@@ -208,11 +208,14 @@ async def run_llm_with_tools(
 ) -> list[dict]:
     """Run the LLM with a tool loop."""
 
+    # Create a copy of messages to avoid mutating the original
+    messages_copy = messages.copy()
+    
     formatted_tools = [await format_tool(t) for t in tools]
 
     print("*" * 100)
     print("Formatted tools in run_llm_with_tools: ", formatted_tools)
-    print("Messages: ", messages)
+    print("Messages: ", messages_copy)
     print("Settings: ", settings)
     print("*" * 100)
 
@@ -227,18 +230,18 @@ async def run_llm_with_tools(
     while True:
         response: ModelResponse = await litellm.acompletion(
             tools=formatted_tools,
-            messages=messages,
+            messages=messages_copy,
             **settings,
         )
         choice = response.choices[0]
-        messages.append(choice.message.model_dump())
+        messages_copy.append(choice.message.model_dump())
 
         print("*" * 100)
-        print("Messages: ", messages)
+        print("Messages: ", messages_copy)
         print("*" * 100)
 
         if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
-            return messages
+            return messages_copy
 
         # Process ALL tool calls before continuing
         for litellm_call in choice.message.tool_calls:
@@ -256,11 +259,11 @@ async def run_llm_with_tools(
                     output={},
                     error=f"Tool '{function_name}' not found",
                 )
-                messages.append(format_tool_results_for_llm(error_result))
+                messages_copy.append(format_tool_results_for_llm(error_result))
                 continue
 
             # Convert LiteLLM call to appropriate internal format while preserving tool type
             internal_call = convert_litellm_to_chosen_tool_call(litellm_call, tool)
             # Execute the tool with the correctly typed call
             result = await run_tool_call(tool, internal_call)
-            messages.append(format_tool_results_for_llm(result))
+            messages_copy.append(format_tool_results_for_llm(result))
