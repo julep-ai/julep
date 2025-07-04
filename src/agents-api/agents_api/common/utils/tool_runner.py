@@ -4,6 +4,7 @@ import inspect
 import json
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
+from uuid import UUID
 
 from beartype import beartype
 from litellm.types.utils import ChatCompletionMessageToolCall
@@ -87,13 +88,19 @@ async def format_tool(tool: Tool | CreateToolRequest) -> dict:
     }
 
 
+# AIDEV-NOTE: Context-free tool execution function that can be used from chat endpoint or other contexts
 @beartype
-async def run_context_tool(
-    context: StepContext,
+async def run_tool_call(
+    *,
+    developer_id: UUID,
+    agent_id: UUID,
+    task_id: UUID | None = None,
+    session_id: UUID | None = None,
     tool: Tool | CreateToolRequest,
     call: BaseChosenToolCall,
+    connection_pool=None,
 ) -> ToolExecutionResult:
-    """Execute a tool call within a workflow step context."""
+    """Execute a tool call with explicit parameters (no context required)."""
 
     call_spec = call.model_dump()
     arguments = call_spec[f"{call.type}"]["arguments"]
@@ -101,7 +108,15 @@ async def run_context_tool(
 
     if tool.type == "integration" and tool.integration:
         output = await execute_integration(
-            context, tool.name, tool.integration, arguments, setup
+            developer_id=developer_id,
+            agent_id=agent_id,
+            task_id=task_id,
+            session_id=session_id,
+            tool_name=tool.name,
+            integration=tool.integration,
+            arguments=arguments,
+            setup=setup,
+            connection_pool=connection_pool,
         )
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
@@ -109,7 +124,11 @@ async def run_context_tool(
         system = tool.system.model_copy(update={"arguments": arguments})
         system_dict = system.model_dump()
         system_def = SystemDef(**system_dict)
-        output = await execute_system(context, system_def)
+        output = await execute_system(
+            developer_id=developer_id,
+            system=system_def,
+            connection_pool=connection_pool,
+        )
         if hasattr(output, "model_dump"):
             return ToolExecutionResult(id=call.id, name=tool.name, output=output.model_dump())
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
@@ -120,6 +139,32 @@ async def run_context_tool(
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     return ToolExecutionResult(id=call.id, name=tool.name, output={})
+
+
+@beartype
+async def run_context_tool(
+    context: StepContext,
+    tool: Tool | CreateToolRequest,
+    call: BaseChosenToolCall,
+) -> ToolExecutionResult:
+    """Execute a tool call within a workflow step context."""
+
+    # AIDEV-NOTE: Extract parameters from context and delegate to context-free function
+    developer_id = context.execution_input.developer_id
+    agent_id = context.execution_input.agent.id
+    task_id = context.execution_input.task.id if context.execution_input.task else None
+    session_id = getattr(context.execution_input, "session", None)
+    session_id = session_id.id if session_id else None
+
+    # Delegate to the context-free function
+    return await run_tool_call(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        session_id=session_id,
+        tool=tool,
+        call=call,
+    )
 
 
 @beartype
@@ -163,6 +208,9 @@ async def run_llm_with_tools(
 ) -> list[dict]:
     """Run the LLM with a tool loop."""
 
+    # Create a copy of messages to avoid mutating the original
+    messages_copy = messages.copy()
+
     formatted_tools = [await format_tool(t) for t in tools]
 
     # Build a map of function name to tool
@@ -176,14 +224,14 @@ async def run_llm_with_tools(
     while True:
         response: ModelResponse = await litellm.acompletion(
             tools=formatted_tools,
-            messages=messages,
+            messages=messages_copy,
             **settings,
         )
         choice = response.choices[0]
-        messages.append(choice.message.model_dump())
+        messages_copy.append(choice.message.model_dump())
 
         if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
-            return messages
+            return messages_copy
 
         # Process ALL tool calls before continuing
         for litellm_call in choice.message.tool_calls:
@@ -201,11 +249,11 @@ async def run_llm_with_tools(
                     output={},
                     error=f"Tool '{function_name}' not found",
                 )
-                messages.append(format_tool_results_for_llm(error_result))
+                messages_copy.append(format_tool_results_for_llm(error_result))
                 continue
 
             # Convert LiteLLM call to appropriate internal format while preserving tool type
             internal_call = convert_litellm_to_chosen_tool_call(litellm_call, tool)
             # Execute the tool with the correctly typed call
             result = await run_tool_call(tool, internal_call)
-            messages.append(format_tool_results_for_llm(result))
+            messages_copy.append(format_tool_results_for_llm(result))

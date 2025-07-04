@@ -48,7 +48,13 @@ class BaseEntry(BaseModel):
         ]
     )
     source: Literal[
-        "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
+        "api_request",
+        "api_response",
+        "tool_request",
+        "tool_response",
+        "internal",
+        "summarizer",
+        "meta",
     ]
     tokenizer: str
     token_count: int
