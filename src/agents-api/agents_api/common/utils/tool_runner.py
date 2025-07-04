@@ -213,12 +213,6 @@ async def run_llm_with_tools(
     
     formatted_tools = [await format_tool(t) for t in tools]
 
-    print("*" * 100)
-    print("Formatted tools in run_llm_with_tools: ", formatted_tools)
-    print("Messages: ", messages_copy)
-    print("Settings: ", settings)
-    print("*" * 100)
-
     # Build a map of function name to tool
     tool_map = {}
     for t in tools:
@@ -236,9 +230,6 @@ async def run_llm_with_tools(
         choice = response.choices[0]
         messages_copy.append(choice.message.model_dump())
 
-        print("*" * 100)
-        print("Messages: ", messages_copy)
-        print("*" * 100)
 
         if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
             return messages_copy
