@@ -65,6 +65,7 @@ alias eventStream = "text/event-stream";
 alias entrySource =
     | "api_request"
     | "api_response"
+    | "tool_request"
     | "tool_response"
     | "internal"
     | "summarizer"

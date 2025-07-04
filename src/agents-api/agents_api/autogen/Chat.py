@@ -609,3 +609,7 @@ class ChatInput(ChatInputData):
     """
     Whether to automatically run tools and send the results back to the model (requires tools or agents with tools).
     """
+    recall_tools: StrictBool = True
+    """
+    Whether to include tool requests and responses when recalling messages.
+    """
