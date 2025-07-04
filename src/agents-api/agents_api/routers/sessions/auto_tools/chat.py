@@ -209,7 +209,7 @@ async def chat(
                 source = "tool_response"
             else:
                 source = "api_request"  # fallback, shouldn't happen
-            
+
             entries_to_save.append(
                 CreateEntryRequest.from_model_input(
                     model=settings["model"],

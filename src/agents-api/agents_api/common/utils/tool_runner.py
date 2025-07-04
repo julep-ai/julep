@@ -210,7 +210,7 @@ async def run_llm_with_tools(
 
     # Create a copy of messages to avoid mutating the original
     messages_copy = messages.copy()
-    
+
     formatted_tools = [await format_tool(t) for t in tools]
 
     # Build a map of function name to tool
@@ -229,7 +229,6 @@ async def run_llm_with_tools(
         )
         choice = response.choices[0]
         messages_copy.append(choice.message.model_dump())
-
 
         if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
             return messages_copy

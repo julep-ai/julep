@@ -48,10 +48,16 @@ async def gather_messages(
     # Get the session history
     # Determine allowed sources based on recall_tools flag
     if chat_input.recall_tools:
-        allowed_sources = ["api_request", "api_response", "tool_request", "tool_response", "summarizer"]
+        allowed_sources = [
+            "api_request",
+            "api_response",
+            "tool_request",
+            "tool_response",
+            "summarizer",
+        ]
     else:
         allowed_sources = ["api_request", "api_response"]
-    
+
     history: History = await get_history(
         developer_id=developer.id,
         session_id=session_id,
