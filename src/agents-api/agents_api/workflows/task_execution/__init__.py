@@ -573,6 +573,11 @@ class TaskExecutionWorkflow:
         self,
         step: ToolCallStep,
     ):
+        # Add null check for context
+        if self.context is None:
+            msg = "Context is None in _handle_ToolCallStep"
+            raise ApplicationError(msg)
+
         tool_call = self.outcome.output if self.outcome is not None else {}
         if tool_call["type"] == "function":
             tool_call_response = await workflow.execute_activity(
@@ -593,7 +598,7 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools() if self.context is not None else []
+            tools = await self.context.tools()
             integration_tool = next((t for t in tools if t.name == tool_name), None)
 
             if integration_tool is None:
@@ -651,7 +656,7 @@ class TaskExecutionWorkflow:
             call = tool_call["api_call"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools() if self.context else []
+            tools = await self.context.tools()
             apicall_tool = next((t for t in tools if t.name == tool_name), None)
 
             if apicall_tool is None:
