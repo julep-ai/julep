@@ -58,7 +58,15 @@ Send messages to the AI model:
   settings:
     model: "claude-3.5-sonnet"
     temperature: 0.8
+
+# Prompt with automatic tool execution
+- prompt: What's the weather in San Francisco?
+  auto_run_tools: true  # Tools execute automatically if needed
 ```
+
+<Note>
+When `auto_run_tools` is set to `true` in a prompt step, any tools available to the agent will be automatically executed if the model decides to use them. The results are then fed back to the model to continue processing. This is particularly useful for creating autonomous workflows where the agent can gather information and make decisions without manual intervention.
+</Note>
 <Info>
 In the prompt step we offer a bunch of Python functions to help you manipulate data. Here is a list of the functions you can use:
 

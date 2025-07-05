@@ -18,7 +18,6 @@ from ....queries.chat.gather_messages import gather_messages
 from ....queries.chat.prepare_chat_context import prepare_chat_context
 from ....queries.secrets.list import list_secrets_query
 from ....queries.sessions.count_sessions import count_sessions as count_sessions_query
-from ...utils.model_validation import validate_model
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
@@ -75,7 +74,7 @@ async def render_chat_input(
     chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings or {}
 
-    await validate_model(settings.get("model"))
+    # await validate_model(settings.get("model")) # Note: temporarily disabled
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
