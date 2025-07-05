@@ -48,7 +48,13 @@ class BaseEntry(BaseModel):
         ]
     )
     source: Literal[
-        "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
+        "api_request",
+        "api_response",
+        "tool_request",
+        "tool_response",
+        "internal",
+        "summarizer",
+        "meta",
     ]
     tokenizer: str
     token_count: int
@@ -96,8 +102,7 @@ class Content(BaseModel):
     """
 
 
-class ContentItem(Content):
-    pass
+ContentItem = Content
 
 
 class ContentItemModel(BaseModel):
@@ -108,12 +113,10 @@ class ContentItemModel(BaseModel):
     source: Source
 
 
-class ContentItemModel1(Content):
-    pass
+ContentItemModel1 = Content
 
 
-class ContentItemModel2(ContentItemModel):
-    pass
+ContentItemModel2 = ContentItemModel
 
 
 class ContentModel(BaseModel):
@@ -129,8 +132,7 @@ class ContentModel(BaseModel):
     content: list[ContentItem] | list[ContentItemModel]
 
 
-class ContentModel1(Content):
-    pass
+ContentModel1 = Content
 
 
 class ContentModel2(BaseModel):

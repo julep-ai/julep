@@ -33,10 +33,13 @@ class BaseDocSearch(BaseModel):
     """
     The maximum query length to use for the search.
     """
+    include_embeddings: StrictBool = True
+    """
+    Whether to include embeddings in the response
+    """
 
 
-class BaseDocSearchUpdate(BaseDocSearch):
-    pass
+BaseDocSearchUpdate = BaseDocSearch
 
 
 class CreateSessionRequest(BaseModel):

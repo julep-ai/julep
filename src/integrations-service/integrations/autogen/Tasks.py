@@ -84,8 +84,7 @@ class Content(BaseModel):
     """
 
 
-class ContentItem(Content):
-    pass
+ContentItem = Content
 
 
 class ContentItemModel(BaseModel):
@@ -96,12 +95,10 @@ class ContentItemModel(BaseModel):
     source: Source
 
 
-class ContentItemModel1(Content):
-    pass
+ContentItemModel1 = Content
 
 
-class ContentItemModel2(ContentItemModel):
-    pass
+ContentItemModel2 = ContentItemModel
 
 
 class ContentModel(BaseModel):
@@ -131,12 +128,10 @@ class ContentModel1(BaseModel):
     content: list[ContentItem] | list[ContentItemModel]
 
 
-class ContentModel2(Content):
-    pass
+ContentModel2 = Content
 
 
-class ContentModel3(ContentModel):
-    pass
+ContentModel3 = ContentModel
 
 
 class ContentModel4(BaseModel):
@@ -907,10 +902,10 @@ class PromptStep(BaseModel):
     """
     Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
     """
-    auto_run_tools: StrictBool = True
+    auto_run_tools: StrictBool = False
     """
     Whether to auto-run the tool and send the tool results to the model when available.
-    (default: true for prompt steps, false for sessions)
+    (default: false)
 
     If a tool call is made, the tool's output will be used as the model's input.
     If a tool call is not made, the model's output will be used as the next step's input.
@@ -955,10 +950,10 @@ class PromptStepUpdateItem(BaseModel):
     """
     Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
     """
-    auto_run_tools: StrictBool = True
+    auto_run_tools: StrictBool = False
     """
     Whether to auto-run the tool and send the tool results to the model when available.
-    (default: true for prompt steps, false for sessions)
+    (default: false)
 
     If a tool call is made, the tool's output will be used as the model's input.
     If a tool call is not made, the model's output will be used as the next step's input.

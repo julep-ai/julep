@@ -19,7 +19,6 @@ from ..autogen.openapi_model import (
     UpdateUserRequest,
     VectorDocSearchRequest,
 )
-from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.utils.evaluator import get_handler
 from ..env import testing
 from ..queries import developers
@@ -27,20 +26,18 @@ from ..queries import developers
 
 @beartype
 async def execute_system(
-    context: StepContext,
+    developer_id: UUID,
     system: SystemDef,
+    connection_pool=None,
 ) -> Any:
     """Execute a system call with the appropriate handler and transformed arguments."""
 
     arguments: dict[str, Any] = system.arguments or {}
 
-    connection_pool = getattr(app.state, "postgres_pool", None)
+    if connection_pool is None:
+        connection_pool = getattr(app.state, "postgres_pool", None)
 
-    if not isinstance(context.execution_input, ExecutionInput):
-        msg = "Expected ExecutionInput type for context.execution_input"
-        raise TypeError(msg)
-
-    arguments["developer_id"] = context.execution_input.developer_id
+    arguments["developer_id"] = developer_id
 
     # Unbox all the arguments
     for key, value in arguments.items():
@@ -50,9 +47,17 @@ async def execute_system(
             arguments[key] = value.to_list()
 
     # Convert all UUIDs to UUID objects
-    uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id"]
+    uuid_fields = [
+        "agent_id",
+        "user_id",
+        "task_id",
+        "session_id",
+        "doc_id",
+        "owner_id",
+        "developer_id",
+    ]
     for field in uuid_fields:
-        if field in arguments:
+        if field in arguments and not isinstance(arguments[field], UUID):
             arguments[field] = UUID(arguments[field])
 
     try:
@@ -143,7 +148,6 @@ async def execute_system(
                 user_id=user_id,
                 data=update_user_request,
             )
-
         return await handler(**arguments)
     except BaseException as e:
         if activity.in_activity():
@@ -153,27 +157,28 @@ async def execute_system(
 
 def _create_search_request(arguments: dict) -> Any:
     """Create appropriate search request based on available parameters."""
-    if "text" in arguments and "vector" in arguments:
+    search_params = arguments | arguments.pop("search_params", {})
+    if "text" in search_params and "vector" in search_params:
         return HybridDocSearchRequest(
-            text=arguments.pop("text"),
-            mmr_strength=arguments.pop("mmr_strength", 0),
-            vector=arguments.pop("vector"),
-            alpha=arguments.pop("alpha", 0.75),
-            confidence=arguments.pop("confidence", 0.5),
-            limit=arguments.get("limit", 10),
+            text=search_params.pop("text"),
+            mmr_strength=search_params.pop("mmr_strength", 0),
+            vector=search_params.pop("vector"),
+            alpha=search_params.pop("alpha", 0.75),
+            confidence=search_params.pop("confidence", 0.5),
+            limit=search_params.get("limit", 10),
         )
-    if "text" in arguments:
+    if "text" in search_params:
         return TextOnlyDocSearchRequest(
-            text=arguments.pop("text"),
-            mmr_strength=arguments.pop("mmr_strength", 0),
-            limit=arguments.get("limit", 10),
+            text=search_params.pop("text"),
+            mmr_strength=search_params.pop("mmr_strength", 0),
+            limit=search_params.get("limit", 10),
         )
-    if "vector" in arguments:
+    if "vector" in search_params:
         return VectorDocSearchRequest(
-            vector=arguments.pop("vector"),
-            mmr_strength=arguments.pop("mmr_strength", 0),
-            confidence=arguments.pop("confidence", 0.7),
-            limit=arguments.get("limit", 10),
+            vector=search_params.pop("vector"),
+            mmr_strength=search_params.pop("mmr_strength", 0),
+            confidence=search_params.pop("confidence", 0.7),
+            limit=search_params.get("limit", 10),
         )
     return None
 

@@ -25,21 +25,13 @@
   </p>
   
   <h3 align="center">
-    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow"><img src="https://user-images.githubusercontent.com/74038190/235294015-47144047-25ab-417c-af1b-6746820a20ff.gif" width="60"></a>
+    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow"><img src="https://user-images.githubusercontent.com/74038190/235294015-47144047-25ab-417c-af1b-6746820a20ff.gif" width="45"></a>
     ·
-    <a href="https://x.com/julep_ai" rel="dofollow"><img src="https://raw.githubusercontent.com/gist/IgnaceMaes/744cd9cf41ec6acf46fc8f4e9f370f86/raw/d16658c2945d30c8a953b35cb17dd7085111b46c/x-logo.svg" width="45"></a>
+    <a href="https://x.com/julep_ai" rel="dofollow"><img src="https://raw.githubusercontent.com/gist/IgnaceMaes/744cd9cf41ec6acf46fc8f4e9f370f86/raw/d16658c2945d30c8a953b35cb17dd7085111b46c/x-logo.svg" width="32"></a>
     ·
-    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow"><img src="https://user-images.githubusercontent.com/74038190/235294012-0a55e343-37ad-4b0f-924f-c8431d9d2483.gif" width="60"></a>
+    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow"><img src="https://user-images.githubusercontent.com/74038190/235294012-0a55e343-37ad-4b0f-924f-c8431d9d2483.gif" width="45"></a>
 
   </h3>
-  
-  <!-- <h3>
-    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
-    ·
-    <a href="https://x.com/julep_ai" rel="dofollow">𝕏</a>
-    ·
-    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
-  </h3> -->
 </div>
 
 **Try Julep Today:** Visit the **[Julep Website](https://julep.ai)** · Get started on the **[Julep Dashboard](https://dashboard.julep.ai)** (free API key) · Read the **[Documentation](https://docs.julep.ai/introduction/julep)**
@@ -57,7 +49,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
+
 
 ## Why Julep?
 
@@ -74,7 +66,7 @@ Julep is an open-source platform for building **agent-based AI workflows** that 
 
 *Focus on your AI logic and creativity, while Julep takes care of the heavy lifting!* <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/2c0eef4b-7b75-42bd-9722-4bea97a2d532" width="20">
 
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
+
 
 ## Getting Started
 <p>
@@ -100,7 +92,7 @@ That’s it! Your first AI agent can be up and running in minutes. For a complet
 
 > **Note:** Julep also offers a command-line interface (CLI) (currently in beta for Python) to manage workflows and agents. If you prefer a no-code approach or want to script common tasks, see the [Julep CLI docs](https://docs.julep.ai/responses/quickstart#cli-installation) for details.
 
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
+
 
 ## Documentation and Examples
 
@@ -113,7 +105,7 @@ Looking to dive deeper? The **[Julep Documentation](https://docs.julep.ai)** cov
 * **[Cookbook Recipes](https://github.com/julep-ai/julep/tree/dev/cookbooks):** Explore the **Julep Cookbook** for ready-made example workflows and agents. These recipes demonstrate common patterns and use cases – a great way to learn by example. *Browse the [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) directory in this repository for sample agent definitions.*
 * **[IDE Integration](https://context7.com/julep-ai/julep):** Access Julep documentation directly in your IDE! Perfect for getting instant answers while coding.
 
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
+
 
 ## Community and Contributions
 
@@ -121,7 +113,7 @@ Join our growing community of developers and AI enthusiasts! Here are some ways 
 
 * **Discord Community:** Have questions or ideas? Join the conversation on our [official Discord server](https://discord.gg/7H5peSN9QP) to chat with the Julep team and other users. We’re happy to help with troubleshooting or brainstorm new use cases.
 * **GitHub Discussions and Issues:** Feel free to use GitHub for reporting bugs, requesting features, or discussing implementation details. Check out the [**good first issues**](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if you’d like to contribute – we welcome contributions of all kinds.
-* **Contributing:** If you want to contribute code or improvements, please see our [Contributing Guide](CONTRIBUTING.md) for how to get started. We appreciate all PRs and feedback. By collaborating, we can make Julep even better!
+* **Contributing:** If you want to contribute code or improvements, please see our [Contributing Guide](.github/CONTRIBUTING.md) for how to get started. We appreciate all PRs and feedback. By collaborating, we can make Julep even better!
 
 *Pro tip: <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/e379a33a-b428-4385-b44f-3da16e7bac9f" width="35"> Star our repo to stay updated – we’re constantly adding new features and examples.*    
 

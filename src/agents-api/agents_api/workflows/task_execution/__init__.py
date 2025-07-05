@@ -60,6 +60,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowResult,
     )
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
+    from ...common.utils.feature_flags import get_feature_flag_value
     from ...env import (
         debug,
         task_max_parallelism,
@@ -78,7 +79,6 @@ with workflow.unsafe.imports_passed_through():
         execute_switch_branch,
     )
     from .transition import transition
-
 
 # Supported steps
 # ---------------
@@ -441,20 +441,43 @@ class TaskExecutionWorkflow:
         if self.outcome is None:
             return WorkflowResult(state=PartialTransition(output=None))
 
-        message = self.outcome.output
+        messages = self.outcome.output
 
-        if (
-            step.unwrap
-            or not step.auto_run_tools
-            or message["choices"][0]["finish_reason"] != "tool_calls"
-        ):
-            workflow.logger.debug(f"Prompt step: Received response: {message}")
-            return WorkflowResult(state=PartialTransition(output=message))
+        try:
+            if self.context is not None and get_feature_flag_value(
+                "auto_tool_calls_prompt_step",
+                developer_id=str(self.context.execution_input.developer_id),
+            ):
+                if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
+                    workflow.logger.debug(f"Prompt step: Received response: {messages}")
+                    return WorkflowResult(state=PartialTransition(output=messages))
 
-        choice = message["choices"][0]
-        tool_calls_input = choice["message"]["tool_calls"]
+                # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
+                tool_calls_input = messages[-1]["tool_calls"]
+            else:
+                message = messages
+                if (
+                    step.unwrap
+                    or not step.auto_run_tools
+                    or message["choices"][0]["finish_reason"] != "tool_calls"
+                ):
+                    workflow.logger.debug(f"Prompt step: Received response: {message}")
+                    return WorkflowResult(state=PartialTransition(output=message))
+
+                choice = message["choices"][0]
+                tool_calls_input = choice["message"]["tool_calls"]
+        except (KeyError, IndexError, TypeError) as e:
+            workflow.logger.error(f"Prompt step: Error parsing response structure: {e}")
+            msg = f"Invalid response structure in prompt step: {e}"
+            raise ApplicationError(msg) from e
+        except Exception as e:
+            workflow.logger.error(f"Prompt step: Unexpected error: {e}")
+            msg = f"Unexpected error in prompt step: {e}"
+            raise ApplicationError(msg) from e
+
         input_type = tool_calls_input[0]["type"]
 
+        # TODO: What if the model requested multiple function tool calls?
         if input_type == "function":
             workflow.logger.debug("Prompt step: Received FUNCTION tool call")
 
@@ -469,7 +492,7 @@ class TaskExecutionWorkflow:
 
             # Feed the tool call results back to the model
             if self.context is not None:
-                self.context.current_step.prompt.append(message)
+                self.context.current_step.prompt.append(messages)
                 self.context.current_step.prompt.append(tool_calls_results)
             new_response = await workflow.execute_activity(
                 task_steps.prompt_step,
@@ -512,7 +535,7 @@ class TaskExecutionWorkflow:
         workflow.logger.debug(
             f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}",
         )
-        return WorkflowResult(state=PartialTransition(output=message))
+        return WorkflowResult(state=PartialTransition(output=messages))
 
     async def _handle_SetStep(
         self,
@@ -550,6 +573,11 @@ class TaskExecutionWorkflow:
         self,
         step: ToolCallStep,
     ):
+        # Add null check for context
+        if self.context is None:
+            msg = "Context is None in _handle_ToolCallStep"
+            raise ApplicationError(msg)
+
         tool_call = self.outcome.output if self.outcome is not None else {}
         if tool_call["type"] == "function":
             tool_call_response = await workflow.execute_activity(
@@ -570,7 +598,7 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools() if self.context is not None else []
+            tools = await self.context.tools()
             integration_tool = next((t for t in tools if t.name == tool_name), None)
 
             if integration_tool is None:
@@ -591,9 +619,28 @@ class TaskExecutionWorkflow:
                 arguments=arguments,
             )
 
+            # AIDEV-NOTE: Extract IDs from context for new execute_integration signature
+            developer_id = self.context.execution_input.developer_id
+            agent_id = self.context.execution_input.agent.id
+            task_id = (
+                self.context.execution_input.task.id
+                if self.context.execution_input.task
+                else None
+            )
+            session_id = getattr(self.context.execution_input, "session", None)
+            session_id = session_id.id if session_id else None
+
             tool_call_response = await workflow.execute_activity(
                 execute_integration,
-                args=[self.context, tool_name, integration, arguments],
+                args=[
+                    developer_id,
+                    agent_id,
+                    task_id,
+                    session_id,
+                    tool_name,
+                    integration,
+                    arguments,
+                ],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
@@ -609,7 +656,7 @@ class TaskExecutionWorkflow:
             call = tool_call["api_call"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools() if self.context else []
+            tools = await self.context.tools()
             apicall_tool = next((t for t in tools if t.name == tool_name), None)
 
             if apicall_tool is None:
@@ -654,9 +701,11 @@ class TaskExecutionWorkflow:
             call = tool_call.get("system")
 
             system_call = SystemDef(**call)
+            # AIDEV-NOTE: Extract developer_id for new execute_system signature
+            developer_id = self.context.execution_input.developer_id
             tool_call_response = await workflow.execute_activity(
                 execute_system,
-                args=[self.context, system_call],
+                args=[developer_id, system_call],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),

@@ -342,7 +342,7 @@
       "title": "AlgoliaSetupUpdate",
       "type": "object"
     },
-    "ApiCallDef": {
+    "ApiCallDef-Input": {
       "description": "API call definition",
       "properties": {
         "content": {
@@ -461,6 +461,196 @@
             }
           ],
           "title": "Params"
+        },
+        "params_schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParameterSchema-Input"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema"
+        },
+        "secrets": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/SecretRef"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Secrets"
+        },
+        "timeout": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timeout"
+        },
+        "url": {
+          "format": "uri",
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "url"
+      ],
+      "title": "ApiCallDef",
+      "type": "object"
+    },
+    "ApiCallDef-Output": {
+      "description": "API call definition",
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Content"
+        },
+        "cookies": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cookies"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Data"
+        },
+        "files": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Files"
+        },
+        "follow_redirects": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Follow Redirects"
+        },
+        "headers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Headers"
+        },
+        "include_response_content": {
+          "default": true,
+          "title": "Include Response Content",
+          "type": "boolean"
+        },
+        "json": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Json"
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH",
+            "HEAD",
+            "OPTIONS",
+            "CONNECT",
+            "TRACE"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "params": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Params"
+        },
+        "params_schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParameterSchema-Output"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "schema": {
           "anyOf": [
@@ -638,6 +828,16 @@
             }
           ],
           "title": "Params"
+        },
+        "params_schema": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParameterSchemaUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "schema": {
           "anyOf": [
@@ -4438,7 +4638,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Output"
             },
             {
               "type": "null"
@@ -6435,6 +6635,11 @@
           "title": "Confidence",
           "type": "number"
         },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "k_multiplier": {
           "default": 7,
           "minimum": 0.0,
@@ -6511,6 +6716,11 @@
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
         },
         "k_multiplier": {
           "default": 5,
@@ -6590,6 +6800,11 @@
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
         },
         "k_multiplier": {
           "default": 7,
@@ -8603,6 +8818,133 @@
       "title": "ParallelStep",
       "type": "object"
     },
+    "ParameterSchema-Input": {
+      "description": "JSON Schema for API call parameters",
+      "properties": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Additionalproperties"
+        },
+        "properties": {
+          "additionalProperties": {
+            "$ref": "#/$defs/PropertyDefinition-Input"
+          },
+          "title": "Properties",
+          "type": "object"
+        },
+        "required": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required",
+          "type": "array"
+        },
+        "type": {
+          "default": "object",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "properties"
+      ],
+      "title": "ParameterSchema",
+      "type": "object"
+    },
+    "ParameterSchema-Output": {
+      "description": "JSON Schema for API call parameters",
+      "properties": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Additionalproperties"
+        },
+        "properties": {
+          "additionalProperties": {
+            "$ref": "#/$defs/PropertyDefinition-Output"
+          },
+          "title": "Properties",
+          "type": "object"
+        },
+        "required": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required",
+          "type": "array"
+        },
+        "type": {
+          "default": "object",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "properties"
+      ],
+      "title": "ParameterSchema",
+      "type": "object"
+    },
+    "ParameterSchemaUpdate": {
+      "description": "JSON Schema for API call parameters",
+      "properties": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Additionalproperties"
+        },
+        "properties": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/PropertyDefinitionUpdate"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Properties"
+        },
+        "required": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required",
+          "type": "array"
+        },
+        "type": {
+          "default": "object",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "ParameterSchemaUpdate",
+      "type": "object"
+    },
     "PatchAgentRequest": {
       "description": "Payload for patching a agent",
       "properties": {
@@ -9323,7 +9665,7 @@
     "PromptStep-Input": {
       "properties": {
         "auto_run_tools": {
-          "default": true,
+          "default": false,
           "title": "Auto Run Tools",
           "type": "boolean"
         },
@@ -9433,7 +9775,7 @@
     "PromptStep-Output": {
       "properties": {
         "auto_run_tools": {
-          "default": true,
+          "default": false,
           "title": "Auto Run Tools",
           "type": "boolean"
         },
@@ -9538,6 +9880,157 @@
         "prompt"
       ],
       "title": "PromptStep",
+      "type": "object"
+    },
+    "PropertyDefinition-Input": {
+      "description": "Property definition for parameter schema",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Enum"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PropertyDefinition-Input"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PropertyDefinition",
+      "type": "object"
+    },
+    "PropertyDefinition-Output": {
+      "description": "Property definition for parameter schema",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Enum"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PropertyDefinition-Output"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PropertyDefinition",
+      "type": "object"
+    },
+    "PropertyDefinitionUpdate": {
+      "description": "Property definition for parameter schema",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Enum"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PropertyDefinitionUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Type"
+        }
+      },
+      "title": "PropertyDefinitionUpdate",
       "type": "object"
     },
     "Relation": {
@@ -11135,7 +11628,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Input"
             },
             {
               "type": "null"
@@ -11315,7 +11808,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Output"
             },
             {
               "type": "null"
@@ -11526,6 +12019,11 @@
     },
     "TextOnlyDocSearch": {
       "properties": {
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -11576,6 +12074,11 @@
     },
     "TextOnlyDocSearchRequest": {
       "properties": {
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -11619,6 +12122,11 @@
     },
     "TextOnlyDocSearchUpdate": {
       "properties": {
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -11892,7 +12400,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Output"
             },
             {
               "type": "null"
@@ -12879,7 +13387,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Input"
             },
             {
               "type": "null"
@@ -13200,6 +13708,11 @@
           "title": "Confidence",
           "type": "number"
         },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -13257,6 +13770,11 @@
           "title": "Confidence",
           "type": "number"
         },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "limit": {
           "default": 10,
           "maximum": 50.0,
@@ -13298,6 +13816,11 @@
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
         },
         "lang": {
           "default": "en-US",
@@ -14148,7 +14671,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Input"
             },
             {
               "type": "null"
@@ -14322,7 +14845,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef"
+              "$ref": "#/$defs/ApiCallDef-Input"
             },
             {
               "type": "null"
