@@ -87,6 +87,8 @@ Here's an example of how a typical message object might be structured in a chat 
 | `remember`          | `bool` | DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) | `False` |
 | `model`             | `str` | The model to use for the chat completion. | `None` |
 | `metadata`          | `dict[str, Any]` | Custom metadata that can be passed to the system template for dynamic behavior. See [System Templates](/advanced/system-templates) for details. | `None` |
+| `auto_run_tools`    | `bool` | Whether to automatically execute tools and send the results back to the model (requires tools on the agent) | `False` |
+| `recall_tools`      | `bool` | Whether to include tool requests and responses when recalling messages from history | `True` |
 
 ## Usage
 
@@ -235,6 +237,98 @@ Both types of responses include the following fields:
   - `jobs`: List of UUIDs for background jobs that may have been initiated as a result of this interaction
   - `usage`: Statistics on token usage for the completion request
 
+
+## Automatic Tool Calling
+
+Julep supports automatic tool execution during chat interactions. This feature allows tools to be executed seamlessly without manual intervention, making conversations more fluid and responsive.
+
+### How It Works
+
+1. **When `auto_run_tools=true`**: 
+   - The model identifies when a tool should be used based on the conversation
+   - The tool is automatically executed by Julep's backend
+   - Results are fed back to the model to continue the conversation
+   - The entire process happens in a single API call
+
+2. **When `auto_run_tools=false` (default)**:
+   - The model returns tool call requests in the response
+   - Your application must execute the tools manually
+   - Results need to be sent back in a follow-up message
+
+### Example with Automatic Tool Execution
+
+<CodeGroup>
+    ```python Python
+    # Agent with a weather tool
+    agent = client.agents.create(
+        name="Weather Assistant",
+        tools=[
+            {
+                "name": "get_weather",
+                "type": "integration",
+                "integration": {"provider": "weather"}
+            }
+        ]
+    )
+    
+    # Chat with automatic tool execution
+    response = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "What's the weather like in Tokyo and Paris?"
+            }
+        ],
+        auto_run_tools=True  # Tools execute automatically
+    )
+    
+    # The response already includes the weather data
+    print(response.choices[0].message.content)
+    # Output: "In Tokyo, it's currently 22°C with clear skies. 
+    #          In Paris, it's 15°C with light rain."
+    ```
+    
+    ```javascript Node.js
+    // Agent with a weather tool
+    const agent = await client.agents.create({
+        name: "Weather Assistant",
+        tools: [
+            {
+                name: "get_weather",
+                type: "integration",
+                integration: {provider: "weather"}
+            }
+        ]
+    });
+    
+    // Chat with automatic tool execution
+    const response = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "What's the weather like in Tokyo and Paris?"
+            }
+        ],
+        auto_run_tools: true  // Tools execute automatically
+    });
+    
+    // The response already includes the weather data
+    console.log(response.choices[0].message.content);
+    // Output: "In Tokyo, it's currently 22°C with clear skies. 
+    //          In Paris, it's 15°C with light rain."
+    ```
+</CodeGroup>
+
+### Tool History Management
+
+The `recall_tools` parameter controls whether tool calls and their results are included when recalling conversation history:
+
+- **`recall_tools=true` (default)**: Tool interactions are preserved in the conversation history
+- **`recall_tools=false`**: Tool calls and results are excluded from recalled messages
+
+This is useful when you want to maintain a cleaner conversation history without the technical details of tool executions.
 
 ## Finish Reasons
 
