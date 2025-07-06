@@ -164,24 +164,50 @@ Checkout the list of integrations that Julep supports [here](/integrations/suppo
 
 #### API Call Tool
 
-Julep can also directly make `api_call` during workflow executions as tool calls. Similar to `integration` tools, additional runtime parameters are loaded from metadata fields. For example,
+Julep can also directly make `api_call` during workflow executions as tool calls. Similar to `integration` tools, additional runtime parameters are loaded from metadata fields. 
+
+API call tools support `params_schema` to define the expected parameters for the API call, enabling better validation and documentation:
 
 ```yaml YAML
 name: Example api_call task
 tools:
 - type: api_call
-  name: hello
+  name: weather_api
+  description: Get weather information for a location
   api_call:
     method: GET  # Required - HTTP method must be specified
-    url: https://httpbin.org/get  # Required - URL must be specified
-    # Optional parameters can be added here (headers, follow_redirects, etc.)
+    url: https://api.openweathermap.org/data/2.5/weather  # Required - URL must be specified
+    params_schema:  # Define expected parameters
+      type: object
+      properties:
+        q:
+          type: string
+          description: City name or coordinates
+        units:
+          type: string
+          enum: [metric, imperial]
+          description: Temperature units
+        appid:
+          type: string
+          description: API key (loaded from metadata)
+      required: [q, appid]
 
 main:
-- tool: hello
+- tool: weather_api
   arguments:
-    json:
-      test: $ _.input # <-- python expression
+    params:
+      q: $ _.location  # City from input
+      units: "metric"
+      appid: $ metadata.weather_api_key  # API key from metadata
 ```
+
+<Note>
+The `params_schema` follows JSON Schema format and helps:
+- Document expected parameters for the API
+- Enable LLMs to understand what parameters the tool accepts
+- Provide validation for API calls
+- Generate better tool descriptions for the model
+</Note>
 
 <AccordionGroup>
   <Accordion title="Available API HTTP Methods">
@@ -201,6 +227,7 @@ main:
     <ul>
       <li><strong>method</strong>: (Required) The HTTP method to use.</li>
       <li><strong>url</strong>: (Required) The URL to call.</li>
+      <li><strong>params_schema</strong>: JSON Schema definition for API parameters, enabling validation and better LLM understanding.</li>
       <li><strong>schema</strong>: The schema of the response.</li>
       <li><strong>headers</strong>: The headers to send with the request.</li>
       <li><strong>content</strong>: The content as base64 to send with the request.</li>
@@ -344,6 +371,179 @@ When a tool is associated with a task, it is meant to be used only for that task
 ### Agent
 
 When a tool is associated with an agent, it is meant to be used across all tasks associated with that agent. This allows for greater flexibility and reuse of tools, as the agent can leverage the same tool in multiple tasks. It also simplifies the management of tools, as they only need to be defined once for the agent and can then be utilized in various tasks.
+
+## Automatic Tool Execution
+
+Julep supports automatic tool execution, allowing agents to seamlessly use tools without manual intervention. This feature is controlled by the `auto_run_tools` parameter.
+
+### How Automatic Tool Execution Works
+
+1. **In Sessions (Chat)**:
+   - Set `auto_run_tools=true` when calling `sessions.chat()`
+   - When the model decides to use a tool, Julep automatically:
+     - Executes the tool with the provided arguments
+     - Captures the tool's output
+     - Sends the results back to the model
+     - Continues the conversation with the tool results
+   - All happens in a single API call - no manual intervention needed
+
+2. **In Tasks (Prompt Steps)**:
+   - Set `auto_run_tools: true` in the prompt step definition
+   - During task execution, tools are automatically invoked when needed
+   - Results flow seamlessly into subsequent steps
+
+3. **Default Behavior** (`auto_run_tools=false`):
+   - Tool calls are returned in the response
+   - Your application must handle tool execution
+   - Results must be sent back in a follow-up message
+
+### Example: Session with Automatic Tools
+
+<CodeGroup>
+```python Python
+# Create agent with multiple tools
+agent = client.agents.create(
+    name="Research Assistant",
+    tools=[
+        {
+            "name": "web_search",
+            "type": "integration",
+            "integration": {"provider": "brave"}
+        },
+        {
+            "name": "wikipedia",
+            "type": "integration",
+            "integration": {"provider": "wikipedia"}
+        }
+    ]
+)
+
+# Chat with automatic tool execution
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "user",
+            "content": "Tell me about the latest developments in quantum computing"
+        }
+    ],
+    auto_run_tools=True  # Enable automatic execution
+)
+
+# Response includes information gathered from tools
+print(response.choices[0].message.content)
+# "Based on recent search results, here are the latest developments..."
+```
+
+```javascript Node.js
+// Create agent with multiple tools
+const agent = await client.agents.create({
+    name: "Research Assistant",
+    tools: [
+        {
+            name: "web_search",
+            type: "integration",
+            integration: {provider: "brave"}
+        },
+        {
+            name: "wikipedia",
+            type: "integration",
+            integration: {provider: "wikipedia"}
+        }
+    ]
+});
+
+// Chat with automatic tool execution
+const response = await client.sessions.chat({
+    session_id: session.id,
+    messages: [
+        {
+            role: "user",
+            content: "Tell me about the latest developments in quantum computing"
+        }
+    ],
+    auto_run_tools: true  // Enable automatic execution
+});
+
+// Response includes information gathered from tools
+console.log(response.choices[0].message.content);
+// "Based on recent search results, here are the latest developments..."
+```
+</CodeGroup>
+
+### Example: Task with Automatic Tools
+
+```yaml YAML
+name: Research and Summarize Task
+tools:
+  - name: web_search
+    type: integration
+    integration:
+      provider: brave
+  
+  - name: save_research_summary
+    description: Save the research summary as a document
+    type: system
+    system:
+      resource: agent
+      subresource: doc
+      operation: create
+
+main:
+  # Step 1: Search with automatic tool execution
+  - prompt:
+      - role: user
+        content: "Search for recent news about {{topic}} and create a comprehensive summary and save it as a document for agent {{agent.id}}"
+    auto_run_tools: true  # Tools execute automatically
+  
+  # Step 2: The results from tools are already available
+  - evaluate:
+      summary: $ _.choices[0].message.content
+```
+
+### When to Use Automatic Tool Execution
+
+**Use `auto_run_tools=true` when**:
+- Building conversational agents that need real-time information
+- Creating autonomous workflows in tasks
+- You want a seamless, single-call interaction
+- Tools are trusted and don't require manual validation
+
+**Use `auto_run_tools=false` when**:
+- You need to validate or modify tool inputs before execution
+- Tool execution requires user confirmation
+- You want to handle tool errors with custom logic
+- Building applications with complex tool orchestration
+
+### Tool Execution Flow
+
+<Steps>
+  <Step title="Model Decision">
+    The LLM analyzes the user's request and decides if a tool is needed
+  </Step>
+  <Step title="Tool Call Generation">
+    The model generates appropriate tool calls with arguments
+  </Step>
+  <Step title="Automatic Execution" icon="play">
+    With auto_run_tools=true: Julep executes the tool automatically
+    With auto_run_tools=false: Tool calls are returned for manual handling
+  </Step>
+  <Step title="Result Processing">
+    Tool results are fed back to the model or returned to the client
+  </Step>
+  <Step title="Response Generation">
+    The model uses tool results to generate the final response
+  </Step>
+</Steps>
+
+### Managing Tool History
+
+When using `sessions.chat()`, the `recall_tools` parameter controls whether tool interactions are saved in the conversation history:
+
+- `recall_tools=true` (default): Tool calls and results are preserved
+- `recall_tools=false`: Tool interactions are excluded from history
+
+This helps maintain clean conversation logs while still benefiting from tool capabilities.
 
 ## Best Practices
 

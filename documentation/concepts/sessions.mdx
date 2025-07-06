@@ -33,8 +33,8 @@ When creating a session, you can leverage the following configuration options to
 | `system_template`    | `str` \| `None`                              | A specific system prompt template that sets the background for this session                        | `None`         |
 | `render_templates`   | `StrictBool`                               | Whether to render system and assistant messages as Jinja templates                                 | `True`         |
 | `token_budget`       | `int` \| `None`                              | Threshold value for the adaptive context functionality                                           | `None`         |
-| `auto_run_tools`     | `StrictBool`                               | Whether to auto-run tools and send the tool results to the model when available                   | `False`          |
-| `forward_tool_calls` | `StrictBool`                               | Whether to forward tool calls directly to the model                                               | `False`          |
+| `auto_run_tools`     | `StrictBool`                               | Whether to automatically execute tools and send the results back to the model when available      | `False`        |
+| `forward_tool_calls` | `StrictBool`                               | Whether to forward tool calls directly to the model                                               | `False`        |
 | `recall_options`     | `object` \| `None`                    | Options for different RAG search modes (VectorDocSearch, TextOnlyDocSearch, HybridDocSearch) in the session                                  | `VectorDocSearch`         |
 
 ### Recall Options (RAG Search)
@@ -295,14 +295,17 @@ In this example, the user John Doe is associated with the agent Mark Lee in the 
 
 ### Tools
 
-Sessions have the ability to use [Tools](/concepts/tools). If an agent has a tool, and the LLM decides to use it, the tool will be run and the result will be automatically sent to the LLM for further processing.
+Sessions have the ability to use [Tools](/concepts/tools). When `auto_run_tools` is set to `true` (available in chat calls), if an agent has a tool and the LLM decides to use it, the tool will be executed automatically and the result will be sent back to the LLM for further processing. When `auto_run_tools` is `false` (default), tool calls are returned in the response without execution.
 
 Example:
 
-If the agent that's associated with the session has a tool called `fetch_weather`, and the LLM decides to use it, the tool will be run and the result will be automatically sent to the LLM for further processing.
+If the agent that's associated with the session has a tool called `fetch_weather`, and the LLM decides to use it:
+- With `auto_run_tools=true`: The tool executes automatically and returns weather data to the LLM
+- With `auto_run_tools=false`: The tool call is returned in the response for manual execution
 
 <CodeGroup>
     ```python Python
+    # With automatic tool execution
     response = client.sessions.chat(
         session_id="session_id",
         messages=[
@@ -311,14 +314,33 @@ If the agent that's associated with the session has a tool called `fetch_weather
                 "content": "What is the weather in San Francisco?"
             }
         ],
-        auto_run_tools=True
+        auto_run_tools=True,  # Tools execute automatically
+        recall_tools=True     # Tool calls/results included in message history
     )
 
     print("Agent's response:", response.choices[0].message.content)
     # Agent's response: The weather in San Francisco is 70 degrees and it's sunny. Humidity is 50%, and the wind speed is around 10 mph.
+    
+    # Without automatic tool execution (default)
+    response = client.sessions.chat(
+        session_id="session_id",
+        messages=[
+            {
+                "role": "user",
+                "content": "What is the weather in San Francisco?"
+            }
+        ],
+        auto_run_tools=False  # Default - returns tool calls without execution
+    )
+    
+    # Check if tool calls were made
+    if response.choices[0].message.tool_calls:
+        print("Tool calls:", response.choices[0].message.tool_calls)
+        # You need to execute these tools manually and send results back
     ```
 
     ```javascript Node.js
+    // With automatic tool execution
     const response = await client.sessions.chat({
         session_id: "session_id",
         messages: [
@@ -327,10 +349,29 @@ If the agent that's associated with the session has a tool called `fetch_weather
                 content: "What is the weather in San Francisco?"
             }
         ],
-        auto_run_tools=True
+        auto_run_tools: true,  // Tools execute automatically
+        recall_tools: true     // Tool calls/results included in message history
     });
     console.log("Agent:", response.choices[0].message.content);
     // Agent's response: The weather in San Francisco is 70 degrees and it's sunny. Humidity is 50%, and the wind speed is around 10 mph.
+    
+    // Without automatic tool execution (default)
+    const response2 = await client.sessions.chat({
+        session_id: "session_id",
+        messages: [
+            {
+                role: "user",
+                content: "What is the weather in San Francisco?"
+            }
+        ],
+        auto_run_tools: false  // Default - returns tool calls without execution
+    });
+    
+    // Check if tool calls were made
+    if (response2.choices[0].message.tool_calls) {
+        console.log("Tool calls:", response2.choices[0].message.tool_calls);
+        // You need to execute these tools manually and send results back
+    }
     ```
 </CodeGroup>
 
