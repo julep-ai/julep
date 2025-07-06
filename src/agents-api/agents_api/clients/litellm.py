@@ -137,7 +137,7 @@ async def aembedding(
     **settings,
 ) -> list[list[float]]:
     if not custom_api_key:
-        model = f"openai/{model}"  # This is needed for litellm
+        model = f"openai/{model.removeprefix('openai/')}" # This is needed for litellm
 
     input = (
         [inputs]
