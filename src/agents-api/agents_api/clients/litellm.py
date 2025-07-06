@@ -76,7 +76,8 @@ async def acompletion(
                 )
 
         custom_api_key = secret and secret.value
-        model = f"openai/{model}"  # This is needed for litellm
+        model = f"openai/{model.removeprefix('openai/')}"
+  # This is needed for litellm
 
     supported_params: list[str] = (
         get_supported_openai_params(model) or []
