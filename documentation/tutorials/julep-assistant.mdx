@@ -1,0 +1,560 @@
+---
+title: 'Building a RAG-powered AI Assistant with Julep'
+description: 'Learn how to build an intelligent AI support assistant using Julep with document indexing, RAG capabilities, and a chat interface'
+icon: 'robot'
+---
+
+## Overview
+
+This tutorial demonstrates how to build a production-ready AI assistant using Julep. We'll create an intelligent support assistant that can:
+
+- Crawl and index documentation automatically
+- Answer questions using RAG (Retrieval-Augmented Generation)
+- Provide contextual, accurate responses based on indexed content
+- Offer an interactive chat interface with session management
+- Collect and validate user feedback for continuous improvement
+
+## What You'll Learn
+
+By the end of this tutorial, you'll understand how to:
+
+1. Configure a Julep agent with specific instructions and capabilities
+2. Create complex workflows for document processing and indexing
+3. Implement RAG-powered conversations with hybrid search
+4. Build an interactive chat interface using Chainlit
+5. Deploy a production-ready AI assistant
+
+## Prerequisites
+
+- Python 3.8+
+- Julep API key (get one at [platform.julep.ai](https://platform.julep.ai))
+- Basic understanding of Julep concepts (agents, tasks, sessions)
+- Spider API key for web crawling
+
+## Project Structure
+
+The Julep Assistant project is organized as follows:
+
+```bash
+julep-assistant/
+├── agent.yaml              # Agent configuration
+├── task/                   # Julep task definitions
+│   ├── main.yaml          # Main workflow task
+│   ├── crawl.yaml         # Web crawling sub-task
+│   └── full_task.yaml     # Complete task with all steps
+├── scripts/               # Utility scripts
+│   ├── crawler.py         # Standalone web crawler
+│   └── indexer.py         # Document indexing utility
+├── chainlit-ui/           # Web interface
+│   ├── app.py            # Main Chainlit application
+│   ├── feedback/         # Feedback handling system
+│   └── requirements.txt  # Python dependencies
+└── julep-assistant-notebook.ipynb  # Interactive notebook demo
+```
+
+## Step 1: Agent Configuration
+
+First, let's understand how the agent is configured. The `agent.yaml` file defines the assistant's personality and capabilities:
+
+```yaml
+name: Julep Support Assistant
+about: >-
+  You are the official Julep AI support assistant. You help developers 
+  understand and use the Julep platform effectively.
+  
+model: claude-sonnet-4
+
+instructions: |-
+  You are the official Julep AI support assistant. Your purpose is to help 
+  developers build AI applications using the Julep platform.
+  
+  Your core responsibilities:
+  1. **Workflow Assistance**: Help users write, debug, and optimize Julep workflows
+  2. **Concept Explanation**: Clearly explain Julep concepts like agents, tasks, sessions, and tools
+  3. **Code Examples**: Provide working code examples in Python, YAML, or JavaScript
+  4. **API Guidance**: Help users understand and use Julep's API effectively
+  5. **Best Practices**: Share proven patterns and architectural recommendations
+  
+  Guidelines:
+  - Always provide accurate, up-to-date information from the official documentation
+  - Include code examples whenever possible
+  - Use proper syntax highlighting for code blocks
+  - Explain the "why" behind recommendations, not just the "how"
+```
+
+Key points:
+- The agent uses Claude Sonnet 4 for high-quality responses
+- Instructions provide clear guidance on how to help users
+- The agent is specialized for Julep-specific support
+
+## Step 2: Web Crawling and Document Indexing
+
+The assistant's knowledge base is built in two stages: first crawling documentation websites, then indexing the content for RAG retrieval.
+
+### Web Crawling with Spider Integration
+
+Before indexing documents, we need to crawl the target website. The `task/crawl.yaml` defines a reusable crawling workflow:
+
+```yaml
+name: Julep Documentation Crawler Task
+description: A Julep agent that can crawl the Julep documentation website and store the content in the document store with proper contextualization.
+
+input_schema:
+  type: object
+  properties:
+    url:
+      type: string
+      description: "The URL of the documentation page"
+  required:
+    - url
+
+tools:
+- name: spider_crawler
+  type: integration
+  integration:
+    provider: spider
+    setup:
+      spider_api_key: {spider_api_key}
+
+main:
+- tool: spider_crawler
+  arguments:
+    url: $ _['url']
+    params:
+      request: smart_mode
+      return_format: markdown
+      proxy_enabled: $ True
+      filter_output_images: $ True
+      filter_output_svg: $ True
+      readability: $ True
+```
+
+### Complete Workflow: Crawl + Index
+
+The `task/full_task.yaml` combines both crawling and indexing into a single workflow:
+
+```yaml
+main:
+# Step 0: Crawl the Julep documentation using Spider (will crawl multiple pages)
+- tool: spider_crawler
+  arguments:
+    url: $ _['url']
+    params:
+      request: smart_mode
+      limit: 2
+      return_format: markdown
+      proxy_enabled: $ True
+      filter_output_images: $ True
+      filter_output_svg: $ True
+      readability: $ True
+
+# Step 1: Process each crawled page individually
+- over: $ [page for page in _.result if page.status == 200 and page.content]
+  parallelism: 5
+  map:
+    workflow: process_single_page
+    arguments:
+      url: $ _.url
+      content: $ _.content
+```
+
+The key Spider crawler parameters:
+- `smart_mode`: Intelligently navigates and extracts content
+- `limit`: Number of pages to crawl (set to 2 for testing, increase for production)
+- `return_format: markdown`: Returns clean markdown content
+- `proxy_enabled`: Uses proxy for better reliability
+- `filter_output_images/svg`: Removes images to focus on text content
+- `readability`: Extracts main content, removing navigation and ads
+
+### Document Indexing Workflow
+
+After crawling, the main workflow in `task/main.yaml` processes and indexes the content:
+
+### Input Schema
+
+```yaml
+input_schema:
+  type: object
+  properties:
+    url:
+      type: string
+      description: "The URL of the documentation page"
+    content:
+      type: string
+      description: "The markdown content of the documentation page"
+  required:
+    - url
+    - content
+```
+
+### Document Processing Steps
+
+<Steps>
+  <Step title="Chunk Creation">
+    The workflow starts by creating documentation-sized chunks:
+    
+    ```yaml
+    - evaluate:
+        chunks: |
+          $ [" ".join(_.content.strip().split()[i:i + 1500]) 
+            for i in range(0, len(_.content.strip().split()), 1200)]
+    ```
+    
+    This creates ~1500 word chunks with 300-word overlap to preserve context.
+  </Step>
+  
+  <Step title="Content Analysis">
+    Each page is analyzed to extract structured information:
+    
+    ```yaml
+    - prompt:
+      - role: system
+        content: |-
+          Analyze the documentation content and extract:
+          - primary_concepts: Which Julep concepts does this content cover?
+          - content_type: (tutorial, api_reference, concept_explanation, etc.)
+          - key_topics: Main topics discussed
+          - code_examples: Whether it contains code examples
+          - use_cases: Practical applications mentioned
+    ```
+  </Step>
+  
+  <Step title="Code Extraction">
+    All code examples are extracted and categorized:
+    
+    ```yaml
+    - prompt:
+      - role: system
+        content: |-
+          Extract all code examples from the documentation content.
+          For each code example found, identify:
+          - language: The programming language
+          - code: The actual code content
+          - purpose: What this code demonstrates
+          - context: When to use this code
+    ```
+  </Step>
+  
+  <Step title="Q&A Generation">
+    For each chunk, the system generates questions and answers:
+    
+    ```yaml
+    - prompt:
+      - role: system
+        content: |-
+          Generate 3-5 relevant questions users might ask about this chunk
+          Provide clear, concise answers based on the content
+          Add contextual information to improve search retrieval
+    ```
+  </Step>
+  
+  <Step title="Document Storage">
+    Finally, enhanced content is stored as agent documents:
+    
+    ```yaml
+    - tool: create_agent_doc
+      arguments:
+        agent_id: $ str(agent.id)
+        data:
+          metadata:
+            source: "spider_crawler"
+            url: $ steps[0].input.page_url
+            content_type: $ steps[2].output.doc_analysis.get('content_type')
+            concepts: $ steps[2].output.doc_analysis.get('primary_concepts')
+          content: $ _["final_content"]
+    ```
+  </Step>
+</Steps>
+
+## Step 3: Building the Chat Interface
+
+The chat interface is built with Chainlit, providing a smooth user experience. Here's how it works:
+
+### Session Initialization
+
+```python
+@cl.on_chat_start
+async def on_chat_start():
+    """Initialize a new chat session"""
+    
+    # Create session with RAG search options
+    session = await julep_client.sessions.create(
+        agent=AGENT_UUID,
+        recall_options={
+            "mode": "hybrid",      # Uses both vector and text search
+            "confidence": 0.7,     # Confidence threshold
+            "limit": 10,          # Max number of results
+            "embed_text": True    # Embed query for vector search
+        }
+    )
+    
+    # Store session for later use
+    cl.user_session.set("session", session)
+```
+
+### Message Handling
+
+```python
+@cl.on_message
+async def on_message(message: cl.Message):
+    """Handle incoming user messages"""
+    
+    # Get the session
+    session = cl.user_session.get("session")
+    
+    # Send message to Julep and stream response
+    msg = cl.Message(content="")
+    
+    response = await julep_client.sessions.chat(
+        session_id=session.id,
+        message={
+            "role": "user",
+            "content": message.content
+        },
+        stream=True
+    )
+    
+    # Stream tokens to user
+    async for chunk in response:
+        if chunk.choices[0].delta.content:
+            await msg.stream_token(chunk.choices[0].delta.content)
+    
+    await msg.send()
+```
+
+## Step 4: RAG Configuration
+
+The assistant uses hybrid search for optimal retrieval:
+
+```python
+recall_options={
+    "mode": "hybrid",      # Combines vector and text search
+    "confidence": 0.7,     # Minimum confidence score
+    "limit": 10,          # Maximum results to retrieve
+    "embed_text": True    # Enable embeddings for vector search
+}
+```
+
+### Search Modes Explained
+
+- **Hybrid Mode**: Combines semantic vector search with keyword matching
+- **Vector Mode**: Pure semantic search based on embeddings
+- **Text Mode**: Traditional keyword-based search
+
+## Step 5: Dynamic Feedback System
+
+The assistant implements an innovative feedback system that dynamically improves the agent's behavior by updating its instructions in real-time based on validated user feedback.
+
+### How the Feedback System Works
+
+The feedback system validates and applies user feedback directly to the agent's instructions:
+
+```python
+class FeedbackHandler:
+    async def process_feedback(
+        self, 
+        feedback_text: str, 
+        user_question: str, 
+        agent_response: str,
+        session_id: str
+    ) -> Dict[str, Any]:
+        """Process user feedback and update agent instructions if valid"""
+        
+        # Get current agent details
+        agent = await self.client.agents.get(agent_id=self.agent_id)
+        
+        # Validate the feedback using AI
+        validation_result = await self.validator.validate_feedback(
+            feedback_text=feedback_text,
+            user_question=user_question,
+            agent_response=agent_response,
+            agent_instructions=current_instructions_str
+        )
+        
+        # If feedback is valid with high confidence (>= 0.7)
+        if validation_result.get("is_valid") and validation_result.get("confidence", 0) >= 0.7:
+            updated_instructions = validation_result.get("updated_instructions")
+            
+            if updated_instructions:
+                # Update the agent with new instructions
+                await self.client.agents.create_or_update(
+                    agent_id=self.agent_id,
+                    name=agent.name,
+                    instructions=updated_instructions, 
+                )
+```
+
+### Feedback Validation Process
+
+The system uses AI to validate feedback before applying it:
+
+```python
+class FeedbackValidator:
+    async def validate_feedback(self, feedback_text, user_question, agent_response, agent_instructions):
+        """Validate feedback using AI to ensure it's constructive and applicable"""
+        
+        # AI validates if feedback is:
+        # 1. Constructive and specific
+        # 2. Relevant to improving the agent
+        # 3. Not contradicting core functionality
+        # 4. Actionable for instruction updates
+        
+        # Returns:
+        # - is_valid: boolean
+        # - confidence: 0-1 score
+        # - category: type of feedback
+        # - updated_instructions: new instructions if applicable
+```
+
+### Feedback Collection UI
+
+The system provides three feedback options:
+
+```python
+def create_feedback_actions(self, message_id: str) -> list:
+    """Create Chainlit actions for feedback collection"""
+    return [
+        cl.Action(
+            name="feedback_helpful",
+            payload={"value": "helpful"},
+            label="👍 Helpful"
+        ),
+        cl.Action(
+            name="feedback_not_helpful",
+            payload={"value": "not_helpful"}, 
+            label="👎 Not Helpful"
+        ),
+        cl.Action(
+            name="feedback_detailed",
+            payload={"value": "detailed"},
+            label="💭 Give Detailed Feedback"
+        )
+    ]
+```
+
+### Real-time Agent Improvement
+
+When valid feedback is received, the agent immediately adapts:
+
+1. **Positive Feedback**: Reinforces current behavior patterns
+2. **Negative Feedback**: Prompts for specifics and adjusts instructions
+3. **Detailed Feedback**: Allows comprehensive improvements
+
+Example of instruction evolution:
+```python
+# Original instruction
+"Provide code examples when explaining concepts"
+
+# After user feedback: "The code examples are too basic"
+"Provide comprehensive code examples with edge cases and best practices when explaining concepts"
+```
+
+### Benefits of Dynamic Feedback
+
+1. **Continuous Learning**: Agent improves with each interaction
+2. **User-Driven Evolution**: Adapts to actual user needs
+3. **Quality Control**: AI validation prevents harmful changes
+4. **Immediate Impact**: Changes apply to next interaction
+
+This approach makes the assistant truly adaptive, learning from user interactions to provide increasingly better support over time.
+
+## Step 6: Running the Assistant
+
+### Installation
+
+1. Clone the repository and install dependencies:
+
+```bash
+cd julep-assistant
+pip install -r chainlit-ui/requirements.txt
+```
+
+2. Set up environment variables:
+
+```bash
+# Create .env file
+JULEP_API_KEY=your_julep_api_key_here
+AGENT_UUID=your_agent_uuid  # Or use the default
+SPIDER_API_KEY=your_spider_api_key  # Optional
+```
+
+### Running the Chat Interface
+
+```bash
+cd chainlit-ui
+chainlit run app.py
+```
+
+This starts the web interface at `http://localhost:8000`.
+
+### Using Scripts for Better Monitoring
+
+While the `full_task.yaml` can handle both crawling and indexing, using the separate scripts provides better visibility and control:
+
+**Web Crawler Script:**
+```bash
+python scripts/crawler.py --url https://docs.julep.ai --max-pages 100
+```
+
+This script:
+- Provides real-time progress updates
+- Saves crawled content to JSON for inspection
+- Allows you to verify content before indexing
+- Handles rate limiting and retries
+
+**Document Indexer Script:**
+```bash
+python scripts/indexer.py
+```
+
+This script:
+- Reads the crawled content from the crawler output
+- Shows progress for each document being indexed
+- Provides detailed error messages if indexing fails
+- Generates a summary report of indexed documents
+
+**Monitoring Task Execution:**
+
+You can also monitor the full workflow execution:
+
+```python
+# Execute the full crawl + index task
+execution = await julep_client.tasks.execute(
+    task_id=TASK_ID,
+    input={
+        "url": "https://docs.julep.ai",
+        "max_pages": 100
+    }
+)
+
+# Monitor execution status
+while execution.status in ["pending", "running"]:
+    execution = await julep_client.executions.get(execution.id)
+    print(f"Status: {execution.status}")
+    
+    # Get execution steps for detailed progress
+    steps = await julep_client.executions.steps.list(execution.id)
+    for step in steps:
+        print(f"  Step {step.name}: {step.status}")
+    
+    await asyncio.sleep(5)
+```
+
+## Resources
+
+- [Julep Assistant GitHub Repository](https://github.com/julep-ai/julep-assistant) - Complete source code and examples
+- [Julep Documentation](https://docs.julep.ai)
+- [API Reference](https://api.julep.ai/docs)
+- [Discord Community](https://discord.com/invite/JTSBGRZrzj)
+
+## Summary
+
+You've learned how to build a production-ready AI assistant with Julep that features:
+- Web crawling with Spider integration for content acquisition
+- Automated documentation processing and indexing
+- RAG-powered responses with hybrid search
+- Interactive chat interface with session management
+- Feedback collection and analysis using Julep documents
+- Scalable architecture for production deployment
+
+This assistant demonstrates the power of Julep for building stateful, context-aware AI applications that can maintain conversations, access external knowledge, and provide accurate, helpful responses.
