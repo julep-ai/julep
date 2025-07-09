@@ -1,6 +1,7 @@
 # Tests for task queries
 
 from agents_api.autogen.openapi_model import (
+    CreateOrUpdateTaskRequest,
     CreateTaskRequest,
     PatchTaskRequest,
     Task,
@@ -400,3 +401,175 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     assert exc.raised.status_code == 404
     assert "Task not found" in str(exc.raised.detail)
+
+
+@test("query: get task with workflows and tools - no cartesian product")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that getting a task with both workflows and tools doesn't create duplicates."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a task with workflows
+    task = await create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        task_id=uuid7(),
+        data=CreateTaskRequest(
+            name="test task with workflows",
+            description="test task with multiple workflows and tools",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"result": "_"}}],
+            tools=[
+                {
+                    "type": "function",
+                    "name": "workflow1",
+                    "function": {"name": "workflow1", "parameters": {"type": "object"}},
+                },
+                {
+                    "type": "function",
+                    "name": "workflow2",
+                    "function": {"name": "workflow2", "parameters": {"type": "object"}},
+                },
+            ],
+        ),
+        connection_pool=pool,
+    )
+
+    # Get the task
+    result = await get_task(
+        developer_id=developer_id,
+        task_id=task.id,
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, Task)
+
+    # Verify we have the correct number of tools (no duplicates)
+    assert len(result.tools) == 2, f"Expected 2 tools, got {len(result.tools)}"
+    tool_names = [tool.name for tool in result.tools]
+    assert set(tool_names) == {"workflow1", "workflow2"}, "Tool names don't match"
+
+
+@test("query: get task filters tools by updated_at timestamp")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that tools not updated for the current task version are filtered out."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a task v1 with a tool
+    task_id = uuid7()
+    canonical_name = "test_task_tool_lifecycle"
+
+    # V1: Create task with tool_a
+    await create_or_update_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        task_id=task_id,
+        data=CreateOrUpdateTaskRequest(
+            name="task v1",
+            canonical_name=canonical_name,
+            description="initial task version with tool",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"result": "v1"}}],
+            tools=[
+                {
+                    "type": "function",
+                    "name": "tool_a",
+                    "function": {
+                        "name": "tool_a",
+                        "description": "Tool A",
+                        "parameters": {"type": "object"},
+                    },
+                }
+            ],
+        ),
+        connection_pool=pool,
+    )
+
+    # Check v1 has the tool
+    result_v1 = await get_task(
+        developer_id=developer_id,
+        task_id=task_id,
+        connection_pool=pool,
+    )
+    assert result_v1 is not None
+    assert result_v1.version == 1
+    tool_names_v1 = [tool.name for tool in result_v1.tools]
+    assert "tool_a" in tool_names_v1, "Tool A should be present in v1"
+    assert len(result_v1.tools) == 1, f"Expected 1 tool in v1, got {len(result_v1.tools)}"
+
+    # Wait to ensure different timestamps
+    import asyncio
+
+    await asyncio.sleep(0.1)
+
+    # V2: Update to remove the tool
+    await create_or_update_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        task_id=task_id,
+        data=CreateOrUpdateTaskRequest(
+            name="task v2",
+            canonical_name=canonical_name,
+            description="v2 without tool_a",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"result": "v2"}}],
+            tools=[],  # No tools in v2
+            inherit_tools=False,
+        ),
+        connection_pool=pool,
+    )
+
+    # Check v2 - tool_a should be filtered out because its updated_at is older
+    result_v2 = await get_task(
+        developer_id=developer_id,
+        task_id=task_id,
+        connection_pool=pool,
+    )
+    assert result_v2 is not None
+    assert result_v2.version == 2
+    tool_names_v2 = [tool.name for tool in result_v2.tools]
+    assert "tool_a" not in tool_names_v2, "Tool A should be filtered out in v2"
+    assert len(result_v2.tools) == 0, f"Expected 0 tools in v2, got {len(result_v2.tools)}"
+
+    # Wait to ensure different timestamps
+    await asyncio.sleep(0.1)
+
+    # V3: Re-add the same tool
+    await create_or_update_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        task_id=task_id,
+        data=CreateOrUpdateTaskRequest(
+            name="task v3",
+            canonical_name=canonical_name,
+            description="v3 with tool_a re-added",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"result": "v3"}}],
+            tools=[
+                {
+                    "type": "function",
+                    "name": "tool_a",
+                    "function": {
+                        "name": "tool_a",
+                        "description": "Tool A",
+                        "parameters": {"type": "object"},
+                    },
+                }
+            ],
+        ),
+        connection_pool=pool,
+    )
+
+    # Check v3 - tool_a should be present again because it was updated
+    result_v3 = await get_task(
+        developer_id=developer_id,
+        task_id=task_id,
+        connection_pool=pool,
+    )
+    assert result_v3 is not None
+    assert result_v3.version == 3
+    tool_names_v3 = [tool.name for tool in result_v3.tools]
+    assert "tool_a" in tool_names_v3, "Tool A should be present again in v3"
+    assert len(result_v3.tools) == 1, f"Expected 1 tool in v3, got {len(result_v3.tools)}"
