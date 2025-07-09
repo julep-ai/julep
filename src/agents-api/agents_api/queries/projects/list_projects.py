@@ -23,6 +23,7 @@ SELECT
     developer_id,
     name,
     canonical_name,
+    description,
     metadata,
     created_at,
     updated_at

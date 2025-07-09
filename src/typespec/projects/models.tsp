@@ -24,6 +24,9 @@ model Project {
   @doc("Display name of the project")
   name: displayName;
 
+  @doc("Optional description of the project")
+  description?: string;
+
 }
 
 /** Payload for updating a project */
