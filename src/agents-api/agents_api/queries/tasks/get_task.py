@@ -7,7 +7,7 @@ from ...common.protocol.models import spec_to_task
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# AIDEV-NOTE: Tools aggregated in subquery to avoid cartesian product with workflows
+# AIDEV-NOTE: Tools aggregated in subquery to avoid cartesian product; filtered by updated_at to exclude older versions
 # Define the raw SQL query for getting a task
 get_task_query = """
 SELECT
@@ -34,6 +34,7 @@ SELECT
             FROM tools tl
             WHERE tl.developer_id = t.developer_id
             AND tl.task_id = t.task_id
+            AND tl.updated_at >= t.updated_at
         ),
         '[]'::jsonb
     ) as tools
