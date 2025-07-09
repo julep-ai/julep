@@ -32,7 +32,7 @@ SELECT
         (
             SELECT jsonb_agg(to_jsonb(tl))
             FROM tools tl
-            WHERE tl.developer_id = t.developer_id 
+            WHERE tl.developer_id = t.developer_id
             AND tl.task_id = t.task_id
         ),
         '[]'::jsonb

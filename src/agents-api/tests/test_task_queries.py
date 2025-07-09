@@ -405,9 +405,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 @test("query: get task with workflows and tools - no cartesian product")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that getting a task with both workflows and tools doesn't create duplicates."""
-    
+
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a task with workflows
     task = await create_task(
         developer_id=developer_id,
@@ -422,34 +422,28 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
                 {
                     "type": "function",
                     "name": "workflow1",
-                    "function": {
-                        "name": "workflow1",
-                        "parameters": {"type": "object"}
-                    }
+                    "function": {"name": "workflow1", "parameters": {"type": "object"}},
                 },
                 {
-                    "type": "function", 
+                    "type": "function",
                     "name": "workflow2",
-                    "function": {
-                        "name": "workflow2",
-                        "parameters": {"type": "object"}
-                    }
-                }
+                    "function": {"name": "workflow2", "parameters": {"type": "object"}},
+                },
             ],
         ),
         connection_pool=pool,
     )
-    
+
     # Get the task
     result = await get_task(
         developer_id=developer_id,
         task_id=task.id,
         connection_pool=pool,
     )
-    
+
     assert result is not None
     assert isinstance(result, Task)
-    
+
     # Verify we have the correct number of tools (no duplicates)
     assert len(result.tools) == 2, f"Expected 2 tools, got {len(result.tools)}"
     tool_names = [tool.name for tool in result.tools]
