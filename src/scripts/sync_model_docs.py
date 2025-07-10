@@ -136,7 +136,7 @@ def enrich_model_data(models: List[Dict], pricing_data: Dict) -> List[Dict]:
             # Default values for models not in pricing data
             model['context_window'] = 'Unknown'
             model['max_output'] = 'Unknown'
-            model['supports_tools'] = 'Unknown'
+            model['supports_tools'] = False
             model['supports_vision'] = False
             model['supports_audio'] = False
             model['supports_prompt_caching'] = False
@@ -286,7 +286,7 @@ def generate_embedding_table(embedding_models: List[Dict]) -> str:
         table += f"| {model['name']} | {dimensions} |\n"
     
     table += "\n<Info>\n"
-    table += "Though the models mention above support different embedding dimensions, Julep uses fixed 1024 dimensions for all embedding models for now. We plan to support different dimensions in the future.\n"
+    table += "Though the models mentioned above support different embedding dimensions, Julep uses fixed 1024 dimensions for all embedding models for now. We plan to support different dimensions in the future.\n"
     table += "</Info>\n"
     
     return table
