@@ -184,11 +184,14 @@ Following are a list of different parameters that can be used to control the beh
     | min_p | 0.0 - 1.0 | Minimum probability threshold compared to the highest token probability |
     | seed | integer | For deterministic generation. Set a specific seed for reproducible results |
     | stop | list[str] | Up to 4 sequences where generation should stop |
+    | response_format | object | Control output format: `{"type": "json_object"}` or `{"type": "json_schema", "json_schema": {...}}` |
   </Accordion>
 
 </AccordionGroup>
 <Info>
 Not all parameters are supported by every model. Please refer to the [LiteLLM documentation](https://docs.litellm.ai/completion/input) for more details.
+
+**Response Format Support**: The `response_format` parameter is supported by OpenAI, Azure OpenAI, Google AI Studio (Gemini), Vertex AI, Bedrock, Anthropic, Groq, xAI (Grok-2+), Databricks, and Ollama. For the most up-to-date list, check the [LiteLLM JSON Mode documentation](https://docs.litellm.ai/docs/completion/json_mode).
 </Info>
 
 <Note>

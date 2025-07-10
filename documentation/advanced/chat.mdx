@@ -148,6 +148,25 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         }
     )
     # The metadata will be available in the system template as {{metadata.language}}, etc.
+    
+    # Chat with structured JSON response
+    response_json = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Analyze the sentiment of: 'I love using Julep, it makes AI development so much easier!'"
+            }
+        ],
+        response_format={"type": "json_object"},
+        # When using response_format, instruct the model to return JSON
+        settings={
+            "temperature": 0.3
+        }
+    )
+    # Response will be valid JSON that can be parsed
+    import json
+    sentiment_data = json.loads(response_json.choices[0].message.content)
     ```
 
     ```javascript Node.js [expandable]
@@ -196,6 +215,24 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         }
     });
     // The metadata will be available in the system template as {{metadata.language}}, etc.
+    
+    // Chat with structured JSON response
+    const responseJson = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Analyze the sentiment of: 'I love using Julep, it makes AI development so much easier!'"
+            }
+        ],
+        response_format: { type: "json_object" },
+        // When using response_format, instruct the model to return JSON
+        settings: {
+            temperature: 0.3
+        }
+    });
+    // Response will be valid JSON that can be parsed
+    const sentimentData = JSON.parse(responseJson.choices[0].message.content);
     ```
 </CodeGroup>
 
@@ -214,10 +251,44 @@ To learn more about the Session object, check out the [Session](/concepts/sessio
   </Tab>
   <Tab title="Streamed Response">
     - **Content-Type**: `text/event-stream`
-    - **Body**: A stream of `ChatOutputChunk` objects
-    <Warning>
-      This feature is not implemented yet.
-    </Warning>
+    - **Body**: A stream of `ChatOutputChunk` objects sent as Server-Sent Events (SSE)
+    
+    To enable streaming, set `stream: true` in your chat request:
+    
+    <CodeGroup>
+    ```python Python
+    from julep import AsyncClient
+    
+    # Streaming requires async client
+    async_client = AsyncClient(api_key="your-api-key")
+    
+    response = await async_client.sessions.chat(
+        session_id=session.id,
+        messages=[{"role": "user", "content": "Tell me a story"}],
+        stream=True
+    )
+    
+    async for chunk in response:
+        if chunk.choices[0].delta.content:
+            print(chunk.choices[0].delta.content, end="")
+    ```
+    
+    ```javascript Node.js
+    const response = await client.sessions.chat({
+        session_id: session.id,
+        messages: [{ role: "user", content: "Tell me a story" }],
+        stream: true
+    });
+    
+    for await (const chunk of response) {
+        process.stdout.write(chunk.choices[0].delta.content);
+    }
+    ```
+    </CodeGroup>
+    
+    <Note>
+      Streaming is not available when `auto_run_tools=true`. The system will return an error if both options are enabled.
+    </Note>
   </Tab>
 </Tabs>
 

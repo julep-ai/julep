@@ -175,6 +175,42 @@ To create an agent, you can use the `create` method in the Python or Node.js SDK
   ```
 </CodeGroup>
 
+### Using default_settings with response_format
+
+You can configure your agent to always return structured JSON responses by setting `response_format` in the `default_settings`:
+
+<CodeGroup>
+  ```python Python
+  agent = client.agents.create(
+    name="Data Analyst",
+    model="gpt-4o-mini",
+    about="An agent that analyzes data and returns structured insights",
+    instructions="Always provide analysis results in a structured format",
+    default_settings={
+      "temperature": 0.3,
+      "response_format": {
+        "type": "json_object"
+      }
+    }
+  )
+  ```
+
+  ```javascript Node.js
+  const agent = await client.agents.create({
+    name: "Data Analyst",
+    model: "gpt-4o-mini",
+    about: "An agent that analyzes data and returns structured insights",
+    instructions: "Always provide analysis results in a structured format",
+    default_settings: {
+      temperature: 0.3,
+      response_format: {
+        type: "json_object"
+      }
+    }
+  });
+  ```
+</CodeGroup>
+
 <Tip>
     Check out the API reference [here](/api-reference/agents/create-agent) or SDK reference (Python [here](/sdks/python/reference#agents) or JavaScript [here](/sdks/nodejs/reference#agents) for more details on different operations you can perform on agents.
 </Tip>
