@@ -573,6 +573,11 @@ class TaskExecutionWorkflow:
         self,
         step: ToolCallStep,
     ):
+        # Add null check for context
+        if self.context is None:
+            msg = "Context is None in _handle_ToolCallStep"
+            raise ApplicationError(msg)
+
         tool_call = self.outcome.output if self.outcome is not None else {}
         if tool_call["type"] == "function":
             tool_call_response = await workflow.execute_activity(
@@ -593,7 +598,7 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools() if self.context is not None else []
+            tools = await self.context.tools()
             integration_tool = next((t for t in tools if t.name == tool_name), None)
 
             if integration_tool is None:
@@ -614,9 +619,28 @@ class TaskExecutionWorkflow:
                 arguments=arguments,
             )
 
+            # AIDEV-NOTE: Extract IDs from context for new execute_integration signature
+            developer_id = self.context.execution_input.developer_id
+            agent_id = self.context.execution_input.agent.id
+            task_id = (
+                self.context.execution_input.task.id
+                if self.context.execution_input.task
+                else None
+            )
+            session_id = getattr(self.context.execution_input, "session", None)
+            session_id = session_id.id if session_id else None
+
             tool_call_response = await workflow.execute_activity(
                 execute_integration,
-                args=[self.context, tool_name, integration, arguments],
+                args=[
+                    developer_id,
+                    agent_id,
+                    task_id,
+                    session_id,
+                    tool_name,
+                    integration,
+                    arguments,
+                ],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
@@ -632,7 +656,7 @@ class TaskExecutionWorkflow:
             call = tool_call["api_call"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools() if self.context else []
+            tools = await self.context.tools()
             apicall_tool = next((t for t in tools if t.name == tool_name), None)
 
             if apicall_tool is None:
@@ -677,9 +701,11 @@ class TaskExecutionWorkflow:
             call = tool_call.get("system")
 
             system_call = SystemDef(**call)
+            # AIDEV-NOTE: Extract developer_id for new execute_system signature
+            developer_id = self.context.execution_input.developer_id
             tool_call_response = await workflow.execute_activity(
                 execute_system,
-                args=[self.context, system_call],
+                args=[developer_id, system_call],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),

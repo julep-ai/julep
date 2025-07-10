@@ -82,9 +82,14 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             **passed_settings,
         }
 
+        # AIDEV-NOTE: When auto_run_tools=False, pass empty tools list to prevent
+        # model from making tool calls that won't be executed. This simplifies the
+        # flow as the model will always return a regular completion instead of tool calls.
+        tools_to_use = all_tools if context.current_step.auto_run_tools else []
+
         responses: list[dict] = await run_llm_with_tools(
             messages=prompt,
-            tools=all_tools,
+            tools=tools_to_use,
             settings=completion_data,
             run_tool_call=functools.partial(run_context_tool, context),
         )

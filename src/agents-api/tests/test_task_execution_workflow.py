@@ -185,7 +185,15 @@ async def _():
         )
         workflow.execute_activity.assert_called_once_with(
             execute_integration,
-            args=[context, tool_name, integration, arguments],
+            args=[
+                execution_input.developer_id,
+                execution_input.agent.id,
+                execution_input.task.id if execution_input.task else None,
+                None,  # session_id is None for task execution
+                tool_name,
+                integration,
+                arguments,
+            ],
             schedule_to_close_timeout=timedelta(
                 seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
             ),
@@ -645,7 +653,7 @@ async def _():
         )
         workflow.execute_activity.assert_called_once_with(
             execute_system,
-            args=[context, system_call],
+            args=[execution_input.developer_id, system_call],
             schedule_to_close_timeout=timedelta(
                 seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
             ),
@@ -918,7 +926,7 @@ async def _():
         return StepOutcome(output="function_call")
 
     wf = TaskExecutionWorkflow()
-    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")], auto_run_tools=True)
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(

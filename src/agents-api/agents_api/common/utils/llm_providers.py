@@ -34,3 +34,25 @@ def get_api_key_env_var_name(model: str) -> str | None:
                 return api_key.split("/", 1)[1]
 
     return None
+
+
+def get_litellm_model_name(model: str) -> str:
+    """
+    Convert a model name to its LiteLLM equivalent by looking it up in the config.
+    Returns the litellm_params.model value if found, otherwise returns the original model name.
+
+    Examples:
+        "gpt-4o" -> "openai/gpt-4o"
+        "gemini-1.5-pro" -> "gemini/gemini-1.5-pro"
+        "claude-3.5-sonnet" -> "claude-3-5-sonnet-20241022"
+    """
+    config = get_config()
+
+    for model_config in config.get("model_list", []):
+        if model_config.get("model_name") == model:
+            litellm_model = model_config.get("litellm_params", {}).get("model")
+            if litellm_model:
+                return litellm_model
+
+    # AIDEV-NOTE: If model not found in config, return original name
+    return model

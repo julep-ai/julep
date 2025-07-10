@@ -2579,6 +2579,8 @@ components:
         - save
         - stream
         - stop
+        - auto_run_tools
+        - recall_tools
       properties:
         remember:
           type: boolean
@@ -2678,6 +2680,14 @@ components:
         metadata:
           type: object
           additionalProperties: {}
+        auto_run_tools:
+          type: boolean
+          description: Whether to automatically run tools and send the results back to the model (requires tools or agents with tools).
+          default: false
+        recall_tools:
+          type: boolean
+          description: Whether to include tool requests and responses when recalling messages.
+          default: true
       allOf:
         - $ref: '#/components/schemas/Chat.ChatInputData'
     Chat.ChatInputData:
@@ -4143,6 +4153,7 @@ components:
           enum:
             - api_request
             - api_response
+            - tool_request
             - tool_response
             - internal
             - summarizer
@@ -8095,11 +8106,11 @@ components:
           type: boolean
           description: |-
             Whether to auto-run the tool and send the tool results to the model when available.
-            (default: true for prompt steps, false for sessions)
+            (default: false)
 
             If a tool call is made, the tool's output will be used as the model's input.
             If a tool call is not made, the model's output will be used as the next step's input.
-          default: true
+          default: false
         disable_cache:
           type: boolean
           description: Whether to disable caching for the prompt step
@@ -8305,11 +8316,11 @@ components:
           type: boolean
           description: |-
             Whether to auto-run the tool and send the tool results to the model when available.
-            (default: true for prompt steps, false for sessions)
+            (default: false)
 
             If a tool call is made, the tool's output will be used as the model's input.
             If a tool call is not made, the model's output will be used as the next step's input.
-          default: true
+          default: false
         disable_cache:
           type: boolean
           description: Whether to disable caching for the prompt step

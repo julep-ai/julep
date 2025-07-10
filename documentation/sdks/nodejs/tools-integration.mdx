@@ -133,7 +133,7 @@ const wikiTool = await client.agents.tools.create(agentId, {
 Make direct HTTP requests to external APIs:
 
 ```javascript
-// Add a direct API call tool
+// Add a direct API call tool with params_schema
 const apiTool = await client.agents.tools.create(agentId, {
   name: 'github_stars',
   description: 'Get GitHub repository stars',
@@ -143,6 +143,20 @@ const apiTool = await client.agents.tools.create(agentId, {
     url: 'https://api.github.com/repos/{{owner}}/{{repo}}',
     headers: {
       Authorization: 'Bearer {{github_token}}'
+    },
+    params_schema: {
+      type: 'object',
+      properties: {
+        owner: {
+          type: 'string',
+          description: 'Repository owner (username or organization)'
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name'
+        }
+      },
+      required: ['owner', 'repo']
     }
   }
 });

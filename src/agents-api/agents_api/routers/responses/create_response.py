@@ -24,8 +24,8 @@ from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
     convert_create_response,
 )
+from ..sessions.legacy.render import render_chat_input
 from ..sessions.metrics import total_tokens_per_user
-from ..sessions.render import render_chat_input
 from .router import router
 
 
