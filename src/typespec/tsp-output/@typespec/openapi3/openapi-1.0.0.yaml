@@ -2822,9 +2822,6 @@ components:
               name:
                 type: string
                 description: Name
-              continue:
-                type: boolean
-                description: Whether to continue this message or return a new one
               tool_calls:
                 type: array
                 items:
@@ -2982,9 +2979,6 @@ components:
             name:
               type: string
               description: Name
-            continue:
-              type: boolean
-              description: Whether to continue this message or return a new one
             tool_calls:
               type: array
               items:
@@ -8059,9 +8053,6 @@ components:
                   name:
                     type: string
                     description: Name
-                  continue:
-                    type: boolean
-                    description: Whether to continue this message or return a new one
                   tool_calls:
                     type: array
                     items:
@@ -8269,9 +8260,6 @@ components:
                   name:
                     type: string
                     description: Name
-                  continue:
-                    type: boolean
-                    description: Whether to continue this message or return a new one
                   tool_calls:
                     type: array
                     items:

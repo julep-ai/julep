@@ -285,10 +285,6 @@ class Delta(BaseModel):
     """
     Name
     """
-    continue_: Annotated[StrictBool | None, Field(alias="continue")] = None
-    """
-    Whether to continue this message or return a new one
-    """
     tool_calls: (
         list[
             ChosenFunctionCall
@@ -350,10 +346,6 @@ class Message(BaseModel):
     name: str | None = None
     """
     Name
-    """
-    continue_: Annotated[StrictBool | None, Field(alias="continue")] = None
-    """
-    Whether to continue this message or return a new one
     """
     tool_calls: (
         list[

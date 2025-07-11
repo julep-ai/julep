@@ -14,6 +14,7 @@ from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ...common.utils.feature_flags import get_feature_flag_value
 from ...common.utils.tool_runner import format_tool, run_context_tool, run_llm_with_tools
 from ...env import debug
+from ...common.utils.llm_providers import get_api_key_env_var_name
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -47,6 +48,16 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     agent_model: str = (
         context.execution_input.agent.model if context.execution_input.agent.model else "gpt-4o"
     )
+
+    if get_api_key_env_var_name(agent_model) != "OPENAI_API_KEY":
+        prompt = [
+            {
+                k: v
+                for k, v in message.items()
+                if k != 'name'
+            }
+            for message in prompt
+        ]
 
     excluded_keys = [
         "prompt",

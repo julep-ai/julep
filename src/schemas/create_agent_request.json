@@ -2383,6 +2383,11 @@
           ],
           "title": "Agent"
         },
+        "auto_run_tools": {
+          "default": false,
+          "title": "Auto Run Tools",
+          "type": "boolean"
+        },
         "frequency_penalty": {
           "anyOf": [
             {
@@ -2496,6 +2501,11 @@
         "recall": {
           "default": true,
           "title": "Recall",
+          "type": "boolean"
+        },
+        "recall_tools": {
+          "default": true,
+          "title": "Recall Tools",
           "type": "boolean"
         },
         "remember": {
@@ -5849,6 +5859,7 @@
           "enum": [
             "api_request",
             "api_response",
+            "tool_request",
             "tool_response",
             "internal",
             "summarizer",
