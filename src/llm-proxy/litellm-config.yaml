@@ -179,7 +179,7 @@ model_list:
     api_key: os.environ/ANTHROPIC_API_KEY
 
 # Groq models
-- model_name: "llama-3.1-70b"
+- model_name: "llama-3.1-70b" # `llama-3.1-70b-versatile` has been decommissioned and is no longer supported
   litellm_params:
     model: "groq/llama-3.1-70b-versatile"
     tags: ["paid"]

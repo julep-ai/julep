@@ -7,6 +7,7 @@ from ...common.protocol.models import spec_to_task
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
+# AIDEV-NOTE: Tools aggregated in subquery to avoid cartesian product; filtered by updated_at to exclude older versions
 # Define the raw SQL query for getting a task
 get_task_query = """
 SELECT
@@ -28,15 +29,19 @@ SELECT
         '[]'::jsonb
     ) as workflows,
     COALESCE(
-        jsonb_agg(to_jsonb(tl)) FILTER (WHERE tl.tool_id IS NOT NULL),
+        (
+            SELECT jsonb_agg(to_jsonb(tl))
+            FROM tools tl
+            WHERE tl.developer_id = t.developer_id
+            AND tl.task_id = t.task_id
+            AND tl.updated_at >= t.updated_at
+        ),
         '[]'::jsonb
     ) as tools
 FROM
     tasks t
 LEFT JOIN
     workflows w ON t.developer_id = w.developer_id AND t.task_id = w.task_id AND t.version = w.version
-LEFT JOIN
-    tools tl ON t.developer_id = tl.developer_id AND t.task_id = tl.task_id
 WHERE
     t.developer_id = $1 AND t.task_id = $2
     AND t.version = (

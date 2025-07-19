@@ -1,0 +1,51 @@
+name: Sync Model Documentation
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'src/llm-proxy/litellm-config.yaml'
+      - 'src/scripts/sync_model_docs.py'
+  workflow_dispatch:
+
+jobs:
+  sync-model-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        pip install pyyaml
+        
+    - name: Run sync script
+      run: |
+        python src/scripts/sync_model_docs.py
+        
+    - name: Check for changes
+      id: check_changes
+      run: |
+        if git diff --quiet documentation/integrations/supported-models.mdx; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Commit and push changes
+      if: steps.check_changes.outputs.changed == 'true'
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add documentation/integrations/supported-models.mdx
+        git commit -m "chore: sync model documentation from litellm-config.yaml [skip ci]"
+        git push

@@ -13,7 +13,7 @@ from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 from ..common.exceptions.secrets import (
     SecretNotFoundError,  # AIDEV-NOTE: catch missing secrets in LLM client
 )
-from ..common.utils.llm_providers import get_api_key_env_var_name
+from ..common.utils.llm_providers import get_api_key_env_var_name, get_litellm_model_name
 from ..common.utils.secrets import get_secret_by_name
 from ..common.utils.usage import track_embedding_usage, track_usage
 from ..env import (
@@ -59,24 +59,31 @@ async def acompletion(
 ) -> ModelResponse | CustomStreamWrapper:
     api_user = kwargs.get("user")
 
-    # TODO: test this condition? try out custom_api_key is not None
-    if not custom_api_key and litellm_url:
-        api_key_env_var_name = get_api_key_env_var_name(model)
+    # Check if user has a custom API key in secrets
+    api_key_env_var_name = get_api_key_env_var_name(model)
+    secret = None
 
-        secret = None
+    if api_user is not None and api_key_env_var_name:
+        developer_id: UUID = UUID(api_user)
 
-        if api_user is not None:
-            developer_id: UUID = UUID(api_user)
+        with contextlib.suppress(SecretNotFoundError):
+            secret = await get_secret_by_name(
+                developer_id=developer_id,
+                name=api_key_env_var_name,
+                decrypt=True,
+            )
 
-            with contextlib.suppress(SecretNotFoundError):
-                secret = await get_secret_by_name(
-                    developer_id=developer_id,
-                    name=api_key_env_var_name,
-                    decrypt=True,
-                )
+    # Determine if we have a custom API key (either provided or from secrets)
+    has_custom_key = custom_api_key or (secret and secret.value)
 
-        custom_api_key = secret and secret.value
-        model = f"openai/{model}"  # This is needed for litellm
+    if has_custom_key:
+        # User has their own API key - convert model name and use direct provider
+        if not custom_api_key and secret:
+            custom_api_key = secret.value
+        model = get_litellm_model_name(model)
+    else:
+        # No custom key - use our proxy with openai/ prefix
+        model = f"openai/{model}"
 
     supported_params: list[str] = (
         get_supported_openai_params(model) or []
@@ -98,7 +105,7 @@ async def acompletion(
         model=model,
         messages=messages,
         **settings,
-        base_url=None if custom_api_key else litellm_url,
+        base_url=None if has_custom_key else litellm_url,
         api_key=custom_api_key or litellm_master_key,
     )
 
@@ -136,8 +143,32 @@ async def aembedding(
     custom_api_key: str | None = None,
     **settings,
 ) -> list[list[float]]:
-    if not custom_api_key:
-        model = f"openai/{model}"  # This is needed for litellm
+    # Check if user has a custom API key in secrets
+    api_user = settings.get("user")
+    api_key_env_var_name = get_api_key_env_var_name(model)
+    secret = None
+
+    if api_user is not None and api_key_env_var_name:
+        developer_id: UUID = UUID(api_user)
+
+        with contextlib.suppress(SecretNotFoundError):
+            secret = await get_secret_by_name(
+                developer_id=developer_id,
+                name=api_key_env_var_name,
+                decrypt=True,
+            )
+
+    # Determine if we have a custom API key (either provided or from secrets)
+    has_custom_key = custom_api_key or (secret and secret.value)
+
+    if has_custom_key:
+        # User has their own API key - convert model name and use direct provider
+        if not custom_api_key and secret:
+            custom_api_key = secret.value
+        model = get_litellm_model_name(model)
+    else:
+        # No custom key - use our proxy with openai/ prefix
+        model = f"openai/{model}"
 
     input = (
         [inputs]
@@ -153,7 +184,7 @@ async def aembedding(
     response = await _aembedding(
         model=model,
         input=input,
-        api_base=None if custom_api_key else litellm_url,
+        api_base=None if has_custom_key else litellm_url,
         api_key=custom_api_key or litellm_master_key,
         drop_params=True,
         **settings,
