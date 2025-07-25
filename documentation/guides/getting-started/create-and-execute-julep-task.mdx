@@ -62,7 +62,7 @@ In this step, you will define the task that the Julep agent will execute. This i
 import yaml
 
 task_def = yaml.safe_load("""
-# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/src/schemas/create_task_request.json
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
@@ -162,7 +162,7 @@ task = julep.tasks.create(
 const yaml = require("yaml");
 
 const task_def = yaml.safeLoad("""
-# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/src/schemas/create_task_request.json
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
@@ -386,7 +386,7 @@ agent = julep.agents.create(
 )
 
 task_def = yaml.safe_load("""
-# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/src/schemas/create_task_request.json
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
@@ -515,7 +515,7 @@ const agent = await julep.agents.create({
 const yaml = require("yaml");
 
 const task_def = yaml.safeLoad("""
-# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/src/schemas/create_task_request.json
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
