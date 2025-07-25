@@ -3,20 +3,68 @@ title: 'Welcome to Julep'
 icon: 'eye' 
 ---
 
-<Frame>
-  <img
-    className="block dark:hidden"
-    src="/images/overview.svg"
-    alt="Julep Hero Light"
-    style={{ height: "33vh", maxHeight: "280px" }}
-  />
-  <img
-    className="hidden dark:block"
-    src="/images/overview-dark.svg"
-    alt="Julep Hero Dark"
-    style={{ height: "33vh", maxHeight: "280px" }}
-  />
-</Frame>
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'textColor': '#000000',
+    'primaryTextColor': '#000000'
+  },
+  'background': '#ffffff'
+}}%%
+
+graph TB
+    %% Title
+    title[Julep Simple Overview]
+    
+    %% Components
+    LLM[LLM<br/>Language Model]
+    AGENT[AGENT<br/>Central Orchestrator<br/>Prompt Management]
+    USERS[USERS<br/>User Profiles<br/>Individual Info]
+    SESSIONS[SESSIONS<br/>Chat Instances<br/>Multiple Active]
+    DOCUMENTS[DOCUMENTS<br/>Information Storage<br/>Retrieval System]
+    TASKS[TASKS<br/>GitHub Actions-style<br/>Multi-step Workflows<br/>Recipe Instructions]
+    TOOLS[TOOLS<br/>Programmatic Interfaces]
+    
+    %% Tool examples
+    web_search[Web Search]
+    api_call[API Call]
+    file_read[File Read]
+    
+    %% Connections
+    AGENT --> |calls| LLM
+    SESSIONS -->|interacts with| AGENT
+    USERS --> |Joins| SESSIONS
+    AGENT -->|Owns| DOCUMENTS
+    AGENT -->|Uses| TOOLS
+    AGENT -->|Executes| TASKS
+    TASKS -->|Uses| TOOLS
+
+    %% Tool connections
+    TOOLS --> web_search
+    TOOLS --> api_call
+    TOOLS --> file_read
+
+    
+    %% Styling
+    classDef llm fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
+    classDef agent fill:#3b82f6,stroke:#2563eb,stroke-width:3px,color:#fff
+    classDef users fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    classDef sessions fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#fff
+    classDef documents fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
+    classDef tasks fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
+    classDef tools fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    classDef toolExample fill:#fbbf24,stroke:#f59e0b,stroke-width:1px,color:#92400e
+    
+    class LLM llm
+    class AGENT agent
+    class USERS users
+    class SESSIONS sessions
+    class DOCUMENTS documents
+    class TASKS tasks
+    class TOOLS tools
+    class web_search,api_call,file_read toolExample
+```
 
 Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.
 
