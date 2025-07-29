@@ -22,35 +22,6 @@ Tools in Julep consist of three main components:
    - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tool)
 3. **Arguments**: The inputs required by the tool.
 
-#### User-defined Function Tool
-
-These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
-
-```yaml YAML
-name: Example system tool task
-description: List agents using system call
-
-tools:
-  - name: send_notification
-    description: Send a notification to the user
-    type: function
-    function:
-      parameters:
-        type: object
-        properties:
-          text:
-            type: string
-            description: Content of the notification
-
-main:
-  - tool: send_notification
-    arguments:
-      content: "hi"
-```
-
-<Note>
-Whenever julep encounters a user-defined function, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
-</Note>
 
 #### System Tool
 
@@ -246,6 +217,169 @@ The `params_schema` follows JSON Schema format and helps:
  - Arguments provided during the tool call can override the default `method` and `url` set in the `api_call` configuration.
   - We utlize the python httpx library to make the api calls. Please refer to the [httpx documentation](https://www.python-httpx.org/api/#request-parameters) for more details on the parameters.
 </Note>
+
+#### User-defined Function Tool
+
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
+
+```yaml YAML [expandable]
+name: Example system tool task
+description: List agents using system call
+
+tools:
+  - name: send_notification
+    description: Send a notification to the user
+    type: function
+    function:
+      parameters:
+        type: object
+        properties:
+          text:
+            type: string
+            description: Content of the notification
+
+main:
+  - tool: send_notification
+    arguments:
+      content: "hi"
+```
+
+<Note>
+Whenever julep encounters a user-defined function, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
+</Note>
+
+##### How User-Defined Functions Work
+
+**User-defined function tools** in Julep work exactly like OpenAI's function calling:
+
+1. **Definition**: You define a function signature with name, description, and parameters schema
+2. **Model Decision**: The LLM decides when to call your function based on the conversation context  
+3. **Execution Pause**: When Julep encounters a user-defined function call, it pauses execution and returns control to your client
+4. **Your Implementation**: You implement the actual function logic in your client code
+5. **Result Return**: You send the function results back to Julep to continue the workflow
+
+<Warning>
+Unlike `integration`, `system`, or `api_call` tools that execute automatically, function tools require manual handling by your client application.
+</Warning>
+
+##### Complete Example: Math Calculator with Function Tools
+
+Here's a comprehensive example showing how to implement and handle user-defined functions:
+
+```python [expandable]
+import yaml
+import time
+from julep import Julep
+
+# Replace with your API key
+API_KEY = "your-api-key"
+
+client = Julep(api_key=API_KEY, environment="production")
+
+# 1. Define your actual functions
+def add_numbers(a, b):
+    """Add two numbers together"""
+    result = a + b
+    print(f"Adding {a} + {b} = {result}")
+    return result
+
+def multiply_numbers(x, y):
+    """Multiply two numbers"""
+    result = x * y
+    print(f"Multiplying {x} × {y} = {result}")
+    return result
+
+# Function dispatcher
+FUNCTION_MAP = {
+    "add_numbers": add_numbers,
+    "multiply_numbers": multiply_numbers,
+}
+
+def execute_function(function_name, arguments):
+    """Execute a function by name with arguments"""
+    if function_name not in FUNCTION_MAP:
+        raise ValueError(f"Unknown function: {function_name}")
+    
+    func = FUNCTION_MAP[function_name]
+    return func(**arguments)
+
+# 2. Create agent
+agent = client.agents.create(
+    name="Math Calculator",
+    model="gpt-4o-mini",
+    instructions="You are a calculator."
+)
+
+# 3. Define task with inline tools
+task_def = yaml.safe_load("""
+name: "function-tool-demo"
+
+tools:
+  - name: add_numbers
+    type: function
+    function:
+      parameters:
+        type: object
+        properties:
+          a:
+            type: number
+            description: First number
+          b:
+            type: number
+            description: Second number
+        required: ["a", "b"]
+
+main:
+  - tool: add_numbers
+    arguments:
+      a: 15
+      b: 27
+""")
+
+# 4. Create and execute task
+task = client.tasks.create(agent_id=agent.id, **task_def)
+execution = client.executions.create(task_id=task.id, input={})
+
+print(f"Execution: {execution.id}")
+
+# 5. Monitor and handle function calls
+for i in range(15):
+    execution = client.executions.get(execution.id)
+    print(f"Iteration {i+1}: Status = {execution.status}")
+    
+    if execution.status == "awaiting_input":
+        # Execute the function based on task definition
+        tool_name = task_def["main"][0]["tool"]  # "add_numbers"
+        arguments = task_def["main"][0]["arguments"]  # {"a": 15, "b": 27}
+        
+        result = execute_function(tool_name, arguments)
+        print(f"Result: {result}")
+        
+        # Use change_status to provide tool results
+        client.executions.change_status(
+            execution_id=execution.id,
+            status="running",  # Resume execution
+            input={"result": result} 
+        )
+        print("Sent result back to Julep")
+        
+    elif execution.status == "succeeded":
+        print(f"Output: {execution.output}")
+        break
+        
+    elif execution.status == "failed":
+        print(f"Failed: {execution.error}")
+        break
+    
+    time.sleep(3)
+```
+
+##### Key Points
+
+1. **Execution Status Monitoring**: You must monitor the execution status and watch for `awaiting_input`
+2. **Manual Function Execution**: When status is `awaiting_input`, execute your function locally
+3. **Resume with Results**: Use `change_status` to resume execution with the function output
+4. **Alternative Tool Creation**: You can also use `client.agents.tools.create()` to create tools before running the task
 
 
 ## How to Use Tools
@@ -514,6 +648,10 @@ main:
 - Tool execution requires user confirmation
 - You want to handle tool errors with custom logic
 - Building applications with complex tool orchestration
+
+<Warning>
+**Important**: User-defined function tools (`type: function`) are **never** executed automatically, regardless of the `auto_run_tools` setting. They always pause execution and return control to the client for manual handling. This is a key difference from `system`, `integration`, and `api_call` tools.
+</Warning>
 
 ### Tool Execution Flow
 
