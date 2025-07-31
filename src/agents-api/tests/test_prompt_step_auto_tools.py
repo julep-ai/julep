@@ -16,6 +16,17 @@ from agents_api.common.utils.datetime import utcnow
 from ward import test
 
 
+# Define the mock function once at module level
+def mock_base_evaluate(value, context):
+    """Mock base_evaluate to return appropriate types based on input"""
+    if isinstance(value, dict):
+        # For passed_settings, return the dict unchanged
+        return value
+    else:
+        # For prompt strings, return the string
+        return "Test prompt"
+
+
 @test("prompt_step uses auto tool calls when feature flag is enabled")
 async def _():
     tool = CreateToolRequest(
@@ -33,10 +44,8 @@ async def _():
     ) as mock_flag:
         mock_flag.return_value = True
 
-        # Mock base_evaluate to just return the prompt unchanged
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
-
+        # Use the shared mock function
+        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate", side_effect=mock_base_evaluate) as mock_eval:
             # Mock run_llm_with_tools
             with patch(
                 "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
@@ -111,10 +120,8 @@ async def _():
     ) as mock_flag:
         mock_flag.return_value = True
 
-        # Mock base_evaluate
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
-
+        # Use the shared mock function
+        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate", side_effect=mock_base_evaluate) as mock_eval:
             # Mock run_llm_with_tools to return unwrappable response
             with patch(
                 "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
@@ -186,10 +193,8 @@ async def _():
     ) as mock_flag:
         mock_flag.return_value = True
 
-        # Mock base_evaluate to just return the prompt unchanged
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
-
+        # Use the shared mock function
+        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate", side_effect=mock_base_evaluate) as mock_eval:
             # Mock run_llm_with_tools
             with patch(
                 "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
@@ -280,10 +285,8 @@ async def _():
     ) as mock_flag:
         mock_flag.return_value = True
 
-        # Mock base_evaluate to just return the prompt unchanged
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
-
+        # Use the shared mock function
+        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate", side_effect=mock_base_evaluate) as mock_eval:
             # Mock run_llm_with_tools
             with patch(
                 "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",

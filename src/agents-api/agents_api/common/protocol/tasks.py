@@ -22,6 +22,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
     )
     from ...common.utils.expressions import evaluate_expressions
+    from ...common.utils.secrets import get_secrets_list
     from ...worker.codec import RemoteObject
 
 from ...activities.pg_query_step import pg_query_step
@@ -31,7 +32,6 @@ from ...queries.executions import (
     list_execution_inputs_data,
     list_execution_state_data,
 )
-from ...queries.secrets.list import list_secrets_query
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
 
@@ -202,23 +202,7 @@ class StepContext(BaseModel):
         task_tools = []
         tools = task.tools if task else []
         inherit_tools = task.inherit_tools if task else False
-        try:
-            secrets_query_result = await workflow.execute_activity(
-                pg_query_step,
-                args=[
-                    "list_secrets_query",
-                    "secrets.list",
-                    {"developer_id": self.execution_input.developer_id, "decrypt": True},
-                ],
-                schedule_to_close_timeout=timedelta(days=31),
-                retry_policy=DEFAULT_RETRY_POLICY,
-                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
-            )
-        except _NotInWorkflowEventLoopError:
-            secrets_query_result = await list_secrets_query(
-                developer_id=self.execution_input.developer_id,
-                decrypt=True,
-            )
+        secrets_query_result = await get_secrets_list(self.execution_input.developer_id, True)
 
         if tools:
             secrets = {secret.name: secret.value for secret in secrets_query_result}
@@ -318,7 +302,7 @@ class StepContext(BaseModel):
 
     # AIDEV-NOTE: Prepares the step context by loading inputs and retrieving historical data for expression evaluation.
     async def prepare_for_step(
-        self, limit: int = max_steps_accessible_in_tasks, *args, **kwargs
+        self, limit: int = max_steps_accessible_in_tasks, connection_pool=None, *args, **kwargs
     ) -> dict[str, Any]:
         current_input = self.current_input
 
@@ -343,10 +327,18 @@ class StepContext(BaseModel):
 
             steps[i] = step
 
+        secrets_query_result = await get_secrets_list(
+            self.execution_input.developer_id, 
+            True, 
+            connection_pool=connection_pool
+        )
+        secrets = {secret.name: secret.value for secret in secrets_query_result}
+
         dump["state"] = state
         dump["steps"] = steps
         dump["inputs"] = {i: step["input"] for i, step in steps.items()}
         dump["outputs"] = {i: step["output"] for i, step in steps.items() if "output" in step}
+        dump["secrets"] = secrets
         return dump | {"_": current_input}
 
 

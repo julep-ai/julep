@@ -70,6 +70,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings.update(passed_settings.pop("settings", {}) or {})
     passed_settings["user"] = str(context.execution_input.developer_id)
 
+    passed_settings = await base_evaluate(passed_settings, context)
+
     if get_feature_flag_value(
         "auto_tool_calls_prompt_step", developer_id=str(context.execution_input.developer_id)
     ):

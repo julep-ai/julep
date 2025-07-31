@@ -1,4 +1,5 @@
 import uuid
+import functools
 from base64 import b64decode
 from datetime import timedelta
 from unittest.mock import Mock, call, patch
@@ -58,6 +59,29 @@ from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
 from temporalio.workflow import _NotInWorkflowEventLoopError
 from ward import raises, test
+from agents_api.common.utils.expressions import evaluate_expressions
+from agents_api.clients.pg import create_db_pool
+from tests.fixtures import pg_dsn
+
+
+async def base_evaluate_with_pool(
+    exprs,
+    context=None,
+    values=None,
+    extra_lambda_strs=None,
+    connection_pool=None,
+):
+    """Custom base_evaluate that uses connection_pool for prepare_for_step"""
+    if context is None and values is None:
+        msg = "Either context or values must be provided"
+        raise ValueError(msg)
+
+    values = values or {}
+    if context:
+        # Pass the connection_pool to prepare_for_step
+        values.update(await context.prepare_for_step(limit=50, connection_pool=connection_pool))
+
+    return evaluate_expressions(exprs, values=values, extra_lambda_strs=extra_lambda_strs)
 
 
 @test("task execution workflow: handle function tool call step")
@@ -157,7 +181,7 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch("agents_api.common.protocol.tasks.get_secrets_list") as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -237,7 +261,7 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch("agents_api.common.protocol.tasks.get_secrets_list") as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -312,7 +336,7 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch("agents_api.common.protocol.tasks.get_secrets_list") as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -409,7 +433,7 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch("agents_api.common.protocol.tasks.get_secrets_list") as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -988,7 +1012,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate foreach step expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1056,7 +1087,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,  # Use the partial function here
         ):
             result = await wf.eval_step_exprs(
                 ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1"))),
@@ -1066,7 +1097,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate ifelse step expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1134,7 +1172,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 IfElseWorkflowStep(if_="$ 1 + 2", then=YieldStep(workflow="wf1")),
@@ -1144,7 +1182,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate return step expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1212,7 +1257,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 ReturnStep(return_={"x": "$ 1 + 2"}),
@@ -1222,7 +1267,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate wait for input step expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1290,7 +1342,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "$ 1 + 2"})),
@@ -1300,7 +1352,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate evaluate expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1368,7 +1427,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 EvaluateStep(evaluate={"x": "$ 1 + 2"}),
@@ -1378,7 +1437,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate map reduce expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1446,7 +1512,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 MapReduceStep(over="$ 1 + 2", map=YieldStep(workflow="wf1")),
@@ -1456,7 +1522,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate set expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1524,7 +1597,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(SetStep(set={"x": "$ 1 + 2"}))
 
@@ -1532,7 +1605,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate log expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1600,7 +1680,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(LogStep(log="$ steps[0].input['x']"))
 
@@ -1608,7 +1688,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate switch expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1676,7 +1763,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 SwitchStep(
@@ -1691,7 +1778,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate tool call expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
@@ -1744,7 +1838,7 @@ async def _():
         ),
         patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch("agents_api.common.protocol.tasks.get_secrets_list") as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -1774,7 +1868,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"}),
@@ -1790,7 +1884,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate yield expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
     execution_input = ExecutionInput(
@@ -1858,7 +1959,7 @@ async def _():
         )
         with patch(
             "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+            new=base_evaluate_patched,
         ):
             result = await wf.eval_step_exprs(
                 YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"),
@@ -1876,7 +1977,14 @@ async def _():
 
 
 @test("task execution workflow: evaluate yield expressions assertion")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    base_evaluate_patched = functools.partial(
+        base_evaluate_with_pool,
+        connection_pool=pool
+    )
+
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
@@ -1946,7 +2054,7 @@ async def _():
             raises(AssertionError),
             patch(
                 "agents_api.workflows.task_execution.base_evaluate_activity",
-                new=base_evaluate,
+                new=base_evaluate_patched,
             ),
         ):
             await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))
