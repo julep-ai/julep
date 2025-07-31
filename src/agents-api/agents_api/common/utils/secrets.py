@@ -44,11 +44,10 @@ async def get_secret_by_name(developer_id: UUID, name: str, decrypt: bool = Fals
 
     return secret
 
+
 @alru_cache(ttl=secrets_cache_ttl)
 async def get_secrets_list(
-    developer_id: UUID, 
-    decrypt: bool = False, 
-    connection_pool=None
+    developer_id: UUID, decrypt: bool = False, connection_pool=None
 ) -> list[Secret]:
     try:
         secrets_query_result = await workflow.execute_activity(

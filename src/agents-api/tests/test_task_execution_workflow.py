@@ -1,5 +1,5 @@
-import uuid
 import functools
+import uuid
 from base64 import b64decode
 from datetime import timedelta
 from unittest.mock import Mock, call, patch
@@ -9,7 +9,6 @@ from agents_api.activities import task_steps
 from agents_api.activities.execute_api_call import execute_api_call
 from agents_api.activities.execute_integration import execute_integration
 from agents_api.activities.execute_system import execute_system
-from agents_api.activities.task_steps.base_evaluate import base_evaluate
 from agents_api.autogen.openapi_model import (
     Agent,
     ApiCallDef,
@@ -39,6 +38,7 @@ from agents_api.autogen.openapi_model import (
     Workflow,
     YieldStep,
 )
+from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
     PartialTransition,
@@ -48,6 +48,7 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.retry_policies import DEFAULT_RETRY_POLICY
 from agents_api.common.utils.datetime import utcnow
+from agents_api.common.utils.expressions import evaluate_expressions
 from agents_api.env import (
     debug,
     temporal_heartbeat_timeout,
@@ -59,8 +60,7 @@ from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
 from temporalio.workflow import _NotInWorkflowEventLoopError
 from ward import raises, test
-from agents_api.common.utils.expressions import evaluate_expressions
-from agents_api.clients.pg import create_db_pool
+
 from tests.fixtures import pg_dsn
 
 
@@ -1015,10 +1015,7 @@ async def _():
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1100,10 +1097,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1185,10 +1179,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1270,10 +1261,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1355,10 +1343,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1440,10 +1425,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1525,10 +1507,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1608,10 +1587,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1691,10 +1667,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -1781,10 +1754,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
@@ -1887,10 +1857,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
@@ -1980,10 +1947,7 @@ async def _(dsn=pg_dsn):
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
 
-    base_evaluate_patched = functools.partial(
-        base_evaluate_with_pool,
-        connection_pool=pool
-    )
+    base_evaluate_patched = functools.partial(base_evaluate_with_pool, connection_pool=pool)
 
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})

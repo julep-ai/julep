@@ -1,10 +1,8 @@
-from datetime import timedelta
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
-from temporalio.workflow import _NotInWorkflowEventLoopError
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -25,9 +23,7 @@ with workflow.unsafe.imports_passed_through():
     from ...common.utils.secrets import get_secrets_list
     from ...worker.codec import RemoteObject
 
-from ...activities.pg_query_step import pg_query_step
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
-from ...env import max_steps_accessible_in_tasks, temporal_heartbeat_timeout
+from ...env import max_steps_accessible_in_tasks
 from ...queries.executions import (
     list_execution_inputs_data,
     list_execution_state_data,
@@ -328,9 +324,7 @@ class StepContext(BaseModel):
             steps[i] = step
 
         secrets_query_result = await get_secrets_list(
-            self.execution_input.developer_id, 
-            True, 
-            connection_pool=connection_pool
+            self.execution_input.developer_id, True, connection_pool=connection_pool
         )
         secrets = {secret.name: secret.value for secret in secrets_query_result}
 

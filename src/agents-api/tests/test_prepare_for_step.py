@@ -10,19 +10,20 @@ from agents_api.autogen.openapi_model import (
     TransitionTarget,
     Workflow,
 )
+from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
     StepContext,
 )
 from agents_api.common.utils.datetime import utcnow
+from agents_api.common.utils.expressions import evaluate_expressions
 from agents_api.common.utils.workflows import get_workflow_name
 from uuid_extensions import uuid7
 from ward import raises, test
 
-from tests.utils import generate_transition
 from tests.fixtures import pg_dsn
-from agents_api.clients.pg import create_db_pool
-from agents_api.web import app
+from tests.utils import generate_transition
+
 
 async def base_evaluate_with_pool(
     exprs,
@@ -43,11 +44,11 @@ async def base_evaluate_with_pool(
 
     return evaluate_expressions(exprs, values=values, extra_lambda_strs=extra_lambda_strs)
 
+
 @test("utility: prepare_for_step - underscore")
 async def _(dsn=pg_dsn):  # Add dsn parameter
-    
     pool = await create_db_pool(dsn=dsn)
-    
+
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=(
@@ -88,7 +89,7 @@ async def _(dsn=pg_dsn):  # Add dsn parameter
 @test("utility: prepare_for_step - label lookup in step")
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
-    
+
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=(
@@ -133,7 +134,7 @@ async def _(dsn=pg_dsn):
 @test("utility: prepare_for_step - global state")
 async def _(dsn=pg_dsn):
     pool = await create_db_pool(dsn=dsn)
-    
+
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=([], [], {"user_name": "John", "count": 10, "has_data": True}),
@@ -171,8 +172,8 @@ async def _(dsn=pg_dsn):
 
 @test("utility: get_workflow_name")
 async def _(dsn=pg_dsn):
-    pool = await create_db_pool(dsn=dsn)
-    
+    await create_db_pool(dsn=dsn)
+
     transition = Transition(
         id=uuid.uuid4(),
         execution_id=uuid.uuid4(),
@@ -231,8 +232,8 @@ async def _(dsn=pg_dsn):
 
 @test("utility: get_workflow_name - raises")
 async def _(dsn=pg_dsn):
-    pool = await create_db_pool(dsn=dsn)
-    
+    await create_db_pool(dsn=dsn)
+
     transition = Transition(
         id=uuid.uuid4(),
         execution_id=uuid.uuid4(),
@@ -271,8 +272,8 @@ async def _(dsn=pg_dsn):
 
 @test("utility: get_inputs - 2 parallel subworkflows")
 async def _(dsn=pg_dsn):
-    pool = await create_db_pool(dsn=dsn)
-    
+    await create_db_pool(dsn=dsn)
+
     uuid7()
     subworkflow1_scope_id = uuid7()
     subworkflow2_scope_id = uuid7()
