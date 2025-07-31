@@ -16,6 +16,16 @@ from agents_api.common.utils.datetime import utcnow
 from ward import test
 
 
+# Define the mock function once at module level
+def mock_base_evaluate(value, context):
+    """Mock base_evaluate to return appropriate types based on input"""
+    if isinstance(value, dict):
+        # For passed_settings, return the dict unchanged
+        return value
+    # For prompt strings, return the string
+    return "Test prompt"
+
+
 @test("prompt_step uses auto tool calls when feature flag is enabled")
 async def _():
     tool = CreateToolRequest(
@@ -28,145 +38,143 @@ async def _():
     )
 
     # Mock feature flag to be enabled
-    with patch(
-        "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
-    ) as mock_flag:
+    with (
+        patch(
+            "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
+        ) as mock_flag,
+        patch(
+            "agents_api.activities.task_steps.prompt_step.base_evaluate",
+            side_effect=mock_base_evaluate,
+        ),
+        patch(
+            "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
+            new_callable=AsyncMock,
+        ) as mock_run_llm,
+    ):
         mock_flag.return_value = True
+        mock_run_llm.return_value = [
+            {"role": "user", "content": "Test prompt"},
+            {"role": "assistant", "content": "Test response"},
+        ]
 
-        # Mock base_evaluate to just return the prompt unchanged
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
+        # Create proper StepContext with real objects
+        # Note: auto_run_tools defaults to False now, so we need to explicitly set it to True
+        step = PromptStep(prompt="Test prompt", unwrap=False, auto_run_tools=True)
+        execution_input = ExecutionInput(
+            developer_id=uuid4(),
+            agent=Agent(
+                id=uuid4(),
+                name="test_agent",
+                model="gpt-4",
+                default_settings={"temperature": 0.7},
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            ),
+            agent_tools=[],
+            arguments={},
+            task=TaskSpecDef(
+                name="test_task",
+                tools=[],
+                workflows=[Workflow(name="main", steps=[step])],
+            ),
+        )
 
-            # Mock run_llm_with_tools
-            with patch(
-                "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
-                new_callable=AsyncMock,
-            ) as mock_run_llm:
-                mock_run_llm.return_value = [
-                    {"role": "user", "content": "Test prompt"},
-                    {"role": "assistant", "content": "Test response"},
-                ]
+        context = StepContext(
+            execution_input=execution_input,
+            current_input="test input",
+            cursor=TransitionTarget(
+                workflow="main",
+                step=0,
+                scope_id=uuid4(),
+            ),
+        )
 
-                # Create proper StepContext with real objects
-                # Note: auto_run_tools defaults to False now, so we need to explicitly set it to True
-                step = PromptStep(prompt="Test prompt", unwrap=False, auto_run_tools=True)
-                execution_input = ExecutionInput(
-                    developer_id=uuid4(),
-                    agent=Agent(
-                        id=uuid4(),
-                        name="test_agent",
-                        model="gpt-4",
-                        default_settings={"temperature": 0.7},
-                        created_at=utcnow(),
-                        updated_at=utcnow(),
-                    ),
-                    agent_tools=[],
-                    arguments={},
-                    task=TaskSpecDef(
-                        name="test_task",
-                        tools=[],
-                        workflows=[Workflow(name="main", steps=[step])],
-                    ),
-                )
+        # Mock the tools method on the StepContext class - need to accept self parameter
+        async def mock_tools_method(self):
+            return [tool]
 
-                context = StepContext(
-                    execution_input=execution_input,
-                    current_input="test input",
-                    cursor=TransitionTarget(
-                        workflow="main",
-                        step=0,
-                        scope_id=uuid4(),
-                    ),
-                )
+        with patch.object(StepContext, "tools", mock_tools_method):
+            # Run the activity
+            result = await prompt_step(context)
 
-                # Mock the tools method on the StepContext class - need to accept self parameter
-                async def mock_tools_method(self):
-                    return [tool]
+            # Verify run_llm_with_tools was called
+            mock_run_llm.assert_called_once()
+            call_args = mock_run_llm.call_args
+            assert call_args[1]["messages"] == [{"role": "user", "content": "Test prompt"}]
+            assert len(call_args[1]["tools"]) == 1
+            assert call_args[1]["tools"][0].name == "test_tool"
 
-                with patch.object(StepContext, "tools", mock_tools_method):
-                    # Run the activity
-                    result = await prompt_step(context)
-
-                    # Verify run_llm_with_tools was called
-                    mock_run_llm.assert_called_once()
-                    call_args = mock_run_llm.call_args
-                    assert call_args[1]["messages"] == [
-                        {"role": "user", "content": "Test prompt"}
-                    ]
-                    assert len(call_args[1]["tools"]) == 1
-                    assert call_args[1]["tools"][0].name == "test_tool"
-
-                    # Check result
-                    assert result.output == [
-                        {"role": "user", "content": "Test prompt"},
-                        {"role": "assistant", "content": "Test response"},
-                    ]
+            # Check result
+            assert result.output == [
+                {"role": "user", "content": "Test prompt"},
+                {"role": "assistant", "content": "Test response"},
+            ]
 
 
 @test("prompt_step with auto tools handles unwrap correctly")
 async def _():
     # Mock feature flag to be enabled
-    with patch(
-        "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
-    ) as mock_flag:
+    with (
+        patch(
+            "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
+        ) as mock_flag,
+        patch(
+            "agents_api.activities.task_steps.prompt_step.base_evaluate",
+            side_effect=mock_base_evaluate,
+        ),
+        patch(
+            "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
+            new_callable=AsyncMock,
+        ) as mock_run_llm,
+    ):
         mock_flag.return_value = True
+        mock_run_llm.return_value = [
+            {"role": "user", "content": "Test prompt"},
+            {"role": "assistant", "content": "Unwrapped response", "tool_calls": None},
+        ]
 
-        # Mock base_evaluate
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
+        # Create proper StepContext with real objects
+        # Note: auto_run_tools defaults to False now, so we need to explicitly set it to True for this test
+        step = PromptStep(prompt="Test prompt", unwrap=True, auto_run_tools=True)
+        execution_input = ExecutionInput(
+            developer_id=uuid4(),
+            agent=Agent(
+                id=uuid4(),
+                name="test_agent",
+                model="gpt-4",
+                default_settings={},
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            ),
+            agent_tools=[],
+            arguments={},
+            task=TaskSpecDef(
+                name="test_task",
+                tools=[],
+                workflows=[Workflow(name="main", steps=[step])],
+            ),
+        )
 
-            # Mock run_llm_with_tools to return unwrappable response
-            with patch(
-                "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
-                new_callable=AsyncMock,
-            ) as mock_run_llm:
-                mock_run_llm.return_value = [
-                    {"role": "user", "content": "Test prompt"},
-                    {"role": "assistant", "content": "Unwrapped response", "tool_calls": None},
-                ]
+        context = StepContext(
+            execution_input=execution_input,
+            current_input="test input",
+            cursor=TransitionTarget(
+                workflow="main",
+                step=0,
+                scope_id=uuid4(),
+            ),
+        )
 
-                # Create proper StepContext with real objects
-                # Note: auto_run_tools defaults to False now, so we need to explicitly set it to True for this test
-                step = PromptStep(prompt="Test prompt", unwrap=True, auto_run_tools=True)
-                execution_input = ExecutionInput(
-                    developer_id=uuid4(),
-                    agent=Agent(
-                        id=uuid4(),
-                        name="test_agent",
-                        model="gpt-4",
-                        default_settings={},
-                        created_at=utcnow(),
-                        updated_at=utcnow(),
-                    ),
-                    agent_tools=[],
-                    arguments={},
-                    task=TaskSpecDef(
-                        name="test_task",
-                        tools=[],
-                        workflows=[Workflow(name="main", steps=[step])],
-                    ),
-                )
+        # Mock the tools method on the StepContext class - need to accept self parameter
+        async def mock_tools_method(self):
+            return []
 
-                context = StepContext(
-                    execution_input=execution_input,
-                    current_input="test input",
-                    cursor=TransitionTarget(
-                        workflow="main",
-                        step=0,
-                        scope_id=uuid4(),
-                    ),
-                )
+        with patch.object(StepContext, "tools", mock_tools_method):
+            # Run the activity
+            result = await prompt_step(context)
 
-                # Mock the tools method on the StepContext class - need to accept self parameter
-                async def mock_tools_method(self):
-                    return []
-
-                with patch.object(StepContext, "tools", mock_tools_method):
-                    # Run the activity
-                    result = await prompt_step(context)
-
-                    # Check that output is unwrapped
-                    assert result.output == "Unwrapped response"
+            # Check that output is unwrapped
+            assert result.output == "Unwrapped response"
 
 
 @test("prompt_step with auto_run_tools=False passes empty tools list")
@@ -181,78 +189,76 @@ async def _():
     )
 
     # Mock feature flag to be enabled
-    with patch(
-        "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
-    ) as mock_flag:
+    with (
+        patch(
+            "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
+        ) as mock_flag,
+        patch(
+            "agents_api.activities.task_steps.prompt_step.base_evaluate",
+            side_effect=mock_base_evaluate,
+        ),
+        patch(
+            "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
+            new_callable=AsyncMock,
+        ) as mock_run_llm,
+    ):
         mock_flag.return_value = True
+        mock_run_llm.return_value = [
+            {"role": "user", "content": "Test prompt"},
+            {"role": "assistant", "content": "Test response without tools"},
+        ]
 
-        # Mock base_evaluate to just return the prompt unchanged
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
+        # Create prompt step with auto_run_tools=False
+        step = PromptStep(prompt="Test prompt", unwrap=False, auto_run_tools=False)
+        execution_input = ExecutionInput(
+            developer_id=uuid4(),
+            agent=Agent(
+                id=uuid4(),
+                name="test_agent",
+                model="gpt-4",
+                default_settings={"temperature": 0.7},
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            ),
+            agent_tools=[],
+            arguments={},
+            task=TaskSpecDef(
+                name="test_task",
+                tools=[],
+                workflows=[Workflow(name="main", steps=[step])],
+            ),
+        )
 
-            # Mock run_llm_with_tools
-            with patch(
-                "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
-                new_callable=AsyncMock,
-            ) as mock_run_llm:
-                mock_run_llm.return_value = [
-                    {"role": "user", "content": "Test prompt"},
-                    {"role": "assistant", "content": "Test response without tools"},
-                ]
+        context = StepContext(
+            execution_input=execution_input,
+            current_input="test input",
+            cursor=TransitionTarget(
+                workflow="main",
+                step=0,
+                scope_id=uuid4(),
+            ),
+        )
 
-                # Create prompt step with auto_run_tools=False
-                step = PromptStep(prompt="Test prompt", unwrap=False, auto_run_tools=False)
-                execution_input = ExecutionInput(
-                    developer_id=uuid4(),
-                    agent=Agent(
-                        id=uuid4(),
-                        name="test_agent",
-                        model="gpt-4",
-                        default_settings={"temperature": 0.7},
-                        created_at=utcnow(),
-                        updated_at=utcnow(),
-                    ),
-                    agent_tools=[],
-                    arguments={},
-                    task=TaskSpecDef(
-                        name="test_task",
-                        tools=[],
-                        workflows=[Workflow(name="main", steps=[step])],
-                    ),
-                )
+        # Mock the tools method to return a tool
+        async def mock_tools_method(self):
+            return [tool]
 
-                context = StepContext(
-                    execution_input=execution_input,
-                    current_input="test input",
-                    cursor=TransitionTarget(
-                        workflow="main",
-                        step=0,
-                        scope_id=uuid4(),
-                    ),
-                )
+        with patch.object(StepContext, "tools", mock_tools_method):
+            # Run the activity
+            result = await prompt_step(context)
 
-                # Mock the tools method to return a tool
-                async def mock_tools_method(self):
-                    return [tool]
+            # Verify run_llm_with_tools was called with empty tools list
+            mock_run_llm.assert_called_once()
+            call_args = mock_run_llm.call_args
+            assert call_args[1]["messages"] == [{"role": "user", "content": "Test prompt"}]
+            # IMPORTANT: Verify empty tools list was passed
+            assert call_args[1]["tools"] == []
 
-                with patch.object(StepContext, "tools", mock_tools_method):
-                    # Run the activity
-                    result = await prompt_step(context)
-
-                    # Verify run_llm_with_tools was called with empty tools list
-                    mock_run_llm.assert_called_once()
-                    call_args = mock_run_llm.call_args
-                    assert call_args[1]["messages"] == [
-                        {"role": "user", "content": "Test prompt"}
-                    ]
-                    # IMPORTANT: Verify empty tools list was passed
-                    assert call_args[1]["tools"] == []
-
-                    # Check result
-                    assert result.output == [
-                        {"role": "user", "content": "Test prompt"},
-                        {"role": "assistant", "content": "Test response without tools"},
-                    ]
+            # Check result
+            assert result.output == [
+                {"role": "user", "content": "Test prompt"},
+                {"role": "assistant", "content": "Test response without tools"},
+            ]
 
 
 @test("prompt_step with auto_run_tools=True passes all available tools")
@@ -275,77 +281,75 @@ async def _():
     )
 
     # Mock feature flag to be enabled
-    with patch(
-        "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
-    ) as mock_flag:
+    with (
+        patch(
+            "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
+        ) as mock_flag,
+        patch(
+            "agents_api.activities.task_steps.prompt_step.base_evaluate",
+            side_effect=mock_base_evaluate,
+        ),
+        patch(
+            "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
+            new_callable=AsyncMock,
+        ) as mock_run_llm,
+    ):
         mock_flag.return_value = True
+        mock_run_llm.return_value = [
+            {"role": "user", "content": "Test prompt"},
+            {"role": "assistant", "content": "Test response with tools"},
+        ]
 
-        # Mock base_evaluate to just return the prompt unchanged
-        with patch("agents_api.activities.task_steps.prompt_step.base_evaluate") as mock_eval:
-            mock_eval.return_value = "Test prompt"
+        # Create prompt step with auto_run_tools=True (default)
+        step = PromptStep(prompt="Test prompt", unwrap=False, auto_run_tools=True)
+        execution_input = ExecutionInput(
+            developer_id=uuid4(),
+            agent=Agent(
+                id=uuid4(),
+                name="test_agent",
+                model="gpt-4",
+                default_settings={"temperature": 0.7},
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            ),
+            agent_tools=[],
+            arguments={},
+            task=TaskSpecDef(
+                name="test_task",
+                tools=[],
+                workflows=[Workflow(name="main", steps=[step])],
+            ),
+        )
 
-            # Mock run_llm_with_tools
-            with patch(
-                "agents_api.activities.task_steps.prompt_step.run_llm_with_tools",
-                new_callable=AsyncMock,
-            ) as mock_run_llm:
-                mock_run_llm.return_value = [
-                    {"role": "user", "content": "Test prompt"},
-                    {"role": "assistant", "content": "Test response with tools"},
-                ]
+        context = StepContext(
+            execution_input=execution_input,
+            current_input="test input",
+            cursor=TransitionTarget(
+                workflow="main",
+                step=0,
+                scope_id=uuid4(),
+            ),
+        )
 
-                # Create prompt step with auto_run_tools=True (default)
-                step = PromptStep(prompt="Test prompt", unwrap=False, auto_run_tools=True)
-                execution_input = ExecutionInput(
-                    developer_id=uuid4(),
-                    agent=Agent(
-                        id=uuid4(),
-                        name="test_agent",
-                        model="gpt-4",
-                        default_settings={"temperature": 0.7},
-                        created_at=utcnow(),
-                        updated_at=utcnow(),
-                    ),
-                    agent_tools=[],
-                    arguments={},
-                    task=TaskSpecDef(
-                        name="test_task",
-                        tools=[],
-                        workflows=[Workflow(name="main", steps=[step])],
-                    ),
-                )
+        # Mock the tools method to return multiple tools
+        async def mock_tools_method(self):
+            return [tool1, tool2]
 
-                context = StepContext(
-                    execution_input=execution_input,
-                    current_input="test input",
-                    cursor=TransitionTarget(
-                        workflow="main",
-                        step=0,
-                        scope_id=uuid4(),
-                    ),
-                )
+        with patch.object(StepContext, "tools", mock_tools_method):
+            # Run the activity
+            result = await prompt_step(context)
 
-                # Mock the tools method to return multiple tools
-                async def mock_tools_method(self):
-                    return [tool1, tool2]
+            # Verify run_llm_with_tools was called with all tools
+            mock_run_llm.assert_called_once()
+            call_args = mock_run_llm.call_args
+            assert call_args[1]["messages"] == [{"role": "user", "content": "Test prompt"}]
+            # IMPORTANT: Verify all tools were passed
+            assert len(call_args[1]["tools"]) == 2
+            assert call_args[1]["tools"][0].name == "tool1"
+            assert call_args[1]["tools"][1].name == "tool2"
 
-                with patch.object(StepContext, "tools", mock_tools_method):
-                    # Run the activity
-                    result = await prompt_step(context)
-
-                    # Verify run_llm_with_tools was called with all tools
-                    mock_run_llm.assert_called_once()
-                    call_args = mock_run_llm.call_args
-                    assert call_args[1]["messages"] == [
-                        {"role": "user", "content": "Test prompt"}
-                    ]
-                    # IMPORTANT: Verify all tools were passed
-                    assert len(call_args[1]["tools"]) == 2
-                    assert call_args[1]["tools"][0].name == "tool1"
-                    assert call_args[1]["tools"][1].name == "tool2"
-
-                    # Check result
-                    assert result.output == [
-                        {"role": "user", "content": "Test prompt"},
-                        {"role": "assistant", "content": "Test response with tools"},
-                    ]
+            # Check result
+            assert result.output == [
+                {"role": "user", "content": "Test prompt"},
+                {"role": "assistant", "content": "Test response with tools"},
+            ]

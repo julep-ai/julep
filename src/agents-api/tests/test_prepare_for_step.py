@@ -10,20 +10,45 @@ from agents_api.autogen.openapi_model import (
     TransitionTarget,
     Workflow,
 )
+from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
     StepContext,
 )
 from agents_api.common.utils.datetime import utcnow
+from agents_api.common.utils.expressions import evaluate_expressions
 from agents_api.common.utils.workflows import get_workflow_name
 from uuid_extensions import uuid7
 from ward import raises, test
 
+from tests.fixtures import pg_dsn
 from tests.utils import generate_transition
 
 
+async def base_evaluate_with_pool(
+    exprs,
+    context=None,
+    values=None,
+    extra_lambda_strs=None,
+    connection_pool=None,
+):
+    """Custom base_evaluate that uses connection_pool for prepare_for_step"""
+    if context is None and values is None:
+        msg = "Either context or values must be provided"
+        raise ValueError(msg)
+
+    values = values or {}
+    if context:
+        # Pass the connection_pool to prepare_for_step
+        values.update(await context.prepare_for_step(limit=50, connection_pool=connection_pool))
+
+    return evaluate_expressions(exprs, values=values, extra_lambda_strs=extra_lambda_strs)
+
+
 @test("utility: prepare_for_step - underscore")
-async def _():
+async def _(dsn=pg_dsn):  # Add dsn parameter
+    pool = await create_db_pool(dsn=dsn)
+
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=(
@@ -57,12 +82,14 @@ async def _():
                 scope_id=uuid.uuid4(),
             ),
         )
-        result = await context.prepare_for_step()
+        result = await context.prepare_for_step(connection_pool=pool)
         assert result["_"] == {"current_input": "value 1"}
 
 
 @test("utility: prepare_for_step - label lookup in step")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=(
@@ -96,7 +123,7 @@ async def _():
                 scope_id=uuid.uuid4(),
             ),
         )
-        result = await context.prepare_for_step()
+        result = await context.prepare_for_step(connection_pool=pool)
 
         assert result["steps"]["first step"]["input"] == {"x": "1"}
         assert result["steps"]["first step"]["output"] == {"y": "2"}
@@ -105,7 +132,9 @@ async def _():
 
 
 @test("utility: prepare_for_step - global state")
-async def _():
+async def _(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=([], [], {"user_name": "John", "count": 10, "has_data": True}),
@@ -135,14 +164,16 @@ async def _():
                 scope_id=uuid.uuid4(),
             ),
         )
-        result = await context.prepare_for_step()
+        result = await context.prepare_for_step(connection_pool=pool)
         assert result["state"]["user_name"] == "John"
         assert result["state"]["count"] == 10
         assert result["state"]["has_data"] is True
 
 
 @test("utility: get_workflow_name")
-async def _():
+async def _(dsn=pg_dsn):
+    await create_db_pool(dsn=dsn)
+
     transition = Transition(
         id=uuid.uuid4(),
         execution_id=uuid.uuid4(),
@@ -200,7 +231,9 @@ async def _():
 
 
 @test("utility: get_workflow_name - raises")
-async def _():
+async def _(dsn=pg_dsn):
+    await create_db_pool(dsn=dsn)
+
     transition = Transition(
         id=uuid.uuid4(),
         execution_id=uuid.uuid4(),
@@ -238,7 +271,9 @@ async def _():
 
 
 @test("utility: get_inputs - 2 parallel subworkflows")
-async def _():
+async def _(dsn=pg_dsn):
+    await create_db_pool(dsn=dsn)
+
     uuid7()
     subworkflow1_scope_id = uuid7()
     subworkflow2_scope_id = uuid7()
