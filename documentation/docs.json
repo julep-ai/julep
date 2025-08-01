@@ -350,5 +350,6 @@
       "family": "Figtree",
       "weight": 500
     }
-  }
+  },
+  "js": ["scripts/julep-chat-widget.js"]
 }

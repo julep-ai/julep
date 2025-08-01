@@ -88,5 +88,5 @@ Key Uses
 ## Development Resources
 - Discord Community: https://discord.gg/p4c7ehs4vD
 - GitHub Repo: https://github.com/julep-ai/julep
-- Documentation Site: https://julep.ai/docs
+- Documentation Site: https://docs.julep.ai/
 - Support Email: developers@julep.ai

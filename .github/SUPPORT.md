@@ -16,8 +16,8 @@ Here you'll find detailed guides, API references, and tutorials to help you make
 
 Join our vibrant community to get help from other users and the Julep team:
 
-- [Discord](https://discord.com/invite/JTSBGRZrzj): Join our Discord server for real-time chat and support.
-- [GitHub Discussions](https://github.com/julep-ai/julep/discussions): Ask questions, share ideas, and discuss Julep with other developers.
+- [Discord](https://discord.com/invite/JTSBGRZrzj): Join our Discord server to ask questions, share ideas, and discuss Julep with other developers.
+- [GitHub](https://github.com/julep-ai/julep): Report issues and feature requests.
 
 ### Social Media
 
@@ -45,7 +45,7 @@ When reporting issues, please provide as much detail as possible, including:
 We welcome contributions to Julep! If you're interested in contributing, please check out our:
 
 - [Contributing Guidelines](https://github.com/julep-ai/julep/blob/dev/.github/CONTRIBUTING.md)
-- [Code of Conduct](https://github.com/julep-ai/julep/blob/main/CODE_OF_CONDUCT.md)
+- [Code of Conduct](https://github.com/julep-ai/julep/blob/main/.github/CODE_OF_CONDUCT.md)
 
 ## API Keys
 

@@ -142,11 +142,11 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/ANTHROPIC_API_KEY
 
-- model_name: "claude-3-sonnet"
-  litellm_params:
-    model: "claude-3-sonnet-20240229"
-    tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+# - model_name: "claude-3-sonnet" # Litellm/Anthropic removed support for this model
+#   litellm_params:
+#     model: "claude-3-sonnet-20240229"
+#     tags: ["paid"]
+#     api_key: os.environ/ANTHROPIC_API_KEY
 
 - model_name: "claude-3-haiku"
   litellm_params:

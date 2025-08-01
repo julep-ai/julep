@@ -132,4 +132,4 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
 
 ## License
 
-Julep is offered under the **Apache 2.0 License**, which means it’s free to use in your own projects. See the [LICENSE](LICENSE) file for details. Enjoy building with Julep!
+Julep is offered under the **Apache 2.0 License**, which means it’s free to use in your own projects. See the [LICENSE](.github/LICENSE) file for details. Enjoy building with Julep!
