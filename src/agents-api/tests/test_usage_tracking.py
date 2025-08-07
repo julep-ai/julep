@@ -319,6 +319,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         record = response[0]
         record_cost_with_multiplier = record["cost"]
 
-        expected_cost = record_cost_without_multiplier * Decimal('0.5')
+        expected_cost = record_cost_without_multiplier * Decimal("0.5")
         tolerance = Decimal("0.000001")
         assert abs(record_cost_with_multiplier - expected_cost) <= tolerance
