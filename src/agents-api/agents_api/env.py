@@ -199,7 +199,11 @@ hasura_admin_secret: str | None = env.str(
 
 # Llama model cost
 # ----------------
-llama_model_multiplier: float = env.float("LLAMA_MODEL_MULTIPLIER", default=1.0)
+# AIDEV-NOTE: Validate multiplier is within reasonable bounds (0 to 100)
+_raw_llama_multiplier: float = env.float("LLAMA_MODEL_MULTIPLIER", default=1.0)
+if _raw_llama_multiplier < 0 or _raw_llama_multiplier > 100:
+    raise ValueError("LLAMA_MODEL_MULTIPLIER must be between 0 and 100")
+llama_model_multiplier: float = _raw_llama_multiplier
 
 
 # Secrets
