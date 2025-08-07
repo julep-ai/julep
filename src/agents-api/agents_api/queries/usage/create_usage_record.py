@@ -10,9 +10,9 @@ from beartype import beartype
 from litellm import cost_per_token, model_cost
 
 from ...common.utils.db_exceptions import common_db_exceptions
+from ...env import llama_model_multiplier
 from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions
-from ...env import llama_model_multiplier
 
 FALLBACK_PRICING = {
     # Meta Llama models
@@ -169,7 +169,6 @@ async def create_usage_record(
                 + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
             )
             print(f"No fallback pricing found for model {model}, using avg costs: {total_cost}")
-
 
     if is_llama_model:
         total_cost = total_cost * llama_model_multiplier

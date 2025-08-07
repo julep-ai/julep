@@ -10,14 +10,12 @@ from litellm.utils import ModelResponse, token_counter
 
 from ...queries.usage.create_usage_record import create_usage_record
 
+
 async def is_llama_based_model(model_string: str) -> bool:
     """Check if a model string (either model_name or litellm_params.model) indicates a LLaMA model"""
     model_lower = model_string.lower()
-    return (
-        "llama" in model_lower or 
-        model_lower.startswith("l3.") or 
-        "/l3." in model_lower
-    )
+    return "llama" in model_lower or model_lower.startswith("l3.") or "/l3." in model_lower
+
 
 @beartype
 async def track_usage(
