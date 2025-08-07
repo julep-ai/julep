@@ -197,7 +197,6 @@ async def _() -> None:
     assert await is_llama_based_model("llama-3.1-8b-instruct") is True
     assert await is_llama_based_model("meta-llama/llama-4-maverick") is True
     assert await is_llama_based_model("meta-llama/llama-4-maverick:free") is True
-    assert await is_llama_based_model("meta-llama/llama-4-maverick:free") is True
     assert await is_llama_based_model("gpt-4o-mini") is False
     assert await is_llama_based_model("claude-3.5-sonnet") is False
     assert await is_llama_based_model("gemini-1.5-pro") is False
@@ -320,6 +319,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         record = response[0]
         record_cost_with_multiplier = record["cost"]
 
-        expected_cost = Decimal(str(float(record_cost_without_multiplier) * 0.5))
+        expected_cost = record_cost_without_multiplier * Decimal('0.5')
         tolerance = Decimal("0.000001")
         assert abs(record_cost_with_multiplier - expected_cost) <= tolerance
