@@ -197,6 +197,10 @@ hasura_admin_secret: str | None = env.str(
     default=None,
 )
 
+# Llama model cost
+# ----------------
+llama_model_multiplier: float = env.float("LLAMA_MODEL_MULTIPLIER", default=1.0)
+
 
 # Secrets
 # -------
@@ -242,6 +246,7 @@ environment: dict[str, Any] = {
     "unleash_url": unleash_url,
     "unleash_api_token": unleash_api_token,
     "unleash_app_name": unleash_app_name,
+    "llama_model_multiplier": llama_model_multiplier,
 }
 
 if debug or testing:
