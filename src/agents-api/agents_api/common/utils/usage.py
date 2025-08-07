@@ -11,6 +11,24 @@ from litellm.utils import ModelResponse, token_counter
 from ...queries.usage.create_usage_record import create_usage_record
 
 
+def is_llama_based_model(model_string: str) -> bool:
+    """Check if a model string (either model_name or litellm_params.model) indicates a LLaMA model"""
+    # AIDEV-NOTE: More specific Llama model detection patterns to avoid false positives
+    model_lower = model_string.lower()
+
+    # Check for specific llama patterns
+    llama_patterns = [
+        "llama",  # Matches any model with "llama" in the name
+        "meta-llama/",  # Meta's official Llama models
+        "l3.1",  # Llama 3.1 models
+        "l3.3",  # Llama 3.3 models
+        "/l3.1",  # Llama 3.1 models with provider prefix
+        "/l3.3",  # Llama 3.3 models with provider prefix
+    ]
+
+    return any(pattern in model_lower for pattern in llama_patterns)
+
+
 @beartype
 async def track_usage(
     *,
@@ -62,6 +80,8 @@ async def track_usage(
     # Map the model name to the actual model name
     actual_model = model
 
+    is_llama_model = is_llama_based_model(actual_model)
+
     # Create usage record
     await create_usage_record(
         developer_id=developer_id,
@@ -73,6 +93,7 @@ async def track_usage(
             "request_id": response.id if hasattr(response, "id") else None,
             **metadata,
         },
+        is_llama_model=is_llama_model,
         connection_pool=connection_pool,
     )
 
