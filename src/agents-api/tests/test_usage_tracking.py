@@ -7,7 +7,11 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from agents_api.clients.pg import create_db_pool
-from agents_api.common.utils.usage import is_llama_based_model, track_embedding_usage, track_usage
+from agents_api.common.utils.usage import (
+    is_llama_based_model,
+    track_embedding_usage,
+    track_usage,
+)
 from agents_api.queries.usage.create_usage_record import (
     AVG_INPUT_COST_PER_TOKEN,
     AVG_OUTPUT_COST_PER_TOKEN,
@@ -187,6 +191,7 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["prompt_tokens"] == 100
         assert call_args["completion_tokens"] == 100
 
+
 @test("utils: is_llama_based_model returns True for llama models")
 async def _() -> None:
     assert await is_llama_based_model("llama-3.1-8b-instruct") is True
@@ -197,6 +202,7 @@ async def _() -> None:
     assert await is_llama_based_model("claude-3.5-sonnet") is False
     assert await is_llama_based_model("gemini-1.5-pro") is False
     assert await is_llama_based_model("deepseek-chat") is False
+
 
 @test("utils: track_usage without response.usage")
 async def _(developer_id=test_developer_id) -> None:
@@ -283,9 +289,10 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["completion_tokens"] == 0
         assert call_args["model"] == "text-embedding-3-large"
 
+
 @test("utils: track_usage with llama model")
 async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    with patch('agents_api.queries.usage.create_usage_record.llama_model_multiplier', 0.5):
+    with patch("agents_api.queries.usage.create_usage_record.llama_model_multiplier", 0.5):
         pool = await create_db_pool(dsn=dsn)
         response = await create_usage_record(
             developer_id=developer_id,
@@ -314,5 +321,5 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         record_cost_with_multiplier = record["cost"]
 
         expected_cost = Decimal(str(float(record_cost_without_multiplier) * 0.5))
-        tolerance = Decimal('0.000001')
+        tolerance = Decimal("0.000001")
         assert abs(record_cost_with_multiplier - expected_cost) <= tolerance
