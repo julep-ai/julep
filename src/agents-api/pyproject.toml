@@ -5,7 +5,7 @@ description = "Julep's backend API"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "aiobotocore>=2.15.2",
+  "aiobotocore>=2.21.0",
   "anyio>=4.4.0",
   "arrow>=1.3.0",
   "async-lru>=2.0.4",
@@ -22,7 +22,7 @@ dependencies = [
   "jsonschema>=4.22.0",
   "langchain-core>=0.3.14",
   "larch-pickle~=1.4.3",
-  "litellm>=1.57.0",
+  "litellm>=1.74.9",
   "lz4>=4.3.3",
   "msgpack>=1.1.0",
   "numpy>=2.0.0,<2.1.0",
@@ -44,7 +44,7 @@ dependencies = [
   "thefuzz>=0.22.1",
   "tiktoken>=0.7.0",
   "UnleashClient>=5.12.0",
-  "uvicorn>=0.30.6",
+  "uvicorn==0.29.0",
   "uvloop>=0.21.0",
   "xxhash>=3.5.0",
   "spacy-chunks>=0.0.2",
@@ -57,6 +57,15 @@ dependencies = [
   "markdownify>=1.0.0",
   "markdown2>=2.5.3",
   "aiohttp>=3.11.13",
+  "websockets>=15.0.1",
+  "python-multipart>=0.0.20",
+  "cryptography>=45.0.6",
+  "backoff>=2.2.1",
+  "pyjwt>=2.10.1",
+  "sqlalchemy>=2.0.42",
+  "redis>=6.4.0",
+  "psycopg2-binary>=2.9.10",
+  "fastapi-sso>=0.18.0",
 ]
 
 [dependency-groups]
