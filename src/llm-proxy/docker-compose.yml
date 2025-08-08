@@ -26,8 +26,8 @@ x--litellm-base: &litellm-base
     - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY:-}
     - GITHUB_API_KEY=${GITHUB_API_KEY:-}
     - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
-    - AWS_REGION_NAME=${AWS_REGION_NAME:-}
-    
+    - AWS_REGION_NAME=${AWS_REGION_NAME:-us-east-1}
+
   command:
     [
       "--config",
