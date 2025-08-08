@@ -120,63 +120,69 @@ model_list:
 # Anthropic models
 - model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
-    model: "claude-3-5-sonnet-20240620"
+    model: "bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.5-sonnet"
   litellm_params:
-    model: "claude-3-5-sonnet-20241022"
+    model: "bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.5-sonnet-20241022"
   litellm_params:
-    model: "claude-3-5-sonnet-20241022"
+    model: "bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
-- model_name: "claude-3-opus"
-  litellm_params:
-    model: "claude-3-opus-20240229"
-    tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
-
-# - model_name: "claude-3-sonnet" # Litellm/Anthropic removed support for this model
+# - model_name: "claude-3-opus" # Model unavailable
 #   litellm_params:
-#     model: "claude-3-sonnet-20240229"
+#     model: "bedrock/us.anthropic.claude-3-opus-20240229-v1:0"
 #     tags: ["paid"]
-#     api_key: os.environ/ANTHROPIC_API_KEY
+#     api_key: os.environ/BEDROCK_API_KEY
+
+- model_name: "claude-3-sonnet" # Litellm/Anthropic removed support for this model
+  litellm_params:
+    model: "bedrock/us.anthropic.claude-3-sonnet-20240229-v1:0"
+    tags: ["paid"]
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3-haiku"
   litellm_params:
-    model: "claude-3-haiku-20240307"
+    model: "bedrock/us.anthropic.claude-3-haiku-20240307-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.5-haiku"
   litellm_params:
-    model: "claude-3-5-haiku-20241022"
+    model: "bedrock/us.anthropic.claude-3-5-haiku-20241022-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.7-sonnet"
   litellm_params:
-    model: "claude-3-7-sonnet-20250219"
+    model: "bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-sonnet-4"
   litellm_params:
-    model: "claude-sonnet-4-20250514"
+    model: "bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-opus-4"
   litellm_params:
-    model: "claude-opus-4-20250514"
+    model: "bedrock/us.anthropic.claude-opus-4-20250514-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
+
+- model_name: "claude-opus-4-1"
+  litellm_params:
+    model: "bedrock/us.anthropic.claude-opus-4-1-20250805-v1:0"
+    tags: ["paid"]
+    api_key: os.environ/BEDROCK_API_KEY
 
 # Groq models
 # - model_name: "llama-3.1-70b" # `llama-3.1-70b-versatile` has been decommissioned and is no longer supported
