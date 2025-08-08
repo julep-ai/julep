@@ -10,6 +10,7 @@ from beartype import beartype
 from litellm import cost_per_token, model_cost
 
 from ...common.utils.db_exceptions import common_db_exceptions
+from ...env import llama_model_multiplier
 from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions
 
@@ -128,6 +129,7 @@ async def create_usage_record(
     custom_api_used: bool = False,
     estimated: bool = False,
     metadata: dict[str, Any] | None = None,
+    is_llama_model: bool = False,
 ) -> tuple[str, list]:
     """
     Creates a usage record to track token usage and costs.
@@ -140,7 +142,7 @@ async def create_usage_record(
         custom_api_used (bool): Whether a custom API key was used.
         estimated (bool): Whether the token count is estimated.
         metadata (dict | None): Additional metadata about the usage.
-
+        is_llama_model (bool): Whether the model is a Llama model.
     Returns:
         tuple[str, list]: SQL query and parameters for creating the usage record.
     """
@@ -167,6 +169,9 @@ async def create_usage_record(
                 + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
             )
             print(f"No fallback pricing found for model {model}, using avg costs: {total_cost}")
+
+    if is_llama_model:
+        total_cost = total_cost * llama_model_multiplier
 
     params = [
         developer_id,

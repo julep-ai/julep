@@ -1,7 +1,7 @@
 name: julep-llm-proxy
 
 x--litellm-base: &litellm-base
-  image: ghcr.io/berriai/litellm-database:main-v1.65.0-stable
+  image: ghcr.io/berriai/litellm-database:main-v1.74.9-stable
   restart: unless-stopped
   hostname: litellm
   ports:
@@ -17,6 +17,7 @@ x--litellm-base: &litellm-base
     - OPENAI_API_KEY=${OPENAI_API_KEY}
     - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    - BEDROCK_API_KEY=${BEDROCK_API_KEY}
     - GROQ_API_KEY=${GROQ_API_KEY}
     - VOYAGE_API_KEY=${VOYAGE_API_KEY}
     - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
@@ -25,6 +26,8 @@ x--litellm-base: &litellm-base
     - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY:-}
     - GITHUB_API_KEY=${GITHUB_API_KEY:-}
     - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+    - AWS_REGION_NAME=${AWS_REGION_NAME:-us-east-1}
+
   command:
     [
       "--config",

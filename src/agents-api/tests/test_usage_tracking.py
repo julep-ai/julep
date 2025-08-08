@@ -7,7 +7,11 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from agents_api.clients.pg import create_db_pool
-from agents_api.common.utils.usage import track_embedding_usage, track_usage
+from agents_api.common.utils.usage import (
+    is_llama_based_model,
+    track_embedding_usage,
+    track_usage,
+)
 from agents_api.queries.usage.create_usage_record import (
     AVG_INPUT_COST_PER_TOKEN,
     AVG_OUTPUT_COST_PER_TOKEN,
@@ -188,6 +192,17 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["completion_tokens"] == 100
 
 
+@test("utils: is_llama_based_model returns True for llama models")
+async def _() -> None:
+    assert is_llama_based_model("llama-3.1-8b-instruct") is True
+    assert is_llama_based_model("meta-llama/llama-4-maverick") is True
+    assert is_llama_based_model("meta-llama/llama-4-maverick:free") is True
+    assert is_llama_based_model("gpt-4o-mini") is False
+    assert is_llama_based_model("claude-3.5-sonnet") is False
+    assert is_llama_based_model("gemini-1.5-pro") is False
+    assert is_llama_based_model("deepseek-chat") is False
+
+
 @test("utils: track_usage without response.usage")
 async def _(developer_id=test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
@@ -272,3 +287,38 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["prompt_tokens"] == expected_tokens
         assert call_args["completion_tokens"] == 0
         assert call_args["model"] == "text-embedding-3-large"
+
+
+@test("utils: track_usage with llama model")
+async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    with patch("agents_api.queries.usage.create_usage_record.llama_model_multiplier", 0.5):
+        pool = await create_db_pool(dsn=dsn)
+        response = await create_usage_record(
+            developer_id=developer_id,
+            model="llama-3.1-8b-instruct",
+            prompt_tokens=100,
+            completion_tokens=100,
+            is_llama_model=False,
+            connection_pool=pool,
+        )
+
+        assert len(response) == 1
+        record = response[0]
+        record_cost_without_multiplier = record["cost"]
+
+        response = await create_usage_record(
+            developer_id=developer_id,
+            model="llama-3.1-8b-instruct",
+            prompt_tokens=100,
+            completion_tokens=100,
+            is_llama_model=True,
+            connection_pool=pool,
+        )
+
+        assert len(response) == 1
+        record = response[0]
+        record_cost_with_multiplier = record["cost"]
+
+        expected_cost = record_cost_without_multiplier * Decimal("0.5")
+        tolerance = Decimal("0.000001")
+        assert abs(record_cost_with_multiplier - expected_cost) <= tolerance

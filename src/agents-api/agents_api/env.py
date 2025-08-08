@@ -197,6 +197,15 @@ hasura_admin_secret: str | None = env.str(
     default=None,
 )
 
+# Llama model cost
+# ----------------
+# AIDEV-NOTE: Validate multiplier is within reasonable bounds (0 to 100)
+_raw_llama_multiplier: float = env.float("LLAMA_MODEL_MULTIPLIER", default=1.0)
+if _raw_llama_multiplier < 0 or _raw_llama_multiplier > 100:
+    msg = "LLAMA_MODEL_MULTIPLIER must be between 0 and 100"
+    raise ValueError(msg)
+llama_model_multiplier: float = _raw_llama_multiplier
+
 
 # Secrets
 # -------
@@ -242,6 +251,7 @@ environment: dict[str, Any] = {
     "unleash_url": unleash_url,
     "unleash_api_token": unleash_api_token,
     "unleash_app_name": unleash_app_name,
+    "llama_model_multiplier": llama_model_multiplier,
 }
 
 if debug or testing:

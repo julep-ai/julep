@@ -120,70 +120,76 @@ model_list:
 # Anthropic models
 - model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
-    model: "claude-3-5-sonnet-20240620"
+    model: "bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.5-sonnet"
   litellm_params:
-    model: "claude-3-5-sonnet-20241022"
+    model: "bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.5-sonnet-20241022"
   litellm_params:
-    model: "claude-3-5-sonnet-20241022"
+    model: "bedrock/us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
-- model_name: "claude-3-opus"
-  litellm_params:
-    model: "claude-3-opus-20240229"
-    tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
-
-# - model_name: "claude-3-sonnet" # Litellm/Anthropic removed support for this model
+# - model_name: "claude-3-opus" # Model unavailable
 #   litellm_params:
-#     model: "claude-3-sonnet-20240229"
+#     model: "bedrock/us.anthropic.claude-3-opus-20240229-v1:0"
 #     tags: ["paid"]
-#     api_key: os.environ/ANTHROPIC_API_KEY
+#     api_key: os.environ/BEDROCK_API_KEY
+
+- model_name: "claude-3-sonnet" # Litellm/Anthropic removed support for this model
+  litellm_params:
+    model: "bedrock/us.anthropic.claude-3-sonnet-20240229-v1:0"
+    tags: ["paid"]
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3-haiku"
   litellm_params:
-    model: "claude-3-haiku-20240307"
+    model: "bedrock/us.anthropic.claude-3-haiku-20240307-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.5-haiku"
   litellm_params:
-    model: "claude-3-5-haiku-20241022"
+    model: "bedrock/us.anthropic.claude-3-5-haiku-20241022-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-3.7-sonnet"
   litellm_params:
-    model: "claude-3-7-sonnet-20250219"
+    model: "bedrock/us.anthropic.claude-3-7-sonnet-20250219-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-sonnet-4"
   litellm_params:
-    model: "claude-sonnet-4-20250514"
+    model: "bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
 
 - model_name: "claude-opus-4"
   litellm_params:
-    model: "claude-opus-4-20250514"
+    model: "bedrock/us.anthropic.claude-opus-4-20250514-v1:0"
     tags: ["paid"]
-    api_key: os.environ/ANTHROPIC_API_KEY
+    api_key: os.environ/BEDROCK_API_KEY
+
+- model_name: "claude-opus-4-1"
+  litellm_params:
+    model: "bedrock/us.anthropic.claude-opus-4-1-20250805-v1:0"
+    tags: ["paid"]
+    api_key: os.environ/BEDROCK_API_KEY
 
 # Groq models
-- model_name: "llama-3.1-70b" # `llama-3.1-70b-versatile` has been decommissioned and is no longer supported
-  litellm_params:
-    model: "groq/llama-3.1-70b-versatile"
-    tags: ["paid"]
-    api_key: os.environ/GROQ_API_KEY
+# - model_name: "llama-3.1-70b" # `llama-3.1-70b-versatile` has been decommissioned and is no longer supported
+#   litellm_params:
+#     model: "groq/llama-3.1-70b-versatile"
+#     tags: ["paid"]
+#     api_key: os.environ/GROQ_API_KEY
 
 - model_name: "llama-3.1-8b"
   litellm_params:
@@ -233,17 +239,17 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
 
-- model_name: "mistral-saba-24b"
-  litellm_params:
-    model: "groq/mistral-saba-24b"
-    tags: ["paid"]
-    api_key: os.environ/GROQ_API_KEY
+# - model_name: "mistral-saba-24b" # Discontinued
+#   litellm_params:
+#     model: "groq/mistral-saba-24b"
+#     tags: ["paid"]
+#     api_key: os.environ/GROQ_API_KEY
 
-- model_name: "qwen-qwq-32b"
-  litellm_params:
-    model: "groq/qwen-qwq-32b"
-    tags: ["paid"]
-    api_key: os.environ/GROQ_API_KEY
+# - model_name: "qwen-qwq-32b" # Discontinued
+#   litellm_params:
+#     model: "groq/qwen-qwq-32b"
+#     tags: ["paid"]
+#     api_key: os.environ/GROQ_API_KEY
 
 - model_name: "qwen/qwen3-32b"
   litellm_params:
@@ -349,35 +355,35 @@ model_list:
     tags: ["paid"]
     
     
-# Cerebras Models
-- model_name: "cerebras/llama-3.1-8b"
+# Cerebras Models (OpenRouter)
+- model_name: "meta-llama/llama-3.1-8b-instruct"
   litellm_params:
-    model: "cerebras/llama3.1-8b"
-    api_key: os.environ/CEREBRAS_API_KEY
+    model: "openrouter/meta-llama/llama-3.1-8b-instruct"
+    api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "cerebras/llama-3.3-70b"
+- model_name: "meta-llama/llama-3.3-70b-instruct"
   litellm_params:
-    model: "cerebras/llama-3.3-70b"
-    api_key: os.environ/CEREBRAS_API_KEY
+    model: "openrouter/meta-llama/llama-3.3-70b-instruct"
+    api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
   
-- model_name: "cerebras/llama-4-scout-17b-16e-instruct"
+- model_name: "meta-llama/llama-4-scout"
   litellm_params:
-    model: "cerebras/llama-4-scout-17b-16e-instruct"
-    api_key: os.environ/CEREBRAS_API_KEY
+    model: "openrouter/meta-llama/llama-4-scout"
+    api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "cerebras/deepseek-r1-distill-llama-70b"
+- model_name: "deepseek/deepseek-r1-distill-llama-70b"
   litellm_params:
-    model: "cerebras/deepseek-r1-distill-llama-70b"
-    api_key: os.environ/CEREBRAS_API_KEY
+    model: "openrouter/deepseek/deepseek-r1-distill-llama-70b"
+    api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "cerebras/qwen-3-32b"
+- model_name: "deepseek/deepseek-r1-distill-qwen-32b"
   litellm_params:
-    model: "cerebras/qwen-3-32b"
-    api_key: os.environ/CEREBRAS_API_KEY
+    model: "openrouter/deepseek/deepseek-r1-distill-qwen-32b"
+    api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
 # -*= Embedding models =*-
