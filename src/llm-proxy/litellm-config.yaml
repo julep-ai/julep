@@ -110,6 +110,55 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/OPENAI_API_KEY
 
+# GPT-5 models
+- model_name: "gpt-5"
+  litellm_params:
+    model: "openai/gpt-5"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-mini"
+  litellm_params:
+    model: "openai/gpt-5-mini"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-nano"
+  litellm_params:
+    model: "openai/gpt-5-nano"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-chat"
+  litellm_params:
+    model: "openai/gpt-5-chat"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-chat-latest"
+  litellm_params:
+    model: "openai/gpt-5-chat-latest"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-2025-08-07"
+  litellm_params:
+    model: "openai/gpt-5-2025-08-07"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-mini-2025-08-07"
+  litellm_params:
+    model: "openai/gpt-5-mini-2025-08-07"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-5-nano-2025-08-07"
+  litellm_params:
+    model: "openai/gpt-5-nano-2025-08-07"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
 # TODO: uncomment after integrating litellm.image_generation
 # - model_name: "gpt-image-1"
 #   litellm_params:
