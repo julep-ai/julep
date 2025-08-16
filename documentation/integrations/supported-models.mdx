@@ -59,15 +59,6 @@ Here are the Google models supported by Julep:
 
 Here are the OpenAI models supported by Julep:
 
-<Info>
-**GPT-5 Models**: Released on August 7, 2025, GPT-5 models feature a massive 400K token context window and 128K max output tokens. Available in three variants:
-- **gpt-5**: Full capability model for reasoning and tool use ($1.25/$10 per 1M input/output tokens)
-- **gpt-5-mini**: Cost-optimized for practical workloads ($0.25/$2 per 1M input/output tokens)
-- **gpt-5-nano**: Ultra-lightweight for high-speed batch tasks ($0.05/$0.40 per 1M input/output tokens)
-
-All GPT-5 models support new `reasoning_effort` (minimal, low, medium, high) and `verbosity` (low, medium, high) parameters for fine-tuned control over response behavior.
-</Info>
-
 | Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
 |------------|----------------|------------|--------------|--------|-------|---------|----------|
 | gpt-4-turbo | 128K tokens | 4K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
@@ -76,19 +67,19 @@ All GPT-5 models support new `reasoning_effort` (minimal, low, medium, high) and
 | gpt-4.1-nano | 1M tokens | 32K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
 | gpt-4o | 128K tokens | 16K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
 | gpt-4o-mini | 128K tokens | 16K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-chat | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-chat-latest | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-mini | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5-mini-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5-nano | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5-nano-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
 | o1 | 200K tokens | 100K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
 | o1-mini | 128K tokens | 65K tokens | ❌ | ✅ | ❌ | ✅ | Standard |
 | o1-preview | 128K tokens | 32K tokens | ❌ | ✅ | ❌ | ✅ | Enterprise |
 | o3-mini | 200K tokens | 100K tokens | ✅ | ❌ | ❌ | ✅ | Standard |
 | o4-mini | 200K tokens | 100K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
-| gpt-5 | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Premium |
-| gpt-5-mini | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Budget |
-| gpt-5-nano | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Budget |
-| gpt-5-chat | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Premium |
-| gpt-5-chat-latest | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Premium |
-| gpt-5-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Premium |
-| gpt-5-mini-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Budget |
-| gpt-5-nano-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ✅ | ✅ | Budget |
 
 
 ### Groq
