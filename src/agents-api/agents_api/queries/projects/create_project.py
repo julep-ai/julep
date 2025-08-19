@@ -20,6 +20,7 @@ INSERT INTO projects (
     project_id,
     canonical_name,
     name,
+    description,
     metadata
 )
 VALUES (
@@ -27,7 +28,8 @@ VALUES (
     $2,
     $3,
     $4,
-    $5
+    $5,
+    $6
 )
 RETURNING *;
 """
@@ -70,6 +72,7 @@ async def create_project(
         project_id,
         data.canonical_name,
         data.name,
+        data.description,
         data.metadata,
     ]
 
