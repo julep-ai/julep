@@ -64,6 +64,8 @@ Julep is an open-source platform for building **agent-based AI workflows** that 
 * **Reliable Execution:** Don’t worry about glitches – Julep provides built-in retries, self-healing steps, and robust error handling to keep long-running tasks on track. You also get real-time monitoring and logging to track progress.
 * **Easy Integration:** Get started quickly with our SDKs for **Python** and **Node.js**, or use the Julep CLI for scripting. Julep’s REST API is available if you want to integrate directly into other systems.
 
+<img src="./.github/julep.gif"/>
+
 *Focus on your AI logic and creativity, while Julep takes care of the heavy lifting!* <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/2c0eef4b-7b75-42bd-9722-4bea97a2d532" width="20">
 
 
