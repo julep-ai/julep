@@ -786,25 +786,19 @@
     
     // Detect initial theme
     detectTheme();
-    
-    // Watch for theme changes
-    const observer = new MutationObserver(() => {
-      detectTheme();
+
+    // Watch for theme changes (Mintlify toggles `dark` on <html>)
+    const observer = new MutationObserver(() => detectTheme());
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
     });
-    
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class', 'data-theme']
-    });
-    
-    // Also watch for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
   }
-  
-  // Wait for DOM
+
+  // Start it up
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    setTimeout(init, 100);
+    init();
   }
 })();
