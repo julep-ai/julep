@@ -39,11 +39,10 @@ jobs:
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
-          provider: bedrock
-          
-          model: "us.anthropic.claude-opus-4-1-20250805-v1:0"
+          use_bedrock: "true"
+          claude_args: '--model us.anthropic.claude-opus-4-1-20250805-v1:0'
           
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
