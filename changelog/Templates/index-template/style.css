@@ -58,7 +58,7 @@ a {
   transition: background 0.2s ease;
 }
 
-a:hover { background: rgba(0,0,0,0.05); color: var(--link-hover-color); }
+a:hover { background: var(--link-hover-bg); color: var(--link-hover-color); }
 a:active { opacity: 0.9; }
 
 /* ── Headings ─────────────────────────────────────────── */
