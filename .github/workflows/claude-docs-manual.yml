@@ -15,10 +15,18 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-Docs-${{ github.run_id }}
+          aws-region: us-east-1
 
       - name: Save PR patch
         run: gh pr diff ${{ github.event.inputs.pr_number }} --patch > diff.patch
@@ -45,13 +53,15 @@ jobs:
           fi
 
       - name: Claude changes docs
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model:   claude-sonnet-4-20250514
-          github_token:      ${{ secrets.GITHUB_TOKEN }}
-          allowed_tools:     "Read,Edit,Replace"
-          direct_prompt: |
+          use_bedrock: "true"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-sonnet-4-20250514-v1:0
+            --max-turns 10
+            --allowedTools Read,Edit,MultiEdit,Write
+          prompt: |
             You are the team's documentation bot.  
             1. Read *diff.patch*.  
             2. For any change that affects users:
@@ -73,5 +83,5 @@ jobs:
             3. Commit the edits.  
             If diff.patch has no user-visible change, do nothing.
             4. Finally, stage, commit and push the edits with a clear message.
-          custom_instructions: |
-            AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).
+            
+            Note: AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).

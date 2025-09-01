@@ -42,25 +42,15 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
-          claude_args: '--model us.anthropic.claude-opus-4-1-20250805-v1:0'
+          claude_args: |
+            --model us.anthropic.claude-opus-4-1-20250805-v1:0
+            --max-turns 15
+            --allowedTools Edit,MultiEdit,Read,Write,Glob,Grep,Bash,WebSearch,WebFetch
+            --system-prompt "This is a monorepo with multiple different services. The repo uses AGENTS.md as the file that contains instructions for AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but is just a symlink to the corresponding AGENTS.md (usually in the same dir)."
           
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
           
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
-          
-          # Optional: Allow Claude to run specific commands
-          # allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
-          
-          # Optional: Add custom instructions for Claude to customize its behavior for your project
-          custom_instructions: >-
-            This is a monorepo with multiple different services.
-            The repo uses AGENTS.md as the file that contains instructions for
-            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
-            is just a symlink to the corresponding AGENTS.md (usually in the same dir).
-          
-          # Optional: Custom environment variables for Claude
-          # claude_env: |
-          #   NODE_ENV: test
 
