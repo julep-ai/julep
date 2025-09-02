@@ -15,6 +15,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: read
       id-token: write
 
     steps:
@@ -56,12 +57,16 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
+          track_progress: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
             --model us.anthropic.claude-sonnet-4-20250514-v1:0
             --max-turns 10
             --allowedTools Read,Edit,MultiEdit,Write
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.inputs.pr_number }}
+            
             You are the team's documentation bot.  
             1. Read *diff.patch*.  
             2. For any change that affects users:

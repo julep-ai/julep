@@ -21,8 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
+      actions: read
       id-token: write
     
     steps:
@@ -43,6 +44,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
+          track_progress: true
           claude_args: |
             --model us.anthropic.claude-opus-4-1-20250805-v1:0
             --max-turns 10
@@ -50,6 +52,9 @@ jobs:
           
           # Automated review prompt
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            
             This is a monorepo with multiple different services.
             The repo uses AGENTS.md as the file that contains instructions for
             AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but is just a symlink to the corresponding AGENTS.md (usually in the same dir).

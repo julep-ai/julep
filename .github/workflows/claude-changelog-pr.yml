@@ -16,6 +16,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: read
       id-token: write
 
     steps:
@@ -49,12 +50,16 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
+          track_progress: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
             --model us.anthropic.claude-sonnet-4-20250514-v1:0
             --max-turns 5
             --allowedTools Read,Edit,MultiEdit
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            
             You are the team's *changelog* bot. Follow these rules strictly:
 
             1. Read the unified diff in *diff.patch*.
