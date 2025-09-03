@@ -403,6 +403,35 @@ model_list:
     api_key: os.environ/AMAZON_API_KEY
     tags: ["paid"]
     
+- model_name: "perplexity/sonar-deep-research"
+  litellm_params:
+    model: "openrouter/perplexity/sonar-deep-research"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "perplexity/sonar"
+  litellm_params:
+    model: "openrouter/perplexity/sonar"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "perplexity/sonar-pro"
+  litellm_params:
+    model: "openrouter/perplexity/sonar-pro"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "perplexity/sonar-reasoning-pro"
+  litellm_params:
+    model: "openrouter/perplexity/sonar-reasoning-pro"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "perplexity/sonar-reasoning"
+  litellm_params:
+    model: "openrouter/perplexity/sonar-reasoning"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
     
 # Cerebras Models (OpenRouter)
 - model_name: "meta-llama/llama-3.1-8b-instruct"
