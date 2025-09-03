@@ -10,8 +10,17 @@
   [中文](https://www.readme-i18n.com/julep-ai/julep?lang=zh)
 </div></sup>
 
-<div align="center" id="top">
-<img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Serverless%20AI%20Workflows%20for%20Data%20%26%20ML%20Teams&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" height=300 />
+
+<div align="center">
+
+```
+      ██╗ ██╗   ██╗ ██╗      ███████╗ ██████╗       █████╗  ██╗
+      ██║ ██║   ██║ ██║      ██╔════╝ ██╔══██╗     ██╔══██╗ ██║
+      ██║ ██║   ██║ ██║      █████╗   ██████╔╝     ███████║ ██║
+ ██   ██║ ██║   ██║ ██║      ██╔══╝   ██╔═══╝      ██╔══██║ ██║
+ ╚█████╔╝ ╚██████╔╝ ███████╗ ███████╗ ██║          ██║  ██║ ██║
+  ╚════╝   ╚═════╝  ╚══════╝ ╚══════╝ ╚═╝          ╚═╝  ╚═╝ ╚═╝
+```
 
 <br>
   <p>
@@ -63,6 +72,8 @@ Julep is an open-source platform for building **agent-based AI workflows** that 
 * **Parallel & Scalable:** Run multiple operations in parallel for efficiency, and let Julep handle scaling and concurrency under the hood. The platform is serverless, so it seamlessly scales workflows without extra devops overhead.
 * **Reliable Execution:** Don’t worry about glitches – Julep provides built-in retries, self-healing steps, and robust error handling to keep long-running tasks on track. You also get real-time monitoring and logging to track progress.
 * **Easy Integration:** Get started quickly with our SDKs for **Python** and **Node.js**, or use the Julep CLI for scripting. Julep’s REST API is available if you want to integrate directly into other systems.
+
+<img src="./.github/julep.gif"/>
 
 *Focus on your AI logic and creativity, while Julep takes care of the heavy lifting!* <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/2c0eef4b-7b75-42bd-9722-4bea97a2d532" width="20">
 

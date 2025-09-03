@@ -18,9 +18,22 @@ jobs:
       pr_number:     ${{ steps.resolve.outputs.number }}
       should_update: ${{ steps.gate.outputs.result }}
 
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-DocsGate-${{ github.run_id }}
+          aws-region: us-east-1
 
       - name: PR number
         id: resolve
@@ -33,13 +46,19 @@ jobs:
 
       - name: Gate
         id: gate
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model:   claude-sonnet-4-20250514
-          github_token:      ${{ secrets.GITHUB_TOKEN }}
-          allowed_tools:     "Read"
-          direct_prompt: |
+          use_bedrock: "true"
+          track_progress: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-sonnet-4-20250514-v1:0
+            --max-turns 2
+            --allowedTools Read
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            
             You are a senior technical-writer.  
             Read *diff.patch* (unified diff).  
             Reply with the single word **UPDATE** if the patch
@@ -59,10 +78,19 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-DocsUpdate-${{ github.run_id }}
+          aws-region: us-east-1
 
       - name: Save PR patch
         run: gh pr diff ${{ needs.docs-gate.outputs.pr_number }} --patch > diff.patch
@@ -70,13 +98,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Claude changes docs
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model:   claude-sonnet-4-20250514
-          github_token:      ${{ secrets.GITHUB_TOKEN }}
-          allowed_tools:     "Read,Edit,Replace"
-          direct_prompt: |
+          use_bedrock: "true"
+          track_progress: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-opus-4-1-20250805-v1:0
+            --max-turns 10
+            --allowedTools Read,Edit,MultiEdit
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ needs.docs-gate.outputs.pr_number }}
+            
             You are the team's documentation bot.  
             1. Read *diff.patch*.  
             2. For any change that affects users, **edit** files under *documentation/***  
@@ -84,5 +118,5 @@ jobs:
             3. Commit the edits.  
             If diff.patch has no user-visible change, do nothing.
             4. Finally, stage, commit and push the edits with a clear message.
-          custom_instructions: |
-            AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).
+            
+            Note: AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).
