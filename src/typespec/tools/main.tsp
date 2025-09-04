@@ -14,6 +14,7 @@ import "./cloudinary.tsp";
 import "./arxiv.tsp";
 import "./unstructured.tsp";
 import "./algolia.tsp";
+import "./google_sheets.tsp";
 
 namespace Tools;
 

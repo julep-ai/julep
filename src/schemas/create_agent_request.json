@@ -4897,17 +4897,6 @@
           ],
           "title": "Content"
         },
-        "continue": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Continue"
-        },
         "name": {
           "anyOf": [
             {
@@ -8195,17 +8184,6 @@
           ],
           "title": "Content"
         },
-        "continue": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Continue"
-        },
         "name": {
           "anyOf": [
             {
@@ -8307,17 +8285,6 @@
             }
           ],
           "title": "Content"
-        },
-        "continue": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Continue"
         },
         "name": {
           "anyOf": [
@@ -9480,17 +9447,6 @@
           ],
           "title": "Content"
         },
-        "continue": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Continue"
-        },
         "name": {
           "anyOf": [
             {
@@ -9593,17 +9549,6 @@
             }
           ],
           "title": "Content"
-        },
-        "continue": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Continue"
         },
         "name": {
           "anyOf": [
