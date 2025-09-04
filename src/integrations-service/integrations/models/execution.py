@@ -30,6 +30,7 @@ from ..autogen.Tools import (
     RemoteBrowserSetup,
     SpiderFetchArguments,
     SpiderSetup,
+    UnstructuredPartitionArguments,
     UnstructuredSetup,
     WeatherGetArguments,
     WeatherSetup,
@@ -101,6 +102,7 @@ ExecutionArguments = (
     | MailgunSendEmailArguments
     | RemoteBrowserArguments
     | SpiderFetchArguments
+    | UnstructuredPartitionArguments
     | WeatherGetArguments
     | WikipediaSearchArguments
 )

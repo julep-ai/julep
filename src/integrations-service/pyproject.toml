@@ -9,7 +9,7 @@ dependencies = [
   "fastapi~=0.115.0",
   "uvicorn~=0.30.6",
   "langchain~=0.3.0",
-  "pydantic[email]~=2.9.2",
+  "pydantic[email]>=2.11.2,<3.0.0",
   "duckduckgo-search~=6.2.13",
   "openai~=1.47.1",
   "tweepy~=4.14.0",
@@ -33,7 +33,7 @@ dependencies = [
   "environs~=11.2.1",
   "arxiv~=2.1.3",
   "sentry-sdk[flask]>=2.19.0",
-  "unstructured-client>=0.28.1",
+  "unstructured-client==0.42.3",
   "algoliasearch>=4.14.0",
 ]
 
