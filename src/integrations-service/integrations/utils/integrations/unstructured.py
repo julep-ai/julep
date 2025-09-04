@@ -1,5 +1,6 @@
 import base64
 import uuid
+from typing import Any
 
 import unstructured_client
 from beartype import beartype
@@ -8,6 +9,45 @@ from unstructured_client.models import operations, shared
 
 from ...autogen.Tools import UnstructuredPartitionArguments, UnstructuredSetup
 from ...models import UnstructuredParseOutput
+
+
+def to_unstructured_strategy(
+    value: Any, default: shared.Strategy | None = None
+) -> shared.Strategy | None:
+    """
+    Convert a user-provided strategy (string/enum) to unstructured_client.models.shared.Strategy.
+
+    Accepts common aliases and ignores case, spaces, and dashes.
+    Returns `default` if value is None or unrecognized.
+    """
+    if value is None:
+        return default
+    if isinstance(value, shared.Strategy):
+        return value
+
+    s = str(value).strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "hires": "hi_res",
+        "hires_ocr": "hi_res",
+        "highres": "hi_res",
+        "high_res": "hi_res",
+        "ocr": "ocr_only",
+        "ocronly": "ocr_only",
+        "od": "od_only",
+        "odonly": "od_only",
+        "object_detection_only": "od_only",
+    }
+    s = aliases.get(s, s)
+
+    mapping = {
+        "fast": shared.Strategy.FAST,
+        "hi_res": shared.Strategy.HI_RES,
+        "auto": shared.Strategy.AUTO,
+        "ocr_only": shared.Strategy.OCR_ONLY,
+        "od_only": shared.Strategy.OD_ONLY,
+        "vlm": shared.Strategy.VLM,
+    }
+    return mapping.get(s, default)
 
 
 @beartype
@@ -23,6 +63,17 @@ async def parse(
     """
     Parse documents into structured elements using Unstructured.io.
     """
+    # AIDEV-NOTE: Extract and convert strategy/chunking_strategy explicitly for proper API handling
+    params = (
+        arguments.partition_params
+        if hasattr(arguments, "partition_params") and arguments.partition_params
+        else {}
+    )
+
+    # Extract strategy and chunking_strategy for explicit handling
+    # AIDEV-NOTE: Use .get() instead of .pop() to avoid mutating params on retries
+    strategy = to_unstructured_strategy(params.get("strategy", None))
+    chunking_strategy = params.get("chunking_strategy", None)
 
     api_key = setup.unstructured_api_key
 
@@ -43,18 +94,27 @@ async def parse(
         raise RuntimeError(msg)
 
     # Process file
+    # Build partition parameters with explicit strategy and chunking_strategy
+    partition_params = {
+        "files": shared.Files(
+            content=decoded_file,
+            file_name=arguments.filename or f"{uuid.uuid4()}.txt",
+        ),
+    }
+
+    # Add strategy and chunking_strategy explicitly if provided
+    if strategy is not None:
+        partition_params["strategy"] = strategy
+    if chunking_strategy is not None:
+        partition_params["chunking_strategy"] = chunking_strategy
+
+    # Spread the rest of the parameters (excluding strategy and chunking_strategy)
+    partition_params.update({
+        k: v for k, v in params.items() if k not in ["strategy", "chunking_strategy"]
+    })
+
     req = operations.PartitionRequest(
-        partition_parameters=shared.PartitionParameters(
-            files=shared.Files(
-                content=decoded_file,
-                file_name=arguments.filename or f"{uuid.uuid4()}.txt",
-            ),
-            **(
-                arguments.partition_params
-                if hasattr(arguments, "partition_params") and arguments.partition_params
-                else {}
-            ),
-        )
+        partition_parameters=shared.PartitionParameters(**partition_params)
     )
 
     try:
