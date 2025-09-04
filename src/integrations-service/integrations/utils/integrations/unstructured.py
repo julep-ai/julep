@@ -1,5 +1,6 @@
 import base64
 import uuid
+from typing import Any
 
 import unstructured_client
 from beartype import beartype
@@ -8,10 +9,11 @@ from unstructured_client.models import operations, shared
 
 from ...autogen.Tools import UnstructuredPartitionArguments, UnstructuredSetup
 from ...models import UnstructuredParseOutput
-from typing import Any, Optional
 
 
-def to_unstructured_strategy(value: Any, default: Optional[shared.Strategy] = None) -> Optional[shared.Strategy]:
+def to_unstructured_strategy(
+    value: Any, default: shared.Strategy | None = None
+) -> shared.Strategy | None:
     """
     Convert a user-provided strategy (string/enum) to unstructured_client.models.shared.Strategy.
 
@@ -62,13 +64,16 @@ async def parse(
     Parse documents into structured elements using Unstructured.io.
     """
     # AIDEV-NOTE: Extract and convert strategy/chunking_strategy explicitly for proper API handling
-    params = arguments.partition_params if hasattr(arguments, "partition_params") and arguments.partition_params else {}
+    params = (
+        arguments.partition_params
+        if hasattr(arguments, "partition_params") and arguments.partition_params
+        else {}
+    )
 
     # Extract strategy and chunking_strategy for explicit handling
     # AIDEV-NOTE: Use .get() instead of .pop() to avoid mutating params on retries
     strategy = to_unstructured_strategy(params.get("strategy", None))
     chunking_strategy = params.get("chunking_strategy", None)
-
 
     api_key = setup.unstructured_api_key
 
@@ -96,16 +101,18 @@ async def parse(
             file_name=arguments.filename or f"{uuid.uuid4()}.txt",
         ),
     }
-    
+
     # Add strategy and chunking_strategy explicitly if provided
     if strategy is not None:
         partition_params["strategy"] = strategy
     if chunking_strategy is not None:
         partition_params["chunking_strategy"] = chunking_strategy
-    
+
     # Spread the rest of the parameters (excluding strategy and chunking_strategy)
-    partition_params.update({k: v for k, v in params.items() if k not in ['strategy', 'chunking_strategy']})
-    
+    partition_params.update({
+        k: v for k, v in params.items() if k not in ["strategy", "chunking_strategy"]
+    })
+
     req = operations.PartitionRequest(
         partition_parameters=shared.PartitionParameters(**partition_params)
     )
