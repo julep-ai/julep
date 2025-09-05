@@ -1,6 +1,6 @@
 import base64
 import json
-import os
+from ...env import julep_google_sheets_service_account_json
 
 from beartype import beartype
 from google.oauth2 import service_account
@@ -44,7 +44,7 @@ def get_sheets_service(setup: GoogleSheetsSetup):
     """
     if setup.use_julep_service:
         # Use Julep's built-in service account
-        julep_service_account = os.getenv("JULEP_GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON")
+        julep_service_account = julep_google_sheets_service_account_json
         if not julep_service_account:
             msg = (
                 "Julep's Google Sheets service account is not configured. "

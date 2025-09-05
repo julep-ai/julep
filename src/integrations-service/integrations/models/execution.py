@@ -35,6 +35,13 @@ from ..autogen.Tools import (
     WeatherGetArguments,
     WeatherSetup,
     WikipediaSearchArguments,
+    GoogleSheetsReadArguments,
+    GoogleSheetsWriteArguments,
+    GoogleSheetsAppendArguments,
+    GoogleSheetsClearArguments,
+    GoogleSheetsBatchReadArguments,
+    GoogleSheetsBatchWriteArguments,
+    GoogleSheetsSetup,
 )
 from .algolia import AlgoliaSearchOutput
 from .arxiv import ArxivSearchOutput
@@ -47,6 +54,14 @@ from .browserbase import (
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
+)
+from .google_sheets import (
+    GoogleSheetsReadOutput,
+    GoogleSheetsWriteOutput,
+    GoogleSheetsClearOutput,
+    GoogleSheetsBatchReadOutput,
+    GoogleSheetsBatchWriteOutput,
+    GoogleSheetsValueRangeOutput,
 )
 from .cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 from .email import EmailOutput
@@ -80,6 +95,7 @@ ExecutionSetup = (
     | SpiderSetup
     | UnstructuredSetup
     | WeatherSetup
+    | GoogleSheetsSetup
 )
 
 # Argument configurations
@@ -105,6 +121,12 @@ ExecutionArguments = (
     | UnstructuredPartitionArguments
     | WeatherGetArguments
     | WikipediaSearchArguments
+    | GoogleSheetsReadArguments
+    | GoogleSheetsWriteArguments
+    | GoogleSheetsAppendArguments
+    | GoogleSheetsClearArguments
+    | GoogleSheetsBatchReadArguments
+    | GoogleSheetsBatchWriteArguments
 )
 
 ExecutionResponse = (
@@ -130,6 +152,12 @@ ExecutionResponse = (
     | SpiderOutput
     | UnstructuredParseOutput
     | AlgoliaSearchOutput
+    | GoogleSheetsReadOutput
+    | GoogleSheetsWriteOutput
+    | GoogleSheetsClearOutput
+    | GoogleSheetsBatchReadOutput
+    | GoogleSheetsBatchWriteOutput
+    | GoogleSheetsValueRangeOutput
 )
 
 
