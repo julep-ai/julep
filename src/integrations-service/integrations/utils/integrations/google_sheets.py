@@ -69,10 +69,10 @@ def get_sheets_service(setup: GoogleSheetsSetup):
         # Add padding if missing
         missing_padding = len(service_account_json) % 4
         if missing_padding:
-            service_account_json += '=' * (4 - missing_padding)
+            service_account_json += "=" * (4 - missing_padding)
         creds_dict = json.loads(base64.b64decode(service_account_json))
     except Exception as e:
-        msg = f"Failed to decode service account JSON: {str(e)}"
+        msg = f"Failed to decode service account JSON: {e!s}"
         raise ValueError(msg) from e
     creds = service_account.Credentials.from_service_account_info(
         creds_dict,
