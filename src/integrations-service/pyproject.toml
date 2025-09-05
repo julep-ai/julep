@@ -35,6 +35,10 @@ dependencies = [
   "sentry-sdk[flask]>=2.19.0",
   "unstructured-client==0.42.3",
   "algoliasearch>=4.14.0",
+  "google-api-python-client>=2.181.0",
+  "google-auth>=2.40.3",
+  "google-auth-oauthlib>=1.2.2",
+  "google-auth-httplib2>=0.2.0",
 ]
 
 [dependency-groups]
