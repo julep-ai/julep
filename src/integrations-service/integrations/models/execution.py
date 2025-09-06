@@ -22,6 +22,13 @@ from ..autogen.Tools import (
     EmailArguments,
     EmailSetup,
     FfmpegSearchArguments,
+    GoogleSheetsAppendArguments,
+    GoogleSheetsBatchReadArguments,
+    GoogleSheetsBatchWriteArguments,
+    GoogleSheetsClearArguments,
+    GoogleSheetsReadArguments,
+    GoogleSheetsSetup,
+    GoogleSheetsWriteArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     MailgunSendEmailArguments,
@@ -51,6 +58,14 @@ from .browserbase import (
 from .cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
+from .google_sheets import (
+    GoogleSheetsBatchReadOutput,
+    GoogleSheetsBatchWriteOutput,
+    GoogleSheetsClearOutput,
+    GoogleSheetsReadOutput,
+    GoogleSheetsValueRangeOutput,
+    GoogleSheetsWriteOutput,
+)
 from .llama_parse import LlamaParseFetchOutput
 from .mailgun import MailgunSendEmailOutput
 from .remote_browser import RemoteBrowserOutput
@@ -80,6 +95,7 @@ ExecutionSetup = (
     | SpiderSetup
     | UnstructuredSetup
     | WeatherSetup
+    | GoogleSheetsSetup
 )
 
 # Argument configurations
@@ -105,6 +121,12 @@ ExecutionArguments = (
     | UnstructuredPartitionArguments
     | WeatherGetArguments
     | WikipediaSearchArguments
+    | GoogleSheetsReadArguments
+    | GoogleSheetsWriteArguments
+    | GoogleSheetsAppendArguments
+    | GoogleSheetsClearArguments
+    | GoogleSheetsBatchReadArguments
+    | GoogleSheetsBatchWriteArguments
 )
 
 ExecutionResponse = (
@@ -130,6 +152,12 @@ ExecutionResponse = (
     | SpiderOutput
     | UnstructuredParseOutput
     | AlgoliaSearchOutput
+    | GoogleSheetsReadOutput
+    | GoogleSheetsWriteOutput
+    | GoogleSheetsClearOutput
+    | GoogleSheetsBatchReadOutput
+    | GoogleSheetsBatchWriteOutput
+    | GoogleSheetsValueRangeOutput
 )
 
 

@@ -9695,6 +9695,7 @@ components:
             - arxiv
             - unstructured
             - algolia
+            - google_sheets
           description: The provider of the integration
         method:
           type: string
@@ -9720,6 +9721,7 @@ components:
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDef'
           unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDef'
           algolia: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+          google_sheets: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -9742,6 +9744,7 @@ components:
             - arxiv
             - unstructured
             - algolia
+            - google_sheets
           description: The provider of the integration
         method:
           type: string
@@ -9767,6 +9770,7 @@ components:
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
           unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
           algolia: '#/components/schemas/Tools.AlgoliaIntegrationDefUpdate'
+          google_sheets: '#/components/schemas/Tools.GoogleSheetsIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -10616,6 +10620,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -10885,6 +10890,501 @@ components:
           additionalProperties: {}
           description: The parameters the function accepts
       description: Function definition
+    Tools.GoogleSheetsAppendArguments:
+      type: object
+      required:
+        - spreadsheet_id
+        - range
+        - values
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to append to
+        range:
+          type: string
+          description: The A1 notation of the range to start appending from
+        values:
+          type: array
+          items:
+            type: array
+            items: {}
+          description: The values to append (2D array)
+        value_input_option:
+          type: string
+          enum:
+            - RAW
+            - USER_ENTERED
+          description: How the input data should be interpreted
+          default: USER_ENTERED
+        insert_data_option:
+          type: string
+          enum:
+            - OVERWRITE
+            - INSERT_ROWS
+          description: How the input data should be inserted
+          default: INSERT_ROWS
+        include_values_in_response:
+          type: boolean
+          description: Whether to include the values in the response
+          default: false
+      description: Arguments for appending values to a spreadsheet
+    Tools.GoogleSheetsAppendArgumentsUpdate:
+      type: object
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to append to
+        range:
+          type: string
+          description: The A1 notation of the range to start appending from
+        values:
+          type: array
+          items:
+            type: array
+            items: {}
+          description: The values to append (2D array)
+        value_input_option:
+          type: string
+          enum:
+            - RAW
+            - USER_ENTERED
+          description: How the input data should be interpreted
+          default: USER_ENTERED
+        insert_data_option:
+          type: string
+          enum:
+            - OVERWRITE
+            - INSERT_ROWS
+          description: How the input data should be inserted
+          default: INSERT_ROWS
+        include_values_in_response:
+          type: boolean
+          description: Whether to include the values in the response
+          default: false
+      description: Arguments for appending values to a spreadsheet
+    Tools.GoogleSheetsBatchReadArguments:
+      type: object
+      required:
+        - spreadsheet_id
+        - ranges
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to read from
+        ranges:
+          type: array
+          items:
+            type: string
+          description: The A1 notation of the ranges to read
+        major_dimension:
+          type: string
+          enum:
+            - ROWS
+            - COLUMNS
+          description: The major dimension that results should use
+          default: ROWS
+        value_render_option:
+          type: string
+          enum:
+            - FORMATTED_VALUE
+            - UNFORMATTED_VALUE
+            - FORMULA
+          description: How values should be represented in the output
+          default: FORMATTED_VALUE
+        date_time_render_option:
+          type: string
+          enum:
+            - SERIAL_NUMBER
+            - FORMATTED_STRING
+          description: How dates, times, and durations should be represented
+          default: FORMATTED_STRING
+      description: Arguments for batch reading values from multiple ranges
+    Tools.GoogleSheetsBatchReadArgumentsUpdate:
+      type: object
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to read from
+        ranges:
+          type: array
+          items:
+            type: string
+          description: The A1 notation of the ranges to read
+        major_dimension:
+          type: string
+          enum:
+            - ROWS
+            - COLUMNS
+          description: The major dimension that results should use
+          default: ROWS
+        value_render_option:
+          type: string
+          enum:
+            - FORMATTED_VALUE
+            - UNFORMATTED_VALUE
+            - FORMULA
+          description: How values should be represented in the output
+          default: FORMATTED_VALUE
+        date_time_render_option:
+          type: string
+          enum:
+            - SERIAL_NUMBER
+            - FORMATTED_STRING
+          description: How dates, times, and durations should be represented
+          default: FORMATTED_STRING
+      description: Arguments for batch reading values from multiple ranges
+    Tools.GoogleSheetsBatchWriteArguments:
+      type: object
+      required:
+        - spreadsheet_id
+        - data
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to write to
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tools.GoogleSheetsValueRange'
+          description: The data to write to each range
+        value_input_option:
+          type: string
+          enum:
+            - RAW
+            - USER_ENTERED
+          description: How the input data should be interpreted
+          default: USER_ENTERED
+        include_values_in_response:
+          type: boolean
+          description: Whether to include the values in the response
+          default: false
+      description: Arguments for batch updating values in multiple ranges
+    Tools.GoogleSheetsBatchWriteArgumentsUpdate:
+      type: object
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to write to
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tools.GoogleSheetsValueRange'
+          description: The data to write to each range
+        value_input_option:
+          type: string
+          enum:
+            - RAW
+            - USER_ENTERED
+          description: How the input data should be interpreted
+          default: USER_ENTERED
+        include_values_in_response:
+          type: boolean
+          description: Whether to include the values in the response
+          default: false
+      description: Arguments for batch updating values in multiple ranges
+    Tools.GoogleSheetsClearArguments:
+      type: object
+      required:
+        - spreadsheet_id
+        - range
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to clear values from
+        range:
+          type: string
+          description: The A1 notation of the range to clear
+      description: Arguments for clearing values from a spreadsheet
+    Tools.GoogleSheetsClearArgumentsUpdate:
+      type: object
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to clear values from
+        range:
+          type: string
+          description: The A1 notation of the range to clear
+      description: Arguments for clearing values from a spreadsheet
+    Tools.GoogleSheetsIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - google_sheets
+          description: The provider must be "google_sheets"
+          default: google_sheets
+        method:
+          type: string
+          enum:
+            - read_values
+            - write_values
+            - append_values
+            - clear_values
+            - batch_read
+            - batch_write
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.GoogleSheetsSetup'
+          description: The setup parameters for Google Sheets
+        arguments:
+          anyOf:
+            - $ref: '#/components/schemas/Tools.GoogleSheetsReadArguments'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsWriteArguments'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsAppendArguments'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsClearArguments'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsBatchReadArguments'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsBatchWriteArguments'
+          description: The arguments for the method
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Google Sheets integration definition
+    Tools.GoogleSheetsIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - google_sheets
+          description: The provider must be "google_sheets"
+          default: google_sheets
+        method:
+          type: string
+          enum:
+            - read_values
+            - write_values
+            - append_values
+            - clear_values
+            - batch_read
+            - batch_write
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.GoogleSheetsSetupUpdate'
+          description: The setup parameters for Google Sheets
+        arguments:
+          anyOf:
+            - $ref: '#/components/schemas/Tools.GoogleSheetsReadArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsWriteArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsAppendArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsClearArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsBatchReadArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsBatchWriteArgumentsUpdate'
+          description: The arguments for the method
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Google Sheets integration definition
+    Tools.GoogleSheetsReadArguments:
+      type: object
+      required:
+        - spreadsheet_id
+        - range
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to read from
+        range:
+          type: string
+          description: The A1 notation of the range to read
+        major_dimension:
+          type: string
+          enum:
+            - ROWS
+            - COLUMNS
+          description: The major dimension that results should use
+          default: ROWS
+        value_render_option:
+          type: string
+          enum:
+            - FORMATTED_VALUE
+            - UNFORMATTED_VALUE
+            - FORMULA
+          description: How values should be represented in the output
+          default: FORMATTED_VALUE
+        date_time_render_option:
+          type: string
+          enum:
+            - SERIAL_NUMBER
+            - FORMATTED_STRING
+          description: How dates, times, and durations should be represented
+          default: FORMATTED_STRING
+      description: Arguments for reading values from a spreadsheet
+    Tools.GoogleSheetsReadArgumentsUpdate:
+      type: object
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to read from
+        range:
+          type: string
+          description: The A1 notation of the range to read
+        major_dimension:
+          type: string
+          enum:
+            - ROWS
+            - COLUMNS
+          description: The major dimension that results should use
+          default: ROWS
+        value_render_option:
+          type: string
+          enum:
+            - FORMATTED_VALUE
+            - UNFORMATTED_VALUE
+            - FORMULA
+          description: How values should be represented in the output
+          default: FORMATTED_VALUE
+        date_time_render_option:
+          type: string
+          enum:
+            - SERIAL_NUMBER
+            - FORMATTED_STRING
+          description: How dates, times, and durations should be represented
+          default: FORMATTED_STRING
+      description: Arguments for reading values from a spreadsheet
+    Tools.GoogleSheetsSetup:
+      type: object
+      required:
+        - use_julep_service
+      properties:
+        use_julep_service:
+          type: boolean
+          description: |-
+            Whether to use Julep's built-in Google Sheets service account.
+            If true, no credentials needed. If false, service_account_json is required.
+        service_account_json:
+          type: string
+          description: |-
+            Base64 encoded service account JSON for authentication.
+            Required when use_julep_service is false.
+            Users can provide their own service account for better isolation and quota management.
+        default_retry_count:
+          type: integer
+          format: uint8
+          minimum: 1
+          maximum: 10
+          description: Default number of retry attempts for API calls
+          default: 3
+      description: Setup parameters for Google Sheets integration
+    Tools.GoogleSheetsSetupUpdate:
+      type: object
+      properties:
+        use_julep_service:
+          type: boolean
+          description: |-
+            Whether to use Julep's built-in Google Sheets service account.
+            If true, no credentials needed. If false, service_account_json is required.
+        service_account_json:
+          type: string
+          description: |-
+            Base64 encoded service account JSON for authentication.
+            Required when use_julep_service is false.
+            Users can provide their own service account for better isolation and quota management.
+        default_retry_count:
+          type: integer
+          format: uint8
+          minimum: 1
+          maximum: 10
+          description: Default number of retry attempts for API calls
+          default: 3
+      description: Setup parameters for Google Sheets integration
+    Tools.GoogleSheetsValueRange:
+      type: object
+      required:
+        - range
+        - values
+      properties:
+        range:
+          type: string
+          description: The A1 notation of the range
+        values:
+          type: array
+          items:
+            type: array
+            items: {}
+          description: The values for the range (2D array)
+        major_dimension:
+          type: string
+          enum:
+            - ROWS
+            - COLUMNS
+          description: The major dimension of the values
+          default: ROWS
+      description: Represents a range of values to write
+    Tools.GoogleSheetsWriteArguments:
+      type: object
+      required:
+        - spreadsheet_id
+        - range
+        - values
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to write to
+        range:
+          type: string
+          description: The A1 notation of the range to write to
+        values:
+          type: array
+          items:
+            type: array
+            items: {}
+          description: The values to write (2D array)
+        value_input_option:
+          type: string
+          enum:
+            - RAW
+            - USER_ENTERED
+          description: How the input data should be interpreted
+          default: USER_ENTERED
+        insert_data_option:
+          type: string
+          enum:
+            - OVERWRITE
+            - INSERT_ROWS
+          description: How the input data should be inserted
+          default: OVERWRITE
+        include_values_in_response:
+          type: boolean
+          description: Whether to include the values in the response
+          default: false
+      description: Arguments for writing values to a spreadsheet
+    Tools.GoogleSheetsWriteArgumentsUpdate:
+      type: object
+      properties:
+        spreadsheet_id:
+          type: string
+          description: The ID of the spreadsheet to write to
+        range:
+          type: string
+          description: The A1 notation of the range to write to
+        values:
+          type: array
+          items:
+            type: array
+            items: {}
+          description: The values to write (2D array)
+        value_input_option:
+          type: string
+          enum:
+            - RAW
+            - USER_ENTERED
+          description: How the input data should be interpreted
+          default: USER_ENTERED
+        insert_data_option:
+          type: string
+          enum:
+            - OVERWRITE
+            - INSERT_ROWS
+          description: How the input data should be inserted
+          default: OVERWRITE
+        include_values_in_response:
+          type: boolean
+          description: Whether to include the values in the response
+          default: false
+      description: Arguments for writing values to a spreadsheet
     Tools.LlamaParseFetchArguments:
       type: object
       required:
@@ -11214,6 +11714,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -11694,6 +12195,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -11922,6 +12424,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
           description: The integration to call
         system:
           allOf:
