@@ -21,6 +21,9 @@ from .autogen.Tools import (
     LlamaParseSetup,
     MailgunSendEmailArguments,
     MailgunSetup,
+    McpCallToolArguments,
+    McpListToolsArguments,
+    McpSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -49,6 +52,8 @@ from .models import (
     FfmpegSearchOutput,
     LlamaParseFetchOutput,
     MailgunSendEmailOutput,
+    McpListToolsOutput,
+    McpToolCallOutput,
     ProviderInfo,
     RemoteBrowserOutput,
     SpiderOutput,
@@ -374,6 +379,32 @@ mailgun = BaseProvider(
     ),
 )
 
+# MCP provider: dynamic protocol-backed tool execution
+mcp = BaseProvider(
+    provider="mcp",
+    setup=McpSetup,
+    methods=[
+        BaseProviderMethod(
+            method="list_tools",
+            description="List tools exposed by an MCP server",
+            arguments=McpListToolsArguments,
+            output=McpListToolsOutput,
+        ),
+        BaseProviderMethod(
+            method="call_tool",
+            description="Call a named tool on an MCP server",
+            arguments=McpCallToolArguments,
+            output=McpToolCallOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="Model Context Protocol",
+        url="https://modelcontextprotocol.io/",
+        docs="https://spec.modelcontextprotocol.io/",
+        icon="https://modelcontextprotocol.io/favicon.ico",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -389,4 +420,5 @@ available_providers: dict[str, BaseProvider] = {
     "unstructured": unstructured,
     "algolia": algolia,
     "mailgun": mailgun,
+    "mcp": mcp,
 }

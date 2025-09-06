@@ -28,7 +28,7 @@ generate_json_schema () {
 }
 
 cd src/typespec/ && \
-  tsp compile .
+  npx tsp compile .
 cd -
 
 generate_json_schema CreateTaskRequest src/schemas/create_task_request.json

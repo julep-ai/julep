@@ -26,6 +26,9 @@ from ..autogen.Tools import (
     LlamaParseSetup,
     MailgunSendEmailArguments,
     MailgunSetup,
+    McpCallToolArguments,
+    McpListToolsArguments,
+    McpSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -53,6 +56,7 @@ from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
 from .mailgun import MailgunSendEmailOutput
+from .mcp import McpListToolsOutput, McpToolCallOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderOutput
 from .unstructured import UnstructuredParseOutput
@@ -80,6 +84,7 @@ ExecutionSetup = (
     | SpiderSetup
     | UnstructuredSetup
     | WeatherSetup
+    | McpSetup
 )
 
 # Argument configurations
@@ -105,6 +110,8 @@ ExecutionArguments = (
     | UnstructuredPartitionArguments
     | WeatherGetArguments
     | WikipediaSearchArguments
+    | McpCallToolArguments
+    | McpListToolsArguments
 )
 
 ExecutionResponse = (
@@ -130,6 +137,8 @@ ExecutionResponse = (
     | SpiderOutput
     | UnstructuredParseOutput
     | AlgoliaSearchOutput
+    | McpToolCallOutput
+    | McpListToolsOutput
 )
 
 
