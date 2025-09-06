@@ -15,6 +15,7 @@ import "./arxiv.tsp";
 import "./unstructured.tsp";
 import "./algolia.tsp";
 import "./mcp.tsp";
+import "./google_sheets.tsp";
 
 namespace Tools;
 

@@ -385,6 +385,7 @@ class BaseIntegrationDef(BaseModel):
         "unstructured",
         "algolia",
         "mcp",
+        "google_sheets",
     ]
     """
     The provider of the integration
@@ -429,6 +430,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "unstructured",
             "algolia",
             "mcp",
+            "google_sheets",
         ]
         | None
     ) = None
@@ -1062,6 +1064,7 @@ class CreateToolRequest(BaseModel):
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
         | McpIntegrationDef
+        | GoogleSheetsIntegrationDef
         | None
     ) = None
     """
@@ -1374,6 +1377,518 @@ class FunctionDef(BaseModel):
     parameters: dict[str, Any] | None = None
     """
     The parameters the function accepts
+    """
+
+
+class GoogleSheetsAppendArguments(BaseModel):
+    """
+    Arguments for appending values to a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str
+    """
+    The ID of the spreadsheet to append to
+    """
+    range: str
+    """
+    The A1 notation of the range to start appending from
+    """
+    values: list[list]
+    """
+    The values to append (2D array)
+    """
+    value_input_option: Literal["RAW", "USER_ENTERED"] = "USER_ENTERED"
+    """
+    How the input data should be interpreted
+    """
+    insert_data_option: Literal["OVERWRITE", "INSERT_ROWS"] = "INSERT_ROWS"
+    """
+    How the input data should be inserted
+    """
+    include_values_in_response: StrictBool = False
+    """
+    Whether to include the values in the response
+    """
+
+
+class GoogleSheetsAppendArgumentsUpdate(BaseModel):
+    """
+    Arguments for appending values to a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str | None = None
+    """
+    The ID of the spreadsheet to append to
+    """
+    range: str | None = None
+    """
+    The A1 notation of the range to start appending from
+    """
+    values: list[list] | None = None
+    """
+    The values to append (2D array)
+    """
+    value_input_option: Literal["RAW", "USER_ENTERED"] = "USER_ENTERED"
+    """
+    How the input data should be interpreted
+    """
+    insert_data_option: Literal["OVERWRITE", "INSERT_ROWS"] = "INSERT_ROWS"
+    """
+    How the input data should be inserted
+    """
+    include_values_in_response: StrictBool = False
+    """
+    Whether to include the values in the response
+    """
+
+
+class GoogleSheetsBatchReadArguments(BaseModel):
+    """
+    Arguments for batch reading values from multiple ranges
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str
+    """
+    The ID of the spreadsheet to read from
+    """
+    ranges: list[str]
+    """
+    The A1 notation of the ranges to read
+    """
+    major_dimension: Literal["ROWS", "COLUMNS"] = "ROWS"
+    """
+    The major dimension that results should use
+    """
+    value_render_option: Literal["FORMATTED_VALUE", "UNFORMATTED_VALUE", "FORMULA"] = (
+        "FORMATTED_VALUE"
+    )
+    """
+    How values should be represented in the output
+    """
+    date_time_render_option: Literal["SERIAL_NUMBER", "FORMATTED_STRING"] = "FORMATTED_STRING"
+    """
+    How dates, times, and durations should be represented
+    """
+
+
+class GoogleSheetsBatchReadArgumentsUpdate(BaseModel):
+    """
+    Arguments for batch reading values from multiple ranges
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str | None = None
+    """
+    The ID of the spreadsheet to read from
+    """
+    ranges: list[str] | None = None
+    """
+    The A1 notation of the ranges to read
+    """
+    major_dimension: Literal["ROWS", "COLUMNS"] = "ROWS"
+    """
+    The major dimension that results should use
+    """
+    value_render_option: Literal["FORMATTED_VALUE", "UNFORMATTED_VALUE", "FORMULA"] = (
+        "FORMATTED_VALUE"
+    )
+    """
+    How values should be represented in the output
+    """
+    date_time_render_option: Literal["SERIAL_NUMBER", "FORMATTED_STRING"] = "FORMATTED_STRING"
+    """
+    How dates, times, and durations should be represented
+    """
+
+
+class GoogleSheetsBatchWriteArguments(BaseModel):
+    """
+    Arguments for batch updating values in multiple ranges
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str
+    """
+    The ID of the spreadsheet to write to
+    """
+    data: list[GoogleSheetsValueRange]
+    """
+    The data to write to each range
+    """
+    value_input_option: Literal["RAW", "USER_ENTERED"] = "USER_ENTERED"
+    """
+    How the input data should be interpreted
+    """
+    include_values_in_response: StrictBool = False
+    """
+    Whether to include the values in the response
+    """
+
+
+class GoogleSheetsBatchWriteArgumentsUpdate(BaseModel):
+    """
+    Arguments for batch updating values in multiple ranges
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str | None = None
+    """
+    The ID of the spreadsheet to write to
+    """
+    data: list[GoogleSheetsValueRange] | None = None
+    """
+    The data to write to each range
+    """
+    value_input_option: Literal["RAW", "USER_ENTERED"] = "USER_ENTERED"
+    """
+    How the input data should be interpreted
+    """
+    include_values_in_response: StrictBool = False
+    """
+    Whether to include the values in the response
+    """
+
+
+class GoogleSheetsClearArguments(BaseModel):
+    """
+    Arguments for clearing values from a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str
+    """
+    The ID of the spreadsheet to clear values from
+    """
+    range: str
+    """
+    The A1 notation of the range to clear
+    """
+
+
+class GoogleSheetsClearArgumentsUpdate(BaseModel):
+    """
+    Arguments for clearing values from a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str | None = None
+    """
+    The ID of the spreadsheet to clear values from
+    """
+    range: str | None = None
+    """
+    The A1 notation of the range to clear
+    """
+
+
+class GoogleSheetsIntegrationDef(BaseIntegrationDef):
+    """
+    Google Sheets integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["google_sheets"] = "google_sheets"
+    """
+    The provider must be "google_sheets"
+    """
+    method: (
+        Literal[
+            "read_values",
+            "write_values",
+            "append_values",
+            "clear_values",
+            "batch_read",
+            "batch_write",
+        ]
+        | None
+    ) = None
+    """
+    The specific method of the integration to call
+    """
+    setup: GoogleSheetsSetup | None = None
+    """
+    The setup parameters for Google Sheets
+    """
+    arguments: (
+        GoogleSheetsReadArguments
+        | GoogleSheetsWriteArguments
+        | GoogleSheetsAppendArguments
+        | GoogleSheetsClearArguments
+        | GoogleSheetsBatchReadArguments
+        | GoogleSheetsBatchWriteArguments
+        | None
+    ) = None
+    """
+    The arguments for the method
+    """
+
+
+class GoogleSheetsIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Google Sheets integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["google_sheets"] = "google_sheets"
+    """
+    The provider must be "google_sheets"
+    """
+    method: (
+        Literal[
+            "read_values",
+            "write_values",
+            "append_values",
+            "clear_values",
+            "batch_read",
+            "batch_write",
+        ]
+        | None
+    ) = None
+    """
+    The specific method of the integration to call
+    """
+    setup: GoogleSheetsSetupUpdate | None = None
+    """
+    The setup parameters for Google Sheets
+    """
+    arguments: (
+        GoogleSheetsReadArgumentsUpdate
+        | GoogleSheetsWriteArgumentsUpdate
+        | GoogleSheetsAppendArgumentsUpdate
+        | GoogleSheetsClearArgumentsUpdate
+        | GoogleSheetsBatchReadArgumentsUpdate
+        | GoogleSheetsBatchWriteArgumentsUpdate
+        | None
+    ) = None
+    """
+    The arguments for the method
+    """
+
+
+class GoogleSheetsReadArguments(BaseModel):
+    """
+    Arguments for reading values from a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str
+    """
+    The ID of the spreadsheet to read from
+    """
+    range: str
+    """
+    The A1 notation of the range to read
+    """
+    major_dimension: Literal["ROWS", "COLUMNS"] = "ROWS"
+    """
+    The major dimension that results should use
+    """
+    value_render_option: Literal["FORMATTED_VALUE", "UNFORMATTED_VALUE", "FORMULA"] = (
+        "FORMATTED_VALUE"
+    )
+    """
+    How values should be represented in the output
+    """
+    date_time_render_option: Literal["SERIAL_NUMBER", "FORMATTED_STRING"] = "FORMATTED_STRING"
+    """
+    How dates, times, and durations should be represented
+    """
+
+
+class GoogleSheetsReadArgumentsUpdate(BaseModel):
+    """
+    Arguments for reading values from a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str | None = None
+    """
+    The ID of the spreadsheet to read from
+    """
+    range: str | None = None
+    """
+    The A1 notation of the range to read
+    """
+    major_dimension: Literal["ROWS", "COLUMNS"] = "ROWS"
+    """
+    The major dimension that results should use
+    """
+    value_render_option: Literal["FORMATTED_VALUE", "UNFORMATTED_VALUE", "FORMULA"] = (
+        "FORMATTED_VALUE"
+    )
+    """
+    How values should be represented in the output
+    """
+    date_time_render_option: Literal["SERIAL_NUMBER", "FORMATTED_STRING"] = "FORMATTED_STRING"
+    """
+    How dates, times, and durations should be represented
+    """
+
+
+class GoogleSheetsSetup(BaseModel):
+    """
+    Setup parameters for Google Sheets integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    use_julep_service: StrictBool
+    """
+    Whether to use Julep's built-in Google Sheets service account.
+    If true, no credentials needed. If false, service_account_json is required.
+    """
+    service_account_json: str | None = None
+    """
+    Base64 encoded service account JSON for authentication.
+    Required when use_julep_service is false.
+    Users can provide their own service account for better isolation and quota management.
+    """
+    default_retry_count: Annotated[int, Field(ge=1, le=10)] = 3
+    """
+    Default number of retry attempts for API calls
+    """
+
+
+class GoogleSheetsSetupUpdate(BaseModel):
+    """
+    Setup parameters for Google Sheets integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    use_julep_service: StrictBool | None = None
+    """
+    Whether to use Julep's built-in Google Sheets service account.
+    If true, no credentials needed. If false, service_account_json is required.
+    """
+    service_account_json: str | None = None
+    """
+    Base64 encoded service account JSON for authentication.
+    Required when use_julep_service is false.
+    Users can provide their own service account for better isolation and quota management.
+    """
+    default_retry_count: Annotated[int, Field(ge=1, le=10)] = 3
+    """
+    Default number of retry attempts for API calls
+    """
+
+
+class GoogleSheetsValueRange(BaseModel):
+    """
+    Represents a range of values to write
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    range: str
+    """
+    The A1 notation of the range
+    """
+    values: list[list]
+    """
+    The values for the range (2D array)
+    """
+    major_dimension: Literal["ROWS", "COLUMNS"] = "ROWS"
+    """
+    The major dimension of the values
+    """
+
+
+class GoogleSheetsWriteArguments(BaseModel):
+    """
+    Arguments for writing values to a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str
+    """
+    The ID of the spreadsheet to write to
+    """
+    range: str
+    """
+    The A1 notation of the range to write to
+    """
+    values: list[list]
+    """
+    The values to write (2D array)
+    """
+    value_input_option: Literal["RAW", "USER_ENTERED"] = "USER_ENTERED"
+    """
+    How the input data should be interpreted
+    """
+    insert_data_option: Literal["OVERWRITE", "INSERT_ROWS"] = "OVERWRITE"
+    """
+    How the input data should be inserted
+    """
+    include_values_in_response: StrictBool = False
+    """
+    Whether to include the values in the response
+    """
+
+
+class GoogleSheetsWriteArgumentsUpdate(BaseModel):
+    """
+    Arguments for writing values to a spreadsheet
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spreadsheet_id: str | None = None
+    """
+    The ID of the spreadsheet to write to
+    """
+    range: str | None = None
+    """
+    The A1 notation of the range to write to
+    """
+    values: list[list] | None = None
+    """
+    The values to write (2D array)
+    """
+    value_input_option: Literal["RAW", "USER_ENTERED"] = "USER_ENTERED"
+    """
+    How the input data should be interpreted
+    """
+    insert_data_option: Literal["OVERWRITE", "INSERT_ROWS"] = "OVERWRITE"
+    """
+    How the input data should be inserted
+    """
+    include_values_in_response: StrictBool = False
+    """
+    Whether to include the values in the response
     """
 
 
@@ -1969,6 +2484,7 @@ class PatchToolRequest(BaseModel):
         | UnstructuredIntegrationDefUpdate
         | AlgoliaIntegrationDefUpdate
         | McpIntegrationDefUpdate
+        | GoogleSheetsIntegrationDefUpdate
         | None
     ) = None
     """
@@ -2475,6 +2991,7 @@ class Tool(BaseModel):
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
         | McpIntegrationDef
+        | GoogleSheetsIntegrationDef
         | None
     ) = None
     """
@@ -2736,6 +3253,7 @@ class UpdateToolRequest(BaseModel):
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
         | McpIntegrationDef
+        | GoogleSheetsIntegrationDef
         | None
     ) = None
     """

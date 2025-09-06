@@ -22,6 +22,13 @@ from ..autogen.Tools import (
     EmailArguments,
     EmailSetup,
     FfmpegSearchArguments,
+    GoogleSheetsAppendArguments,
+    GoogleSheetsBatchReadArguments,
+    GoogleSheetsBatchWriteArguments,
+    GoogleSheetsClearArguments,
+    GoogleSheetsReadArguments,
+    GoogleSheetsSetup,
+    GoogleSheetsWriteArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     MailgunSendEmailArguments,
@@ -54,6 +61,14 @@ from .browserbase import (
 from .cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
+from .google_sheets import (
+    GoogleSheetsBatchReadOutput,
+    GoogleSheetsBatchWriteOutput,
+    GoogleSheetsClearOutput,
+    GoogleSheetsReadOutput,
+    GoogleSheetsValueRangeOutput,
+    GoogleSheetsWriteOutput,
+)
 from .llama_parse import LlamaParseFetchOutput
 from .mailgun import MailgunSendEmailOutput
 from .mcp import McpListToolsOutput, McpToolCallOutput
@@ -85,6 +100,7 @@ ExecutionSetup = (
     | UnstructuredSetup
     | WeatherSetup
     | McpSetup
+    | GoogleSheetsSetup
 )
 
 # Argument configurations
@@ -112,6 +128,12 @@ ExecutionArguments = (
     | WikipediaSearchArguments
     | McpCallToolArguments
     | McpListToolsArguments
+    | GoogleSheetsReadArguments
+    | GoogleSheetsWriteArguments
+    | GoogleSheetsAppendArguments
+    | GoogleSheetsClearArguments
+    | GoogleSheetsBatchReadArguments
+    | GoogleSheetsBatchWriteArguments
 )
 
 ExecutionResponse = (
@@ -139,6 +161,12 @@ ExecutionResponse = (
     | AlgoliaSearchOutput
     | McpToolCallOutput
     | McpListToolsOutput
+    | GoogleSheetsReadOutput
+    | GoogleSheetsWriteOutput
+    | GoogleSheetsClearOutput
+    | GoogleSheetsBatchReadOutput
+    | GoogleSheetsBatchWriteOutput
+    | GoogleSheetsValueRangeOutput
 )
 
 

@@ -17,6 +17,13 @@ from .autogen.Tools import (
     EmailArguments,
     EmailSetup,
     FfmpegSearchArguments,
+    GoogleSheetsAppendArguments,
+    GoogleSheetsBatchReadArguments,
+    GoogleSheetsBatchWriteArguments,
+    GoogleSheetsClearArguments,
+    GoogleSheetsReadArguments,
+    GoogleSheetsSetup,
+    GoogleSheetsWriteArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     MailgunSendEmailArguments,
@@ -50,6 +57,11 @@ from .models import (
     CloudinaryUploadOutput,
     EmailOutput,
     FfmpegSearchOutput,
+    GoogleSheetsBatchReadOutput,
+    GoogleSheetsBatchWriteOutput,
+    GoogleSheetsClearOutput,
+    GoogleSheetsReadOutput,
+    GoogleSheetsWriteOutput,
     LlamaParseFetchOutput,
     MailgunSendEmailOutput,
     McpListToolsOutput,
@@ -405,6 +417,55 @@ mcp = BaseProvider(
     ),
 )
 
+google_sheets = BaseProvider(
+    provider="google_sheets",
+    setup=GoogleSheetsSetup,
+    methods=[
+        BaseProviderMethod(
+            method="read_values",
+            description="Read values from a specific range in a Google Sheets spreadsheet",
+            arguments=GoogleSheetsReadArguments,
+            output=GoogleSheetsReadOutput,
+        ),
+        BaseProviderMethod(
+            method="write_values",
+            description="Write or update values in a specific range in a Google Sheets spreadsheet",
+            arguments=GoogleSheetsWriteArguments,
+            output=GoogleSheetsWriteOutput,
+        ),
+        BaseProviderMethod(
+            method="append_values",
+            description="Append new rows of data to a Google Sheets spreadsheet",
+            arguments=GoogleSheetsAppendArguments,
+            output=GoogleSheetsWriteOutput,
+        ),
+        BaseProviderMethod(
+            method="clear_values",
+            description="Clear values from a specific range in a Google Sheets spreadsheet",
+            arguments=GoogleSheetsClearArguments,
+            output=GoogleSheetsClearOutput,
+        ),
+        BaseProviderMethod(
+            method="batch_read",
+            description="Read values from multiple ranges in a Google Sheets spreadsheet",
+            arguments=GoogleSheetsBatchReadArguments,
+            output=GoogleSheetsBatchReadOutput,
+        ),
+        BaseProviderMethod(
+            method="batch_write",
+            description="Write values to multiple ranges in a Google Sheets spreadsheet",
+            arguments=GoogleSheetsBatchWriteArguments,
+            output=GoogleSheetsBatchWriteOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://sheets.google.com/",
+        docs="https://developers.google.com/sheets/api",
+        icon="https://www.gstatic.com/images/branding/product/1x/sheets_2020q4_48dp.png",
+        friendly_name="Google Sheets",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -421,4 +482,5 @@ available_providers: dict[str, BaseProvider] = {
     "algolia": algolia,
     "mailgun": mailgun,
     "mcp": mcp,
+    "google_sheets": google_sheets,
 }
