@@ -1,3 +1,15 @@
+"""
+MCP (Model Context Protocol) Integration for Julep
+
+This module provides a native MCP client integration that allows Julep agents to:
+1. Connect to any MCP server (stdio or HTTP transport)
+2. Dynamically discover available tools from the server
+3. Execute tools with proper error handling and retry logic
+
+The MCP integration enables Julep to interface with external tools and services
+through a standardized protocol, making it extensible without hardcoding specific integrations.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,6 +23,12 @@ from ...models import McpListToolsOutput, McpToolCallOutput
 
 
 def _ensure_mcp_available() -> None:
+    """
+    Check if the MCP SDK is installed and available.
+    
+    This is a runtime check to provide clear error messages if the MCP
+    dependency is missing, rather than cryptic import errors later.
+    """
     try:
         import mcp  # noqa: F401
     except Exception as e:  # pragma: no cover - import path validation
@@ -22,17 +40,29 @@ def _ensure_mcp_available() -> None:
 
 
 async def _connect_session(setup: McpSetup):
-    """Create and initialize an MCP client session for the given setup.
+    """
+    Create and initialize an MCP client session for the given setup.
+    
+    This function handles the complexity of establishing connections to MCP servers
+    which can use different transport mechanisms (stdio for local processes, HTTP for remote).
+    
+    The dual transport supports:
+    - stdio: For running MCP servers as local subprocesses (e.g., npx tools)  
+    - HTTP: For connecting to remote MCP servers over the network
+    
+    The session management pattern ensures proper cleanup of resources.
 
-    Returns a 2-tuple (session, aclose) where `aclose` is an async callable that
-    will close underlying transports/session when awaited.
+    Returns:
+        tuple: (session, aclose) where session is the active MCP client and
+               aclose is an async cleanup function that must be called when done
     """
     _ensure_mcp_available()
 
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
-    # `streamablehttp_client` is available for Streamable HTTP transport
+    # Dynamic import handling for optional HTTP transport
+    # Not all MCP SDK versions include HTTP support, so we gracefully handle its absence
     try:
         from mcp.client.streamable_http import streamablehttp_client
     except Exception as e:  # pragma: no cover - guard older SDKs
@@ -101,14 +131,23 @@ async def _connect_session(setup: McpSetup):
 
 
 def _serialize_content_item(item: Any) -> dict[str, Any]:
-    """Best-effort conversion of MCP content item to JSON-serializable dict."""
+    """
+    Best-effort conversion of MCP content item to JSON-serializable dict.
+    
+    MCP servers can return various content types (text, images, structured data).
+    This function normalizes them into a consistent format that can be serialized to JSON
+    and passed back through our API. The fallback chain ensures we never lose data,
+    even if it's in an unexpected format.
+    """
     try:
-        # Most MCP SDK objects support model_dump()
+        # Most MCP SDK objects support model_dump() for Pydantic-style serialization
         return item.model_dump()  # type: ignore[attr-defined]
     except Exception:
         try:
+            # Fallback to dict conversion for simpler objects
             return dict(item)
         except Exception:
+            # Last resort: string representation to preserve some information
             return {"repr": repr(item)}
 
 
@@ -119,18 +158,36 @@ def _serialize_content_item(item: Any) -> dict[str, Any]:
     stop=stop_after_attempt(3),
 )
 async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpListToolsOutput:
-    """List tools from an MCP server using the provided setup."""
+    """
+    Discover available tools from an MCP server.
+    
+    This is the key innovation of MCP integration -
+    Instead of hardcoding tools, we dynamically discover what's available from any MCP server.
+    This makes Julep infinitely extensible - just point it at a new MCP server and all
+    its tools become available to your agents automatically.
+    
+    The retry logic handles transient network issues, especially important for
+    remote HTTP-based MCP servers.
+    
+    Returns:
+        McpListToolsOutput: List of discovered tools with their names, descriptions, and schemas
+    """
     session, aclose = await _connect_session(setup)
     try:
+        # Query the MCP server for its tool catalog
         tools = await session.list_tools()
+        
+        # Transform MCP tool format to Julep's internal format
+        # Extract the essential fields that Julep needs to present tools to agents
         out = [
             {
                 "name": t.name,
                 "description": getattr(t, "description", None),
-                "input_schema": getattr(t, "inputSchema", None),
+                "input_schema": getattr(t, "inputSchema", None),  # JSON Schema for validation
             }
             for t in tools
         ]
+        
         return McpListToolsOutput(tools=out)  # type: ignore[arg-type]
     finally:
         await aclose()
@@ -143,7 +200,25 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
     stop=stop_after_attempt(3),
 )
 async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpToolCallOutput:
-    """Call a named tool on an MCP server and normalize the response."""
+    """
+    Execute a specific tool on an MCP server with the provided arguments.
+    
+    This is where Julep agents can call any tool
+    exposed by an MCP server without knowing its implementation details. The tool
+    could be running Python, Node.js, Rust, or any language - MCP abstracts that away.
+    
+    Key features:
+    - Automatic retry on failure (network issues, timeouts)
+    - Timeout support for long-running tools
+    - Response normalization for consistent handling
+    
+    Args:
+        setup: MCP connection configuration (transport type, credentials)
+        arguments: Tool name and parameters to pass
+        
+    Returns:
+        McpToolCallOutput: Normalized tool response with text, structured data, and error info
+    """
     session, aclose = await _connect_session(setup)
     try:
         # Enforce timeout per call if provided
