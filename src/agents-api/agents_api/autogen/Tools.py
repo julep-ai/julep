@@ -385,6 +385,7 @@ class BaseIntegrationDef(BaseModel):
         "arxiv",
         "unstructured",
         "algolia",
+        "mcp",
     ]
     """
     The provider of the integration
@@ -428,6 +429,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "arxiv",
             "unstructured",
             "algolia",
+            "mcp",
         ]
         | None
     ) = None
@@ -456,8 +458,7 @@ class Bash20241022Def(BaseModel):
     name: str = "bash"
 
 
-class Bash20241022DefUpdate(Bash20241022Def):
-    pass
+Bash20241022DefUpdate = Bash20241022Def
 
 
 class BraveIntegrationDef(BaseIntegrationDef):
@@ -676,14 +677,10 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
     id: str | None = None
 
 
-class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
-    pass
+BrowserbaseGetSessionLiveUrlsArguments = BrowserbaseGetSessionArguments
 
 
-class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(
-    BrowserbaseGetSessionArgumentsUpdate
-):
-    pass
+BrowserbaseGetSessionLiveUrlsArgumentsUpdate = BrowserbaseGetSessionArgumentsUpdate
 
 
 class BrowserbaseListSessionsArguments(BaseModel):
@@ -1007,10 +1004,7 @@ class Computer20241022Def(BaseModel):
     """
 
 
-class Computer20241022DefUpdate(Computer20241022Def):
-    """
-    Anthropic new tools
-    """
+Computer20241022DefUpdate = Computer20241022Def
 
 
 class CreateToolRequest(BaseModel):
@@ -1068,6 +1062,7 @@ class CreateToolRequest(BaseModel):
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
+        | McpIntegrationDef
         | None
     ) = None
     """
@@ -1671,6 +1666,188 @@ class MailgunSetupUpdate(BaseModel):
     """
 
 
+class McpCallToolArguments(BaseModel):
+    """
+    Arguments to call a named tool on the MCP server
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_name: str
+    """
+    The MCP tool name to invoke
+    """
+    arguments: dict[str, Any] = {}
+    """
+    JSON-serializable arguments to pass to the MCP tool
+    """
+    timeout_seconds: int = 60
+    """
+    Optional per-call timeout in seconds
+    """
+
+
+class McpCallToolArgumentsUpdate(BaseModel):
+    """
+    Arguments to call a named tool on the MCP server
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_name: str | None = None
+    """
+    The MCP tool name to invoke
+    """
+    arguments: dict[str, Any] = {}
+    """
+    JSON-serializable arguments to pass to the MCP tool
+    """
+    timeout_seconds: int = 60
+    """
+    Optional per-call timeout in seconds
+    """
+
+
+class McpIntegrationDef(BaseIntegrationDef):
+    """
+    MCP integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["mcp"] = "mcp"
+    """
+    The provider must be "mcp"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: McpSetup | None = None
+    """
+    The setup parameters for MCP
+    """
+    arguments: McpCallToolArguments | McpListToolsArguments | None = None
+    """
+    The arguments for MCP methods
+    """
+
+
+class McpIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    MCP integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["mcp"] = "mcp"
+    """
+    The provider must be "mcp"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: McpSetupUpdate | None = None
+    """
+    The setup parameters for MCP
+    """
+    arguments: McpCallToolArgumentsUpdate | McpListToolsArguments | None = None
+    """
+    The arguments for MCP methods
+    """
+
+
+class McpListToolsArguments(BaseModel):
+    """
+    Arguments to list available tools
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+
+
+class McpSetup(BaseModel):
+    """
+    Setup parameters for MCP integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    transport: Literal["stdio", "http"]
+    """
+    Transport used to connect to the MCP server
+    """
+    command: str | None = None
+    """
+    (stdio) Executable or command to launch the server
+    """
+    args: list[str] = []
+    """
+    (stdio) Arguments for the server command
+    """
+    cwd: str | None = None
+    """
+    (stdio) Working directory for the server process
+    """
+    env: dict[str, str] = {}
+    """
+    (stdio) Environment variables for the server process
+    """
+    http_url: AnyUrl | None = None
+    """
+    (http) Base URL for the MCP server (usually ends with /mcp)
+    """
+    http_headers: dict[str, str] = {}
+    """
+    (http) Optional HTTP headers to include (e.g., Authorization)
+    """
+
+
+class McpSetupUpdate(BaseModel):
+    """
+    Setup parameters for MCP integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    transport: Literal["stdio", "http"] | None = None
+    """
+    Transport used to connect to the MCP server
+    """
+    command: str | None = None
+    """
+    (stdio) Executable or command to launch the server
+    """
+    args: list[str] = []
+    """
+    (stdio) Arguments for the server command
+    """
+    cwd: str | None = None
+    """
+    (stdio) Working directory for the server process
+    """
+    env: dict[str, str] = {}
+    """
+    (stdio) Environment variables for the server process
+    """
+    http_url: AnyUrl | None = None
+    """
+    (http) Base URL for the MCP server (usually ends with /mcp)
+    """
+    http_headers: dict[str, str] = {}
+    """
+    (http) Optional HTTP headers to include (e.g., Authorization)
+    """
+
+
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1792,6 +1969,7 @@ class PatchToolRequest(BaseModel):
         | ArxivIntegrationDefUpdate
         | UnstructuredIntegrationDefUpdate
         | AlgoliaIntegrationDefUpdate
+        | McpIntegrationDefUpdate
         | None
     ) = None
     """
@@ -2243,8 +2421,7 @@ class TextEditor20241022Def(BaseModel):
     name: str = "str_replace_editor"
 
 
-class TextEditor20241022DefUpdate(TextEditor20241022Def):
-    pass
+TextEditor20241022DefUpdate = TextEditor20241022Def
 
 
 class Tool(BaseModel):
@@ -2298,6 +2475,7 @@ class Tool(BaseModel):
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
+        | McpIntegrationDef
         | None
     ) = None
     """
@@ -2558,6 +2736,7 @@ class UpdateToolRequest(BaseModel):
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
+        | McpIntegrationDef
         | None
     ) = None
     """
