@@ -159,7 +159,7 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
         McpListToolsOutput: List of discovered tools with their names, descriptions, and schemas
     """
     start_time = time.time()
-    logger.info(f"MCP list_tools call started for server: {getattr(setup.http_url, '', 'unknown')}")
+    logger.info(f"MCP list_tools call started for server: {getattr(setup, 'http_url', 'unknown')}")
     session, aclose = await _connect_session(setup)
     try:
         # Query the MCP server for its tool catalog
@@ -210,7 +210,7 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
         McpToolCallOutput: Normalized tool response with text, structured data, and error info
     """
     start_time = time.time()
-    logger.info(f"MCP call_tool started for server: {getattr(setup.http_url)} tool: {arguments.tool_name}")
+    logger.info(f"MCP call_tool started for server: {getattr(setup, 'http_url')} tool: {arguments.tool_name}")
     session, aclose = await _connect_session(setup)
     try:
         # Enforce timeout per call if provided
