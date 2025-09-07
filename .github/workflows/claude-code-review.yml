@@ -21,9 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
-      issues: write
-      actions: read
+      pull-requests: read
+      issues: read
       id-token: write
     
     steps:
@@ -32,33 +31,12 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
-          role-session-name: GitHubActions-Claude-Review-${{ github.run_id }}
-          aws-region: us-east-1
-
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
-          use_bedrock: "true"
-          track_progress: true
-          claude_args: |
-            --model us.anthropic.claude-opus-4-1-20250805-v1:0
-            --max-turns 10
-            --allowedTools Read,Glob,Grep
-          
-          # Automated review prompt
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
-            
-            This is a monorepo with multiple different services.
-            The repo uses AGENTS.md as the file that contains instructions for
-            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but is just a symlink to the corresponding AGENTS.md (usually in the same dir).
-            
             Please review this pull request and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
@@ -66,28 +44,11 @@ jobs:
             - Security concerns
             - Test coverage
             
-            Be constructive and helpful in your feedback.
+            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+
+            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
           
-          # Optional: Customize review based on file types
-          # direct_prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
-          
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
-          
-          # Note: To add test/lint tools, modify claude_args:
-          # --allowedTools Read,Glob,Grep,Bash
-          # And ensure Bash commands are safe
-          
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
 
