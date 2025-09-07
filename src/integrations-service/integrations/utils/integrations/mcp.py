@@ -13,10 +13,15 @@ through a standardized protocol, making it extensible without hardcoding specifi
 from __future__ import annotations
 
 import asyncio
+import logging
+import time
+import uuid
 from typing import Any
 
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = logging.getLogger(__name__)
 
 from ...autogen.Tools import McpCallToolArguments, McpListToolsArguments, McpSetup
 from ...models import McpListToolsOutput, McpToolCallOutput
@@ -39,6 +44,11 @@ def _ensure_mcp_available() -> None:
         raise RuntimeError(msg) from e
 
 
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=16),
+    reraise=True,
+    stop=stop_after_attempt(5),
+)
 async def _connect_session(setup: McpSetup):
     """
     Create and initialize an MCP client session for the given setup.
@@ -58,8 +68,7 @@ async def _connect_session(setup: McpSetup):
     """
     _ensure_mcp_available()
 
-    from mcp import ClientSession, StdioServerParameters
-    from mcp.client.stdio import stdio_client
+    from mcp import ClientSession
 
     # Dynamic import handling for optional HTTP transport
     # Not all MCP SDK versions include HTTP support, so we gracefully handle its absence
@@ -72,32 +81,6 @@ async def _connect_session(setup: McpSetup):
         stream_err = None
 
     transport = setup.transport
-
-    if transport == "stdio":
-        if not setup.command:
-            msg = "McpSetup.command is required for stdio transport"
-            raise ValueError(msg)
-
-        server_params = StdioServerParameters(
-            command=setup.command,
-            args=setup.args or [],
-            env=setup.env or None,
-            cwd=setup.cwd or None,
-        )
-
-        stdio_ctx = stdio_client(server_params)
-        read, write = await stdio_ctx.__aenter__()
-
-        session = ClientSession(read, write)
-        await session.initialize()
-
-        async def aclose() -> None:
-            try:
-                await session.__aexit__(None, None, None)  # type: ignore[attr-defined]
-            finally:
-                await stdio_ctx.__aexit__(None, None, None)
-
-        return session, aclose
 
     if transport == "http":
         if streamablehttp_client is None:
@@ -112,6 +95,9 @@ async def _connect_session(setup: McpSetup):
             raise ValueError(msg)
 
         headers = setup.http_headers or {}
+        # Add session management header for MCP session tracking
+        session_id = uuid.uuid4().hex
+        headers["Mcp-Session-Id"] = session_id
         http_ctx = streamablehttp_client(str(setup.http_url), headers=headers)
         read, write, _ = await http_ctx.__aenter__()
 
@@ -160,23 +146,25 @@ def _serialize_content_item(item: Any) -> dict[str, Any]:
 async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpListToolsOutput:
     """
     Discover available tools from an MCP server.
-    
+
     This is the key innovation of MCP integration -
     Instead of hardcoding tools, we dynamically discover what's available from any MCP server.
     This makes Julep infinitely extensible - just point it at a new MCP server and all
     its tools become available to your agents automatically.
-    
+
     The retry logic handles transient network issues, especially important for
     remote HTTP-based MCP servers.
-    
+
     Returns:
         McpListToolsOutput: List of discovered tools with their names, descriptions, and schemas
     """
+    start_time = time.time()
+    logger.info(f"MCP list_tools call started for server: {getattr(setup.http_url, '', 'unknown')}")
     session, aclose = await _connect_session(setup)
     try:
         # Query the MCP server for its tool catalog
         tools = await session.list_tools()
-        
+
         # Transform MCP tool format to Julep's internal format
         # Extract the essential fields that Julep needs to present tools to agents
         out = [
@@ -187,7 +175,9 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
             }
             for t in tools
         ]
-        
+
+        duration = time.time() - start_time
+        logger.info(f"MCP list_tools call completed in {duration:.3f}s, discovered {len(out)} tools")
         return McpListToolsOutput(tools=out)  # type: ignore[arg-type]
     finally:
         await aclose()
@@ -202,23 +192,25 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
 async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpToolCallOutput:
     """
     Execute a specific tool on an MCP server with the provided arguments.
-    
+
     This is where Julep agents can call any tool
     exposed by an MCP server without knowing its implementation details. The tool
     could be running Python, Node.js, Rust, or any language - MCP abstracts that away.
-    
+
     Key features:
     - Automatic retry on failure (network issues, timeouts)
     - Timeout support for long-running tools
     - Response normalization for consistent handling
-    
+
     Args:
         setup: MCP connection configuration (transport type, credentials)
         arguments: Tool name and parameters to pass
-        
+
     Returns:
         McpToolCallOutput: Normalized tool response with text, structured data, and error info
     """
+    start_time = time.time()
+    logger.info(f"MCP call_tool started for server: {getattr(setup.http_url)} tool: {arguments.tool_name}")
     session, aclose = await _connect_session(setup)
     try:
         # Enforce timeout per call if provided
@@ -253,6 +245,8 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
                     text_parts.append(text)
             content_items.append(_serialize_content_item(item))
 
+        duration = time.time() - start_time
+        logger.info(f"MCP call_tool completed in {duration:.3f}s for tool: {arguments.tool_name}, error: {is_error}")
         return McpToolCallOutput(
             text="\n".join(text_parts) if text_parts else None,
             structured=structured,  # type: ignore[arg-type]

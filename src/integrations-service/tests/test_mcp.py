@@ -46,7 +46,7 @@ async def test_mcp_list_tools_exec(monkeypatch):
     # Build arguments via autogen classes at runtime
     from integrations.autogen.Tools import McpListToolsArguments, McpSetup
 
-    setup = McpSetup(transport="stdio", command="fake-server")
+    setup = McpSetup(transport="http", http_url="http://localhost:9999/mcp")
     args = McpListToolsArguments()
 
     result = await execute_integration(
