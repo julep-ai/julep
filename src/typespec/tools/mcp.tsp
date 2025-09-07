@@ -5,7 +5,7 @@ using Common;
 namespace Tools;
 
 /** Transport type for MCP servers */
-alias McpTransport = ("stdio" | "http");
+alias McpTransport = ("sse" | "http");
 
 /** Setup parameters for MCP integration */
 model McpSetup {
