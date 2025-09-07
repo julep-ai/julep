@@ -80,8 +80,9 @@ async def _connect_session(setup: McpSetup):
     if transport == "http":
         if streamablehttp_client is None:
             msg = (
-                "Your installed 'mcp' SDK does not provide streamable HTTP client "
-                f"support. Underlying import error: {stream_err}"
+                f"Your installed 'mcp' SDK version does not support Streamable HTTP transport. "
+                f"Required: mcp>=1.8.0. Please update with: pip install 'mcp>=1.8.0'. "
+                f"Underlying import error: {stream_err}"
             )
             raise RuntimeError(msg)
 
