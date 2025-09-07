@@ -2332,7 +2332,7 @@ class McpSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    transport: Literal["stdio", "http"] | None = None
+    transport: Literal["sse", "http"] | None = None
     """
     Transport used to connect to the MCP server
     """
