@@ -2,12 +2,15 @@
 MCP (Model Context Protocol) Integration for Julep
 
 This module provides a native MCP client integration that allows Julep agents to:
-1. Connect to any MCP server (stdio or HTTP transport)
+1. Connect to MCP servers using SSE (legacy) or Streamable HTTP (recommended) transport
 2. Dynamically discover available tools from the server
 3. Execute tools with proper error handling and retry logic
 
 The MCP integration enables Julep to interface with external tools and services
 through a standardized protocol, making it extensible without hardcoding specific integrations.
+
+Note: Stdio transport has been removed for security reasons. Use SSE for legacy servers
+or Streamable HTTP (requires mcp>=1.8.0) for modern production deployments.
 """
 
 from __future__ import annotations
