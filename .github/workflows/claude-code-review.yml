@@ -45,6 +45,12 @@ jobs:
         with:
           use_bedrock: "true"
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            
+            This is a monorepo with multiple different services.
+            The repo uses AGENTS.md as the file that contains instructions for
+            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but is just a symlink to the corresponding AGENTS.md (usually in the same dir).
             Please review this pull request and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
