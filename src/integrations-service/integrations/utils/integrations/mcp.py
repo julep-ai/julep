@@ -55,8 +55,8 @@ async def _connect_session(setup: McpSetup):
     which can use different transport mechanisms (stdio for local processes, HTTP for remote).
     
     The dual transport supports:
-    - stdio: For running MCP servers as local subprocesses (e.g., npx tools)  
-    - HTTP: For connecting to remote MCP servers over the network
+    - SSE: For legacy MCP servers using Server-Sent Events transport
+    - HTTP: For modern MCP servers using Streamable HTTP transport (recommended)
     
     The session management pattern ensures proper cleanup of resources.
 
