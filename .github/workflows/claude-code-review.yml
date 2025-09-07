@@ -23,6 +23,7 @@ jobs:
       contents: read
       pull-requests: read
       issues: read
+      actions: read
       id-token: write
     
     steps:
@@ -31,11 +32,18 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-${{ github.run_id }}
+          aws-region: us-east-1
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          use_bedrock: "true"
           prompt: |
             Please review this pull request and provide feedback on:
             - Code quality and best practices
@@ -50,5 +58,7 @@ jobs:
           
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          claude_args: |
+            --model us.anthropic.claude-opus-4-1-20250805-v1:0
+            --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
 
