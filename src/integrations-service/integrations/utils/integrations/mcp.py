@@ -13,15 +13,10 @@ through a standardized protocol, making it extensible without hardcoding specifi
 from __future__ import annotations
 
 import asyncio
-import logging
-import time
-import uuid
 from typing import Any
 
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
-
-logger = logging.getLogger(__name__)
 
 from ...autogen.Tools import McpCallToolArguments, McpListToolsArguments, McpSetup
 from ...models import McpListToolsOutput, McpToolCallOutput
@@ -158,8 +153,6 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
     Returns:
         McpListToolsOutput: List of discovered tools with their names, descriptions, and schemas
     """
-    start_time = time.time()
-    logger.info(f"MCP list_tools call started for server: {getattr(setup, 'http_url', 'unknown')}")
     session, aclose = await _connect_session(setup)
     try:
         # Query the MCP server for its tool catalog
@@ -176,8 +169,6 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
             for t in tools
         ]
 
-        duration = time.time() - start_time
-        logger.info(f"MCP list_tools call completed in {duration:.3f}s, discovered {len(out)} tools")
         return McpListToolsOutput(tools=out)  # type: ignore[arg-type]
     finally:
         await aclose()
@@ -209,8 +200,6 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
     Returns:
         McpToolCallOutput: Normalized tool response with text, structured data, and error info
     """
-    start_time = time.time()
-    logger.info(f"MCP call_tool started for server: {getattr(setup, 'http_url')} tool: {arguments.tool_name}")
     session, aclose = await _connect_session(setup)
     try:
         # Enforce timeout per call if provided
@@ -245,8 +234,6 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
                     text_parts.append(text)
             content_items.append(_serialize_content_item(item))
 
-        duration = time.time() - start_time
-        logger.info(f"MCP call_tool completed in {duration:.3f}s for tool: {arguments.tool_name}, error: {is_error}")
         return McpToolCallOutput(
             text="\n".join(text_parts) if text_parts else None,
             structured=structured,  # type: ignore[arg-type]
