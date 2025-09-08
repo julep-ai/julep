@@ -5,6 +5,7 @@ import "./brave.tsp";
 import "./browserbase";
 import "./cloudinary.tsp";
 import "./ffmpeg.tsp";
+import "./google_sheets.tsp";
 import "./llama_parse.tsp";
 import "./mailgun.tsp";
 import "./remote_browser.tsp";
@@ -43,6 +44,7 @@ alias integrationProvider = (
     | "arxiv"
     | "unstructured"
     | "algolia"
+    | "google_sheets"
 );
 
 enum ToolType {
@@ -146,6 +148,7 @@ alias IntegrationDef = (
     | ArxivIntegrationDef
     | UnstructuredIntegrationDef
     | AlgoliaIntegrationDef
+    | GoogleSheetsIntegrationDef
 );
 
 //

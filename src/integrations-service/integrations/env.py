@@ -22,6 +22,9 @@ sentry_dsn: str = env.str("SENTRY_DSN", default=None)
 unstructured_api_key = env.str("UNSTRUCTURED_API_KEY", default=None)
 algolia_api_key = env.str("ALGOLIA_API_KEY", default=None)
 algolia_application_id = env.str("ALGOLIA_APPLICATION_ID", default=None)
+julep_google_sheets_service_account_json = env.str(
+    "JULEP_GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON", default=None
+)
 
 # Gunicorn
 gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
