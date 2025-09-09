@@ -74,6 +74,7 @@
                 "group": "Communication & Data",
                 "pages": [
                   "integrations/communicationdata/email",
+                  "integrations/communicationdata/google-sheets",
                   "integrations/communicationdata/weather"
                 ]
               },
