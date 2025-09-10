@@ -42,11 +42,16 @@ executions_app = WrappedTyper(
     help="Manage executions",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
+projects_app = WrappedTyper(
+    help="Manage projects",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 app.add_typer(agents_app, name="agents")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(tools_app, name="tools")
 app.add_typer(executions_app, name="executions")
+app.add_typer(projects_app, name="projects")
 
 
 # Version command

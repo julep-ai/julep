@@ -7,6 +7,7 @@ from .importt import importt
 from .init import init
 from .logs import logs
 from .ls import ls
+from .projects import projects_app as projects_app
 from .run import run
 from .sync import sync
 from .tasks import tasks_app as tasks_app
@@ -23,6 +24,7 @@ __all__ = [
     "init",
     "logs",
     "ls",
+    "projects_app",
     "run",
     "save_config",
     "sync",
