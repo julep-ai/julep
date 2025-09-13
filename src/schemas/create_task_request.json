@@ -4765,6 +4765,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Output"
+            },
+            {
               "type": "null"
             }
           ],
@@ -6566,6 +6569,890 @@
         "get"
       ],
       "title": "GetStep",
+      "type": "object"
+    },
+    "GoogleSheetsAppendArguments": {
+      "description": "Arguments for appending values to a spreadsheet",
+      "properties": {
+        "include_values_in_response": {
+          "default": false,
+          "title": "Include Values In Response",
+          "type": "boolean"
+        },
+        "insert_data_option": {
+          "default": "INSERT_ROWS",
+          "enum": [
+            "OVERWRITE",
+            "INSERT_ROWS"
+          ],
+          "title": "Insert Data Option",
+          "type": "string"
+        },
+        "range": {
+          "title": "Range",
+          "type": "string"
+        },
+        "spreadsheet_id": {
+          "title": "Spreadsheet Id",
+          "type": "string"
+        },
+        "value_input_option": {
+          "default": "USER_ENTERED",
+          "enum": [
+            "RAW",
+            "USER_ENTERED"
+          ],
+          "title": "Value Input Option",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {},
+            "type": "array"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "spreadsheet_id",
+        "range",
+        "values"
+      ],
+      "title": "GoogleSheetsAppendArguments",
+      "type": "object"
+    },
+    "GoogleSheetsAppendArgumentsUpdate": {
+      "description": "Arguments for appending values to a spreadsheet",
+      "properties": {
+        "include_values_in_response": {
+          "default": false,
+          "title": "Include Values In Response",
+          "type": "boolean"
+        },
+        "insert_data_option": {
+          "default": "INSERT_ROWS",
+          "enum": [
+            "OVERWRITE",
+            "INSERT_ROWS"
+          ],
+          "title": "Insert Data Option",
+          "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Range"
+        },
+        "spreadsheet_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Spreadsheet Id"
+        },
+        "value_input_option": {
+          "default": "USER_ENTERED",
+          "enum": [
+            "RAW",
+            "USER_ENTERED"
+          ],
+          "title": "Value Input Option",
+          "type": "string"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {},
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Values"
+        }
+      },
+      "title": "GoogleSheetsAppendArgumentsUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsBatchReadArguments": {
+      "description": "Arguments for batch reading values from multiple ranges",
+      "properties": {
+        "date_time_render_option": {
+          "default": "FORMATTED_STRING",
+          "enum": [
+            "SERIAL_NUMBER",
+            "FORMATTED_STRING"
+          ],
+          "title": "Date Time Render Option",
+          "type": "string"
+        },
+        "major_dimension": {
+          "default": "ROWS",
+          "enum": [
+            "ROWS",
+            "COLUMNS"
+          ],
+          "title": "Major Dimension",
+          "type": "string"
+        },
+        "ranges": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ranges",
+          "type": "array"
+        },
+        "spreadsheet_id": {
+          "title": "Spreadsheet Id",
+          "type": "string"
+        },
+        "value_render_option": {
+          "default": "FORMATTED_VALUE",
+          "enum": [
+            "FORMATTED_VALUE",
+            "UNFORMATTED_VALUE",
+            "FORMULA"
+          ],
+          "title": "Value Render Option",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spreadsheet_id",
+        "ranges"
+      ],
+      "title": "GoogleSheetsBatchReadArguments",
+      "type": "object"
+    },
+    "GoogleSheetsBatchReadArgumentsUpdate": {
+      "description": "Arguments for batch reading values from multiple ranges",
+      "properties": {
+        "date_time_render_option": {
+          "default": "FORMATTED_STRING",
+          "enum": [
+            "SERIAL_NUMBER",
+            "FORMATTED_STRING"
+          ],
+          "title": "Date Time Render Option",
+          "type": "string"
+        },
+        "major_dimension": {
+          "default": "ROWS",
+          "enum": [
+            "ROWS",
+            "COLUMNS"
+          ],
+          "title": "Major Dimension",
+          "type": "string"
+        },
+        "ranges": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ranges"
+        },
+        "spreadsheet_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Spreadsheet Id"
+        },
+        "value_render_option": {
+          "default": "FORMATTED_VALUE",
+          "enum": [
+            "FORMATTED_VALUE",
+            "UNFORMATTED_VALUE",
+            "FORMULA"
+          ],
+          "title": "Value Render Option",
+          "type": "string"
+        }
+      },
+      "title": "GoogleSheetsBatchReadArgumentsUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsBatchWriteArguments": {
+      "description": "Arguments for batch updating values in multiple ranges",
+      "properties": {
+        "data": {
+          "items": {
+            "$ref": "#/$defs/GoogleSheetsValueRange"
+          },
+          "title": "Data",
+          "type": "array"
+        },
+        "include_values_in_response": {
+          "default": false,
+          "title": "Include Values In Response",
+          "type": "boolean"
+        },
+        "spreadsheet_id": {
+          "title": "Spreadsheet Id",
+          "type": "string"
+        },
+        "value_input_option": {
+          "default": "USER_ENTERED",
+          "enum": [
+            "RAW",
+            "USER_ENTERED"
+          ],
+          "title": "Value Input Option",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spreadsheet_id",
+        "data"
+      ],
+      "title": "GoogleSheetsBatchWriteArguments",
+      "type": "object"
+    },
+    "GoogleSheetsBatchWriteArgumentsUpdate": {
+      "description": "Arguments for batch updating values in multiple ranges",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/GoogleSheetsValueRange"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Data"
+        },
+        "include_values_in_response": {
+          "default": false,
+          "title": "Include Values In Response",
+          "type": "boolean"
+        },
+        "spreadsheet_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Spreadsheet Id"
+        },
+        "value_input_option": {
+          "default": "USER_ENTERED",
+          "enum": [
+            "RAW",
+            "USER_ENTERED"
+          ],
+          "title": "Value Input Option",
+          "type": "string"
+        }
+      },
+      "title": "GoogleSheetsBatchWriteArgumentsUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsClearArguments": {
+      "description": "Arguments for clearing values from a spreadsheet",
+      "properties": {
+        "range": {
+          "title": "Range",
+          "type": "string"
+        },
+        "spreadsheet_id": {
+          "title": "Spreadsheet Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spreadsheet_id",
+        "range"
+      ],
+      "title": "GoogleSheetsClearArguments",
+      "type": "object"
+    },
+    "GoogleSheetsClearArgumentsUpdate": {
+      "description": "Arguments for clearing values from a spreadsheet",
+      "properties": {
+        "range": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Range"
+        },
+        "spreadsheet_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Spreadsheet Id"
+        }
+      },
+      "title": "GoogleSheetsClearArgumentsUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsIntegrationDef-Input": {
+      "description": "Google Sheets integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoogleSheetsReadArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsWriteArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsAppendArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsClearArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsBatchReadArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsBatchWriteArguments"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arguments"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "enum": [
+                "read_values",
+                "write_values",
+                "append_values",
+                "clear_values",
+                "batch_read",
+                "batch_write"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "google_sheets",
+          "default": "google_sheets",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoogleSheetsSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "GoogleSheetsIntegrationDef",
+      "type": "object"
+    },
+    "GoogleSheetsIntegrationDef-Output": {
+      "description": "Google Sheets integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoogleSheetsReadArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsWriteArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsAppendArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsClearArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsBatchReadArguments"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsBatchWriteArguments"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arguments"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "enum": [
+                "read_values",
+                "write_values",
+                "append_values",
+                "clear_values",
+                "batch_read",
+                "batch_write"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "google_sheets",
+          "default": "google_sheets",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoogleSheetsSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "GoogleSheetsIntegrationDef",
+      "type": "object"
+    },
+    "GoogleSheetsIntegrationDefUpdate": {
+      "description": "Google Sheets integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoogleSheetsReadArgumentsUpdate"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsWriteArgumentsUpdate"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsAppendArgumentsUpdate"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsClearArgumentsUpdate"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsBatchReadArgumentsUpdate"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsBatchWriteArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arguments"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "enum": [
+                "read_values",
+                "write_values",
+                "append_values",
+                "clear_values",
+                "batch_read",
+                "batch_write"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "google_sheets",
+          "default": "google_sheets",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoogleSheetsSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "GoogleSheetsIntegrationDefUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsReadArguments": {
+      "description": "Arguments for reading values from a spreadsheet",
+      "properties": {
+        "date_time_render_option": {
+          "default": "FORMATTED_STRING",
+          "enum": [
+            "SERIAL_NUMBER",
+            "FORMATTED_STRING"
+          ],
+          "title": "Date Time Render Option",
+          "type": "string"
+        },
+        "major_dimension": {
+          "default": "ROWS",
+          "enum": [
+            "ROWS",
+            "COLUMNS"
+          ],
+          "title": "Major Dimension",
+          "type": "string"
+        },
+        "range": {
+          "title": "Range",
+          "type": "string"
+        },
+        "spreadsheet_id": {
+          "title": "Spreadsheet Id",
+          "type": "string"
+        },
+        "value_render_option": {
+          "default": "FORMATTED_VALUE",
+          "enum": [
+            "FORMATTED_VALUE",
+            "UNFORMATTED_VALUE",
+            "FORMULA"
+          ],
+          "title": "Value Render Option",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spreadsheet_id",
+        "range"
+      ],
+      "title": "GoogleSheetsReadArguments",
+      "type": "object"
+    },
+    "GoogleSheetsReadArgumentsUpdate": {
+      "description": "Arguments for reading values from a spreadsheet",
+      "properties": {
+        "date_time_render_option": {
+          "default": "FORMATTED_STRING",
+          "enum": [
+            "SERIAL_NUMBER",
+            "FORMATTED_STRING"
+          ],
+          "title": "Date Time Render Option",
+          "type": "string"
+        },
+        "major_dimension": {
+          "default": "ROWS",
+          "enum": [
+            "ROWS",
+            "COLUMNS"
+          ],
+          "title": "Major Dimension",
+          "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Range"
+        },
+        "spreadsheet_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Spreadsheet Id"
+        },
+        "value_render_option": {
+          "default": "FORMATTED_VALUE",
+          "enum": [
+            "FORMATTED_VALUE",
+            "UNFORMATTED_VALUE",
+            "FORMULA"
+          ],
+          "title": "Value Render Option",
+          "type": "string"
+        }
+      },
+      "title": "GoogleSheetsReadArgumentsUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsSetup": {
+      "description": "Setup parameters for Google Sheets integration",
+      "properties": {
+        "default_retry_count": {
+          "default": 3,
+          "maximum": 10.0,
+          "minimum": 1.0,
+          "title": "Default Retry Count",
+          "type": "integer"
+        },
+        "service_account_json": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Service Account Json"
+        },
+        "use_julep_service": {
+          "title": "Use Julep Service",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "use_julep_service"
+      ],
+      "title": "GoogleSheetsSetup",
+      "type": "object"
+    },
+    "GoogleSheetsSetupUpdate": {
+      "description": "Setup parameters for Google Sheets integration",
+      "properties": {
+        "default_retry_count": {
+          "default": 3,
+          "maximum": 10.0,
+          "minimum": 1.0,
+          "title": "Default Retry Count",
+          "type": "integer"
+        },
+        "service_account_json": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Service Account Json"
+        },
+        "use_julep_service": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Use Julep Service"
+        }
+      },
+      "title": "GoogleSheetsSetupUpdate",
+      "type": "object"
+    },
+    "GoogleSheetsValueRange": {
+      "description": "Represents a range of values to write",
+      "properties": {
+        "major_dimension": {
+          "default": "ROWS",
+          "enum": [
+            "ROWS",
+            "COLUMNS"
+          ],
+          "title": "Major Dimension",
+          "type": "string"
+        },
+        "range": {
+          "title": "Range",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {},
+            "type": "array"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "range",
+        "values"
+      ],
+      "title": "GoogleSheetsValueRange",
+      "type": "object"
+    },
+    "GoogleSheetsWriteArguments": {
+      "description": "Arguments for writing values to a spreadsheet",
+      "properties": {
+        "include_values_in_response": {
+          "default": false,
+          "title": "Include Values In Response",
+          "type": "boolean"
+        },
+        "insert_data_option": {
+          "default": "OVERWRITE",
+          "enum": [
+            "OVERWRITE",
+            "INSERT_ROWS"
+          ],
+          "title": "Insert Data Option",
+          "type": "string"
+        },
+        "range": {
+          "title": "Range",
+          "type": "string"
+        },
+        "spreadsheet_id": {
+          "title": "Spreadsheet Id",
+          "type": "string"
+        },
+        "value_input_option": {
+          "default": "USER_ENTERED",
+          "enum": [
+            "RAW",
+            "USER_ENTERED"
+          ],
+          "title": "Value Input Option",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {},
+            "type": "array"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "spreadsheet_id",
+        "range",
+        "values"
+      ],
+      "title": "GoogleSheetsWriteArguments",
+      "type": "object"
+    },
+    "GoogleSheetsWriteArgumentsUpdate": {
+      "description": "Arguments for writing values to a spreadsheet",
+      "properties": {
+        "include_values_in_response": {
+          "default": false,
+          "title": "Include Values In Response",
+          "type": "boolean"
+        },
+        "insert_data_option": {
+          "default": "OVERWRITE",
+          "enum": [
+            "OVERWRITE",
+            "INSERT_ROWS"
+          ],
+          "title": "Insert Data Option",
+          "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Range"
+        },
+        "spreadsheet_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Spreadsheet Id"
+        },
+        "value_input_option": {
+          "default": "USER_ENTERED",
+          "enum": [
+            "RAW",
+            "USER_ENTERED"
+          ],
+          "title": "Value Input Option",
+          "type": "string"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {},
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Values"
+        }
+      },
+      "title": "GoogleSheetsWriteArgumentsUpdate",
       "type": "object"
     },
     "HTTPValidationError": {
@@ -9244,6 +10131,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDefUpdate"
             },
             {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDefUpdate"
+            },
+            {
               "type": "null"
             }
           ],
@@ -11707,6 +12597,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
+            },
+            {
               "type": "null"
             }
           ],
@@ -11885,6 +12778,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Output"
             },
             {
               "type": "null"
@@ -12483,6 +13379,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Output"
             },
             {
               "type": "null"
@@ -13458,6 +14357,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
             },
             {
               "type": "null"
@@ -14744,6 +15646,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
+            },
+            {
               "type": "null"
             }
           ],
@@ -14916,6 +15821,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
             },
             {
               "type": "null"

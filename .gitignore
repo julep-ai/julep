@@ -11,5 +11,7 @@ ngrok*
 .aider*
 .vscode/
 schema.sql
+*.egg-info/
+**/*.egg-info/
 
 **/.claude/settings.local.json

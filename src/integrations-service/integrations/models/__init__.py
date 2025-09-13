@@ -72,6 +72,12 @@ from .google_sheets import (
 )
 from .llama_parse import LlamaParseFetchOutput as LlamaParseFetchOutput
 from .mailgun import MailgunSendEmailOutput as MailgunSendEmailOutput
+from .mcp import (
+    McpListToolsOutput as McpListToolsOutput,
+)
+from .mcp import (
+    McpToolCallOutput as McpToolCallOutput,
+)
 from .remote_browser import RemoteBrowserOutput as RemoteBrowserOutput
 from .spider import (
     SpiderOutput as SpiderOutput,
