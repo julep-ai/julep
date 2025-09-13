@@ -2,28 +2,28 @@
 MCP (Model Context Protocol) Integration for Julep
 
 This module provides a native MCP client integration that allows Julep agents to:
-1. Connect to MCP servers using SSE (legacy) or Streamable HTTP (recommended) transport
+1. Connect to MCP servers using Streamable HTTP transport (recommended for production)
 2. Dynamically discover available tools from the server
 3. Execute tools with proper error handling and retry logic
 
 The MCP integration enables Julep to interface with external tools and services
 through a standardized protocol, making it extensible without hardcoding specific integrations.
 
-Note: Stdio transport has been removed for security reasons. Use SSE for legacy servers
-or Streamable HTTP (requires mcp>=1.8.0) for modern production deployments.
+Note: Streamable HTTP (requires mcp>=1.8.0) supports SSE streaming capability. Stdio transport has been removed for security reasons.
 """
 
 from __future__ import annotations
 
 import asyncio
 from typing import Any
-
+import importlib.metadata
+from packaging import version
+import uuid
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import McpCallToolArguments, McpListToolsArguments, McpSetup
 from ...models import McpListToolsOutput, McpToolCallOutput
-
 
 def _ensure_mcp_available() -> None:
     """
@@ -41,6 +41,20 @@ def _ensure_mcp_available() -> None:
         )
         raise RuntimeError(msg) from e
 
+# Module-level dynamic import for Streamable HTTP client with version check
+try:
+    mcp_version = importlib.metadata.version('mcp')
+    if version.parse(mcp_version) < version.parse('1.8.0'):
+        raise RuntimeError(
+            f"Your installed 'mcp' SDK version {mcp_version} does not support Streamable HTTP transport. "
+            f"Required: mcp>=1.8.0. Please update with: pip install 'mcp>=1.8.0'."
+        )
+    from mcp.client.streamable_http import streamablehttp_client
+except ImportError as e:
+    raise RuntimeError(
+        f"Streamable HTTP transport requires mcp>=1.8.0. Underlying import error: {e}. "
+        f"Please update with: pip install 'mcp>=1.8.0'."
+    ) from e
 
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=16),
@@ -51,12 +65,8 @@ async def _connect_session(setup: McpSetup):
     """
     Create and initialize an MCP client session for the given setup.
     
-    This function handles the complexity of establishing connections to MCP servers
-    which can use different transport mechanisms (stdio for local processes, HTTP for remote).
-    
-    The dual transport supports:
-    - SSE: For legacy MCP servers using Server-Sent Events transport
-    - HTTP: For modern MCP servers using Streamable HTTP transport (recommended)
+    This function establishes connections to MCP servers using Streamable HTTP transport
+    (recommended for production, with built-in SSE streaming capability).
     
     The session management pattern ensures proper cleanup of resources.
 
@@ -68,27 +78,9 @@ async def _connect_session(setup: McpSetup):
 
     from mcp import ClientSession
 
-    # Dynamic import handling for optional HTTP transport
-    # Not all MCP SDK versions include HTTP support, so we gracefully handle its absence
-    try:
-        from mcp.client.streamable_http import streamablehttp_client
-    except Exception as e:  # pragma: no cover - guard older SDKs
-        streamablehttp_client = None  # type: ignore[assignment]
-        stream_err = e
-    else:
-        stream_err = None
-
     transport = setup.transport
 
     if transport == "http":
-        if streamablehttp_client is None:
-            msg = (
-                f"Your installed 'mcp' SDK version does not support Streamable HTTP transport. "
-                f"Required: mcp>=1.8.0. Please update with: pip install 'mcp>=1.8.0'. "
-                f"Underlying import error: {stream_err}"
-            )
-            raise RuntimeError(msg)
-
         if not setup.http_url:
             msg = "McpSetup.http_url is required for http transport"
             raise ValueError(msg)
@@ -236,6 +228,8 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
                 text = getattr(item, "text", None)
                 if text:
                     text_parts.append(text)
+            elif hasattr(item, 'text') and item.text:
+                text_parts.append(item.text)
             content_items.append(_serialize_content_item(item))
 
         return McpToolCallOutput(
