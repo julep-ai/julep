@@ -3,6 +3,7 @@ from typing import Any
 from uuid import UUID
 
 from beartype import beartype
+from pydantic import AnyUrl, BaseModel
 from temporalio import activity
 
 from ..app import app
@@ -11,6 +12,20 @@ from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
 from ..env import testing
 from ..queries import tools
+
+
+def serialize_pydantic_objects(obj: Any) -> Any:
+    """Recursively convert Pydantic types to JSON-serializable formats."""
+    if isinstance(obj, BaseModel):
+        return obj.model_dump(mode='json')
+    elif isinstance(obj, AnyUrl):
+        return str(obj)
+    elif isinstance(obj, dict):
+        return {k: serialize_pydantic_objects(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [serialize_pydantic_objects(item) for item in obj]
+    else:
+        return obj
 
 
 @beartype
@@ -53,20 +68,23 @@ async def execute_integration(
 
     arguments = arguments | (integration.arguments or {}) | merged_tool_args.get(tool_name, {})
 
-    # Convert integration.setup to dict if it's an object with model_dump method
+
+
+    # Convert integration.setup to dict and ensure all Pydantic types are serialized
     integration_setup = {}
     if integration.setup:
-        if hasattr(integration.setup, "model_dump"):
-            integration_setup = integration.setup.model_dump()
-        else:
-            integration_setup = integration.setup
+        # Use our helper to recursively serialize any Pydantic objects
+        integration_setup = serialize_pydantic_objects(integration.setup)
 
-    setup = setup | integration_setup | merged_tool_setup.get(tool_name, {})
+    # Serialize both setup and arguments to ensure no Pydantic objects remain
+    setup = serialize_pydantic_objects(setup | integration_setup | merged_tool_setup.get(tool_name, {}))
+    arguments = serialize_pydantic_objects(arguments)
 
     try:
         # Handle dummy provider as a special case
         if integration.provider == "dummy":
             return arguments
+
 
         # Call the integration service
         integration_service_response = await integrations.run_integration_service(

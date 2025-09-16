@@ -86,14 +86,18 @@ async def _connect_session(setup: McpSetup):
             raise ValueError(msg)
 
         headers = setup.http_headers or {}
-        # Add session management header for MCP session tracking
-        session_id = uuid.uuid4().hex
-        headers["Mcp-Session-Id"] = session_id
         http_ctx = streamablehttp_client(str(setup.http_url), headers=headers)
         read, write, _ = await http_ctx.__aenter__()
 
         session = ClientSession(read, write)
-        await session.initialize()
+        await session.__aenter__()
+
+        try:
+            await session.initialize()
+        except Exception as e:
+            await session.__aexit__(type(e), e, e.__traceback__)
+            await http_ctx.__aexit__(type(e), e, e.__traceback__)
+            raise e
 
         async def aclose() -> None:
             try:
@@ -132,7 +136,7 @@ def _serialize_content_item(item: Any) -> dict[str, Any]:
 @retry(
     wait=wait_exponential(multiplier=1, min=1, max=8),
     reraise=True,
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(1),
 )
 async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpListToolsOutput:
     """
@@ -153,7 +157,6 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
     try:
         # Query the MCP server for its tool catalog
         tools = await session.list_tools()
-
         # Transform MCP tool format to Julep's internal format
         # Extract the essential fields that Julep needs to present tools to agents
         out = [
@@ -162,9 +165,8 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
                 "description": getattr(t, "description", None),
                 "input_schema": getattr(t, "inputSchema", None),  # JSON Schema for validation
             }
-            for t in tools
+            for t in tools.tools
         ]
-
         return McpListToolsOutput(tools=out)  # type: ignore[arg-type]
     finally:
         await aclose()
