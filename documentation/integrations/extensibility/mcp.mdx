@@ -1,0 +1,325 @@
+---
+title: 'MCP (Model Context Protocol)'
+description: 'Learn how to use the MCP integration to connect Julep with any MCP-compatible server'
+icon: 'plug'
+---
+
+## Overview
+
+Welcome to the MCP (Model Context Protocol) integration guide for Julep! This integration enables you to connect Julep agents with any MCP-compatible server, providing access to a vast ecosystem of tools and capabilities. MCP is a standardized protocol that allows language models to interact with external tools and services in a consistent, secure manner.
+
+The MCP integration is unique because instead of hardcoding specific tools, it dynamically discovers available capabilities from any MCP server. This makes Julep infinitely extensible - simply point it at a new MCP server and all its tools become available to your agents automatically.
+
+## Prerequisites
+
+<Info type="info" title="MCP Server Required">
+  To use the MCP integration, you need access to an MCP-compatible server. The server can be:
+  - A public MCP server (e.g., DeepWiki, GitHub Copilot MCP)
+  - A private MCP server you've deployed
+
+  Some servers may require authentication tokens or API keys.
+</Info>
+
+## Supported Transports
+
+The MCP integration supports two transport types:
+
+<CardGroup cols={2}>
+  <Card title="HTTP Transport" icon="globe">
+    Standard request-response pattern for tool execution. Works with servers that expose HTTP endpoints.
+  </Card>
+  <Card title="SSE Transport" icon="rss">
+    Server-Sent Events for streaming responses and real-time updates. Ideal for long-running operations.
+  </Card>
+</CardGroup>
+
+## How to Use the Integration
+
+To get started with the MCP integration, you need to define two types of tools:
+
+<Steps>
+  <Step title="Define Tool Discovery">
+    First, create a tool that discovers available capabilities from the MCP server using the `list_tools` method.
+  </Step>
+  <Step title="Define Tool Execution">
+    Then, create a tool that executes specific MCP tools using the `call_tool` method.
+  </Step>
+  <Step title="Configure Your Task">
+    Use the discovered tools in your task workflow to interact with the MCP server.
+  </Step>
+</Steps>
+
+## Examples
+
+### Example 1: Basic HTTP Transport (DeepWiki)
+
+```yaml
+name: Test DeepWiki with HTTP Transport
+
+tools:
+- type: integration
+  name: mcp_fetch
+  integration:
+    provider: mcp
+    method: list_tools
+    setup:
+      transport: http
+      http_url: https://mcp.deepwiki.com/mcp
+
+- type: integration
+  name: mcp_call_tool
+  integration:
+    provider: mcp
+    method: call_tool
+    setup:
+      transport: http
+      http_url: https://mcp.deepwiki.com/mcp
+
+main:
+- tool: mcp_fetch
+
+- tool: mcp_call_tool
+  arguments:
+    tool_name: read_wiki_structure
+    arguments:
+      repoName: facebook/react
+```
+
+### Example 2: SSE Transport with Headers
+
+```yaml
+name: Test DeepWiki with SSE Transport
+
+tools:
+  - type: integration
+    name: mcp_sse
+    integration:
+      provider: mcp
+      method: call_tool
+      setup:
+        transport: sse
+        http_url: https://mcp.deepwiki.com/sse
+        http_headers:
+          Accept: "text/event-stream"
+          Cache-Control: "no-cache"
+  - type: integration
+    name: mcp_fetch
+    integration:
+      provider: mcp
+      method: list_tools
+      setup:
+        transport: sse
+        http_url: https://mcp.deepwiki.com/sse
+
+main:
+  - tool: mcp_fetch
+
+  - tool: mcp_sse
+    arguments:
+      tool_name: "read_wiki_structure"
+      arguments:
+        repoName: "julep-ai/julep"
+```
+
+### Example 3: Authenticated MCP Server (GitHub)
+
+```yaml
+name: Simple GitHub MCP Test (with authorization)
+
+tools:
+  - type: integration
+    name: github_mcp
+    integration:
+      provider: mcp
+      method: list_tools
+      setup:
+        transport: http
+        http_url: https://api.githubcopilot.com/mcp/
+        http_headers:
+          Authorization: "Bearer {your_github_token}"
+          Accept: "application/json, text/event-stream"
+          Content-Type: "application/json"
+
+  - type: integration
+    name: github_call
+    integration:
+      provider: mcp
+      method: call_tool
+      setup:
+        transport: http
+        http_url: https://api.githubcopilot.com/mcp/
+        http_headers:
+          Authorization: "Bearer {your_github_token}"
+          Accept: "application/json, text/event-stream"
+          Content-Type: "application/json"
+
+main:
+  - tool: github_mcp
+
+  - tool: github_call
+    arguments:
+      tool_name: "search_repositories"
+      arguments:
+        query: "julep language:python"
+        perPage: 3
+        minimal_output: true
+```
+
+## YAML Configuration Explained
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task
+    - **_tools_**: Lists the MCP integration tools being used
+    - **_type_**: Must be `integration` for MCP tools
+  </Accordion>
+
+  <Accordion title="Integration Setup">
+    - **_provider_**: Must be `mcp` for MCP integration
+    - **_method_**: Either `list_tools` or `call_tool`
+      - `list_tools`: Discovers available tools from the MCP server
+      - `call_tool`: Executes a specific tool on the MCP server
+    - **_setup_**: Connection configuration
+      - **_transport_**: Either `http` or `sse`
+      - **_http_url_**: The MCP server endpoint URL
+      - **_http_headers_**: (Optional) HTTP headers for authentication or content negotiation
+  </Accordion>
+
+  <Accordion title="Tool Execution Arguments">
+    For `call_tool` method:
+    - **_tool_name_**: The name of the MCP tool to execute
+    - **_arguments_**: (Optional) Arguments to pass to the MCP tool
+    - **_timeout_seconds_**: (Optional) Per-call timeout in seconds (default: 60)
+    
+    For `list_tools` method:
+    - No arguments required (empty object or omit entirely)
+  </Accordion>
+</AccordionGroup>
+
+
+## Best Practices
+
+<Tip>
+  **Tool Discovery**: Always call `list_tools` first to discover available capabilities before attempting to use specific tools. This ensures you're aware of what tools are available and their required parameters.
+</Tip>
+
+<Warning>
+  **Authentication**: Never hardcode authentication tokens in your task definitions. Use Julep's secrets management to store sensitive credentials securely.
+</Warning>
+
+<Note>
+  - Different MCP servers expose different tools. Always check the server's documentation for available capabilities
+  - SSE transport is recommended for long-running operations or when you need real-time updates
+  - HTTP transport is simpler and works well for quick request-response operations
+  - Some servers may have rate limits - consider implementing retry logic in your tasks
+</Note>
+
+## Advanced Features
+
+### Dynamic Tool Discovery
+
+The MCP integration's killer feature is dynamic tool discovery. Instead of defining tools statically, your agents can:
+1. Connect to any MCP server
+2. Discover available tools at runtime
+3. Adapt their capabilities based on what's available
+
+This means you can:
+- Switch between different MCP servers without changing your code
+- Add new capabilities by simply deploying new MCP servers
+- Build agents that adapt to their environment
+
+### Response Handling
+
+MCP tool responses are normalized into a consistent format:
+
+```json
+{
+  "text": "Concatenated text content if any",
+  "structured": {
+    // Any structured data returned by the tool
+  },
+  "content": [
+    // Raw content items as returned by the server
+  ],
+  "is_error": false
+}
+```
+
+This allows you to handle responses consistently regardless of the underlying MCP server implementation.
+
+## Using MCP with Automatic Tool Execution
+
+One of the most powerful features of Julep is automatic tool execution, which works seamlessly with MCP integrations. This allows your agents to dynamically discover and use MCP tools without manual intervention.
+
+### How It Works
+
+When you combine MCP integration with Julep's `auto_run_tools` feature:
+
+1. **Tool Discovery**: The agent first calls `list_tools` to discover available capabilities from the MCP server
+2. **Automatic Execution**: When the model determines an MCP tool is needed, it's executed automatically
+3. **Result Integration**: Tool results are fed back to the model to continue processing
+4. **Seamless Workflow**: Everything happens in a single call - no manual intervention required
+
+### Example: Autonomous MCP Agent in Tasks
+
+```yaml
+name: Autonomous Documentation Assistant
+
+tools:
+  - type: integration
+    name: mcp_discover
+    integration:
+      provider: mcp
+      method: list_tools
+      setup:
+        transport: http
+        http_url: https://mcp.deepwiki.com/mcp
+
+  - type: integration
+    name: mcp_execute
+    integration:
+      provider: mcp
+      method: call_tool
+      setup:
+        transport: http
+        http_url: https://mcp.deepwiki.com/mcp
+
+main:
+  # Step 1: Use discovered tools automatically to answer questions
+  - prompt:
+      - role: user
+        content: |
+          Using the available MCP tools, find information about the React repository structure
+          and provide a comprehensive overview of its main components.
+    auto_run_tools: true  # MCP tools execute automatically when needed
+
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection Issues">
+    - Verify the MCP server URL is correct and accessible
+    - Check if authentication headers are required and properly formatted
+    - Ensure the transport type matches what the server expects
+  </Accordion>
+
+  <Accordion title="Tool Execution Failures">
+    - Use `list_tools` to verify the tool exists on the server
+    - Check the tool's input schema for required parameters
+  </Accordion>
+
+  <Accordion title="Authentication Errors">
+    - Ensure Bearer tokens include the "Bearer " prefix
+    - Verify API keys/tokens are valid and not expired
+    - Check if additional headers are required
+  </Accordion>
+</AccordionGroup>
+
+## Conclusion
+
+The MCP integration opens up unlimited possibilities for extending Julep agents with external capabilities. By following a standardized protocol, you can connect to any MCP-compatible server and instantly gain access to its tools, making your agents more powerful and adaptable.
+
+<Tip>
+  For more information about the Model Context Protocol, visit the [official MCP documentation](https://modelcontextprotocol.io/). To explore available MCP servers, check out the [MCP server directory](https://github.com/modelcontextprotocol/servers).
+</Tip>
