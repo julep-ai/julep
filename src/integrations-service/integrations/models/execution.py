@@ -33,6 +33,9 @@ from ..autogen.Tools import (
     LlamaParseSetup,
     MailgunSendEmailArguments,
     MailgunSetup,
+    McpCallToolArguments,
+    McpListToolsArguments,
+    McpSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -68,6 +71,7 @@ from .google_sheets import (
 )
 from .llama_parse import LlamaParseFetchOutput
 from .mailgun import MailgunSendEmailOutput
+from .mcp import McpListToolsOutput, McpToolCallOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderOutput
 from .unstructured import UnstructuredParseOutput
@@ -95,6 +99,7 @@ ExecutionSetup = (
     | SpiderSetup
     | UnstructuredSetup
     | WeatherSetup
+    | McpSetup
     | GoogleSheetsSetup
 )
 
@@ -121,6 +126,8 @@ ExecutionArguments = (
     | UnstructuredPartitionArguments
     | WeatherGetArguments
     | WikipediaSearchArguments
+    | McpCallToolArguments
+    | McpListToolsArguments
     | GoogleSheetsReadArguments
     | GoogleSheetsWriteArguments
     | GoogleSheetsAppendArguments
@@ -152,6 +159,8 @@ ExecutionResponse = (
     | SpiderOutput
     | UnstructuredParseOutput
     | AlgoliaSearchOutput
+    | McpToolCallOutput
+    | McpListToolsOutput
     | GoogleSheetsReadOutput
     | GoogleSheetsWriteOutput
     | GoogleSheetsClearOutput

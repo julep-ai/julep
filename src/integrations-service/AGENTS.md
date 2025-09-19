@@ -66,6 +66,7 @@ The integrations-service is a FastAPI-based microservice that provides a unified
    - `email` - Email sending capabilities
    - `mailgun` - Mailgun email service integration
    - `weather` - Weather information
+   - `mcp` - Model Context Protocol client (stdio/http)
 
 ### API Structure
 - `/execute/{provider}` - Execute default method for a provider
@@ -83,6 +84,11 @@ The integrations-service is a FastAPI-based microservice that provides a unified
    - Each provider has method implementations in `utils/integrations/`
    - Methods use `@beartype` for type validation and `@retry` for resilience
    - Async execution with consistent error handling
+   - MCP specifics:
+     - `mcp.list_tools` connects to the server and returns dynamic tool metadata
+     - `mcp.call_tool` invokes a named MCP tool with JSON arguments
+     - Supports `stdio` (via `command`/`args`) and `http` (via `http_url`/`http_headers`)
+
 
 3. **Dynamic Loading**
    - Provider modules loaded using `importlib` based on provider name

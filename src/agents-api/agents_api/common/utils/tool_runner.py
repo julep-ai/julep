@@ -217,7 +217,7 @@ async def run_llm_with_tools(
     tool_map = {}
     for t in tools:
         if t.type == "integration" and t.integration is not None:
-            tool_map[t.integration.provider] = t
+            tool_map[f"{t.integration.provider}_{t.integration.method}"] = t
         else:
             tool_map[t.name] = t
 
