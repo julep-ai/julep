@@ -384,6 +384,7 @@ class BaseIntegrationDef(BaseModel):
         "arxiv",
         "unstructured",
         "algolia",
+        "mcp",
         "google_sheets",
     ]
     """
@@ -428,6 +429,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "arxiv",
             "unstructured",
             "algolia",
+            "mcp",
             "google_sheets",
         ]
         | None
@@ -1061,6 +1063,7 @@ class CreateToolRequest(BaseModel):
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
+        | McpIntegrationDef
         | GoogleSheetsIntegrationDef
         | None
     ) = None
@@ -2177,6 +2180,192 @@ class MailgunSetupUpdate(BaseModel):
     """
 
 
+class McpCallToolArguments(BaseModel):
+    """
+    Arguments to call a named tool on the MCP server
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_name: str
+    """
+    The MCP tool name to invoke
+    """
+    arguments: dict[str, Any] = {}
+    """
+    JSON-serializable arguments to pass to the MCP tool
+    """
+    timeout_seconds: int = 60
+    """
+    Optional per-call timeout in seconds
+    """
+
+
+class McpCallToolArgumentsUpdate(BaseModel):
+    """
+    Arguments to call a named tool on the MCP server
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_name: str | None = None
+    """
+    The MCP tool name to invoke
+    """
+    arguments: dict[str, Any] = {}
+    """
+    JSON-serializable arguments to pass to the MCP tool
+    """
+    timeout_seconds: int = 60
+    """
+    Optional per-call timeout in seconds
+    """
+
+
+class McpIntegrationDef(BaseIntegrationDef):
+    """
+    MCP integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["mcp"] = "mcp"
+    """
+    The provider must be "mcp"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: McpSetup | None = None
+    """
+    The setup parameters for MCP
+    """
+    arguments: McpCallToolArguments | McpListToolsArguments | None = None
+    """
+    The arguments for MCP methods
+    """
+
+
+class McpIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    MCP integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["mcp"] = "mcp"
+    """
+    The provider must be "mcp"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: McpSetupUpdate | None = None
+    """
+    The setup parameters for MCP
+    """
+    arguments: McpCallToolArgumentsUpdate | McpListToolsArgumentsUpdate | None = None
+    """
+    The arguments for MCP methods
+    """
+
+
+class McpListToolsArguments(BaseModel):
+    """
+    Arguments to list available tools
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    dummy: str = "dummy"
+
+
+McpListToolsArgumentsUpdate = McpListToolsArguments
+
+
+class McpSetup(BaseModel):
+    """
+    Setup parameters for MCP integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    transport: Literal["sse", "http"]
+    """
+    Transport used to connect to the MCP server
+    """
+    command: str | None = None
+    """
+    (stdio) Executable or command to launch the server
+    """
+    args: list[str] = []
+    """
+    (stdio) Arguments for the server command
+    """
+    cwd: str | None = None
+    """
+    (stdio) Working directory for the server process
+    """
+    env: dict[str, str] = {}
+    """
+    (stdio) Environment variables for the server process
+    """
+    http_url: AnyUrl | None = None
+    """
+    (http) Base URL for the MCP server (usually ends with /mcp)
+    """
+    http_headers: dict[str, str] = {}
+    """
+    (http) Optional HTTP headers to include (e.g., Authorization)
+    """
+
+
+class McpSetupUpdate(BaseModel):
+    """
+    Setup parameters for MCP integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    transport: Literal["sse", "http"] | None = None
+    """
+    Transport used to connect to the MCP server
+    """
+    command: str | None = None
+    """
+    (stdio) Executable or command to launch the server
+    """
+    args: list[str] = []
+    """
+    (stdio) Arguments for the server command
+    """
+    cwd: str | None = None
+    """
+    (stdio) Working directory for the server process
+    """
+    env: dict[str, str] = {}
+    """
+    (stdio) Environment variables for the server process
+    """
+    http_url: AnyUrl | None = None
+    """
+    (http) Base URL for the MCP server (usually ends with /mcp)
+    """
+    http_headers: dict[str, str] = {}
+    """
+    (http) Optional HTTP headers to include (e.g., Authorization)
+    """
+
+
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -2298,6 +2487,7 @@ class PatchToolRequest(BaseModel):
         | ArxivIntegrationDefUpdate
         | UnstructuredIntegrationDefUpdate
         | AlgoliaIntegrationDefUpdate
+        | McpIntegrationDefUpdate
         | GoogleSheetsIntegrationDefUpdate
         | None
     ) = None
@@ -2804,6 +2994,7 @@ class Tool(BaseModel):
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
+        | McpIntegrationDef
         | GoogleSheetsIntegrationDef
         | None
     ) = None
@@ -3065,6 +3256,7 @@ class UpdateToolRequest(BaseModel):
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
         | AlgoliaIntegrationDef
+        | McpIntegrationDef
         | GoogleSheetsIntegrationDef
         | None
     ) = None
