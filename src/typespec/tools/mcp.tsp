@@ -44,7 +44,7 @@ model McpCallToolArguments {
 }
 
 /** Arguments to list available tools */
-model McpListToolsArguments {}
+model McpListToolsArguments {dummy: string = "dummy";}
 
 /** A single MCP tool description */
 model McpToolInfo {

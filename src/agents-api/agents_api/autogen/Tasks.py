@@ -85,7 +85,8 @@ class Content(BaseModel):
     """
 
 
-ContentItem = Content
+class ContentItem(Content):
+    pass
 
 
 class ContentItemModel(BaseModel):
@@ -96,10 +97,12 @@ class ContentItemModel(BaseModel):
     source: Source
 
 
-ContentItemModel1 = Content
+class ContentItemModel1(Content):
+    pass
 
 
-ContentItemModel2 = ContentItemModel
+class ContentItemModel2(ContentItemModel):
+    pass
 
 
 class ContentModel(BaseModel):
@@ -129,10 +132,12 @@ class ContentModel1(BaseModel):
     content: list[ContentItem] | list[ContentItemModel]
 
 
-ContentModel2 = Content
+class ContentModel2(Content):
+    pass
 
 
-ContentModel3 = ContentModel
+class ContentModel3(ContentModel):
+    pass
 
 
 class ContentModel4(BaseModel):

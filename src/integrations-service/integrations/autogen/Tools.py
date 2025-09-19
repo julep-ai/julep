@@ -2270,7 +2270,7 @@ class McpIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The setup parameters for MCP
     """
-    arguments: McpCallToolArgumentsUpdate | McpListToolsArguments | None = None
+    arguments: McpCallToolArgumentsUpdate | McpListToolsArgumentsUpdate | None = None
     """
     The arguments for MCP methods
     """
@@ -2284,6 +2284,10 @@ class McpListToolsArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    dummy: str = "dummy"
+
+
+McpListToolsArgumentsUpdate = McpListToolsArguments
 
 
 class McpSetup(BaseModel):
@@ -2294,7 +2298,7 @@ class McpSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    transport: Literal["stdio", "http"]
+    transport: Literal["sse", "http"]
     """
     Transport used to connect to the MCP server
     """

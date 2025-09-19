@@ -17,15 +17,14 @@ from ..queries import tools
 def serialize_pydantic_objects(obj: Any) -> Any:
     """Recursively convert Pydantic types to JSON-serializable formats."""
     if isinstance(obj, BaseModel):
-        return obj.model_dump(mode='json')
-    elif isinstance(obj, AnyUrl):
+        return obj.model_dump(mode="json")
+    if isinstance(obj, AnyUrl):
         return str(obj)
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: serialize_pydantic_objects(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [serialize_pydantic_objects(item) for item in obj]
-    else:
-        return obj
+    return obj
 
 
 @beartype
@@ -68,8 +67,6 @@ async def execute_integration(
 
     arguments = arguments | (integration.arguments or {}) | merged_tool_args.get(tool_name, {})
 
-
-
     # Convert integration.setup to dict and ensure all Pydantic types are serialized
     integration_setup = {}
     if integration.setup:
@@ -77,14 +74,15 @@ async def execute_integration(
         integration_setup = serialize_pydantic_objects(integration.setup)
 
     # Serialize both setup and arguments to ensure no Pydantic objects remain
-    setup = serialize_pydantic_objects(setup | integration_setup | merged_tool_setup.get(tool_name, {}))
+    setup = serialize_pydantic_objects(
+        setup | integration_setup | merged_tool_setup.get(tool_name, {})
+    )
     arguments = serialize_pydantic_objects(arguments)
 
     try:
         # Handle dummy provider as a special case
         if integration.provider == "dummy":
             return arguments
-
 
         # Call the integration service
         integration_service_response = await integrations.run_integration_service(

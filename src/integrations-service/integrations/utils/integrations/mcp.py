@@ -2,33 +2,42 @@
 MCP (Model Context Protocol) Integration for Julep
 
 This module provides a native MCP client integration that allows Julep agents to:
-1. Connect to MCP servers using Streamable HTTP transport (recommended for production)
+1. Connect to MCP servers using HTTP or SSE (Server-Sent Events) transports
 2. Dynamically discover available tools from the server
 3. Execute tools with proper error handling and retry logic
 
 The MCP integration enables Julep to interface with external tools and services
 through a standardized protocol, making it extensible without hardcoding specific integrations.
 
-Note: Streamable HTTP (requires mcp>=1.8.0) supports SSE streaming capability. Stdio transport has been removed for security reasons.
+Transport Options:
+- HTTP: Standard request-response pattern using streamablehttp_client
+- SSE: Server-Sent Events for streaming responses using dedicated sse_client
+
+Note: Both transports require mcp>=1.8.0. The HTTP transport uses streamablehttp_client
+which supports both regular HTTP and streaming responses. The SSE transport uses a
+dedicated sse_client for proper event stream handling. Stdio transport has been 
+removed for security reasons.
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+import contextlib
 import importlib.metadata
-from packaging import version
-import uuid
+from typing import Any
+
 from beartype import beartype
+from packaging import version
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import McpCallToolArguments, McpListToolsArguments, McpSetup
 from ...models import McpListToolsOutput, McpToolCallOutput
 
+
 def _ensure_mcp_available() -> None:
     """
     Check if the MCP SDK is installed and available.
-    
+
     This is a runtime check to provide clear error messages if the MCP
     dependency is missing, rather than cryptic import errors later.
     """
@@ -41,20 +50,25 @@ def _ensure_mcp_available() -> None:
         )
         raise RuntimeError(msg) from e
 
-# Module-level dynamic import for Streamable HTTP client with version check
+
+# Module-level dynamic import for MCP clients with version check
 try:
-    mcp_version = importlib.metadata.version('mcp')
-    if version.parse(mcp_version) < version.parse('1.8.0'):
-        raise RuntimeError(
-            f"Your installed 'mcp' SDK version {mcp_version} does not support Streamable HTTP transport. "
+    mcp_version = importlib.metadata.version("mcp")
+    if version.parse(mcp_version) < version.parse("1.8.0"):
+        msg = (
+            f"Your installed 'mcp' SDK version {mcp_version} does not support required transports. "
             f"Required: mcp>=1.8.0. Please update with: pip install 'mcp>=1.8.0'."
         )
+        raise RuntimeError(msg)
+    from mcp.client.sse import sse_client
     from mcp.client.streamable_http import streamablehttp_client
 except ImportError as e:
-    raise RuntimeError(
-        f"Streamable HTTP transport requires mcp>=1.8.0. Underlying import error: {e}. "
+    msg = (
+        f"MCP transports require mcp>=1.8.0. Underlying import error: {e}. "
         f"Please update with: pip install 'mcp>=1.8.0'."
-    ) from e
+    )
+    raise RuntimeError(msg) from e
+
 
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=16),
@@ -64,15 +78,23 @@ except ImportError as e:
 async def _connect_session(setup: McpSetup):
     """
     Create and initialize an MCP client session for the given setup.
-    
-    This function establishes connections to MCP servers using Streamable HTTP transport
-    (recommended for production, with built-in SSE streaming capability).
-    
+
+    This function establishes connections to MCP servers using either:
+    - streamablehttp_client for HTTP transport (standard request/response)
+    - sse_client for SSE transport (Server-Sent Events streaming)
+
     The session management pattern ensures proper cleanup of resources.
+
+    Args:
+        setup: MCP setup configuration with transport type and connection details
 
     Returns:
         tuple: (session, aclose) where session is the active MCP client and
                aclose is an async cleanup function that must be called when done
+
+    Raises:
+        ValueError: If required configuration is missing or transport type is unknown
+        RuntimeError: If connection to the MCP server fails
     """
     _ensure_mcp_available()
 
@@ -80,30 +102,74 @@ async def _connect_session(setup: McpSetup):
 
     transport = setup.transport
 
-    if transport == "http":
+    if transport in ("http", "sse"):
         if not setup.http_url:
-            msg = "McpSetup.http_url is required for http transport"
+            msg = f"McpSetup.http_url is required for {transport} transport"
             raise ValueError(msg)
 
         headers = setup.http_headers or {}
-        http_ctx = streamablehttp_client(str(setup.http_url), headers=headers)
-        read, write, _ = await http_ctx.__aenter__()
+
+        # Use different clients for SSE vs HTTP transports
+        if transport == "sse":
+            # SSE transport uses the dedicated sse_client for proper event stream handling
+            # Add SSE-specific headers to ensure proper content negotiation
+            headers = {
+                **headers,
+                "Accept": "text/event-stream",
+                "Cache-Control": "no-cache",
+            }
+
+            # Create the SSE context
+            client_ctx = sse_client(str(setup.http_url), headers=headers)
+        else:
+            # HTTP transport uses streamablehttp_client
+            client_ctx = streamablehttp_client(str(setup.http_url), headers=headers)
+
+        # Manually enter the async context to avoid task boundary issues
+        try:
+            # Enter the context manager
+            result = await client_ctx.__aenter__()
+            # Handle both tuple and direct stream returns
+            if isinstance(result, tuple):
+                read, write = result[:2]  # Take first two items, ignore rest
+            else:
+                # Some versions might return a different structure
+                read = result
+                write = result
+        except Exception as e:
+            error_msg = (
+                f"Failed to connect to {transport.upper()} endpoint {setup.http_url}: {e}"
+            )
+            raise RuntimeError(error_msg) from e
 
         session = ClientSession(read, write)
-        await session.__aenter__()
 
+        # Store references for cleanup
+        session_entered = False
         try:
+            await session.__aenter__()
+            session_entered = True
             await session.initialize()
         except Exception as e:
-            await session.__aexit__(type(e), e, e.__traceback__)
-            await http_ctx.__aexit__(type(e), e, e.__traceback__)
-            raise e
+            # Clean up on failure
+            if session_entered:
+                with contextlib.suppress(Exception):
+                    await session.__aexit__(type(e), e, e.__traceback__)
+            with contextlib.suppress(Exception):
+                await client_ctx.__aexit__(type(e), e, e.__traceback__)
 
+            # Add context about transport type in error
+            error_msg = (
+                f"Failed to establish {transport.upper()} connection to {setup.http_url}: {e}"
+            )
+            raise RuntimeError(error_msg) from e
+
+        # Create cleanup function that will be called later
         async def aclose() -> None:
-            try:
+            with contextlib.suppress(Exception):
                 await session.__aexit__(None, None, None)  # type: ignore[attr-defined]
-            finally:
-                await http_ctx.__aexit__(None, None, None)
+            with contextlib.suppress(Exception):
+                await client_ctx.__aexit__(None, None, None)
 
         return session, aclose
 
@@ -114,7 +180,7 @@ async def _connect_session(setup: McpSetup):
 def _serialize_content_item(item: Any) -> dict[str, Any]:
     """
     Best-effort conversion of MCP content item to JSON-serializable dict.
-    
+
     MCP servers can return various content types (text, images, structured data).
     This function normalizes them into a consistent format that can be serialized to JSON
     and passed back through our API. The fallback chain ensures we never lose data,
@@ -142,17 +208,26 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
     """
     Discover available tools from an MCP server.
 
-    This is the key innovation of MCP integration -
-    Instead of hardcoding tools, we dynamically discover what's available from any MCP server.
-    This makes Julep infinitely extensible - just point it at a new MCP server and all
-    its tools become available to your agents automatically.
+    This is the key innovation of MCP integration - instead of hardcoding tools, 
+    we dynamically discover what's available from any MCP server. This makes Julep 
+    infinitely extensible - just point it at a new MCP server and all its tools 
+    become available to your agents automatically.
 
     The retry logic handles transient network issues, especially important for
     remote HTTP-based MCP servers.
 
+    Args:
+        setup: MCP connection configuration (transport type, URL, headers)
+        arguments: Arguments for listing tools (currently unused, reserved for future filtering)
+
     Returns:
         McpListToolsOutput: List of discovered tools with their names, descriptions, and schemas
+
+    Raises:
+        RuntimeError: If connection to the MCP server fails
+        ValueError: If configuration is invalid
     """
+    # AIDEV-NOTE: Debug logging for MCP tool discovery - remove in production
     session, aclose = await _connect_session(setup)
     try:
         # Query the MCP server for its tool catalog
@@ -182,9 +257,9 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
     """
     Execute a specific tool on an MCP server with the provided arguments.
 
-    This is where Julep agents can call any tool
-    exposed by an MCP server without knowing its implementation details. The tool
-    could be running Python, Node.js, Rust, or any language - MCP abstracts that away.
+    This allows Julep agents to call any tool exposed by an MCP server without 
+    knowing its implementation details. The tool could be running Python, Node.js, 
+    Rust, or any language - MCP abstracts that away.
 
     Key features:
     - Automatic retry on failure (network issues, timeouts)
@@ -192,12 +267,22 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
     - Response normalization for consistent handling
 
     Args:
-        setup: MCP connection configuration (transport type, credentials)
-        arguments: Tool name and parameters to pass
+        setup: MCP connection configuration (transport type, URL, headers)
+        arguments: Contains tool_name, arguments dict, and optional timeout_seconds
 
     Returns:
-        McpToolCallOutput: Normalized tool response with text, structured data, and error info
+        McpToolCallOutput: Normalized tool response with:
+            - text: Concatenated text content from the response
+            - structured: Any structured data returned by the tool
+            - content: Raw content items as JSON-serializable dicts
+            - is_error: Whether the tool execution resulted in an error
+
+    Raises:
+        asyncio.TimeoutError: If the tool execution exceeds the specified timeout
+        RuntimeError: If connection to the MCP server fails
+        ValueError: If configuration is invalid
     """
+    # AIDEV-NOTE: Debug logging for MCP tool execution - remove in production
     session, aclose = await _connect_session(setup)
     try:
         # Enforce timeout per call if provided
@@ -230,7 +315,7 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
                 text = getattr(item, "text", None)
                 if text:
                     text_parts.append(text)
-            elif hasattr(item, 'text') and item.text:
+            elif hasattr(item, "text") and item.text:
                 text_parts.append(item.text)
             content_items.append(_serialize_content_item(item))
 

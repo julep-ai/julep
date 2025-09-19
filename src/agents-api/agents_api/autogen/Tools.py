@@ -460,7 +460,8 @@ class Bash20241022Def(BaseModel):
     name: str = "bash"
 
 
-Bash20241022DefUpdate = Bash20241022Def
+class Bash20241022DefUpdate(Bash20241022Def):
+    pass
 
 
 class BraveIntegrationDef(BaseIntegrationDef):
@@ -679,10 +680,14 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
     id: str | None = None
 
 
-BrowserbaseGetSessionLiveUrlsArguments = BrowserbaseGetSessionArguments
+class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
+    pass
 
 
-BrowserbaseGetSessionLiveUrlsArgumentsUpdate = BrowserbaseGetSessionArgumentsUpdate
+class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(
+    BrowserbaseGetSessionArgumentsUpdate
+):
+    pass
 
 
 class BrowserbaseListSessionsArguments(BaseModel):
@@ -1006,7 +1011,10 @@ class Computer20241022Def(BaseModel):
     """
 
 
-Computer20241022DefUpdate = Computer20241022Def
+class Computer20241022DefUpdate(Computer20241022Def):
+    """
+    Anthropic new tools
+    """
 
 
 class CreateToolRequest(BaseModel):
@@ -2279,7 +2287,7 @@ class McpIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The setup parameters for MCP
     """
-    arguments: McpCallToolArgumentsUpdate | McpListToolsArguments | None = None
+    arguments: McpCallToolArgumentsUpdate | McpListToolsArgumentsUpdate | None = None
     """
     The arguments for MCP methods
     """
@@ -2293,6 +2301,13 @@ class McpListToolsArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    dummy: str = "dummy"
+
+
+class McpListToolsArgumentsUpdate(McpListToolsArguments):
+    """
+    Arguments to list available tools
+    """
 
 
 class McpSetup(BaseModel):
@@ -2303,7 +2318,7 @@ class McpSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    transport: Literal["stdio", "http"]
+    transport: Literal["sse", "http"]
     """
     Transport used to connect to the MCP server
     """
@@ -2341,7 +2356,7 @@ class McpSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    transport: Literal["stdio", "http"] | None = None
+    transport: Literal["sse", "http"] | None = None
     """
     Transport used to connect to the MCP server
     """
@@ -2945,7 +2960,8 @@ class TextEditor20241022Def(BaseModel):
     name: str = "str_replace_editor"
 
 
-TextEditor20241022DefUpdate = TextEditor20241022Def
+class TextEditor20241022DefUpdate(TextEditor20241022Def):
+    pass
 
 
 class Tool(BaseModel):

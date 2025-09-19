@@ -39,7 +39,8 @@ class BaseDocSearch(BaseModel):
     """
 
 
-BaseDocSearchUpdate = BaseDocSearch
+class BaseDocSearchUpdate(BaseDocSearch):
+    pass
 
 
 class CreateSessionRequest(BaseModel):

@@ -7,6 +7,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
   "langchain-community~=0.3.0",
   "fastapi~=0.115.0",
+  "sse-starlette>=2.0.0",
   "uvicorn~=0.30.6",
   "langchain~=0.3.0",
   "pydantic[email]>=2.11.2,<3.0.0",

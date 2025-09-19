@@ -11706,13 +11706,26 @@ components:
         arguments:
           anyOf:
             - $ref: '#/components/schemas/Tools.McpCallToolArgumentsUpdate'
-            - $ref: '#/components/schemas/Tools.McpListToolsArguments'
+            - $ref: '#/components/schemas/Tools.McpListToolsArgumentsUpdate'
           description: The arguments for MCP methods
       allOf:
         - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
       description: MCP integration definition
     Tools.McpListToolsArguments:
       type: object
+      required:
+        - dummy
+      properties:
+        dummy:
+          type: string
+          default: dummy
+      description: Arguments to list available tools
+    Tools.McpListToolsArgumentsUpdate:
+      type: object
+      properties:
+        dummy:
+          type: string
+          default: dummy
       description: Arguments to list available tools
     Tools.McpSetup:
       type: object
@@ -11722,7 +11735,7 @@ components:
         transport:
           type: string
           enum:
-            - stdio
+            - sse
             - http
           description: Transport used to connect to the MCP server
         command:
@@ -11760,7 +11773,7 @@ components:
         transport:
           type: string
           enum:
-            - stdio
+            - sse
             - http
           description: Transport used to connect to the MCP server
         command:
