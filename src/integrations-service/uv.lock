@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = "==3.12.*"
 
 [[package]]
@@ -846,6 +846,7 @@ dependencies = [
     { name = "sentry-sdk", extra = ["flask"] },
     { name = "setuptools" },
     { name = "spider-client" },
+    { name = "sse-starlette" },
     { name = "tenacity" },
     { name = "tweepy" },
     { name = "unstructured-client" },
@@ -897,6 +898,7 @@ requires-dist = [
     { name = "sentry-sdk", extras = ["flask"], specifier = ">=2.19.0" },
     { name = "setuptools", specifier = "~=75.1.0" },
     { name = "spider-client", specifier = "~=0.0.70" },
+    { name = "sse-starlette", specifier = ">=2.0.0" },
     { name = "tenacity", specifier = ">=8.2.0,<8.4.0" },
     { name = "tweepy", specifier = "~=4.14.0" },
     { name = "unstructured-client", specifier = "==0.42.3" },

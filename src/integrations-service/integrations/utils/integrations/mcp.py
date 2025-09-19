@@ -15,7 +15,7 @@ Transport Options:
 
 Note: Both transports require mcp>=1.8.0. The HTTP transport uses streamablehttp_client
 which supports both regular HTTP and streaming responses. The SSE transport uses a
-dedicated sse_client for proper event stream handling. Stdio transport has been 
+dedicated sse_client for proper event stream handling. Stdio transport has been
 removed for security reasons.
 """
 
@@ -208,9 +208,9 @@ async def list_tools(setup: McpSetup, arguments: McpListToolsArguments) -> McpLi
     """
     Discover available tools from an MCP server.
 
-    This is the key innovation of MCP integration - instead of hardcoding tools, 
-    we dynamically discover what's available from any MCP server. This makes Julep 
-    infinitely extensible - just point it at a new MCP server and all its tools 
+    This is the key innovation of MCP integration - instead of hardcoding tools,
+    we dynamically discover what's available from any MCP server. This makes Julep
+    infinitely extensible - just point it at a new MCP server and all its tools
     become available to your agents automatically.
 
     The retry logic handles transient network issues, especially important for
@@ -257,8 +257,8 @@ async def call_tool(setup: McpSetup, arguments: McpCallToolArguments) -> McpTool
     """
     Execute a specific tool on an MCP server with the provided arguments.
 
-    This allows Julep agents to call any tool exposed by an MCP server without 
-    knowing its implementation details. The tool could be running Python, Node.js, 
+    This allows Julep agents to call any tool exposed by an MCP server without
+    knowing its implementation details. The tool could be running Python, Node.js,
     Rust, or any language - MCP abstracts that away.
 
     Key features:
