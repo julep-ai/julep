@@ -41,6 +41,7 @@ dependencies = [
   "google-auth>=2.40.3",
   "google-auth-oauthlib>=1.2.2",
   "google-auth-httplib2>=0.2.0",
+  "aiosmtplib>=3.0.1",
 ]
 
 [dependency-groups]
