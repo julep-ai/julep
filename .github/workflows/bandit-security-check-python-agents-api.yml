@@ -2,6 +2,7 @@ name: Bandit security check python agents-api
 run-name: ${{ github.actor }} is checking the security of the code
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'src/agents-api/**'
@@ -15,10 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: mdegis/bandit-action@v1.0.1
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Run Bandit scan
+      uses: PyCQA/bandit-action@v1
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        path: "./src/agents-api/agents_api"
-        level: high
+        targets: "./src/agents-api/agents_api"
         confidence: high
-        # exit_zero: true
+        severity: high
