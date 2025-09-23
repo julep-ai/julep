@@ -9695,6 +9695,7 @@ components:
             - arxiv
             - unstructured
             - algolia
+            - mcp
             - google_sheets
           description: The provider of the integration
         method:
@@ -9721,6 +9722,7 @@ components:
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDef'
           unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDef'
           algolia: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+          mcp: '#/components/schemas/Tools.McpIntegrationDef'
           google_sheets: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
@@ -9744,6 +9746,7 @@ components:
             - arxiv
             - unstructured
             - algolia
+            - mcp
             - google_sheets
           description: The provider of the integration
         method:
@@ -9770,6 +9773,7 @@ components:
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
           unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
           algolia: '#/components/schemas/Tools.AlgoliaIntegrationDefUpdate'
+          mcp: '#/components/schemas/Tools.McpIntegrationDefUpdate'
           google_sheets: '#/components/schemas/Tools.GoogleSheetsIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
@@ -10620,6 +10624,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.McpIntegrationDef'
             - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
           description: The integration to call
         system:
@@ -11620,6 +11625,186 @@ components:
           type: string
           description: The API key for the Mailgun integration
       description: Setup parameters for Mailgun integration
+    Tools.McpCallToolArguments:
+      type: object
+      required:
+        - tool_name
+      properties:
+        tool_name:
+          type: string
+          description: The MCP tool name to invoke
+        arguments:
+          type: object
+          additionalProperties: {}
+          description: JSON-serializable arguments to pass to the MCP tool
+          default: {}
+        timeout_seconds:
+          type: integer
+          format: uint16
+          description: Optional per-call timeout in seconds
+          default: 60
+      description: Arguments to call a named tool on the MCP server
+    Tools.McpCallToolArgumentsUpdate:
+      type: object
+      properties:
+        tool_name:
+          type: string
+          description: The MCP tool name to invoke
+        arguments:
+          type: object
+          additionalProperties: {}
+          description: JSON-serializable arguments to pass to the MCP tool
+          default: {}
+        timeout_seconds:
+          type: integer
+          format: uint16
+          description: Optional per-call timeout in seconds
+          default: 60
+      description: Arguments to call a named tool on the MCP server
+    Tools.McpIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - mcp
+          description: The provider must be "mcp"
+          default: mcp
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.McpSetup'
+          description: The setup parameters for MCP
+        arguments:
+          anyOf:
+            - $ref: '#/components/schemas/Tools.McpCallToolArguments'
+            - $ref: '#/components/schemas/Tools.McpListToolsArguments'
+          description: The arguments for MCP methods
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: MCP integration definition
+    Tools.McpIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - mcp
+          description: The provider must be "mcp"
+          default: mcp
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.McpSetupUpdate'
+          description: The setup parameters for MCP
+        arguments:
+          anyOf:
+            - $ref: '#/components/schemas/Tools.McpCallToolArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.McpListToolsArgumentsUpdate'
+          description: The arguments for MCP methods
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: MCP integration definition
+    Tools.McpListToolsArguments:
+      type: object
+      required:
+        - dummy
+      properties:
+        dummy:
+          type: string
+          default: dummy
+      description: Arguments to list available tools
+    Tools.McpListToolsArgumentsUpdate:
+      type: object
+      properties:
+        dummy:
+          type: string
+          default: dummy
+      description: Arguments to list available tools
+    Tools.McpSetup:
+      type: object
+      required:
+        - transport
+      properties:
+        transport:
+          type: string
+          enum:
+            - sse
+            - http
+          description: Transport used to connect to the MCP server
+        command:
+          type: string
+          description: (stdio) Executable or command to launch the server
+        args:
+          type: array
+          items:
+            type: string
+          description: (stdio) Arguments for the server command
+          default: []
+        cwd:
+          type: string
+          description: (stdio) Working directory for the server process
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: (stdio) Environment variables for the server process
+          default: {}
+        http_url:
+          type: string
+          format: uri
+          description: (http) Base URL for the MCP server (usually ends with /mcp)
+        http_headers:
+          type: object
+          additionalProperties:
+            type: string
+          description: (http) Optional HTTP headers to include (e.g., Authorization)
+          default: {}
+      description: Setup parameters for MCP integration
+    Tools.McpSetupUpdate:
+      type: object
+      properties:
+        transport:
+          type: string
+          enum:
+            - sse
+            - http
+          description: Transport used to connect to the MCP server
+        command:
+          type: string
+          description: (stdio) Executable or command to launch the server
+        args:
+          type: array
+          items:
+            type: string
+          description: (stdio) Arguments for the server command
+          default: []
+        cwd:
+          type: string
+          description: (stdio) Working directory for the server process
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: (stdio) Environment variables for the server process
+          default: {}
+        http_url:
+          type: string
+          format: uri
+          description: (http) Base URL for the MCP server (usually ends with /mcp)
+        http_headers:
+          type: object
+          additionalProperties:
+            type: string
+          description: (http) Optional HTTP headers to include (e.g., Authorization)
+          default: {}
+      description: Setup parameters for MCP integration
     Tools.NamedToolChoice:
       type: object
       properties:
@@ -11714,6 +11899,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.McpIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDefUpdate'
           description: The integration to call
         system:
@@ -12195,6 +12381,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.McpIntegrationDef'
             - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
           description: The integration to call
         system:
@@ -12424,6 +12611,7 @@ components:
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
             - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.McpIntegrationDef'
             - $ref: '#/components/schemas/Tools.GoogleSheetsIntegrationDef'
           description: The integration to call
         system:
