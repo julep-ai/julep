@@ -13,6 +13,10 @@ from ...clients import (
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ...common.utils.feature_flags import get_feature_flag_value
 from ...common.utils.llm_providers import get_api_key_env_var_name
+from ...common.utils.model_validation import (
+    ModelNotAvailableError,
+    ensure_model_available,
+)
 from ...common.utils.tool_runner import format_tool, run_context_tool, run_llm_with_tools
 from ...env import debug
 from .base_evaluate import base_evaluate
@@ -71,6 +75,13 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings["user"] = str(context.execution_input.developer_id)
 
     passed_settings = await base_evaluate(passed_settings, context)
+
+    override_model = passed_settings.get("model")
+    if override_model is not None:
+        try:
+            await ensure_model_available(override_model)
+        except ModelNotAvailableError as exc:
+            raise ApplicationError(str(exc), non_retryable=True) from exc
 
     if get_feature_flag_value(
         "auto_tool_calls_prompt_step", developer_id=str(context.execution_input.developer_id)
