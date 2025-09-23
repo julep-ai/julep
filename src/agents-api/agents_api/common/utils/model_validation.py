@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from ...clients.litellm import get_model_list
 
@@ -13,12 +13,7 @@ class ModelNotAvailableError(ValueError):
     def __init__(self, model_name: str | None, available_models: Sequence[str]) -> None:
         self.requested_model = model_name
         self.available_models = list(available_models)
-        message = (
-            "Model {model} not available. Available models: {available}".format(
-                model=model_name,
-                available=self.available_models,
-            )
-        )
+        message = f"Model {model_name} not available. Available models: {self.available_models}"
         super().__init__(message)
 
 
