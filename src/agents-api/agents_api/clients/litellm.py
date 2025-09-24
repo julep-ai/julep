@@ -26,6 +26,7 @@ from ..env import (
 
 __all__: list[str] = ["acompletion"]
 
+
 def patch_litellm_response(
     model_response: ModelResponse | CustomStreamWrapper,
 ) -> ModelResponse | CustomStreamWrapper:
@@ -45,6 +46,7 @@ def patch_litellm_response(
         model_response.received_finish_reason = "stop"
 
     return model_response
+
 
 @wraps(_acompletion)
 @beartype
@@ -131,6 +133,7 @@ async def acompletion(
             print(f"Error tracking usage: {e}")
 
     return response
+
 
 @wraps(_aembedding)
 @beartype
@@ -220,6 +223,7 @@ async def aembedding(
         for item in embedding_list
         if len(item["embedding"]) >= dimensions
     ]
+
 
 @beartype
 async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
