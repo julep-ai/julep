@@ -26,7 +26,6 @@ from ..env import (
 
 __all__: list[str] = ["acompletion"]
 
-
 def patch_litellm_response(
     model_response: ModelResponse | CustomStreamWrapper,
 ) -> ModelResponse | CustomStreamWrapper:
@@ -46,7 +45,6 @@ def patch_litellm_response(
         model_response.received_finish_reason = "stop"
 
     return model_response
-
 
 @wraps(_acompletion)
 @beartype
@@ -100,6 +98,10 @@ async def acompletion(
     for message in messages:
         if "tool_calls" in message and message["tool_calls"] == []:
             message.pop("tool_calls")
+    tools_free_models = {"openai/gpt-5-chat-latest"}
+    if model in tools_free_models:
+        settings.pop("tools", None)
+        kwargs.pop("tools", None)
 
     model_response = await _acompletion(
         model=model,
@@ -129,7 +131,6 @@ async def acompletion(
             print(f"Error tracking usage: {e}")
 
     return response
-
 
 @wraps(_aembedding)
 @beartype
@@ -219,7 +220,6 @@ async def aembedding(
         for item in embedding_list
         if len(item["embedding"]) >= dimensions
     ]
-
 
 @beartype
 async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
