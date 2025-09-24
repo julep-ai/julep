@@ -462,7 +462,7 @@ def client(_dsn=pg_dsn):
     with (
         TestClient(app=app) as client,
         patch(
-            "agents_api.routers.utils.model_validation.get_model_list",
+            "agents_api.common.utils.model_validation.get_model_list",
             return_value=SAMPLE_MODELS,
         ),
     ):
