@@ -13,7 +13,11 @@ from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 from ..common.exceptions.secrets import (
     SecretNotFoundError,  # AIDEV-NOTE: catch missing secrets in LLM client
 )
-from ..common.utils.llm_providers import get_api_key_env_var_name, get_litellm_model_name
+from ..common.utils.llm_providers import (
+    get_api_key_env_var_name,
+    get_litellm_model_name,
+    tools_free_models,
+)
 from ..common.utils.secrets import get_secret_by_name
 from ..common.utils.usage import track_embedding_usage, track_usage
 from ..env import (
@@ -100,7 +104,6 @@ async def acompletion(
     for message in messages:
         if "tool_calls" in message and message["tool_calls"] == []:
             message.pop("tool_calls")
-    tools_free_models = {"openai/gpt-5-chat-latest"}
     if model in tools_free_models:
         settings.pop("tools", None)
         kwargs.pop("tools", None)
