@@ -1,0 +1,254 @@
+---
+title: 'Google Sheets'
+description: 'Learn how to use the Google Sheets integration with Julep'
+icon: 'table'
+---
+
+## Overview
+
+Welcome to the Google Sheets integration guide for Julep! This integration allows you to read, write, and manage data in Google Sheets spreadsheets, enabling you to build workflows that leverage structured data storage and manipulation. Whether you're tracking metrics, managing inventories, or processing data tables, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="Service Account Required">
+  To use the Google Sheets integration, you need either:
+  1. A Google Cloud service account with Sheets API enabled (recommended)
+  2. Use Julep's shared service account (limited to spreadsheets shared with it)
+  
+  For your own service account, follow the [Google Get Started guide](https://developers.google.com/workspace/guides/get-started) to create credentials.
+</Info>
+
+## How to Use the Integration
+
+To get started with the Google Sheets integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your Authentication">
+    Choose between using your own service account or Julep's shared service. For your own service account, base64 encode your JSON credentials file.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration examples for different operations:
+
+### Read Values Example
+
+```yaml Read Values
+name: Google Sheets Read Task
+
+tools:
+- name: sheets_reader
+  type: integration
+  integration:
+    provider: google_sheets
+    method: read_values
+    setup:
+      # Option 1: Use your own service account
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+      # Option 2: Use Julep's service (comment out service_account_json)
+      # use_julep_service: true
+
+main:
+- tool: sheets_reader
+  arguments:
+    spreadsheet_id: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+    range: "Sheet1!A1:C10"
+```
+
+### Write Values Example
+
+```yaml Write Values
+name: Google Sheets Write Task
+
+tools:
+- name: sheets_writer
+  type: integration
+  integration:
+    provider: google_sheets
+    method: write_values
+    setup:
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+
+main:
+- tool: sheets_writer
+  arguments:
+    spreadsheet_id: "YOUR_SPREADSHEET_ID"
+    range: "Sheet1!A1:B2"
+    values:
+      - ["Name", "Score"]
+      - ["Alice", 95]
+```
+
+### Append Values Example
+
+```yaml Append Values
+name: Google Sheets Append Task
+
+tools:
+- name: sheets_appender
+  type: integration
+  integration:
+    provider: google_sheets
+    method: append_values
+    setup:
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+
+main:
+- tool: sheets_appender
+  arguments:
+    spreadsheet_id: "YOUR_SPREADSHEET_ID"
+    range: "Sheet1!A:B"
+    values:
+      - ["Bob", 87]
+      - ["Charlie", 92]
+```
+
+### Clear Values Example
+
+```yaml Clear Values
+name: Google Sheets Clear Task
+
+tools:
+- name: sheets_clearer
+  type: integration
+  integration:
+    provider: google_sheets
+    method: clear_values
+    setup:
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+
+main:
+- tool: sheets_clearer
+  arguments:
+    spreadsheet_id: "YOUR_SPREADSHEET_ID"
+    range: "Sheet1!A2:B100"
+```
+
+### Batch Read Example
+
+```yaml Batch Read
+name: Google Sheets Batch Read Task
+
+tools:
+- name: sheets_batch_reader
+  type: integration
+  integration:
+    provider: google_sheets
+    method: batch_read
+    setup:
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+
+main:
+- tool: sheets_batch_reader
+  arguments:
+    spreadsheet_id: "YOUR_SPREADSHEET_ID"
+    ranges:
+      - "Sheet1!A1:C5"
+      - "Sheet2!D1:F10"
+      - "Summary!A1:B20"
+```
+
+### Batch Write Example
+
+```yaml Batch Write
+name: Google Sheets Batch Write Task
+
+tools:
+- name: sheets_batch_writer
+  type: integration
+  integration:
+    provider: google_sheets
+    method: batch_write
+    setup:
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+
+main:
+- tool: sheets_batch_writer
+  arguments:
+    spreadsheet_id: "YOUR_SPREADSHEET_ID"
+    data:
+      - range: "Sheet1!A1:B2"
+        values:
+          - ["Updated", "Data"]
+          - ["New", "Values"]
+      - range: "Sheet2!C1:D2"
+        values:
+          - ["More", "Updates"]
+          - ["Here", "Too"]
+```
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task (e.g., "Google Sheets Read Task").
+    - **_tools_**: This section lists the tools or integrations being used. Each tool has a unique name for reference.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Always `google_sheets` for Google Sheets integration.
+      - **_method_**: The operation to perform. Available methods:
+        - `read_values`: Read data from a range
+        - `write_values`: Write or update data in a range
+        - `append_values`: Append new rows to a sheet
+        - `clear_values`: Clear data from a range
+        - `batch_read`: Read from multiple ranges at once
+        - `batch_write`: Write to multiple ranges at once
+      - **_setup_**: Authentication configuration (see Authentication Methods below).
+  </Accordion>
+
+  <Accordion title="Authentication Methods">
+    You have two options for authentication:
+    
+    **Option 1: Your Own Service Account (Recommended)**
+    ```yaml
+    setup:
+      service_account_json: "BASE64_ENCODED_SERVICE_ACCOUNT_JSON"
+    ```
+    - Full control over permissions
+    
+    **Option 2: Julep's Shared Service (Testing Only)**
+    ```yaml
+    setup:
+      use_julep_service: true
+    ```
+    - No setup required
+    - Limited to spreadsheets explicitly shared with Julep's service account
+    - **Recommended for testing only** - Use your own service account in production to manage Google API quotas and constraints
+  </Accordion>
+
+  <Accordion title="Method Arguments">
+    **Common Arguments:**
+    - **_spreadsheet_id_**: The ID of the Google Sheets spreadsheet (found in the URL)
+    - **_range_**: The A1 notation range (e.g., "Sheet1!A1:C10")
+    
+    **Method-Specific Arguments:**
+    - **_values_** (write/append): 2D array of data to write
+    - **_ranges_** (batch_read): Array of ranges to read
+    - **_data_** (batch_write): Array of range-value pairs to write
+  </Accordion>
+</AccordionGroup>
+
+## Important Notes
+
+<Note>
+  - **Spreadsheet ID**: Found in the spreadsheet URL: `https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit`
+  - **Range Notation**: Use A1 notation like "Sheet1!A1:C10" or "A:A" for entire columns
+  - **Service Account Setup**: Your service account needs the Google Sheets API enabled in the Google Cloud Console
+  - **Sharing Requirements**: When using `use_julep_service`, share your spreadsheet with Julep's service account email: `julep-sheets-assistant@julep-471013.iam.gserviceaccount.com`
+  - **Base64 Encoding**: Encode your service account JSON with: `base64 -i service-account.json`
+</Note>
+
+## Conclusion
+
+With the Google Sheets integration, you can efficiently manage spreadsheet data within your Julep workflows. 
+This integration provides robust data management capabilities, from simple reads and writes to complex batch operations, enhancing your workflow's ability to work with structured data.
+
+<Tip>
+  For more information, please refer to:
+  - [Google Sheets API documentation](https://developers.google.com/sheets/api/reference/rest)
+  - [A1 notation guide](https://developers.google.com/sheets/api/guides/concepts#a1_notation)
+  - [Service account setup guide](https://cloud.google.com/iam/docs/service-accounts)
+</Tip>

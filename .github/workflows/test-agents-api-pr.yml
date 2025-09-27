@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is testing the code
 on:
   pull_request:
     paths:
-      - 'agents-api/**'
+      - 'src/agents-api/**'
   push:
     paths:
-      - 'agents-api/**'
+      - 'src/agents-api/**'
 
 jobs:
   Test:
@@ -23,7 +23,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-      
+
       - name: Install Go migrate
         uses: jaxxstorm/action-install-gh-release@v1.10.0
         with: # Grab the latest version
@@ -31,13 +31,15 @@ jobs:
 
       - name: Set up python and install dependencies
         run: |
-          cd agents-api
+          cd src/agents-api
           uv python install
           uv sync --all-extras --dev
 
       - name: Run tests
+        env:
+          SECRETS_MASTER_KEY: ${{ secrets.SECRETS_MASTER_KEY }}
         run: |
-          cd agents-api
+          cd src/agents-api
           uv run poe test --fail-limit 3
 
 concurrency:

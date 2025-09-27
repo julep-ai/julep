@@ -1,24 +1,25 @@
-
 # TODO: Make docker compose setup production ready
 # SCRUM-30
 
 name: julep
 
 include:
-  - ./memory-store/docker-compose.yml
-  - ./gateway/docker-compose.yml
-  - ./agents-api/docker-compose.yml
-  - ./scheduler/docker-compose.yml
-  - ./llm-proxy/docker-compose.yml
-  - ./integrations-service/docker-compose.yml
-  - ./monitoring/docker-compose.yml
-  - ./blob-store/docker-compose.yml
-  - ./hasura/docker-compose.yml
+  - ./src/memory-store/docker-compose.yml
+  - ./src/gateway/docker-compose.yml
+  - ./src/agents-api/docker-compose.yml
+  - ./src/scheduler/docker-compose.yml
+  - ./src/llm-proxy/docker-compose.yml
+  - ./src/integrations-service/docker-compose.yml
+  - ./src/monitoring/docker-compose.yml
+  - ./src/blob-store/docker-compose-ha.yml
+  - ./src/hasura/docker-compose.yml
+  - ./src/analytics/docker-compose.yml
+  - ./src/feature-flags/docker-compose.yml
   # - ./code-interpreter/docker-compose.yml
   # - ./embedding-service/docker-compose.yml
 
   # TODO: Enable after testing
-  # - ./monitoring/docker-compose.yml
+  # - ./src/monitoring/docker-compose.yml
 
 ### Notes on authentication
 

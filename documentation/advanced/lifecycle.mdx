@@ -72,7 +72,7 @@ Next, we define the external tools our task will use:
   integration:
     provider: brave
     setup:
-      api_key: {brave_api_key}
+      brave_api_key: {brave_api_key}
 ```
 
 We're using two integrations:
@@ -134,7 +134,7 @@ This step:
 
 #### Step 4: Generate Itineraries
 
-```yaml
+```yaml [expandable]
 - over: $ _['zipped']
   parallelism: 3
   # Inside the map step, each `_` represents the current element in the list

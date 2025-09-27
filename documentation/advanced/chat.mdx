@@ -55,7 +55,6 @@ Here's an example of how a typical message object might be structured in a chat 
         tool_call_id (str | None): Optional identifier for a tool call associated with this message.
         content (Annotated[str | list[str] | list[Content | ContentModel7 | ContentModel] | None, Field(...)]): The main content of the message, which can be a string, a list of strings, or a list of content models.
         name (str | None): Optional name associated with the message.
-        continue_ (Annotated[StrictBool | None, Field(alias="continue")]): Flag to indicate whether to continue the conversation without interruption.
         tool_calls (list[ChosenFunctionCall | ChosenComputer20241022 | ChosenTextEditor20241022 | ChosenBash20241022] | None): List of tool calls generated during the message creation, if any.
     """
     # Example of a simple message structure
@@ -86,6 +85,9 @@ Here's an example of how a typical message object might be structured in a chat 
 | `save`              | `bool` | Whether this interaction should be stored in the session history or not | `True` |
 | `remember`          | `bool` | DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) | `False` |
 | `model`             | `str` | The model to use for the chat completion. | `None` |
+| `metadata`          | `dict[str, Any]` | Custom metadata that can be passed to the system template for dynamic behavior. See [System Templates](/advanced/system-templates) for details. | `None` |
+| `auto_run_tools`    | `bool` | Whether to automatically execute tools and send the results back to the model (requires tools on the agent) | `False` |
+| `recall_tools`      | `bool` | Whether to include tool requests and responses when recalling messages from history | `True` |
 
 ## Usage
 
@@ -96,7 +98,7 @@ Here's an example of how to use the chat API in Julep using the SDKs:
 </Info>
 
 <CodeGroup>
-    ```python Python
+    ```python Python [expandable]
     # Create a session with custom recall options
     client.sessions.create(
         agent=agent.id,
@@ -128,9 +130,45 @@ Here's an example of how to use the chat API in Julep using the SDKs:
     )
     print("Agent's response:", response.choices[0].message.content)
     print("Searched Documents:", response.docs)
+    
+    # Chat with metadata for dynamic system prompts
+    response_with_metadata = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Help me with Python"
+            }
+        ],
+        metadata={
+            "language": "Spanish",
+            "expertise_level": "beginner",
+            "custom_instructions": "Use simple examples"
+        }
+    )
+    # The metadata will be available in the system template as {{metadata.language}}, etc.
+    
+    # Chat with structured JSON response
+    response_json = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Analyze the sentiment of: 'I love using Julep, it makes AI development so much easier!'"
+            }
+        ],
+        response_format={"type": "json_object"},
+        # When using response_format, instruct the model to return JSON
+        settings={
+            "temperature": 0.3
+        }
+    )
+    # Response will be valid JSON that can be parsed
+    import json
+    sentiment_data = json.loads(response_json.choices[0].message.content)
     ```
 
-    ```javascript Node.js
+    ```javascript Node.js [expandable]
     client.sessions.create({
         agent: agent.id,
         user: user.id,
@@ -159,6 +197,41 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         ],
         recall: true
     });
+    
+    // Chat with metadata for dynamic system prompts
+    const responseWithMetadata = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Help me with Python"
+            }
+        ],
+        metadata: {
+            language: "Spanish",
+            expertise_level: "beginner",
+            custom_instructions: "Use simple examples"
+        }
+    });
+    // The metadata will be available in the system template as {{metadata.language}}, etc.
+    
+    // Chat with structured JSON response
+    const responseJson = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Analyze the sentiment of: 'I love using Julep, it makes AI development so much easier!'"
+            }
+        ],
+        response_format: { type: "json_object" },
+        // When using response_format, instruct the model to return JSON
+        settings: {
+            temperature: 0.3
+        }
+    });
+    // Response will be valid JSON that can be parsed
+    const sentimentData = JSON.parse(responseJson.choices[0].message.content);
     ```
 </CodeGroup>
 
@@ -177,10 +250,44 @@ To learn more about the Session object, check out the [Session](/concepts/sessio
   </Tab>
   <Tab title="Streamed Response">
     - **Content-Type**: `text/event-stream`
-    - **Body**: A stream of `ChatOutputChunk` objects
-    <Warning>
-      This feature is not implemented yet.
-    </Warning>
+    - **Body**: A stream of `ChatOutputChunk` objects sent as Server-Sent Events (SSE)
+    
+    To enable streaming, set `stream: true` in your chat request:
+    
+    <CodeGroup>
+    ```python Python
+    from julep import AsyncClient
+    
+    # Streaming requires async client
+    async_client = AsyncClient(api_key="your-api-key")
+    
+    response = await async_client.sessions.chat(
+        session_id=session.id,
+        messages=[{"role": "user", "content": "Tell me a story"}],
+        stream=True
+    )
+    
+    async for chunk in response:
+        if chunk.choices[0].delta.content:
+            print(chunk.choices[0].delta.content, end="")
+    ```
+    
+    ```javascript Node.js
+    const response = await client.sessions.chat({
+        session_id: session.id,
+        messages: [{ role: "user", content: "Tell me a story" }],
+        stream: true
+    });
+    
+    for await (const chunk of response) {
+        process.stdout.write(chunk.choices[0].delta.content);
+    }
+    ```
+    </CodeGroup>
+    
+    <Note>
+      Streaming is not available when `auto_run_tools=true`. The system will return an error if both options are enabled.
+    </Note>
   </Tab>
 </Tabs>
 
@@ -200,6 +307,98 @@ Both types of responses include the following fields:
   - `jobs`: List of UUIDs for background jobs that may have been initiated as a result of this interaction
   - `usage`: Statistics on token usage for the completion request
 
+
+## Automatic Tool Calling
+
+Julep supports automatic tool execution during chat interactions. This feature allows tools to be executed seamlessly without manual intervention, making conversations more fluid and responsive.
+
+### How It Works
+
+1. **When `auto_run_tools=true`**: 
+   - The model identifies when a tool should be used based on the conversation
+   - The tool is automatically executed by Julep's backend
+   - Results are fed back to the model to continue the conversation
+   - The entire process happens in a single API call
+
+2. **When `auto_run_tools=false` (default)**:
+   - The model returns tool call requests in the response
+   - Your application must execute the tools manually
+   - Results need to be sent back in a follow-up message
+
+### Example with Automatic Tool Execution
+
+<CodeGroup>
+    ```python Python
+    # Agent with a weather tool
+    agent = client.agents.create(
+        name="Weather Assistant",
+        tools=[
+            {
+                "name": "get_weather",
+                "type": "integration",
+                "integration": {"provider": "weather"}
+            }
+        ]
+    )
+    
+    # Chat with automatic tool execution
+    response = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "What's the weather like in Tokyo and Paris?"
+            }
+        ],
+        auto_run_tools=True  # Tools execute automatically
+    )
+    
+    # The response already includes the weather data
+    print(response.choices[0].message.content)
+    # Output: "In Tokyo, it's currently 22°C with clear skies. 
+    #          In Paris, it's 15°C with light rain."
+    ```
+    
+    ```javascript Node.js
+    // Agent with a weather tool
+    const agent = await client.agents.create({
+        name: "Weather Assistant",
+        tools: [
+            {
+                name: "get_weather",
+                type: "integration",
+                integration: {provider: "weather"}
+            }
+        ]
+    });
+    
+    // Chat with automatic tool execution
+    const response = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "What's the weather like in Tokyo and Paris?"
+            }
+        ],
+        auto_run_tools: true  // Tools execute automatically
+    });
+    
+    // The response already includes the weather data
+    console.log(response.choices[0].message.content);
+    // Output: "In Tokyo, it's currently 22°C with clear skies. 
+    //          In Paris, it's 15°C with light rain."
+    ```
+</CodeGroup>
+
+### Tool History Management
+
+The `recall_tools` parameter controls whether tool calls and their results are included when recalling conversation history:
+
+- **`recall_tools=true` (default)**: Tool interactions are preserved in the conversation history
+- **`recall_tools=false`**: Tool calls and results are excluded from recalled messages
+
+This is useful when you want to maintain a cleaner conversation history without the technical details of tool executions.
 
 ## Finish Reasons
 

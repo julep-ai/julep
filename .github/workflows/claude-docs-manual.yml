@@ -1,0 +1,92 @@
+name: Claude Docs (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number"
+        required: true
+
+jobs:
+  update-docs:
+    name: Manual Doc Update
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-Docs-${{ github.run_id }}
+          aws-region: us-east-1
+
+      - name: Save PR patch
+        run: gh pr diff ${{ github.event.inputs.pr_number }} --patch > diff.patch
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine PR base branch
+        id: pr_base
+        run: |
+          base=$(gh pr view ${{ github.event.inputs.pr_number }} --json baseRefName -q .baseRefName)
+          echo "BASE_BRANCH=$base" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set changelog directory
+        id: set_cl_dir
+        run: |
+          if [[ "${{ steps.pr_base.outputs.BASE_BRANCH }}" == "dev" ]]; then
+            echo "CHANGELOG_DIR=changelog/dev" >> "$GITHUB_ENV"
+            echo "CHANGELOG_TAG=dev" >> "$GITHUB_ENV"
+          else
+            echo "CHANGELOG_DIR=changelog/main" >> "$GITHUB_ENV"
+            echo "CHANGELOG_TAG=main" >> "$GITHUB_ENV"
+          fi
+
+      - name: Claude changes docs
+        uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          track_progress: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-sonnet-4-20250514-v1:0
+            --max-turns 10
+            --allowedTools Read,Edit,MultiEdit,Write
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.inputs.pr_number }}
+            
+            You are the team's documentation bot.  
+            1. Read *diff.patch*.  
+            2. For any change that affects users:
+              1. **edit** files under *documentation/***  
+               (Mintlify structure) so docs stay accurate.
+              2. **create** new file in *${{ env.CHANGELOG_DIR }}***
+                named `{YYYY}-{MM}-{DD}.md`** containing a bulleted list 
+                of the changes (don't include unnecessary details).
+                - File front-matter:
+                  ```
+                  ---
+                  title: "Julep AI Changelog – {human-readable-date}"
+                  date:  {YYYY}-{MM}-{DD}
+                  tags: [${{ env.CHANGELOG_TAG }}]
+                  ---
+                  ```  
+               - If the file already exists, append to its bullet list.
+              3. **update** `Templates/index-template/home-summary.html` so the home page summarises the latest entry from the changelog (same title/date and bullet list).  
+            3. Commit the edits.  
+            If diff.patch has no user-visible change, do nothing.
+            4. Finally, stage, commit and push the edits with a clear message.
+            
+            Note: AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).

@@ -16,7 +16,7 @@ Tools in Julep extend your agents' capabilities by allowing them to interact wit
 
 Create custom tools that your agents can use:
 
-```javascript
+```javascript [expandable]
 // Create a custom function tool
 const tool = await client.agents.tools.create(agentId, {
   name: 'calculate_discount',
@@ -74,7 +74,7 @@ const braveSearch = await client.agents.tools.create(agentId, {
     provider: 'brave',
     method: 'search',
     setup: {
-      api_key: process.env.BRAVE_API_KEY
+      brave_api_key: process.env.BRAVE_API_KEY
     }
   }
 });
@@ -133,7 +133,7 @@ const wikiTool = await client.agents.tools.create(agentId, {
 Make direct HTTP requests to external APIs:
 
 ```javascript
-// Add a direct API call tool
+// Add a direct API call tool with params_schema
 const apiTool = await client.agents.tools.create(agentId, {
   name: 'github_stars',
   description: 'Get GitHub repository stars',
@@ -143,6 +143,20 @@ const apiTool = await client.agents.tools.create(agentId, {
     url: 'https://api.github.com/repos/{{owner}}/{{repo}}',
     headers: {
       Authorization: 'Bearer {{github_token}}'
+    },
+    params_schema: {
+      type: 'object',
+      properties: {
+        owner: {
+          type: 'string',
+          description: 'Repository owner (username or organization)'
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name'
+        }
+      },
+      required: ['owner', 'repo']
     }
   }
 });
@@ -152,7 +166,7 @@ const apiTool = await client.agents.tools.create(agentId, {
 
 Once tools are added to an agent, they can be used in tasks:
 
-```javascript
+```javascript [expandable]
 const task = await client.tasks.create(agentId, {
   name: 'Research Task',
   description: 'Research a topic using multiple tools',
@@ -213,7 +227,7 @@ try {
     integration: {
       provider: 'brave',
       setup: {
-        api_key: process.env.BRAVE_API_KEY
+        brave_api_key: process.env.BRAVE_API_KEY
       }
     }
   });

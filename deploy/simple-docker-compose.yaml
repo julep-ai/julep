@@ -90,12 +90,12 @@ services:
     restart: unless-stopped
     volumes:
       - type: bind
-        source: ../llm-proxy/litellm-config.yaml
+        source: ../src/llm-proxy/litellm-config.yaml
         target: /app/config.yaml
         bind:
           create_host_path: true
       - type: bind
-        source: ../llm-proxy/.keys
+        source: ../src/llm-proxy/.keys
         target: /app/.keys
         read_only: true
         bind:
@@ -215,12 +215,12 @@ services:
       default: null
     volumes:
       - type: bind
-        source: ../scheduler/dynamicconfig
+        source: ../src/scheduler/dynamicconfig
         target: /etc/temporal/config/dynamicconfig
         bind:
           create_host_path: true
       - type: bind
-        source: ../scheduler/cert
+        source: ../src/scheduler/cert
         target: /cert
         bind:
           create_host_path: true

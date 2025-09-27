@@ -56,7 +56,7 @@ Steps generally include:
 ![Routing Workflow](../assets/agentic-patterns/routing-workflow.png "Routing Workflow")
 
 **Example implementation:**
-```yaml
+```yaml [expandable]
 main:
 # Classification step
 - prompt:
@@ -97,7 +97,7 @@ Keys to consider:
 **Example implementations:**
 
 1. Sectioning:
-```yaml
+```yaml [expandable]
 tools:
 - name: aggregate_results
   type: ... # depends on the specific needs
@@ -126,7 +126,7 @@ main:
 ```
 
 2. Voting:
-```yaml
+```yaml [expandable]
 tools:
 - name: perform_voting
   description: Perform voting on the results of running the task instances, and return the majority best result.
@@ -193,7 +193,7 @@ General flow:
 ![Evaluator-Optimizer Workflow](../assets/agentic-patterns/evaluator-optimizer-workflow.png "Evaluator-Optimizer Workflow")
 
 **Example implementation:**
-```yaml
+```yaml [expandable]
 tools:
 - name: score_content
   description: Score the content based on the criteria. Returns a json object with a score between 0 and 1, and a feedback string.

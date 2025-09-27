@@ -1,0 +1,105 @@
+---
+title: 'Projects'
+description: 'Organizational units for grouping related resources'
+icon: 'layer-group'
+---
+
+
+## Overview
+Projects are organizational units that allow you to group related agents, users, files, and other resources together. They provide a way to manage resources at a higher level and maintain clean separation between different use cases or applications.
+
+Projects provide several benefits:
+
+- **Organization**: Group related resources together logically
+- **Management**: Administer resources at the project level
+- **Isolation**: Keep resources separate between different applications
+- **Deployment**: Deploy multiple templates or configurations without conflicts
+
+Each developer automatically gets a "default" project that contains all existing resources. This ensures backward compatibility with existing applications while providing the benefits of project organization.
+
+## Project Properties
+
+A project includes:
+
+- `id`: Unique identifier
+- `canonical_name`: Machine-readable name (unique per developer)
+- `name`: Human-readable display name
+- `metadata`: Custom attributes for the project
+
+## Project Relationships
+
+Projects have a one-to-many relationship with resources:
+
+- Each agent belongs to exactly one project
+- Each user belongs to exactly one project
+- Each file belongs to exactly one project
+
+When creating resources, you can specify which project they belong to using the `project` field. If not specified, resources are automatically assigned to the "default" project.
+
+## Default Project
+
+Every developer automatically receives a "default" project when they first interact with the API. This project:
+
+- Cannot be deleted
+- Has a canonical name of "default"
+- Contains all previously created resources (pre-dating the projects feature)
+- Serves as a fallback for resources created without a project specification
+
+## API Operations
+
+Projects support standard CRUD operations:
+
+- `GET /projects`: List all projects for a developer
+- `POST /projects`: Create a new project
+- `GET /projects/{id}`: Retrieve a specific project
+- `PUT /projects/{id}`: Update a project
+- `PATCH /projects/{id}`: Partially update a project
+- `DELETE /projects/{id}`: Delete a project (except the default project)
+
+## Usage Examples
+
+### Creating a Project
+
+```json
+POST /projects
+{
+  "name": "Customer Support Bot",
+  "canonical_name": "support-bot",
+  "metadata": {
+    "description": "Resources for our customer support chatbot",
+    "team": "customer-success"
+  }
+}
+```
+
+### Creating a Resource in a Project
+
+When creating a resource such as an agent, specify the project canonical name:
+
+```json
+POST /agents
+{
+  "name": "Support Assistant",
+  "project": "support-bot",
+  "instructions": [
+    "You are a helpful customer support assistant."
+  ],
+  "model": "gpt-4-turbo"
+}
+```
+
+## Future Capabilities
+
+Projects are designed with future extensibility in mind. Planned enhancements include:
+
+- Project-specific API keys for more granular access control
+- Usage tracking and billing at the project level
+- Enhanced permissions and role-based access control
+- Cross-project resource sharing capabilities
+
+## Best Practices
+
+- Use meaningful canonical names for projects that reflect their purpose
+- Group resources by logical application or team
+- Use metadata to add custom attributes for filtering and organization
+- Create separate projects for development, staging, and production environments

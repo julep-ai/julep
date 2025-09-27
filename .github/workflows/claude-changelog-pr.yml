@@ -1,0 +1,81 @@
+name: Claude Changelog (PR)
+
+on:
+  pull_request:
+    branches: [main, dev]
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "changelog/**"
+
+jobs:
+  changelog:
+    name: Update Changelog
+    runs-on: ubuntu-latest
+    if: ${{ github.event.sender.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'claude-doc-bot' && contains(github.event.pull_request.title, '[skip-claude]') == false }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-Changelog-${{ github.run_id }}
+          aws-region: us-east-1
+
+      - name: Save PR patch
+        run: gh pr diff ${{ github.event.pull_request.number }} --patch > diff.patch
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Set changelog directory
+        id: set_cl_dir
+        run: |
+          if [[ "${{ github.event.pull_request.base.ref }}" == "dev" ]]; then
+            echo "CHANGELOG_DIR=changelog/dev" >> "$GITHUB_ENV"
+            echo "CHANGELOG_TAG=dev" >> "$GITHUB_ENV"
+          else
+            echo "CHANGELOG_DIR=changelog/main" >> "$GITHUB_ENV"
+            echo "CHANGELOG_TAG=main" >> "$GITHUB_ENV"
+          fi
+
+      - name: Claude updates changelog & home summary
+        uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          track_progress: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-sonnet-4-20250514-v1:0
+            --max-turns 5
+            --allowedTools Read,Edit,MultiEdit
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            
+            You are the team's *changelog* bot. Follow these rules strictly:
+
+            1. Read the unified diff in *diff.patch*.
+            2. Decide if the patch introduces any user-visible change (new feature, behaviour change, deprecation, bug fix).  
+               • If **no user-visible change** – *do nothing*: exit without writing, committing, or replying.
+            3. If **yes**:
+               a. **Create or update** file in *${{ env.CHANGELOG_DIR }}* named `{YYYY}-{MM}-{DD}.md` with a concise bullet list of the changes.
+                  • Begin each bullet with a past-tense verb (e.g. "Added", "Fixed").
+                  • Keep bullets short (< 100 chars).
+                  • Ensure the file contains YAML front-matter:
+                    ```
+                    ---
+                    title: "Julep AI Changelog"
+                    date:  {YYYY}-{MM}-{DD}
+                    tags: [${{ env.CHANGELOG_TAG }}]
+                    ---
+                    ```
+               b. **Update** `Templates/index-template/home-summary.html` so the home page shows the newest entry's title, date and bullet list (only if the PR is on main).
+            4. Finally, stage, commit and push the edits with a clear message.

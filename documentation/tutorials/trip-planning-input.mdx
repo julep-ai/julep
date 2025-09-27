@@ -1,0 +1,31 @@
+---
+title: 'Trip Planning - Input'
+description: 'Define the input schema for the trip planning task'
+icon: 'display'
+---
+
+### 1. Input Schema
+
+First, we define what inputs our task expects:
+
+```yaml
+input_schema:
+  type: object
+  properties:
+    locations:
+      type: array
+      items:
+        type: string
+```
+
+This schema specifies that our task expects an array of location strings (e.g., `["New York", "London", "Paris"]`).
+
+## Next Step
+
+- [Tools Configuration](./trip-planning-tools)
+
+## Related Concepts
+
+- [Tasks](/concepts/tasks)
+
+

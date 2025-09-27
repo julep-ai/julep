@@ -1,0 +1,128 @@
+# Welcome to Julep - Julep
+
+> Welcome to Julep
+
+
+## Getting Started with Julep
+- [Welcome to Julep - Julep](https://docs.julep.ai/): Welcome to Julep
+- [Chat with an Agent - Julep](https://docs.julep.ai/guides/getting-started/chat-with-an-agent): Learn how to chat with your agent
+- [Create & Execute a Julep Task - Julep](https://docs.julep.ai/guides/getting-started/create-and-execute-julep-task): Learn how to create and execute a Julep task
+- [Tool Integration Demo - Julep](https://docs.julep.ai/guides/getting-started/tool-integration-demo): Learn how to integrate tools with your Julep agent
+
+## Julep Concepts
+- [Agents - Julep](https://docs.julep.ai/concepts/agents): Understanding Julep Agents and their capabilities
+- [Documents (RAG) - Julep](https://docs.julep.ai/concepts/docs): Working with documents in Julep
+- [Executions - Julep](https://docs.julep.ai/concepts/execution): Understanding Task Executions and Their Lifecycle
+- [Files - Julep](https://docs.julep.ai/concepts/files): Managing files and attachments in Julep
+- [Projects - Julep](https://docs.julep.ai/concepts/projects): Organizational units for grouping related resources
+- [Secrets - Julep](https://docs.julep.ai/concepts/secrets): Securely store and manage sensitive information for your LLM applications
+- [Sessions - Julep](https://docs.julep.ai/concepts/sessions): Understanding Julep Sessions and state management
+- [Tasks - Julep](https://docs.julep.ai/concepts/tasks): Understanding Julep Tasks and workflows
+- [Tools - Julep](https://docs.julep.ai/concepts/tools): Understanding tools in Julep
+- [Users - Julep](https://docs.julep.ai/concepts/users): Understanding and Managing Users in Julep
+
+## Advanced Features
+- [Agentic Patterns - Julep](https://docs.julep.ai/advanced/agentic-patterns): Learn about common patterns and best practices for building Julep agents
+- [Architecture Deep Dive - Julep](https://docs.julep.ai/advanced/architecture-deep-dive): Understand the core architecture and components of Julep
+- [Chat Features in Julep - Julep](https://docs.julep.ai/advanced/chat): Learn about the robust chat system and its various features for dynamic interaction with agents
+- [Files (Multimedia) - Julep](https://docs.julep.ai/advanced/files): Learn about file handling and management in Julep
+- [Execution Lifecycle - Julep](https://docs.julep.ai/advanced/lifecycle): Understanding the Lifecycle of Task when executed in Julep
+- [Local Setup - Julep](https://docs.julep.ai/advanced/localsetup): Learn how to run Julep locally
+- [Multi-Agent Multi-User Sessions - Julep](https://docs.julep.ai/advanced/multi-agent-multi-user-sessions): Learn how to manage complex multi-agent systems with multiple users
+- [New Syntax (Important) - Julep](https://docs.julep.ai/advanced/new-syntax): Learn about the new workflow syntax and how to migrate your existing workflows
+- [Python Expression - Julep](https://docs.julep.ai/advanced/python-expression): Learn how to use Python expressions in Julep task definitions
+- [Render Endpoint in Julep - Julep](https://docs.julep.ai/advanced/render): Learn about the render endpoint for previewing chat inputs before sending them to the model
+- [Secrets Management - Julep](https://docs.julep.ai/advanced/secrets-management): Advanced techniques for managing sensitive information in Julep
+- [Types of Task Steps - Julep](https://docs.julep.ai/advanced/types-of-task-steps): Learn about different types of task steps and their use
+
+## API Reference - Agents
+- [Create Agent - Julep](https://docs.julep.ai/api-reference/agents/create-agent): Create Agent
+- [Create Agent Tool - Julep](https://docs.julep.ai/api-reference/agents/create-agent-tool): Create Agent Tool
+- [Create Or Update Agent - Julep](https://docs.julep.ai/api-reference/agents/create-or-update-agent): Create Or Update Agent
+- [Delete Agent - Julep](https://docs.julep.ai/api-reference/agents/delete-agent): Delete Agent
+- [Delete Agent Tool - Julep](https://docs.julep.ai/api-reference/agents/delete-agent-tool): Delete Agent Tool
+- [Get Agent Details - Julep](https://docs.julep.ai/api-reference/agents/get-agent-details): Get Agent Details
+- [List Agent Tools - Julep](https://docs.julep.ai/api-reference/agents/list-agent-tools): List Agent Tools
+- [List Agents - Julep](https://docs.julep.ai/api-reference/agents/list-agents): List Agents
+- [List Models - Julep](https://docs.julep.ai/api-reference/agents/list-models): List all available models that can be used with agents.  Returns:     ListModelsResponse: A list of available models
+- [Patch Agent - Julep](https://docs.julep.ai/api-reference/agents/patch-agent): Patch Agent
+- [Patch Agent Tool - Julep](https://docs.julep.ai/api-reference/agents/patch-agent-tool): Patch Agent Tool
+- [Update Agent - Julep](https://docs.julep.ai/api-reference/agents/update-agent): Update Agent
+- [Update Agent Tool - Julep](https://docs.julep.ai/api-reference/agents/update-agent-tool): Update Agent Tool
+
+## API Reference - Documents
+- [Bulk Delete Agent Docs - Julep](https://docs.julep.ai/api-reference/docs/bulk-delete-agent-docs): Bulk delete documents owned by an agent based on metadata filter
+- [Bulk Delete User Docs - Julep](https://docs.julep.ai/api-reference/docs/bulk-delete-user-docs): Bulk delete documents owned by a user based on metadata filter
+- [Create Agent Doc - Julep](https://docs.julep.ai/api-reference/docs/create-agent-doc): Create Agent Doc
+- [Create User Doc - Julep](https://docs.julep.ai/api-reference/docs/create-user-doc): Creates a new document for a user.  Parameters:     user_id (UUID): The unique identifier of the user associated with the document.     data (CreateDocRequest): The data to create the document with.     x_developer_id (UUID): The unique identifier of the developer associated with the document.  Returns:     Doc: The created document.
+- [Delete Agent Doc - Julep](https://docs.julep.ai/api-reference/docs/delete-agent-doc): Delete Agent Doc
+- [Delete User Doc - Julep](https://docs.julep.ai/api-reference/docs/delete-user-doc): Delete User Doc
+- [Embed - Julep](https://docs.julep.ai/api-reference/docs/embed): Embed
+- [Get Doc - Julep](https://docs.julep.ai/api-reference/docs/get-doc): Get Doc
+- [List Agent Docs - Julep](https://docs.julep.ai/api-reference/docs/list-agent-docs): List Agent Docs
+- [List User Docs - Julep](https://docs.julep.ai/api-reference/docs/list-user-docs): List User Docs
+- [Search Agent Docs - Julep](https://docs.julep.ai/api-reference/docs/search-agent-docs): Searches for documents associated with a specific agent.  Parameters:     x_developer_id (UUID): The unique identifier of the developer associated with the agent.     search_params (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest): The parameters for the search.     agent_id (UUID): The unique identifier of the agent associated with the documents.  Returns:     DocSearchResponse: The search results.
+- [Search User Docs - Julep](https://docs.julep.ai/api-reference/docs/search-user-docs): Searches for documents associated with a specific user.  Parameters:     x_developer_id (UUID): The unique identifier of the developer associated with the user.     search_params (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest): The parameters for the search.     user_id (UUID): The unique identifier of the user associated with the documents.  Returns:     DocSearchResponse: The search results.
+
+## API Reference - Executions
+- [Create Task Execution - Julep](https://docs.julep.ai/api-reference/executions/create-task-execution): Create Task Execution
+- [Get Execution Details - Julep](https://docs.julep.ai/api-reference/executions/get-execution-details): Get Execution Details
+- [List Execution Transitions - Julep](https://docs.julep.ai/api-reference/executions/list-execution-transitions): List Execution Transitions
+- [Stream Execution Status - Julep](https://docs.julep.ai/api-reference/executions/stream-execution-status): SSE endpoint that streams the status of a given execution_id by polling the latest_executions view.
+- [Stream Transitions Events - Julep](https://docs.julep.ai/api-reference/executions/stream-transitions-events): Stream Transitions Events
+- [Update Execution - Julep](https://docs.julep.ai/api-reference/executions/update-execution): Update Execution
+
+## API Reference - Files
+- [Create File - Julep](https://docs.julep.ai/api-reference/files/create-file): Create File
+- [Delete File - Julep](https://docs.julep.ai/api-reference/files/delete-file): Delete File
+- [Get File - Julep](https://docs.julep.ai/api-reference/files/get-file): Get File
+- [List Files - Julep](https://docs.julep.ai/api-reference/files/list-files): List Files
+
+## API Reference - Health
+- [Check Health - Julep](https://docs.julep.ai/api-reference/healthz/check-health): Check Health
+
+## API Reference - Jobs
+- [Get Job Status - Julep](https://docs.julep.ai/api-reference/jobs/get-job-status): Get Job Status
+
+## API Reference - Projects
+- [Create Project - Julep](https://docs.julep.ai/api-reference/projects/create-project): Create Project
+- [List Projects - Julep](https://docs.julep.ai/api-reference/projects/list-projects): List Projects
+
+## API Reference - Secrets
+- [Create Developer Secret - Julep](https://docs.julep.ai/api-reference/secrets/create-developer-secret): Create a new secret for a developer.  Args:     developer_id: ID of the developer creating the secret     secret: Secret to create  Returns:     The created secret  Raises:     HTTPException: If a secret with this name already exists (409 Conflict)
+- [Delete Developer Secret - Julep](https://docs.julep.ai/api-reference/secrets/delete-developer-secret): Delete a secret.  Args:     secret_id: ID of the secret to delete     x_developer_id: ID of the developer who owns the secret  Returns:     The deleted secret  Raises:     HTTPException: If the secret doesn't exist
+- [List Developer Secrets - Julep](https://docs.julep.ai/api-reference/secrets/list-developer-secrets): List all secrets for a developer.  Args:     x_developer_id: ID of the developer whose secrets to list     limit: Maximum number of secrets to return     offset: Number of secrets to skip  Returns:     List of secrets
+- [Update Developer Secret - Julep](https://docs.julep.ai/api-reference/secrets/update-developer-secret): Update a developer secret.  Args:     developer_id: ID of the developer who owns the secret     secret_id: ID of the secret to update     data: New secret data  Returns:     The updated secret  Raises:     HTTPException: If the secret doesn't exist or doesn't belong to the developer
+
+## API Reference - Sessions
+- [Chat - Julep](https://docs.julep.ai/api-reference/sessions/chat): Initiates a chat session.  Parameters:     developer (Developer): The developer associated with the chat session.     session_id (UUID): The unique identifier of the chat session.     chat_input (ChatInput): The chat input data.     background_tasks (BackgroundTasks): The background tasks to run.     x_custom_api_key (Optional[str]): The custom API key.  Returns:     ChatResponse: The chat response.
+- [Create Or Update Session - Julep](https://docs.julep.ai/api-reference/sessions/create-or-update-session): Create Or Update Session
+- [Create Session - Julep](https://docs.julep.ai/api-reference/sessions/create-session): Create Session
+- [Delete Session - Julep](https://docs.julep.ai/api-reference/sessions/delete-session): Delete Session
+- [Get Session - Julep](https://docs.julep.ai/api-reference/sessions/get-session): Get Session
+- [Get Session History - Julep](https://docs.julep.ai/api-reference/sessions/get-session-history): Get Session History
+- [List Sessions - Julep](https://docs.julep.ai/api-reference/sessions/list-sessions): List Sessions
+- [Patch Session - Julep](https://docs.julep.ai/api-reference/sessions/patch-session): Patch Session
+- [Render - Julep](https://docs.julep.ai/api-reference/sessions/render): Renders a chat input.  Parameters:     developer (Developer): The developer associated with the chat session.     session_id (UUID): The unique identifier of the chat session.     chat_input (ChatInput): The chat input data.  Returns:     RenderResponse: The rendered chat input.
+- [Update Session - Julep](https://docs.julep.ai/api-reference/sessions/update-session): Update Session
+
+## API Reference - Tasks
+- [Create Or Update Task - Julep](https://docs.julep.ai/api-reference/tasks/create-or-update-task): Create Or Update Task
+- [Create Task - Julep](https://docs.julep.ai/api-reference/tasks/create-task): Create Task
+- [Get Execution Transition - Julep](https://docs.julep.ai/api-reference/tasks/get-execution-transition): Get Execution Transition
+- [Get Task Details - Julep](https://docs.julep.ai/api-reference/tasks/get-task-details): Get Task Details
+- [List Task Executions - Julep](https://docs.julep.ai/api-reference/tasks/list-task-executions): List Task Executions
+- [List Tasks - Julep](https://docs.julep.ai/api-reference/tasks/list-tasks): List Tasks
+
+## Optional
+- [Adding a Tool Integration - Julep](https://docs.julep.ai/guides/adding-tool-integration): Extend Julep with your own tool or API
+- [Complex Workflows - Julep](https://docs.julep.ai/guides/advanced/complex-workflows): Creating advanced task workflows
+- [Integration Patterns - Julep](https://docs.julep.ai/guides/advanced/integration-patterns): Common patterns for integrating with external services
+- [Multi-Agent Systems - Julep](https://docs.julep.ai/guides/advanced/multi-agent-systems): Building complex multi-agent systems
+- [Community Examples - Julep](https://docs.julep.ai/guides/cookbooks/community-examples): Examples from the Julep community
+- [Quick Solutions - Julep](https://docs.julep.ai/guides/cookbooks/quick-solutions): Ready-to-use solutions for common use cases
+- [Modifying Agent Workflow - Julep](https://docs.julep.ai/guides/modifying-agent-workflow): Customize how your agents process tasks
+
+---
+
+*This llms.txt file was generated by [llmtxt.dev](https://llmtxt.dev)*

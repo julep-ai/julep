@@ -58,7 +58,59 @@ Send messages to the AI model:
   settings:
     model: "claude-3.5-sonnet"
     temperature: 0.8
+
+# Prompt with automatic tool execution
+- prompt: What's the weather in San Francisco?
+  auto_run_tools: true  # Tools execute automatically if needed
+
+# Prompt with JSON response format
+- prompt:
+    - role: system
+      content: You are a helpful assistant that always responds in JSON format.
+    - role: user
+      content: List 3 interesting facts about space. Format as JSON with 'facts' array.
+  settings:
+    model: "gpt-4o-mini"
+    temperature: 0.7
+    response_format:
+      type: json_object
+
+# Prompt with JSON schema for structured output
+- prompt:
+    - role: system
+      content: You are a data extraction specialist.
+    - role: user
+      content: Extract product information from the description.
+  settings:
+    response_format:
+      type: json_schema
+      json_schema:
+        name: product_info
+        schema:
+          type: object
+          properties:
+            product_name:
+              type: string
+            features:
+              type: array
+              items:
+                type: string
+            price:
+              type: number
+          required: ["product_name", "features", "price"]
 ```
+
+<Note>
+When `auto_run_tools` is set to `true` in a prompt step, any tools available to the agent will be automatically executed if the model decides to use them. The results are then fed back to the model to continue processing. This is particularly useful for creating autonomous workflows where the agent can gather information and make decisions without manual intervention.
+</Note>
+
+<Note>
+The `response_format` setting allows you to request structured output from the model. There are two main options:
+- `type: json_object` - Ensures the model responds with valid JSON
+- `type: json_schema` - Enforces a specific JSON structure defined by a schema
+
+When using `response_format`, make sure to instruct the model to produce JSON in your prompt (via system or user message) for best results. Response format support varies by model provider - check the [supported models documentation](/integrations/supported-models) for compatibility.
+</Note>
 <Info>
 In the prompt step we offer a bunch of Python functions to help you manipulate data. Here is a list of the functions you can use:
 
@@ -147,7 +199,7 @@ Pause workflow for user input:
 
 Executing a subworkflow from a main workflow:
 
-```yaml YAML
+```yaml YAML [expandable]
 # Subworkflow
 subworkflow:
 - evaluate:
@@ -309,7 +361,7 @@ Process collections in parallel:
 
 Conditional execution:
 
-```yaml YAML
+```yaml YAML [expandable]
 # Simple if
 - if: $ _.count > 0
   then:
@@ -386,26 +438,6 @@ Return values from workflow:
       timestamp: $ datetime.now().isoformat()
 ```
 
-### Yield Step
-
-Execute subworkflows:
-
-```yaml YAML
-# Yield to subworkflow
-- yield:
-    workflow: process_data
-    arguments:
-      input_data: $ _.raw_data
-
-# Yield with result handling
-- yield:
-    workflow: analyze
-    arguments:
-      text: $ _.content
-- evaluate:
-    analysis_result: $ _
-```
-
 ### Log Step
 
 Log messages or specific values:
@@ -426,8 +458,8 @@ Handle errors by specifying an error message:
 
 Here's an example combining various step types:
 
-```yaml YAML
-# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+```yaml YAML [expandable]
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/src/schemas/create_task_request.json
 name: Multi-Step Task Demonstration
 description: A demonstration of multi-step task processing with research and summarization capabilities.
 
@@ -452,7 +484,7 @@ tools:
   integration:
     provider: brave
     setup:
-      api_key: "DEMO_API_KEY"
+      brave_api_key: "YOUR_BRAVE_API_KEY"
 
 ################################################################################
 ############################# MAIN WORKFLOW ####################################

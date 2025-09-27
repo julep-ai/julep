@@ -26,101 +26,141 @@ Looking for top-notch quality? Our curated selection of models delivers excellen
 
 Here are the Anthropic models supported by Julep:
 
-| Model Name | Context Window | Best For |
-|------------|---------------|-----------|
-| claude-3-opus | 200K tokens | Complex reasoning, analysis |
-| claude-3-sonnet | 200K tokens | General purpose tasks |
-| claude-3-haiku | 200K tokens | Quick responses |
-| claude-3.5-haiku | 200K tokens | Improved reasoning |
-| claude-3.5-sonnet | 200K tokens | Improved reasoning |
-| claude-3.5-sonnet-20240620 | 200K tokens | Enhanced reasoning capabilities |
-| claude-3.5-sonnet-20241022 | 200K tokens | Computer Use Capabilities and one of the latest models |
-| claude-3.7-sonnet | 200K tokens | Reasoning abilities and the latest model from Anthropic |
+| Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
+|------------|----------------|------------|--------------|--------|-------|---------|----------|
+| claude-3-haiku | 200K tokens | 4K tokens | ✅ | ✅ | ❌ | ❌ | Budget |
+| claude-3-sonnet | 200K tokens | 4K tokens | ✅ | ✅ | ❌ | ❌ | Premium |
+| claude-3.5-haiku | 200K tokens | 8K tokens | ✅ | ❌ | ❌ | ✅ | Standard |
+| claude-3.5-sonnet | 200K tokens | 8K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
+| claude-3.5-sonnet-20240620 | 200K tokens | 4K tokens | ✅ | ✅ | ❌ | ❌ | Premium |
+| claude-3.5-sonnet-20241022 | 200K tokens | 8K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
+| claude-3.7-sonnet | 200K tokens | 8K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
+| claude-opus-4 | 200K tokens | 32K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
+| claude-opus-4-1 | 200K tokens | 32K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
+| claude-sonnet-4 | 200K tokens | 64K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
+
 
 ### Google
 
 Here are the Google models supported by Julep:
 
-| Model Name | Context Window | Best For |
-|------------|---------------|-----------|
-| gemini-1.5-pro | 1M tokens | Complex tasks |
-| gemini-1.5-pro-latest | 1M tokens | Cutting-edge performance |
-| gemini-2.0-flash | 1M tokens | Next generation features, speed, thinking, realtime streaming, and multimodal generation |
-| gemini-2.5-pro-preview-03-25 | 1M tokens | Enhanced thinking and reasoning, multimodal understanding, advanced coding, and more |
+| Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
+|------------|----------------|------------|--------------|--------|-------|---------|----------|
+| gemini-1.5-pro | 2M tokens | 8K tokens | ✅ | ✅ | ❌ | ❌ | Standard |
+| gemini-1.5-pro-latest | 1M tokens | 8K tokens | ✅ | ✅ | ❌ | ❌ | Premium |
+| gemini-2.0-flash | 1M tokens | 8K tokens | ✅ | ✅ | ✅ | ✅ | Budget |
+| gemini-2.5-flash | 1M tokens | 65K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gemini-2.5-pro | 1M tokens | 65K tokens | ✅ | ✅ | ✅ | ✅ | Standard |
+| gemini-2.5-pro-preview-03-25 | 1M tokens | 65K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gemini-2.5-pro-preview-06-05 | 1M tokens | 65K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+
 
 ### OpenAI
 
 Here are the OpenAI models supported by Julep:
 
-| Model Name | Context Window | Best For |
-|------------|---------------|-----------|
-| gpt-4-turbo | 128K tokens | Advanced reasoning |
-| gpt-4o-mini | 128K tokens | Balanced performance |
-| gpt-4o | 128K tokens | Balanced performance |
-| o1-mini | 200K tokens | Quick tasks |
-| o1-preview | 200K tokens | Testing features |
-| o1 | 200K tokens | General tasks |
-| o3-mini | 200K tokens | Suited for reasoning tasks |
+| Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
+|------------|----------------|------------|--------------|--------|-------|---------|----------|
+| gpt-4-turbo | 128K tokens | 4K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
+| gpt-4.1 | 1M tokens | 32K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
+| gpt-4.1-mini | 1M tokens | 32K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-4.1-nano | 1M tokens | 32K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-4o | 128K tokens | 16K tokens | ✅ | ✅ | ❌ | ✅ | Premium |
+| gpt-4o-mini | 128K tokens | 16K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-chat | 400K tokens | 128K tokens | ❌ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-chat-latest | 400K tokens | 128K tokens | ❌ | ✅ | ❌ | ✅ | Standard |
+| gpt-5-mini | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5-mini-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5-nano | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| gpt-5-nano-2025-08-07 | 400K tokens | 128K tokens | ✅ | ✅ | ❌ | ✅ | Budget |
+| o1 | 200K tokens | 100K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
+| o1-mini | 128K tokens | 65K tokens | ❌ | ✅ | ❌ | ✅ | Standard |
+| o1-preview | 128K tokens | 32K tokens | ❌ | ✅ | ❌ | ✅ | Enterprise |
+| o3-mini | 200K tokens | 100K tokens | ✅ | ❌ | ❌ | ✅ | Standard |
+| o4-mini | 200K tokens | 100K tokens | ✅ | ✅ | ❌ | ✅ | Standard |
+
 
 ### Groq
 
 Here are the Groq models supported by Julep:
 
-| Model Name | Context Window | Best For |
-|------------|---------------|-----------|
-| llama-3.1-70b | 8K tokens | Long-form content |
-| llama-3.1-8b | 8K tokens | Quick processing |
+| Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
+|------------|----------------|------------|--------------|--------|-------|---------|----------|
+| deepseek-r1-distill-llama-70b | 128K tokens | 128K tokens | ✅ | ❌ | ❌ | ❌ | Standard |
+| gemma2-9b-it | 8K tokens | 8K tokens | ❌ | ❌ | ❌ | ❌ | Budget |
+| llama-3.1-8b | 128K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| llama-3.1-8b-instant | 128K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| llama-3.3-70b-versatile | 128K tokens | 32K tokens | ✅ | ❌ | ❌ | ❌ | Standard |
+| meta-llama/Llama-Guard-4-12B | 163K tokens | 163K tokens | ❌ | ❌ | ❌ | ❌ | Budget |
+| meta-llama/llama-4-maverick-17b-128e-instruct | 131K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| meta-llama/llama-4-scout-17b-16e-instruct | 131K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| qwen/qwen3-32b | 131K tokens | 131K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+
 
 ### OpenRouter
 
 Here are the OpenRouter models supported by Julep:
 
-| Model Name | Context Window | Best For |
-|------------|---------------|-----------|
-| mistral-large-2411 | 128K tokens | High performance |
-| qwen-2.5-72b-instruct | 131K tokens | Complex instructions |
-| eva-llama-3.33-70b | 128K tokens | Story writing and creative fiction |
-| l3.1-euryale-70b | 128K tokens | Poetry and artistic writing |
-| l3.3-euryale-70b | 128K tokens | Advanced creative writing and roleplay |
-| magnum-v4-72b | 8K tokens | Content generation and brainstorming |
-| eva-qwen-2.5-72b | 8K tokens | Creative problem solving and ideation |
-| hermes-3-llama-3.1-70b | 8K tokens | Narrative design and worldbuilding |
-| deepseek-chat | 32K tokens | Conversational AI |
-| meta-llama/llama-4-scout | 10M tokens | General purpose tasks, long-context processing, code analysis |
-| meta-llama/llama-4-scout:free | 10M tokens | Free tier usage, same capabilities as llama-4-scout |
-| meta-llama/llama-4-maverick | 10M tokens | Advanced reasoning, coding, multilingual tasks, image understanding |
-| meta-llama/llama-4-maverick:free | 10M tokens | Free tier usage, same capabilities as llama-4-maverick |
+| Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
+|------------|----------------|------------|--------------|--------|-------|---------|----------|
+| deepseek-chat | 65K tokens | 8K tokens | ❌ | ❌ | ❌ | ✅ | Budget |
+| deepseek/deepseek-r1-distill-llama-70b | 65K tokens | 8K tokens | ✅ | ❌ | ❌ | ✅ | Standard |
+| deepseek/deepseek-r1-distill-qwen-32b | 65K tokens | 8K tokens | ✅ | ❌ | ❌ | ✅ | Standard |
+| eva-llama-3.33-70b | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| eva-qwen-2.5-72b | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| hermes-3-llama-3.1-70b | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| l3.1-euryale-70b | 200K tokens | 100K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
+| l3.3-euryale-70b | 200K tokens | 100K tokens | ✅ | ✅ | ❌ | ✅ | Enterprise |
+| magnum-v4-72b | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| meta-llama/llama-3.1-8b-instruct | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| meta-llama/llama-3.3-70b-instruct | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| meta-llama/llama-4-scout | 131K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| mistral-large-2411 | 128K tokens | 128K tokens | ✅ | ❌ | ❌ | ❌ | Premium |
+| openrouter/meta-llama/llama-4-maverick | 131K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| openrouter/meta-llama/llama-4-maverick:free | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| openrouter/meta-llama/llama-4-scout | 131K tokens | 8K tokens | ✅ | ❌ | ❌ | ❌ | Budget |
+| openrouter/meta-llama/llama-4-scout:free | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| perplexity/sonar | 128K tokens | Unknown | ❌ | ❌ | ❌ | ❌ | Standard |
+| perplexity/sonar-deep-research | 128K tokens | Unknown | ❌ | ❌ | ❌ | ❌ | Premium |
+| perplexity/sonar-pro | 200K tokens | 8K tokens | ❌ | ❌ | ❌ | ❌ | Premium |
+| perplexity/sonar-reasoning | 128K tokens | Unknown | ❌ | ❌ | ❌ | ❌ | Standard |
+| perplexity/sonar-reasoning-pro | 128K tokens | Unknown | ❌ | ❌ | ❌ | ❌ | Premium |
+| qwen-2.5-72b-instruct | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
 
-### Cerebras
 
-Here are the Cerebras models supported by Julep:
+### Amazon Nova
 
-| Model Name | Context Window | Best For |
-|------------|---------------|-----------|
-| cerebras/llama-3.1-8b | 8K tokens | Quick creative writing and basic text generation |
-| cerebras/llama-3.3-70b | 8K tokens | Complex creative writing, storytelling, and detailed content generation |
-| llama-4-scout-17b-16e-instruct | 10M tokens | General purpose tasks, long-context processing, code analysis (Much faster than other deployements at over 2,600 token/sec) |
+Here are the Amazon Nova models supported by Julep:
+
+| Model Name | Context Window | Max Output | Tool Calling | Vision | Audio | Caching | Cost Tier |
+|------------|----------------|------------|--------------|--------|-------|---------|----------|
+| amazon/nova-lite-v1 | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| amazon/nova-micro-v1 | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+| amazon/nova-pro-v1 | Unknown | Unknown | ❌ | ❌ | ❌ | ❌ | Unknown |
+
 
 ### Embedding
 
 Here are the embedding models supported by Julep:
 
-| Model Name | Embedding Dimensions | Best For |
-|------------|---------------|-----------|
-| text-embedding-3-large | 1024 | High-quality vectors |
-| voyage-multilingual-2 | 1024 | Cross-language tasks |
-| voyage-3 | 1024 | Advanced embeddings |
-| Alibaba-NLP/gte-large-en-v1.5 | 1024 | Cost-effective solutions |
-| BAAI/bge-m3 | 1024 | Cost-effective solutions |
-| vertex_ai/text-embedding-004 | 1024 | Google Cloud integration |
+| Model Name | Embedding Dimensions |
+|------------|---------------------|
+| Alibaba-NLP/gte-large-en-v1.5 | 1024 |
+| BAAI/bge-m3 | 1024 |
+| text-embedding-3-large | 1024 |
+| vertex_ai/text-embedding-004 | 1024 |
+| voyage-3 | 1024 |
+| voyage-multilingual-2 | 1024 |
 
 <Info>
-Though the models mention above support different embedding dimensions, Julep uses  fixed 1024 dimensions for all embedding models for now. We plan to support different dimensions in the future.
+Though the models mentioned above support different embedding dimensions, Julep uses fixed 1024 dimensions for all embedding models for now. We plan to support different dimensions in the future.
 </Info>
 
 ## Supported Parameters
 
-Following are a list of different paramters that can be used to control the behavior of the models.
+Following are a list of different parameters that can be used to control the behavior of the models.
 
 <AccordionGroup>
   <Accordion title="Core Parameters" icon="sliders" defaultOpen={true}>
@@ -146,11 +186,14 @@ Following are a list of different paramters that can be used to control the beha
     | min_p | 0.0 - 1.0 | Minimum probability threshold compared to the highest token probability |
     | seed | integer | For deterministic generation. Set a specific seed for reproducible results |
     | stop | list[str] | Up to 4 sequences where generation should stop |
+    | response_format | object | Control output format: `{"type": "json_object"}` or `{"type": "json_schema", "json_schema": {...}}` |
   </Accordion>
 
 </AccordionGroup>
 <Info>
 Not all parameters are supported by every model. Please refer to the [LiteLLM documentation](https://docs.litellm.ai/completion/input) for more details.
+
+**Response Format Support**: The `response_format` parameter is supported by OpenAI, Azure OpenAI, Google AI Studio (Gemini), Vertex AI, Bedrock, Anthropic, Groq, xAI (Grok-2+), Databricks, and Ollama. For the most up-to-date list, check the [LiteLLM JSON Mode documentation](https://docs.litellm.ai/docs/completion/json_mode).
 </Info>
 
 <Note>

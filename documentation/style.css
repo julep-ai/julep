@@ -1,0 +1,31 @@
+.topbar-cta-button, #topbar-cta-button, .topbar-cta-button a, #topbar-cta-button a {
+  background: linear-gradient(135deg, #25A18E 0%, #00A5CF 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.32rem 1rem !important;
+  border-radius: 8px !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease-in-out;
+  box-shadow: 0 3px 8px rgba(0, 165, 207, 0.35);
+  animation: julep-cta-pulse 3.5s infinite;
+}
+
+.topbar-cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 165, 207, 0.55);
+}
+
+@keyframes julep-cta-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 165, 207, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 165, 207, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 165, 207, 0);
+  }
+}

@@ -1,0 +1,708 @@
+---
+title: 'Hacker News Newsletter Generator'
+description: 'Learn how to build a personalized newsletter generator that fetches top Hacker News stories, analyzes their relevance to user interests, and creates AI-powered summaries'
+icon: 'newspaper'
+---
+
+## Overview
+
+This tutorial demonstrates how to:
+- Fetch and filter top stories from Hacker News API
+- Scrape full article content using web scraping integration
+- Personalize content based on user preferences using AI
+- Generate concise summaries for curated stories
+- Process data in parallel for optimal performance
+
+## Task Structure
+
+Let's break down the task into its core components:
+
+### 1. Input Schema
+
+First, we define what inputs our task expects:
+
+```yaml
+input_schema:
+  type: object
+  properties:
+    min_score:
+      type: integer
+      default: 50
+    num_stories:
+      type: integer
+      default: 10
+      description: Number of stories to include in newsletter
+    user_preferences:
+      type: array
+      items:
+        type: string
+      description: User's technology interests (e.g., ["AI/ML", "Python", "Startups"])
+```
+
+This schema allows users to:
+- Set a minimum HN score threshold for quality filtering
+- Specify how many stories to include in the final newsletter
+- Define their technology interests for personalization
+
+### 2. Tools Configuration
+
+Next, we define the external tools our task will use:
+
+```yaml
+- name: fetch_hn_stories
+  type: api_call
+  api_call:
+    method: GET
+    url: https://hacker-news.firebaseio.com/v0/topstories.json
+    headers:
+      Content-Type: application/json
+
+- name: get_story_details
+  type: api_call
+  api_call:
+    method: GET
+    url: "https://example.com"
+    headers:
+      Content-Type: application/json
+
+- name: get_comment_details
+  type: api_call
+  api_call:
+    method: GET
+    url: https://hacker-news.firebaseio.com/v0/item/{{comment_id}}.json
+
+- name: spider_fetch
+  type: integration
+  integration:
+    provider: spider
+    setup:
+      spider_api_key: YOUR_SPIDER_API_KEY
+```
+
+We're using:
+- Direct Hacker News API calls for stories and comments
+- Spider integration for advanced web scraping capabilities
+
+### 3. Main Workflow Steps
+
+<Steps>
+
+  <Step title="Fetch Top Story IDs">
+```yaml
+- tool: fetch_hn_stories
+  arguments:
+    url: "https://hacker-news.firebaseio.com/v0/topstories.json"
+  label: fetch_story_ids
+
+- evaluate:
+    story_ids: $ steps["fetch_story_ids"].output.json[:50]
+    message: $ f"Fetched {len(steps['fetch_story_ids'].output.json)} stories, processing top 50"
+  label: extract_ids
+```
+
+    This step:
+    - Fetches the current top 500 story IDs from Hacker News
+    - Extracts the first 50 for processing
+  </Step>
+
+  <Step title="Fetch Story Details in Parallel">
+```yaml
+- over: $ steps["extract_ids"].output["story_ids"]
+  parallelism: 10
+  map:
+    tool: get_story_details
+    arguments:
+      method: GET
+      url: $ f"https://hacker-news.firebaseio.com/v0/item/{_}.json"
+  label: all_stories
+
+- evaluate:
+    stories: $ [item["json"] for item in _ if item and "json" in item]
+  label: extract_stories
+```
+
+    This step:
+    - Fetches full details for each story ID
+    - Processes 10 stories in parallel for efficiency
+    - Extracts successfully fetched story data
+  </Step>
+
+  <Step title="Filter and Sort Stories">
+```yaml
+- evaluate:
+    filtered: $ [s for s in steps["extract_stories"]["output"]["stories"] 
+                 if "score" in s and s["score"] >= inputs.get("min_score", 50)]
+  label: filter_stories
+
+- evaluate:
+    sorted_stories: '$ steps["filter_stories"]["output"]["filtered"][:inputs.get("num_stories", 10)]'
+  label: sort_stories
+```
+
+    This step:
+    - Filters stories by minimum score threshold
+    - Sorts by score and takes the top N stories
+    - Ensures quality content for the newsletter
+  </Step>
+
+  <Step title="Scrape Full Article Content">
+```yaml [expandable]
+- over: $ steps["sort_stories"]["output"]["sorted_stories"]
+  parallelism: 4
+  map:
+    tool: spider_fetch
+    arguments:
+      url: $ _['url']
+      params:
+        request: smart_mode
+        return_format: markdown
+        proxy_enabled: $ True
+        filter_output_images: $ True
+        filter_output_svg: $ True
+        readability: $ True
+        limit: 1
+  label: fetch_content
+
+- evaluate:
+    scraped_contents: '$ [item["result"][0]["content"] if item and "result" in item 
+                         and item["result"] and "content" in item["result"][0] else "" 
+                         for item in _]'
+  label: extract_scraped_content
+```
+
+    <Accordion title="Spider scraping parameters explained">
+      - **smart_mode**: Intelligently extracts main content
+      - **return_format: markdown**: Clean, parseable text format
+      - **proxy_enabled**: Avoids rate limiting and blocks
+      - **filter_output_images/svg**: Text-only content
+      - **readability**: Enhanced article parsing
+      - **parallelism: 4**: Balanced to avoid overwhelming target sites
+    </Accordion>
+
+    This step:
+    - Scrapes full article content for each story
+    - Converts to clean markdown format
+    - Handles failed scrapes gracefully
+  </Step>
+
+  <Step title="Fetch Top Comments">
+```yaml
+- evaluate:
+    comment_pairs: '$ [{"story_id": story["id"], "story_index": idx, "comment_id": kid} 
+                      for idx, story in enumerate(steps["sort_stories"]["output"]["sorted_stories"]) 
+                      if "kids" in story for kid in story["kids"][:3]]'
+  label: prepare_comments
+
+- over: '$ steps["prepare_comments"]["output"]["comment_pairs"]'
+  parallelism: 15
+  map:
+    tool: get_comment_details
+    arguments:
+      method: GET
+      url: '$ f"https://hacker-news.firebaseio.com/v0/item/{_["comment_id"]}.json"'
+  label: fetch_all_comments
+```
+
+    This step:
+    - Prepares comment IDs (up to 3 per story)
+    - Fetches comment details with high parallelism
+    - Maintains story-comment relationships
+  </Step>
+
+  <Step title="Personalize Content">
+```yaml [expandable]
+- evaluate:
+    stories_with_comments: '$ [dict(story, 
+                                   content=steps["extract_scraped_content"]["output"]["scraped_contents"][i], 
+                                   top_comments=[item[1] for item in steps["comments_with_index"]["output"]["comments_grouped"] 
+                                               if item[0] == i]) 
+                              for i, story in enumerate(steps["sort_stories"]["output"]["sorted_stories"])]'
+  label: final_stories_with_comments
+
+- over: $ steps["final_stories_with_comments"]["output"]["stories_with_comments"]
+  parallelism: 10
+  map:
+    prompt:
+    - role: system
+      content: |-
+        $ f'''
+        You are a content curator. Score this HN story's relevance to the user's interests.
+        User interests: {steps[0].input.user_preferences}
+
+        Return only a JSON object with the relevance score (0-100).
+        Return ONLY raw JSON without markdown code blocks
+        '''
+    - role: user
+      content: >-
+        $ f'''
+        Story to analyze:
+        Title: {_["title"]}
+        URL: {_["url"]}
+        Score: {_["score"]}
+        Content preview: {_["content"]}
+        Top comment: {_["top_comments"][0]["text"]}
+
+        Return format: "relevance_score" from 0 to 100
+        '''
+    unwrap: true
+  label: score_stories
+
+- evaluate:
+    personalized_stories: $ [item for item in steps["combine_scores"]["output"]["scored_stories"] 
+                            if item["relevance_score"] >= 60]
+  label: filter_personalized
+```
+
+    This step:
+    - Combines stories with their content and comments
+    - Uses AI to score relevance (0-100) based on user preferences
+    - Filters stories with relevance >= 60 for high personalization
+  </Step>
+
+  <Step title="Generate Summaries and Final Output">
+```yaml
+- over: $ steps["filter_personalized"]["output"]["personalized_stories"]
+  parallelism: 10
+  map:
+    prompt:
+    - role: system
+      content: |
+        Generate a concise, insightful summary (max 100 words) for this article.
+        Focus on key insights and why it matters.
+    - role: user
+      content: >-
+        $ f'''
+        Title: {_["story"]["title"]}
+        Content: {_["story"]["content"]}
+        Top comments: {_["story"]["top_comments"]}
+        '''
+    unwrap: true
+  label: generate_summaries
+
+- evaluate:
+    final_output: |
+      $ [{
+          "title": steps["filter_personalized"]["output"]["personalized_stories"][i]["story"]["title"],
+          "url": steps["filter_personalized"]["output"]["personalized_stories"][i]["story"]["url"],
+          "hn_url": f"https://news.ycombinator.com/item?id={steps['filter_personalized']['output']['personalized_stories'][i]['story']['id']}",
+          "comments_count": steps["filter_personalized"]["output"]["personalized_stories"][i]["story"].get("descendants", 0),
+          "summary": steps["generate_summaries"]["output"][i]
+      } for i in range(len(steps["filter_personalized"]["output"]["personalized_stories"]))]
+  label: prepare_final_output
+```
+
+    This step:
+    - Generates 100-word AI summaries for each story
+    - Formats the final newsletter with all relevant information
+    - Includes both article URL and HN discussion URL
+  </Step>
+
+</Steps>
+
+<Accordion title="Complete Task YAML" icon="code">
+```yaml YAML [expandable]
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/src/schemas/create_task_request.json
+name: HN Newsletter Generator
+description: Fetch top Hacker News stories, personalize content
+input_schema:
+  type: object
+  properties:
+    min_score:
+      type: integer
+      default: 50
+    num_stories:
+      type: integer
+      default: 10
+      description: Number of stories to include in newsletter
+    user_preferences:
+      type: array
+      items:
+        type: string
+      description: User's technology interests (e.g., ["AI/ML", "Python", "Startups"])
+
+tools:
+# Fetch top story IDs from Hacker News
+- name: fetch_hn_stories
+  type: api_call
+  api_call:
+    method: GET
+    url: https://hacker-news.firebaseio.com/v0/topstories.json
+    headers:
+      Content-Type: application/json
+
+# Get detailed information for a specific story
+- name: get_story_details
+  type: api_call
+  api_call:
+    method: GET
+    url: "https://example.com"
+    headers:
+      Content-Type: application/json
+
+# Fetch individual comment details
+- name: get_comment_details
+  type: api_call
+  api_call:
+    method: GET
+    url: https://hacker-news.firebaseio.com/v0/item/{{comment_id}}.json
+
+# Spider web scraping integration
+- name: spider_fetch
+  type: integration
+  integration:
+    provider: spider
+    setup:
+      spider_api_key: YOUR_SPIDER_API_KEY
+
+main:
+# Step 0: Fetch top story IDs from Hacker News
+- tool: fetch_hn_stories
+  arguments:
+    url: "https://hacker-news.firebaseio.com/v0/topstories.json"
+  label: fetch_story_ids
+
+# Step 1: Extract first 50 story IDs
+- evaluate:
+    story_ids: $ steps["fetch_story_ids"].output.json[:50]
+    message: $ f"Fetched {len(steps['fetch_story_ids'].output.json)} stories, processing top 50"
+  label: extract_ids
+
+# Step 2: Fetch details for each story in parallel
+- over: $ steps["extract_ids"].output["story_ids"]
+  parallelism: 10
+  map:
+    tool: get_story_details
+    arguments:
+      method: GET
+      url: $ f"https://hacker-news.firebaseio.com/v0/item/{_}.json"
+  label: all_stories
+
+# Step 3: Extract successfully fetched story data
+- evaluate:
+    stories: $ [item["json"] for item in _ if item and "json" in item]
+  label: extract_stories
+
+# Step 4: Filter by score
+- evaluate:
+    filtered: $ [s for s in steps["extract_stories"]["output"]["stories"] if "score" in s and s["score"] >= inputs.get("min_score", 50)]
+  label: filter_stories
+
+# Step 5: Sort stories by score and limit
+- evaluate:
+    sorted_stories: '$ steps["filter_stories"]["output"]["filtered"][:inputs.get("num_stories", 10)]'
+  label: sort_stories
+
+# Step 6: Fetch full article content using Spider
+- over: $ steps["sort_stories"]["output"]["sorted_stories"]
+  parallelism: 4
+  map:
+    tool: spider_fetch
+    arguments:
+      url: $ _['url']
+      params:
+        request: smart_mode
+        return_format: markdown
+        proxy_enabled: $ True
+        filter_output_images: $ True
+        filter_output_svg: $ True
+        readability: $ True
+        limit: 1
+  label: fetch_content
+
+# Step 7: Extract scraped content
+- evaluate:
+    scraped_contents: '$ [item["result"][0]["content"] if item and "result" in item and item["result"] and "content" in item["result"][0] else "" for item in _]'
+  label: extract_scraped_content
+
+# Step 8: Prepare comment fetching
+- evaluate:
+    comment_pairs: '$ [{"story_id": story["id"], "story_index": idx, "comment_id": kid} for idx, story in 
+enumerate(steps["sort_stories"]["output"]["sorted_stories"]) if "kids" in story for kid in story["kids"][:3]]'
+  label: prepare_comments
+
+# Step 9: Fetch all comment details
+- over: '$ steps["prepare_comments"]["output"]["comment_pairs"]'
+  parallelism: 15
+  map:
+    tool: get_comment_details
+    arguments:
+      method: GET
+      url: '$ f"https://hacker-news.firebaseio.com/v0/item/{_["comment_id"]}.json"'
+  label: fetch_all_comments
+
+# Step 10: Extract comment data
+- evaluate:
+    comment_results: '$ [item["json"] for item in _ if item and "json" in item and item["json"]]'
+  label: extract_comments
+
+# Step 11: Group comments by story
+- evaluate:
+    comments_grouped: '$ [[pair["story_index"], steps["extract_comments"]["output"]["comment_results"][i]] for i, pair in 
+enumerate(steps["prepare_comments"]["output"]["comment_pairs"])]'
+  label: comments_with_index
+
+# Step 12: Combine stories with content and comments
+- evaluate:
+    stories_with_comments: '$ [dict(story, content=steps["extract_scraped_content"]["output"]["scraped_contents"][i], top_comments=[item[1] for item in 
+steps["comments_with_index"]["output"]["comments_grouped"] if item[0] == i]) for i, story in enumerate(steps["sort_stories"]["output"]["sorted_stories"])]'
+  label: final_stories_with_comments
+
+# Step 13: Score stories based on user preferences
+- over: $ steps["final_stories_with_comments"]["output"]["stories_with_comments"]
+  parallelism: 10
+  map:
+    prompt:
+    - role: system
+      content: |-
+        $ f'''
+        You are a content curator. Score this HN story's relevance to the user's interests.
+        User interests: $ {{ steps[0].input.user_preferences }}
+
+        Return only a JSON object with the relevance score (0-100).
+        Return ONLY raw JSON without markdown code blocks
+        '''
+    - role: user
+      content: >-
+        $ f'''
+        Story to analyze:
+        Title: $ {{ _["title"] }}
+        URL: $ {{ _["url"] }}
+        Score: $ {{ _["score"] }}
+        Content preview: $ {{ _["content"]}}
+        Top comment: $ {{ _["top_comments"][0]["text"] }}
+
+        Return format: "relevance_score" from 0 to 100
+        '''
+    unwrap: true
+  label: score_stories
+
+# Step 14: Combine with scores
+- evaluate:
+    scored_stories: '$ [{"story": steps["final_stories_with_comments"]["output"]["stories_with_comments"][i], "relevance_score": json.loads(steps["score_stories"]["output"][i])["relevance_score"]} for i in range(len(steps["score_stories"]["output"]))]'
+  label: combine_scores
+
+# Step 15: Filter by relevance
+- evaluate:
+    personalized_stories: $ [item for item in steps["combine_scores"]["output"]["scored_stories"] if item["relevance_score"] >= 60]
+  label: filter_personalized
+
+# Step 16: Generate summaries
+- over: $ steps["filter_personalized"]["output"]["personalized_stories"]
+  parallelism: 10
+  map:
+    prompt:
+    - role: system
+      content: |
+        Generate a concise, insightful summary (max 100 words) for this article.
+        Focus on key insights and why it matters.
+    - role: user
+      content: >-
+        $ f'''
+        Title: {{ _["story"]["title"] }}
+        Content: {{ _["story"]["content"] }}
+        Top comments: {{ _["story"]["top_comments"] }}
+        '''
+    unwrap: true
+  label: generate_summaries
+
+# Step 17: Prepare final output
+- evaluate:
+    final_output: |
+      $ [{
+          "title": steps["filter_personalized"]["output"]["personalized_stories"][i]["story"]["title"],
+          "url": steps["filter_personalized"]["output"]["personalized_stories"][i]["story"]["url"],
+          "hn_url": f"https://news.ycombinator.com/item?id={{steps['filter_personalized']['output']['personalized_stories'][i]['story']['id']}}",
+          "comments_count": steps["filter_personalized"]["output"]["personalized_stories"][i]["story"].get("descendants", 0),
+          "summary": steps["generate_summaries"]["output"][i]
+      } for i in range(len(steps["filter_personalized"]["output"]["personalized_stories"]))]
+  label: prepare_final_output
+```
+</Accordion>
+
+## Usage
+
+Here's how to use this task with the Julep SDK:
+
+<CodeGroup>
+
+```python Python [expandable]
+from julep import Client
+import time
+import yaml
+
+# Initialize the client
+client = Client(api_key=JULEP_API_KEY)
+
+# Create the agent
+agent = client.agents.create(
+  name="Hacker News Agent",
+  about="A hacker news agent that can fetch the top stories from Hacker News and summarize them.",
+  model="gpt-4o"
+)
+
+# Load the task definition
+with open('hn_newsletter_task.yaml', 'r') as file:
+  task_definition = yaml.safe_load(file)
+
+# Create the task
+task = client.tasks.create(
+  agent_id=agent.id,
+  **task_definition
+)
+
+# Create the execution
+execution = client.executions.create(
+  task_id=task.id,
+  input={
+    "min_score": 100,
+    "num_stories": 5,
+    "user_preferences": ["AI/ML", "Python", "DevOps", "Cloud Computing"]
+  }
+)
+
+# Wait for the execution to complete
+while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+    print(result.status)
+    time.sleep(5)
+
+# Print the result
+if result.status == "succeeded":
+    for story in result.output['final_output']:
+        print(f"Title: {story['title']}")
+        print(f"URL: {story['url']}")
+        print(f"HN Discussion: {story['hn_url']}")
+        print(f"Comments: {story['comments_count']}")
+        print(f"Summary: {story['summary']}")
+        print("-" * 80)
+else:
+    print(f"Error: {result.error}")
+```
+
+```js Node.js [expandable]
+import { Julep } from '@julep/sdk';
+import fs from 'fs';
+import yaml from 'yaml';
+
+// Initialize the client
+const client = new Julep({
+  apiKey: 'your_julep_api_key'
+});
+
+// Create the agent
+const agent = await client.agents.create({
+  name: "Hacker News Agent",
+  about: "A hacker news agent that can fetch the top stories from Hacker News and summarize them.",
+  model: "gpt-4o"
+});
+
+// Load the task definition
+const taskDefinition = yaml.parse(fs.readFileSync('hn_newsletter_task.yaml', 'utf8'));
+
+// Create the task
+const task = await client.tasks.create(
+  agent.id,
+  taskDefinition
+);
+
+// Create the execution
+const execution = await client.executions.create(
+  task.id,
+  {
+    input: { 
+      min_score: 100,
+      num_stories: 5,
+      user_preferences: ["AI/ML", "Python", "DevOps", "Cloud Computing"]
+    }
+  }
+);
+
+// Wait for the execution to complete
+let result;
+while (true) {
+  result = await client.executions.get(execution.id);
+  if (result.status === 'succeeded' || result.status === 'failed') break;
+  console.log(result.status);
+  await new Promise(resolve => setTimeout(resolve, 5000));
+}
+
+// Print the result
+if (result.status === 'succeeded') {
+  result.output.final_output.forEach(story => {
+    console.log(`Title: ${story.title}`);
+    console.log(`URL: ${story.url}`);
+    console.log(`HN Discussion: ${story.hn_url}`);
+    console.log(`Comments: ${story.comments_count}`);
+    console.log(`Summary: ${story.summary}`);
+    console.log('-'.repeat(80));
+  });
+} else {
+  console.error(`Error: ${result.error}`);
+}
+```
+
+</CodeGroup>
+
+## Example Output
+
+An example output when running this task with user preferences for AI/ML and Python:
+
+<Accordion title="Example Newsletter Output">
+**Title:** OpenAI Announces GPT-5 with Revolutionary Reasoning Capabilities  
+**URL:** https://openai.com/research/gpt-5  
+**HN Discussion:** https://news.ycombinator.com/item?id=12345678  
+**Comments:** 234  
+**Summary:** OpenAI's GPT-5 demonstrates unprecedented reasoning abilities and multimodal understanding. The model shows significant improvements in code generation, mathematical reasoning, and real-world problem solving. Key breakthrough involves new architecture allowing dynamic computation allocation based on task complexity. Community discusses implications for AI safety and potential applications in scientific research.
+
+---
+
+**Title:** Python 3.13 Released with Major Performance Improvements  
+**URL:** https://python.org/downloads/release/python-313  
+**HN Discussion:** https://news.ycombinator.com/item?id=12345679  
+**Comments:** 156  
+**Summary:** Python 3.13 brings 40% performance improvements through adaptive bytecode specialization and improved memory management. New features include better error messages, enhanced typing support, and native WASM compilation. Developers report significant speedups in data processing workloads. Discussion highlights compatibility concerns with popular libraries and migration strategies for large codebases.
+
+---
+
+**Title:** New ML Framework Achieves 10x Training Speed on Consumer GPUs  
+**URL:** https://github.com/fastML/framework  
+**HN Discussion:** https://news.ycombinator.com/item?id=12345680  
+**Comments:** 189  
+**Summary:** FastML framework enables training large language models on consumer hardware through innovative gradient compression and distributed computing techniques. Benchmarks show 10x speedup compared to PyTorch for specific workloads. Framework supports automatic mixed precision and memory-efficient attention mechanisms. Community excited about democratizing ML research but debates production readiness.
+</Accordion>
+
+## Monitoring Execution
+
+Track the execution progress and debug issues:
+
+```python
+# Get execution transitions
+transitions = client.executions.transitions.list(execution.id).items
+
+for i, transition in enumerate(transitions):
+    print(f"Step {i}: {transition.type}")
+    if transition.type == "step":
+        print(f"Label: {transition.current.label}")
+        print(f"Status: {transition.status}")
+        if transition.status == "failed":
+            print(f"Error: {transition.error}")
+    print("-" * 40)
+```
+
+## Customization Ideas
+
+1. **Email Integration**: Add email sending to deliver newsletters automatically
+2. **Scheduling**: Set up periodic execution for daily/weekly newsletters
+
+## Next Steps
+
+- Try this task yourself, check out the full example in the [Hacker News cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/advanced/11-hacker-news.ipynb)
+- Learn more about the [Spider integration](/integrations/spider) for web scraping
+- Explore [parallel processing patterns](/advanced/types-of-task-steps#parallel-execution) in Julep
+
+## Related Concepts
+
+- [Agents](/concepts/agents)
+- [Tasks](/concepts/tasks)
+- [Tools](/concepts/tools)
+- [Integrations](/integrations/supported-integrations)
+- [Python Expressions](/advanced/python-expression)

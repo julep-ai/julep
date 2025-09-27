@@ -53,7 +53,6 @@ Here's an example of how a typical message object might be structured in a rende
         tool_call_id (str | None): Optional identifier for a tool call associated with this message.
         content (Annotated[str | list[str] | list[Content | ContentModel7 | ContentModel] | None, Field(...)]): The main content of the message, which can be a string, a list of strings, or a list of content models.
         name (str | None): Optional name associated with the message.
-        continue_ (Annotated[StrictBool | None, Field(alias="continue")]): Flag to indicate whether to continue the conversation without interruption.
         tool_calls (list[ChosenFunctionCall | ChosenComputer20241022 | ChosenTextEditor20241022 | ChosenBash20241022] | None): List of tool calls generated during the message creation, if any.
     """
     # Example of a simple message structure
@@ -111,7 +110,7 @@ Here's an example of how to use the render endpoint in Julep using the SDKs:
 </Info>
 
 <CodeGroup>
-    ```python Python
+    ```python Python [expandable]
     # Create a session with custom recall options
     client.sessions.create(
         agent=agent.id,
@@ -146,7 +145,7 @@ Here's an example of how to use the render endpoint in Julep using the SDKs:
     print("Available tools:", render_response.tools)
     ```
 
-    ```javascript Node.js
+    ```javascript Node.js [expandable]
     client.sessions.create({
         agent: agent.id,
         user: user.id,

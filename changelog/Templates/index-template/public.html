@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  {{> head}}
+  <body>
+    <style>
+      body {margin: 2em;}
+      td, tr {border:none;}
+    </style>
+    <h1>
+      {{#breadcrumbs}}
+      <a href="{{path}}">{{name}}</a> /
+      {{/breadcrumbs}}
+      {{dirname}}
+    </h1>
+    <table>
+      {{#contents}}
+      <tr>
+        <td><a href="{{path}}">{{name}}</a></td>
+      </tr>
+      {{/contents}}
+    </table>
+  </body>
+</html>

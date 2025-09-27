@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "julep-cli"
+version = "0.2.1-alpha0"
+description = "Julep CLI"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+authors = [
+  { name = "Julep", email = "developers@julep.ai" },
+]
+
+dependencies = [
+  "anyio>=4.4.0",
+  "beartype>=0.18.5",
+  "environs>=10.3.0",
+  "jsonschema>=4.22.0",
+  "openai>=1.55.0",
+  "pandas>=2.2.2",
+  "pydantic[email]>=2.10.2",
+  "uvloop>=0.21.0",
+  "xxhash>=3.5.0",
+  "unique-namer>=1.6.1",
+  "typer>=0.15.1",
+  "textual>=1.0.0",
+  "trogon[typer]>=0.6.0",
+  "typer-config[yaml]>=1.4.2",
+  "julep>=2,<3",
+  "questionary>=2.1.0",
+  "db-sqlite3>=0.0.1",
+  "stringcase>=1.2.0",
+  "pyjwt>=2.10.1",
+  "watchdog>=6.0.0",
+  "requests>=2.32.3",
+]
+
+[project.scripts]
+julep = "julep_cli:app"
+julep-cli = "julep_cli:app"  # For backwards compatibility
+
+[dependency-groups]
+dev = [
+  "ipython>=8.30.0",
+  "ipywidgets>=8.1.5",
+  "jupyterlab>=4.3.1",
+  "pip>=24.3.1",
+  "poethepoet>=0.34,<1",
+  "pyinstaller>=6.14,<7",
+  "ruff>=0.11,<1",
+  "textual-dev>=1.7.0",
+  "ty>=0.0.1a8",
+  "pytest>=8.0.0",
+  "pytest-mock>=3.14.0",
+]
+
+[tool.setuptools]
+py-modules = [
+  "julep_cli",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ty.src]
+root = "./src"
+
+[tool.ty.rules]
+invalid-argument-type = "ignore"
+invalid-assignment = "ignore"
+invalid-parameter-default = "ignore"
+invalid-type-form = "ignore"
+missing-argument = "ignore"
+no-matching-overload = "ignore"
+not-iterable = "ignore"
+possibly-unbound-attribute = "ignore"
+possibly-unbound-import = "ignore"
+redundant-cast = "ignore"
+unknown-argument = "ignore"
+unresolved-attribute = "ignore"
+unsupported-operator = "ignore"
+unused-ignore-comment = "ignore"

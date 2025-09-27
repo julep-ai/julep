@@ -1,0 +1,122 @@
+name: Claude Docs (PR)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "changelog/**"
+
+jobs:
+  docs-gate:
+    name: Documentation Gate
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event.sender.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'claude-doc-bot' && contains(github.event.pull_request.title, '[skip-claude]') == false }}
+
+    outputs:
+      pr_number:     ${{ steps.resolve.outputs.number }}
+      should_update: ${{ steps.gate.outputs.result }}
+
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-DocsGate-${{ github.run_id }}
+          aws-region: us-east-1
+
+      - name: PR number
+        id: resolve
+        run: echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Save PR patch
+        run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gate
+        id: gate
+        uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          track_progress: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-sonnet-4-20250514-v1:0
+            --max-turns 2
+            --allowedTools Read
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            
+            You are a senior technical-writer.  
+            Read *diff.patch* (unified diff).  
+            Reply with the single word **UPDATE** if the patch
+            a) adds new user-visible functionality,
+            b) changes or removes existing behaviour,
+            c) deprecates anything,  
+            otherwise reply **SKIP**.
+
+  update-docs:
+    name: Update Documentation
+    needs: docs-gate
+    if: ${{ github.event.sender.login != 'github-actions[bot]' &&
+            needs.docs-gate.result == 'success' &&
+            needs.docs-gate.outputs.should_update == 'UPDATE' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: GitHubActions-Claude-DocsUpdate-${{ github.run_id }}
+          aws-region: us-east-1
+
+      - name: Save PR patch
+        run: gh pr diff ${{ needs.docs-gate.outputs.pr_number }} --patch > diff.patch
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Claude changes docs
+        uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          track_progress: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model us.anthropic.claude-opus-4-1-20250805-v1:0
+            --max-turns 10
+            --allowedTools Read,Edit,MultiEdit
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ needs.docs-gate.outputs.pr_number }}
+            
+            You are the team's documentation bot.  
+            1. Read *diff.patch*.  
+            2. For any change that affects users, **edit** files under *documentation/***  
+               (Mintlify structure) so docs stay accurate.
+            3. Commit the edits.  
+            If diff.patch has no user-visible change, do nothing.
+            4. Finally, stage, commit and push the edits with a clear message.
+            
+            Note: AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).

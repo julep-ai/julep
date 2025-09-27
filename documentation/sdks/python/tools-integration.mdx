@@ -26,7 +26,7 @@ client.agents.tools.create(
         "provider": "brave",
         "method": "search",
         "setup": {
-            "api_key": "your_brave_api_key"
+            "brave_api_key": "your_brave_api_key"
         }
     }
 )
@@ -56,7 +56,7 @@ client.agents.tools.create(
 
 Create custom tools using function definitions:
 
-```python
+```python [expandable]
 # Define a custom tool
 client.agents.tools.create(
     agent_id=agent.id,
@@ -105,7 +105,7 @@ client.agents.tools.create(
 Make direct API calls from your tasks:
 
 ```python
-# Add external API integration
+# Add external API integration with params_schema
 client.agents.tools.create(
     agent_id=agent.id,
     name="weather_api",
@@ -115,6 +115,21 @@ client.agents.tools.create(
         "url": "https://api.weather.com/v1/current",
         "headers": {
             "Authorization": "Bearer {{env.WEATHER_API_KEY}}"
+        },
+        "params_schema": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "City name or coordinates"
+                },
+                "units": {
+                    "type": "string",
+                    "enum": ["metric", "imperial"],
+                    "description": "Temperature units"
+                }
+            },
+            "required": ["location"]
         }
     }
 )
@@ -124,7 +139,7 @@ client.agents.tools.create(
 
 Example of using tools in a task:
 
-```yaml
+```yaml [expandable]
 name: Research Assistant
 description: Research and summarize topics
 

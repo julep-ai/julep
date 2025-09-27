@@ -7,7 +7,11 @@ ngrok*
 .env
 *.env
 *.pyc
-*/node_modules/
+**/node_modules/
 .aider*
 .vscode/
 schema.sql
+*.egg-info/
+**/*.egg-info/
+
+**/.claude/settings.local.json
