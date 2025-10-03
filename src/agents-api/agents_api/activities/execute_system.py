@@ -11,6 +11,7 @@ from ..app import app
 from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
+    CreateExecutionRequest,
     CreateSessionRequest,
     HybridDocSearchRequest,
     SystemDef,
@@ -148,6 +149,29 @@ async def execute_system(
                 user_id=user_id,
                 data=update_user_request,
             )
+        if (
+            system.operation == "create"
+            and system.resource == "task"
+            and system.subresource == "execution"
+        ):
+            developer_id = arguments.pop("developer_id")
+            task_id = arguments.pop("task_id")
+            payload = arguments.pop("data", {})
+            execution_request = (
+                payload
+                if isinstance(payload, CreateExecutionRequest)
+                else CreateExecutionRequest(**payload)
+            )
+            bg_runner = BackgroundTasks()
+            # AIDEV-NOTE: Ensure Temporal lookup background tasks run when invoked outside FastAPI.
+            result = await handler(
+                task_id=task_id,
+                data=execution_request,
+                x_developer_id=developer_id,
+                background_tasks=bg_runner,
+            )
+            await bg_runner()
+            return result
         return await handler(**arguments)
     except BaseException as e:
         if activity.in_activity():

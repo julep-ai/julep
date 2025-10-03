@@ -1,6 +1,6 @@
 # AIDEV-NOTE: This module defines the API endpoint for creating and initiating task executions.
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from beartype import beartype
@@ -126,10 +126,15 @@ async def create_task_execution(
     data: CreateExecutionRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
+    connection_pool: Any | None = None,
 ) -> Execution:
     try:
         # AIDEV-NOTE: Validates the input data against the task's input schema.
-        task = await get_task_query(task_id=task_id, developer_id=x_developer_id)
+        task = await get_task_query(
+            task_id=task_id,
+            developer_id=x_developer_id,
+            connection_pool=connection_pool,
+        )
         validate(data.input, task.input_schema)
 
     except ValidationError:
@@ -140,11 +145,18 @@ async def create_task_execution(
 
     # AIDEV-NOTE: Checks if the developer is within the free tier execution limit for the task.
     # get developer data
-    developer: Developer = await get_developer(developer_id=x_developer_id)
+    developer: Developer = await get_developer(
+        developer_id=x_developer_id,
+        connection_pool=connection_pool,
+    )
 
     # check if the developer is paid
     if "paid" not in developer.tags:
-        executions = await count_executions_query(developer_id=x_developer_id, task_id=task_id)
+        executions = await count_executions_query(
+            developer_id=x_developer_id,
+            task_id=task_id,
+            connection_pool=connection_pool,
+        )
 
         execution_count = executions["count"]
         if execution_count > max_free_executions:
@@ -154,16 +166,19 @@ async def create_task_execution(
             )
 
     # AIDEV-NOTE: Starts the task execution and creates a Temporal lookup entry in the background.
+    # AIDEV-NOTE: Propagate pooled connections when endpoint is invoked via system tools.
     execution, handle = await start_execution(
         developer_id=x_developer_id,
         task_id=task_id,
         data=data,
+        connection_pool=connection_pool,
     )
 
     background_tasks.add_task(
         create_temporal_lookup,
         execution_id=execution.id,
         workflow_handle=handle,
+        connection_pool=connection_pool,
     )
 
     execution.metadata = {"jobs": [handle.id]}
