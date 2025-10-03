@@ -233,6 +233,12 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/BEDROCK_API_KEY
 
+- model_name: "claude-sonnet-4-5"
+  litellm_params:
+    model: "bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+    tags: ["paid"]
+    api_key: os.environ/BEDROCK_API_KEY
+
 # Groq models
 # - model_name: "llama-3.1-70b" # `llama-3.1-70b-versatile` has been decommissioned and is no longer supported
 #   litellm_params:
