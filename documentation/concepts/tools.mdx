@@ -25,7 +25,7 @@ Tools in Julep consist of three main components:
 
 #### System Tool
 
-Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc. See the [task execution system tool](#task-execution-system-tool) for a complete example.
 
 `System` tools are built into the backend. They get executed automatically when needed. They do not require any action from the client-side. For example,
 
@@ -85,6 +85,7 @@ main:
       <li><strong>create</strong>: Create a new task.</li>
       <li><strong>update</strong>: Update an existing task.</li>
       <li><strong>delete</strong>: Delete an existing task.</li>
+      <li><strong>execution.create</strong>: Start an execution for a task (see guidance below).</li>
     </ul>
   </Accordion>
   <Accordion title="Doc (subresource for agent and user)">
@@ -105,6 +106,39 @@ main:
     </ul>
   </Accordion>
 </Accordion>
+
+<a id="task-execution-system-tool"></a>
+
+##### Task Execution system tool
+
+Use the `execution.create` task tool when you want an agent run to immediately kick off another task execution. A minimal definition looks like this:
+
+```yaml YAML
+tools:
+  - name: create_task_execution
+    description: Launch a new execution for the current (or another) task
+    type: system
+    system:
+      resource: task
+      subresource: execution
+      operation: create
+
+main:
+  - tool: create_task_execution
+    arguments:
+      task_id: $ steps[0].input.sub_task_id
+      data:
+        input: {}
+```
+
+<Info>
+`data.input` must satisfy the task's input schema. Use an empty object only when the schema allows it; otherwise populate the fields the task expects.
+</Info>
+
+Operational notes:
+
+- **Re-use existing tasks**: The `task_id` only has to belong to the same developer. You can start executions for tasks attached to different agents you own without extra setup.
+- **Inspect prior runs**: To review execution history, call the REST endpoint `GET /tasks/{task_id}/executions` from a workflow via an `api_call` tool or use the SDK (`client.executions.list(task_id=...)`). That gives you the execution IDs needed to fetch outputs later (e.g. via transitions or `execution.get`).
 
 #### Integration Tool
 

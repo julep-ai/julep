@@ -13,6 +13,7 @@ import "./spider.tsp";
 import "./unstructured.tsp";
 import "./weather.tsp";
 import "./wikipedia.tsp";
+import "./mcp.tsp";
 
 using Common;
 
@@ -44,6 +45,7 @@ alias integrationProvider = (
     | "arxiv"
     | "unstructured"
     | "algolia"
+    | "mcp"
     | "google_sheets"
 );
 
@@ -148,6 +150,7 @@ alias IntegrationDef = (
     | ArxivIntegrationDef
     | UnstructuredIntegrationDef
     | AlgoliaIntegrationDef
+    | McpIntegrationDef
     | GoogleSheetsIntegrationDef
 );
 

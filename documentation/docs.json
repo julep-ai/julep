@@ -104,6 +104,12 @@
                   "integrations/webbrowser/remote-browser"
                 ]
               },
+              {
+                "group": "Extensibility",
+                "pages": [
+                  "integrations/extensibility/mcp"
+                ]
+              },
               "integrations/contributing-integrations"
             ]
           },

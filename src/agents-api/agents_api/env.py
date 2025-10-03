@@ -85,7 +85,7 @@ _random_generated_key: str = "".join(str(random.randint(0, 9)) for _ in range(32
 api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
 
 if api_key == _random_generated_key and not TYPE_CHECKING:
-    print(f"Generated API key since not set in the environment: {api_key}")
+    print("Generated API key since not set in the environment.")
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 

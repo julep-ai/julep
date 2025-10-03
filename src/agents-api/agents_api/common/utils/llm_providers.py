@@ -56,3 +56,7 @@ def get_litellm_model_name(model: str) -> str:
 
     # AIDEV-NOTE: If model not found in config, return original name
     return model
+
+
+# Models that do not support tools param
+tools_free_models: set[str] = {"openai/gpt-5-chat-latest"}
