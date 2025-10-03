@@ -152,9 +152,7 @@ async def _connect_session(setup: McpSetup):
                     f"Failed to connect to {transport.upper()} endpoint {setup.http_url}: {e}"
                 )
             else:
-                error_msg = (
-                    f"Failed to establish {transport.upper()} connection to {setup.http_url}: {e}"
-                )
+                error_msg = f"Failed to establish {transport.upper()} connection to {setup.http_url}: {e}"
             raise RuntimeError(error_msg) from e
 
         async def aclose(
