@@ -24,6 +24,9 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import importlib.metadata
+import sys
+from contextlib import AsyncExitStack
+from types import TracebackType
 from typing import Any
 
 from beartype import beartype
@@ -109,67 +112,62 @@ async def _connect_session(setup: McpSetup):
 
         headers = setup.http_headers or {}
 
-        # Use different clients for SSE vs HTTP transports
         if transport == "sse":
             # SSE transport uses the dedicated sse_client for proper event stream handling
-            # Add SSE-specific headers to ensure proper content negotiation
             headers = {
                 **headers,
                 "Accept": "text/event-stream",
                 "Cache-Control": "no-cache",
             }
-
-            # Create the SSE context
             client_ctx = sse_client(str(setup.http_url), headers=headers)
         else:
             # HTTP transport uses streamablehttp_client
             client_ctx = streamablehttp_client(str(setup.http_url), headers=headers)
 
-        # Manually enter the async context to avoid task boundary issues
+        stack = AsyncExitStack()
+        closed = False
+        stage = "transport"
+
+        # AsyncExitStack keeps MCP client cleanup on the same task to avoid cancel-scope errors.
         try:
-            # Enter the context manager
-            result = await client_ctx.__aenter__()
-            # Handle both tuple and direct stream returns
+            result = await stack.enter_async_context(client_ctx)
+            stage = "session"
+
             if isinstance(result, tuple):
-                read, write = result[:2]  # Take first two items, ignore rest
+                read, write = result[:2]
             else:
-                # Some versions might return a different structure
                 read = result
                 write = result
-        except Exception as e:
-            error_msg = (
-                f"Failed to connect to {transport.upper()} endpoint {setup.http_url}: {e}"
-            )
-            raise RuntimeError(error_msg) from e
 
-        session = ClientSession(read, write)
-
-        # Store references for cleanup
-        session_entered = False
-        try:
-            await session.__aenter__()
-            session_entered = True
+            session = await stack.enter_async_context(ClientSession(read, write))
+            stage = "initialize"
             await session.initialize()
         except Exception as e:
-            # Clean up on failure
-            if session_entered:
-                with contextlib.suppress(Exception):
-                    await session.__aexit__(type(e), e, e.__traceback__)
             with contextlib.suppress(Exception):
-                await client_ctx.__aexit__(type(e), e, e.__traceback__)
+                await stack.__aexit__(type(e), e, e.__traceback__)
 
-            # Add context about transport type in error
-            error_msg = (
-                f"Failed to establish {transport.upper()} connection to {setup.http_url}: {e}"
-            )
+            error_msg: str
+            if stage == "transport":
+                error_msg = (
+                    f"Failed to connect to {transport.upper()} endpoint {setup.http_url}: {e}"
+                )
+            else:
+                error_msg = f"Failed to establish {transport.upper()} connection to {setup.http_url}: {e}"
             raise RuntimeError(error_msg) from e
 
-        # Create cleanup function that will be called later
-        async def aclose() -> None:
+        async def aclose(
+            exc_type: type[BaseException] | None = None,
+            exc: BaseException | None = None,
+            tb: TracebackType | None = None,
+        ) -> None:
+            nonlocal closed
+            if closed:
+                return
+            closed = True
+            if exc_type is None and exc is None and tb is None:
+                exc_type, exc, tb = sys.exc_info()
             with contextlib.suppress(Exception):
-                await session.__aexit__(None, None, None)  # type: ignore[attr-defined]
-            with contextlib.suppress(Exception):
-                await client_ctx.__aexit__(None, None, None)
+                await stack.__aexit__(exc_type, exc, tb)
 
         return session, aclose
 
