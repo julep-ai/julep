@@ -666,7 +666,7 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
     base_handler = get_handler(system)
 
     # Skip parameters that can't be serialized to JSON schema
-    parameters_to_exclude = ["background_tasks"]
+    parameters_to_exclude = ["background_tasks", "connection_pool"]
 
     # Get the original signature
     sig = signature(base_handler)
@@ -725,6 +725,7 @@ def get_handler(system: SystemDef) -> Callable:
     from ...routers.docs.create_doc import create_agent_doc, create_user_doc
     from ...routers.docs.search_docs import search_agent_docs, search_user_docs
     from ...routers.sessions.chat import chat
+    from ...routers.tasks.create_task_execution import create_task_execution
 
     match (system.resource, system.subresource, system.operation):
         # AGENTS
@@ -794,6 +795,9 @@ def get_handler(system: SystemDef) -> Callable:
             return update_task_query
         case ("task", None, "delete"):
             return delete_task_query
+        case ("task", "execution", "create"):
+            # AIDEV-NOTE: Surface Temporal-backed execution creation for system tools.
+            return create_task_execution
 
         case _:
             msg = f"System call not implemented for {system.resource}.{system.operation}"
