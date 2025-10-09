@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import patch
 from uuid import UUID
 
+import pgai
 from agents_api.autogen.openapi_model import Transition
 from agents_api.common.protocol.tasks import TransitionTarget, TransitionType
 from agents_api.common.utils.datetime import utcnow
@@ -15,7 +16,6 @@ from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
-import pgai
 from temporalio.testing import WorkflowEnvironment
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
