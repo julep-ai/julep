@@ -8,6 +8,67 @@ ALTER TABLE docs_embeddings_store
 
 DROP FUNCTION IF EXISTS public.uuid_to_smallint_labels(uuid);
 
+-- AIDEV-NOTE: restore legacy docs vectorizer config if we swapped it during the up migration.
+DO $$
+DECLARE
+    v_new_id integer;
+BEGIN
+    SELECT id
+    INTO v_new_id
+    FROM ai.vectorizer
+    WHERE source_schema = 'public'
+      AND source_table = 'docs'
+      AND coalesce(config -> 'destination' ->> 'target_table', '') = 'docs_embeddings_store'
+    ORDER BY id DESC
+    LIMIT 1;
+
+    IF v_new_id IS NOT NULL THEN
+        PERFORM ai.drop_vectorizer(v_new_id, drop_all => true);
+
+        PERFORM ai.create_vectorizer(
+            'public.docs'::regclass,
+            name => 'docs_vectorizer',
+            grant_to => ai.grant_to('postgres'),
+            destination => ai.destination_table(
+                target_schema => 'public',
+                view_name => 'docs_embeddings'
+            ),
+            loading => ai.loading_column('content'),
+            embedding => ai.embedding_openai('text-embedding-3-large', 1024, 'document'),
+            chunking => ai.chunking_recursive_character_text_splitter(
+                chunk_size => 30000,
+                chunk_overlap => 600,
+                separators => ARRAY[
+                    E'\n#',
+                    E'\n##',
+                    E'\n###',
+                    E'\n---',
+                    E'\n***',
+                    E'</article>',
+                    E'</div>',
+                    E'</section>',
+                    E'</p>',
+                    E'<br>',
+                    E'\n\n',
+                    '. ',
+                    '? ',
+                    '! ',
+                    '; ',
+                    E'\n',
+                    ' '
+                ]
+            ),
+            scheduling => ai.scheduling_timescaledb(),
+            indexing => ai.indexing_diskann(),
+            formatting => ai.formatting_python_template(E'Title: $title\n\n$chunk'),
+            processing => ai.processing_default(),
+            enqueue_existing => TRUE,
+            if_not_exists => TRUE
+        );
+    END IF;
+END;
+$$;
+
 -- Restore prior search_by_text implementation.
 CREATE OR REPLACE FUNCTION search_by_text (
     developer_id UUID,

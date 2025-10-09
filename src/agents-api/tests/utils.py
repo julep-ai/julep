@@ -15,6 +15,7 @@ from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
+import pgai
 from temporalio.testing import WorkflowEnvironment
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
@@ -196,9 +197,14 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
 @contextmanager
 def get_pg_dsn(start_vectorizer: bool = False):
-    with PostgresContainer("timescale/timescaledb-ha:pg17-ts2.18-all") as postgres:
+    with PostgresContainer("timescale/timescaledb-ha:pg17.6-ts2.22.1-all") as postgres:
         test_psql_url = postgres.get_connection_url()
         pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
+
+        # Install pgai
+        pgai.install(pg_dsn)
+
+        # Migrate
         command = f"migrate -database '{pg_dsn}' -path ../memory-store/migrations/ up"
         process = subprocess.Popen(command, shell=True)
         process.wait()

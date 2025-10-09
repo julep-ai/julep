@@ -36,6 +36,77 @@ BEGIN
 END;
 $$;
 
+-- AIDEV-NOTE: pgai 0.6+ needs the refreshed docs vectorizer config; rebuild it if an older one is present.
+DO $$
+DECLARE
+    v_old_id integer;
+    v_old_config jsonb;
+BEGIN
+    SELECT id, config
+    INTO v_old_id, v_old_config
+    FROM ai.vectorizer
+    WHERE source_schema = 'public'
+      AND source_table = 'docs'
+    ORDER BY id DESC
+    LIMIT 1;
+
+    IF v_old_id IS NOT NULL
+       AND coalesce(v_old_config -> 'destination' ->> 'target_table', '') <> 'docs_embeddings_store' THEN
+        PERFORM ai.drop_vectorizer(v_old_id, drop_all => true);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM ai.vectorizer
+        WHERE source_schema = 'public'
+          AND source_table = 'docs'
+          AND coalesce(config -> 'destination' ->> 'target_table', '') = 'docs_embeddings_store'
+    ) THEN
+        PERFORM ai.create_vectorizer (
+            'public.docs'::regclass,
+            name => 'docs_vectorizer',
+            grant_to => ai.grant_to('postgres'),
+            destination => ai.destination_table(
+                target_schema => 'public',
+                target_table => 'docs_embeddings_store',
+                view_name => 'docs_embeddings'
+            ),
+            loading => ai.loading_column('content'),
+            embedding => ai.embedding_openai('text-embedding-3-large', 1024, 'document'),
+            chunking => ai.chunking_recursive_character_text_splitter(
+                chunk_size => 30000,
+                chunk_overlap => 600,
+                separators => ARRAY[
+                    E'\n#',
+                    E'\n##',
+                    E'\n###',
+                    E'\n---',
+                    E'\n***',
+                    E'</article>',
+                    E'</div>',
+                    E'</section>',
+                    E'</p>',
+                    E'<br>',
+                    E'\n\n',
+                    '. ',
+                    '? ',
+                    '! ',
+                    '; ',
+                    E'\n',
+                    ' '
+                ]
+            ),
+            scheduling => ai.scheduling_timescaledb(),
+            indexing => ai.indexing_diskann(),
+            formatting => ai.formatting_python_template(E'Title: $title\n\n$chunk'),
+            processing => ai.processing_default(),
+            enqueue_existing => TRUE,
+            if_not_exists => TRUE
+        );
+    END IF;
+END;
+$$;
+
 -- Drop any existing DiskANN indexes so we can recreate them with label support.
 DO $$
 DECLARE
@@ -337,7 +408,7 @@ BEGIN
 
     search_threshold := 1.0 - p_confidence;
     label_filter := uuid_to_smallint_labels(p_developer_id);
-    candidate_limit := GREATEST(p_k * 8, p_k);
+    candidate_limit := GREATEST(p_k * 8, 40);
     PERFORM set_config('enable_seqscan', 'off', true);
     PERFORM set_config('enable_bitmapscan', 'off', true);
 
