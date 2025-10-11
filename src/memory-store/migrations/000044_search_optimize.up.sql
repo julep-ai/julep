@@ -1,5 +1,11 @@
 BEGIN;
 
+-- Performance for this migration only
+SET LOCAL max_parallel_maintenance_workers = 4;
+SET LOCAL maintenance_work_mem = '6GB';
+SET LOCAL max_parallel_workers = 5;
+SET LOCAL statement_timeout = '0';
+
 -- Ensure vectorscale is at least 0.8.0 so label-prefiltered DiskANN indexes are supported.
 DO $$
 DECLARE
@@ -156,9 +162,6 @@ ALTER TABLE docs_embeddings_store
     ADD COLUMN IF NOT EXISTS developer_labels smallint[]
         GENERATED ALWAYS AS (uuid_to_smallint_labels(developer_id)) STORED;
 
--- Build a DiskANN index that leverages vectorscale label pre-filtering.
-SET LOCAL statement_timeout = '0';
-SET LOCAL maintenance_work_mem = '2GB';
 
 CREATE INDEX IF NOT EXISTS idx_docs_embeddings_store_diskann_labels
 ON docs_embeddings_store
