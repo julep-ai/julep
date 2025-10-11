@@ -1,7 +1,7 @@
 name: pgai
 services:
   memory-store:
-    image: timescale/timescaledb-ha:pg17-ts2.18-all
+    image: timescale/timescaledb-ha:pg17.6-ts2.22.1-all
 
     environment:
       - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-julep_secure_password}

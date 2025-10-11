@@ -8,13 +8,20 @@
 -- Create vector similarity search index using diskann and timescale vectorizer
 SELECT
     ai.create_vectorizer (
-        source => 'docs',
-        destination => 'docs_embeddings',
+        'public.docs'::regclass,
+        name => 'docs_vectorizer',
+        grant_to => ai.grant_to('postgres'),
+        destination => ai.destination_table(
+            target_schema => 'public',
+            target_table => 'docs_embeddings_store',
+            view_name => 'docs_embeddings'
+        ),
+        loading => ai.loading_column('content'),
         embedding => ai.embedding_openai ('text-embedding-3-large', 1024, 'document'), -- need to parameterize this
         -- actual chunking is managed by the docs table
         -- this is to prevent running out of context window
         chunking => ai.chunking_recursive_character_text_splitter (
-            chunk_column => 'content',
+            -- chunk_column => 'content',
             chunk_size => 30000, -- 30k characters ~= 7.5k tokens
             chunk_overlap => 600, -- 600 characters ~= 150 tokens
             separators => ARRAY[ -- tries separators in order

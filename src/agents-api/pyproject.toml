@@ -88,6 +88,7 @@ dev = [
     "autotyping>=24.9.0",
     "psycopg[binary]>=3.2.5", # only for use inside tests for now
     "ty>=0.0.0a8",
+    "pgai>=0.12.0",
 ]
 
 [tool.setuptools]

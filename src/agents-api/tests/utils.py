@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import patch
 from uuid import UUID
 
+import pgai
 from agents_api.autogen.openapi_model import Transition
 from agents_api.common.protocol.tasks import TransitionTarget, TransitionType
 from agents_api.common.utils.datetime import utcnow
@@ -196,9 +197,14 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
 @contextmanager
 def get_pg_dsn(start_vectorizer: bool = False):
-    with PostgresContainer("timescale/timescaledb-ha:pg17-ts2.18-all") as postgres:
+    with PostgresContainer("timescale/timescaledb-ha:pg17.6-ts2.22.1-all") as postgres:
         test_psql_url = postgres.get_connection_url()
         pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
+
+        # Install pgai
+        pgai.install(pg_dsn)
+
+        # Migrate
         command = f"migrate -database '{pg_dsn}' -path ../memory-store/migrations/ up"
         process = subprocess.Popen(command, shell=True)
         process.wait()
