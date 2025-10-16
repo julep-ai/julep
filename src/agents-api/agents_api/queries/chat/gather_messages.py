@@ -19,8 +19,8 @@ from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ...common.utils.get_doc_search import get_search_fn_and_params, strip_embeddings
-from ...env import enable_hybrid_trigram_search
 from ...common.utils.mmr import apply_mmr_to_docs
+from ...env import enable_hybrid_trigram_search
 from ..entries.get_history import get_history
 from ..utils import rewrap_exceptions
 
@@ -128,9 +128,7 @@ async def gather_messages(
     # Build search params based on mode
     search_params = None
     trigram_threshold = (
-        recall_options.trigram_similarity_threshold
-        if enable_hybrid_trigram_search
-        else None
+        recall_options.trigram_similarity_threshold if enable_hybrid_trigram_search else None
     )
 
     if recall_options.mode == "vector":
