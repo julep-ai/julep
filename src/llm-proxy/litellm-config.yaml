@@ -239,6 +239,12 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/BEDROCK_API_KEY
 
+- model_name: "claude-haiku-4-5"
+  litellm_params:
+    model: "bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    tags: ["paid"]
+    api_key: os.environ/BEDROCK_API_KEY
+
 # Groq models
 # - model_name: "llama-3.1-70b" # `llama-3.1-70b-versatile` has been decommissioned and is no longer supported
 #   litellm_params:
@@ -438,7 +444,7 @@ model_list:
     model: "openrouter/perplexity/sonar-reasoning"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
-    
+
 # Cerebras Models (OpenRouter)
 - model_name: "meta-llama/llama-3.1-8b-instruct"
   litellm_params:
