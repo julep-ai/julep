@@ -85,7 +85,7 @@ async def list_execution_transitions(
     sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     scope_id: UUID | None = None,
-    search_window: timedelta = timedelta(weeks=2),
+    search_window: timedelta = timedelta(days=3650),
 ) -> tuple[str, list]:
     """
     List execution transitions for a given execution.
