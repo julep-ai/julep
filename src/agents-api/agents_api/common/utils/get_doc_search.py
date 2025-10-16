@@ -10,6 +10,7 @@ from ...autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
+from ...env import enable_hybrid_trigram_search
 from ...queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from ...queries.docs.search_docs_by_text import search_docs_by_text
 from ...queries.docs.search_docs_hybrid import search_docs_hybrid
@@ -66,12 +67,15 @@ def get_search_fn_and_params(
         ):
             search_language = get_language(lang)
             search_fn = search_docs_by_text
+            trigram_threshold = (
+                trigram_similarity_threshold if enable_hybrid_trigram_search else None
+            )
             params = {
                 "query": query,
                 "k": k,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
-                "trigram_similarity_threshold": trigram_similarity_threshold,
+                "trigram_similarity_threshold": trigram_threshold,
                 "extract_keywords": extract_keywords,
             }
             post_processing = {
@@ -86,9 +90,11 @@ def get_search_fn_and_params(
             include_embeddings=include_embeddings,
         ):
             search_fn = search_docs_by_embedding
+            # AIDEV-NOTE: cap extra candidates for MMR to 2x limit (or limit+10) to avoid large fan-out.
+            k_with_buffer = min(k * 2, k + 10) if search_params.mmr_strength > 0 else k
             params = {
                 "embedding": embedding,
-                "k": k * 3 if search_params.mmr_strength > 0 else k,
+                "k": k_with_buffer,
                 "confidence": confidence,
                 "metadata_filter": metadata_filter,
             }
@@ -110,16 +116,21 @@ def get_search_fn_and_params(
         ):
             search_language = get_language(lang)
             search_fn = search_docs_hybrid
+            # AIDEV-NOTE: hybrid search should request a modest MMR buffer before DBSF fusion.
+            k_with_buffer = min(k * 2, k + 10) if search_params.mmr_strength > 0 else k
+            trigram_threshold = (
+                trigram_similarity_threshold if enable_hybrid_trigram_search else None
+            )
             params = {
                 "text_query": query,
                 "embedding": embedding,
-                "k": k * 3 if search_params.mmr_strength > 0 else k,
+                "k": k_with_buffer,
                 "confidence": confidence,
                 "alpha": alpha,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
                 "extract_keywords": extract_keywords,
-                "trigram_similarity_threshold": trigram_similarity_threshold,
+                "trigram_similarity_threshold": trigram_threshold,
                 "k_multiplier": k_multiplier,
             }
             post_processing = {
