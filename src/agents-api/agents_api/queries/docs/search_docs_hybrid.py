@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import DocReference
 from ...common.nlp import text_to_keywords
 from ...common.utils.db_exceptions import common_db_exceptions
+from ...env import enable_hybrid_trigram_search
 from ..utils import (
     pg_query,
     rewrap_exceptions,
@@ -99,6 +100,11 @@ async def search_docs_hybrid(
         keywords = text_to_keywords(text_query, split_chunks=True)
         text_query = " OR ".join(keywords)
 
+    # AIDEV-NOTE: Disable trigram branch unless explicitly gated on.
+    effective_trigram_threshold = (
+        trigram_similarity_threshold if enable_hybrid_trigram_search else None
+    )
+
     return (
         search_docs_hybrid_query,
         [
@@ -112,7 +118,7 @@ async def search_docs_hybrid(
             confidence,
             metadata_filter,
             search_language,
-            trigram_similarity_threshold,
+            effective_trigram_threshold,
             k_multiplier,
         ],
     )

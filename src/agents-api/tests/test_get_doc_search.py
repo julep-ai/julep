@@ -55,7 +55,7 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
-        "trigram_similarity_threshold": 0.4,
+        "trigram_similarity_threshold": None,
     }
     assert post_processing == {
         "include_embeddings": True,
@@ -82,7 +82,7 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
-        "trigram_similarity_threshold": 0.4,
+        "trigram_similarity_threshold": None,
     }
     assert post_processing == {
         "include_embeddings": False,
@@ -153,7 +153,7 @@ def _():
     assert search_fn == search_docs_by_embedding
     assert params == {
         "embedding": [0.1, 0.2, 0.3],
-        "k": 15,  # 5 * 3 because MMR is enabled
+        "k": 10,  # min(limit * 2, limit + 10) with limit=5
         "confidence": 0.8,
         "metadata_filter": {"field": "value"},
     }
@@ -189,7 +189,7 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
-        "trigram_similarity_threshold": 0.4,
+        "trigram_similarity_threshold": None,
         "k_multiplier": 7,
     }
     assert post_processing == {
@@ -225,7 +225,7 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
-        "trigram_similarity_threshold": 0.4,
+        "trigram_similarity_threshold": None,
         "k_multiplier": 7,
     }
     assert post_processing == {
@@ -254,13 +254,13 @@ def _():
     assert params == {
         "text_query": "search query",
         "embedding": [0.1, 0.2, 0.3],
-        "k": 15,  # 5 * 3 because MMR is enabled
+        "k": 10,  # min(limit * 2, limit + 10) with limit=5
         "confidence": 0.8,
         "alpha": 0.5,
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
-        "trigram_similarity_threshold": 0.4,
+        "trigram_similarity_threshold": None,
         "k_multiplier": 7,
     }
     assert post_processing == {

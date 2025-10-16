@@ -186,6 +186,10 @@ unleash_app_name: str = env.str("UNLEASH_APP_NAME", default="agents-api")
 # ---------------
 enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 
+# Search Feature Gates
+# --------------------
+enable_hybrid_trigram_search: bool = env.bool("ENABLE_HYBRID_TRIGRAM_SEARCH", default=False)
+
 
 # Hasura GraphQL settings
 hasura_url: str = env.str(
