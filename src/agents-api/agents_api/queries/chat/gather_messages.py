@@ -20,6 +20,7 @@ from ...common.protocol.sessions import ChatContext
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ...common.utils.get_doc_search import get_search_fn_and_params, strip_embeddings
 from ...common.utils.mmr import apply_mmr_to_docs
+from ...env import enable_hybrid_trigram_search
 from ..entries.get_history import get_history
 from ..utils import rewrap_exceptions
 
@@ -126,6 +127,10 @@ async def gather_messages(
 
     # Build search params based on mode
     search_params = None
+    trigram_threshold = (
+        recall_options.trigram_similarity_threshold if enable_hybrid_trigram_search else None
+    )
+
     if recall_options.mode == "vector":
         search_params = VectorDocSearchRequest(
             lang=recall_options.lang,
@@ -137,6 +142,7 @@ async def gather_messages(
             include_embeddings=recall_options.include_embeddings,
         )
     elif recall_options.mode == "hybrid":
+        # AIDEV-NOTE: Mirror PR-1584 gating so trigram search stays behind the feature flag.
         search_params = HybridDocSearchRequest(
             lang=recall_options.lang,
             limit=recall_options.limit,
@@ -146,7 +152,7 @@ async def gather_messages(
             alpha=recall_options.alpha,
             text=query_text,
             vector=query_embedding,
-            trigram_similarity_threshold=recall_options.trigram_similarity_threshold,
+            trigram_similarity_threshold=trigram_threshold,
             k_multiplier=recall_options.k_multiplier,
             include_embeddings=recall_options.include_embeddings,
         )
@@ -156,7 +162,7 @@ async def gather_messages(
             limit=recall_options.limit,
             metadata_filter=recall_options.metadata_filter,
             text=query_text,
-            trigram_similarity_threshold=recall_options.trigram_similarity_threshold,
+            trigram_similarity_threshold=trigram_threshold,
             include_embeddings=recall_options.include_embeddings,
         )
     else:

@@ -60,9 +60,10 @@ model TextOnlyDocSearch extends BaseDocSearch {
     mode: "text" = "text";
 
     /** The trigram_similarity_threshold cutoff level */
+    // AIDEV-NOTE: Null default keeps trigram search disabled unless explicitly toggled.
     @minValue(0)
     @maxValue(1)
-    trigram_similarity_threshold: float = 0.6;
+    trigram_similarity_threshold?: float | null = null;
 }
 
 model HybridDocSearch extends BaseDocSearch {
@@ -86,9 +87,10 @@ model HybridDocSearch extends BaseDocSearch {
     mmr_strength?: float = 0.5;
 
     /** The trigram_similarity_threshold cutoff level */
+    // AIDEV-NOTE: Null default keeps trigram search disabled unless explicitly toggled.
     @minValue(0)
     @maxValue(1)
-    trigram_similarity_threshold: float = 0.6;
+    trigram_similarity_threshold?: float | null = null;
 
     /** The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring */
     @minValue(0)

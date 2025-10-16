@@ -4765,6 +4765,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
+              "$ref": "#/$defs/McpIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Output"
             },
             {
@@ -9036,6 +9039,336 @@
       "title": "Main",
       "type": "object"
     },
+    "McpCallToolArguments": {
+      "description": "Arguments to call a named tool on the MCP server",
+      "properties": {
+        "arguments": {
+          "default": {},
+          "title": "Arguments",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "default": 60,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        },
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_name"
+      ],
+      "title": "McpCallToolArguments",
+      "type": "object"
+    },
+    "McpCallToolArgumentsUpdate": {
+      "description": "Arguments to call a named tool on the MCP server",
+      "properties": {
+        "arguments": {
+          "default": {},
+          "title": "Arguments",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "default": 60,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tool Name"
+        }
+      },
+      "title": "McpCallToolArgumentsUpdate",
+      "type": "object"
+    },
+    "McpIntegrationDef": {
+      "description": "MCP integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpCallToolArguments"
+            },
+            {
+              "$ref": "#/$defs/McpListToolsArguments"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arguments"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "mcp",
+          "default": "mcp",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "McpIntegrationDef",
+      "type": "object"
+    },
+    "McpIntegrationDefUpdate": {
+      "description": "MCP integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpCallToolArgumentsUpdate"
+            },
+            {
+              "$ref": "#/$defs/McpListToolsArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arguments"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "mcp",
+          "default": "mcp",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "McpIntegrationDefUpdate",
+      "type": "object"
+    },
+    "McpListToolsArguments": {
+      "description": "Arguments to list available tools",
+      "properties": {
+        "dummy": {
+          "default": "dummy",
+          "title": "Dummy",
+          "type": "string"
+        }
+      },
+      "title": "McpListToolsArguments",
+      "type": "object"
+    },
+    "McpListToolsArgumentsUpdate": {
+      "description": "Arguments to list available tools",
+      "properties": {
+        "dummy": {
+          "default": "dummy",
+          "title": "Dummy",
+          "type": "string"
+        }
+      },
+      "title": "McpListToolsArgumentsUpdate",
+      "type": "object"
+    },
+    "McpSetup": {
+      "description": "Setup parameters for MCP integration",
+      "properties": {
+        "args": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Command"
+        },
+        "cwd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cwd"
+        },
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Env",
+          "type": "object"
+        },
+        "http_headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Http Headers",
+          "type": "object"
+        },
+        "http_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Http Url"
+        },
+        "transport": {
+          "enum": [
+            "sse",
+            "http"
+          ],
+          "title": "Transport",
+          "type": "string"
+        }
+      },
+      "required": [
+        "transport"
+      ],
+      "title": "McpSetup",
+      "type": "object"
+    },
+    "McpSetupUpdate": {
+      "description": "Setup parameters for MCP integration",
+      "properties": {
+        "args": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Command"
+        },
+        "cwd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cwd"
+        },
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Env",
+          "type": "object"
+        },
+        "http_headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Http Headers",
+          "type": "object"
+        },
+        "http_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Http Url"
+        },
+        "transport": {
+          "anyOf": [
+            {
+              "enum": [
+                "sse",
+                "http"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transport"
+        }
+      },
+      "title": "McpSetupUpdate",
+      "type": "object"
+    },
     "Message-Input": {
       "properties": {
         "content": {
@@ -10129,6 +10462,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDefUpdate"
+            },
+            {
+              "$ref": "#/$defs/McpIntegrationDefUpdate"
             },
             {
               "$ref": "#/$defs/GoogleSheetsIntegrationDefUpdate"
@@ -12597,6 +12933,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
+              "$ref": "#/$defs/McpIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
             },
             {
@@ -12778,6 +13117,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/McpIntegrationDef"
             },
             {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Output"
@@ -13379,6 +13721,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/McpIntegrationDef"
             },
             {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Output"
@@ -14357,6 +14702,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/McpIntegrationDef"
             },
             {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
@@ -15646,6 +15994,9 @@
               "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
+              "$ref": "#/$defs/McpIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
             },
             {
@@ -15821,6 +16172,9 @@
             },
             {
               "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/McpIntegrationDef"
             },
             {
               "$ref": "#/$defs/GoogleSheetsIntegrationDef-Input"
