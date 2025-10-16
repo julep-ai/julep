@@ -120,7 +120,7 @@ class HybridDocSearch(BaseDocSearch):
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
-    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    trigram_similarity_threshold: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
     """
     The trigram_similarity_threshold cutoff level
     """
@@ -150,7 +150,7 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
-    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    trigram_similarity_threshold: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
     """
     The trigram_similarity_threshold cutoff level
     """
@@ -300,7 +300,7 @@ class TextOnlyDocSearch(BaseDocSearch):
     """
     The mode to use for the search.
     """
-    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    trigram_similarity_threshold: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
     """
     The trigram_similarity_threshold cutoff level
     """
@@ -314,7 +314,7 @@ class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
     """
     The mode to use for the search.
     """
-    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    trigram_similarity_threshold: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
     """
     The trigram_similarity_threshold cutoff level
     """

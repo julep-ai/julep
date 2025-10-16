@@ -6367,7 +6367,6 @@ components:
         - mode
         - confidence
         - alpha
-        - trigram_similarity_threshold
         - k_multiplier
       properties:
         mode:
@@ -6397,10 +6396,11 @@ components:
           default: 0.5
         trigram_similarity_threshold:
           type: number
+          nullable: true
           minimum: 0
           maximum: 1
           description: The trigram_similarity_threshold cutoff level
-          default: 0.6
+          default: null
         k_multiplier:
           type: integer
           format: int8
@@ -6439,10 +6439,11 @@ components:
           default: 0.5
         trigram_similarity_threshold:
           type: number
+          nullable: true
           minimum: 0
           maximum: 1
           description: The trigram_similarity_threshold cutoff level
-          default: 0.6
+          default: null
         k_multiplier:
           type: integer
           format: int8
@@ -6682,7 +6683,6 @@ components:
       type: object
       required:
         - mode
-        - trigram_similarity_threshold
       properties:
         mode:
           type: string
@@ -6692,10 +6692,11 @@ components:
           default: text
         trigram_similarity_threshold:
           type: number
+          nullable: true
           minimum: 0
           maximum: 1
           description: The trigram_similarity_threshold cutoff level
-          default: 0.6
+          default: null
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
     Sessions.TextOnlyDocSearchUpdate:
@@ -6709,10 +6710,11 @@ components:
           default: text
         trigram_similarity_threshold:
           type: number
+          nullable: true
           minimum: 0
           maximum: 1
           description: The trigram_similarity_threshold cutoff level
-          default: 0.6
+          default: null
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
     Sessions.UpdateSessionRequest:
