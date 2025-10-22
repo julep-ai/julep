@@ -34,7 +34,8 @@ SELECT
     d.embedding_dimensions,
     d.language,
     d.metadata,
-    d.created_at
+    d.created_at,
+    d.updated_at
 FROM docs d
 JOIN doc_owners doc_own
     ON d.developer_id = doc_own.developer_id
@@ -46,6 +47,12 @@ WHERE d.developer_id = $1
     AND doc_own.owner_type = $3
     AND doc_own.owner_id = $4
 """
+
+# AIDEV-NOTE: map exposed sort keys to fully-qualified columns to avoid join ambiguity
+SORT_COLUMN_MAP: dict[str, str] = {
+    "created_at": "d.created_at",
+    "updated_at": "d.updated_at",
+}
 
 
 @rewrap_exceptions(common_db_exceptions("doc", ["list"]))
@@ -128,11 +135,14 @@ async def list_docs(
         d.embedding_dimensions,
         d.language,
         d.metadata,
-        d.created_at"""
+        d.created_at,
+        d.updated_at"""
 
     # Add sorting and pagination
+    order_column = SORT_COLUMN_MAP[sort_by]
+    direction_sql = "ASC" if direction == "asc" else "DESC"
     query += (
-        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+        f" ORDER BY {order_column} {direction_sql} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
     )
     params.extend([limit, offset])
 
