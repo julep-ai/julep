@@ -141,9 +141,7 @@ async def list_docs(
     # Add sorting and pagination
     order_column = SORT_COLUMN_MAP[sort_by]
     direction_sql = "ASC" if direction == "asc" else "DESC"
-    query += (
-        f" ORDER BY {order_column} {direction_sql} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
-    )
+    query += f" ORDER BY {order_column} {direction_sql} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
     params.extend([limit, offset])
 
     return query, params
