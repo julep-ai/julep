@@ -1,3 +1,4 @@
+import asyncio
 from uuid import uuid4
 
 from agents_api.autogen.openapi_model import CreateDocRequest, Doc
@@ -344,6 +345,56 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
 
     assert exc.raised.status_code == 400
     assert exc.raised.detail == "Invalid sort direction"
+
+
+@test("queries filters test... list docs sorted by updated_at uses latest timestamps")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+
+    shared_metadata = {"sort_group": "updated_at_sort_regression"}
+
+    first_doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Sort regression doc 1",
+            content="content one",
+            metadata=shared_metadata,
+            embed_instruction="Embed",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    # Ensure the second document has a greater updated_at timestamp
+    await asyncio.sleep(0.01)
+
+    second_doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Sort regression doc 2",
+            content="content two",
+            metadata=shared_metadata,
+            embed_instruction="Embed",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    docs = await list_docs(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+        metadata_filter=shared_metadata,
+        sort_by="updated_at",
+        direction="desc",
+    )
+
+    assert len(docs) >= 2
+    assert docs[0].id == second_doc.id
+    assert docs[1].id == first_doc.id
 
 
 @test("query: list agent docs")
