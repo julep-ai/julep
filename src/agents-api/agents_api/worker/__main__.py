@@ -8,7 +8,7 @@ It supports various workflows and activities related to agents' operations.
 import asyncio
 import logging
 
-from tenacity import after_log, retry, retry_if_exception_type, wait_fixed
+from tenacity import after_log, retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from ..app import app, lifespan
 from ..clients import temporal
@@ -22,9 +22,12 @@ logger.addHandler(h)
 logger.setLevel(logging.DEBUG)
 
 
+# AIDEV-NOTE: Allow up to five retries (~100s total) so transient Temporal outages
+# can recover while still failing fast enough for orchestration to replace the worker.
 @retry(
     wait=wait_fixed(20),
     retry=retry_if_exception_type(RuntimeError),
+    stop=stop_after_attempt(5),
     after=after_log(logger, logging.DEBUG),
 )
 async def main() -> None:
