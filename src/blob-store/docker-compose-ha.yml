@@ -78,6 +78,46 @@ services:
     volumes:
       - seaweedfs_data3:/data
 
+  seaweedfs-volume4:
+    <<: *seaweedfs-base
+    ports:
+      - 28083:28083
+      # - 18084:18084
+    command: 'volume -max=8 -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28083 -ip=seaweedfs-volume4 -metricsPort=9324 -preStopSeconds=3'
+    healthcheck:
+      test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28083/healthz" ]
+      interval: 60s
+      retries: 6
+      timeout: 30s
+      start_period: 30s
+      start_interval: 10s
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+    volumes:
+      - seaweedfs_data4:/data
+    # AIDEV-NOTE: Keep metricsPort unique when adding more volume replicas.
+
+  seaweedfs-volume5:
+    <<: *seaweedfs-base
+    ports:
+      - 28084:28084
+      # - 18085:18085
+    command: 'volume -max=8 -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28084 -ip=seaweedfs-volume5 -metricsPort=9325 -preStopSeconds=3'
+    healthcheck:
+      test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28084/healthz" ]
+      interval: 60s
+      retries: 6
+      timeout: 30s
+      start_period: 30s
+      start_interval: 10s
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+    volumes:
+      - seaweedfs_data5:/data
+    # AIDEV-NOTE: Align exposed ports with `seaweedfs` depends_on configuration.
+
   seaweedfs-filer:
     <<: *seaweedfs-base
     ports:
@@ -114,6 +154,10 @@ services:
         condition: service_healthy
       seaweedfs-volume3:
         condition: service_healthy
+      seaweedfs-volume4:
+        condition: service_healthy
+      seaweedfs-volume5:
+        condition: service_healthy
       seaweedfs-filer:
         condition: service_healthy
 
@@ -123,4 +167,8 @@ volumes:
   seaweedfs_data2:
     external: true
   seaweedfs_data3:
+    external: true
+  seaweedfs_data4:
+    external: true
+  seaweedfs_data5:
     external: true
