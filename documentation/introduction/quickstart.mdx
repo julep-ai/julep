@@ -137,6 +137,10 @@ Let's create a task that generates a short story based on a given topic:
   ```
 </CodeGroup>
 
+<Note>
+  Notice the `$` expression in the task definition: `$ f'Write a short story about {steps[0].input.topic}'`. This is a powerful feature that allows you to dynamically reference variables, inputs, and previous step outputs within your tasks. Learn more about [dollar expressions](/advanced/new-syntax) in the Tasks documentation.
+</Note>
+
 ### Step 5: Execute the Task
 
 Now let's run the task with a specific topic:
