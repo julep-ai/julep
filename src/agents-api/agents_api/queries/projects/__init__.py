@@ -11,9 +11,11 @@ Each function in this module constructs and returns SQL queries along with their
 """
 
 from .create_project import create_project
+from .delete_project import delete_project
 from .list_projects import list_projects
 
 __all__ = [
     "create_project",
+    "delete_project",
     "list_projects",
 ]
