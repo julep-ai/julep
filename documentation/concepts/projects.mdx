@@ -24,6 +24,7 @@ A project includes:
 - `id`: Unique identifier
 - `canonical_name`: Machine-readable name (unique per developer)
 - `name`: Human-readable display name
+- `description`: Optional description of the project
 - `metadata`: Custom attributes for the project
 
 ## Project Relationships
@@ -65,8 +66,8 @@ POST /projects
 {
   "name": "Customer Support Bot",
   "canonical_name": "support-bot",
+  "description": "Resources for our customer support chatbot",
   "metadata": {
-    "description": "Resources for our customer support chatbot",
     "team": "customer-success"
   }
 }
