@@ -1,0 +1,33 @@
+name: julep-dev
+include:
+  - ../agents-api/docker-compose.yml
+  - ../memory-store/docker-compose.yml
+  - ../scheduler/docker-compose.yml
+  - ../llm-proxy/docker-compose.yml
+  - ../integrations-service/docker-compose.yml
+services:
+  agents-api:
+    profiles: [""]
+  worker:
+    profiles: [""]
+  memory-store:
+    profiles: [""]
+  vectorizer-worker:
+    profiles: [""]
+  integrations:
+    profiles: [""]
+  temporal:
+    profiles: [""]
+    depends_on:
+      temporal-db:
+        condition: service_started
+  temporal-db:
+    profiles: [""]
+  temporal-ui:
+    profiles: [""]
+  litellm:
+    profiles: [""]
+  litellm-db:
+    profiles: [""]
+  litellm-redis:
+    profiles: [""]

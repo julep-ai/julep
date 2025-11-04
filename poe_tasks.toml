@@ -1,0 +1,2 @@
+[tasks.dev-up]
+shell = "docker compose -f deploy/docker-compose.dev.yaml --env-file .env up --build"
