@@ -1,12 +1,12 @@
 <sup><div align="center">
   <!-- Keep these links. Translations will automatically update with the README. -->
-  [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
-  [Español](https://www.readme-i18n.com/julep-ai/julep?lang=es) | 
-  [français](https://www.readme-i18n.com/julep-ai/julep?lang=fr) | 
-  [日本語](https://www.readme-i18n.com/julep-ai/julep?lang=ja) | 
-  [한국어](https://www.readme-i18n.com/julep-ai/julep?lang=ko) | 
-  [Português](https://www.readme-i18n.com/julep-ai/julep?lang=pt) | 
-  [Русский](https://www.readme-i18n.com/julep-ai/julep?lang=ru) | 
+  [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) |
+  [Español](https://www.readme-i18n.com/julep-ai/julep?lang=es) |
+  [français](https://www.readme-i18n.com/julep-ai/julep?lang=fr) |
+  [日本語](https://www.readme-i18n.com/julep-ai/julep?lang=ja) |
+  [한국어](https://www.readme-i18n.com/julep-ai/julep?lang=ko) |
+  [Português](https://www.readme-i18n.com/julep-ai/julep?lang=pt) |
+  [Русский](https://www.readme-i18n.com/julep-ai/julep?lang=ru) |
   [中文](https://www.readme-i18n.com/julep-ai/julep?lang=zh)
 </div></sup>
 
@@ -32,7 +32,7 @@
     <span>&nbsp;</span>
     <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License" height="28"></a>
   </p>
-  
+
   <h3 align="center">
     <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow"><img src="https://user-images.githubusercontent.com/74038190/235294015-47144047-25ab-417c-af1b-6746820a20ff.gif" width="45"></a>
     ·
@@ -43,14 +43,24 @@
   </h3>
 </div>
 
-**Try Julep Today:** Visit the **[Julep Website](https://julep.ai)** · Get started on the **[Julep Dashboard](https://dashboard.julep.ai)** (free API key) · Read the **[Documentation](https://docs.julep.ai/introduction/julep)**
+---
+
+## ⚠️ Important Notice: Julep is Shutting Down
+
+**The Julep backend and dashboard will shut down on December 31, 2025.**
+
+Julep is open source and you can continue using it by self-hosting. See the [Self-Hosting Guide](https://docs.julep.ai/advanced/localsetup) for instructions.
+
+**We're now working on [memory.store](https://memory.store/)** — check it out!
+
+---
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table of Contents</h3>
 
 - [Why Julep?](#why-julep)
-- [Getting Started](#getting-started)
+- [Self-Hosting](#self-hosting)
 - [Documentation and Examples](#documentation-and-examples)
 - [Community and Contributions](#community-and-contributions)
 - [License](#license)
@@ -79,29 +89,24 @@ Julep is an open-source platform for building **agent-based AI workflows** that 
 
 
 
-## Getting Started
-<p>
-    <a href="https://dashboard.julep.ai">
-      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key" height="28">
-    </a>
-    <span>&nbsp;</span>
-    <a href="https://docs.julep.ai">
-      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation" height="28">
-    </a>
-  </p>
-Getting up and running with Julep is simple:
+## Self-Hosting
 
-1. **Sign Up & API Key:** First, sign up on the [Julep Dashboard](https://dashboard.julep.ai) to obtain your API key (needed for authenticating your SDK calls).
-2. **Install the SDK:** Install the Julep SDK for your preferred language:
+Since the hosted version is shutting down, you can self-host Julep to continue using it.
+
+1. **Install the SDK:** Install the Julep SDK for your preferred language:
 
    * <img src="https://user-images.githubusercontent.com/74038190/212257472-08e52665-c503-4bd9-aa20-f5a4dae769b5.gif" width="20"> **Python:** `pip install julep`
    * <img src="https://user-images.githubusercontent.com/74038190/212257454-16e3712e-945a-4ca2-b238-408ad0bf87e6.gif" width="20"> **Node.js:** `npm install @julep/sdk` (or `yarn add @julep/sdk`)
-3. **Define Your Agent:** Use the SDK or YAML to define an agent and its task workflow. For example, you can specify the agent’s memory, tools it can use, and a step-by-step task logic. (See the **[Quick Start](https://docs.julep.ai/introduction/quick-start)** in our docs for a detailed walkthrough.)
-4. **Run a Workflow:** Invoke your agent through the SDK to execute the task. The Julep platform will orchestrate the entire workflow in the cloud and manage the state, tool calls, and LLM interactions for you. You can check the agent’s output, monitor the execution on the dashboard, and iterate as needed.
 
-That’s it! Your first AI agent can be up and running in minutes. For a complete tutorial, check out the **[Quick Start Guide](https://docs.julep.ai/introduction/quick-start)** in the documentation.
+2. **Self-Host Julep:** Follow the [Self-Hosting Guide](https://docs.julep.ai/advanced/localsetup) to run Julep on your own infrastructure.
 
-> **Note:** Julep also offers a command-line interface (CLI) (currently in beta for Python) to manage workflows and agents. If you prefer a no-code approach or want to script common tasks, see the [Julep CLI docs](https://docs.julep.ai/responses/quickstart#cli-installation) for details.
+3. **Define Your Agent:** Use the SDK or YAML to define an agent and its task workflow. For example, you can specify the agent's memory, tools it can use, and a step-by-step task logic. (See the **[Quick Start](https://docs.julep.ai/introduction/quick-start)** in our docs for a detailed walkthrough.)
+
+4. **Run a Workflow:** Invoke your agent through the SDK to execute the task. Julep will orchestrate the entire workflow and manage the state, tool calls, and LLM interactions for you.
+
+That's it! For a complete tutorial, check out the **[Quick Start Guide](https://docs.julep.ai/introduction/quick-start)** in the documentation.
+
+> **Note:** Julep also offers a command-line interface (CLI) to manage workflows and agents. See the [Julep CLI docs](https://docs.julep.ai/responses/quickstart#cli-installation) for details.
 
 
 
@@ -122,11 +127,11 @@ Looking to dive deeper? The **[Julep Documentation](https://docs.julep.ai)** cov
 
 Join our growing community of developers and AI enthusiasts! Here are some ways to get involved and get support:
 
-* **Discord Community:** Have questions or ideas? Join the conversation on our [official Discord server](https://discord.gg/7H5peSN9QP) to chat with the Julep team and other users. We’re happy to help with troubleshooting or brainstorm new use cases.
-* **GitHub Discussions and Issues:** Feel free to use GitHub for reporting bugs, requesting features, or discussing implementation details. Check out the [**good first issues**](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if you’d like to contribute – we welcome contributions of all kinds.
-* **Contributing:** If you want to contribute code or improvements, please see our [Contributing Guide](.github/CONTRIBUTING.md) for how to get started. We appreciate all PRs and feedback. By collaborating, we can make Julep even better!
+* **Discord Community:** Have questions or ideas? Join the conversation on our [official Discord server](https://discord.gg/7H5peSN9QP) to chat with other users.
+* **GitHub Discussions and Issues:** Feel free to use GitHub for reporting bugs, requesting features, or discussing implementation details. Check out the [**good first issues**](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if you'd like to contribute – we welcome contributions of all kinds.
+* **Contributing:** If you want to contribute code or improvements, please see our [Contributing Guide](.github/CONTRIBUTING.md) for how to get started. We appreciate all PRs and feedback.
 
-*Pro tip: <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/e379a33a-b428-4385-b44f-3da16e7bac9f" width="35"> Star our repo to stay updated – we’re constantly adding new features and examples.*    
+*Pro tip: <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/e379a33a-b428-4385-b44f-3da16e7bac9f" width="35"> Star our repo to stay updated.*
 
 <br/>
 
