@@ -14,7 +14,13 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 agent_query = """
-WITH deleted_file_owners AS (
+WITH deleted_session_lookup AS (
+    DELETE FROM session_lookup
+    WHERE developer_id = $1
+    AND participant_type = 'agent'
+    AND participant_id = $2
+),
+deleted_file_owners AS (
     DELETE FROM file_owners
     WHERE developer_id = $1
     AND owner_type = 'agent'
