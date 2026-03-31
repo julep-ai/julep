@@ -1,0 +1,43 @@
+name: foodie_tour_planner
+input_schema:
+  type: object
+  properties:
+    cities:
+      type: array
+      items:
+        type: string
+  required:
+    - cities
+
+steps:
+  - for_each:
+      input: ${input.cities}
+      as: city
+      steps:
+        - id: get_weather
+          tool: weather
+          input:
+            location: ${city}
+        - id: decide_dining_type
+          tool: llm
+          input:
+            prompt: |
+              It's currently ${get_weather.output.description} in ${city}.
+              Would you recommend indoor or outdoor dining?
+        - id: search_dishes
+          tool: brave_search
+          input:
+            query: "3 most iconic dishes in ${city}"
+        - id: search_restaurants
+          tool: brave_search
+          input:
+            query: "top-rated restaurants in ${city} serving ${search_dishes.output}"
+        - id: generate_foodie_tour
+          tool: llm
+          input:
+            prompt: |
+              Plan a one-day foodie tour in ${city}:
+              - Breakfast: ${search_dishes.output[0]} at ${search_restaurants.output[0]}
+              - Lunch: ${search_dishes.output[1]} at ${search_restaurants.output[1]}
+              - Dinner: ${search_dishes.output[2]} at ${search_restaurants.output[2]}
+              It's currently ${get_weather.output.description}, so recommend ${decide_dining_type.output} options.
