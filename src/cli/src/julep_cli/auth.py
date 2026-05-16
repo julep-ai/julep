@@ -90,8 +90,12 @@ def auth(
                 progress.stop_task(verify_task)
                 progress.stop()
 
+                error_message = str(e)
+                if not is_valid_jwt(api_key):
+                    error_message = "invalid token format"
+
                 error_console.print(
-                    Text(f"Error verifying API key: {e}", style="bold red"),
+                    Text(f"Error verifying API key: {error_message}", style="bold red"),
                     highlight=True,
                 )
                 raise Exit(1)
