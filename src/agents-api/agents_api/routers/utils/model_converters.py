@@ -382,6 +382,8 @@ def convert_chat_response_to_response(
             # TODO: Support system tool calls here
             pass
 
+    if not chat_response.choices or chat_response.choices[0].message is None:
+        raise ValueError("LLM returned empty or filtered response")
     output_text = chat_response.choices[0].message.content
     if output_text:
         output.append(

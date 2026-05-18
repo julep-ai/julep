@@ -79,6 +79,8 @@ def humanize_llm(text: str) -> str:
             temperature=1.0,
             api_key=litellm_master_key,
         )
+        if not response.choices or response.choices[0].message is None:
+            raise ValueError("LLM returned empty or filtered response")
         return response.choices[0].message.content
     except Exception as e:
         msg = "Error humanizing text with an llm: "
@@ -98,6 +100,8 @@ def grammar(text: str):
             api_key=litellm_master_key,
             # extra_body={"min_p": 0.025},
         )
+        if not response.choices or response.choices[0].message is None:
+            return text
         return response.choices[0].message.content
     except Exception:
         return text

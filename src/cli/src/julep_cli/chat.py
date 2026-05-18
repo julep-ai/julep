@@ -73,6 +73,8 @@ def chat(
                 ],
             )
 
+        if not response.choices or response.choices[0].message is None:
+            raise ValueError("LLM returned empty or filtered response")
         console.print(
             Panel(
                 Text(response.choices[0].message.content, style="bold blue"),
