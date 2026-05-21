@@ -144,3 +144,38 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
 ## License
 
 Julep is offered under the **Apache 2.0 License**, which means it’s free to use in your own projects. See the [LICENSE](.github/LICENSE) file for details. Enjoy building with Julep!
+
+
+## ❓ FAQ
+
+### What is Julep?
+
+Julep is an open-source platform for building agent-based AI workflows that go beyond simple prompt chains. It acts like a "Firebase for AI agents," providing a robust backend for intelligent workflows at scale.
+
+### Key Features
+
+- ✅ **Persistent Memory**: Agents maintain context across conversations
+- ✅ **Modular Workflows**: Define tasks in YAML or code with conditions, loops
+- ✅ **Tool Orchestration**: Integrate external APIs and tools
+- ✅ **Parallel Execution**: Run multiple operations concurrently
+- ✅ **Serverless**: No infrastructure management required
+
+### How do I get started?
+
+1. Get API key from [Julep Dashboard](https://dashboard.julep.ai)
+2. Install SDK: `pip install julep` or `npm install @julep/sdk`
+3. Define your agent and workflow
+
+### What LLM providers are supported?
+
+OpenAI, Anthropic, Azure OpenAI, local models (via custom endpoints).
+
+### Where can I find help?
+
+- 📖 [Documentation](https://docs.julep.ai)
+- 💬 [Discord](https://discord.com/invite/JTSBGRZrzj)
+
+### License
+
+Apache 2.0 License
+
