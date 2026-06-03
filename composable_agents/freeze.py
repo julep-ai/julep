@@ -28,7 +28,6 @@ from .ir import (
     CallStep,
     HUMAN_GATE_TOOL,
     JSONSchema,
-    McpTool,
     NativeTool,
     Node,
     ToolRef,

@@ -33,11 +33,14 @@ http = ["httpx>=0.24"]
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
 # Everything needed to run the full test suite (including the Temporal E2E test).
 dev = [
+    "mypy>=1.10",
     "pytest>=7",
+    "ruff>=0.5",
     "temporalio>=1.7",
     "httpx>=0.24",
     "opentelemetry-api>=1.20",
     "opentelemetry-sdk>=1.20",
+    "types-PyYAML>=6.0",
 ]
 
 [project.urls]
@@ -46,8 +49,51 @@ Homepage = "https://example.com/composable-agents"
 [tool.setuptools.packages.find]
 include = ["composable_agents*"]
 
+[tool.setuptools.package-data]
+composable_agents = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # The Temporal E2E test wraps its own asyncio loop, so no asyncio plugin mode is
 # required; pure tests are synchronous.
 addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# Existing docs and explanatory strings are intentionally prose-heavy; enforcing
+# E501 now would create broad, non-behavioral churn unrelated to Phase 0.
+#
+# I001 and the listed UP rules are noisy on the current package: they would
+# mostly reshuffle public re-export blocks or modernize annotations/imports
+# across runtime modules. Keep those for a later formatting-only pass.
+ignore = ["E501", "I001", "UP007", "UP015", "UP035", "UP037", "UP038"]
+
+[tool.ruff.lint.per-file-ignores]
+# Public API re-exports are intentionally imported for package consumers.
+"composable_agents/__init__.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.10"
+packages = ["composable_agents"]
+strict = true
+show_error_codes = true
+warn_unused_ignores = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["composable_agents.execution.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["composable_agents"]
+# The root package conditionally re-exports Temporal symbols from the lenient
+# execution layer. Keep those out of the pure-core error budget for now.
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = ["temporalio.*"]
+ignore_missing_imports = true

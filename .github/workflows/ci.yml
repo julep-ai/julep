@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev tools
+        run: python -m pip install -e '.[dev]'
+      - name: Ruff
+        run: ruff check composable_agents
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        temporal: ["off", "on"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install base package
+        if: matrix.temporal == 'off'
+        run: python -m pip install -e . pytest
+      - name: Assert Temporal is absent
+        if: matrix.temporal == 'off'
+        run: python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is False"
+      - name: Install package with dev extras
+        if: matrix.temporal == 'on'
+        run: python -m pip install -e '.[dev]'
+      - name: Assert Temporal is present
+        if: matrix.temporal == 'on'
+        run: python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is True"
+      - name: Pytest
+        run: python -m pytest -q

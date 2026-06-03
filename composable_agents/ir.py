@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional, Union
 
 from .kinds import ContextScope, Effect, Op, Shape, SummaryPolicy

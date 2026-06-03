@@ -26,7 +26,7 @@ from typing import Any, Optional
 
 from .errors import CapabilityDenied
 from .freeze import CapabilityOverrides
-from .ir import CallStep, Node, SubStep, ThinkStep, toolref_key
+from .ir import CallStep, Node, ThinkStep, toolref_key
 from .kinds import ContextScope, Effect, Idempotency
 from .contracts import ToolContract
 from .validate import Diagnostic

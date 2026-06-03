@@ -22,7 +22,7 @@ Rules implemented:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from .contracts import ToolManifest
 from .ir import (
@@ -30,7 +30,6 @@ from .ir import (
     ContextPolicy,
     JSONSchema,
     Node,
-    SubStep,
     ThinkStep,
 )
 from .kinds import ContextScope, Op, Shape, shape_leq

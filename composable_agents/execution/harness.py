@@ -40,7 +40,7 @@ behind the activity boundary.
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Awaitable, Callable, Optional, Sequence
 
@@ -55,7 +55,7 @@ with workflow.unsafe.imports_passed_through():
     from ..ir import Node
     from ..kinds import Effect, Idempotency
     from ..projection import InMemoryProjection, ProjectionEmitter
-    from .interpreter import Env, Result, call_contract, call_ref_key, interpret
+    from .interpreter import Result, call_contract, call_ref_key, interpret
     from .activities import (
         CallHandInput,
         CompilePlanInput,

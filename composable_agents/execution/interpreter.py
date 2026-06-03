@@ -94,7 +94,6 @@ class Env(Protocol):
 
 async def interpret(node: Node, value: Any, env: Env, causes: tuple[str, ...] = ()) -> Result:
     """Evaluate ``node`` on ``value``; return its result and recording event id."""
-    op = node.op
     cid = env.next_cid(node.id)
     shape = surface_shape(node).value
     planned = env.emitter.plan(node.id, cid, causes=causes, shape=shape)
