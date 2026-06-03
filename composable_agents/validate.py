@@ -124,22 +124,54 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
         if n.step is not None:
             err("STEP_ON_NONPRIM", f"{op.value} node must not carry a step")
 
-    if op in (Op.SEQ, Op.PAR, Op.ALT):
+    if op != Op.ALT and (n.select is not None or n.cases is not None or n.default is not None):
+        err("ALT_FIELDS_ON_NONALT", f"{op.value} node must not carry alt switch fields")
+
+    if op in (Op.SEQ, Op.PAR):
         if not has_lr:
             err("MISSING_BRANCH", f"{op.value} requires both left and right")
 
     if op == Op.ALT:
-        if n.pure is None:
-            err("ALT_NO_PRED", "alt requires a named pure predicate")
-        elif not is_registered(n.pure):
-            err("UNKNOWN_PURE", f"alt predicate not registered: {n.pure!r}")
+        if n.cases is not None:
+            if n.left is not None or n.right is not None:
+                err("ALT_SWITCH_HAS_BINARY_BRANCH", "alt switch must not carry left/right branches")
+            if n.pure is not None:
+                err("ALT_SWITCH_HAS_PRED", "alt switch must not carry a binary predicate")
+            if n.select is None:
+                err("ALT_NO_SELECT", "alt switch requires a named pure selector")
+            elif not is_registered(n.select):
+                err("UNKNOWN_PURE", f"alt selector not registered: {n.select!r}")
+            if not n.cases:
+                err("ALT_NO_CASES", "alt switch requires at least one case")
+            for key, child in n.cases.items():
+                if not isinstance(key, str):
+                    err("ALT_BAD_CASE_KEY", "alt switch case keys must be strings")
+                if not isinstance(child, Node):
+                    err("ALT_BAD_CASE", f"alt switch case {key!r} is not a flow")
+        else:
+            if not has_lr:
+                err("MISSING_BRANCH", "alt requires both left and right")
+            if n.select is not None:
+                err("ALT_BINARY_HAS_SELECT", "binary alt must not carry a switch selector")
+            if n.default is not None:
+                err("ALT_BINARY_HAS_DEFAULT", "binary alt must not carry a switch default")
+            if n.pure is None:
+                err("ALT_NO_PRED", "alt requires a named pure predicate")
+            elif not is_registered(n.pure):
+                err("UNKNOWN_PURE", f"alt predicate not registered: {n.pure!r}")
 
     if op == Op.ARR:
         if n.pure is None:
             err("ARR_NO_PURE", "arr requires a named pure function (no inline closures)")
         elif not is_registered(n.pure):
             err("UNKNOWN_PURE", f"arr function not registered: {n.pure!r}")
-        if n.left is not None or n.right is not None or n.body is not None:
+        if (
+            n.left is not None
+            or n.right is not None
+            or n.body is not None
+            or n.cases is not None
+            or n.default is not None
+        ):
             err("ARR_HAS_CHILD", "arr is a leaf and must not have children")
 
     if op == Op.ITER_UP_TO:

@@ -159,18 +159,35 @@ def alt(
     if_false: Optional[Node] = None,
     *,
     select: Optional[str] = None,
+    cases: Optional[dict[str, Node]] = None,
+    default: Optional[Node] = None,
 ) -> Node:
-    """Choose a branch by a registered pure predicate (Branching).
+    """Choose a branch by a registered pure predicate or classifier (Branching).
 
     ``pred(input)`` truthy -> ``if_true``, else ``if_false``. For a model-judged
     branch, put a ``think`` before an ``alt`` over its (pure) verdict so the
     workflow stays deterministic.
     """
+    if cases is not None or default is not None:
+        if pred is not None or if_true is not None or if_false is not None:
+            raise ValueError("alt switch uses select/cases/default, not binary branches")
+        if select is None:
+            raise ValueError("alt switch needs a selector")
+        if not cases:
+            raise ValueError("alt switch needs at least one case")
+        return Node(
+            op=Op.ALT,
+            id=_nid("alt"),
+            select=select,
+            cases=dict(cases),
+            default=default,
+        )
+
     pred = pred or select
     if pred is None:
         raise ValueError("alt needs a predicate")
     if if_true is None or if_false is None:
-        raise ValueError("alt stays binary in Phase A1: pass if_true and if_false")
+        raise ValueError("alt binary mode needs if_true and if_false")
     return Node(op=Op.ALT, id=_nid("alt"), pure=pred, left=if_true, right=if_false)
 
 

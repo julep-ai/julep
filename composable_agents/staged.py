@@ -70,7 +70,13 @@ def estimate_cost(plan: Node) -> float:
         base = estimate_cost(plan.left) + estimate_cost(plan.right) if plan.left and plan.right else 0.0
         return (own or 0.0) + base
     if op == Op.ALT:
-        base = max(estimate_cost(plan.left), estimate_cost(plan.right)) if plan.left and plan.right else 0.0
+        if plan.cases is not None:
+            branch_costs = [estimate_cost(plan.cases[k]) for k in sorted(plan.cases)]
+            if plan.default is not None:
+                branch_costs.append(estimate_cost(plan.default))
+            base = max(branch_costs) if branch_costs else 0.0
+        else:
+            base = max(estimate_cost(plan.left), estimate_cost(plan.right)) if plan.left and plan.right else 0.0
         return (own or 0.0) + base
     if op == Op.ITER_UP_TO:
         body = estimate_cost(plan.body) if plan.body else 0.0

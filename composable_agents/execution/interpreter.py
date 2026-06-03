@@ -136,6 +136,13 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
         return await _eval_par(node, value, env, planned)
 
     if op == Op.ALT:
+        if node.cases is not None:
+            assert node.select is not None
+            key = env.get_pure(node.select)(value)
+            child = node.cases.get(key, node.default)
+            if child is None:
+                raise ComposableAgentsError(f"alt: no case for key {key!r} at {node.id!r}")
+            return await interpret(child, value, env, causes=(planned,))
         assert node.pure is not None and node.left is not None and node.right is not None
         pred = env.get_pure(node.pure)
         branch = node.left if pred(value) else node.right

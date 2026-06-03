@@ -31,7 +31,11 @@ def test_surface_shape_climbs_the_lattice():
     agent = app("ctrl", tools=["a"], subflows=["child"], budget={"usd": 1}, max_rounds=2)
     assert surface_shape(agent) == Shape.AGENT
     agent_json = agent.to_json()
-    assert not {"tools", "subflows", "budget", "max_rounds"} & set(agent_json)
+    assert agent_json["tools"] == ["a"]
+    assert agent_json["subflows"] == ["child"]
+    assert agent_json["budget"] == {"usd": 1}
+    assert agent_json["maxRounds"] == 2
+    assert "max_rounds" not in agent_json
 
 
 def test_join_takes_the_max_shape():

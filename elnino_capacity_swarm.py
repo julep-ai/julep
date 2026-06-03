@@ -255,7 +255,7 @@ ingest = seq(
     par([enso_outlook, forecast_consensus]),     # outlook + consensus, concurrently
     # Synthesize a per-zone context vector. Annotated with a cost/timeout hint so
     # the projection can attribute spend to this step.
-    think("forecast_synthesizer", ctx=ContextScope.SESSION,
+    think("forecast_synthesizer", ctx=ContextScope.WHOLE_SESSION,
           ann=Ann(cost_usd=0.20, timeout_s=90)),
 )
 

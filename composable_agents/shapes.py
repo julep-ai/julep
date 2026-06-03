@@ -52,7 +52,12 @@ def _shape(n: Node, mode: str) -> Shape:
         return shape_join(Shape.DATAFLOW, _shape(n.left, mode), _shape(n.right, mode))
 
     if op == Op.ALT:
-        # Two possible continuations -> at least Branching.
+        # Two or more possible continuations -> at least Branching.
+        if n.cases is not None:
+            branches = [_shape(n.cases[k], mode) for k in sorted(n.cases)]
+            if n.default is not None:
+                branches.append(_shape(n.default, mode))
+            return shape_join(Shape.BRANCHING, *branches)
         return shape_join(Shape.BRANCHING, _shape(n.left, mode), _shape(n.right, mode))
 
     if op == Op.ITER_UP_TO:

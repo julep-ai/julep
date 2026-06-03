@@ -269,6 +269,41 @@ def step_from_json(d: dict[str, Any]) -> Step:
     raise ValueError(f"unknown Step kind: {k!r}")
 
 
+def _budget_to_json(budget: Any) -> dict[str, Any]:
+    if isinstance(budget, dict):
+        out: dict[str, Any] = {}
+        if "usd" in budget and budget["usd"] is not None:
+            out["usd"] = budget["usd"]
+        if "tokens" in budget and budget["tokens"] is not None:
+            out["tokens"] = budget["tokens"]
+        wall_seconds = budget.get("wallSeconds", budget.get("wall_seconds"))
+        if wall_seconds is not None:
+            out["wallSeconds"] = wall_seconds
+        return out
+
+    out = {}
+    usd = getattr(budget, "usd", None)
+    tokens = getattr(budget, "tokens", None)
+    wall_seconds = getattr(budget, "wall_seconds", None)
+    if usd is not None:
+        out["usd"] = usd
+    if tokens is not None:
+        out["tokens"] = tokens
+    if wall_seconds is not None:
+        out["wallSeconds"] = wall_seconds
+    return out
+
+
+def _budget_from_json(d: dict[str, Any]) -> Any:
+    from .capabilities import Budget
+
+    return Budget(
+        usd=d.get("usd"),
+        tokens=d.get("tokens"),
+        wall_seconds=d.get("wallSeconds", d.get("wall_seconds")),
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Node.
 # --------------------------------------------------------------------------- #
@@ -320,6 +355,10 @@ class Node:
     # seq / par / alt:
     left: Optional["Node"] = None
     right: Optional["Node"] = None
+    # alt switch:
+    select: Optional[str] = None
+    cases: Optional[dict[str, "Node"]] = None
+    default: Optional["Node"] = None
     # iter_up_to:
     bound: Optional[int] = None
     body: Optional["Node"] = None
@@ -331,8 +370,8 @@ class Node:
     pure: Optional[str] = None
     # par join semantics (all/race/hedge/quorum). None == "all".
     merge: Optional[Merge] = None
-    # DSL-only metadata held for later phases. Intentionally omitted from
-    # to_json/from_json so existing IR wire keys and hashes do not change.
+    # DSL-only metadata held for later phases. APP inline config is serialized
+    # below only when present; prompt stays out of the IR wire format.
     prompt: Optional[str] = None
     tools: Optional[Any] = None
     subflows: Optional[Any] = None
@@ -342,7 +381,12 @@ class Node:
     # ----- traversal -------------------------------------------------------- #
     def children(self) -> list["Node"]:
         kids = [self.left, self.right, self.body, self.plan]
-        return [k for k in kids if k is not None]
+        out = [k for k in kids if k is not None]
+        if self.cases is not None:
+            out.extend(self.cases[k] for k in sorted(self.cases))
+        if self.default is not None:
+            out.append(self.default)
+        return out
 
     def walk(self):
         """Pre-order traversal over the node and all descendants."""
@@ -370,6 +414,12 @@ class Node:
             out["left"] = self.left.to_json()
         if self.right is not None:
             out["right"] = self.right.to_json()
+        if self.select is not None:
+            out["select"] = self.select
+        if self.cases is not None:
+            out["cases"] = {k: self.cases[k].to_json() for k in sorted(self.cases)}
+        if self.default is not None:
+            out["default"] = self.default.to_json()
         if self.bound is not None:
             out["bound"] = self.bound
         if self.body is not None:
@@ -378,6 +428,15 @@ class Node:
             out["plan"] = self.plan.to_json()
         if self.controller is not None:
             out["controller"] = self.controller
+        if self.op == Op.APP:
+            if self.tools is not None:
+                out["tools"] = self.tools
+            if self.subflows is not None:
+                out["subflows"] = self.subflows
+            if self.budget is not None:
+                out["budget"] = _budget_to_json(self.budget)
+            if self.max_rounds is not None:
+                out["maxRounds"] = self.max_rounds
         if self.pure is not None:
             out["pure"] = self.pure
         if self.merge is not None:
@@ -393,12 +452,23 @@ class Node:
             step=step_from_json(d["step"]) if d.get("step") else None,
             left=Node.from_json(d["left"]) if d.get("left") else None,
             right=Node.from_json(d["right"]) if d.get("right") else None,
+            select=d.get("select"),
+            cases=(
+                {str(k): Node.from_json(v) for k, v in d["cases"].items()}
+                if "cases" in d
+                else None
+            ),
+            default=Node.from_json(d["default"]) if d.get("default") else None,
             bound=d.get("bound"),
             body=Node.from_json(d["body"]) if d.get("body") else None,
             plan=Node.from_json(d["plan"]) if d.get("plan") else None,
             controller=d.get("controller"),
             pure=d.get("pure"),
             merge=Merge.from_json(d["merge"]) if d.get("merge") else None,
+            tools=d.get("tools"),
+            subflows=d.get("subflows"),
+            budget=_budget_from_json(d["budget"]) if "budget" in d else None,
+            max_rounds=d.get("maxRounds", d.get("max_rounds")),
         )
 
 

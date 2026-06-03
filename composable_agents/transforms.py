@@ -65,6 +65,13 @@ def normalize_ids(flow: Node, prefix: str = "$") -> Node:
             child = getattr(n, slot)
             if child is not None:
                 setattr(new, slot, rebuild(child, f"{node_id}.{_SLOT_TAG[slot]}"))
+        if n.cases is not None:
+            new.cases = {
+                key: rebuild(n.cases[key], f"{node_id}.C[{key}]")
+                for key in sorted(n.cases)
+            }
+        if n.default is not None:
+            new.default = rebuild(n.default, f"{node_id}.D")
         return new
 
     return rebuild(flow, prefix)
