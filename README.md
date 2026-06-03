@@ -38,14 +38,14 @@ Shape is computed (`surface_shape`), not declared, and it bounds what static gua
 import asyncio
 from temporalio.client import Client
 from composable_agents import (
-    mcp_call, think, pipeline, deploy, snapshot_from_listings,
+    call, mcp, think, seq, deploy, snapshot_from_listings,
     register_brain, Brain,
 )
 from composable_agents.execution.worker import run_worker
 from composable_agents.execution.activities import WorkerContext
 
 # 1) Author a flow with combinators.
-flow = pipeline(mcp_call("search", "web"), think("summarize"))
+flow = seq(call(mcp("search", "web")), think("summarize"))
 
 # 2) Snapshot the tools (here from a literal listing; in practice from MCP tools/list)
 #    and compile: freeze -> validate -> capability enforcement -> race admission.
@@ -67,7 +67,7 @@ asyncio.run(main())
 A worker process wires the environment (tool endpoints, the MCP caller, the LLM client, the capability manifest) once and serves both workflow types:
 
 ```python
-register_brain(Brain(name="summarize", model="claude-...", system_prompt="Summarize."))
+register_brain(Brain(name="summarize", model="claude-...", system="Summarize."))
 await run_worker(
     target_host="localhost:7233",
     hand_urls={"native_tool": "https://my-hand.run.app"},
@@ -85,25 +85,25 @@ await run_worker(
 
 | Combinator | Shape | Meaning |
 |---|---|---|
-| `pipeline(a, b, ...)` | Pipeline | run in sequence, threading output → input |
-| `parallel(a, b, ...)` / `fanout(...)` | Dataflow | run concurrently on the same input, collect results |
-| `route(pred, if_true, if_false)` | Branching | choose a branch by a registered pure predicate |
-| `critique(bound, body, until=...)` | Feedback | iterate `body` up to `bound` times, optional convergence predicate |
-| `stage(planner)` | Staged | a brain emits a plan; it is compiled, admitted (§8), and run as IR |
-| `escalate(controller)` | Agent | open-ended controller loop (use sparingly) |
-| `subagent(ref, Contract.…())` | Pipeline (opaque) | an opaque child flow carrying its contract across the firewall |
+| `seq(a, b, ...)` | Pipeline | run in sequence, threading output → input |
+| `par(a, b, ...)` / `fanout(...)` | Dataflow | run concurrently on the same input, collect results |
+| `alt(pred, if_true, if_false)` | Branching | choose a branch by a registered pure predicate |
+| `iter_up_to(max, body, until=...)` | Feedback | iterate `body` up to `max` times, optional convergence predicate |
+| `stage(planner=...)` | Staged | a brain emits a plan; it is compiled, admitted (§8), and run as IR |
+| `app(controller, tools=..., subflows=..., budget=..., max_rounds=...)` | Agent | open-ended controller loop (use sparingly) |
+| `sub(ref, contract=None)` | Pipeline (opaque) | an opaque child flow carrying its contract across the firewall; omitted contract defaults to `Contract.of(Shape.PIPELINE)` |
 
-**Leaves:** `call(name)` (native hand), `mcp_call(server, tool)`, `think(brain)`, `brain_from_ctx(path)`, `ident()`, `arr(pure_name)`.
+**Leaves:** `native(name)` and `mcp(server, tool)` build tool refs; `call(ref_or_name)` invokes a tool ref or a bare native-tool name. Also: `think(brain)`, `brain_from_ctx(path)`, `ident()`, `arr(pure_name)`.
 
 **Derived combinators** lower to a uniform, analyzable race spine:
 
-- `race(a, b, ...)` — first to finish wins, cancel the rest.
-- `hedge(a, b, ..., after_ms=N)` — start the first branch; reveal the rest only after a delay.
-- `quorum(a, b, ..., m=K)` — settle once `K` branches succeed.
+- `race([a, b, ...], reduce=...)` or `race(a, b, ...)` — first to finish wins, cancel the rest.
+- `hedge([a, b, ...], hedge_ms=N, reduce=...)` — start the first branch; reveal the rest only after a delay.
+- `quorum([a, b, ...], k=K, reduce=...)` — settle once `K` branches succeed.
 - `map_n` / `map_reduce` / `vote` / `review` — common fan-out patterns.
-- `human_gate(timeout_s=...)` — pause for a human decision (a durable signal-wait).
+- `human_gate(prompt=..., timeout_s=...)` — pause for a human decision (a durable signal-wait).
 
-Any combinator accepts `ctx=` (a `ContextPolicy`) and `ann=` (`Ann`: caching hints, timeouts).
+Leaves accept `ctx=` (a `ContextPolicy`) and `ann=` (`Ann`: `cost_usd`, caching hints, effects, `timeout_s`).
 
 ---
 
@@ -113,7 +113,7 @@ Any combinator accepts `ctx=` (a `ContextPolicy`) and `ann=` (`Ann`: caching hin
 
 1. **Freeze** — snapshot every tool (MCP version + schema + annotations, or a native contract) to a **content hash** and bind each `call` to it, so the tool set can never shift under a running flow. The flow is deep-copied to a clean tree (cycles rejected, sharing removed, ids normalized to deterministic paths like `$.L`, `$.R`).
 2. **Validate** — per-op well-formedness, schema edges, and a non-blocking warning where a `par` branch reads the whole session (sequential degrade).
-3. **Capability enforcement (§9)** — the flow may only use granted tools, models, memory scopes, and MCP servers. A capability manifest (YAML/dict) also supplies **contract assertions**: the only way a non-read tool becomes legal inside a race.
+3. **Capability enforcement (§9)** — the flow may only use granted tools, brains, memory scopes, and MCP servers. A capability manifest (YAML/dict) also supplies **contract assertions**: the only way a non-read tool becomes legal inside a race.
 4. **Race admission (§5)** — every branch of a `race`/`hedge`/`quorum` must be read-only or contract-asserted idempotent, so a duplicated branch can do no harm. MCP "read-only" *hints* are untrusted — a tool must be **asserted** in the capability manifest to race.
 
 `freeze`, `validate`, and the §8/§9/§5 checks are all exposed individually for finer control.
@@ -125,7 +125,7 @@ Any combinator accepts `ctx=` (a `ContextPolicy`) and `ann=` (`Ann`: caching hin
 The execution layer is the only part that imports `temporalio`, and it does so behind a guarded import.
 
 - **`FlowWorkflow`** walks the frozen IR. The same deterministic interpreter (`composable_agents.execution.interpreter.interpret`) runs here and in tests; only the injected `Env` differs (Temporal activities vs. in-memory callables). Per-tool retry policy is derived from each frozen contract — reads/idempotent tools retry liberally; non-idempotent writes retry cautiously behind an `Idempotency-Key` the `callHand` activity sends. Policy-decision errors (`CapabilityDenied`, `PlanRejected`, `ValidationError`, `FreezeError`) are non-retryable.
-- **`AgentWorkflow`** is the `escalate` loop. It is bounded by construction: each round the controller returns one of a closed action set — *finish*, *escalate*, call one **granted** tool, or invoke one registered **sub-flow** — and a **budget guard** stops the run before any action that would exceed the capability budget. History growth is bounded by **continue-as-new** (a configurable seam). It is a separate workflow precisely so its continue-as-new truncates only the agent's history, not the parent flow's.
+- **`AgentWorkflow`** is the `app` loop. It is bounded by construction: each round the controller returns one of a closed action set — *finish*, *escalate*, call one **granted** tool, or invoke one registered **sub-flow** — and a **budget guard** stops the run before any action that would exceed the capability budget. History growth is bounded by **continue-as-new** (a configurable seam). It is a separate workflow precisely so its continue-as-new truncates only the agent's history, not the parent flow's.
 - **`Sub`** is a child `FlowWorkflow` resolved by `ref`; the firewall is structural (the surface shape is already opaque), so a child's value crosses while its shape does not.
 - **Human gates** are a `submitHuman` signal plus a durable `wait_condition`. Two queries support a review UI: `projection` (the full pomset snapshot — events, `costByShape`, `pending`) and **`openGates`** (the precise activation ids currently parked on a gate — exactly what to signal, excluding structural `seq`/`par` activations).
 
@@ -135,7 +135,7 @@ The execution layer is the only part that imports `temporalio`, and it does so b
 
 ## Staged plans and plan extraction
 
-`stage(planner)` lets a brain emit a plan at runtime. The plan is parsed, **admitted under §8** (it may loop but not itself stage or escalate, must use only granted tools, and must fit the budget), then run as ordinary IR. Because an admitted plan is not re-frozen, its calls are **late-bound** by tool ref at execution time (`call_ref_key` / `call_contract`).
+`stage(planner=...)` lets a brain emit a plan at runtime. The plan is parsed, **admitted under §8** (it may loop but not itself stage or app, must use only granted tools, and must fit the budget), then run as ordinary IR. Because an admitted plan is not re-frozen, its calls are **late-bound** by tool ref at execution time (`call_ref_key` / `call_contract`).
 
 The offline complement is **plan extraction**: an observed agent action trace can be generalized into a candidate plan (`generalize_trace_to_plan`), checked (`extract_plan`), and promoted to a cheap, replayable stage (`promote_plan`, which enforces admission). The agent discovers a procedure; the plan freezes it.
 
@@ -148,7 +148,7 @@ This split is deliberate and load-bearing:
 - **Pure core** (`kinds`, `ir`, `shapes`, `contracts`, `freeze`, `validate`, `dsl`, `derived`, `capabilities`, `staged`, `projection`, `dotctx`, `agent_loop`, `deploy`, and `execution.interpreter`) has **no Temporal dependency**. The interpreter takes an injected `Env` of effect handlers and concurrency primitives, so the same control-flow logic runs under Temporal *and* under an in-memory `InMemoryEnv` in tests.
 - **Execution layer** (`execution.harness`, `execution.activities`, `execution.worker`, `execution.otel`) binds to Temporal and is import-guarded.
 
-**Testing.** The full suite is **64 tests with `temporalio` installed** (including a real end-to-end run on Temporal's time-skipping server covering a pipeline, a race, a human gate, and the agent loop with budget guard and capability deny) and **63 pass + 1 skip without it**. Run:
+**Testing.** The current full suite is **74 passing tests + 10 skips** with the repository test command. Run:
 
 ```bash
 pip install -e '.[dev]'

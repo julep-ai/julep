@@ -136,7 +136,7 @@ class CacheHint:
         return CacheHint(key=d.get("key"), ttl_s=d.get("ttlS"))
 
 
-@dataclass
+@dataclass(init=False)
 class Ann:
     """Optional per-node annotations: cost/risk hints, cache, effect, timeout."""
 
@@ -145,6 +145,21 @@ class Ann:
     cache: Optional[CacheHint] = None
     effect: Optional[Effect] = None
     timeout: Optional[int] = None  # seconds
+
+    def __init__(
+        self,
+        *,
+        cost_usd: Optional[float] = None,
+        risk: Optional[str] = None,
+        cache: Optional[CacheHint] = None,
+        effect: Optional[Effect] = None,
+        timeout_s: Optional[int] = None,
+    ) -> None:
+        self.cost = cost_usd
+        self.risk = risk
+        self.cache = cache
+        self.effect = effect
+        self.timeout = timeout_s
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -163,11 +178,11 @@ class Ann:
     @staticmethod
     def from_json(d: dict[str, Any]) -> "Ann":
         return Ann(
-            cost=d.get("cost"),
+            cost_usd=d.get("cost"),
             risk=d.get("risk"),
             cache=CacheHint.from_json(d["cache"]) if d.get("cache") else None,
             effect=Effect(d["effect"]) if d.get("effect") else None,
-            timeout=d.get("timeout"),
+            timeout_s=d.get("timeout"),
         )
 
 
@@ -316,6 +331,13 @@ class Node:
     pure: Optional[str] = None
     # par join semantics (all/race/hedge/quorum). None == "all".
     merge: Optional[Merge] = None
+    # DSL-only metadata held for later phases. Intentionally omitted from
+    # to_json/from_json so existing IR wire keys and hashes do not change.
+    prompt: Optional[str] = None
+    tools: Optional[Any] = None
+    subflows: Optional[Any] = None
+    budget: Optional[Any] = None
+    max_rounds: Optional[int] = None
 
     # ----- traversal -------------------------------------------------------- #
     def children(self) -> list["Node"]:

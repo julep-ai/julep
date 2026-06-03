@@ -8,7 +8,7 @@ policy (first-success-wins, first-after-delay, m-of-n). Because the IR ``par`` i
 binary, a single ``race(a, b, c)`` becomes a spine of ``par`` nodes that all
 share the *same* merge kind; :func:`flatten_race_group` walks that spine to
 recover the flat branch list, stopping at any child that isn't a same-kind
-race-par (so a plain ``parallel`` nested inside a race stays one opaque branch).
+race-par (so a plain ``par`` nested inside a race stays one opaque branch).
 
 The race family is the one place the framework owes a hard guarantee (§5): a
 loser branch gets cancelled, so its effects must be either absent (read-only) or
@@ -81,7 +81,7 @@ def flatten_race_group(root: Node) -> list[Node]:
     """Recover the flat branch list of a race-family ``par`` group.
 
     Descends only through ``par`` nodes whose merge kind matches ``root``'s; any
-    other node (a plain ``parallel``, a different-kind race group, or a leaf) is
+    other node (a plain ``par``, a different-kind race group, or a leaf) is
     returned as a single opaque branch.
     """
     if root.merge is None:
@@ -104,30 +104,37 @@ def flatten_race_group(root: Node) -> list[Node]:
 # --------------------------------------------------------------------------- #
 # The race family.
 # --------------------------------------------------------------------------- #
-def race(*flows: Node, reducer: Optional[str] = None) -> Node:
+def _branches(flows: tuple[Node | Sequence[Node], ...]) -> tuple[Node, ...]:
+    if len(flows) == 1 and isinstance(flows[0], Sequence):
+        return tuple(flows[0])
+    return flows  # type: ignore[return-value]
+
+
+def race(*flows: Node | Sequence[Node], reduce: Optional[str] = None) -> Node:
     """Run branches concurrently; first success wins, losers are cancelled.
 
     All branches must pass :func:`check_race_admission` (read-only or asserted
-    idempotent calls, no sub-agents). ``reducer`` optionally names a pure applied
+    idempotent calls, no sub-agents). ``reduce`` optionally names a pure applied
     to the winning result.
     """
-    return _par_group(flows, Merge(kind="race", reducer=reducer), "race")
+    return _par_group(_branches(flows), Merge(kind="race", reducer=reduce), "race")
 
 
-def hedge(*flows: Node, after_ms: int, reducer: Optional[str] = None) -> Node:
+def hedge(*flows: Node | Sequence[Node], hedge_ms: int, reduce: Optional[str] = None) -> Node:
     """Race with a delay: start the first branch, launch the rest only after
-    ``after_ms`` if it hasn't returned. Same admission rules as :func:`race`."""
-    if after_ms < 0:
-        raise ValueError("hedge after_ms must be >= 0")
-    return _par_group(flows, Merge(kind="hedge", hedge_ms=after_ms, reducer=reducer), "hedge")
+    ``hedge_ms`` if it hasn't returned. Same admission rules as :func:`race`."""
+    if hedge_ms < 0:
+        raise ValueError("hedge hedge_ms must be >= 0")
+    return _par_group(_branches(flows), Merge(kind="hedge", hedge_ms=hedge_ms, reducer=reduce), "hedge")
 
 
-def quorum(*flows: Node, m: int, reducer: Optional[str] = None) -> Node:
-    """Run branches concurrently; settle once ``m`` have succeeded, cancel the
+def quorum(*flows: Node | Sequence[Node], k: int, reduce: Optional[str] = None) -> Node:
+    """Run branches concurrently; settle once ``k`` have succeeded, cancel the
     rest. Same admission rules as :func:`race`."""
-    if m < 1 or m > len(flows):
-        raise ValueError(f"quorum m must be in 1..{len(flows)}, got {m}")
-    return _par_group(flows, Merge(kind="quorum", quorum_m=m, reducer=reducer), "quorum")
+    branches = _branches(flows)
+    if k < 1 or k > len(branches):
+        raise ValueError(f"quorum k must be in 1..{len(branches)}, got {k}")
+    return _par_group(branches, Merge(kind="quorum", quorum_m=k, reducer=reduce), "quorum")
 
 
 # --------------------------------------------------------------------------- #
@@ -137,7 +144,7 @@ def quorum(*flows: Node, m: int, reducer: Optional[str] = None) -> Node:
 def map_n(*flows: Node, reducer: Optional[str] = None) -> Node:
     """Run every branch concurrently and wait for all of them (Dataflow).
 
-    Like :func:`composable_agents.dsl.parallel`, but attaches an explicit ``all``
+    Like :func:`composable_agents.dsl.par`, but attaches an explicit ``all``
     merge so an optional named ``reducer`` can fold the collected results.
     """
     return _par_group(flows, Merge(kind="all", reducer=reducer), "mapn")
@@ -177,7 +184,7 @@ def review(main: Node, reviewer: str, k: int, *, agg: Optional[str] = None) -> N
     return Node(op=Op.SEQ, id=_nid("seq"), left=main, right=reviewers)
 
 
-def human_gate(*, timeout_s: Optional[int] = None) -> Node:
+def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None) -> Node:
     """A leaf that blocks on a human signal, with an optional timeout.
 
     Emits a ``call`` to the reserved hand ``__human_gate__``; the harness turns
@@ -185,9 +192,9 @@ def human_gate(*, timeout_s: Optional[int] = None) -> Node:
     surfaced to the human as the prompt and the signal payload becomes its
     output. ``timeout_s`` (carried on the annotation) bounds the wait.
     """
-    ann = Ann(timeout=timeout_s) if timeout_s is not None else None
+    ann = Ann(timeout_s=timeout_s) if timeout_s is not None else None
     return Node(op=Op.PRIM, id=_nid("gate"), ann=ann,
-                step=CallStep(tool=NativeTool(HUMAN_GATE_TOOL)))
+                step=CallStep(tool=NativeTool(HUMAN_GATE_TOOL)), prompt=prompt)
 
 
 # --------------------------------------------------------------------------- #

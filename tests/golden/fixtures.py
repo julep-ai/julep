@@ -9,17 +9,17 @@ from composable_agents import (
     Contract,
     Effect,
     Idempotency,
+    app,
     call,
     deploy,
-    escalate,
     hedge,
     human_gate,
-    mcp_call,
-    pipeline,
+    mcp,
     quorum,
     race,
+    seq,
     stage,
-    subagent,
+    sub,
 )
 from composable_agents.contracts import ToolContract
 from composable_agents.deploy import Deployment, snapshot_from_listings
@@ -75,7 +75,7 @@ def _caps(*tool_names: str) -> CapabilityManifest:
 def simple_pipeline() -> GoldenFixture:
     return GoldenFixture(
         name="simple_pipeline",
-        flow=pipeline(mcp_call("srv", "extract"), mcp_call("srv", "summarize")),
+        flow=seq(call(mcp("srv", "extract")), call(mcp("srv", "summarize"))),
         snapshot=_read_snapshot("extract", "summarize"),
     )
 
@@ -83,10 +83,10 @@ def simple_pipeline() -> GoldenFixture:
 def subagent_firewall() -> GoldenFixture:
     return GoldenFixture(
         name="subagent_firewall",
-        flow=pipeline(
-            mcp_call("srv", "parent_read"),
-            subagent("child.agent", Contract.agent()),
-            mcp_call("srv", "parent_summarize"),
+        flow=seq(
+            call(mcp("srv", "parent_read")),
+            sub("child.agent", Contract.agent()),
+            call(mcp("srv", "parent_summarize")),
         ),
         snapshot=_read_snapshot("parent_read", "parent_summarize"),
     )
@@ -95,7 +95,7 @@ def subagent_firewall() -> GoldenFixture:
 def race_fixture() -> GoldenFixture:
     return GoldenFixture(
         name="race",
-        flow=race(mcp_call("srv", "primary"), mcp_call("srv", "replica")),
+        flow=race(call(mcp("srv", "primary")), call(mcp("srv", "replica"))),
         snapshot=_read_snapshot("primary", "replica"),
         capabilities=_caps("primary", "replica"),
     )
@@ -105,10 +105,10 @@ def quorum_fixture() -> GoldenFixture:
     return GoldenFixture(
         name="quorum",
         flow=quorum(
-            mcp_call("srv", "vote_a"),
-            mcp_call("srv", "vote_b"),
-            mcp_call("srv", "vote_c"),
-            m=2,
+            call(mcp("srv", "vote_a")),
+            call(mcp("srv", "vote_b")),
+            call(mcp("srv", "vote_c")),
+            k=2,
         ),
         snapshot=_read_snapshot("vote_a", "vote_b", "vote_c"),
         capabilities=_caps("vote_a", "vote_b", "vote_c"),
@@ -118,7 +118,7 @@ def quorum_fixture() -> GoldenFixture:
 def hedge_fixture() -> GoldenFixture:
     return GoldenFixture(
         name="hedge",
-        flow=hedge(mcp_call("srv", "near"), mcp_call("srv", "far"), after_ms=50),
+        flow=hedge(call(mcp("srv", "near")), call(mcp("srv", "far")), hedge_ms=50),
         snapshot=_read_snapshot("near", "far"),
         capabilities=_caps("near", "far"),
     )
@@ -127,7 +127,7 @@ def hedge_fixture() -> GoldenFixture:
 def human_gate_fixture() -> GoldenFixture:
     return GoldenFixture(
         name="human_gate",
-        flow=pipeline(human_gate(timeout_s=60), mcp_call("srv", "record_approval")),
+        flow=seq(human_gate(timeout_s=60), call(mcp("srv", "record_approval"))),
         snapshot=_read_snapshot("record_approval"),
     )
 
@@ -143,7 +143,7 @@ def staged_plan() -> GoldenFixture:
 def agent_app() -> GoldenFixture:
     return GoldenFixture(
         name="agent_app",
-        flow=escalate("support.controller"),
+        flow=app("support.controller"),
         snapshot=McpSnapshot(),
     )
 
@@ -162,7 +162,7 @@ def frozen_manifest() -> GoldenFixture:
     )
     return GoldenFixture(
         name="frozen_manifest",
-        flow=pipeline(call("native_index"), mcp_call("srv", "lookup")),
+        flow=seq(call("native_index"), call(mcp("srv", "lookup"))),
         snapshot=snapshot,
     )
 
@@ -175,14 +175,14 @@ def capability_manifest() -> GoldenFixture:
                 {"name": "srv/archive", "effect": "write", "idempotency": "required"},
             ],
             "mcp_servers": {"srv": None},
-            "models": [],
+            "brains": [],
             "memory": [],
             "budget": {"usd": 100.0, "tokens": 10000},
         }
     )
     return GoldenFixture(
         name="capability_manifest",
-        flow=pipeline(mcp_call("srv", "search"), mcp_call("srv", "archive")),
+        flow=seq(call(mcp("srv", "search")), call(mcp("srv", "archive"))),
         snapshot=_read_snapshot("search", "archive"),
         capabilities=caps,
     )

@@ -110,7 +110,7 @@ def validate_plan(
     # Inherit ordinary well-formedness, ids, and (if manifest given) schema edges.
     out.extend(validate(plan, manifest))
 
-    # Bounded shape: a plan may loop but may not stage or escalate.
+    # Bounded shape: a plan may loop but may not stage or app.
     s = closed_shape(plan)
     if shape_rank(s) > shape_rank(Shape.FEEDBACK):
         out.append(

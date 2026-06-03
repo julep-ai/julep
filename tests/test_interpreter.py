@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from composable_agents import (
-    mcp_call, think, pipeline, parallel, route, critique, stage, escalate,
-    subagent, race, quorum, human_gate, Contract, freeze, register_pure,
+    call, mcp, think, seq, par, alt, iter_up_to, stage, app,
+    sub, race, quorum, human_gate, Contract, freeze, register_pure,
 )
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.ir import Node
 from conftest import read_snapshot, run
 
 
@@ -29,14 +28,14 @@ HANDS = {
 
 
 def test_pipeline_threads_value():
-    flow = pipeline(mcp_call("srv", "inc"), mcp_call("srv", "double"))
+    flow = seq(call(mcp("srv", "inc")), call(mcp("srv", "double")))
     fr, env = _env(flow, hands=HANDS)
     out = run(interpret(fr.flow, 5, env))
     assert out.value == 12  # (5+1)*2
 
 
 def test_parallel_collects_branches():
-    flow = parallel(mcp_call("srv", "a"), mcp_call("srv", "b"))
+    flow = par(call(mcp("srv", "a")), call(mcp("srv", "b")))
     fr, env = _env(flow, hands=HANDS)
     out = run(interpret(fr.flow, 9, env))
     assert out.value == [("a", 9), ("b", 9)]
@@ -44,7 +43,7 @@ def test_parallel_collects_branches():
 
 def test_alt_routes_by_pure_predicate():
     register_pure("is_even", lambda v: v % 2 == 0)
-    flow = route("is_even", mcp_call("srv", "half"), mcp_call("srv", "inc"))
+    flow = alt("is_even", call(mcp("srv", "half")), call(mcp("srv", "inc")))
     fr, env = _env(flow, hands=HANDS)
     assert run(interpret(fr.flow, 8, env)).value == 4   # even -> half
     fr2, env2 = _env(flow, hands=HANDS)
@@ -54,24 +53,24 @@ def test_alt_routes_by_pure_predicate():
 def test_iter_up_to_runs_bound_times_and_converges():
     register_pure("at_least_10", lambda v: v >= 10)
     # No convergence: runs exactly bound times.
-    flow = critique(3, mcp_call("srv", "inc"))
+    flow = iter_up_to(3, call(mcp("srv", "inc")))
     fr, env = _env(flow, hands=HANDS)
     assert run(interpret(fr.flow, 5, env)).value == 8  # 5 -> 6 -> 7 -> 8
     # With convergence: stops early once predicate holds.
-    flow2 = critique(100, mcp_call("srv", "inc"), until="at_least_10")
+    flow2 = iter_up_to(100, call(mcp("srv", "inc")), until="at_least_10")
     fr2, env2 = _env(flow2, hands=HANDS)
     assert run(interpret(fr2.flow, 7, env2)).value == 10  # stops at 10
 
 
 def test_race_picks_first_branch_with_sync_fakes():
-    flow = race(mcp_call("srv", "a"), mcp_call("srv", "b"))
+    flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
     fr, env = _env(flow, hands=HANDS)
     out = run(interpret(fr.flow, 1, env))
     assert out.value == ("a", 1)  # branch order under synchronous fakes
 
 
 def test_quorum_returns_m_results():
-    flow = quorum(mcp_call("srv", "a"), mcp_call("srv", "b"), mcp_call("srv", "c"), m=2)
+    flow = quorum(call(mcp("srv", "a")), call(mcp("srv", "b")), call(mcp("srv", "c")), k=2)
     fr, env = _env(flow, hands=HANDS)
     out = run(interpret(fr.flow, 1, env))
     assert isinstance(out.value, list) and len(out.value) == 2
@@ -90,13 +89,13 @@ def test_human_gate_uses_gate_handler():
 
 
 def test_sub_runs_child_handler():
-    flow = subagent("child", Contract.pipeline())
+    flow = sub("child", Contract.pipeline())
     fr, env = _env(flow, subs={"child": lambda v: v * 100})
     assert run(interpret(fr.flow, 3, env)).value == 300
 
 
 def test_app_runs_agent_handler():
-    flow = escalate("controller")
+    flow = app("controller")
     fr, env = _env(flow, agents={"controller": lambda v: {"status": "done", "output": v}})
     assert run(interpret(fr.flow, "go", env)).value == {"status": "done", "output": "go"}
 
@@ -105,7 +104,7 @@ def test_stage_compiles_then_runs_plan_with_late_binding():
     # The planner returns an UNFROZEN plan; the interpreter late-binds its calls
     # by tool ref (admission would have vetted them in the real pipeline).
     def planner(value):
-        return pipeline(mcp_call("srv", "inc"), mcp_call("srv", "double"))
+        return seq(call(mcp("srv", "inc")), call(mcp("srv", "double")))
 
     flow = stage("planner")
     fr, env = _env(flow, hands=HANDS, planners={"planner": planner})

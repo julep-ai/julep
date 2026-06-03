@@ -6,15 +6,15 @@ combinator returns a ``Node``; nothing here does IO. Node ids are provisional
 :func:`composable_agents.freeze.freeze`, so reusing a sub-flow in two places is
 fine — the freeze round-trip unshares it.
 
-Shapes are *derived*, never declared: ``parallel`` is Dataflow because ``par`` is,
-``critique`` is Feedback because ``iter_up_to`` is, and so on. The DSL can't lie
+Shapes are *derived*, never declared: ``par`` is Dataflow because ``Op.PAR`` is,
+``iter_up_to`` is Feedback because ``Op.ITER_UP_TO`` is, and so on. The DSL can't lie
 about cost.
 """
 
 from __future__ import annotations
 
 import itertools
-from typing import Optional, Union
+from typing import Any, Optional, Sequence, Union
 
 from .ir import (
     Ann,
@@ -26,6 +26,7 @@ from .ir import (
     SubContract,
     SubStep,
     ThinkStep,
+    ToolRef,
 )
 from .kinds import ContextScope, Op, Shape, SummaryPolicy
 
@@ -50,16 +51,28 @@ def _ctx(c: CtxArg) -> Optional[ContextPolicy]:
 # --------------------------------------------------------------------------- #
 # Leaves.
 # --------------------------------------------------------------------------- #
-def call(name: str, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
-    """A native HTTP hand we own."""
-    return Node(op=Op.PRIM, id=_nid("call"), ann=ann,
-                step=CallStep(tool=NativeTool(name), ctx=_ctx(ctx)))
+def native(name: str) -> NativeTool:
+    """Reference a native HTTP hand we own."""
+    return NativeTool(name)
 
 
-def mcp_call(server: str, tool: str, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
-    """A tool from an MCP server (resolved + frozen at run start)."""
-    return Node(op=Op.PRIM, id=_nid("mcp"), ann=ann,
-                step=CallStep(tool=McpTool(server=server, tool=tool), ctx=_ctx(ctx)))
+def mcp(server: str, tool: str) -> McpTool:
+    """Reference a tool from an MCP server."""
+    return McpTool(server=server, tool=tool)
+
+
+def call(ref_or_name: str | ToolRef, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
+    """Invoke a tool reference.
+
+    A bare string is shorthand for :func:`native`; pass :func:`mcp` for MCP
+    tools.
+    """
+    ref = native(ref_or_name) if isinstance(ref_or_name, str) else ref_or_name
+    if not isinstance(ref, (NativeTool, McpTool)):
+        raise TypeError("call() expects a ToolRef or native tool name")
+    tag = "mcp" if isinstance(ref, McpTool) else "call"
+    return Node(op=Op.PRIM, id=_nid(tag), ann=ann,
+                step=CallStep(tool=ref, ctx=_ctx(ctx)))
 
 
 def think(brain: str, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
@@ -87,9 +100,15 @@ def arr(pure_name: str) -> Node:
     return Node(op=Op.ARR, id=_nid("arr"), pure=pure_name)
 
 
-def subagent(ref: str, contract: SubContract,
-             *, summary_policy: Optional[SummaryPolicy] = None) -> Node:
+def sub(
+    ref: str,
+    contract: Optional[SubContract] = None,
+    *,
+    summary_policy: Optional[SummaryPolicy] = None,
+) -> Node:
     """An opaque child workflow carrying its contract across the firewall."""
+    if contract is None:
+        contract = SubContract(Shape.PIPELINE, summary_policy)
     if summary_policy is not None and contract.summary_policy is None:
         contract = SubContract(shape=contract.shape, summary_policy=summary_policy)
     return Node(op=Op.PRIM, id=_nid("sub"), step=SubStep(ref=ref, contract=contract))
@@ -98,6 +117,12 @@ def subagent(ref: str, contract: SubContract,
 # --------------------------------------------------------------------------- #
 # Structural combinators.
 # --------------------------------------------------------------------------- #
+def _as_flows(flows: tuple[Node | Sequence[Node], ...]) -> tuple[Node, ...]:
+    if len(flows) == 1 and isinstance(flows[0], Sequence):
+        return tuple(flows[0])
+    return flows  # type: ignore[return-value]
+
+
 def _binary(op: Op, tag: str, flows: tuple[Node, ...]) -> Node:
     if not flows:
         raise ValueError(f"{tag} needs at least one flow")
@@ -109,42 +134,53 @@ def _binary(op: Op, tag: str, flows: tuple[Node, ...]) -> Node:
     return acc
 
 
-def pipeline(*flows: Node) -> Node:
+def seq(*flows: Node | Sequence[Node]) -> Node:
     """Run flows in sequence, threading output -> input (Pipeline)."""
-    return _binary(Op.SEQ, "seq", flows)
+    return _binary(Op.SEQ, "seq", _as_flows(flows))
 
 
-def parallel(*flows: Node) -> Node:
+def par(*flows: Node | Sequence[Node]) -> Node:
     """Run flows concurrently on the same input, then merge (Dataflow)."""
-    return _binary(Op.PAR, "par", flows)
+    return _binary(Op.PAR, "par", _as_flows(flows))
 
 
-def fanout(*flows: Node) -> Node:
+def fanout(*flows: Node | Sequence[Node]) -> Node:
     """Fan one input out to N branches concurrently (Dataflow).
 
-    Same IR as :func:`parallel`; the name documents intent (homogeneous fan-out
+    Same IR as :func:`par`; the name documents intent (homogeneous fan-out
     vs heterogeneous join). The harness collects branch results into a list.
     """
-    return _binary(Op.PAR, "par", flows)
+    return _binary(Op.PAR, "par", _as_flows(flows))
 
 
-def route(pred: str, if_true: Node, if_false: Node) -> Node:
+def alt(
+    pred: Optional[str] = None,
+    if_true: Optional[Node] = None,
+    if_false: Optional[Node] = None,
+    *,
+    select: Optional[str] = None,
+) -> Node:
     """Choose a branch by a registered pure predicate (Branching).
 
     ``pred(input)`` truthy -> ``if_true``, else ``if_false``. For a model-judged
-    route, put a ``think`` before a ``route`` over its (pure) verdict so the
+    branch, put a ``think`` before an ``alt`` over its (pure) verdict so the
     workflow stays deterministic.
     """
+    pred = pred or select
+    if pred is None:
+        raise ValueError("alt needs a predicate")
+    if if_true is None or if_false is None:
+        raise ValueError("alt stays binary in Phase A1: pass if_true and if_false")
     return Node(op=Op.ALT, id=_nid("alt"), pure=pred, left=if_true, right=if_false)
 
 
-def critique(bound: int, body: Node, *, until: Optional[str] = None) -> Node:
-    """Iterate ``body`` up to ``bound`` times (Feedback).
+def iter_up_to(max: int, body: Node, *, until: Optional[str] = None) -> Node:
+    """Iterate ``body`` up to ``max`` times (Feedback).
 
     ``until`` names a registered convergence predicate; when it returns truthy
-    the loop stops early. Omit it to always run ``bound`` rounds.
+    the loop stops early. Omit it to always run ``max`` rounds.
     """
-    return Node(op=Op.ITER_UP_TO, id=_nid("iter"), bound=bound, body=body, pure=until)
+    return Node(op=Op.ITER_UP_TO, id=_nid("iter"), bound=max, body=body, pure=until)
 
 
 def stage(planner: str) -> Node:
@@ -156,16 +192,31 @@ def stage(planner: str) -> Node:
     return Node(op=Op.EVAL_PLAN, id=_nid("stage"), controller=planner)
 
 
-def escalate(controller: str) -> Node:
+def app(
+    controller: str,
+    *,
+    tools: Optional[Any] = None,
+    subflows: Optional[Any] = None,
+    budget: Optional[Any] = None,
+    max_rounds: Optional[int] = None,
+) -> Node:
     """Open-ended controller loop (Agent — the top of the lattice; use sparingly)."""
-    return Node(op=Op.APP, id=_nid("app"), controller=controller)
+    return Node(
+        op=Op.APP,
+        id=_nid("app"),
+        controller=controller,
+        tools=tools,
+        subflows=subflows,
+        budget=budget,
+        max_rounds=max_rounds,
+    )
 
 
 # --------------------------------------------------------------------------- #
 # Contract helper for Sub.
 # --------------------------------------------------------------------------- #
 class Contract:
-    """Construct :class:`SubContract` values for ``subagent``."""
+    """Construct :class:`SubContract` values for ``sub``."""
 
     @staticmethod
     def of(shape: Shape, summary_policy: Optional[SummaryPolicy] = None) -> SubContract:

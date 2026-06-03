@@ -5,7 +5,7 @@ from __future__ import annotations
 from composable_agents.projection import (
     EventType, InMemoryProjection, ProjectionEmitter, ValueStore,
 )
-from composable_agents.execution.otel import spans_to_dicts, HAVE_OTEL
+from composable_agents.execution.otel import spans_to_dicts
 
 
 def test_value_store_dedups_identical_values():
@@ -18,15 +18,18 @@ def test_value_store_dedups_identical_values():
 
 
 def test_emitter_ids_are_deterministic_logical_clock():
-    s1 = InMemoryProjection(); e1 = ProjectionEmitter(s1)
-    s2 = InMemoryProjection(); e2 = ProjectionEmitter(s2)
+    s1 = InMemoryProjection()
+    e1 = ProjectionEmitter(s1)
+    s2 = InMemoryProjection()
+    e2 = ProjectionEmitter(s2)
     ids1 = [e1.plan("n", "c0"), e1.did("n", "c0", value=1)]
     ids2 = [e2.plan("n", "c0"), e2.did("n", "c0", value=1)]
     assert ids1 == ids2  # no wall clock; replay-stable
 
 
 def test_planned_then_did_resolves_status_and_clears_pending():
-    store = InMemoryProjection(); em = ProjectionEmitter(store)
+    store = InMemoryProjection()
+    em = ProjectionEmitter(store)
     em.plan("root", "c0", shape="Pipeline")
     assert store.pending() == ["c0"]
     em.did("root", "c0", value=7, cost=1.0, shape="Pipeline")
@@ -35,7 +38,8 @@ def test_planned_then_did_resolves_status_and_clears_pending():
 
 
 def test_failure_recorded():
-    store = InMemoryProjection(); em = ProjectionEmitter(store)
+    store = InMemoryProjection()
+    em = ProjectionEmitter(store)
     em.plan("leaf", "c1", shape="Pipeline")
     em.fail("leaf", "c1", "boom")
     fails = store.failures()
@@ -43,7 +47,8 @@ def test_failure_recorded():
 
 
 def test_cost_rolls_up_by_shape():
-    store = InMemoryProjection(); em = ProjectionEmitter(store)
+    store = InMemoryProjection()
+    em = ProjectionEmitter(store)
     em.did("a", "c0", value=1, cost=2.0, shape="Pipeline")
     em.did("b", "c1", value=1, cost=3.0, shape="Pipeline")
     em.did("c", "c2", value=1, cost=5.0, shape="Dataflow")
@@ -52,16 +57,18 @@ def test_cost_rolls_up_by_shape():
 
 
 def test_latest_value_threads_through_value_store():
-    store = InMemoryProjection(); em = ProjectionEmitter(store)
+    store = InMemoryProjection()
+    em = ProjectionEmitter(store)
     em.did("node", "c0", value={"v": 99})
     assert store.latest_value("node") == {"v": 99}
 
 
 def test_spans_carry_status_and_causality():
-    store = InMemoryProjection(); em = ProjectionEmitter(store)
+    store = InMemoryProjection()
+    em = ProjectionEmitter(store)
     # Thread the produced event id as the cause of the next activation, the way
     # the interpreter does, so parents resolve back to the producing cid.
-    e0 = em.plan("root", "c0", shape="Pipeline")
+    em.plan("root", "c0", shape="Pipeline")
     d0 = em.did("root", "c0", value=1, cost=0.0, shape="Pipeline")
     em.plan("leaf", "c1", causes=(d0,), shape="Pipeline")
     em.fail("leaf", "c1", "kaboom", causes=(d0,))
@@ -73,7 +80,8 @@ def test_spans_carry_status_and_causality():
 
 
 def test_unfinished_activation_renders_as_open_span():
-    store = InMemoryProjection(); em = ProjectionEmitter(store)
+    store = InMemoryProjection()
+    em = ProjectionEmitter(store)
     em.plan("waiting", "c0", shape="Pipeline")  # never completed
     (span,) = [s for s in spans_to_dicts(store.events()) if s["cid"] == "c0"]
     assert span["status"] == "unfinished" and span["endTs"] is None

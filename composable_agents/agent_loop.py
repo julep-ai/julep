@@ -34,7 +34,7 @@ from typing import Any, Optional
 
 from .capabilities import Budget, CapabilityManifest
 from .contracts import ToolManifest
-from .dsl import Contract, call, ident, pipeline, subagent
+from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
 from .ir import Node
 from .kinds import Shape
@@ -270,8 +270,8 @@ def generalize_trace_to_plan(trace: list[TraceEntry]) -> Node:
     """Turn a successful action trace into a candidate Plan (straight-line IR).
 
     Calls become :func:`~composable_agents.dsl.call` leaves and sub-flow
-    invocations become :func:`~composable_agents.dsl.subagent` leaves, chained in
-    observed order with :func:`~composable_agents.dsl.pipeline`. Terminal
+    invocations become :func:`~composable_agents.dsl.sub` leaves, chained in
+    observed order with :func:`~composable_agents.dsl.seq`. Terminal
     decisions (finish/escalate) carry no tool and are skipped. The result is a
     *candidate* only — it must clear :func:`extract_plan` before promotion.
 
@@ -285,12 +285,12 @@ def generalize_trace_to_plan(trace: list[TraceEntry]) -> Node:
             leaves.append(call(t.ref))
         elif t.decision == Decision.SUB.value and t.ref:
             shape = Shape(t.shape) if t.shape else Shape.PIPELINE
-            leaves.append(subagent(t.ref, Contract.of(shape)))
+            leaves.append(sub(t.ref, Contract.of(shape)))
     if not leaves:
         return ident()
     if len(leaves) == 1:
         return leaves[0]
-    return pipeline(*leaves)
+    return seq(*leaves)
 
 
 def extract_plan(

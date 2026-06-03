@@ -1,7 +1,7 @@
 """Composable Serverless Agents — a typed, durable agent framework.
 
-A flow is written with the combinator DSL (:func:`pipeline`, :func:`parallel`,
-:func:`route`, :func:`critique`, :func:`stage`, :func:`escalate`, plus the
+A flow is written with the combinator DSL (:func:`seq`, :func:`par`,
+:func:`alt`, :func:`iter_up_to`, :func:`stage`, :func:`app`, plus the
 derived :func:`race`/:func:`hedge`/:func:`quorum`/:func:`map_reduce`/…). Its
 *shape* — where it sits on the Pipeline < Dataflow < Branching < Feedback <
 Staged < Agent lattice — is inferred, not declared, and bounds what static
@@ -30,8 +30,8 @@ from .ir import (
 
 # --- authoring DSL --------------------------------------------------------- #
 from .dsl import (
-    call, mcp_call, think, brain_from_ctx, ident, arr, subagent,
-    pipeline, parallel, fanout, route, critique, stage, escalate, Contract,
+    call, native, mcp, think, brain_from_ctx, ident, arr, sub,
+    seq, par, fanout, alt, iter_up_to, stage, app, Contract,
 )
 from .derived import (
     race, hedge, quorum, map_n, map_reduce, vote, review, human_gate,
@@ -100,8 +100,8 @@ _BASE_EXPORTS = [
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
     "NativeTool", "McpTool", "HUMAN_GATE_TOOL",
     # dsl
-    "call", "mcp_call", "think", "brain_from_ctx", "ident", "arr", "subagent",
-    "pipeline", "parallel", "fanout", "route", "critique", "stage", "escalate",
+    "call", "native", "mcp", "think", "brain_from_ctx", "ident", "arr", "sub",
+    "seq", "par", "fanout", "alt", "iter_up_to", "stage", "app",
     "Contract",
     # derived
     "race", "hedge", "quorum", "map_n", "map_reduce", "vote", "review",

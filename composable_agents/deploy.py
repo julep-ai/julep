@@ -9,7 +9,7 @@ hash-addressed artifact, running every static gate in order:
    the only way a non-read tool becomes legal inside a race.
 2. **Validate** (well-formedness): per-op structure, schema edges, and the
    whole-session degrade warning for ``par``.
-3. **Capability enforcement** (§9): the flow may only use granted tools, models,
+3. **Capability enforcement** (§9): the flow may only use granted tools, brains,
    memory scopes and servers; ungranted use is blocking.
 4. **Race admission** (§5): every branch of a ``race``/``hedge``/``quorum`` must
    be read-only or contract-asserted idempotent, so a duplicated branch can do
@@ -179,7 +179,7 @@ def deploy(
 
     ``capabilities`` (a §9 manifest) both supplies contract-assertion overrides
     (so asserted-idempotent tools may appear in races) and constrains which
-    tools/models/servers the flow may use. ``extra_overrides`` merges additional
+    tools/brains/servers the flow may use. ``extra_overrides`` merges additional
     assertions on top. ``freeze_timing`` selects the §6 seam; pass
     ``snapshot_source`` for the per-run case so :meth:`Deployment.refresh` can
     re-freeze without an explicit snapshot.
@@ -196,7 +196,7 @@ def deploy(
     diagnostics: list[Diagnostic] = []
     # 2. Well-formedness + schema edges.
     diagnostics.extend(validate(fr.flow, fr.manifest))
-    # 3. Capability enforcement (§9): granted tools/models/servers only.
+    # 3. Capability enforcement (§9): granted tools/brains/servers only.
     if capabilities is not None:
         diagnostics.extend(capabilities.enforce_compile(fr.flow))
     # 4. Race admission (§5): every race branch read-only or asserted-idempotent.

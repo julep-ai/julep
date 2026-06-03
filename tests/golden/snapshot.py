@@ -49,6 +49,8 @@ def _tool_grant_json(grant: ToolGrant) -> dict[str, Any]:
         out["effect"] = grant.effect.value
     if grant.idempotency is not None:
         out["idempotency"] = grant.idempotency.value
+    if grant.approval is not None:
+        out["approval"] = grant.approval
     if grant.max_calls is not None:
         out["maxCalls"] = grant.max_calls
     return out
@@ -69,8 +71,10 @@ def _capability_json(capabilities: CapabilityManifest | None) -> dict[str, Any] 
             for server in sorted(capabilities.mcp_servers)
         },
     }
-    if capabilities._has_models:
-        out["models"] = sorted(capabilities.models)
+    if capabilities._has_brains:
+        out["brains"] = sorted(capabilities.brains)
+    if capabilities._has_subflows:
+        out["subflows"] = sorted(capabilities.subflows)
     if capabilities._has_memory:
         out["memory"] = sorted(scope.value for scope in capabilities.memory)
     if capabilities.budget is not None:

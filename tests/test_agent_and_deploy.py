@@ -9,7 +9,7 @@ from composable_agents import (
     generalize_trace_to_plan, extract_plan, promote_plan,
     CapabilityManifest, Budget,
     deploy, snapshot_from_listings,
-    mcp_call, pipeline, subagent, Contract, Shape, Effect, Idempotency,
+    call, mcp, seq,
 )
 from composable_agents.agent_loop import (
     TraceEntry, action_cost, would_exceed_budget, should_continue_as_new,
@@ -138,7 +138,7 @@ def test_deploy_happy_path_returns_runnable_artifact():
         "a": {"inputSchema": {}, "annotations": {"readOnlyHint": True, "idempotentHint": True}},
         "b": {"inputSchema": {}, "annotations": {"readOnlyHint": True, "idempotentHint": True}},
     }})
-    d = deploy(pipeline(mcp_call("srv", "a"), mcp_call("srv", "b")), snap)
+    d = deploy(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), snap)
     assert len(d.manifest) == 2
     assert "op" in d.flow_json and isinstance(d.manifest_json, dict)
     assert not d.warnings
@@ -147,7 +147,7 @@ def test_deploy_happy_path_returns_runnable_artifact():
 def test_deploy_blocks_write_in_race():
     d_snap = mixed_snapshot()
     with pytest.raises(ValidationError):
-        deploy(race(mcp_call("srv", "read"), mcp_call("srv", "writer")), d_snap)
+        deploy(race(call(mcp("srv", "read")), call(mcp("srv", "writer"))), d_snap)
 
 
 def test_deploy_blocks_ungranted_tool():
@@ -157,7 +157,7 @@ def test_deploy_blocks_ungranted_tool():
         "mcp_servers": {"srv": None},
     })
     with pytest.raises(ValidationError):
-        deploy(pipeline(mcp_call("srv", "a"), mcp_call("srv", "b")), snap, capabilities=caps)
+        deploy(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), snap, capabilities=caps)
 
 
 def test_deploy_override_admits_asserted_tool_into_race():
@@ -166,12 +166,12 @@ def test_deploy_override_admits_asserted_tool_into_race():
         {"name": "srv/read", "effect": "read", "idempotency": "native"},
         {"name": "srv/writer", "effect": "read", "idempotency": "required"},
     ], "mcp_servers": {"srv": None}})
-    d = deploy(race(mcp_call("srv", "read"), mcp_call("srv", "writer")), snap, capabilities=caps)
+    d = deploy(race(call(mcp("srv", "read")), call(mcp("srv", "writer"))), snap, capabilities=caps)
     assert len(d.manifest) == 2
 
 
 def test_deploy_non_strict_returns_diagnostics():
-    d = deploy(race(mcp_call("srv", "read"), mcp_call("srv", "writer")), mixed_snapshot(), strict=False)
+    d = deploy(race(call(mcp("srv", "read")), call(mcp("srv", "writer"))), mixed_snapshot(), strict=False)
     assert any(x.severity == "error" for x in d.diagnostics)
 
 
@@ -183,7 +183,7 @@ def test_deploy_per_run_refresh_seam():
         calls["n"] += 1
         return snap
 
-    d = deploy(mcp_call("srv", "a"), snap, freeze_timing="per_run", snapshot_source=source)
+    d = deploy(call(mcp("srv", "a")), snap, freeze_timing="per_run", snapshot_source=source)
     assert d.freeze_timing == "per_run"
     d2 = d.refresh()
     assert calls["n"] == 1 and len(d2.manifest) == 1

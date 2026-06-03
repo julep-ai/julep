@@ -25,3 +25,6 @@ dist/
 # Editor / OS
 .DS_Store
 *.swp
+
+# uv lockfile (project toolchain is pip/setuptools; lock is a local artifact)
+uv.lock

@@ -15,7 +15,7 @@ versions), and the overall budget. It does two jobs:
    *run* (network egress + model allow-list, checked inside the activity).
 
 Allow-list semantics are explicit: an **absent** section means "unconstrained";
-a **present** section is a deny-by-default allow-list. So omitting ``models``
+a **present** section is a deny-by-default allow-list. So omitting ``brains``
 permits any brain, but listing two brains forbids a third.
 """
 
@@ -54,6 +54,7 @@ class ToolGrant:
     name: str  # toolref key: native name, or "server/tool" for MCP
     effect: Optional[Effect] = None
     idempotency: Optional[Idempotency] = None
+    approval: Optional[bool] = None
     max_calls: Optional[int] = None
 
     @property
@@ -70,43 +71,57 @@ class ToolGrant:
 @dataclass
 class CapabilityManifest:
     tools: dict[str, ToolGrant] = field(default_factory=dict)
-    models: set[str] = field(default_factory=set)      # empty => unconstrained
+    brains: set[str] = field(default_factory=set)      # empty => unconstrained
+    subflows: set[str] = field(default_factory=set)    # empty => unconstrained
     memory: set[ContextScope] = field(default_factory=set)  # empty => unconstrained
     network: set[str] = field(default_factory=set)     # allowed egress domains
     mcp_servers: dict[str, Optional[str]] = field(default_factory=dict)  # server -> version pin
     budget: Optional[Budget] = None
     # Section presence flags, so "absent" (unconstrained) is distinguishable from
     # "present but empty" (deny-all).
-    _has_models: bool = False
+    _has_brains: bool = False
+    _has_subflows: bool = False
     _has_memory: bool = False
     _has_servers: bool = False
 
     # ----- construction ----------------------------------------------------- #
     @staticmethod
     def from_dict(d: dict[str, Any]) -> "CapabilityManifest":
+        def approval_value(raw: Any) -> bool:
+            if isinstance(raw, str):
+                return raw.lower() in {"1", "true", "yes", "required"}
+            return bool(raw)
+
         tools: dict[str, ToolGrant] = {}
         for t in d.get("tools", []) or []:
             name = t["name"]
+            max_calls = t["maxCalls"] if "maxCalls" in t else t.get("max_calls")
             tools[name] = ToolGrant(
                 name=name,
                 effect=Effect(t["effect"]) if t.get("effect") else None,
                 idempotency=Idempotency(t["idempotency"]) if t.get("idempotency") else None,
-                max_calls=t.get("maxCalls") or t.get("max_calls"),
+                approval=approval_value(t["approval"]) if "approval" in t else None,
+                max_calls=int(max_calls) if max_calls is not None else None,
             )
 
-        has_models = "models" in d
+        has_brains = "brains" in d or "models" in d
+        has_subflows = "subflows" in d or "subFlows" in d
         has_memory = "memory" in d
         has_servers = "mcp_servers" in d or "mcpServers" in d
+        brains_raw = d.get("brains", d.get("models", [])) or []
+        subflows_raw = d.get("subflows", d.get("subFlows", [])) or []
         servers_raw = d.get("mcp_servers", d.get("mcpServers", {})) or {}
 
         return CapabilityManifest(
             tools=tools,
-            models=set(d.get("models", []) or []),
+            brains=set(brains_raw),
+            subflows=set(subflows_raw),
             memory={ContextScope(s) for s in (d.get("memory", []) or [])},
             network=set(d.get("network", []) or []),
             mcp_servers={k: v for k, v in servers_raw.items()},
             budget=Budget.from_dict(d.get("budget")),
-            _has_models=has_models,
+            _has_brains=has_brains,
+            _has_subflows=has_subflows,
             _has_memory=has_memory,
             _has_servers=has_servers,
         )
@@ -144,7 +159,7 @@ class CapabilityManifest:
     def enforce_compile(self, flow: Node) -> list[Diagnostic]:
         """Diagnostics for anything the flow references but the manifest denies.
 
-        Checks tool grants always; checks brains against ``models``, memory
+        Checks tool grants always; checks brains against ``brains``, memory
         scopes against ``memory``, and MCP servers against ``mcp_servers`` only
         when those sections are present (allow-list semantics).
         """
@@ -166,7 +181,7 @@ class CapabilityManifest:
                     out.append(Diagnostic("CAP_MEMORY_DENIED", n.id,
                                           f"context scope {ctx.scope.value!r} is not granted"))
             elif isinstance(step, ThinkStep):
-                if self._has_models and step.brain not in self.models:
+                if self._has_brains and step.brain not in self.brains:
                     out.append(Diagnostic("CAP_MODEL_DENIED", n.id,
                                           f"brain {step.brain!r} is not granted by the manifest"))
                 ctx = step.ctx

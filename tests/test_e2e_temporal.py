@@ -23,7 +23,7 @@ if HAVE_TEMPORAL:
     from temporalio.testing import WorkflowEnvironment
 
     from composable_agents import (
-        mcp_call, pipeline, think, freeze, manifest_to_json,
+        call, mcp, seq, think, freeze, manifest_to_json,
         register_brain, Brain,
     )
     from composable_agents.derived import race, human_gate
@@ -76,13 +76,13 @@ async def _llm(brain, value):
 
 
 def _child_registry():
-    fr = freeze(mcp_call("srv", "inc"), _snapshot())
+    fr = freeze(call(mcp("srv", "inc")), _snapshot())
     return {"child": {"flowJson": fr.flow.to_json(), "manifestJson": manifest_to_json(fr.manifest)}}
 
 
 def _worker(env, *, task_queue, agents=None):
-    register_brain(Brain(name="adder", model="test", system_prompt="add 10"))
-    register_brain(Brain(name="ctrl", model="test", system_prompt="decide"))
+    register_brain(Brain(name="adder", model="test", system="add 10"))
+    register_brain(Brain(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(mcp_call=_mcp, llm=_llm, subflows=_child_registry(), agents=agents or {})
     return build_worker(env.client, ctx, task_queue=task_queue)
 
@@ -91,7 +91,7 @@ def _worker(env, *, task_queue, agents=None):
 # Scenarios (each returns nothing; raises on failure).
 # --------------------------------------------------------------------------- #
 async def _pipeline_and_brain(env):
-    fr = freeze(pipeline(mcp_call("srv", "double"), think("adder")), _snapshot())
+    fr = freeze(seq(call(mcp("srv", "double")), think("adder")), _snapshot())
     async with _worker(env, task_queue="ca-pipe"):
         out = await run_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
                              session_id=f"pipe-{uuid.uuid4()}", input=5, task_queue="ca-pipe")
@@ -99,7 +99,7 @@ async def _pipeline_and_brain(env):
 
 
 async def _race(env):
-    fr = freeze(race(mcp_call("srv", "inc"), mcp_call("srv", "slow")), _snapshot())
+    fr = freeze(race(call(mcp("srv", "inc")), call(mcp("srv", "slow"))), _snapshot())
     async with _worker(env, task_queue="ca-race"):
         out = await run_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
                              session_id=f"race-{uuid.uuid4()}", input=7, task_queue="ca-race")
@@ -107,7 +107,7 @@ async def _race(env):
 
 
 async def _human_gate(env):
-    fr = freeze(pipeline(human_gate(timeout_s=None), mcp_call("srv", "echo")), _snapshot())
+    fr = freeze(seq(human_gate(timeout_s=None), call(mcp("srv", "echo"))), _snapshot())
     async with _worker(env, task_queue="ca-gate"):
         sid = f"gate-{uuid.uuid4()}"
         handle = await start_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),

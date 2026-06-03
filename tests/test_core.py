@@ -5,15 +5,15 @@ from __future__ import annotations
 import pytest
 
 from composable_agents import (
-    Shape, Effect, Idempotency, SummaryPolicy, Contract,
-    call, mcp_call, think, pipeline, parallel, route, critique, stage, escalate,
-    subagent, race, hedge, quorum, map_reduce, human_gate, HUMAN_GATE_TOOL,
-    freeze, validate, blocking, deploy, snapshot_from_listings,
+    Shape, Effect, Idempotency, Contract,
+    Ann,
+    call, mcp, seq, par, alt, iter_up_to, stage, app,
+    sub, race, hedge, quorum, human_gate, HUMAN_GATE_TOOL,
+    freeze, validate, blocking,
     CapabilityManifest, ToolContract, manifest_to_json, manifest_from_json,
-    estimate_cost, validate_plan, admit_plan, check_race_admission,
-    register_pure,
+    estimate_cost, admit_plan, check_race_admission,
 )
-from composable_agents.errors import FreezeError, ValidationError, PlanRejected
+from composable_agents.errors import FreezeError, PlanRejected
 from composable_agents.shapes import surface_shape, closed_shape
 from conftest import read_snapshot, mixed_snapshot
 
@@ -23,22 +23,25 @@ from conftest import read_snapshot, mixed_snapshot
 # --------------------------------------------------------------------------- #
 def test_surface_shape_climbs_the_lattice():
     assert surface_shape(call("a")) == Shape.PIPELINE
-    assert surface_shape(pipeline(call("a"), call("b"))) == Shape.PIPELINE
-    assert surface_shape(parallel(call("a"), call("b"))) == Shape.DATAFLOW
-    assert surface_shape(route("p", call("a"), call("b"))) == Shape.BRANCHING
-    assert surface_shape(critique(3, call("a"))) == Shape.FEEDBACK
+    assert surface_shape(seq(call("a"), call("b"))) == Shape.PIPELINE
+    assert surface_shape(par(call("a"), call("b"))) == Shape.DATAFLOW
+    assert surface_shape(alt("p", call("a"), call("b"))) == Shape.BRANCHING
+    assert surface_shape(iter_up_to(3, call("a"))) == Shape.FEEDBACK
     assert surface_shape(stage("planner")) == Shape.STAGED
-    assert surface_shape(escalate("ctrl")) == Shape.AGENT
+    agent = app("ctrl", tools=["a"], subflows=["child"], budget={"usd": 1}, max_rounds=2)
+    assert surface_shape(agent) == Shape.AGENT
+    agent_json = agent.to_json()
+    assert not {"tools", "subflows", "budget", "max_rounds"} & set(agent_json)
 
 
 def test_join_takes_the_max_shape():
     # A pipeline containing a branching is at least Branching.
-    f = pipeline(call("a"), route("p", call("b"), call("c")))
+    f = seq(call("a"), alt("p", call("b"), call("c")))
     assert surface_shape(f) == Shape.BRANCHING
 
 
 def test_sub_is_opaque_at_surface_but_revealed_when_closed():
-    f = subagent("child", Contract.staged())
+    f = sub("child", Contract.staged())
     # Surface treats a Sub as an opaque Pipeline...
     assert surface_shape(f) == Shape.PIPELINE
     # ...while the closed shape reveals the contracted shape.
@@ -49,7 +52,7 @@ def test_sub_is_opaque_at_surface_but_revealed_when_closed():
 # Contracts + manifest round-trip.
 # --------------------------------------------------------------------------- #
 def test_manifest_json_round_trip():
-    fr = freeze(pipeline(mcp_call("srv", "a"), mcp_call("srv", "b")), read_snapshot("a", "b"))
+    fr = freeze(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"))
     j = manifest_to_json(fr.manifest)
     back = manifest_from_json(j)
     assert set(back.keys()) == set(fr.manifest.keys())
@@ -62,7 +65,7 @@ def test_manifest_json_round_trip():
 # Freeze: hashing, determinism, reserved gate, cycle rejection.
 # --------------------------------------------------------------------------- #
 def test_freeze_is_deterministic_and_binds_hashes():
-    flow = pipeline(mcp_call("srv", "a"), mcp_call("srv", "b"))
+    flow = seq(call(mcp("srv", "a")), call(mcp("srv", "b")))
     f1 = freeze(flow, read_snapshot("a", "b"))
     f2 = freeze(flow, read_snapshot("a", "b"))
     assert f1.flow.to_json() == f2.flow.to_json()  # normalized + stable
@@ -73,15 +76,19 @@ def test_freeze_is_deterministic_and_binds_hashes():
 
 
 def test_freeze_version_changes_hash():
-    a = freeze(mcp_call("srv", "a"), read_snapshot("a", version="1"))
-    b = freeze(mcp_call("srv", "a"), read_snapshot("a", version="2"))
+    a = freeze(call(mcp("srv", "a")), read_snapshot("a", version="1"))
+    b = freeze(call(mcp("srv", "a")), read_snapshot("a", version="2"))
     (ha,) = list(a.manifest.keys())
     (hb,) = list(b.manifest.keys())
     assert ha != hb  # version is bound into the content hash
 
 
 def test_human_gate_freezes_to_reserved_external_tool():
-    fr = freeze(human_gate(), read_snapshot())
+    gate = human_gate(prompt="approve?", timeout_s=60)
+    assert gate.prompt == "approve?"
+    assert gate.to_json()["ann"] == {"timeout": 60}
+    assert "prompt" not in gate.to_json()
+    fr = freeze(gate, read_snapshot())
     (tool,) = list(fr.manifest.values())
     assert tool.ref.to_json()["name"] == HUMAN_GATE_TOOL
     assert tool.contract.effect == Effect.EXTERNAL
@@ -89,21 +96,21 @@ def test_human_gate_freezes_to_reserved_external_tool():
 
 def test_freeze_rejects_unresolved_tool():
     with pytest.raises(FreezeError):
-        freeze(mcp_call("srv", "missing"), read_snapshot("a"))
+        freeze(call(mcp("srv", "missing")), read_snapshot("a"))
 
 
 # --------------------------------------------------------------------------- #
 # Validate.
 # --------------------------------------------------------------------------- #
 def test_validate_clean_flow_has_no_blocking():
-    fr = freeze(pipeline(mcp_call("srv", "a"), mcp_call("srv", "b")), read_snapshot("a", "b"))
+    fr = freeze(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"))
     assert not blocking(validate(fr.flow, fr.manifest))
 
 
 def test_parallel_validates_without_blocking():
     # A plain parallel is well-formed; the whole-session degrade warning only
     # fires for a WHOLE_SESSION context branch, which this flow does not have.
-    fr = freeze(parallel(mcp_call("srv", "a"), mcp_call("srv", "b")), read_snapshot("a", "b"))
+    fr = freeze(par(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"))
     assert not blocking(validate(fr.flow, fr.manifest))
 
 
@@ -118,9 +125,9 @@ def test_race_lowers_to_par_with_merge_on_every_node():
 
 
 def test_quorum_sets_m_and_hedge_sets_timing():
-    q = quorum(call("a"), call("b"), call("c"), m=2)
+    q = quorum(call("a"), call("b"), call("c"), k=2)
     assert any(n.merge and n.merge.kind == "quorum" and n.merge.quorum_m == 2 for n in q.walk())
-    h = hedge(call("a"), call("b"), after_ms=50)
+    h = hedge(call("a"), call("b"), hedge_ms=50)
     assert any(n.merge and n.merge.kind == "hedge" and n.merge.hedge_ms == 50 for n in h.walk())
 
 
@@ -128,7 +135,7 @@ def test_quorum_sets_m_and_hedge_sets_timing():
 # §5 race admission.
 # --------------------------------------------------------------------------- #
 def test_race_admission_blocks_write_branch():
-    fr = freeze(race(mcp_call("srv", "read"), mcp_call("srv", "writer")), mixed_snapshot())
+    fr = freeze(race(call(mcp("srv", "read")), call(mcp("srv", "writer"))), mixed_snapshot())
     diags = check_race_admission(fr.flow, fr.manifest)
     assert blocking(diags)
 
@@ -142,7 +149,7 @@ def test_race_admission_allows_asserted_idempotent_branches():
         "srv/a": ToolContract(Effect.READ, Idempotency.REQUIRED),
         "srv/b": ToolContract(Effect.READ, Idempotency.REQUIRED),
     })
-    fr = freeze(race(mcp_call("srv", "a"), mcp_call("srv", "b")), read_snapshot("a", "b"), ov)
+    fr = freeze(race(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"), ov)
     assert not blocking(check_race_admission(fr.flow, fr.manifest))
 
 
@@ -151,11 +158,12 @@ def test_race_admission_allows_asserted_idempotent_branches():
 # --------------------------------------------------------------------------- #
 def test_estimate_cost_folds_structure():
     # seq sums; alt takes max; iter multiplies by bound.
-    seq = pipeline(call("a"), call("b"))
-    assert estimate_cost(seq) == estimate_cost(call("a")) + estimate_cost(call("b"))
-    alt = route("p", call("a"), pipeline(call("b"), call("c")))
-    assert estimate_cost(alt) == max(estimate_cost(call("a")),
-                                     estimate_cost(pipeline(call("b"), call("c"))))
+    assert Ann(cost_usd=0.5, timeout_s=2).to_json() == {"cost": 0.5, "timeout": 2}
+    seq_flow = seq(call("a"), call("b"))
+    assert estimate_cost(seq_flow) == estimate_cost(call("a")) + estimate_cost(call("b"))
+    alt_flow = alt("p", call("a"), seq(call("b"), call("c")))
+    assert estimate_cost(alt_flow) == max(estimate_cost(call("a")),
+                                          estimate_cost(seq(call("b"), call("c"))))
 
 
 def test_admit_plan_rejects_staged_plan_shape():
@@ -170,7 +178,7 @@ def test_admit_plan_rejects_ungranted_tool():
         {"tools": [{"name": "a", "effect": "read", "idempotency": "native"}], "budget": {"usd": 1000}}
     )
     with pytest.raises(PlanRejected):
-        admit_plan(pipeline(call("a"), call("b")), parent)
+        admit_plan(seq(call("a"), call("b")), parent)
 
 
 # --------------------------------------------------------------------------- #
@@ -178,11 +186,21 @@ def test_admit_plan_rejects_ungranted_tool():
 # --------------------------------------------------------------------------- #
 def test_capability_overrides_assert_contract():
     caps = CapabilityManifest.from_dict({"tools": [
-        {"name": "srv/writer", "effect": "read", "idempotency": "required"},
-    ]})
+        {
+            "name": "srv/writer",
+            "effect": "read",
+            "idempotency": "required",
+            "approval": True,
+            "maxCalls": 1,
+        },
+    ], "brains": ["summarizer"], "subflows": ["child"]})
     ov = caps.overrides()
     c = ov.get("srv/writer")
     assert c is not None and c.effect == Effect.READ and c.idempotency == Idempotency.REQUIRED
+    assert caps.tools["srv/writer"].approval is True
+    assert caps.tools["srv/writer"].max_calls == 1
+    assert caps.brains == {"summarizer"} and caps._has_brains
+    assert caps.subflows == {"child"} and caps._has_subflows
 
 
 def test_capability_enforce_blocks_ungranted_model_or_tool():
@@ -190,6 +208,6 @@ def test_capability_enforce_blocks_ungranted_model_or_tool():
         "tools": [{"name": "srv/a", "effect": "read", "idempotency": "native"}],
         "mcp_servers": {"srv": None},
     })
-    fr = freeze(pipeline(mcp_call("srv", "a"), mcp_call("srv", "b")), read_snapshot("a", "b"))
+    fr = freeze(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"))
     diags = caps.enforce_compile(fr.flow)
     assert blocking(diags)

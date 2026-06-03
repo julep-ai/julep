@@ -6,11 +6,11 @@ schema. This module reads that layout into a :class:`Brain` (registered by name,
 the same way pure functions are registered) and lowers it to IR. The lowering is
 where the round bound becomes *shape*, faithfully to the blueprint:
 
-* a **bounded** ``max_rounds`` (>= 1) -> ``critique`` (Feedback): the model gets
+* a **bounded** ``max_rounds`` (>= 1) -> ``iter_up_to`` (Feedback): the model gets
   that many passes and no more;
-* an **open-ended** brain (``agent: true``, no finite bound) -> ``escalate``
+* an **open-ended** brain (``agent: true``, no finite bound) -> ``app``
   (Agent): the costly, continuation-owning shape, used deliberately;
-* a dotctx marked as a child (``sub:``) -> ``subagent`` (a Temporal child
+* a dotctx marked as a child (``sub:``) -> ``sub`` (a Temporal child
   workflow behind the Joined firewall, the ``to_dbos_agent`` mapping);
 * otherwise a single ``think`` leaf (Pipeline).
 
@@ -25,7 +25,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from .dsl import critique, escalate, subagent, think
+from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
 from .kinds import ContextScope, Shape, SummaryPolicy
 
@@ -36,12 +36,12 @@ class Brain:
 
     name: str
     model: str
-    system_prompt: str = ""
+    system: str = ""
     reply_schema: Optional[dict[str, Any]] = None
     tools: tuple[str, ...] = ()           # toolref keys this brain may call
     temperature: Optional[float] = None
     max_rounds: Optional[int] = None      # >=1 bounded; None/0 open-ended
-    is_agent: bool = False                # explicit open-ended escalate
+    is_agent: bool = False                # explicit open-ended app
     sub_contract: Optional[SubContract] = None  # marks a child workflow
     context_scope: ContextScope = ContextScope.LOCAL
 
@@ -111,7 +111,7 @@ def brain_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
     brain = Brain(
         name=nm,
         model=settings.get("model", "claude-sonnet-4"),
-        system_prompt=system,
+        system=system,
         reply_schema=reply_schema,
         tools=tuple(settings.get("tools", []) or []),
         temperature=settings.get("temperature"),
@@ -162,16 +162,16 @@ def brain_to_flow(brain: Brain, *, ctx: Optional[ContextPolicy] = None) -> Node:
     policy = ctx or ContextPolicy(scope=brain.context_scope)
 
     if brain.sub_contract is not None:
-        return subagent(brain.name, brain.sub_contract,
-                        summary_policy=brain.sub_contract.summary_policy)
+        return sub(brain.name, brain.sub_contract,
+                   summary_policy=brain.sub_contract.summary_policy)
 
     if brain.is_agent or (brain.max_rounds is not None and brain.max_rounds <= 0):
         # Open-ended controller loop. The brain name is the controller ref.
-        return escalate(brain.name)
+        return app(brain.name)
 
     if brain.max_rounds is not None and brain.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.
-        return critique(brain.max_rounds, think(brain.name, ctx=policy))
+        return iter_up_to(brain.max_rounds, think(brain.name, ctx=policy))
 
     # Default: a single model call -> Pipeline.
     return think(brain.name, ctx=policy)
