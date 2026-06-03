@@ -70,7 +70,9 @@ select = ["E", "F", "I", "UP", "B"]
 # I001 and the listed UP rules are noisy on the current package: they would
 # mostly reshuffle public re-export blocks or modernize annotations/imports
 # across runtime modules. Keep those for a later formatting-only pass.
-ignore = ["E501", "I001", "UP007", "UP015", "UP035", "UP037", "UP038"]
+# UP045 = Optional[X] -> X | None; ruff 0.15 split it out of UP007, so it must be
+# listed explicitly to defer annotation modernization with the rest.
+ignore = ["E501", "I001", "UP007", "UP015", "UP035", "UP037", "UP038", "UP045"]
 
 [tool.ruff.lint.per-file-ignores]
 # Public API re-exports are intentionally imported for package consumers.
