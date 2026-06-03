@@ -146,3 +146,32 @@ the IR or hashing must break these tests.
    correction via `codex exec resume`.
 4. Independent, non-file-overlapping batches may run as parallel Codex sessions;
    anything touching the same module stays sequential.
+
+## Addendum — locked decisions (from `elnino_capacity_swarm.py`, the DX north-star)
+
+The El Niño example is *specification-by-example* for the public API. Decisions:
+
+- **Full rename, drop old names.** The algebra-faithful surface is canonical:
+  `seq` (was pipeline), `par` (parallel), `alt` (route), `iter_up_to` (critique),
+  `sub` (subagent), `app` (escalate), `mcp`/`native` ref builders + `call(ref)`
+  (was mcp_call / call(name)). Old names are **removed**; README + all tests are
+  updated. Signature ergonomics: `race/hedge/quorum` accept a list + `k=`/`reduce=`/
+  `hedge_ms=`; `human_gate(prompt=, timeout_s=)`; `Ann(cost_usd=, timeout_s=)`;
+  `Brain(system=)`; `sub(ref)` with a default contract. Caps gain
+  `brains:`/`subflows:`/`approval:`/`maxCalls:`/version-pins.
+- **El Niño = acceptance test (deploy-clean + InMemoryEnv dry-run).** A corrected,
+  runnable version lands under `examples/elnino/` and is asserted in Phase 4.
+
+### Phase A — API surface (runs after Phase 0, before Phase 1)
+- **A1 Mechanical rename + signature ergonomics.** Renames + list/kwarg signatures +
+  caps section parsing (parse/store only; enforcement stays in B1b/B2b). `alt` stays
+  **binary** here. Suite + ruff stay green throughout.
+- **A2 IR generalization (TDD).** Generalize `ALT` to a **classifier+cases multiway
+  switch**: `alt(select=<pure→key>, cases={key: flow}, default=…)`, with binary
+  `alt(pred, a, b)` as 2-case sugar — **one** branching construct, IR stays minimal.
+  Extend the `APP` node to carry inline agent config (`tools`/`subflows`/`budget`/
+  `max_rounds`) as data; enforcement wires in B1c/B2b. Hash changes are fine
+  (golden corpus pinned in Phase 4).
+
+Phases 1–3 then proceed in the new API. Phase 4 adds the El Niño acceptance test
+alongside the golden corpus.
