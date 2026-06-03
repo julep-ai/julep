@@ -1,0 +1,385 @@
+"""The intermediate representation (blueprint §4).
+
+A flow is a finite tree of :class:`Node`. The tree is the *only* thing the
+harness, the analyzer, the validator and the projection ever agree on; the DSL
+in :mod:`composable_agents.dsl` is sugar that emits this, and TypeScript emits
+the same JSON. Recursion in the *evaluated* program only ever enters through
+``iter_up_to`` / ``eval_plan`` / ``app`` — the tree of nodes stays finite, which
+is what makes :func:`composable_agents.shapes.surface_shape` decidable.
+
+Serialization uses camelCase keys (``summaryPolicy``, ``inputSchema``) so the
+on-the-wire IR matches the blueprint's TS types verbatim. Canonical JSON (sorted
+keys, no whitespace) is what we content-hash for replay checks.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass, field
+from typing import Any, Optional, Union
+
+from .kinds import ContextScope, Effect, Op, Shape, SummaryPolicy
+
+JSONSchema = dict[str, Any]
+
+# Reserved native hand: the harness turns a call to this into a human signal-wait
+# rather than an HTTP request (see derived.human_gate / the interpreter).
+HUMAN_GATE_TOOL = "__human_gate__"
+
+
+# --------------------------------------------------------------------------- #
+# camelCase <-> snake_case helpers for the canonical JSON form.
+# --------------------------------------------------------------------------- #
+def _camel(name: str) -> str:
+    head, *tail = name.split("_")
+    return head + "".join(w.capitalize() for w in tail)
+
+
+def _snake(name: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
+
+# --------------------------------------------------------------------------- #
+# Tool references. A ToolRef is *unbound* in authored IR; freeze() binds each
+# one to a content hash in the manifest.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class NativeTool:
+    """An HTTP hand we own (Cloud Run / Lambda)."""
+
+    name: str
+    kind: str = "native"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "native", "name": self.name}
+
+
+@dataclass(frozen=True)
+class McpTool:
+    """A tool resolved from an MCP server and frozen at run start."""
+
+    server: str
+    tool: str
+    kind: str = "mcp"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "mcp", "server": self.server, "tool": self.tool}
+
+
+ToolRef = Union[NativeTool, McpTool]
+
+
+def toolref_from_json(d: dict[str, Any]) -> ToolRef:
+    if d["kind"] == "native":
+        return NativeTool(name=d["name"])
+    if d["kind"] == "mcp":
+        return McpTool(server=d["server"], tool=d["tool"])
+    raise ValueError(f"unknown ToolRef kind: {d.get('kind')!r}")
+
+
+def toolref_key(ref: ToolRef) -> str:
+    """A stable, human-readable identifier used in manifests and capabilities."""
+    if isinstance(ref, NativeTool):
+        return ref.name
+    return f"{ref.server}/{ref.tool}"
+
+
+# --------------------------------------------------------------------------- #
+# Context + caching + annotation leaves.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class ContextPolicy:
+    """Explicit declaration of how much session context a leaf reads.
+
+    A ``WHOLE_SESSION`` branch inside a ``par`` is degraded to sequential by the
+    validator, because two whole-session readers can't run concurrently without
+    racing on the transcript.
+    """
+
+    scope: ContextScope = ContextScope.LOCAL
+    redact_pii: bool = False
+    max_tokens: Optional[int] = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"scope": self.scope.value}
+        if self.redact_pii:
+            out["redactPii"] = True
+        if self.max_tokens is not None:
+            out["maxTokens"] = self.max_tokens
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "ContextPolicy":
+        return ContextPolicy(
+            scope=ContextScope(d.get("scope", "local")),
+            redact_pii=bool(d.get("redactPii", False)),
+            max_tokens=d.get("maxTokens"),
+        )
+
+
+@dataclass(frozen=True)
+class CacheHint:
+    key: Optional[str] = None
+    ttl_s: Optional[int] = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.key is not None:
+            out["key"] = self.key
+        if self.ttl_s is not None:
+            out["ttlS"] = self.ttl_s
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "CacheHint":
+        return CacheHint(key=d.get("key"), ttl_s=d.get("ttlS"))
+
+
+@dataclass
+class Ann:
+    """Optional per-node annotations: cost/risk hints, cache, effect, timeout."""
+
+    cost: Optional[float] = None
+    risk: Optional[str] = None
+    cache: Optional[CacheHint] = None
+    effect: Optional[Effect] = None
+    timeout: Optional[int] = None  # seconds
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cost is not None:
+            out["cost"] = self.cost
+        if self.risk is not None:
+            out["risk"] = self.risk
+        if self.cache is not None:
+            out["cache"] = self.cache.to_json()
+        if self.effect is not None:
+            out["effect"] = self.effect.value
+        if self.timeout is not None:
+            out["timeout"] = self.timeout
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "Ann":
+        return Ann(
+            cost=d.get("cost"),
+            risk=d.get("risk"),
+            cache=CacheHint.from_json(d["cache"]) if d.get("cache") else None,
+            effect=Effect(d["effect"]) if d.get("effect") else None,
+            timeout=d.get("timeout"),
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Steps (prim payloads).
+# --------------------------------------------------------------------------- #
+@dataclass
+class CallStep:
+    tool: ToolRef
+    ctx: Optional[ContextPolicy] = None
+    # Bound by freeze() to the manifest content hash. None in authored IR.
+    frozen_hash: Optional[str] = None
+    kind: str = "call"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "call", "tool": self.tool.to_json()}
+        if self.ctx is not None:
+            out["ctx"] = self.ctx.to_json()
+        if self.frozen_hash is not None:
+            out["frozenHash"] = self.frozen_hash
+        return out
+
+
+@dataclass
+class ThinkStep:
+    brain: str
+    ctx: Optional[ContextPolicy] = None
+    kind: str = "think"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "think", "brain": self.brain}
+        if self.ctx is not None:
+            out["ctx"] = self.ctx.to_json()
+        return out
+
+
+@dataclass(frozen=True)
+class SubContract:
+    """The only thing that crosses the Joined firewall at the surface."""
+
+    shape: Shape
+    summary_policy: Optional[SummaryPolicy] = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"shape": self.shape.value}
+        if self.summary_policy is not None:
+            out["summaryPolicy"] = self.summary_policy.value
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "SubContract":
+        return SubContract(
+            shape=Shape(d["shape"]),
+            summary_policy=(
+                SummaryPolicy(d["summaryPolicy"]) if d.get("summaryPolicy") else None
+            ),
+        )
+
+
+@dataclass
+class SubStep:
+    ref: str
+    contract: SubContract
+    kind: str = "sub"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "sub", "ref": self.ref, "contract": self.contract.to_json()}
+
+
+Step = Union[CallStep, ThinkStep, SubStep]
+
+
+def step_from_json(d: dict[str, Any]) -> Step:
+    k = d["kind"]
+    ctx = ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None
+    if k == "call":
+        return CallStep(
+            tool=toolref_from_json(d["tool"]), ctx=ctx, frozen_hash=d.get("frozenHash")
+        )
+    if k == "think":
+        return ThinkStep(brain=d["brain"], ctx=ctx)
+    if k == "sub":
+        return SubStep(ref=d["ref"], contract=SubContract.from_json(d["contract"]))
+    raise ValueError(f"unknown Step kind: {k!r}")
+
+
+# --------------------------------------------------------------------------- #
+# Node.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class Merge:
+    """How a ``par`` node combines its branches.
+
+    ``all`` waits for every branch (ordinary parallel/fanout). ``race`` and
+    ``hedge`` take the first success and cancel the losers (a scheduling
+    behavior the harness implements, not a post-hoc reduce). ``quorum`` waits for
+    ``m`` successes. The kind is what §5 race admission keys off.
+    """
+
+    kind: str = "all"  # "all" | "race" | "hedge" | "quorum"
+    hedge_ms: Optional[int] = None
+    quorum_m: Optional[int] = None
+    reducer: Optional[str] = None  # named pure applied to the collected results
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": self.kind}
+        if self.hedge_ms is not None:
+            out["hedgeMs"] = self.hedge_ms
+        if self.quorum_m is not None:
+            out["quorumM"] = self.quorum_m
+        if self.reducer is not None:
+            out["reducer"] = self.reducer
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "Merge":
+        return Merge(
+            kind=d.get("kind", "all"),
+            hedge_ms=d.get("hedgeMs"),
+            quorum_m=d.get("quorumM"),
+            reducer=d.get("reducer"),
+        )
+
+
+RACE_LIKE_MERGES = frozenset({"race", "hedge", "quorum"})
+
+
+@dataclass
+class Node:
+    op: Op
+    id: str
+    ann: Optional[Ann] = None
+    # prim:
+    step: Optional[Step] = None
+    # seq / par / alt:
+    left: Optional["Node"] = None
+    right: Optional["Node"] = None
+    # iter_up_to:
+    bound: Optional[int] = None
+    body: Optional["Node"] = None
+    # eval_plan:
+    plan: Optional["Node"] = None
+    # app:
+    controller: Optional[str] = None
+    # arr / alt predicate (named, content-addressed):
+    pure: Optional[str] = None
+    # par join semantics (all/race/hedge/quorum). None == "all".
+    merge: Optional[Merge] = None
+
+    # ----- traversal -------------------------------------------------------- #
+    def children(self) -> list["Node"]:
+        kids = [self.left, self.right, self.body, self.plan]
+        return [k for k in kids if k is not None]
+
+    def walk(self):
+        """Pre-order traversal over the node and all descendants."""
+        yield self
+        for k in self.children():
+            yield from k.walk()
+
+    def tool_refs(self) -> list[ToolRef]:
+        refs: list[ToolRef] = []
+        for n in self.walk():
+            if n.step is not None and isinstance(n.step, CallStep):
+                refs.append(n.step.tool)
+        return refs
+
+    # ----- serialization ---------------------------------------------------- #
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": self.op.value, "id": self.id}
+        if self.ann is not None:
+            a = self.ann.to_json()
+            if a:
+                out["ann"] = a
+        if self.step is not None:
+            out["step"] = self.step.to_json()
+        if self.left is not None:
+            out["left"] = self.left.to_json()
+        if self.right is not None:
+            out["right"] = self.right.to_json()
+        if self.bound is not None:
+            out["bound"] = self.bound
+        if self.body is not None:
+            out["body"] = self.body.to_json()
+        if self.plan is not None:
+            out["plan"] = self.plan.to_json()
+        if self.controller is not None:
+            out["controller"] = self.controller
+        if self.pure is not None:
+            out["pure"] = self.pure
+        if self.merge is not None:
+            out["merge"] = self.merge.to_json()
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "Node":
+        return Node(
+            op=Op(d["op"]),
+            id=d["id"],
+            ann=Ann.from_json(d["ann"]) if d.get("ann") else None,
+            step=step_from_json(d["step"]) if d.get("step") else None,
+            left=Node.from_json(d["left"]) if d.get("left") else None,
+            right=Node.from_json(d["right"]) if d.get("right") else None,
+            bound=d.get("bound"),
+            body=Node.from_json(d["body"]) if d.get("body") else None,
+            plan=Node.from_json(d["plan"]) if d.get("plan") else None,
+            controller=d.get("controller"),
+            pure=d.get("pure"),
+            merge=Merge.from_json(d["merge"]) if d.get("merge") else None,
+        )
+
+
+def canonical_json(value: Any) -> str:
+    """Stable JSON used for content hashing: sorted keys, no whitespace."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)

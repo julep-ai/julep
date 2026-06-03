@@ -1,0 +1,203 @@
+"""Temporal activities (blueprint §2, the Hands + Brains boundary).
+
+Activities are where *all* non-determinism and IO live, run outside the workflow
+sandbox and retried by Temporal according to a policy the workflow sets per call.
+Three activities cover every leaf the interpreter can hit:
+
+* ``callHand`` — invoke a tool. A native hand is a stateless scale-to-zero HTTP
+  endpoint; we POST the value with ``Idempotency-Key: <cid>`` so a Temporal retry
+  is safe for idempotent tools (the blueprint's leases/heartbeats handle the
+  rest). An MCP tool goes through the frozen session's ``tools/call``.
+* ``invokeBrain`` — one model call against a resolved :class:`~composable_agents.dotctx.Brain`
+  (model, system prompt, reply schema, granted tools).
+* ``compilePlan`` — ask a planner brain for a Plan, parse it to IR, and run it
+  through §8 admission (:func:`composable_agents.staged.admit_plan`) before the
+  workflow is allowed to execute it.
+
+Configuration (hand URLs, the MCP caller, the LLM client, the active capability
+manifest) is process-global on the worker, injected once via :func:`configure`.
+This module imports ``temporalio`` at top level, so it is import-guarded by
+:mod:`composable_agents.execution` and is only loaded where Temporal is present.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Awaitable, Callable, Optional
+
+from temporalio import activity
+
+from ..capabilities import CapabilityManifest
+from ..dotctx import Brain, get_brain
+from ..errors import CapabilityDenied
+from ..ir import Node, toolref_from_json, toolref_key
+from ..staged import admit_plan
+
+# Caller signatures the worker supplies.
+McpCaller = Callable[[str, str, Any], Awaitable[Any]]      # (server, tool, args) -> result
+LlmCaller = Callable[[Brain, Any], Awaitable[Any]]         # (brain, value) -> result
+
+
+@dataclass
+class WorkerContext:
+    """Process-global configuration read by the activities."""
+
+    hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
+    mcp_call: Optional[McpCaller] = None
+    llm: Optional[LlmCaller] = None
+    capabilities: Optional[CapabilityManifest] = None
+    http_timeout_s: float = 30.0
+    # Deploy-time registries. A sub-flow is a separately frozen flow addressable
+    # by ref; an agent spec is the controller's loop policy. Both are fixed at
+    # worker startup, so the resolve* activities below read them deterministically.
+    subflows: dict[str, dict[str, Any]] = field(default_factory=dict)  # ref -> {flowJson, manifestJson}
+    agents: dict[str, dict[str, Any]] = field(default_factory=dict)    # controller -> {config, grantedTools}
+
+
+_CTX = WorkerContext()
+
+
+def configure(ctx: WorkerContext) -> None:
+    """Install the worker-wide context the activities read."""
+    global _CTX
+    _CTX = ctx
+
+
+def _domain_of(url: str) -> str:
+    from urllib.parse import urlparse
+
+    return urlparse(url).hostname or ""
+
+
+# --------------------------------------------------------------------------- #
+# Payloads (Temporal serializes these to/from the data converter).
+# --------------------------------------------------------------------------- #
+@dataclass
+class CallHandInput:
+    tool_ref: dict[str, Any]      # ToolRef JSON (native or mcp)
+    value: Any
+    cid: str                      # deterministic activation id -> Idempotency-Key
+
+
+@dataclass
+class InvokeBrainInput:
+    brain: str
+    value: Any
+    cid: str
+
+
+@dataclass
+class CompilePlanInput:
+    planner: str
+    value: Any
+    cid: str
+    manifest: Optional[dict[str, Any]] = None  # parent frozen manifest (for schema checks)
+
+
+# --------------------------------------------------------------------------- #
+# Activities.
+# --------------------------------------------------------------------------- #
+@activity.defn(name="callHand")
+async def callHand(inp: CallHandInput) -> Any:
+    ref = toolref_from_json(inp.tool_ref)
+    key = toolref_key(ref)
+
+    if inp.tool_ref.get("kind") == "mcp":
+        if _CTX.mcp_call is None:
+            raise RuntimeError("worker has no MCP caller configured")
+        server = inp.tool_ref["server"]
+        tool = inp.tool_ref["tool"]
+        return await _CTX.mcp_call(server, tool, inp.value)
+
+    # Native hand: HTTP POST with an idempotency key derived from the cid.
+    url = _CTX.hand_urls.get(key)
+    if url is None:
+        raise RuntimeError(f"no URL registered for native hand {key!r}")
+    if _CTX.capabilities is not None and not _CTX.capabilities.network_allows(_domain_of(url)):
+        raise CapabilityDenied(f"network egress to {_domain_of(url)!r} is not granted")
+
+    import httpx  # imported in-activity so the module loads without httpx
+
+    activity.logger.debug("callHand %s -> %s", key, url)
+    async with httpx.AsyncClient(timeout=_CTX.http_timeout_s) as client:
+        resp = await client.post(
+            url,
+            json={"input": inp.value},
+            headers={"Idempotency-Key": inp.cid},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
+@activity.defn(name="invokeBrain")
+async def invokeBrain(inp: InvokeBrainInput) -> Any:
+    if _CTX.llm is None:
+        raise RuntimeError("worker has no LLM caller configured")
+    brain = get_brain(inp.brain)
+    return await _CTX.llm(brain, inp.value)
+
+
+@activity.defn(name="compilePlan")
+async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
+    """Run the planner brain, parse its Plan, admit it (§8), return plan JSON.
+
+    Admission happens here, in an activity, so a rejected plan fails the activity
+    (and surfaces as a clean ``PlanRejected``) instead of corrupting the
+    deterministic workflow.
+    """
+    if _CTX.llm is None:
+        raise RuntimeError("worker has no LLM caller configured")
+    planner = get_brain(inp.planner)
+    raw = await _CTX.llm(planner, inp.value)
+
+    plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
+    plan = Node.from_json(plan_json)
+
+    if _CTX.capabilities is not None:
+        from ..contracts import manifest_from_json  # local import keeps hot path light
+
+        manifest = manifest_from_json(inp.manifest) if inp.manifest else None
+        admit_plan(plan, _CTX.capabilities, manifest)
+
+    return plan.to_json()
+
+
+@activity.defn(name="resolveSubflow")
+async def resolveSubflow(ref: str) -> dict[str, Any]:
+    """Resolve a sub-flow ref to its frozen IR + manifest (deploy-time registry).
+
+    Done in an activity, not in the child workflow, so the (constant) registry
+    lookup stays outside the deterministic sandbox. The returned ``flowJson`` is
+    already frozen — the child runs it directly.
+    """
+    spec = _CTX.subflows.get(ref)
+    if spec is None:
+        raise RuntimeError(f"no sub-flow registered for ref {ref!r}")
+    return {"flowJson": spec["flowJson"], "manifestJson": spec.get("manifestJson", {})}
+
+
+@activity.defn(name="resolveAgentSpec")
+async def resolveAgentSpec(controller: str) -> dict[str, Any]:
+    """Resolve an agent controller to its loop config + granted-tool allow-list.
+
+    The budget defaults to the worker's active capability budget when the
+    registered spec does not pin one, so an agent inherits the deployment's
+    spend ceiling unless told otherwise.
+    """
+    spec = _CTX.agents.get(controller, {})
+    config = dict(spec.get("config") or {})
+    if "budget" not in config and _CTX.capabilities is not None and _CTX.capabilities.budget is not None:
+        b = _CTX.capabilities.budget
+        budget: dict[str, Any] = {}
+        if b.usd is not None:
+            budget["usd"] = b.usd
+        if b.tokens is not None:
+            budget["tokens"] = b.tokens
+        if b.wall_seconds is not None:
+            budget["wallSeconds"] = b.wall_seconds
+        config["budget"] = budget
+
+    granted = spec.get("grantedTools")
+    if granted is None:
+        granted = list(_CTX.capabilities.tools.keys()) if _CTX.capabilities is not None else []
+    return {"config": config, "grantedTools": list(granted)}

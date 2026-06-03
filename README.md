@@ -1,0 +1,204 @@
+# Composable Serverless Agents
+
+A typed framework for building agents as **composable, durable dataflows** instead of ad-hoc loops. You write a flow with a small set of combinators; the framework infers its *shape*, freezes its tools to content hashes, checks it against a capability manifest, and runs it durably on [Temporal](https://temporal.io). LLM calls ("Brains") and tools ("Hands") are stateless activities; durability, retries, and recovery come from Temporal's history and replay, not from anything the framework reimplements.
+
+The design separates a **pure, dependency-free core** (authoring, compilation, and a deterministic IR interpreter) from a thin **Temporal-bound execution layer**. The core is fully unit-tested without any server; the execution layer is verified end-to-end against Temporal's time-skipping test server. Everything except the durable runtime works with no `temporalio` install.
+
+---
+
+## Install
+
+```bash
+pip install composable-agents            # authoring + compile only (PyYAML)
+pip install 'composable-agents[temporal]' # + durable execution on Temporal
+pip install 'composable-agents[temporal,http,otel]'  # + native HTTP hands + OTel export
+```
+
+`composable_agents.HAVE_TEMPORAL` reports whether the runtime is available; the package imports and compiles flows either way.
+
+---
+
+## The mental model
+
+**Three planes.** A *Control* plane (a Temporal workflow) walks a frozen IR tree and decides what runs next. It dispatches to *Brains* (LLM `Think` activities, rendered from `.ctx` brain definitions) and *Hands* (stateless tool activities — MCP tools or native HTTP endpoints on Cloud Run / Lambda). A *Projection* plane derives an append-only, causally-linked event log (a "pomset") for observability — value store, per-shape cost, OTel spans, replay UI. **The projection is derived, never the source of durability**; history is.
+
+**The shape lattice.** Every flow has an inferred *shape* on the lattice
+
+```
+Pipeline < Dataflow < Branching < Feedback < Staged < Agent
+```
+
+Shape is computed (`surface_shape`), not declared, and it bounds what static guarantees hold. A pipeline is fully analyzable; an agent is an open-ended controller loop at the top. A `Sub` (child flow) is **opaque** at the surface — it looks like a `Pipeline` to its parent (`surface_shape`) while its real contracted shape is visible only when you ask for the closed shape (`closed_shape`). This is the "Joined firewall": a child's internal complexity does not leak into the parent's analysis or projection.
+
+---
+
+## Quickstart
+
+```python
+import asyncio
+from temporalio.client import Client
+from composable_agents import (
+    mcp_call, think, pipeline, deploy, snapshot_from_listings,
+    register_brain, Brain,
+)
+from composable_agents.execution.worker import run_worker
+from composable_agents.execution.activities import WorkerContext
+
+# 1) Author a flow with combinators.
+flow = pipeline(mcp_call("search", "web"), think("summarize"))
+
+# 2) Snapshot the tools (here from a literal listing; in practice from MCP tools/list)
+#    and compile: freeze -> validate -> capability enforcement -> race admission.
+snapshot = snapshot_from_listings({
+    "search": {"web": {"inputSchema": {"type": "object"},
+                       "annotations": {"readOnlyHint": True, "idempotentHint": True}}},
+})
+deployment = deploy(flow, snapshot)          # raises if any blocking diagnostic
+
+# 3) Run it durably (a worker hosts the workflow + activities).
+async def main():
+    client = await Client.connect("localhost:7233")
+    result = await deployment.run(client, session_id="run-1", input={"q": "temporal vs dbos"})
+    print(result)
+
+asyncio.run(main())
+```
+
+A worker process wires the environment (tool endpoints, the MCP caller, the LLM client, the capability manifest) once and serves both workflow types:
+
+```python
+register_brain(Brain(name="summarize", model="claude-...", system_prompt="Summarize."))
+await run_worker(
+    target_host="localhost:7233",
+    hand_urls={"native_tool": "https://my-hand.run.app"},
+    mcp_call=my_async_mcp_caller,   # async (server, tool, value) -> result
+    llm=my_async_llm,               # async (brain, value) -> reply
+    capabilities=my_capability_manifest,
+)
+```
+
+---
+
+## Authoring DSL
+
+**Structural combinators** (the name documents the shape it produces):
+
+| Combinator | Shape | Meaning |
+|---|---|---|
+| `pipeline(a, b, ...)` | Pipeline | run in sequence, threading output → input |
+| `parallel(a, b, ...)` / `fanout(...)` | Dataflow | run concurrently on the same input, collect results |
+| `route(pred, if_true, if_false)` | Branching | choose a branch by a registered pure predicate |
+| `critique(bound, body, until=...)` | Feedback | iterate `body` up to `bound` times, optional convergence predicate |
+| `stage(planner)` | Staged | a brain emits a plan; it is compiled, admitted (§8), and run as IR |
+| `escalate(controller)` | Agent | open-ended controller loop (use sparingly) |
+| `subagent(ref, Contract.…())` | Pipeline (opaque) | an opaque child flow carrying its contract across the firewall |
+
+**Leaves:** `call(name)` (native hand), `mcp_call(server, tool)`, `think(brain)`, `brain_from_ctx(path)`, `ident()`, `arr(pure_name)`.
+
+**Derived combinators** lower to a uniform, analyzable race spine:
+
+- `race(a, b, ...)` — first to finish wins, cancel the rest.
+- `hedge(a, b, ..., after_ms=N)` — start the first branch; reveal the rest only after a delay.
+- `quorum(a, b, ..., m=K)` — settle once `K` branches succeed.
+- `map_n` / `map_reduce` / `vote` / `review` — common fan-out patterns.
+- `human_gate(timeout_s=...)` — pause for a human decision (a durable signal-wait).
+
+Any combinator accepts `ctx=` (a `ContextPolicy`) and `ann=` (`Ann`: caching hints, timeouts).
+
+---
+
+## The compile pipeline (`deploy`)
+
+`deploy(flow, snapshot, capabilities=…)` runs four static gates in order; any blocking diagnostic aborts (`strict=True`, the default) or is returned on the `Deployment` for triage:
+
+1. **Freeze** — snapshot every tool (MCP version + schema + annotations, or a native contract) to a **content hash** and bind each `call` to it, so the tool set can never shift under a running flow. The flow is deep-copied to a clean tree (cycles rejected, sharing removed, ids normalized to deterministic paths like `$.L`, `$.R`).
+2. **Validate** — per-op well-formedness, schema edges, and a non-blocking warning where a `par` branch reads the whole session (sequential degrade).
+3. **Capability enforcement (§9)** — the flow may only use granted tools, models, memory scopes, and MCP servers. A capability manifest (YAML/dict) also supplies **contract assertions**: the only way a non-read tool becomes legal inside a race.
+4. **Race admission (§5)** — every branch of a `race`/`hedge`/`quorum` must be read-only or contract-asserted idempotent, so a duplicated branch can do no harm. MCP "read-only" *hints* are untrusted — a tool must be **asserted** in the capability manifest to race.
+
+`freeze`, `validate`, and the §8/§9/§5 checks are all exposed individually for finer control.
+
+---
+
+## Execution on Temporal
+
+The execution layer is the only part that imports `temporalio`, and it does so behind a guarded import.
+
+- **`FlowWorkflow`** walks the frozen IR. The same deterministic interpreter (`composable_agents.execution.interpreter.interpret`) runs here and in tests; only the injected `Env` differs (Temporal activities vs. in-memory callables). Per-tool retry policy is derived from each frozen contract — reads/idempotent tools retry liberally; non-idempotent writes retry cautiously behind an `Idempotency-Key` the `callHand` activity sends. Policy-decision errors (`CapabilityDenied`, `PlanRejected`, `ValidationError`, `FreezeError`) are non-retryable.
+- **`AgentWorkflow`** is the `escalate` loop. It is bounded by construction: each round the controller returns one of a closed action set — *finish*, *escalate*, call one **granted** tool, or invoke one registered **sub-flow** — and a **budget guard** stops the run before any action that would exceed the capability budget. History growth is bounded by **continue-as-new** (a configurable seam). It is a separate workflow precisely so its continue-as-new truncates only the agent's history, not the parent flow's.
+- **`Sub`** is a child `FlowWorkflow` resolved by `ref`; the firewall is structural (the surface shape is already opaque), so a child's value crosses while its shape does not.
+- **Human gates** are a `submitHuman` signal plus a durable `wait_condition`. Two queries support a review UI: `projection` (the full pomset snapshot — events, `costByShape`, `pending`) and **`openGates`** (the precise activation ids currently parked on a gate — exactly what to signal, excluding structural `seq`/`par` activations).
+
+`run_flow` / `start_flow` are client helpers; `build_worker` / `run_worker` host the workflows and the five activities (`callHand`, `invokeBrain`, `compilePlan`, `resolveSubflow`, `resolveAgentSpec`).
+
+---
+
+## Staged plans and plan extraction
+
+`stage(planner)` lets a brain emit a plan at runtime. The plan is parsed, **admitted under §8** (it may loop but not itself stage or escalate, must use only granted tools, and must fit the budget), then run as ordinary IR. Because an admitted plan is not re-frozen, its calls are **late-bound** by tool ref at execution time (`call_ref_key` / `call_contract`).
+
+The offline complement is **plan extraction**: an observed agent action trace can be generalized into a candidate plan (`generalize_trace_to_plan`), checked (`extract_plan`), and promoted to a cheap, replayable stage (`promote_plan`, which enforces admission). The agent discovers a procedure; the plan freezes it.
+
+---
+
+## The pure core vs. the Temporal layer
+
+This split is deliberate and load-bearing:
+
+- **Pure core** (`kinds`, `ir`, `shapes`, `contracts`, `freeze`, `validate`, `dsl`, `derived`, `capabilities`, `staged`, `projection`, `dotctx`, `agent_loop`, `deploy`, and `execution.interpreter`) has **no Temporal dependency**. The interpreter takes an injected `Env` of effect handlers and concurrency primitives, so the same control-flow logic runs under Temporal *and* under an in-memory `InMemoryEnv` in tests.
+- **Execution layer** (`execution.harness`, `execution.activities`, `execution.worker`, `execution.otel`) binds to Temporal and is import-guarded.
+
+**Testing.** The full suite is **64 tests with `temporalio` installed** (including a real end-to-end run on Temporal's time-skipping server covering a pipeline, a race, a human gate, and the agent loop with budget guard and capability deny) and **63 pass + 1 skip without it**. Run:
+
+```bash
+pip install -e '.[dev]'
+pytest                 # full suite incl. Temporal E2E
+```
+
+---
+
+## Open seams (§6) — configuration decisions
+
+These are surfaced as explicit knobs rather than hidden defaults:
+
+- **Freeze timing** — `deploy(..., freeze_timing="deploy_time")` (default) freezes once and reuses the artifact for maximal determinism; `"per_run"` keeps a snapshot source so each launch can re-freeze against fresh tool definitions (`Deployment.refresh`).
+- **Retry shaping** — `ExecutionPolicy` controls activity timeouts and the read-vs-write retry attempt counts and backoff.
+- **Continue-as-new cadence** — `AgentConfig.continue_as_new_after` bounds agent history; `0` disables it.
+- **Projection sink** — the in-workflow projection threads causal ids deterministically and is exposed read-only via the `projection` query; the durable sink (Postgres via `PostgresProjection`, or OTel via `execution.otel.export_spans`) is fed out-of-band from history so the workflow performs no projection IO.
+
+---
+
+## Module map
+
+```
+composable_agents/
+  kinds.py          shape lattice + effect/idempotency/context enums
+  ir.py             canonical IR: nodes, steps, merges, tool refs, JSON codec
+  shapes.py         surface_shape / closed_shape (the Sub firewall)
+  contracts.py      tool contracts, MCP annotation inference, frozen manifest
+  purity.py         registry of named deterministic functions (pures)
+  transforms.py     cycle detection, id normalization
+  freeze.py         snapshot -> content-hash binding of every tool
+  validate.py       well-formedness + schema diagnostics
+  dsl.py            structural combinators + Contract helpers
+  derived.py        race/hedge/quorum/map/vote/human_gate + §5 admission
+  capabilities.py   §9 capability manifest, budget, grants, overrides
+  staged.py         §8 plan cost estimation + plan admission
+  projection.py     pomset events, value store, in-memory/Postgres sinks, OTel data
+  dotctx.py         §3.2 Brain definitions and lowering to Think nodes
+  agent_loop.py     P4 agent loop logic + plan extraction (pure)
+  deploy.py         the compile pipeline + Deployment artifact
+  errors.py         the error taxonomy
+  execution/
+    interpreter.py  the deterministic IR interpreter + InMemoryEnv (pure)
+    harness.py      FlowWorkflow, AgentWorkflow, Temporal Env, client helpers
+    activities.py   callHand / invokeBrain / compilePlan / resolve* activities
+    worker.py       Client + Worker wiring
+    otel.py         OpenTelemetry export of the projection
+```
+
+---
+
+## License
+
+Apache-2.0.

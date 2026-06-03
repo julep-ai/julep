@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "composable-agents"
+version = "0.1.0"
+description = "A typed, durable framework for composable serverless agents on Temporal."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Composable Agents" }]
+keywords = ["agents", "llm", "temporal", "durable-execution", "mcp", "workflow"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+
+# The authoring + compile path (DSL, freeze, validate, capabilities, deploy, the
+# pure interpreter) depends only on PyYAML. The durable runtime, plan compilation
+# inside workflows, and span export are optional extras.
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+# Durable execution on Temporal (workflows, activities, worker, client helpers).
+temporal = ["temporalio>=1.7"]
+# Native hand (HTTP tool) calls from the callHand activity.
+http = ["httpx>=0.24"]
+# OpenTelemetry span export of the projection.
+otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
+# Everything needed to run the full test suite (including the Temporal E2E test).
+dev = [
+    "pytest>=7",
+    "temporalio>=1.7",
+    "httpx>=0.24",
+    "opentelemetry-api>=1.20",
+    "opentelemetry-sdk>=1.20",
+]
+
+[project.urls]
+Homepage = "https://example.com/composable-agents"
+
+[tool.setuptools.packages.find]
+include = ["composable_agents*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The Temporal E2E test wraps its own asyncio loop, so no asyncio plugin mode is
+# required; pure tests are synchronous.
+addopts = "-q"

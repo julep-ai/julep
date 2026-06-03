@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / TypeScript
+node_modules/
+*.tsbuildinfo
+dist/
+
+# Codex / agent run artifacts
+.codex-runs/
+*.codex-out.txt
+
+# Editor / OS
+.DS_Store
+*.swp

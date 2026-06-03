@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/temporal" },
+    { "path": "examples/research-review" }
+  ]
+}
