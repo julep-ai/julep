@@ -83,5 +83,19 @@ def source_hash_of(name: str) -> str:
     return _REGISTRY[name].source_hash
 
 
+def diff_pure_hashes(
+    pinned: dict[str, str],
+    registered: dict[str, str],
+) -> list[dict[str, str | None]]:
+    """Return changed or missing pure source hashes compared to a pinned artifact."""
+    drift: list[dict[str, str | None]] = []
+    for name in sorted(pinned):
+        pinned_hash = pinned[name]
+        actual_hash = registered.get(name)
+        if actual_hash != pinned_hash:
+            drift.append({"name": name, "pinned": pinned_hash, "actual": actual_hash})
+    return drift
+
+
 def registered_names() -> list[str]:
     return sorted(_REGISTRY)

@@ -3,8 +3,9 @@
 A worker is the persistent process that hosts the deterministic workflow code and
 executes the activities. There is exactly one workflow type per role
 (:class:`~composable_agents.execution.harness.FlowWorkflow` and
-:class:`~composable_agents.execution.harness.AgentWorkflow`) and five activities
-(the three effect activities plus the two deploy-time resolvers). All
+:class:`~composable_agents.execution.harness.AgentWorkflow`) and six activities
+(startup pure verification, three effect activities, and two deploy-time
+resolvers). All
 environment-specific configuration — hand URLs, the MCP caller, the LLM client,
 the active capability manifest, and the sub-flow / agent registries — is injected
 once into the process-global :class:`~composable_agents.execution.activities.WorkerContext`
@@ -33,11 +34,12 @@ from .activities import (
     invokeBrain,
     resolveAgentSpec,
     resolveSubflow,
+    verifyPures,
 )
 from .harness import AgentWorkflow, FlowWorkflow
 
 # Every activity the two workflows can dispatch.
-ACTIVITIES = [callHand, invokeBrain, compilePlan, resolveSubflow, resolveAgentSpec]
+ACTIVITIES = [callHand, invokeBrain, compilePlan, verifyPures, resolveSubflow, resolveAgentSpec]
 WORKFLOWS = [FlowWorkflow, AgentWorkflow]
 
 DEFAULT_TASK_QUEUE = "composable-agents"

@@ -2,8 +2,10 @@
 
 Activities are where *all* non-determinism and IO live, run outside the workflow
 sandbox and retried by Temporal according to a policy the workflow sets per call.
-Three activities cover every leaf the interpreter can hit:
+Four activities cover startup verification and every leaf the interpreter can hit:
 
+* ``verifyPures`` — compare deploy-pinned pure source hashes to the worker's
+  current registry before a workflow executes any flow effect.
 * ``callHand`` — invoke a tool. A native hand is a stateless scale-to-zero HTTP
   endpoint; we POST the value with ``Idempotency-Key: <cid>`` so a Temporal retry
   is safe for idempotent tools (the blueprint's leases/heartbeats handle the
@@ -30,9 +32,10 @@ from temporalio import activity
 from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain, get_brain
-from ..errors import CapabilityDenied
+from ..errors import CapabilityDenied, PureDriftError
 from ..ir import Node, toolref_from_json, toolref_key
 from ..kinds import Effect, Idempotency
+from ..purity import diff_pure_hashes, source_hash_of
 from ..staged import admit_plan
 
 # Caller signatures the worker supplies.
@@ -59,7 +62,8 @@ class WorkerContext:
     # Deploy-time registries. A sub-flow is a separately frozen flow addressable
     # by ref; an agent spec is the controller's loop policy. Both are fixed at
     # worker startup, so the resolve* activities below read them deterministically.
-    subflows: dict[str, dict[str, Any]] = field(default_factory=dict)  # ref -> {flowJson, manifestJson}
+    # ref -> {flowJson, manifestJson, pureSourceHashes?}
+    subflows: dict[str, dict[str, Any]] = field(default_factory=dict)
     # controller -> {config, grantedTools, grantedContracts, grantedSubflows}
     agents: dict[str, dict[str, Any]] = field(default_factory=dict)
 
@@ -172,6 +176,28 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     return plan.to_json()
 
 
+@activity.defn(name="verifyPures")
+async def verifyPures(pinned: dict[str, str]) -> None:
+    """Verify deploy-pinned pure source hashes against this worker's registry."""
+    registered: dict[str, str] = {}
+    for name in pinned:
+        try:
+            registered[name] = source_hash_of(name)
+        except KeyError:
+            pass
+
+    drift = diff_pure_hashes(pinned, registered)
+    if drift:
+        details = "; ".join(
+            (
+                f"{item['name']}: pinned={item['pinned']} "
+                f"actual={item['actual'] if item['actual'] is not None else '<missing>'}"
+            )
+            for item in drift
+        )
+        raise PureDriftError(f"pure source drift detected: {details}")
+
+
 @activity.defn(name="resolveSubflow")
 async def resolveSubflow(ref: str) -> dict[str, Any]:
     """Resolve a sub-flow ref to its frozen IR + manifest (deploy-time registry).
@@ -183,7 +209,11 @@ async def resolveSubflow(ref: str) -> dict[str, Any]:
     spec = _CTX.subflows.get(ref)
     if spec is None:
         raise RuntimeError(f"no sub-flow registered for ref {ref!r}")
-    return {"flowJson": spec["flowJson"], "manifestJson": spec.get("manifestJson", {})}
+    return {
+        "flowJson": spec["flowJson"],
+        "manifestJson": spec.get("manifestJson", {}),
+        "pinnedPures": spec.get("pinnedPures", spec.get("pureSourceHashes")),
+    }
 
 
 def _approval_value(raw: Any) -> bool:

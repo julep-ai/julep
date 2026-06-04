@@ -20,10 +20,13 @@ from composable_agents import HAVE_TEMPORAL
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
+    from temporalio.client import WorkflowFailureError
+    from temporalio.exceptions import ApplicationError
     from temporalio.testing import WorkflowEnvironment
 
     from composable_agents import (
         call, mcp, seq, think, freeze, manifest_to_json,
+        arr,
         register_brain, Brain,
     )
     from composable_agents.derived import race, human_gate
@@ -36,6 +39,10 @@ if HAVE_TEMPORAL:
     )
     from composable_agents.execution.worker import build_worker
     from composable_agents.execution.activities import WorkerContext
+    from composable_agents import purity
+    from composable_agents.purity import PureEntry
+    from composable_agents.deploy import deploy
+    from composable_agents.errors import PureDriftError
 
 
 # --------------------------------------------------------------------------- #
@@ -63,6 +70,10 @@ async def _mcp(server, tool, value, idempotency_key):
         await asyncio.sleep(5)  # time-skipped by the server
         return value * 100
     raise ValueError(tool)
+
+
+def _drift_pure(value):
+    return value
 
 
 async def _llm(brain, value):
@@ -221,12 +232,46 @@ async def _agent(env):
     assert res4["reason"] == "approval-required tool 'srv/double'; agent must ESCALATE"
 
 
+async def _pure_drift_fails_before_effect(env):
+    effects = {"count": 0}
+
+    async def mcp_counter(server, tool, value, idempotency_key):  # noqa: ANN001
+        effects["count"] += 1
+        return await _mcp(server, tool, value, idempotency_key)
+
+    purity._REGISTRY["e2e.drift"] = PureEntry("e2e.drift", _drift_pure, "pure:pinned")
+    deployment = deploy(seq(arr("e2e.drift"), call(mcp("srv", "inc"))), _snapshot())
+    purity._REGISTRY["e2e.drift"] = PureEntry("e2e.drift", _drift_pure, "pure:changed")
+
+    ctx = WorkerContext(mcp_call=mcp_counter, llm=_llm, subflows=_child_registry())
+    async with build_worker(env.client, ctx, task_queue="ca-pure-drift"):
+        with pytest.raises(WorkflowFailureError) as raised:
+            await deployment.run(
+                env.client,
+                session_id=f"pure-drift-{uuid.uuid4()}",
+                input=5,
+                task_queue="ca-pure-drift",
+            )
+
+    cause = raised.value.__cause__
+    while cause is not None and not (
+        isinstance(cause, ApplicationError) and cause.type == PureDriftError.__name__
+    ):
+        cause = cause.__cause__
+
+    assert isinstance(cause, ApplicationError)
+    assert cause.type == PureDriftError.__name__
+    assert "e2e.drift" in str(cause)
+    assert effects["count"] == 0
+
+
 async def _run_all():
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _pipeline_and_brain(env)
         await _race(env)
         await _human_gate(env)
         await _agent(env)
+        await _pure_drift_fails_before_effect(env)
 
 
 def test_temporal_end_to_end():

@@ -235,6 +235,7 @@ class Deployment:
         return await run_flow(
             client, self.flow_json, self.manifest_json,
             session_id=session_id, input=input, task_queue=task_queue, policy=policy,
+            pinned_pures=self.artifact_components["pureSourceHashes"],
         )
 
 

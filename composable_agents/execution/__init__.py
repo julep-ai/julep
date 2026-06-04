@@ -35,6 +35,7 @@ try:  # the workflow/activities only import cleanly with temporalio present
         invokeBrain,
         resolveAgentSpec,
         resolveSubflow,
+        verifyPures,
     )
     from .worker import build_worker, run_worker  # noqa: F401
 
@@ -60,6 +61,7 @@ _TEMPORAL_EXPORTS = [
     "invokeBrain",
     "resolveAgentSpec",
     "resolveSubflow",
+    "verifyPures",
     "build_worker",
     "run_worker",
 ]

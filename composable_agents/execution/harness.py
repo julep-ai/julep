@@ -71,6 +71,7 @@ with workflow.unsafe.imports_passed_through():
         invokeBrain,
         resolveAgentSpec,
         resolveSubflow,
+        verifyPures,
     )
 
 
@@ -124,7 +125,13 @@ class ExecutionPolicy:
 
 
 # Errors that represent a settled policy decision must never be retried.
-_NON_RETRYABLE = ["CapabilityDenied", "PlanRejected", "ValidationError", "FreezeError"]
+_NON_RETRYABLE = [
+    "CapabilityDenied",
+    "PlanRejected",
+    "ValidationError",
+    "FreezeError",
+    "PureDriftError",
+]
 
 
 def _retry_policy_for(contract: ToolContract, policy: ExecutionPolicy) -> RetryPolicy:
@@ -191,6 +198,7 @@ class FlowInput:
     input: Any = None
     flow_json: Optional[dict[str, Any]] = None
     manifest_json: Optional[dict[str, Any]] = None
+    pinned_pures: Optional[dict[str, str]] = None
     ref: Optional[str] = None
     policy: Optional[dict[str, Any]] = None
 
@@ -429,6 +437,7 @@ class FlowWorkflow:
         policy = ExecutionPolicy.from_json(inp.policy)
         flow_json = inp.flow_json
         manifest_json = inp.manifest_json
+        pinned_pures = inp.pinned_pures
 
         # A ref-only input resolves to its frozen flow + manifest via activity
         # (kept outside the deterministic sandbox).
@@ -443,6 +452,23 @@ class FlowWorkflow:
             )
             flow_json = resolved["flowJson"]
             manifest_json = resolved.get("manifestJson", {})
+            if pinned_pures is None:
+                pinned_pures = resolved.get("pinnedPures")
+
+        # Pure source lookup reads the worker registry, so it stays in an
+        # activity. Each FlowWorkflow verifies the pins supplied with that flow;
+        # ref children verify their own pins when the subflow registry carries
+        # pureSourceHashes/pinnedPures, without inheriting parent registry state.
+        if pinned_pures is not None:
+            await workflow.execute_activity(
+                verifyPures,
+                pinned_pures,
+                start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
 
         flow = Node.from_json(flow_json)
         manifest = manifest_from_json(manifest_json or {})
@@ -632,6 +658,7 @@ async def run_flow(
     input: Any = None,
     task_queue: str = "composable-agents",
     policy: Optional[ExecutionPolicy] = None,
+    pinned_pures: Optional[dict[str, str]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
@@ -647,6 +674,7 @@ async def run_flow(
             input=input,
             flow_json=flow_json,
             manifest_json=manifest_json,
+            pinned_pures=pinned_pures,
             policy=(policy or ExecutionPolicy()).to_json(),
         ),
         id=session_id,
@@ -663,6 +691,7 @@ async def start_flow(
     input: Any = None,
     task_queue: str = "composable-agents",
     policy: Optional[ExecutionPolicy] = None,
+    pinned_pures: Optional[dict[str, str]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
@@ -676,6 +705,7 @@ async def start_flow(
             input=input,
             flow_json=flow_json,
             manifest_json=manifest_json,
+            pinned_pures=pinned_pures,
             policy=(policy or ExecutionPolicy()).to_json(),
         ),
         id=session_id,

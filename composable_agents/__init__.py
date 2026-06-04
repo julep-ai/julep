@@ -63,7 +63,7 @@ from .dotctx import (
 )
 
 # --- purity registry ------------------------------------------------------- #
-from .purity import pure, register_pure, is_registered, get_pure
+from .purity import pure, register_pure, is_registered, get_pure, diff_pure_hashes
 
 # --- agent loop + plan extraction (P4) ------------------------------------- #
 from .agent_loop import (
@@ -80,7 +80,7 @@ from .projection import (
 # --- errors ---------------------------------------------------------------- #
 from .errors import (
     ComposableAgentsError, ValidationError, FreezeError, AdmissionError,
-    RaceAllFailed, BudgetExceeded, PlanRejected, CapabilityDenied,
+    PureDriftError, RaceAllFailed, BudgetExceeded, PlanRejected, CapabilityDenied,
 )
 
 # --- execution layer (always exposes the pure interpreter; Temporal guarded) #
@@ -90,7 +90,7 @@ if HAVE_TEMPORAL:  # re-export the durable runtime only when temporalio is prese
     from .execution import (  # noqa: F401
         FlowWorkflow, AgentWorkflow, FlowInput, AgentInput, ExecutionPolicy,
         run_flow, start_flow, build_worker, run_worker, WorkerContext,
-        callHand, invokeBrain, compilePlan, resolveSubflow, resolveAgentSpec,
+        callHand, invokeBrain, compilePlan, verifyPures, resolveSubflow, resolveAgentSpec,
     )
 
 _BASE_EXPORTS = [
@@ -120,7 +120,7 @@ _BASE_EXPORTS = [
     "Brain", "register_brain", "get_brain", "load_dotctx", "dotctx_flow",
     "brain_to_flow", "brain_from_settings",
     # purity
-    "pure", "register_pure", "is_registered", "get_pure",
+    "pure", "register_pure", "is_registered", "get_pure", "diff_pure_hashes",
     # agent loop
     "AgentConfig", "AgentState", "Decision", "interpret_brain_reply",
     "generalize_trace_to_plan", "extract_plan", "promote_plan",
@@ -130,7 +130,7 @@ _BASE_EXPORTS = [
     "to_otel_spans",
     # errors
     "ComposableAgentsError", "ValidationError", "FreezeError", "AdmissionError",
-    "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
+    "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
     # execution (pure)
     "Env", "InMemoryEnv", "Result", "interpret", "HAVE_TEMPORAL",
     "__version__",
@@ -139,7 +139,8 @@ _BASE_EXPORTS = [
 _TEMPORAL_EXPORTS = [
     "FlowWorkflow", "AgentWorkflow", "FlowInput", "AgentInput", "ExecutionPolicy",
     "run_flow", "start_flow", "build_worker", "run_worker", "WorkerContext",
-    "callHand", "invokeBrain", "compilePlan", "resolveSubflow", "resolveAgentSpec",
+    "callHand", "invokeBrain", "compilePlan", "verifyPures", "resolveSubflow",
+    "resolveAgentSpec",
 ]
 
 __all__ = _BASE_EXPORTS + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else [])

@@ -20,6 +20,10 @@ class FreezeError(ComposableAgentsError):
     """Raised when a ToolRef can't be resolved against the MCP snapshot."""
 
 
+class PureDriftError(ComposableAgentsError):
+    """Raised when a pinned pure source hash no longer matches the worker registry."""
+
+
 class AdmissionError(ComposableAgentsError):
     """A branch is illegal in a race/hedge/quorum position (§5 guarantee)."""
 
