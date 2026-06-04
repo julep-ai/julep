@@ -44,6 +44,8 @@ class Diagnostic:
     node_id: str
     message: str
     severity: str = "error"  # "error" | "warning"
+    hint: Optional[str] = None
+    help_url: Optional[str] = None
 
 
 def blocking(diags: list[Diagnostic]) -> list[Diagnostic]:
