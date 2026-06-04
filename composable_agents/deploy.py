@@ -56,7 +56,7 @@ from .freeze import (
     freeze,
 )
 from .ir import Node, ThinkStep, canonical_json
-from .kinds import Op, Shape
+from .kinds import EnforcementMode, Op, Shape
 from .purity import is_registered, source_hash_of
 from .shapes import surface_shape as _compute_surface_shape
 from .validate import Diagnostic, blocking, validate
@@ -163,6 +163,7 @@ class Deployment:
     manifest: ToolManifest
     diagnostics: list[Diagnostic] = field(default_factory=list)
     capabilities: Optional[CapabilityManifest] = None
+    mode: EnforcementMode = EnforcementMode.STRICT
     freeze_timing: str = "deploy_time"
     # Retained only for freeze_timing == "per_run": a source of fresh snapshots
     # and the overrides to re-apply, so each launch can re-freeze.
@@ -205,6 +206,24 @@ class Deployment:
     def warnings(self) -> list[Diagnostic]:
         return [d for d in self.diagnostics if d.severity != "error"]
 
+    @property
+    def prod_gap(self) -> list[Diagnostic]:
+        return blocking(self.diagnostics)
+
+    def prod_gap_summary(self) -> str:
+        if not self.prod_gap:
+            return "no prod gap"
+
+        buckets: dict[str, int] = {}
+        for diagnostic in self.prod_gap:
+            bucket = _prod_gap_bucket(diagnostic.code)
+            buckets[bucket] = buckets.get(bucket, 0) + 1
+        parts = [
+            f"{count} {_pluralize_bucket(bucket, count)}"
+            for bucket, count in buckets.items()
+        ]
+        return "in prod this would block: " + ", ".join(parts)
+
     @cached_property
     def surface_shape(self) -> Shape:
         """Where this flow sits on the shape lattice (Pipeline..Agent)."""
@@ -230,6 +249,7 @@ class Deployment:
             freeze_timing=self.freeze_timing,
             snapshot_source=self._snapshot_source,
             strict=True,
+            mode=self.mode,
         )
 
     async def run(
@@ -268,15 +288,17 @@ def deploy(
     capabilities: Optional[CapabilityManifest] = None,
     extra_overrides: Optional[CapabilityOverrides] = None,
     strict: bool = True,
+    mode: EnforcementMode | str = EnforcementMode.STRICT,
     freeze_timing: str = "deploy_time",
     snapshot_source: Optional[Callable[[], McpSnapshot]] = None,
 ) -> Deployment:
     """Compile ``flow`` against ``snapshot`` into a runnable :class:`Deployment`.
 
     Runs freeze -> validate -> capability enforcement -> approval gates -> race
-    admission. With ``strict`` (default), any blocking diagnostic raises
-    :class:`~composable_agents.errors.ValidationError`; otherwise all diagnostics
-    are returned on the deployment for the caller to triage.
+    admission. With ``mode="strict"`` and ``strict`` (the defaults), any blocking
+    diagnostic raises :class:`~composable_agents.errors.ValidationError`;
+    ``mode="dev"`` always returns a deployment and exposes the would-block
+    diagnostics through :attr:`Deployment.prod_gap`.
 
     ``capabilities`` (a §9 manifest) both supplies contract-assertion overrides
     (so asserted-idempotent tools may appear in races) and constrains which
@@ -285,6 +307,7 @@ def deploy(
     ``snapshot_source`` for the per-run case so :meth:`Deployment.refresh` can
     re-freeze without an explicit snapshot.
     """
+    enforcement_mode = EnforcementMode.coerce(mode)
     if freeze_timing not in ("deploy_time", "per_run"):
         raise ValueError("freeze_timing must be 'deploy_time' or 'per_run'")
 
@@ -305,7 +328,8 @@ def deploy(
     # 5. Race admission (§5): every race branch read-only or asserted-idempotent.
     diagnostics.extend(check_race_admission(fr.flow, fr.manifest))
 
-    if strict:
+    raise_on_blocking = (enforcement_mode is EnforcementMode.STRICT) and strict
+    if raise_on_blocking:
         bad = blocking(diagnostics)
         if bad:
             raise ValidationError(bad)
@@ -315,12 +339,39 @@ def deploy(
         manifest=fr.manifest,
         diagnostics=diagnostics,
         capabilities=capabilities,
+        mode=enforcement_mode,
         freeze_timing=freeze_timing,
         _snapshot_source=snapshot_source,
         _overrides=overrides,
     )
     _ = deployment.artifact_hash
     return deployment
+
+
+def _prod_gap_bucket(code: str) -> str:
+    if code.startswith("CAP_MODEL") and code.endswith("_DENIED"):
+        return "ungranted brain/model"
+    if code in {"CAP_TOOL_DENIED", "CAP_APP_TOOL_DENIED"}:
+        return "ungranted tool"
+    if code in {"CAP_SUBFLOW_DENIED", "CAP_APP_SUBFLOW_DENIED"}:
+        return "ungranted subflow"
+    if code in {"CAP_SERVER_DENIED", "CAP_MEMORY_DENIED"}:
+        return "ungranted server"
+    if code in {"APPROVAL_UNGATED", "CAP_APP_APPROVAL_TOOL"}:
+        return "ungated dangerous/approval call"
+    if code == "CAP_VERSION_PIN":
+        return "version pin mismatch"
+    if code.startswith("CAP_") and code.endswith("_DENIED"):
+        return "ungranted tool/subflow/server"
+    return "other"
+
+
+def _pluralize_bucket(bucket: str, count: int) -> str:
+    if count == 1:
+        return bucket
+    if bucket == "other":
+        return "others"
+    return f"{bucket}s"
 
 
 __all__ = ["Deployment", "deploy", "snapshot_from_listings"]

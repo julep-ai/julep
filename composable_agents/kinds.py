@@ -40,6 +40,21 @@ class Shape(str, Enum):
     AGENT = "Agent"
 
 
+class EnforcementMode(str, Enum):
+    """Compile-time enforcement disposition for deploy diagnostics."""
+
+    STRICT = "strict"
+    DEV = "dev"
+
+    @classmethod
+    def coerce(cls, value: "EnforcementMode | str") -> "EnforcementMode":
+        if isinstance(value, cls):
+            return value
+        if value == "prod":
+            return cls.STRICT
+        return cls(value)
+
+
 # Total order over Shape (cheapest first). The lattice join is "max in this order".
 _SHAPE_ORDER: tuple[Shape, ...] = (
     Shape.PIPELINE,

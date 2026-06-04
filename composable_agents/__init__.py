@@ -25,6 +25,7 @@ __version__ = "0.1.0"
 from .kinds import (
     ContextScope as ContextScope,
     Effect as Effect,
+    EnforcementMode as EnforcementMode,
     Idempotency as Idempotency,
     Shape as Shape,
     SummaryPolicy as SummaryPolicy,
@@ -212,7 +213,7 @@ if HAVE_TEMPORAL:  # re-export the durable runtime only when temporalio is prese
 
 _BASE_EXPORTS = [
     # kinds
-    "Shape", "Effect", "Idempotency", "ContextScope", "SummaryPolicy",
+    "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
     # ir
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
     "NativeTool", "McpTool", "HUMAN_GATE_TOOL",
