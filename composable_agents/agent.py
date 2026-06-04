@@ -21,7 +21,7 @@ from .dsl import app
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
 from .ir import JSONSchema, canonical_json
-from .kinds import Effect, Idempotency
+from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
 
 _OBJECT_SCHEMA: JSONSchema = {"type": "object"}
@@ -286,6 +286,7 @@ class Agent:
         budget_usd: Optional[float] = None,
         max_rounds: int = 24,
         instructions: Optional[str] = None,
+        mode: EnforcementMode | str = EnforcementMode.STRICT,
     ) -> None:
         """Create an agent facade.
 
@@ -310,7 +311,8 @@ class Agent:
         self._tools = tuple(tools)
         self._brain_fn = llm or default_local_brain
         self._budget = Budget(usd=budget_usd) if budget_usd is not None else None
-        self._cfg = AgentConfig(max_rounds=max_rounds, budget=self._budget)
+        self._mode = EnforcementMode.coerce(mode)
+        self._cfg = AgentConfig(max_rounds=max_rounds, budget=self._budget, mode=self._mode)
         self._granted = {native_tool.name for native_tool in self._tools}
         self._contracts = {
             native_tool.name: {
@@ -353,11 +355,22 @@ class Agent:
             self._flow,
             self._snapshot,
             capabilities=self._capabilities,
+            mode=self._mode,
         )
 
     async def arun(self, input: Any) -> dict[str, Any]:
         emitter = ProjectionEmitter(InMemoryProjection())
         tool_fns = {native_tool.name: native_tool.fn for native_tool in self._tools}
+        max_call_limits = (
+            self._deployment.capabilities.max_call_limits()
+            if self._deployment.capabilities is not None
+            else {}
+        )
+        contracts: dict[str, dict[str, Any]] = {
+            name: dict(contract) for name, contract in self._contracts.items()
+        }
+        for tool_name, limit in max_call_limits.items():
+            contracts.setdefault(tool_name, {})["maxCalls"] = limit
 
         async def invoke_controller(payload: dict[str, Any]) -> Any:
             reply = self._brain_fn(self._brain_model, payload)
@@ -382,14 +395,11 @@ class Agent:
                     invoke_controller=invoke_controller,
                     call_tool=call_tool,
                     granted=self._granted,
-                    contracts=self._contracts,
+                    contracts=contracts,
                 )
             },
-            max_calls=(
-                self._deployment.capabilities.max_call_limits()
-                if self._deployment.capabilities is not None
-                else None
-            ),
+            max_calls=max_call_limits,
+            mode=self._mode,
         )
         result = await interpret(self._deployment.flow, input, env)
         return cast(dict[str, Any], result.value)

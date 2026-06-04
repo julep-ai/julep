@@ -33,7 +33,7 @@ from ..derived import flatten_race_group
 from ..errors import CapabilityDenied, ComposableAgentsError, RaceAllFailed
 from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SubContract, SubStep, ThinkStep, toolref_key
-from ..kinds import Op
+from ..kinds import EnforcementMode, Op
 from ..projection import ProjectionEmitter
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..shapes import surface_shape
@@ -502,6 +502,7 @@ class InMemoryEnv:
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
         gate: Optional[Callable[[Any], Any]] = None,
         max_calls: Optional[dict[str, int]] = None,
+        mode: EnforcementMode | str = EnforcementMode.STRICT,
         registry: Optional[Registry] = None,
     ) -> None:
         self.manifest = manifest
@@ -513,6 +514,8 @@ class InMemoryEnv:
         self._planners = planners or {}
         self._gate = gate or (lambda v: {"approved": True, "input": v})
         self._max_calls = dict(max_calls or {})
+        self.mode = EnforcementMode.coerce(mode)
+        self.dev_warnings: list[dict[str, Any]] = []
         self._registry = registry
         self.call_counts: dict[str, int] = {}
         self._cid = 0
@@ -532,6 +535,16 @@ class InMemoryEnv:
             return
         count = self.call_counts.get(tool_key, 0)
         if count >= limit:
+            if self.mode is EnforcementMode.DEV:
+                self.dev_warnings.append(
+                    {
+                        "code": "CAP_TOOL_DENIED_RUNTIME",
+                        "tool": tool_key,
+                        "limit": limit,
+                    }
+                )
+                self.call_counts[tool_key] = count + 1
+                return
             raise CapabilityDenied(f"tool {tool_key!r} exceeded maxCalls={limit}")
         self.call_counts[tool_key] = count + 1
 

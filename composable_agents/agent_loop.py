@@ -38,7 +38,7 @@ from .contracts import CONSERVATIVE_DEFAULT, ToolContract, ToolManifest
 from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
 from .ir import Node
-from .kinds import Effect, Idempotency, Shape
+from .kinds import Effect, EnforcementMode, Idempotency, Shape
 from .staged import admit_plan, estimate_cost, validate_plan
 from .validate import Diagnostic
 
@@ -147,6 +147,7 @@ class AgentConfig:
 
     max_rounds: int = 24
     budget: Optional[Budget] = None
+    mode: EnforcementMode = EnforcementMode.STRICT
     # §6 seam: after this many rounds, the durable harness calls continue_as_new
     # to truncate Temporal history. 0 disables (history grows unbounded — fine
     # for short agents, a footgun for long ones).
@@ -161,6 +162,7 @@ class AgentConfig:
         return AgentConfig(
             max_rounds=int(d.get("maxRounds", d.get("max_rounds", 24))),
             budget=Budget.from_dict(d.get("budget")),
+            mode=EnforcementMode.coerce(d.get("mode", EnforcementMode.STRICT)),
             continue_as_new_after=int(
                 d.get("continueAsNewAfter", d.get("continue_as_new_after", 0))
             ),
@@ -173,6 +175,7 @@ class AgentConfig:
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {
             "maxRounds": self.max_rounds,
+            "mode": EnforcementMode.coerce(self.mode).value,
             "continueAsNewAfter": self.continue_as_new_after,
             "thinkCost": self.think_cost,
             "permissiveController": self.permissive_controller,
@@ -414,16 +417,35 @@ async def drive_agent_loop(
     state: Optional[AgentState] = None,
 ) -> dict[str, Any]:
     """Run the bounded agent loop locally with injected async effects."""
+    mode = EnforcementMode.coerce(cfg.mode)
+    prod_gap: list[str] = []
+    state = state or AgentState(last=input)
+
+    def finish(status: str, output: Any = None, reason: Optional[str] = None) -> dict[str, Any]:
+        result = terminal_result(status, state, output=output, reason=reason)
+        if prod_gap:
+            result["prodGap"] = list(prod_gap)
+        return result
+
+    def denied_or_dev_gap(denial: Optional[CallDenial]) -> Optional[dict[str, Any]]:
+        if denial is None:
+            return None
+        if mode is EnforcementMode.DEV:
+            prod_gap.append(denial.reason)
+            return None
+        return finish("denied", reason=denial.reason)
+
     unconstrained = granted is None
     granted_set = set(granted or [])
-    state = state or AgentState(last=input)
 
     while True:
         if state.round >= cfg.max_rounds:
-            return terminal_result("max_rounds", state)
+            return finish("max_rounds")
 
         controller_precheck = precheck_controller(state, cfg)
         if controller_precheck is not None:
+            if prod_gap:
+                controller_precheck["prodGap"] = list(prod_gap)
             return controller_precheck
 
         payload = {"input": state.last, "trace": [t.to_json() for t in state.trace]}
@@ -432,15 +454,15 @@ async def drive_agent_loop(
         action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
 
         if action.decision is Decision.FINISH:
-            return terminal_result("done", state, output=action.payload)
+            return finish("done", output=action.payload)
         if action.decision is Decision.ESCALATE:
-            return terminal_result("escalated", state, reason=str(action.payload))
+            return finish("escalated", reason=str(action.payload))
         if action.decision is Decision.CONTROLLER_ERROR:
-            return terminal_result("controller_error", state, reason=str(action.payload))
+            return finish("controller_error", reason=str(action.payload))
 
         cost = action_cost(action)
         if would_exceed_budget(state, cost, cfg.budget):
-            return terminal_result("over_budget", state)
+            return finish("over_budget")
 
         if action.decision is Decision.CALL:
             tool = action.payload["tool"]
@@ -450,11 +472,15 @@ async def drive_agent_loop(
                 granted_set=granted_set,
                 contracts=contracts,
             )
-            if denial is not None:
-                return terminal_result("denied", state, reason=denial.reason)
+            result = denied_or_dev_gap(denial)
+            if result is not None:
+                return result
             denial = charge_tool_call(state, tool, contracts)
+            result = denied_or_dev_gap(denial)
+            if result is not None:
+                return result
             if denial is not None:
-                return terminal_result("denied", state, reason=denial.reason)
+                state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
             call_input = action.payload.get("input")
             if call_input is None:
                 call_input = state.last
@@ -466,12 +492,12 @@ async def drive_agent_loop(
         else:
             ref = action.payload["ref"]
             denial = authorize_subflow(ref, granted_subflows=granted_subflows)
-            if denial is not None:
-                return terminal_result("denied", state, reason=denial.reason)
+            result = denied_or_dev_gap(denial)
+            if result is not None:
+                return result
             if run_subflow is None:
-                return terminal_result(
+                return finish(
                     "denied",
-                    state,
                     reason=f"no subflow runner for {ref!r}",
                 )
             sub_input = action.payload.get("input")

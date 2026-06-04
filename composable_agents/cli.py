@@ -18,7 +18,7 @@ from .errors import ComposableAgentsError
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, NativeToolSpec
 from .ir import CallStep, Node, SubStep, toolref_key
-from .kinds import Op
+from .kinds import EnforcementMode, Op
 from .projection import EventType, InMemoryProjection, ProjectionEmitter
 from .shapes import closed_shape, surface_shape
 from .validate import Diagnostic, blocking, validate
@@ -67,6 +67,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     run_p.add_argument("flow_json")
     run_p.add_argument("input_json")
+    run_p.add_argument("--mode", choices=("strict", "dev"), default="strict")
     run_p.set_defaults(func=_cmd_run_local)
 
     graph_p = sub.add_parser("graph", help="emit Graphviz DOT for the IR tree")
@@ -135,6 +136,7 @@ def _cmd_run_local(args: argparse.Namespace, out: TextIO) -> int:
     flow = _load_flow(args.flow_json)
     _clear_frozen_hashes(flow)
     input_value = _load_json(args.input_json)
+    mode = EnforcementMode.coerce(args.mode)
 
     diagnostics = validate(flow)
     bad = blocking(diagnostics)
@@ -151,9 +153,14 @@ def _cmd_run_local(args: argparse.Namespace, out: TextIO) -> int:
         subs=_echo_subs(flow),
         agents=_echo_agents(flow),
         gate=lambda value: {"approved": True, "input": value},
+        mode=mode,
     )
 
     result = asyncio.run(interpret(flow, input_value, env))
+    if env.dev_warnings:
+        print("dev mode: these calls would block in prod strict mode:", file=sys.stderr)
+        for warning in env.dev_warnings:
+            print(json.dumps(warning, sort_keys=True), file=sys.stderr)
     payload = {
         "result": result.value,
         "cost_by_shape": _cost_by_shape_with_zeroes(store),
