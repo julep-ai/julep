@@ -52,6 +52,7 @@ from .freeze import (
     NativeToolSpec, CapabilityOverrides,
 )
 from .validate import validate, Diagnostic, blocking
+from .diagnostics import explain
 from .capabilities import CapabilityManifest, Budget, ToolGrant, check_approval_gates
 from .staged import (
     estimate_cost, validate_plan, admit_plan, referenced_tool_keys, bind_plan_to_manifest,
@@ -116,7 +117,7 @@ _BASE_EXPORTS = [
     # compile
     "freeze", "FreezeResult", "McpSnapshot", "McpServerSnapshot", "McpToolSpec",
     "NativeToolSpec", "CapabilityOverrides",
-    "validate", "Diagnostic", "blocking",
+    "validate", "Diagnostic", "blocking", "explain",
     "CapabilityManifest", "Budget", "ToolGrant", "check_approval_gates",
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
     "bind_plan_to_manifest",

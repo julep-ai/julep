@@ -46,6 +46,9 @@ dev = [
 [project.urls]
 Homepage = "https://example.com/composable-agents"
 
+[project.scripts]
+composable-agents = "composable_agents.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["composable_agents*"]
 
