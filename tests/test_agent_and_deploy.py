@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import pytest
 
+import composable_agents
 from composable_agents import (
     AgentConfig, AgentState, Decision, interpret_brain_reply,
     generalize_trace_to_plan, extract_plan, promote_plan,
-    CapabilityManifest, Budget,
+    CapabilityManifest, Budget, Brain,
     deploy, snapshot_from_listings,
-    call, mcp, seq,
+    alt, app, arr, call, iter_up_to, mcp, par, seq, stage, think,
 )
+from composable_agents import dotctx, purity
 from composable_agents.agent_loop import (
     TraceEntry, action_cost, would_exceed_budget, should_continue_as_new,
     terminal_result, RoundAction,
 )
+from composable_agents.ir import Merge
+from composable_agents.purity import PureEntry
 from composable_agents.errors import PlanRejected, ValidationError
 from composable_agents.derived import race
 from conftest import read_snapshot, mixed_snapshot
@@ -187,3 +191,175 @@ def test_deploy_per_run_refresh_seam():
     assert d.freeze_timing == "per_run"
     d2 = d.refresh()
     assert calls["n"] == 1 and len(d2.manifest) == 1
+
+
+# --------------------------------------------------------------------------- #
+# Replay/freeze artifact hash (§6.2).
+# --------------------------------------------------------------------------- #
+def _pure_artifact_fn(value):
+    return value
+
+
+def _artifact_brain(name: str = "artifact.brain", *, system: str = "original") -> Brain:
+    return Brain(
+        name=name,
+        model="test-model",
+        system=system,
+        reply_schema={"type": "object"},
+        tools=("srv/a",),
+    )
+
+
+def test_deployment_artifact_hash_is_stable_for_same_inputs(monkeypatch):
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.identity",
+        PureEntry("artifact.identity", _pure_artifact_fn, "pure:stable"),
+    )
+    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain())
+    snap = read_snapshot("a")
+    flow = seq(arr("artifact.identity"), think("artifact.brain"), call(mcp("srv", "a")))
+
+    first = deploy(flow, snap)
+    second = deploy(flow, snap)
+
+    assert first.artifact_components == second.artifact_components
+    assert first.artifact_hash == second.artifact_hash
+    assert first.artifact_components["pureSourceHashes"] == {"artifact.identity": "pure:stable"}
+    assert first.artifact_components["brains"]["artifact.brain"]["system"] == "original"
+    assert first.artifact_components["executionPolicy"] is None
+
+
+def test_deployment_artifact_hash_changes_with_flow_change(monkeypatch):
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.identity",
+        PureEntry("artifact.identity", _pure_artifact_fn, "pure:stable"),
+    )
+    snap = read_snapshot("a", "b")
+
+    first = deploy(seq(arr("artifact.identity"), call(mcp("srv", "a"))), snap)
+    second = deploy(seq(arr("artifact.identity"), call(mcp("srv", "a")), call(mcp("srv", "b"))), snap)
+
+    assert first.artifact_hash != second.artifact_hash
+
+
+def test_deployment_artifact_hash_changes_with_referenced_pure_source(monkeypatch):
+    snap = read_snapshot("a")
+    flow = seq(arr("artifact.identity"), call(mcp("srv", "a")))
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.identity",
+        PureEntry("artifact.identity", _pure_artifact_fn, "pure:before"),
+    )
+    first = deploy(flow, snap)
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.identity",
+        PureEntry("artifact.identity", _pure_artifact_fn, "pure:after"),
+    )
+    second = deploy(flow, snap)
+
+    assert first.artifact_hash != second.artifact_hash
+
+
+def test_deployment_artifact_hash_changes_with_referenced_brain(monkeypatch):
+    snap = read_snapshot()
+    flow = think("artifact.brain")
+    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain(system="before"))
+    first = deploy(flow, snap)
+    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain(system="after"))
+    second = deploy(flow, snap)
+
+    assert first.artifact_hash != second.artifact_hash
+
+
+def test_deployment_artifact_hash_changes_with_capabilities():
+    snap = read_snapshot("a")
+    flow = call(mcp("srv", "a"))
+    low_budget = CapabilityManifest.from_dict({"budget": {"usd": 1.0}})
+    high_budget = CapabilityManifest.from_dict({"budget": {"usd": 2.0}})
+
+    first = deploy(flow, snap, capabilities=low_budget)
+    second = deploy(flow, snap, capabilities=high_budget)
+
+    assert first.artifact_hash != second.artifact_hash
+
+
+def test_deployment_artifact_hash_changes_with_framework_version(monkeypatch):
+    snap = read_snapshot("a")
+    flow = call(mcp("srv", "a"))
+
+    first = deploy(flow, snap)
+
+    monkeypatch.setattr(composable_agents, "__version__", "artifact-test-version")
+    second = deploy(flow, snap)
+
+    assert first.artifact_hash != second.artifact_hash
+
+
+def test_deployment_artifact_components_collect_referenced_brains_and_pures(monkeypatch):
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.arr",
+        PureEntry("artifact.arr", _pure_artifact_fn, "pure:arr"),
+    )
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.alt",
+        PureEntry("artifact.alt", _pure_artifact_fn, "pure:alt"),
+    )
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.until",
+        PureEntry("artifact.until", _pure_artifact_fn, "pure:until"),
+    )
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.switch",
+        PureEntry("artifact.switch", _pure_artifact_fn, "pure:switch"),
+    )
+    monkeypatch.setitem(
+        purity._REGISTRY,
+        "artifact.reducer",
+        PureEntry("artifact.reducer", _pure_artifact_fn, "pure:reducer"),
+    )
+    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain())
+    monkeypatch.setitem(
+        dotctx._BRAINS,
+        "artifact.controller",
+        _artifact_brain("artifact.controller", system="controller"),
+    )
+    monkeypatch.setitem(
+        dotctx._BRAINS,
+        "artifact.planner",
+        _artifact_brain("artifact.planner", system="planner"),
+    )
+    fan = par(arr("artifact.arr"), arr("artifact.arr"))
+    fan.merge = Merge(kind="all", reducer="artifact.reducer")
+    flow = seq(
+        arr("artifact.arr"),
+        alt("artifact.alt", think("artifact.brain"), app("artifact.controller")),
+        alt(
+            select="artifact.switch",
+            cases={"x": arr("artifact.arr")},
+            default=arr("artifact.arr"),
+        ),
+        iter_up_to(2, stage("artifact.planner"), until="artifact.until"),
+        fan,
+    )
+
+    d = deploy(flow, read_snapshot(), strict=False)
+
+    assert d.artifact_components["pureSourceHashes"] == {
+        "artifact.alt": "pure:alt",
+        "artifact.arr": "pure:arr",
+        "artifact.reducer": "pure:reducer",
+        "artifact.switch": "pure:switch",
+        "artifact.until": "pure:until",
+    }
+    assert sorted(d.artifact_components["brains"]) == [
+        "artifact.brain",
+        "artifact.controller",
+        "artifact.planner",
+    ]

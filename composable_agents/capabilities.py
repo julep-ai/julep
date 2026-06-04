@@ -151,6 +151,44 @@ class CapabilityManifest:
         with open(path, "r", encoding="utf-8") as fh:
             return CapabilityManifest.from_yaml(fh.read())
 
+    def to_json(self) -> dict[str, Any]:
+        def tool_grant_json(grant: ToolGrant) -> dict[str, Any]:
+            out: dict[str, Any] = {"name": grant.name}
+            if grant.effect is not None:
+                out["effect"] = grant.effect.value
+            if grant.idempotency is not None:
+                out["idempotency"] = grant.idempotency.value
+            if grant.approval is not None:
+                out["approval"] = grant.approval
+            if grant.max_calls is not None:
+                out["maxCalls"] = grant.max_calls
+            return out
+
+        out: dict[str, Any] = {
+            "tools": [tool_grant_json(self.tools[name]) for name in sorted(self.tools)],
+            "network": sorted(self.network),
+            "mcpServers": {
+                server: self.mcp_servers[server]
+                for server in sorted(self.mcp_servers)
+            },
+        }
+        if self._has_brains:
+            out["brains"] = sorted(self.brains)
+        if self._has_subflows:
+            out["subflows"] = sorted(self.subflows)
+        if self._has_memory:
+            out["memory"] = sorted(scope.value for scope in self.memory)
+        if self.budget is not None:
+            budget: dict[str, Any] = {}
+            if self.budget.usd is not None:
+                budget["usd"] = self.budget.usd
+            if self.budget.tokens is not None:
+                budget["tokens"] = self.budget.tokens
+            if self.budget.wall_seconds is not None:
+                budget["wallSeconds"] = self.budget.wall_seconds
+            out["budget"] = budget
+        return out
+
     # ----- freeze integration ---------------------------------------------- #
     def overrides(self) -> CapabilityOverrides:
         """Asserted contracts to hand to :func:`composable_agents.freeze.freeze`."""

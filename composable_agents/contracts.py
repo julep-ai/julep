@@ -60,6 +60,18 @@ class McpAnnotations:
             idempotent_hint=ann.get("idempotentHint"),
         )
 
+    def to_json(self) -> dict[str, bool]:
+        out: dict[str, bool] = {}
+        if self.read_only_hint is not None:
+            out["readOnlyHint"] = self.read_only_hint
+        if self.destructive_hint is not None:
+            out["destructiveHint"] = self.destructive_hint
+        if self.open_world_hint is not None:
+            out["openWorldHint"] = self.open_world_hint
+        if self.idempotent_hint is not None:
+            out["idempotentHint"] = self.idempotent_hint
+        return out
+
 
 def contract_from_annotations(ann: McpAnnotations) -> ToolContract:
     """Seed a contract from MCP hints (blueprint §1.3 table), conservatively.
@@ -81,31 +93,67 @@ def contract_from_annotations(ann: McpAnnotations) -> ToolContract:
     return ToolContract(effect=effect, idempotency=idempotency)
 
 
-def tool_hash(
-    ref: ToolRef, input_schema: JSONSchema, server_version: Optional[str]
-) -> str:
-    """Content hash over (server/name, inputSchema, version).
+def _sha256_json(value: dict[str, Any]) -> str:
+    payload = canonical_json(value)
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return f"sha256:{digest}"
 
-    Deterministic and order-insensitive (canonical JSON), so the same tool
-    yields the same hash on every host, and a schema or version change yields a
-    different hash — which is exactly what surfaces drift after freeze.
+
+def _annotations_json(
+    annotations: Optional[McpAnnotations | dict[str, Any]],
+) -> Optional[dict[str, Any]]:
+    if annotations is None:
+        return None
+    if isinstance(annotations, McpAnnotations):
+        return annotations.to_json()
+    return annotations
+
+
+def definition_hash(
+    ref: ToolRef,
+    input_schema: JSONSchema,
+    output_schema: Optional[JSONSchema] = None,
+    server_version: Optional[str] = None,
+    annotations: Optional[McpAnnotations | dict[str, Any]] = None,
+) -> str:
+    """Provider definition identity for a frozen tool.
+
+    This covers what the provider advertises: reference, input/output schemas,
+    server version, and the MCP annotation snapshot. It intentionally excludes
+    deployment-local contract assertions.
     """
-    payload = canonical_json(
+    return _sha256_json(
         {
             "ref": toolref_key(ref),
             "inputSchema": input_schema,
+            "outputSchema": output_schema,
             "serverVersion": server_version,
+            "annotations": _annotations_json(annotations),
         }
     )
-    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-    return f"sha256:{digest}"
+
+
+def execution_hash(
+    tool_definition_hash: str,
+    contract: ToolContract,
+    asserted: bool,
+) -> str:
+    """Execution identity for the exact contract this deployment will use."""
+    return _sha256_json(
+        {
+            "definitionHash": tool_definition_hash,
+            "contract": contract.to_json(),
+            "asserted": asserted,
+        }
+    )
 
 
 @dataclass(frozen=True)
 class FrozenTool:
     """A tool pinned at run start: hash-addressed, with a settled contract."""
 
-    hash: str
+    definition_hash: str
+    execution_hash: str
     ref: ToolRef
     input_schema: JSONSchema
     contract: ToolContract
@@ -116,6 +164,10 @@ class FrozenTool:
     # (§5) treats an unasserted contract as `none`.
     asserted: bool = False
 
+    @property
+    def hash(self) -> str:
+        return self.execution_hash
+
     @staticmethod
     def create(
         ref: ToolRef,
@@ -124,9 +176,19 @@ class FrozenTool:
         output_schema: Optional[JSONSchema] = None,
         server_version: Optional[str] = None,
         asserted: bool = False,
+        annotations: Optional[McpAnnotations | dict[str, Any]] = None,
     ) -> "FrozenTool":
+        def_hash = definition_hash(
+            ref,
+            input_schema,
+            output_schema,
+            server_version,
+            annotations,
+        )
+        exec_hash = execution_hash(def_hash, contract, asserted)
         return FrozenTool(
-            hash=tool_hash(ref, input_schema, server_version),
+            definition_hash=def_hash,
+            execution_hash=exec_hash,
             ref=ref,
             input_schema=input_schema,
             contract=contract,
@@ -137,7 +199,9 @@ class FrozenTool:
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {
-            "hash": self.hash,
+            "hash": self.execution_hash,
+            "definitionHash": self.definition_hash,
+            "executionHash": self.execution_hash,
             "ref": self.ref.to_json(),
             "inputSchema": self.input_schema,
             "contract": self.contract.to_json(),
@@ -166,8 +230,12 @@ def frozentool_from_json(d: dict[str, Any]) -> FrozenTool:
     round-trip to the *same* hash the run was bound to, even if this process's
     hashing were to differ.
     """
+    execution = d.get("executionHash", d.get("hash"))
+    if execution is None:
+        raise KeyError("executionHash")
     return FrozenTool(
-        hash=d["hash"],
+        definition_hash=d.get("definitionHash", d.get("hash", execution)),
+        execution_hash=execution,
         ref=toolref_from_json(d["ref"]),
         input_schema=d.get("inputSchema", {}),
         contract=ToolContract.from_json(d["contract"]),

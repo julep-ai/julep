@@ -474,4 +474,4 @@ class Node:
 
 def canonical_json(value: Any) -> str:
     """Stable JSON used for content hashing: sorted keys, no whitespace."""
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))

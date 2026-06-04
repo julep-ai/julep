@@ -153,6 +153,7 @@ def _resolve(
         output_schema=spec.output_schema,
         server_version=server.version,
         asserted=asserted,
+        annotations=spec.annotations,
     )
 
 

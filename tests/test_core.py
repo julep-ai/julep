@@ -13,7 +13,9 @@ from composable_agents import (
     CapabilityManifest, ToolContract, manifest_to_json, manifest_from_json,
     estimate_cost, admit_plan, check_race_admission,
 )
+from composable_agents.contracts import FrozenTool, definition_hash, execution_hash
 from composable_agents.errors import FreezeError, PlanRejected
+from composable_agents.ir import canonical_json
 from composable_agents.shapes import surface_shape, closed_shape
 from conftest import read_snapshot, mixed_snapshot
 
@@ -55,6 +57,24 @@ def test_sub_is_opaque_at_surface_but_revealed_when_closed():
 # --------------------------------------------------------------------------- #
 # Contracts + manifest round-trip.
 # --------------------------------------------------------------------------- #
+def test_canonical_json_rejects_non_json_values():
+    class NotJson:
+        pass
+
+    with pytest.raises(TypeError):
+        canonical_json({"payload": NotJson()})
+
+
+def test_existing_fixture_json_stays_structurally_serializable():
+    flow = seq(call(mcp("srv", "a")), alt("route", call("left"), call("right")))
+    before = flow.to_json()
+
+    encoded = canonical_json(before)
+
+    assert encoded
+    assert flow.to_json() == before
+
+
 def test_manifest_json_round_trip():
     fr = freeze(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"))
     j = manifest_to_json(fr.manifest)
@@ -63,6 +83,52 @@ def test_manifest_json_round_trip():
     for h, tool in fr.manifest.items():
         assert back[h].ref.to_json() == tool.ref.to_json()
         assert back[h].contract.effect == tool.contract.effect
+        assert back[h].definition_hash == tool.definition_hash
+        assert back[h].execution_hash == tool.execution_hash
+        assert h == tool.execution_hash
+
+
+def test_tool_hashes_split_definition_from_execution_identity():
+    ref = mcp("srv", "lookup")
+    contract = ToolContract(Effect.READ, Idempotency.NATIVE)
+    output_a = {"type": "object", "properties": {"a": {"type": "string"}}}
+    output_b = {"type": "object", "properties": {"b": {"type": "string"}}}
+
+    base = FrozenTool.create(ref, {}, contract, output_schema=output_a, asserted=False)
+    same = FrozenTool.create(ref, {}, contract, output_schema=output_a, asserted=False)
+    changed_output = FrozenTool.create(ref, {}, contract, output_schema=output_b, asserted=False)
+    changed_contract = FrozenTool.create(
+        ref,
+        {},
+        ToolContract(Effect.WRITE, Idempotency.NATIVE),
+        output_schema=output_a,
+        asserted=False,
+    )
+    changed_asserted = FrozenTool.create(ref, {}, contract, output_schema=output_a, asserted=True)
+
+    assert base.definition_hash == same.definition_hash
+    assert base.execution_hash == same.execution_hash
+    assert base.execution_hash == base.hash
+    assert base.definition_hash != changed_output.definition_hash
+    assert base.execution_hash != changed_output.execution_hash
+    assert base.definition_hash == changed_contract.definition_hash
+    assert base.execution_hash != changed_contract.execution_hash
+    assert base.definition_hash == changed_asserted.definition_hash
+    assert base.execution_hash != changed_asserted.execution_hash
+
+
+def test_hash_helpers_include_expected_identity_parts():
+    ref = mcp("srv", "lookup")
+    contract = ToolContract(Effect.READ, Idempotency.NATIVE)
+    base_definition = definition_hash(ref, {}, {"type": "object"}, "1")
+    same_definition = definition_hash(ref, {}, {"type": "object"}, "1")
+    changed_definition = definition_hash(ref, {}, {"type": "array"}, "1")
+
+    assert base_definition == same_definition
+    assert base_definition != changed_definition
+    assert execution_hash(base_definition, contract, asserted=False) != execution_hash(
+        base_definition, contract, asserted=True
+    )
 
 
 # --------------------------------------------------------------------------- #

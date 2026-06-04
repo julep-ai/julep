@@ -36,12 +36,16 @@ are guarded so this module is usable for offline compilation without Temporal.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Any, Callable, Optional
 
+from . import __version__
 from .capabilities import CapabilityManifest, check_approval_gates
-from .contracts import ToolManifest, manifest_to_json
+from .contracts import McpAnnotations, ToolManifest, manifest_to_json
 from .derived import check_race_admission
+from .dotctx import Brain, get_brain
 from .errors import ValidationError
 from .freeze import (
     CapabilityOverrides,
@@ -51,8 +55,9 @@ from .freeze import (
     McpToolSpec,
     freeze,
 )
-from .ir import Node
-from .contracts import McpAnnotations
+from .ir import Node, ThinkStep, canonical_json
+from .kinds import Op
+from .purity import source_hash_of
 from .validate import Diagnostic, blocking, validate
 
 
@@ -91,11 +96,55 @@ def snapshot_from_listings(
                     destructive_hint=ann_raw.get("destructiveHint", ann_raw.get("destructive_hint")),
                     open_world_hint=ann_raw.get("openWorldHint", ann_raw.get("open_world_hint")),
                 ),
+                output_schema=spec.get("outputSchema", spec.get("output_schema")),
             )
         servers[server] = McpServerSnapshot(
             server=server, version=versions.get(server, "1"), tools=tool_specs
         )
     return McpSnapshot(servers=servers)
+
+
+def _referenced_pures(flow: Node) -> list[str]:
+    names: set[str] = set()
+    for node in flow.walk():
+        if node.pure is not None:
+            names.add(node.pure)
+        if node.op == Op.ALT and node.select is not None:
+            names.add(node.select)
+        if node.merge is not None and node.merge.reducer is not None:
+            names.add(node.merge.reducer)
+    return sorted(names)
+
+
+def _referenced_brains(flow: Node) -> list[str]:
+    names: set[str] = set()
+    for node in flow.walk():
+        step = node.step
+        if isinstance(step, ThinkStep):
+            names.add(step.brain)
+        if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
+            names.add(node.controller)
+    return sorted(names)
+
+
+def _brain_identity(name: str) -> dict[str, Any]:
+    try:
+        brain: Brain = get_brain(name)
+    except KeyError:
+        return {"name": name}
+    return {
+        "name": brain.name,
+        "model": brain.model,
+        "system": brain.system,
+        "replySchema": brain.reply_schema,
+        "tools": list(brain.tools),
+    }
+
+
+def _framework_version() -> str:
+    import composable_agents as package
+
+    return getattr(package, "__version__", __version__)
 
 
 @dataclass
@@ -119,6 +168,33 @@ class Deployment:
     @property
     def manifest_json(self) -> dict[str, Any]:
         return manifest_to_json(self.manifest)
+
+    @cached_property
+    def artifact_components(self) -> dict[str, Any]:
+        capabilities_json = (
+            self.capabilities.to_json() if self.capabilities is not None else None
+        )
+        return {
+            "flowJson": self.flow_json,
+            "manifestJson": self.manifest_json,
+            "pureSourceHashes": {
+                name: source_hash_of(name)
+                for name in _referenced_pures(self.flow)
+            },
+            "brains": {
+                name: _brain_identity(name)
+                for name in _referenced_brains(self.flow)
+            },
+            "capabilities": capabilities_json,
+            "executionPolicy": None,
+            "frameworkVersion": _framework_version(),
+        }
+
+    @cached_property
+    def artifact_hash(self) -> str:
+        payload = canonical_json(self.artifact_components)
+        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        return f"sha256:{digest}"
 
     @property
     def warnings(self) -> list[Diagnostic]:
@@ -211,7 +287,7 @@ def deploy(
         if bad:
             raise ValidationError(bad)
 
-    return Deployment(
+    deployment = Deployment(
         flow=fr.flow,
         manifest=fr.manifest,
         diagnostics=diagnostics,
@@ -220,6 +296,8 @@ def deploy(
         _snapshot_source=snapshot_source,
         _overrides=overrides,
     )
+    _ = deployment.artifact_hash
+    return deployment
 
 
 __all__ = ["Deployment", "deploy", "snapshot_from_listings"]

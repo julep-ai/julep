@@ -19,6 +19,8 @@ authoring/compile path here works with no Temporal install — and
 
 from __future__ import annotations
 
+__version__ = "0.1.0"
+
 # --- shape lattice + effect kinds ----------------------------------------- #
 from .kinds import Shape, Effect, Idempotency, ContextScope, SummaryPolicy
 
@@ -41,7 +43,7 @@ from .derived import (
 # --- contracts + tool manifest --------------------------------------------- #
 from .contracts import (
     ToolContract, FrozenTool, McpAnnotations, ToolManifest,
-    manifest_to_json, manifest_from_json,
+    definition_hash, execution_hash, manifest_to_json, manifest_from_json,
 )
 
 # --- compile pipeline ------------------------------------------------------ #
@@ -91,8 +93,6 @@ if HAVE_TEMPORAL:  # re-export the durable runtime only when temporalio is prese
         callHand, invokeBrain, compilePlan, resolveSubflow, resolveAgentSpec,
     )
 
-__version__ = "0.1.0"
-
 _BASE_EXPORTS = [
     # kinds
     "Shape", "Effect", "Idempotency", "ContextScope", "SummaryPolicy",
@@ -108,7 +108,7 @@ _BASE_EXPORTS = [
     "human_gate", "check_race_admission",
     # contracts
     "ToolContract", "FrozenTool", "McpAnnotations", "ToolManifest",
-    "manifest_to_json", "manifest_from_json",
+    "definition_hash", "execution_hash", "manifest_to_json", "manifest_from_json",
     # compile
     "freeze", "FreezeResult", "McpSnapshot", "McpServerSnapshot", "McpToolSpec",
     "NativeToolSpec", "CapabilityOverrides",
