@@ -5,7 +5,8 @@ from typing import Any
 import pytest
 
 from composable_agents import Agent, ValidationError, call, ident, native, tool
-from composable_agents.flow import flow
+from composable_agents.derived import race
+from composable_agents.flow import flow, seq
 from composable_agents.flow_registry import get_flow
 
 
@@ -179,3 +180,80 @@ def test_plain_flow_cap_with_granted_tool_runs_through_parent_grant() -> None:
 
     assert result["status"] == "done"
     assert calls == ["hi"]
+
+
+def test_unsafe_plain_flow_cap_rejected_by_race_admission_strict() -> None:
+    @tool(effect="write", idempotent=False, name="tf6_write_race_strict")
+    def w(value: str) -> str:
+        return f"w:{value}"
+
+    cap = flow(race(w.to_ir(), w.to_ir())).named("tf6.bad.race.strict")
+    parent = Agent("m", tools=[w, cap], name="tf6_bad_race_parent_strict")
+
+    diagnostics = parent.check()
+    assert any(d.code == "RACE_UNSAFE" for d in diagnostics)
+
+    with pytest.raises(ValidationError, match="RACE_UNSAFE"):
+        parent.run("x")
+
+    with pytest.raises(ValidationError, match="RACE_UNSAFE"):
+        parent.deployment()
+
+
+def test_unsafe_plain_flow_cap_surfaces_prod_gap_in_dev() -> None:
+    @tool(effect="write", idempotent=False, name="tf6_write_race_dev")
+    def w(value: str) -> str:
+        return f"w:{value}"
+
+    cap = flow(race(w.to_ir(), w.to_ir())).named("tf6.bad.race.dev")
+    parent = Agent(
+        "m",
+        tools=[w, cap],
+        name="tf6_bad_race_parent_dev",
+        mode="dev",
+    )
+
+    diagnostics = parent.check()
+    deployment = parent.deployment()
+
+    assert any(d.code == "RACE_UNSAFE" for d in diagnostics)
+    assert any(d.code == "RACE_UNSAFE" for d in deployment.prod_gap)
+
+
+def test_safe_plain_flow_cap_still_runs_with_compiled_manifest() -> None:
+    calls: list[tuple[str, str]] = []
+
+    @tool(effect="read", idempotent=True, name="tf6_read_seq_first")
+    def first(value: str) -> str:
+        calls.append(("first", value))
+        return f"first:{value}"
+
+    @tool(effect="read", idempotent=True, name="tf6_read_seq_second")
+    def second(value: str) -> str:
+        calls.append(("second", value))
+        return f"second:{value}"
+
+    cap = seq(first, second).named("tf6.good.seq")
+    replies = [
+        {"sub": "tf6.good.seq", "input": "start"},
+        {"output": "done"},
+    ]
+    seen: list[dict[str, Any]] = []
+
+    def llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+        seen.append(payload)
+        return replies.pop(0)
+
+    parent = Agent(
+        "m",
+        tools=[first, second, cap],
+        name="tf6_good_seq_parent",
+        llm=llm,
+    )
+
+    assert parent.check() == []
+    result = parent.run("x")
+
+    assert result["status"] == "done"
+    assert calls == [("first", "start"), ("second", "first:start")]
+    assert seen[1]["input"] == "second:first:start"

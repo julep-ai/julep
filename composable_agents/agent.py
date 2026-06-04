@@ -39,7 +39,7 @@ from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
 from .result import Result
-from .validate import Diagnostic
+from .validate import Diagnostic, blocking
 
 _OBJECT_SCHEMA: JSONSchema = {"type": "object"}
 _ALLOWED_EFFECTS = ("read", "write", "external", "dangerous")
@@ -473,6 +473,8 @@ class Agent(FlowLike[Any, Any]):
             _has_subflows=bool(sub_refs),
         )
         self._deployment_cache: Optional[Deployment] = None
+        self._deployment_base_diagnostics: list[Diagnostic] = []
+        self._plain_flow_deployment_cache: dict[str, Deployment] = {}
         self._eager_capability_checks()
 
     def to_ir(self) -> Node:
@@ -557,14 +559,53 @@ class Agent(FlowLike[Any, Any]):
             overrides["llm"] = llm
         return self._reconstruct(**overrides)
 
-    def _deploy(self) -> Deployment:
+    def _plain_flow_cap_deployments(self, *, strict: bool) -> dict[str, Deployment]:
+        deployments: dict[str, Deployment] = {}
+        strict_bad: list[Diagnostic] = []
+        for ref, cap in self._flow_caps.items():
+            if isinstance(cap, Agent):
+                continue
+            cached = self._plain_flow_deployment_cache.get(ref)
+            if cached is None:
+                cached = deploy(
+                    cap.to_ir(),
+                    self._snapshot,
+                    capabilities=self._capabilities,
+                    strict=strict,
+                    mode=self._mode,
+                )
+                self._plain_flow_deployment_cache[ref] = cached
+            deployments[ref] = cached
+            if strict and self._mode is EnforcementMode.STRICT:
+                strict_bad.extend(blocking(cached.diagnostics))
+        if strict_bad:
+            raise ValidationError(strict_bad)
+        return deployments
+
+    def _deploy(self, *, strict: bool = True) -> Deployment:
         if self._deployment_cache is None:
             self._deployment_cache = deploy(
                 self._flow,
                 self._snapshot,
                 capabilities=self._capabilities,
+                strict=strict,
                 mode=self._mode,
             )
+            self._deployment_base_diagnostics = list(self._deployment_cache.diagnostics)
+        elif strict and self._mode is EnforcementMode.STRICT:
+            bad = blocking(self._deployment_base_diagnostics)
+            if bad:
+                raise ValidationError(bad)
+        cap_deployments = self._plain_flow_cap_deployments(strict=strict)
+        cap_diagnostics = [
+            diagnostic
+            for cap_deployment in cap_deployments.values()
+            for diagnostic in cap_deployment.diagnostics
+        ]
+        self._deployment_cache.diagnostics = [
+            *self._deployment_base_diagnostics,
+            *cap_diagnostics,
+        ]
         return self._deployment_cache
 
     def _eager_capability_checks(self) -> None:
@@ -628,6 +669,7 @@ class Agent(FlowLike[Any, Any]):
 
     async def arun(self, input: Any) -> "Result[Any]":
         deployment = self._deploy()
+        plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
         emitter = ProjectionEmitter(InMemoryProjection())
         tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
         max_call_limits = (
@@ -668,13 +710,14 @@ class Agent(FlowLike[Any, Any]):
                     return {"error": f"subflow {ref!r} unavailable"}
                 if isinstance(cap, Agent):
                     return await cap.arun(value)
+                sub_deployment = plain_flow_deployments[ref]
                 sub_env = InMemoryEnv(
-                    deployment.manifest,
+                    sub_deployment.manifest,
                     emitter,
                     hands=tool_fns,
                     mode=self._mode,
                 )
-                sub_result = await interpret(cap.to_ir(), value, sub_env)
+                sub_result = await interpret(sub_deployment.flow, value, sub_env)
                 return sub_result.value
 
         env = InMemoryEnv(
@@ -714,9 +757,8 @@ class Agent(FlowLike[Any, Any]):
         return dict(self._split_children)
 
     def check(self) -> list[Diagnostic]:
-        """Force full freeze validation without executing. In strict mode a blocking
-        diagnostic raises ValidationError (via deploy); otherwise returns diagnostics."""
-        return self._deploy().diagnostics
+        """Force full freeze validation without executing and return diagnostics."""
+        return self._deploy(strict=False).diagnostics
 
     async def deploy(
         self,
