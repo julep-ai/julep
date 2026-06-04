@@ -30,12 +30,14 @@ from .contracts import ToolContract
 from .deploy import Deployment, deploy
 from .dotctx import Brain, register_brain
 from .dsl import app, call, native
+from .errors import ValidationError
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
 from .flow import FlowLike
 from .ir import JSONSchema, Node, canonical_json
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
+from .validate import Diagnostic
 
 _OBJECT_SCHEMA: JSONSchema = {"type": "object"}
 _ALLOWED_EFFECTS = ("read", "write", "external", "dangerous")
@@ -339,7 +341,7 @@ def _derive_agent_name(
     return f"agent-{digest}"
 
 
-class Agent:
+class Agent(FlowLike[Any, Any]):
     """Thin facade over the existing APP IR, local interpreter, and deployment."""
 
     def __init__(
@@ -417,19 +419,62 @@ class Agent:
             budget=self._budget,
             _has_tools=True,
         )
-        self._deployment = deploy(
-            self._flow,
-            self._snapshot,
-            capabilities=self._capabilities,
-            mode=self._mode,
-        )
+        self._deployment_cache: Optional[Deployment] = None
+        self._eager_capability_checks()
+
+    def to_ir(self) -> Node:
+        return self._flow
+
+    def _deploy(self) -> Deployment:
+        if self._deployment_cache is None:
+            self._deployment_cache = deploy(
+                self._flow,
+                self._snapshot,
+                capabilities=self._capabilities,
+                mode=self._mode,
+            )
+        return self._deployment_cache
+
+    def _eager_capability_checks(self) -> None:
+        names = [native_tool.name for native_tool in self._tools]
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            raise ValidationError(
+                [
+                    Diagnostic(
+                        "CAP_APP_TOOL_COLLISION",
+                        self._flow.id,
+                        f"duplicate capability name {name!r} among agent tools",
+                    )
+                    for name in duplicates
+                ]
+            )
+        if self._mode is EnforcementMode.STRICT:
+            dangerous = [
+                native_tool.name
+                for native_tool in self._tools
+                if native_tool.contract.effect == Effect.DANGEROUS
+            ]
+            if dangerous:
+                raise ValidationError(
+                    [
+                        Diagnostic(
+                            "CAP_APP_APPROVAL_TOOL",
+                            self._flow.id,
+                            f"app inline tool {name!r} requires approval and cannot "
+                            "be called by an agent",
+                        )
+                        for name in dangerous
+                    ]
+                )
 
     async def arun(self, input: Any) -> dict[str, Any]:
+        deployment = self._deploy()
         emitter = ProjectionEmitter(InMemoryProjection())
         tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
         max_call_limits = (
-            self._deployment.capabilities.max_call_limits()
-            if self._deployment.capabilities is not None
+            deployment.capabilities.max_call_limits()
+            if deployment.capabilities is not None
             else {}
         )
         contracts: dict[str, dict[str, Any]] = {
@@ -455,7 +500,7 @@ class Agent:
             return result
 
         env = InMemoryEnv(
-            self._deployment.manifest,
+            deployment.manifest,
             emitter,
             hands=tool_fns,
             agents={
@@ -471,7 +516,7 @@ class Agent:
             max_calls=max_call_limits,
             mode=self._mode,
         )
-        result = await interpret(self._deployment.flow, input, env)
+        result = await interpret(deployment.flow, input, env)
         return cast(dict[str, Any], result.value)
 
     def run(self, input: Any) -> dict[str, Any]:
@@ -482,7 +527,12 @@ class Agent:
         raise RuntimeError("Agent.run() cannot be called inside a running event loop; use await Agent.arun(...)")
 
     def deployment(self) -> Deployment:
-        return self._deployment
+        return self._deploy()
+
+    def check(self) -> list[Diagnostic]:
+        """Force full freeze validation without executing. In strict mode a blocking
+        diagnostic raises ValidationError (via deploy); otherwise returns diagnostics."""
+        return self._deploy().diagnostics
 
     async def deploy(
         self,
@@ -493,7 +543,7 @@ class Agent:
         task_queue: str = "composable-agents",
         policy: Any = None,
     ) -> Any:
-        return await self._deployment.run(
+        return await self._deploy().run(
             client,
             session_id=session_id,
             input=input,
