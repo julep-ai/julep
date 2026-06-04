@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+pytest.importorskip("temporalio")
+
 from composable_agents import (
     Brain,
     CapabilityManifest,

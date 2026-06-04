@@ -105,8 +105,9 @@ def _annotations_json(
     if annotations is None:
         return None
     if isinstance(annotations, McpAnnotations):
-        return annotations.to_json()
-    return annotations
+        payload = annotations.to_json()
+        return payload or None
+    return annotations or None
 
 
 def definition_hash(

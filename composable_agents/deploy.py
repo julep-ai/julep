@@ -57,7 +57,7 @@ from .freeze import (
 )
 from .ir import Node, ThinkStep, canonical_json
 from .kinds import Op
-from .purity import source_hash_of
+from .purity import is_registered, source_hash_of
 from .validate import Diagnostic, blocking, validate
 
 
@@ -114,6 +114,13 @@ def _referenced_pures(flow: Node) -> list[str]:
         if node.merge is not None and node.merge.reducer is not None:
             names.add(node.merge.reducer)
     return sorted(names)
+
+
+def _pure_source_hashes(flow: Node) -> dict[str, str | None]:
+    return {
+        name: source_hash_of(name) if is_registered(name) else None
+        for name in _referenced_pures(flow)
+    }
 
 
 def _referenced_brains(flow: Node) -> list[str]:
@@ -177,10 +184,7 @@ class Deployment:
         return {
             "flowJson": self.flow_json,
             "manifestJson": self.manifest_json,
-            "pureSourceHashes": {
-                name: source_hash_of(name)
-                for name in _referenced_pures(self.flow)
-            },
+            "pureSourceHashes": _pure_source_hashes(self.flow),
             "brains": {
                 name: _brain_identity(name)
                 for name in _referenced_brains(self.flow)

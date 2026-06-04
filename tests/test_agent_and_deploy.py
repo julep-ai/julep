@@ -189,6 +189,14 @@ def test_deploy_non_strict_returns_diagnostics():
     assert any(x.severity == "error" for x in d.diagnostics)
 
 
+def test_deploy_non_strict_unknown_pure_keeps_artifact_hash_accessible():
+    d = deploy(arr("artifact.missing"), read_snapshot(), strict=False)
+
+    assert any(x.code == "UNKNOWN_PURE" for x in d.diagnostics)
+    assert d.artifact_components["pureSourceHashes"] == {"artifact.missing": None}
+    assert d.artifact_hash.startswith("sha256:")
+
+
 def test_deploy_per_run_refresh_seam():
     snap = read_snapshot("a")
     calls = {"n": 0}

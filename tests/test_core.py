@@ -13,7 +13,7 @@ from composable_agents import (
     CapabilityManifest, ToolContract, manifest_to_json, manifest_from_json,
     estimate_cost, admit_plan, check_race_admission,
 )
-from composable_agents.contracts import FrozenTool, definition_hash, execution_hash
+from composable_agents.contracts import FrozenTool, McpAnnotations, definition_hash, execution_hash
 from composable_agents.errors import FreezeError, PlanRejected
 from composable_agents.ir import canonical_json
 from composable_agents.shapes import surface_shape, closed_shape
@@ -115,6 +115,16 @@ def test_tool_hashes_split_definition_from_execution_identity():
     assert base.execution_hash != changed_contract.execution_hash
     assert base.definition_hash == changed_asserted.definition_hash
     assert base.execution_hash != changed_asserted.execution_hash
+
+
+def test_empty_annotations_hash_like_absent_annotations():
+    ref = mcp("srv", "lookup")
+    contract = ToolContract(Effect.READ, Idempotency.NATIVE)
+    absent = FrozenTool.create(ref, {}, contract, annotations=None)
+    empty = FrozenTool.create(ref, {}, contract, annotations=McpAnnotations())
+
+    assert absent.definition_hash == empty.definition_hash
+    assert absent.execution_hash == empty.execution_hash
 
 
 def test_hash_helpers_include_expected_identity_parts():

@@ -425,10 +425,10 @@ async def race_first_from_thunks(
         return set(done)
 
     try:
-        if kind == "hedge":
+        if kind == "hedge" and hedge_ms is not None and hedge_ms > 0:
             start(0)
             next_idx = 1
-            delay_s = (hedge_ms or 0) / 1000.0
+            delay_s = hedge_ms / 1000.0
             while True:
                 settled, value = settlement()
                 if settled:

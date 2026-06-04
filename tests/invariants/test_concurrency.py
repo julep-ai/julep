@@ -8,7 +8,7 @@ import pytest
 
 from composable_agents import call, freeze, hedge, mcp, quorum, race
 from composable_agents.errors import RaceAllFailed
-from composable_agents.execution.interpreter import interpret
+from composable_agents.execution.interpreter import interpret, race_first_from_thunks
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 from tests.invariants.helpers import AsyncInMemoryEnv, fast_fail, slow_ok
@@ -125,6 +125,43 @@ def test_hedge_does_not_invoke_later_thunks_when_primary_wins_before_delay():
 
     assert out.value == "a-ok"
     assert invocations == {"b": 0}
+
+
+@pytest.mark.parametrize("hedge_ms", [0, None])
+def test_hedge_without_positive_delay_invokes_all_thunks_before_waiting(hedge_ms):
+    invocations: list[str] = []
+    observed_at_first_start: list[tuple[str, ...]] = []
+
+    def thunk(name: str):
+        def start():
+            invocations.append(name)
+
+            async def branch():
+                if name == "a":
+                    observed_at_first_start.append(tuple(invocations))
+                return name
+
+            return branch()
+
+        return start
+
+    async def wait_first(waitset):
+        done, pending = await asyncio.wait(waitset, return_when=asyncio.FIRST_COMPLETED)
+        return set(done), set(pending)
+
+    winner = run(
+        race_first_from_thunks(
+            [thunk("a"), thunk("b"), thunk("c")],
+            kind="hedge",
+            m=1,
+            hedge_ms=hedge_ms,
+            wait_first=wait_first,
+        )
+    )
+
+    assert winner == "a"
+    assert invocations == ["a", "b", "c"]
+    assert observed_at_first_start == [("a", "b", "c")]
 
 
 def test_hedge_starts_next_branch_after_delay_and_fallback_can_win():

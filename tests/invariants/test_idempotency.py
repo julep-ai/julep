@@ -4,6 +4,9 @@ from typing import Any
 
 import pytest
 
+pytest.importorskip("temporalio")
+pytest.importorskip("httpx")
+
 from composable_agents import mcp
 from composable_agents.execution.activities import CallHandInput, WorkerContext, callHand, configure
 from conftest import run

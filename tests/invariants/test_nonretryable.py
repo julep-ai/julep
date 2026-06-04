@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import pytest
+
+pytest.importorskip("temporalio")
+
 from composable_agents.contracts import ToolContract
 from composable_agents.errors import (
     CapabilityDenied,

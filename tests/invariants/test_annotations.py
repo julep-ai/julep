@@ -3,6 +3,10 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+import pytest
+
+pytest.importorskip("temporalio")
+
 from composable_agents import Ann, CacheHint, call, freeze, mcp, think
 from composable_agents.execution import harness
 from composable_agents.execution.interpreter import interpret
