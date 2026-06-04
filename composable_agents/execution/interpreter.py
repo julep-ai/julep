@@ -103,7 +103,13 @@ class Env(Protocol):
     def charge_call(self, tool_key: str) -> None: ...
 
     async def call_hand(self, node: Node, value: Any, cid: str) -> Any: ...
-    async def invoke_brain(self, brain: str, value: Any, cid: str) -> Any: ...
+    async def invoke_brain(
+        self,
+        brain: str,
+        value: Any,
+        cid: str,
+        timeout_s: Optional[int],
+    ) -> Any: ...
     async def run_sub(self, ref: str, contract: SubContract, value: Any, cid: str) -> Any: ...
     async def run_agent(
         self,
@@ -227,7 +233,8 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
             return Result(await env.human_gate(value, cid, timeout_s))
         return Result(await env.call_hand(node, value, cid))
     if isinstance(step, ThinkStep):
-        out = await env.invoke_brain(step.brain, value, cid)
+        timeout_s = node.ann.timeout if node.ann else None
+        out = await env.invoke_brain(step.brain, value, cid, timeout_s)
         return Result(out, reported_cost=_reported_brain_cost(out))
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid))
@@ -535,7 +542,13 @@ class InMemoryEnv:
             raise KeyError(f"no in-memory hand for {key!r}")
         return fn(value)
 
-    async def invoke_brain(self, brain: str, value: Any, cid: str) -> Any:
+    async def invoke_brain(
+        self,
+        brain: str,
+        value: Any,
+        cid: str,
+        timeout_s: Optional[int],
+    ) -> Any:
         if brain not in self._brains:
             raise KeyError(f"no in-memory brain for {brain!r}")
         return self._brains[brain](value)

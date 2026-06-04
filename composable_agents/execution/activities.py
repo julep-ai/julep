@@ -96,6 +96,9 @@ class CallHandInput:
     tool_ref: dict[str, Any]      # ToolRef JSON (native or mcp)
     value: Any
     cid: str                      # deterministic activation id -> Idempotency-Key
+    # Advisory CacheHint JSON. The hand/transport may honor it; the framework
+    # does not provide a cache backend or change replay behavior from this hint.
+    cache: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -139,9 +142,12 @@ async def callHand(inp: CallHandInput) -> Any:
 
     activity.logger.debug("callHand %s -> %s", key, url)
     async with httpx.AsyncClient(timeout=_CTX.http_timeout_s) as client:
+        body = {"input": inp.value}
+        if inp.cache is not None:
+            body["cache"] = inp.cache
         resp = await client.post(
             url,
-            json={"input": inp.value},
+            json=body,
             headers={"Idempotency-Key": inp.cid},
         )
         resp.raise_for_status()

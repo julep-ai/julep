@@ -54,6 +54,7 @@ with workflow.unsafe.imports_passed_through():
     from ..contracts import ToolContract, manifest_from_json
     from ..ir import Node, toolref_key
     from ..projection import InMemoryProjection, ProjectionEmitter
+    from .timeouts import activity_timeout
     from .interpreter import (
         BranchThunk,
         Result,
@@ -286,18 +287,31 @@ class _TemporalEnv:
         # contract for retry shaping).
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
+        timeout_s = node.ann.timeout if node.ann else None
+        cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
         return await workflow.execute_activity(
             callHand,
-            CallHandInput(tool_ref=_toolref_json_from_key(ref_key), value=value, cid=cid),
-            start_to_close_timeout=timedelta(seconds=self._policy.hand_timeout_s),
+            CallHandInput(
+                tool_ref=_toolref_json_from_key(ref_key),
+                value=value,
+                cid=cid,
+                cache=cache,
+            ),
+            start_to_close_timeout=activity_timeout(timeout_s, self._policy.hand_timeout_s),
             retry_policy=_retry_policy_for(contract, self._policy),
         )
 
-    async def invoke_brain(self, brain: str, value: Any, cid: str) -> Any:
+    async def invoke_brain(
+        self,
+        brain: str,
+        value: Any,
+        cid: str,
+        timeout_s: Optional[int],
+    ) -> Any:
         return await workflow.execute_activity(
             invokeBrain,
             InvokeBrainInput(brain=brain, value=value, cid=cid),
-            start_to_close_timeout=timedelta(seconds=self._policy.brain_timeout_s),
+            start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
             retry_policy=_BRAIN_RETRY,
         )
 

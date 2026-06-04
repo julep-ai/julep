@@ -13,6 +13,7 @@ to be installed. ``HAVE_TEMPORAL`` says whether it is.
 from __future__ import annotations
 
 from .interpreter import Env, InMemoryEnv, Result, interpret
+from .timeouts import activity_timeout
 
 try:  # the workflow/activities only import cleanly with temporalio present
     from .harness import (  # noqa: F401
@@ -73,5 +74,6 @@ __all__ = [
     "InMemoryEnv",
     "Result",
     "interpret",
+    "activity_timeout",
     "HAVE_TEMPORAL",
 ] + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else [])
