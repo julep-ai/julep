@@ -75,6 +75,45 @@ For iteration, use dev mode: `deploy(..., mode="dev")` or `Agent(..., mode="dev"
 
 ---
 
+## Typed composition (the `Flow` surface)
+
+The `composable_agents.flow` layer is a **typed authoring wrapper** over the same
+`Node` IR — it carries Python types while you build, then *elaborates to the
+identical IR and disappears before freeze* (the golden corpus never moves). Tools,
+flows, and agents become first-class **values** you import, type-check, and
+recombine — closing the gap between the ergonomic facade and the composable algebra.
+
+```python
+from composable_agents.flow import flow, seq          # typed combinators
+from composable_agents.flow_adapters import as_type    # explicit Any-edge cast
+
+# A @tool is a typed leaf; >> threads types (a mismatch is a mypy error):
+research = search >> classify                 # Flow[Query, Priority]
+
+# An Agent IS a Flow — it composes as a node, and decomposes:
+inbox = Agent(brain="claude-sonnet-4-6", tools=[search])
+pipeline = fetch >> inbox >> notify           # an agent mid-pipeline
+vip      = inbox.with_tools(add=[escalate]).replace(brain="opus")
+
+# Capabilities are uniform: Tools (→ call) and named Flows/Agents (→ sub).
+# A sub-agent runs with its OWN authority — the parent never inherits its tools:
+triage = Agent(brain="haiku", tools=[search, classify]).named("triage.v1")
+desk   = Agent(brain="claude-sonnet-4-6", tools=[lookup, triage])   # triage = an attenuated sub-agent
+
+# Scale a part independently: pass it as a split capability (own worker/queue):
+desk_scaled = Agent(brain="claude-sonnet-4-6",
+                    tools=[lookup, triage.as_sub(queue="triage-pool")])
+
+r = desk.run("ticket text")    # r: Result[Any] — r.output / r.status / r.cost, and r["status"] (dict-compatible)
+```
+
+Typing is **hybrid and honest**: leaves and pipelines are typed; the agent/LLM/JSON
+boundary is `Any`, made *loud* by `as_type(...)`/`expect(...)` adapters and the
+`any_edges(...)` reporter rather than hidden. The string DSL and the original
+`Agent` facade keep working unchanged — this surface is additive.
+
+---
+
 ## The mental model
 
 **Three planes.** A *Control* plane (a Temporal workflow) walks a frozen IR tree and decides what runs next. It dispatches to *Brains* (LLM `Think` activities, rendered from `.ctx` brain definitions) and *Hands* (stateless tool activities — MCP tools or native HTTP endpoints on Cloud Run / Lambda). A *Projection* plane derives an append-only, causally-linked event log (a "pomset") for observability — value store, per-shape cost, OTel spans, replay UI. **The projection is derived, never the source of durability**; history is.

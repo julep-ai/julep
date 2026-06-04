@@ -1,8 +1,29 @@
 # Typed Composable Flow — design
 
-**Status:** proposed (brainstormed 2026-06-03; not yet implemented)
+**Status:** **implemented** on branch `typed-flow` (TF-1…TF-8 + a P1 safety fix,
+2026-06-04). Brainstormed 2026-06-03. Every phase JSON-equality-gated; the
+golden corpus never moved; the typed authoring layer sits entirely above the
+unchanged `Node` IR.
 **Scope:** a typed, composable *authoring* surface that unifies the `Agent`
 facade and the combinator algebra, without changing the IR.
+
+> **As-built (2026-06-04).** Modules: `flow.py` (`Flow`/`FlowLike`, `>>`, typed
+> `seq`, typed `Tool` leaves, `par`/`alt`, affine `.named()`/`.renamed()`,
+> derived local names), `flow_adapters.py` (`as_type`/`expect`, `any_edges`),
+> `flow_registry.py` (`FlowRegistry` + collision policy), `result.py`
+> (`Result(dict[str,Any], Generic[Out])` — typed *and* dict-compatible), plus
+> `agent.py` (Agent is a `FlowLike`; pure construction + lazy freeze + hybrid
+> eager checks + `.check()`; uniform Tool/Flow capabilities → `APP.tools`/
+> `APP.subflows`; `.as_sub()` split). Notable deviations from the plan below:
+> typed `par` returns `Flow[In, Any]` (re-type via `as_type`) rather than a
+> reducer-named type; `alt` is typed only in its binary form; a plain-`Flow`
+> capability is the parent's *own* authored logic over the parent's granted tools
+> (and is compiled through the deploy gates before running — the P1 fix), while a
+> **sub-Agent** is the independent-authority/attenuation boundary; the Temporal
+> cross-worker execution of `.as_sub(queue=…)` is a documented seam (the `queue`
+> is carried for the durable layer; local run is unchanged). The new run-result
+> lives at `composable_agents.result.Result` (the top-level `Result` stays the
+> execution interpret-result).
 
 ---
 
