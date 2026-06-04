@@ -16,10 +16,10 @@ licence for unbounded, unsafe execution:
   continue-as-new (:func:`should_continue_as_new`), the §6 seam the harness wires.
 
 Plan *extraction* is the offline complement: an observed action trace is
-generalized into a candidate Plan (:func:`generalize_trace_to_plan`) which is
+macro-recorded into a candidate Plan (:func:`generalize_trace_to_plan`) which is
 then run through §8 admission (:func:`extract_plan`) before it may be promoted to
-a cheap, replayable :func:`~composable_agents.dsl.stage`. The agent discovers a
-procedure; the plan freezes it.
+a cheap, replayable :func:`~composable_agents.dsl.stage`. This chains observed
+calls; it does not infer branches, loops, reducers, or new procedures.
 
 Everything here is dependency-free and deterministic so the loop's control logic
 is unit-testable without a Temporal server; the durable wrapper that adds
@@ -190,6 +190,9 @@ class TraceEntry:
     ref: Optional[str] = None      # tool name or sub-flow ref
     shape: Optional[str] = None    # sub-flow surface shape, if a sub
     cost: float = 0.0
+    input_ref: Optional[str] = None
+    output_ref: Optional[str] = None
+    schema_ref: Optional[str] = None
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"decision": self.decision, "cost": self.cost}
@@ -197,6 +200,12 @@ class TraceEntry:
             out["ref"] = self.ref
         if self.shape is not None:
             out["shape"] = self.shape
+        if self.input_ref is not None:
+            out["inputRef"] = self.input_ref
+        if self.output_ref is not None:
+            out["outputRef"] = self.output_ref
+        if self.schema_ref is not None:
+            out["schemaRef"] = self.schema_ref
         return out
 
     @staticmethod
@@ -204,6 +213,9 @@ class TraceEntry:
         return TraceEntry(
             decision=d["decision"], ref=d.get("ref"),
             shape=d.get("shape"), cost=float(d.get("cost", 0.0)),
+            input_ref=d.get("inputRef", d.get("input_ref")),
+            output_ref=d.get("outputRef", d.get("output_ref")),
+            schema_ref=d.get("schemaRef", d.get("schema_ref")),
         )
 
 
@@ -379,13 +391,15 @@ def retry_max_attempts_for_contract(
 # Plan extraction (offline generalization of an observed trace).
 # --------------------------------------------------------------------------- #
 def generalize_trace_to_plan(trace: list[TraceEntry]) -> Node:
-    """Turn a successful action trace into a candidate Plan (straight-line IR).
+    """Macro-record a successful action trace into straight-line candidate IR.
 
     Calls become :func:`~composable_agents.dsl.call` leaves and sub-flow
     invocations become :func:`~composable_agents.dsl.sub` leaves, chained in
     observed order with :func:`~composable_agents.dsl.seq`. Terminal
-    decisions (finish/escalate) carry no tool and are skipped. The result is a
-    *candidate* only — it must clear :func:`extract_plan` before promotion.
+    decisions (finish/escalate) carry no tool and are skipped. This is a
+    macro-recording of observed calls; it does not infer branches, loops,
+    reducers, or latent procedure structure. The result is a *candidate* only —
+    it must clear :func:`extract_plan` before promotion.
 
     The generalization is deliberately shallow (a pipeline, never a loop or a
     stage), which keeps every extracted plan within the ``<= Feedback`` ceiling
@@ -410,11 +424,12 @@ def extract_plan(
     parent: CapabilityManifest,
     manifest: Optional[ToolManifest] = None,
 ) -> tuple[Node, list[Diagnostic]]:
-    """Generalize ``trace`` to a plan and return it with its §8 diagnostics.
+    """Macro-record ``trace`` to a plan and return it with §8 diagnostics.
 
     Does not raise: a caller inspecting whether an observed agent run is safe to
     promote wants the diagnostics, not an exception. Use :func:`promote_plan`
-    when you want admission to be enforced.
+    when you want admission to be enforced. This path chains observed actions;
+    it does not discover branches, loops, reducers, or new procedures.
     """
     plan = generalize_trace_to_plan(trace)
     diags = validate_plan(plan, parent, manifest)
@@ -426,15 +441,14 @@ def promote_plan(
     parent: CapabilityManifest,
     manifest: Optional[ToolManifest] = None,
 ) -> Node:
-    """Generalize and admit an observed trace, returning the promotable plan.
+    """Macro-record and admit an observed trace, returning the promotable plan.
 
     Raises :class:`~composable_agents.errors.PlanRejected` if the generalized
     plan would not pass §8 admission (e.g. it references an ungranted tool or
     exceeds the budget), mirroring runtime plan staging exactly.
     """
     plan = generalize_trace_to_plan(trace)
-    admit_plan(plan, parent, manifest)  # raises PlanRejected on any blocking diag
-    return plan
+    return admit_plan(plan, parent, manifest)  # raises PlanRejected on any blocking diag
 
 
 __all__ = [

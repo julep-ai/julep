@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .capabilities import CapabilityManifest
-from .contracts import ToolManifest
+from .contracts import FrozenTool, ToolManifest
 from .errors import PlanRejected
 from .ir import CallStep, Node, SubStep, ThinkStep, toolref_key
 from .kinds import Op, Shape, shape_rank
@@ -100,6 +100,101 @@ def referenced_tool_keys(plan: Node) -> list[str]:
     return keys
 
 
+def _copy_plan(plan: Node) -> Node:
+    """Deep-copy a finite plan through its JSON representation."""
+    return Node.from_json(plan.to_json())
+
+
+def _binding_reasons(diags: list[Diagnostic]) -> list[str]:
+    return [f"[{d.code}@{d.node_id}] {d.message}" for d in diags]
+
+
+def _bind_plan_to_manifest(
+    plan: Node,
+    manifest: ToolManifest,
+) -> tuple[Node, list[Diagnostic]]:
+    bound = _copy_plan(plan)
+    out: list[Diagnostic] = []
+
+    by_key: dict[str, list[FrozenTool]] = {}
+    for entry in manifest.values():
+        by_key.setdefault(toolref_key(entry.ref), []).append(entry)
+
+    for n in bound.walk():
+        step = n.step
+        if not isinstance(step, CallStep):
+            continue
+
+        key = toolref_key(step.tool)
+        pinned = step.frozen_hash
+
+        if pinned is not None:
+            entry = manifest.get(pinned)
+            if entry is None:
+                out.append(
+                    Diagnostic(
+                        "PLAN_TOOL_UNBOUND",
+                        n.id,
+                        f"plan pins {key!r} to {pinned}, which is absent from "
+                        "the parent frozen manifest",
+                    )
+                )
+                continue
+            if toolref_key(entry.ref) != key:
+                out.append(
+                    Diagnostic(
+                        "PLAN_TOOL_UNBOUND",
+                        n.id,
+                        f"plan pins {key!r} to {pinned}, but that manifest entry "
+                        f"is {toolref_key(entry.ref)!r}",
+                    )
+                )
+                continue
+            step.frozen_hash = entry.execution_hash
+            continue
+
+        matches = by_key.get(key, [])
+        if not matches:
+            out.append(
+                Diagnostic(
+                    "PLAN_TOOL_UNBOUND",
+                    n.id,
+                    f"plan calls {key!r}, which is absent from the parent frozen manifest",
+                )
+            )
+        elif len(matches) > 1:
+            choices = ", ".join(entry.execution_hash for entry in matches)
+            out.append(
+                Diagnostic(
+                    "PLAN_TOOL_AMBIGUOUS",
+                    n.id,
+                    f"plan calls {key!r}, which matches multiple parent manifest "
+                    f"entries: {choices}",
+                )
+            )
+        else:
+            entry = matches[0]
+            step.frozen_hash = entry.execution_hash
+
+    return bound, out
+
+
+def bind_plan_to_manifest(plan: Node, manifest: ToolManifest) -> Node:
+    """Return a copy of ``plan`` whose calls are bound to ``manifest`` hashes.
+
+    Staged plans are authored with logical :class:`ToolRef` values, but runtime
+    scheduling needs the parent's frozen contracts. Each call is matched by
+    ``toolref_key`` and receives the corresponding ``FrozenTool.execution_hash``.
+    Ambiguous logical refs must be hash-pinned by the plan; unknown or stale
+    pins reject the plan.
+    """
+    bound, diags = _bind_plan_to_manifest(plan, manifest)
+    bad = blocking(diags)
+    if bad:
+        raise PlanRejected(_binding_reasons(bad))
+    return bound
+
+
 def validate_plan(
     plan: Node,
     parent: CapabilityManifest,
@@ -112,24 +207,30 @@ def validate_plan(
     capability checks run regardless.
     """
     out: list[Diagnostic] = []
+    checked = plan
+    binding_diags: list[Diagnostic] = []
+
+    if manifest is not None:
+        checked, binding_diags = _bind_plan_to_manifest(plan, manifest)
+        out.extend(binding_diags)
 
     # Inherit ordinary well-formedness, ids, and (if manifest given) schema edges.
-    out.extend(validate(plan, manifest))
+    out.extend(validate(checked, manifest if not blocking(binding_diags) else None))
 
     # Bounded shape: a plan may loop but may not stage or app.
-    s = closed_shape(plan)
+    s = closed_shape(checked)
     if shape_rank(s) > shape_rank(Shape.FEEDBACK):
         out.append(
             Diagnostic(
                 "PLAN_TOO_RICH",
-                plan.id,
+                checked.id,
                 f"staged plan has closed shape {s.value} (> Feedback); a plan may "
                 "not stage another plan or open an agent loop",
             )
         )
 
     # Granted tools only: the plan can't reach past the parent's tool grants.
-    for n in plan.walk():
+    for n in checked.walk():
         if isinstance(n.step, CallStep):
             key = toolref_key(n.step.tool)
             if key not in parent.tools:
@@ -156,12 +257,12 @@ def validate_plan(
 
     # No budget raise: estimated spend must fit the parent envelope.
     if parent.budget is not None and parent.budget.usd is not None:
-        est = estimate_cost(plan)
+        est = estimate_cost(checked)
         if est > parent.budget.usd:
             out.append(
                 Diagnostic(
                     "PLAN_BUDGET",
-                    plan.id,
+                    checked.id,
                     f"plan estimated cost {est:.2f} exceeds parent budget "
                     f"{parent.budget.usd:.2f}",
                 )
@@ -174,9 +275,17 @@ def admit_plan(
     plan: Node,
     parent: CapabilityManifest,
     manifest: Optional[ToolManifest] = None,
-) -> None:
-    """Raise :class:`PlanRejected` if ``plan`` has any blocking §8 violation."""
-    diags = validate_plan(plan, parent, manifest)
+) -> Node:
+    """Return the admitted plan, or raise ``PlanRejected`` on blocking diagnostics."""
+    bound = plan
+    if manifest is not None:
+        bound, binding_diags = _bind_plan_to_manifest(plan, manifest)
+        bad = blocking(binding_diags)
+        if bad:
+            raise PlanRejected(_binding_reasons(bad))
+
+    diags = validate_plan(bound, parent, manifest)
     bad = blocking(diags)
     if bad:
         raise PlanRejected(f"[{d.code}@{d.node_id}] {d.message}" for d in bad)
+    return bound

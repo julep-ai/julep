@@ -53,7 +53,9 @@ from .freeze import (
 )
 from .validate import validate, Diagnostic, blocking
 from .capabilities import CapabilityManifest, Budget, ToolGrant, check_approval_gates
-from .staged import estimate_cost, validate_plan, admit_plan, referenced_tool_keys
+from .staged import (
+    estimate_cost, validate_plan, admit_plan, referenced_tool_keys, bind_plan_to_manifest,
+)
 from .deploy import deploy, Deployment, snapshot_from_listings
 
 # --- brains (dotctx) ------------------------------------------------------- #
@@ -116,6 +118,7 @@ _BASE_EXPORTS = [
     "validate", "Diagnostic", "blocking",
     "CapabilityManifest", "Budget", "ToolGrant", "check_approval_gates",
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
+    "bind_plan_to_manifest",
     "deploy", "Deployment", "snapshot_from_listings",
     # dotctx
     "Brain", "register_brain", "get_brain", "load_dotctx", "dotctx_flow",

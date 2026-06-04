@@ -171,7 +171,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
         from ..contracts import manifest_from_json  # local import keeps hot path light
 
         manifest = manifest_from_json(inp.manifest) if inp.manifest else None
-        admit_plan(plan, _CTX.capabilities, manifest)
+        plan = admit_plan(plan, _CTX.capabilities, manifest)
 
     return plan.to_json()
 
