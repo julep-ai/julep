@@ -1,8 +1,35 @@
 # Composable Serverless Agents
 
-A typed framework for building agents as **composable, durable dataflows** instead of ad-hoc loops. You write a flow with a small set of combinators; the framework infers its *shape*, freezes its tools to content hashes, checks it against a capability manifest, and runs it durably on [Temporal](https://temporal.io). LLM calls ("Brains") and tools ("Hands") are stateless activities; durability, retries, and recovery come from Temporal's history and replay, not from anything the framework reimplements.
+A typed framework for building agents as **composable, durable dataflows** instead of ad-hoc loops: flows can crash and resume, retry safely, explain every step through a derived projection, and deny any tool the model was not explicitly allowed to call. You can start with a pure, keyless local `Agent` facade and later deploy the same frozen control flow to Temporal for durable execution; the pure core stays dependency-free, while the Temporal layer is optional.
 
-The design separates a **pure, dependency-free core** (authoring, compilation, and a deterministic IR interpreter) from a thin **Temporal-bound execution layer**. The core is fully unit-tested without any server; the execution layer is verified end-to-end against Temporal's time-skipping test server. Everything except the durable runtime works with no `temporalio` install.
+---
+
+## Quickstart (10 minutes, no API key)
+
+Install the base package and run this as a normal Python script:
+
+```python
+from composable_agents import Agent, tool
+
+@tool(effect="read", idempotent=True)
+def search_kb(ticket: str) -> dict[str, str]:
+    return {"queue": "billing", "summary": "Use the duplicate-charge runbook."}
+
+def scripted_llm(_brain: str, payload: dict) -> dict:
+    if not payload["trace"]:
+        return {"tool": "search_kb", "input": payload["input"]}
+    hit = payload["input"]
+    return {"output": {"queue": hit["queue"], "reply": hit["summary"]}}
+
+agent = Agent(brain="claude-sonnet-4-6", tools=[search_kb], llm=scripted_llm)
+result = agent.run("Customer was charged twice and renewal access is blocked.")
+print(result["status"], result["output"], result["trace"])
+
+# Later, with the temporal extra and a Temporal client:
+# await agent.deploy(client, session_id="ticket-123", input="Customer was charged twice.")
+```
+
+`llm=` is just a `(brain, payload) -> reply` callable, so examples and tests can stay keyless and deterministic. If you omit `llm`, the facade uses a keyless stub that warns and returns the input unprocessed. See the runnable version in `examples/support_triage.py`.
 
 ---
 
@@ -15,6 +42,36 @@ pip install 'composable-agents[temporal,http,otel]'  # + native HTTP hands + OTe
 ```
 
 `composable_agents.HAVE_TEMPORAL` reports whether the runtime is available; the package imports and compiles flows either way.
+
+---
+
+## Why it's different
+
+- **Deny-by-default capabilities.** A hallucinated or ungranted tool call is denied instead of being routed somewhere surprising.
+- **Approval gates for irreversible actions.** `dangerous` or approval-required tools must sit behind `human_gate()`; strict deploy refuses ungated paths.
+- **Content-hash freeze and replay.** Tool definitions are frozen to hashes before execution, so a running flow cannot silently pick up a changed contract.
+- **Explain every step.** The projection plane derives an append-only trace from execution history, including value flow, per-shape cost, pending gates, and OTel span data.
+- **Teaching diagnostics.** Blocked deploys render actionable `fix:` lines; with source capture enabled, diagnostics also point at the user line that produced the node.
+
+```text
+Blocking diagnostics:
+- [CAP_TOOL_DENIED@$] error: tool 'srv/denied' is not granted
+    --> app.py:42  (call(mcp("srv", "denied")))
+    fix: Add this tool to the capability manifest's tools: allow-list, or remove the call.
+```
+
+For iteration, use dev mode: `deploy(..., mode="dev")` or `Agent(..., mode="dev")` warns and continues while `deployment.prod_gap_summary()` tells you what strict production deploy would block. Temporal runs stay prod-strict; dev-mode deployments are for local iteration.
+
+---
+
+## Climb the ladder
+
+1. `Agent.run` for a keyless local loop: `examples/support_triage.py`.
+2. Add a budget guard to the same facade: `examples/research_assistant.py`.
+3. Add approvals via `human_gate` in a combinator flow: `examples/email_approval.py`.
+4. Deploy the same admitted artifact to Temporal with `deploy()` / `agent.deploy(...)`.
+5. Drop to raw combinators (`seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`) when you need full control.
+6. Study the capstone composition in `examples/elnino/swarm.py`.
 
 ---
 
@@ -32,65 +89,13 @@ Shape is computed (`surface_shape`), not declared, and it bounds what static gua
 
 ---
 
-## Quickstart
-
-```python
-import asyncio
-from temporalio.client import Client
-from composable_agents import (
-    call, mcp, think, seq, deploy, snapshot_from_listings,
-    register_brain, Brain,
-)
-from composable_agents.execution.worker import run_worker
-from composable_agents.execution.activities import WorkerContext
-
-# 1) Author a flow with combinators.
-flow = seq(call(mcp("search", "web")), think("summarize"))
-
-# 2) Snapshot the tools (here from a literal listing; in practice from MCP tools/list)
-#    and compile: freeze -> validate -> capability enforcement -> race admission.
-snapshot = snapshot_from_listings({
-    "search": {"web": {"inputSchema": {"type": "object"},
-                       "annotations": {"readOnlyHint": True, "idempotentHint": True}}},
-})
-deployment = deploy(flow, snapshot)          # raises if any blocking diagnostic
-
-# 3) Run it durably (a worker hosts the workflow + activities).
-async def main():
-    client = await Client.connect("localhost:7233")
-    result = await deployment.run(client, session_id="run-1", input={"q": "temporal vs dbos"})
-    print(result)
-
-asyncio.run(main())
-```
-
-A worker process wires the environment (tool endpoints, the MCP caller, the LLM client, the capability manifest) once and serves both workflow types:
-
-```python
-register_brain(Brain(name="summarize", model="claude-...", system="Summarize."))
-await run_worker(
-    target_host="localhost:7233",
-    hand_urls={"native_tool": "https://my-hand.run.app"},
-    mcp_call=my_async_mcp_caller,   # async (server, tool, value, idempotency_key) -> result
-    llm=my_async_llm,               # async (brain, value) -> reply
-    capabilities=my_capability_manifest,
-)
-```
-
-Temporal activity retries re-use the same deterministic activation `cid`, so
-`callHand` passes a stable idempotency key to both native HTTP hands and MCP
-callers. MCP transports therefore carry the key required for `required`
-idempotent tools to be admitted.
-
----
-
 ## Authoring DSL
 
 **Structural combinators** (the name documents the shape it produces):
 
 | Combinator | Shape | Meaning |
 |---|---|---|
-| `seq(a, b, ...)` | Pipeline | run in sequence, threading output → input |
+| `seq(a, b, ...)` | Pipeline | run in sequence, threading output -> input |
 | `par(a, b, ...)` / `fanout(...)` | Dataflow | run concurrently on the same input, collect results |
 | `alt(pred, if_true, if_false)` | Branching | choose a branch by a registered pure predicate |
 | `iter_up_to(max, body, until=...)` | Feedback | iterate `body` up to `max` times, optional convergence predicate |
@@ -114,7 +119,7 @@ Leaves accept `ctx=` (a `ContextPolicy`) and `ann=` (`Ann`: `cost_usd`, caching 
 
 ## The compile pipeline (`deploy`)
 
-`deploy(flow, snapshot, capabilities=…)` runs four static gates in order; any blocking diagnostic aborts (`strict=True`, the default) or is returned on the `Deployment` for triage:
+`deploy(flow, snapshot, capabilities=...)` runs four static gates in order; any blocking diagnostic aborts (`strict=True`, the default) or is returned on the `Deployment` for triage:
 
 1. **Freeze** — snapshot every tool (MCP version + schema + annotations, or a native contract) to a **content hash** and bind each `call` to it, so the tool set can never shift under a running flow. The flow is deep-copied to a clean tree (cycles rejected, sharing removed, ids normalized to deterministic paths like `$.L`, `$.R`).
 2. **Validate** — per-op well-formedness, schema edges, and a non-blocking warning where a `par` branch reads the whole session (sequential degrade).
@@ -136,6 +141,47 @@ The execution layer is the only part that imports `temporalio`, and it does so b
 
 `run_flow` / `start_flow` are client helpers; `build_worker` / `run_worker` host the workflows and the six activities (`verifyPures`, `callHand`, `invokeBrain`, `compilePlan`, `resolveSubflow`, `resolveAgentSpec`).
 
+Going to production is the same deploy artifact plus a worker process that wires the environment once:
+
+```python
+import asyncio
+from temporalio.client import Client
+from composable_agents import (
+    call, mcp, think, seq, deploy, snapshot_from_listings,
+    register_brain, Brain,
+)
+from composable_agents.execution.worker import run_worker
+
+flow = seq(call(mcp("search", "web")), think("summarize"))
+snapshot = snapshot_from_listings({
+    "search": {"web": {"inputSchema": {"type": "object"},
+                       "annotations": {"readOnlyHint": True, "idempotentHint": True}}},
+})
+deployment = deploy(flow, snapshot)          # raises if any blocking diagnostic
+
+async def main():
+    client = await Client.connect("localhost:7233")
+    result = await deployment.run(client, session_id="run-1", input={"q": "temporal vs dbos"})
+    print(result)
+
+asyncio.run(main())
+```
+
+A worker hosts the workflow + activities:
+
+```python
+register_brain(Brain(name="summarize", model="claude-...", system="Summarize."))
+await run_worker(
+    target_host="localhost:7233",
+    hand_urls={"native_tool": "https://my-hand.run.app"},
+    mcp_call=my_async_mcp_caller,   # async (server, tool, value, idempotency_key) -> result
+    llm=my_async_llm,               # async (brain, value) -> reply
+    capabilities=my_capability_manifest,
+)
+```
+
+Temporal activity retries re-use the same deterministic activation `cid`, so `callHand` passes a stable idempotency key to both native HTTP hands and MCP callers. MCP transports therefore carry the key required for `required` idempotent tools to be admitted.
+
 ---
 
 ## Staged plans and plan extraction
@@ -153,7 +199,7 @@ This split is deliberate and load-bearing:
 - **Pure core** (`kinds`, `ir`, `shapes`, `contracts`, `freeze`, `validate`, `dsl`, `derived`, `capabilities`, `staged`, `projection`, `dotctx`, `agent_loop`, `deploy`, and `execution.interpreter`) has **no Temporal dependency**. The interpreter takes an injected `Env` of effect handlers and concurrency primitives, so the same control-flow logic runs under Temporal *and* under an in-memory `InMemoryEnv` in tests.
 - **Execution layer** (`execution.harness`, `execution.activities`, `execution.worker`, `execution.otel`) binds to Temporal and is import-guarded.
 
-**Testing.** The current full suite is **74 passing tests + 10 skips** with the repository test command. Run:
+**Testing.** The full suite passes with the pure core covered without `temporalio`; install the dev extra to include Temporal E2E coverage when available. Run:
 
 ```bash
 pip install -e '.[dev]'
@@ -192,6 +238,7 @@ composable_agents/
   projection.py     pomset events, value store, in-memory/Postgres sinks, OTel data
   dotctx.py         §3.2 Brain definitions and lowering to Think nodes
   agent_loop.py     P4 agent loop logic + plan extraction (pure)
+  agent.py          Agent facade + @tool decorator for Python-callable hands
   deploy.py         the compile pipeline + Deployment artifact
   errors.py         the error taxonomy
   execution/
