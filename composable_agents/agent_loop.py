@@ -28,6 +28,7 @@ activities and continue-as-new lives in :mod:`composable_agents.execution.harnes
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
@@ -400,6 +401,97 @@ def retry_max_attempts_for_contract(
     return idempotent_max_attempts if idempotent else write_max_attempts
 
 
+async def drive_agent_loop(
+    *,
+    input: Any,
+    cfg: AgentConfig,
+    invoke_controller: Callable[[dict[str, Any]], Awaitable[Any]],
+    call_tool: Callable[[str, Any], Awaitable[Any]],
+    run_subflow: Optional[Callable[[str, Any], Awaitable[Any]]] = None,
+    granted: Optional[set[str]] = None,
+    granted_subflows: Optional[set[str]] = None,
+    contracts: Optional[AgentContractMap] = None,
+    state: Optional[AgentState] = None,
+) -> dict[str, Any]:
+    """Run the bounded agent loop locally with injected async effects."""
+    unconstrained = granted is None
+    granted_set = set(granted or [])
+    state = state or AgentState(last=input)
+
+    while True:
+        if state.round >= cfg.max_rounds:
+            return terminal_result("max_rounds", state)
+
+        controller_precheck = precheck_controller(state, cfg)
+        if controller_precheck is not None:
+            return controller_precheck
+
+        payload = {"input": state.last, "trace": [t.to_json() for t in state.trace]}
+        reply = await invoke_controller(payload)
+        state.charge(cfg.think_cost)
+        action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
+
+        if action.decision is Decision.FINISH:
+            return terminal_result("done", state, output=action.payload)
+        if action.decision is Decision.ESCALATE:
+            return terminal_result("escalated", state, reason=str(action.payload))
+        if action.decision is Decision.CONTROLLER_ERROR:
+            return terminal_result("controller_error", state, reason=str(action.payload))
+
+        cost = action_cost(action)
+        if would_exceed_budget(state, cost, cfg.budget):
+            return terminal_result("over_budget", state)
+
+        if action.decision is Decision.CALL:
+            tool = action.payload["tool"]
+            denial = authorize_call(
+                tool,
+                unconstrained=unconstrained,
+                granted_set=granted_set,
+                contracts=contracts,
+            )
+            if denial is not None:
+                return terminal_result("denied", state, reason=denial.reason)
+            denial = charge_tool_call(state, tool, contracts)
+            if denial is not None:
+                return terminal_result("denied", state, reason=denial.reason)
+            call_input = action.payload.get("input")
+            if call_input is None:
+                call_input = state.last
+            out = await call_tool(tool, call_input)
+            state.charge(cost)
+            state.last = out
+            state.record(TraceEntry(decision="call", ref=tool, cost=cost))
+
+        else:
+            ref = action.payload["ref"]
+            denial = authorize_subflow(ref, granted_subflows=granted_subflows)
+            if denial is not None:
+                return terminal_result("denied", state, reason=denial.reason)
+            if run_subflow is None:
+                return terminal_result(
+                    "denied",
+                    state,
+                    reason=f"no subflow runner for {ref!r}",
+                )
+            sub_input = action.payload.get("input")
+            if sub_input is None:
+                sub_input = state.last
+            out = await run_subflow(ref, sub_input)
+            state.charge(cost)
+            state.last = out
+            state.record(
+                TraceEntry(
+                    decision="sub",
+                    ref=ref,
+                    shape=action.payload.get("shape"),
+                    cost=cost,
+                )
+            )
+
+        state.round += 1
+
+
 # --------------------------------------------------------------------------- #
 # Plan extraction (offline generalization of an observed trace).
 # --------------------------------------------------------------------------- #
@@ -484,6 +576,7 @@ __all__ = [
     "charge_tool_call",
     "authorize_subflow",
     "retry_max_attempts_for_contract",
+    "drive_agent_loop",
     "generalize_trace_to_plan",
     "extract_plan",
     "promote_plan",

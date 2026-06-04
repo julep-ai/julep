@@ -24,6 +24,7 @@ an activity, behind the ``Env`` boundary.
 from __future__ import annotations
 
 import asyncio
+import inspect
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
 
@@ -567,7 +568,8 @@ class InMemoryEnv:
     ) -> Any:
         if controller not in self._agents:
             raise KeyError(f"no in-memory agent for {controller!r}")
-        return self._agents[controller](value)
+        out = self._agents[controller](value)
+        return await out if inspect.isawaitable(out) else out
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         if planner not in self._planners:
