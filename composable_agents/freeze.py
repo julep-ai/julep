@@ -28,13 +28,14 @@ from .ir import (
     CallStep,
     HUMAN_GATE_TOOL,
     JSONSchema,
+    McpTool,
     NativeTool,
     Node,
     SourceSpan,
     ToolRef,
     toolref_key,
 )
-from .kinds import Effect, Idempotency
+from .kinds import Effect, Idempotency, Op
 from .transforms import detect_cycles, normalize_ids
 
 
@@ -159,6 +160,14 @@ def _resolve(
     )
 
 
+def _toolref_from_key(key: str) -> ToolRef:
+    """Reverse of toolref_key for app inline tool grants."""
+    if "/" in key:
+        server, tool = key.split("/", 1)
+        return McpTool(server=server, tool=tool)
+    return NativeTool(name=key)
+
+
 def freeze(
     flow: Node,
     snapshot: McpSnapshot,
@@ -197,6 +206,16 @@ def freeze(
         tool = _resolve(step.tool, snapshot, overrides)
         manifest[tool.hash] = tool
         step.frozen_hash = tool.hash
+
+    # 5. Agent/app nodes name the tools their controller may call, but they are
+    # not call leaves and do not receive a frozen_hash. Bind them into the
+    # manifest so deployed agent loops receive the same contracts as local runs.
+    for node in frozen_flow.walk():
+        if node.op != Op.APP or not node.tools:
+            continue
+        for key in node.tools:
+            tool = _resolve(_toolref_from_key(key), snapshot, overrides)
+            manifest[tool.hash] = tool
 
     return FreezeResult(flow=frozen_flow, manifest=manifest, source_map=source_map)
 

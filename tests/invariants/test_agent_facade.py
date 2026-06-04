@@ -9,7 +9,8 @@ import pytest
 from composable_agents import Agent, Shape, ValidationError, deploy, get_brain, snapshot_from_tools, tool
 from composable_agents.capabilities import Budget, CapabilityManifest, ToolGrant
 from composable_agents.dsl import app
-from composable_agents.ir import Op
+from composable_agents.freeze import McpSnapshot, NativeToolSpec, freeze
+from composable_agents.ir import Op, toolref_key
 from composable_agents.kinds import Effect, Idempotency
 
 
@@ -123,6 +124,52 @@ def test_deployed_allow_list_is_encoded() -> None:
     deny_all = Agent("m", tools=[], name="agent_allow_list_empty")
     assert deny_all.deployment().flow.op == Op.APP
     assert deny_all.deployment().flow.tools == []
+
+
+def test_agent_deployment_manifest_carries_inline_tool_contracts() -> None:
+    agent = Agent("m", tools=[a_read_tool], name="agent_manifest_contract")
+    deployment = agent.deployment()
+
+    tools_by_key = {toolref_key(frozen.ref): frozen for frozen in deployment.manifest.values()}
+
+    assert a_read_tool.name in tools_by_key
+    frozen = tools_by_key[a_read_tool.name]
+    assert frozen.contract.effect == Effect.READ
+    assert frozen.contract.idempotency == Idempotency.NATIVE
+
+
+def test_freeze_binds_raw_app_inline_tools_to_manifest() -> None:
+    contract = a_read_tool.contract
+    snapshot = McpSnapshot(
+        native={
+            "t": NativeToolSpec(
+                input_schema={"type": "string"},
+                output_schema={"type": "string"},
+                contract=contract,
+            )
+        }
+    )
+
+    frozen = freeze(app("c", tools=["t"]), snapshot)
+    tools_by_key = {toolref_key(tool.ref): tool for tool in frozen.manifest.values()}
+
+    assert "t" in tools_by_key
+    assert tools_by_key["t"].contract == contract
+
+
+def test_deployed_agent_contract_derivation_reads_manifest_contracts() -> None:
+    pytest.importorskip("temporalio")
+    from composable_agents.execution.harness import _manifest_contracts_for_agent
+
+    agent = Agent("m", tools=[a_read_tool], name="agent_temporal_contract")
+    deployment = agent.deployment()
+
+    contracts = _manifest_contracts_for_agent(deployment.manifest, {a_read_tool.name})
+
+    assert contracts[a_read_tool.name] == {
+        "effect": Effect.READ.value,
+        "idempotency": Idempotency.NATIVE.value,
+    }
 
 
 def test_registered_brain_carries_tools() -> None:
