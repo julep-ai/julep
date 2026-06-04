@@ -238,7 +238,7 @@ class _TemporalEnv:
         session_id: str,
         manifest_json: Optional[dict[str, Any]],
         policy: ExecutionPolicy,
-        gate_waiter: Callable[[str, Optional[int]], Awaitable[Any]],
+        gate_waiter: Callable[[Any, str, Optional[int]], Awaitable[Any]],
         max_call_limits: Optional[dict[str, int]] = None,
     ) -> None:
         self.manifest = manifest
@@ -377,7 +377,7 @@ class _TemporalEnv:
         )
 
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
-        return await self._gate_waiter(cid, timeout_s)
+        return await self._gate_waiter(value, cid, timeout_s)
 
     # --- concurrency (deterministic under Temporal's asyncio) --- #
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
@@ -427,13 +427,13 @@ class FlowWorkflow:
         """Deliver a human decision keyed by activation id (``cid``)."""
         self._human_inbox[payload["cid"]] = payload.get("value")
 
-    async def _await_human(self, cid: str, timeout_s: Optional[int]) -> Any:
+    async def _await_human(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         timeout = timedelta(seconds=timeout_s) if timeout_s else None
         self._open_gates.add(cid)
         try:
             await workflow.wait_condition(lambda: cid in self._human_inbox, timeout=timeout)
         except asyncio.TimeoutError:
-            return {"approved": False, "reason": "timeout", "input": None}
+            return {"approved": False, "reason": "timeout", "input": value}
         finally:
             self._open_gates.discard(cid)
         return self._human_inbox.pop(cid)

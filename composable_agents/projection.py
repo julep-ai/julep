@@ -229,22 +229,24 @@ class ProjectionEmitter:
         return f"e{next(self._ids)}"
 
     def plan(self, node: str, cid: str, causes: Iterable[str] = (),
-             shape: Optional[str] = None) -> str:
+             shape: Optional[str] = None, attrs: Optional[dict[str, Any]] = None) -> str:
         eid = self._next_id()
         self._store.append(ProjectionEvent(
             event_id=eid, type=EventType.PLANNED, node=node, cid=cid,
             ts=self._clock(), causes=tuple(causes), shape=shape,
+            attrs=dict(attrs or {}),
         ))
         return eid
 
     def did(self, node: str, cid: str, value: Any = None,
             cost: Optional[float] = None, shape: Optional[str] = None,
-            causes: Iterable[str] = ()) -> str:
+            causes: Iterable[str] = (), attrs: Optional[dict[str, Any]] = None) -> str:
         eid = self._next_id()
         ref = self._values.put(value) if (self._values is not None and value is not None) else None
         self._store.append(ProjectionEvent(
             event_id=eid, type=EventType.DID, node=node, cid=cid,
             ts=self._clock(), causes=tuple(causes), value_ref=ref, cost=cost, shape=shape,
+            attrs=dict(attrs or {}),
         ))
         return eid
 

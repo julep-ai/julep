@@ -147,6 +147,24 @@ async def _human_gate(env):
     assert out == {"approved": True, "n": 99}, f"gate value did not flow through: {out}"
 
 
+async def _human_gate_timeout(env):
+    fr = freeze(human_gate(timeout_s=1), _snapshot())
+    async with _worker(env, task_queue="ca-gate-timeout"):
+        out = await run_flow(
+            env.client,
+            fr.flow.to_json(),
+            manifest_to_json(fr.manifest),
+            session_id=f"gate-timeout-{uuid.uuid4()}",
+            input={"q": "timeout"},
+            task_queue="ca-gate-timeout",
+        )
+    assert out == {
+        "approved": False,
+        "reason": "timeout",
+        "input": {"q": "timeout"},
+    }, f"gate timeout lost original input: {out}"
+
+
 async def _agent(env):
     agents = {"ctrl": {"config": {"maxRounds": 6, "budget": {"usd": 1000}}, "grantedTools": ["srv/double"]}}
     async with _worker(env, task_queue="ca-agent", agents=agents):
@@ -396,6 +414,7 @@ async def _run_all():
         await _pipeline_and_brain(env)
         await _race(env)
         await _human_gate(env)
+        await _human_gate_timeout(env)
         await _agent(env)
         await _pure_drift_fails_before_effect(env)
 

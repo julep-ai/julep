@@ -36,6 +36,14 @@ from ..kinds import Op
 from ..purity import get_pure as _registry_get_pure
 from ..projection import ProjectionEmitter
 from ..shapes import surface_shape
+from ..validate import reads_whole_session
+
+
+# Runtime projection cost defaults for effect leaves without Ann.cost. These
+# match the staged estimator's small fallback values.
+DEFAULT_CALL_COST = 1.0
+DEFAULT_THINK_COST = 2.0
+DEFAULT_SUB_COST = 5.0
 
 
 @dataclass
@@ -44,6 +52,16 @@ class Result:
 
     value: Any
     event_id: Optional[str] = None
+    attrs: Optional[dict[str, Any]] = None
+    reported_cost: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class BranchOutcome:
+    """A race-family branch result annotated with its original branch index."""
+
+    index: int
+    result: Any
 
 
 BranchThunk = Callable[[], Awaitable[Any]]
@@ -118,7 +136,15 @@ async def interpret(node: Node, value: Any, env: Env, causes: tuple[str, ...] = 
         env.emitter.fail(node.id, cid, repr(e), causes=(planned,))
         raise
 
-    did = env.emitter.did(node.id, cid, value=out.value, shape=shape, causes=(planned,))
+    did = env.emitter.did(
+        node.id,
+        cid,
+        value=out.value,
+        cost=_projection_cost(node, out.reported_cost),
+        shape=shape,
+        causes=(planned,),
+        attrs=out.attrs,
+    )
     return Result(value=out.value, event_id=did)
 
 
@@ -201,7 +227,8 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
             return Result(await env.human_gate(value, cid, timeout_s))
         return Result(await env.call_hand(node, value, cid))
     if isinstance(step, ThinkStep):
-        return Result(await env.invoke_brain(step.brain, value, cid))
+        out = await env.invoke_brain(step.brain, value, cid)
+        return Result(out, reported_cost=_reported_brain_cost(out))
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid))
     raise ComposableAgentsError(f"interpreter: prim with no usable step at {node.id!r}")
@@ -215,22 +242,88 @@ async def _eval_par(node: Node, value: Any, env: Env, planned: str) -> Result:
 
     if kind in {"race", "hedge", "quorum"}:
         thunks = [
-            (lambda b=b: interpret(b, value, env, causes=(planned,)))
-            for b in branches
+            (lambda idx=idx, b=b: _interpret_branch(idx, b, value, env, planned))
+            for idx, b in enumerate(branches)
         ]
         m = (merge.quorum_m if merge and merge.quorum_m else 1)
         hedge_ms = merge.hedge_ms if merge else None
         winner = await env.race_first(thunks, kind=kind, m=m, hedge_ms=hedge_ms)
-        results = winner if isinstance(winner, list) else [winner]
+        outcomes = winner if isinstance(winner, list) else [winner]
+        winner_indices = [o.index if isinstance(o, BranchOutcome) else idx for idx, o in enumerate(outcomes)]
+        results = [o.result if isinstance(o, BranchOutcome) else o for o in outcomes]
         values = [r.value if isinstance(r, Result) else r for r in results]
         out_value = values if kind == "quorum" else values[0]
+        attrs = {
+            "merge": kind,
+            "winner": winner_indices if kind == "quorum" else winner_indices[0],
+            "cancelled": [idx for idx in range(len(branches)) if idx not in set(winner_indices)],
+        }
     else:
-        results = await env.gather([interpret(b, value, env, causes=(planned,)) for b in branches])
+        degraded = any(reads_whole_session(b) for b in branches)
+        if degraded:
+            results = []
+            for branch in branches:
+                results.append(await interpret(branch, value, env, causes=(planned,)))
+            attrs = {"merge": "degraded", "reason": "whole_session"}
+        else:
+            results = await env.gather([interpret(b, value, env, causes=(planned,)) for b in branches])
+            attrs = None
         out_value = [r.value if isinstance(r, Result) else r for r in results]
 
     if merge is not None and merge.reducer is not None:
         out_value = env.get_pure(merge.reducer)(out_value)
-    return Result(out_value)
+    return Result(out_value, attrs=attrs)
+
+
+async def _interpret_branch(
+    idx: int,
+    branch: Node,
+    value: Any,
+    env: Env,
+    planned: str,
+) -> BranchOutcome:
+    return BranchOutcome(idx, await interpret(branch, value, env, causes=(planned,)))
+
+
+def _projection_cost(node: Node, reported_cost: Optional[float]) -> Optional[float]:
+    if node.ann is not None and node.ann.cost is not None:
+        return float(node.ann.cost)
+    if node.op != Op.PRIM:
+        return None
+
+    step = node.step
+    if isinstance(step, ThinkStep):
+        return reported_cost if reported_cost is not None else DEFAULT_THINK_COST
+    if isinstance(step, SubStep):
+        return DEFAULT_SUB_COST
+    if isinstance(step, CallStep):
+        return DEFAULT_CALL_COST
+    return None
+
+
+def _reported_brain_cost(value: Any) -> Optional[float]:
+    if not isinstance(value, dict):
+        return None
+
+    direct = _numeric_cost(value)
+    if direct is not None:
+        return direct
+
+    for key in ("usage", "metadata", "meta"):
+        nested = value.get(key)
+        if isinstance(nested, dict):
+            nested_cost = _numeric_cost(nested)
+            if nested_cost is not None:
+                return nested_cost
+    return None
+
+
+def _numeric_cost(data: dict[str, Any]) -> Optional[float]:
+    for key in ("cost", "costUsd", "cost_usd", "totalCostUsd", "total_cost_usd"):
+        cost = data.get(key)
+        if isinstance(cost, (int, float)) and not isinstance(cost, bool):
+            return float(cost)
+    return None
 
 
 def _all_branches(node: Node) -> list[Node]:

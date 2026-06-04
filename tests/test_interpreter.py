@@ -5,19 +5,25 @@ from __future__ import annotations
 import pytest
 
 from composable_agents import (
+    Ann, ContextScope,
     call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
 )
 from composable_agents.errors import CapabilityDenied
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 
 
-def _env(flow, **kw):
-    fr = freeze(flow, read_snapshot("inc", "double", "half", "a", "b", "c"))
+def _env_and_store(flow, **kw):
+    fr = freeze(flow, read_snapshot("inc", "double", "half", "a", "b", "c", "other"))
     store = InMemoryProjection()
-    return fr, InMemoryEnv(fr.manifest, ProjectionEmitter(store), **kw)
+    return fr, InMemoryEnv(fr.manifest, ProjectionEmitter(store), **kw), store
+
+
+def _env(flow, **kw):
+    fr, env, _store = _env_and_store(flow, **kw)
+    return fr, env
 
 
 HANDS = {
@@ -42,6 +48,92 @@ def test_parallel_collects_branches():
     fr, env = _env(flow, hands=HANDS)
     out = run(interpret(fr.flow, 9, env))
     assert out.value == [("a", 9), ("b", 9)]
+
+
+class RecordingEnv(InMemoryEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.events = []
+        self.gather_calls = 0
+
+    async def invoke_brain(self, brain, value, cid):
+        self.events.append("brain:start")
+        self.events.append("brain:end")
+        return ("brain", value)
+
+    async def call_hand(self, node, value, cid):
+        self.events.append("hand:start")
+        self.events.append("hand:end")
+        return ("hand", value)
+
+    async def gather(self, coros):
+        self.gather_calls += 1
+        self.events.append("gather")
+        return await super().gather(coros)
+
+
+def test_parallel_degrades_to_sequential_when_branch_reads_whole_session():
+    flow = par(
+        think("ctx_reader", ctx=ContextScope.WHOLE_SESSION),
+        call(mcp("srv", "other")),
+    )
+    fr = freeze(flow, read_snapshot("other"))
+    store = InMemoryProjection()
+    env = RecordingEnv(fr.manifest, ProjectionEmitter(store))
+
+    out = run(interpret(fr.flow, 7, env))
+
+    assert out.value == [("brain", 7), ("hand", 7)]
+    assert env.gather_calls == 0
+    assert env.events == ["brain:start", "brain:end", "hand:start", "hand:end"]
+    par_did = next(e for e in store.events() if e.node == fr.flow.id and e.type == EventType.DID)
+    assert par_did.attrs == {"merge": "degraded", "reason": "whole_session"}
+
+
+def test_parallel_without_whole_session_still_fans_out():
+    flow = par(think("local_reader"), call(mcp("srv", "other")))
+    fr = freeze(flow, read_snapshot("other"))
+    store = InMemoryProjection()
+    env = RecordingEnv(fr.manifest, ProjectionEmitter(store))
+
+    run(interpret(fr.flow, 7, env))
+
+    assert env.gather_calls == 1
+
+
+def test_race_emits_scheduling_attrs():
+    flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
+    fr, env, store = _env_and_store(flow, hands=HANDS)
+
+    out = run(interpret(fr.flow, 1, env))
+
+    assert out.value == ("a", 1)
+    race_did = next(e for e in store.events() if e.node == fr.flow.id and e.type == EventType.DID)
+    assert race_did.attrs == {"merge": "race", "winner": 0, "cancelled": [1]}
+
+
+def test_real_run_cost_rolls_up_from_annotations():
+    flow = seq(
+        call(mcp("srv", "a"), ann=Ann(cost_usd=0.25)),
+        think("summarizer", ann=Ann(cost_usd=0.75)),
+    )
+    fr, env, store = _env_and_store(flow, hands=HANDS, brains={"summarizer": lambda v: v})
+
+    run(interpret(fr.flow, 1, env))
+
+    assert store.cost_by_shape()["Pipeline"] == pytest.approx(1.0)
+
+
+def test_brain_reported_cost_metadata_overrides_default():
+    flow = think("metered")
+    fr, env, store = _env_and_store(
+        flow,
+        brains={"metered": lambda v: {"output": v, "usage": {"costUsd": 0.33}}},
+    )
+
+    run(interpret(fr.flow, "doc", env))
+
+    assert store.cost_by_shape()["Pipeline"] == pytest.approx(0.33)
 
 
 def test_alt_routes_by_pure_predicate():

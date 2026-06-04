@@ -222,7 +222,8 @@ def _ctx_of(n: Node) -> Optional[ContextPolicy]:
     return None
 
 
-def _branch_reads_whole_session(n: Node) -> bool:
+def reads_whole_session(n: Node) -> bool:
+    """True if any call/think leaf in ``n`` reads whole-session context."""
     for d in n.walk():
         ctx = _ctx_of(d)
         if ctx is not None and ctx.scope == ContextScope.WHOLE_SESSION:
@@ -270,7 +271,7 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
         # ContextPolicy legality under par -> sequential degrade (warning)
         if n.op == Op.PAR and n.left is not None and n.right is not None:
             for side, label in ((n.left, "left"), (n.right, "right")):
-                if _branch_reads_whole_session(side):
+                if reads_whole_session(side):
                     out.append(
                         Diagnostic(
                             "CTX_PAR_DEGRADED",
