@@ -196,3 +196,49 @@ def test_agent_facade_dev_allows_over_called_tool() -> None:
     assert calls == [0, 1]
     assert result["prodGap"] == ["tool 'limited' exceeded maxCalls=1"]
     assert "denied" not in result
+
+
+def test_agent_facade_dev_unregistered_tool_returns_placeholder_prod_gap() -> None:
+    replies = [
+        {"tool": "ungranted_tool", "input": "x"},
+        {"output": "done"},
+    ]
+    seen_payloads: list[dict[str, Any]] = []
+
+    def llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+        seen_payloads.append(payload)
+        return replies.pop(0)
+
+    @tool(effect="read", idempotent=True)
+    def granted_read_tool(value: str) -> str:
+        return f"read:{value}"
+
+    strict_agent = Agent(
+        "m",
+        tools=[granted_read_tool],
+        name="agent_strict_unregistered_tool",
+        llm=lambda _brain_name, _payload: {"tool": "ungranted_tool", "input": "x"},
+    )
+    strict = strict_agent.run("start")
+    assert strict["status"] == "denied"
+    assert strict["reason"] == "tool 'ungranted_tool' is not granted"
+
+    dev_agent = Agent(
+        "m",
+        tools=[granted_read_tool],
+        name="agent_dev_unregistered_tool",
+        llm=llm,
+        mode="dev",
+    )
+
+    result = dev_agent.run("start")
+
+    placeholder = {
+        "error": "tool 'ungranted_tool' unavailable (dev mode: not a registered tool of this agent)"
+    }
+    assert result["status"] == "done"
+    assert result["prodGap"] == ["tool 'ungranted_tool' is not granted"]
+    assert result["trace"] == [
+        {"decision": "call", "cost": 1.0, "ref": "ungranted_tool"}
+    ]
+    assert seen_payloads[1]["input"] == placeholder

@@ -267,6 +267,14 @@ class Deployment:
         ``temporalio``. For the per-run freeze seam, callers that want a fresh
         snapshot each launch should ``deployment.refresh(...).run(...)``.
         """
+        if self.mode is EnforcementMode.DEV:
+            raise ValueError(
+                "cannot run a dev-mode deployment on Temporal: dev mode is a local "
+                "iteration aid and Deployment.run() is prod-strict. Resolve "
+                "deployment.prod_gap and rebuild with deploy(..., mode='strict') "
+                "(or 'prod') before deploying."
+            )
+
         from .execution.harness import run_flow  # lazy: keeps deploy import-light
 
         return await run_flow(

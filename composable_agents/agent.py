@@ -379,6 +379,10 @@ class Agent:
             return reply
 
         async def call_tool(name: str, value: Any) -> Any:
+            if name not in tool_fns:
+                return {
+                    "error": f"tool {name!r} unavailable (dev mode: not a registered tool of this agent)"
+                }
             result = tool_fns[name](value)
             if inspect.isawaitable(result):
                 return await result

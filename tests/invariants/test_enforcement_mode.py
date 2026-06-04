@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from composable_agents import (
@@ -62,6 +64,13 @@ def test_clean_dev_mode_has_no_prod_gap() -> None:
 
     assert dep.prod_gap == []
     assert dep.prod_gap_summary() == "no prod gap"
+
+
+def test_dev_mode_deployment_run_rejects_before_temporal_import() -> None:
+    dep = deploy(_clean_flow(), read_snapshot("a"), capabilities=_capabilities(), mode="dev")
+
+    with pytest.raises(ValueError, match="dev-mode deployment.*prod_gap"):
+        asyncio.run(dep.run(object(), session_id="x"))
 
 
 def test_prod_alias_behaves_as_strict() -> None:
