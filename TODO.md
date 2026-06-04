@@ -388,59 +388,74 @@ The spec above is the **target**. This section tracks where the current
 implementation diverges, as a punch list. An item is *conformant* only when its
 invariant holds in code with a test.
 
+> **Status (2026-06-03): conformant.** Every P0/P1/P2 item below holds in code
+> with a test, the §13 golden corpus is pinned, and the El Niño worked example
+> (`examples/elnino/`) deploys clean and dry-runs end-to-end. Suite: 184 tests
+> (Temporal) / 164 + 6 skipped (no-Temporal) / 20 golden · mypy --strict 0 ·
+> ruff clean. See the `conformance` build history (`docs/conformance-plan.md`).
+
 ### 12.1 Implemented
 
-IR · shape lattice · freeze · validation · capability basics · race admission
-(static) · pure interpreter · Temporal harness · human gate · agent loop ·
-local projection.
+IR · shape lattice (incl. n-ary `alt` switch) · freeze (definition+execution
+hash) · validation · capabilities (deny-by-default, approval gating, model-id /
+`maxCalls` / version-pin / subflow / app-grant attenuation) · race admission ·
+pure interpreter · Temporal harness · human gate · agent loop (strict
+controller, budget pre-check, contract retry) · projection (cost + scheduling
+attrs) · staged-plan manifest binding · artifact hash · pure-drift verification ·
+explicit Registry · CLI + `explain` · golden corpus · py.typed + mypy-strict + CI.
 
 ### 12.2 Seam / experimental
 
-Production projection sink · full replay-artifact verification · plan-extraction
-quality · per-run freeze · cost accounting · OTel export completeness.
+Production projection durable sink (Postgres/OTel are interface + data; fed
+out-of-band from history) · plan-extraction quality (honest *macro-recording*,
+not yet procedure discovery, §10.1) · per-run freeze · `Ann.cache` (forwarded to
+the hand as advisory; no framework cache backend).
 
-### 12.3 Known gaps (fix in priority order)
+### 12.3 Closed gaps (all conformant — invariant holds in code with a test)
 
 **P0 — execution semantics & effect authorization**
 
-- [ ] **Race settles on first completion, not first success** (`finished()`
-      re-raises on a failed branch). Both `Env`s. → §8.3
-- [ ] **Hedge starts all branches eagerly** (the lazy "reveal" is cosmetic). →
-      §8.3 (requires the thunk-based `Env` API)
-- [ ] **Approval gating is not modeled or enforced.** → §7.3
-- [ ] **Empty grant list = allow-all in the agent loop.** → §7.1
-- [ ] **Agent tool calls ignore the tool contract for retry/effect.** → §8.4,
-      §10
-- [ ] **MCP calls carry no idempotency key.** → §8.5
+- [x] **Race/quorum/hedge settle on first SUCCESS** (thunk `Env`; failures
+      ignored until impossible; losers cancelled). → §8.3 · `7c210c7`
+- [x] **Hedge is lazy** (branch *i* starts only after `hedge_ms`). → §8.3 · `7c210c7`
+- [x] **Approval gating** modeled + enforced (deploy dominance check + runtime
+      refusal; `app`-grant attenuation). → §7.3 · `7bc0e93`, `fca8499`, `e33d4af`
+- [x] **Deny-by-default** (`None`=unconstrained vs `[]`=deny) at compile + loop. → §7.1 · `7bc0e93`, `fca8499`
+- [x] **Agent CALLs use the tool contract** for retry/effect. → §8.4, §10 · `fca8499`
+- [x] **MCP calls carry a deterministic idempotency key.** → §8.5 · `2f8e7a8`
 
 **P1 — replay integrity & capability consistency**
 
-- [ ] **`canonical_json(default=str)` silently coerces.** → §6.3
-- [ ] **Pure-function drift is computed but never verified.** → §6.4
-- [ ] **Tool hash omits output_schema / contract / asserted.** *(verify the
-      `FrozenTool.hash` body before treating as fact.)* → §6.1
-- [ ] **No artifact hash.** → §6.2
-- [ ] **`models` gates brain names, not model ids.** → §7.2
-- [ ] **`maxCalls` parsed, never enforced.** → §7.4
-- [ ] **MCP server version pins not enforced.** → §7.2
-- [ ] **No subflow grant boundary.** → §7.2
-- [ ] **Agent budget checked after the controller already spent.** → §10
-- [ ] **WHOLE_SESSION `par` degradation warned but not implemented.** → §8.2
-- [ ] **Human-gate timeout drops the input.** → §8.6
-- [ ] **Projection cost not charged (`costByShape` empty in real runs).** → §11
+- [x] **Strict `canonical_json`** (no `default=str`; raises on non-JSON). → §6.3 · `e766411`
+- [x] **Pure-function drift verified** at workflow start (non-retryable). → §6.4 · `01dd702`
+- [x] **Definition + execution hash** (folds output_schema/contract/asserted). → §6.1 · `e766411`
+- [x] **`artifact_hash`** over flow+manifest+pures+brains+caps+version. → §6.2 · `e766411`
+- [x] **`models` gates model ids**; `brains` gates brain names. → §7.2 · `1eae744`
+- [x] **`maxCalls` enforced** (deterministic counter; inherited across SUB). → §7.4 · `1eae744`, `e33d4af`
+- [x] **MCP server version pins enforced.** → §7.2 · `1eae744`
+- [x] **Subflow grant boundary** (compile + agent SUB). → §7.2 · `7bc0e93`, `1eae744`
+- [x] **Agent budget pre-checked** before the controller spends. → §10 · `fca8499`
+- [x] **WHOLE_SESSION `par` degraded** to sequential + annotated. → §8.2 · `753f667`
+- [x] **Human-gate timeout returns the input.** → §8.6 · `753f667`
+- [x] **Projection charges cost** (`costByShape` populated; scheduling attrs). → §11 · `753f667`
 
 **P2 — ergonomics & guardrails**
 
-- [ ] **Staged plans not bound to the parent manifest** (fall back to
-      conservative default; no invented-tool check). → §9
-- [ ] Explicit `Registry` instead of process-global registries.
-- [ ] Non-retryable policy errors raised as explicit application errors. → §8.7
-- [ ] `Ann.timeout` honored only for human gates; `Ann.cache` inert — wire or
-      remove. → §4, §8.4
-- [ ] `py.typed` marker, mypy (strict on core), ruff, CI matrix with/without the
-      `temporal` extra.
-- [ ] CLI (`freeze` / `validate` / `inspect` / `run-local` / `graph`) and a
-      user-facing `explain(diagnostics)`.
+- [x] **Staged plans bound to the parent manifest** (invented-tool rejection). → §9 · `276fe9d`
+- [x] Explicit `Registry` (back-compat shims). · `83dc37a`
+- [x] Non-retryable policy errors raised as typed application errors. → §8.7 · `ef6f3cc`
+- [x] `Ann.timeout` honored per node; `Ann.cache` forwarded as advisory. → §4, §8.4 · `e546007`
+- [x] `py.typed`, mypy (strict on core, 0 errors), ruff, CI matrix with/without
+      the `temporal` extra. · `74d9055`, `3ae8a99`, `a84600d`
+- [x] CLI (`freeze`/`validate`/`inspect`/`run-local`/`graph`) + `explain(diagnostics)`. · `ef6f3cc`
+
+### 12.4 Beyond the punch-list
+
+- Public API renamed to the algebra-faithful surface (`seq`/`par`/`alt`/
+  `iter_up_to`/`sub`/`app`/`mcp`/`native`); clean typed re-exports. · `af472e2`, `3ae8a99`
+- n-ary `alt(select, cases)` multiway switch added to the IR. · `88b9c77`
+- Final adversarial review (two independent passes) closed 10 cross-batch issues
+  incl. an `app`-inline-grant capability bypass. · `e33d4af`, `a84600d`
 
 ---
 
