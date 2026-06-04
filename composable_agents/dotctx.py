@@ -28,6 +28,7 @@ from typing import Any, Optional
 from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
 from .kinds import ContextScope, Shape, SummaryPolicy
+from .registry import DEFAULT_REGISTRY
 
 
 @dataclass(frozen=True)
@@ -46,25 +47,23 @@ class Brain:
     context_scope: ContextScope = ContextScope.LOCAL
 
 
-_BRAINS: dict[str, Brain] = {}
+_BRAINS: dict[str, Brain] = DEFAULT_REGISTRY.brains
 
 
 def register_brain(brain: Brain) -> Brain:
-    if brain.name in _BRAINS and _BRAINS[brain.name] != brain:
-        raise ValueError(f"brain {brain.name!r} already registered with a different config")
-    _BRAINS[brain.name] = brain
-    return brain
+    return DEFAULT_REGISTRY.register_brain(brain)
 
 
 def get_brain(name: str) -> Brain:
-    try:
-        return _BRAINS[name]
-    except KeyError as e:
-        raise KeyError(f"unknown brain {name!r}; load its dotctx with load_dotctx()") from e
+    return DEFAULT_REGISTRY.get_brain(name)
+
+
+def list_brains() -> list[str]:
+    return DEFAULT_REGISTRY.list_brains()
 
 
 def registered_brains() -> list[str]:
-    return sorted(_BRAINS)
+    return DEFAULT_REGISTRY.list_brains()
 
 
 # --------------------------------------------------------------------------- #

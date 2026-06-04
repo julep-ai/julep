@@ -31,11 +31,11 @@ from temporalio import activity
 
 from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
-from ..dotctx import Brain, get_brain
+from ..dotctx import Brain
 from ..errors import CapabilityDenied, PureDriftError
 from ..ir import Node, toolref_from_json, toolref_key
 from ..kinds import Effect, Idempotency
-from ..purity import diff_pure_hashes, source_hash_of
+from ..registry import DEFAULT_REGISTRY, Registry
 from ..staged import admit_plan
 
 # Caller signatures the worker supplies.
@@ -58,6 +58,7 @@ class WorkerContext:
     mcp_call: Optional[McpCaller] = None
     llm: Optional[LlmCaller] = None
     capabilities: Optional[CapabilityManifest] = None
+    registry: Optional[Registry] = None
     http_timeout_s: float = 30.0
     # Deploy-time registries. A sub-flow is a separately frozen flow addressable
     # by ref; an agent spec is the controller's loop policy. Both are fixed at
@@ -75,6 +76,10 @@ def configure(ctx: WorkerContext) -> None:
     """Install the worker-wide context the activities read."""
     global _CTX
     _CTX = ctx
+
+
+def _registry() -> Registry:
+    return _CTX.registry or DEFAULT_REGISTRY
 
 
 def _domain_of(url: str) -> str:
@@ -147,7 +152,7 @@ async def callHand(inp: CallHandInput) -> Any:
 async def invokeBrain(inp: InvokeBrainInput) -> Any:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
-    brain = get_brain(inp.brain)
+    brain = _registry().get_brain(inp.brain)
     return await _CTX.llm(brain, inp.value)
 
 
@@ -161,7 +166,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     """
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
-    planner = get_brain(inp.planner)
+    planner = _registry().get_brain(inp.planner)
     raw = await _CTX.llm(planner, inp.value)
 
     plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
@@ -180,13 +185,14 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
 async def verifyPures(pinned: dict[str, str]) -> None:
     """Verify deploy-pinned pure source hashes against this worker's registry."""
     registered: dict[str, str] = {}
+    registry = _registry()
     for name in pinned:
         try:
-            registered[name] = source_hash_of(name)
+            registered[name] = registry.source_hash_of(name)
         except KeyError:
             pass
 
-    drift = diff_pure_hashes(pinned, registered)
+    drift = registry.diff_pure_hashes(pinned, registered)
     if drift:
         details = "; ".join(
             (

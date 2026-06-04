@@ -33,8 +33,8 @@ from ..errors import CapabilityDenied, ComposableAgentsError, RaceAllFailed
 from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import Op
-from ..purity import get_pure as _registry_get_pure
 from ..projection import ProjectionEmitter
+from ..registry import DEFAULT_REGISTRY, Registry
 from ..shapes import surface_shape
 from ..validate import reads_whole_session
 
@@ -494,6 +494,7 @@ class InMemoryEnv:
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
         gate: Optional[Callable[[Any], Any]] = None,
         max_calls: Optional[dict[str, int]] = None,
+        registry: Optional[Registry] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -504,6 +505,7 @@ class InMemoryEnv:
         self._planners = planners or {}
         self._gate = gate or (lambda v: {"approved": True, "input": v})
         self._max_calls = dict(max_calls or {})
+        self._registry = registry
         self.call_counts: dict[str, int] = {}
         self._cid = 0
 
@@ -513,7 +515,8 @@ class InMemoryEnv:
         return f"{node_id}@{self._cid}"
 
     def get_pure(self, name: str) -> Callable[[Any], Any]:
-        return _registry_get_pure(name)
+        registry = self._registry or DEFAULT_REGISTRY
+        return registry.get_pure(name)
 
     def charge_call(self, tool_key: str) -> None:
         limit = self._max_calls.get(tool_key)

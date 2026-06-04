@@ -13,32 +13,15 @@ non-deterministic predicate will desync replay. Keep them total and pure.
 
 from __future__ import annotations
 
-import hashlib
-import inspect
-from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
-PureFn = Callable[[Any], Any]
+from .registry import DEFAULT_REGISTRY, PureEntry, PureFn, _source_hash as _registry_source_hash
 
-
-@dataclass(frozen=True)
-class PureEntry:
-    name: str
-    fn: PureFn
-    source_hash: str
-
-
-_REGISTRY: dict[str, PureEntry] = {}
+_REGISTRY: dict[str, PureEntry] = DEFAULT_REGISTRY.pures
 
 
 def _source_hash(fn: PureFn) -> str:
-    try:
-        src = inspect.getsource(fn)
-    except (OSError, TypeError):
-        # e.g. defined in a REPL; fall back to qualname so it's at least stable
-        src = f"{fn.__module__}.{getattr(fn, '__qualname__', fn.__name__)}"
-    digest = hashlib.sha256(src.encode("utf-8")).hexdigest()[:16]
-    return f"pure:{digest}"
+    return _registry_source_hash(fn)
 
 
 def pure(name: str) -> Callable[[PureFn], PureFn]:
@@ -59,28 +42,19 @@ def pure(name: str) -> Callable[[PureFn], PureFn]:
 
 
 def register_pure(name: str, fn: PureFn) -> PureEntry:
-    if name in _REGISTRY and _REGISTRY[name].fn is not fn:
-        raise ValueError(f"pure name already registered to a different fn: {name!r}")
-    entry = PureEntry(name=name, fn=fn, source_hash=_source_hash(fn))
-    _REGISTRY[name] = entry
-    return entry
+    return DEFAULT_REGISTRY.register_pure(name, fn)
 
 
 def is_registered(name: str) -> bool:
-    return name in _REGISTRY
+    return DEFAULT_REGISTRY.is_registered(name)
 
 
 def get_pure(name: str) -> PureFn:
-    try:
-        return _REGISTRY[name].fn
-    except KeyError as e:
-        raise KeyError(
-            f"unknown pure {name!r}; register it with @pure({name!r}) on a worker"
-        ) from e
+    return DEFAULT_REGISTRY.get_pure(name)
 
 
 def source_hash_of(name: str) -> str:
-    return _REGISTRY[name].source_hash
+    return DEFAULT_REGISTRY.source_hash_of(name)
 
 
 def diff_pure_hashes(
@@ -88,14 +62,8 @@ def diff_pure_hashes(
     registered: dict[str, str],
 ) -> list[dict[str, str | None]]:
     """Return changed or missing pure source hashes compared to a pinned artifact."""
-    drift: list[dict[str, str | None]] = []
-    for name in sorted(pinned):
-        pinned_hash = pinned[name]
-        actual_hash = registered.get(name)
-        if actual_hash != pinned_hash:
-            drift.append({"name": name, "pinned": pinned_hash, "actual": actual_hash})
-    return drift
+    return DEFAULT_REGISTRY.diff_pure_hashes(pinned, registered)
 
 
 def registered_names() -> list[str]:
-    return sorted(_REGISTRY)
+    return DEFAULT_REGISTRY.registered_names()

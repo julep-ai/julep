@@ -66,6 +66,7 @@ from .dotctx import (
 
 # --- purity registry ------------------------------------------------------- #
 from .purity import pure, register_pure, is_registered, get_pure, diff_pure_hashes
+from .registry import Registry, DEFAULT_REGISTRY
 
 # --- agent loop + plan extraction (P4) ------------------------------------- #
 from .agent_loop import (
@@ -125,6 +126,7 @@ _BASE_EXPORTS = [
     "brain_to_flow", "brain_from_settings",
     # purity
     "pure", "register_pure", "is_registered", "get_pure", "diff_pure_hashes",
+    "Registry", "DEFAULT_REGISTRY",
     # agent loop
     "AgentConfig", "AgentState", "Decision", "interpret_brain_reply",
     "generalize_trace_to_plan", "extract_plan", "promote_plan",
