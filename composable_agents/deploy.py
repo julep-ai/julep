@@ -56,8 +56,9 @@ from .freeze import (
     freeze,
 )
 from .ir import Node, ThinkStep, canonical_json
-from .kinds import Op
+from .kinds import Op, Shape
 from .purity import is_registered, source_hash_of
+from .shapes import surface_shape as _compute_surface_shape
 from .validate import Diagnostic, blocking, validate
 
 
@@ -203,6 +204,11 @@ class Deployment:
     @property
     def warnings(self) -> list[Diagnostic]:
         return [d for d in self.diagnostics if d.severity != "error"]
+
+    @cached_property
+    def surface_shape(self) -> Shape:
+        """Where this flow sits on the shape lattice (Pipeline..Agent)."""
+        return _compute_surface_shape(self.flow)
 
     def refresh(self, snapshot: Optional[McpSnapshot] = None) -> "Deployment":
         """Re-run the compile pipeline against a fresh snapshot (per-run seam).

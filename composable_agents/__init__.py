@@ -116,6 +116,8 @@ from .deploy import (
     snapshot_from_listings as snapshot_from_listings,
 )
 from .agent import (
+    AGENT_REPLY_SCHEMA as AGENT_REPLY_SCHEMA,
+    Agent as Agent,
     Tool as Tool,
     snapshot_from_tools as snapshot_from_tools,
     tool as tool,
@@ -232,7 +234,7 @@ _BASE_EXPORTS = [
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
     "bind_plan_to_manifest",
     "deploy", "Deployment", "snapshot_from_listings",
-    "Tool", "tool", "snapshot_from_tools",
+    "Agent", "AGENT_REPLY_SCHEMA", "Tool", "tool", "snapshot_from_tools",
     # dotctx
     "Brain", "register_brain", "get_brain", "load_dotctx", "dotctx_flow",
     "brain_to_flow", "brain_from_settings",

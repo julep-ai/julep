@@ -1,22 +1,102 @@
-"""Small facade helpers for native Python-callable tools."""
+"""Small facade helpers for native Python-callable tools and agents."""
 
 from __future__ import annotations
 
+import asyncio
 import inspect
 import types
+import warnings
 from collections.abc import Mapping as AbcMapping
 from collections.abc import Sequence as AbcSequence
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, Sequence, Union, get_args, get_origin, get_type_hints, overload
+from typing import Any, Callable, Optional, Sequence, Union, cast, get_args, get_origin, get_type_hints, overload
 
+from .agent_loop import AgentConfig, drive_agent_loop
+from .capabilities import Budget, CapabilityManifest, ToolGrant
 from .contracts import ToolContract
+from .deploy import Deployment, deploy
+from .dotctx import Brain, register_brain
+from .dsl import app
+from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
 from .ir import JSONSchema
 from .kinds import Effect, Idempotency
+from .projection import InMemoryProjection, ProjectionEmitter
 
 _OBJECT_SCHEMA: JSONSchema = {"type": "object"}
 _ALLOWED_EFFECTS = ("read", "write", "external", "dangerous")
 _NONE_TYPE = type(None)
+
+AGENT_REPLY_SCHEMA: JSONSchema = {
+    "oneOf": [
+        {
+            "type": "object",
+            "required": ["tool"],
+            "properties": {
+                "tool": {"type": "string"},
+                "input": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["sub"],
+            "properties": {
+                "sub": {"type": "string"},
+                "input": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["output"],
+            "properties": {
+                "output": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["done"],
+            "properties": {
+                "done": {"const": True},
+                "output": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["escalate"],
+            "properties": {
+                "escalate": {"type": "string"},
+            },
+            "additionalProperties": False,
+        },
+    ]
+}
+
+_DEFAULT_LOCAL_BRAIN_WARNING = (
+    "Agent llm=None: no model configured; returning input unprocessed. "
+    "Pass llm= for real behavior."
+)
+_default_local_brain_warned = False
+
+
+def default_local_brain(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Keyless demo brain: terminal, explicit, and never silently intelligent."""
+    global _default_local_brain_warned
+    if not _default_local_brain_warned:
+        warnings.warn(_DEFAULT_LOCAL_BRAIN_WARNING, RuntimeWarning, stacklevel=2)
+        _default_local_brain_warned = True
+    return {
+        "output": {
+            "note": (
+                "no model configured (llm=None); returning input unprocessed "
+                "- pass llm= for real behavior"
+            ),
+            "input": payload.get("input"),
+        }
+    }
 
 
 def _copy_schema(schema: JSONSchema) -> JSONSchema:
@@ -169,3 +249,128 @@ def tool(
 
 def snapshot_from_tools(tools: Sequence[Tool]) -> McpSnapshot:
     return McpSnapshot(native={native_tool.name: native_tool.native_spec for native_tool in tools})
+
+
+class Agent:
+    """Thin facade over the existing APP IR, local interpreter, and deployment."""
+
+    def __init__(
+        self,
+        brain: str,
+        tools: Sequence[Tool] = (),
+        *,
+        name: str = "agent",
+        llm: Optional[Callable[[str, Any], Any]] = None,
+        budget_usd: Optional[float] = None,
+        max_rounds: int = 24,
+        instructions: Optional[str] = None,
+    ) -> None:
+        self._name = name
+        self._brain_model = brain
+        self._tools = tuple(tools)
+        self._brain_fn = llm or default_local_brain
+        self._budget = Budget(usd=budget_usd) if budget_usd is not None else None
+        self._cfg = AgentConfig(max_rounds=max_rounds, budget=self._budget)
+        self._granted = {native_tool.name for native_tool in self._tools}
+        self._contracts = {
+            native_tool.name: {
+                "effect": native_tool.contract.effect.value,
+                "idempotency": native_tool.contract.idempotency.value,
+            }
+            for native_tool in self._tools
+        }
+
+        register_brain(
+            Brain(
+                name=name,
+                model=brain,
+                system=instructions or "",
+                reply_schema=AGENT_REPLY_SCHEMA,
+                is_agent=True,
+            )
+        )
+        self._flow = app(name, budget=self._budget, max_rounds=max_rounds)
+        self._snapshot = snapshot_from_tools(self._tools)
+        self._capabilities = CapabilityManifest(
+            tools={
+                native_tool.name: ToolGrant(
+                    name=native_tool.name,
+                    effect=native_tool.contract.effect,
+                    idempotency=native_tool.contract.idempotency,
+                )
+                for native_tool in self._tools
+            },
+            budget=self._budget,
+            _has_tools=True,
+        )
+        self._deployment = deploy(
+            self._flow,
+            self._snapshot,
+            capabilities=self._capabilities,
+        )
+
+    async def arun(self, input: Any) -> dict[str, Any]:
+        emitter = ProjectionEmitter(InMemoryProjection())
+        tool_fns = {native_tool.name: native_tool.fn for native_tool in self._tools}
+
+        async def invoke_controller(payload: dict[str, Any]) -> Any:
+            reply = self._brain_fn(self._brain_model, payload)
+            if inspect.isawaitable(reply):
+                return await reply
+            return reply
+
+        async def call_tool(name: str, value: Any) -> Any:
+            result = tool_fns[name](value)
+            if inspect.isawaitable(result):
+                return await result
+            return result
+
+        env = InMemoryEnv(
+            self._deployment.manifest,
+            emitter,
+            hands=tool_fns,
+            agents={
+                self._name: lambda value: drive_agent_loop(
+                    input=value,
+                    cfg=self._cfg,
+                    invoke_controller=invoke_controller,
+                    call_tool=call_tool,
+                    granted=self._granted,
+                    contracts=self._contracts,
+                )
+            },
+            max_calls=(
+                self._deployment.capabilities.max_call_limits()
+                if self._deployment.capabilities is not None
+                else None
+            ),
+        )
+        result = await interpret(self._deployment.flow, input, env)
+        return cast(dict[str, Any], result.value)
+
+    def run(self, input: Any) -> dict[str, Any]:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.arun(input))
+        raise RuntimeError("Agent.run() cannot be called inside a running event loop; use await Agent.arun(...)")
+
+    def deployment(self) -> Deployment:
+        return self._deployment
+
+    async def deploy(
+        self,
+        client: Any,
+        *,
+        session_id: str,
+        input: Any = None,
+        task_queue: str = "composable-agents",
+        policy: Any = None,
+    ) -> Any:
+        return await self._deployment.run(
+            client,
+            session_id=session_id,
+            input=input,
+            task_queue=task_queue,
+            policy=policy,
+        )

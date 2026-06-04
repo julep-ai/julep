@@ -87,7 +87,6 @@ from composable_agents import (
     sub,
     think,
 )
-from composable_agents.shapes import surface_shape
 
 
 ZONE_FANOUT = 12
@@ -696,7 +695,6 @@ def build_deployment(snapshot: McpSnapshot | None = None, *, verbose: bool = Fal
             "\n  ".join(f"[{d.code}@{d.node_id}] {d.message}" for d in blocking)
         )
 
-    deployment.surface_shape = surface_shape(deployment.flow)
     if verbose:
         print(f"deployed season_plan  artifact={deployment.artifact_hash[:12]}  "
               f"shape={deployment.surface_shape}")   # expect Agent (swarm contains app)
