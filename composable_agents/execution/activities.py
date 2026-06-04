@@ -305,6 +305,11 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
         granted = list(_CTX.capabilities.tools.keys())
     else:
         granted = None
+    capability_tools = (
+        list(_CTX.capabilities.tools.keys())
+        if _CTX.capabilities is not None and _CTX.capabilities._has_tools
+        else None
+    )
 
     contracts: dict[str, dict[str, Any]] = {}
     if _CTX.capabilities is not None:
@@ -327,10 +332,17 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
         granted_subflows = sorted(_CTX.capabilities.subflows)
     else:
         granted_subflows = None
+    capability_subflows = (
+        sorted(_CTX.capabilities.subflows)
+        if _CTX.capabilities is not None and _CTX.capabilities._has_subflows
+        else None
+    )
 
     return {
         "config": config,
         "grantedTools": None if granted is None else list(granted),
+        "capabilityTools": None if capability_tools is None else list(capability_tools),
         "grantedContracts": contracts,
         "grantedSubflows": None if granted_subflows is None else list(granted_subflows),
+        "capabilitySubflows": None if capability_subflows is None else list(capability_subflows),
     }

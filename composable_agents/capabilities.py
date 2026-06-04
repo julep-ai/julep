@@ -285,7 +285,47 @@ class CapabilityManifest:
                 if self._has_subflows and step.ref not in self.subflows:
                     out.append(Diagnostic("CAP_SUBFLOW_DENIED", n.id,
                                           f"subflow {step.ref!r} is not granted by the manifest"))
+            if n.op == Op.APP:
+                if n.tools is not None:
+                    for key in n.tools:
+                        tool_key = str(key)
+                        if self._has_tools and tool_key not in self.tools:
+                            out.append(Diagnostic(
+                                "CAP_APP_TOOL_DENIED",
+                                n.id,
+                                f"app inline tool {tool_key!r} is not granted by the capability manifest",
+                            ))
+                        if self._app_tool_approval_required(tool_key, manifest):
+                            out.append(Diagnostic(
+                                "CAP_APP_APPROVAL_TOOL",
+                                n.id,
+                                f"app inline tool {tool_key!r} requires approval and cannot be called by an agent",
+                            ))
+                if n.subflows is not None and self._has_subflows:
+                    for ref in n.subflows:
+                        subflow_ref = str(ref)
+                        if subflow_ref not in self.subflows:
+                            out.append(Diagnostic(
+                                "CAP_APP_SUBFLOW_DENIED",
+                                n.id,
+                                f"app inline subflow {subflow_ref!r} is not granted by the capability manifest",
+                            ))
         return out
+
+    def _app_tool_approval_required(
+        self,
+        tool_key: str,
+        manifest: Optional[ToolManifest],
+    ) -> bool:
+        grant = self.tools.get(tool_key)
+        if grant is not None:
+            if grant.approval is True or grant.effect == Effect.DANGEROUS:
+                return True
+        if manifest is not None:
+            for frozen in manifest.values():
+                if toolref_key(frozen.ref) == tool_key and frozen.contract.effect == Effect.DANGEROUS:
+                    return True
+        return False
 
     # ----- run-time helpers (§9, seam 3) ------------------------------------ #
     def network_allows(self, domain: str) -> bool:
@@ -413,7 +453,7 @@ def check_approval_gates(
             if node.cases is not None:
                 result = (
                     all(always_gates(case) for case in node.cases.values())
-                    and always_gates(node.default)
+                    and (node.default is None or always_gates(node.default))
                 )
             else:
                 result = always_gates(node.left) and always_gates(node.right)

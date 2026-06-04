@@ -46,12 +46,14 @@ from typing import Any, Awaitable, Callable, Optional, Sequence
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import ApplicationError
 
 # Import the pure pieces through the sandbox-safe import pass so Temporal's
 # workflow sandbox does not trip over disallowed modules at definition time.
 with workflow.unsafe.imports_passed_through():
     from .. import agent_loop as al
     from ..contracts import ToolContract, manifest_from_json
+    from ..errors import ComposableAgentsError
     from ..ir import Node, toolref_key
     from ..projection import InMemoryProjection, ProjectionEmitter
     from .timeouts import activity_timeout
@@ -193,6 +195,17 @@ def _manifest_contracts_for_agent(
     return contracts
 
 
+def _max_call_limits_from_contracts(
+    contracts: Optional[dict[str, dict[str, Any]]],
+) -> Optional[dict[str, int]]:
+    limits: dict[str, int] = {}
+    for tool, raw in (contracts or {}).items():
+        limit = raw.get("maxCalls", raw.get("max_calls"))
+        if limit is not None:
+            limits[tool] = int(limit)
+    return limits or None
+
+
 # --------------------------------------------------------------------------- #
 # Workflow inputs (Temporal serializes these via the data converter).
 # --------------------------------------------------------------------------- #
@@ -206,6 +219,7 @@ class FlowInput:
     manifest_json: Optional[dict[str, Any]] = None
     pinned_pures: Optional[dict[str, str]] = None
     max_call_limits: Optional[dict[str, int]] = None
+    call_counts: Optional[dict[str, int]] = None
     ref: Optional[str] = None
     policy: Optional[dict[str, Any]] = None
 
@@ -241,6 +255,7 @@ class _TemporalEnv:
         policy: ExecutionPolicy,
         gate_waiter: Callable[[Any, str, Optional[int]], Awaitable[Any]],
         max_call_limits: Optional[dict[str, int]] = None,
+        call_counts: Optional[dict[str, int]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -249,7 +264,7 @@ class _TemporalEnv:
         self._policy = policy
         self._gate_waiter = gate_waiter
         self._max_call_limits = dict(max_call_limits or {})
-        self._call_counts: dict[str, int] = {}
+        self._call_counts: dict[str, int] = dict(call_counts or {})
         self._cid = 0
         self._child = 0
 
@@ -336,6 +351,7 @@ class _TemporalEnv:
                 ref=ref,
                 policy=self._policy.to_json(),
                 max_call_limits=self._max_call_limits,
+                call_counts=dict(self._call_counts),
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.sub_task_timeout_s),
@@ -363,15 +379,15 @@ class _TemporalEnv:
                 config["maxRounds"] = app_config["maxRounds"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
-            granted_tools_unconstrained = tools is None
             granted_tools = None if tools is None else list(tools)
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
-            granted_contracts = _manifest_contracts_for_agent(
-                self.manifest,
-                granted_tools,
-                self._max_call_limits,
-            )
+            if tools is not None:
+                granted_contracts = _manifest_contracts_for_agent(
+                    self.manifest,
+                    granted_tools,
+                    self._max_call_limits,
+                )
 
         return await workflow.execute_child_workflow(
             AgentWorkflow.run,
@@ -483,6 +499,7 @@ class FlowWorkflow:
         manifest_json = inp.manifest_json
         pinned_pures = inp.pinned_pures
         max_call_limits = inp.max_call_limits
+        call_counts = inp.call_counts
 
         # A ref-only input resolves to its frozen flow + manifest via activity
         # (kept outside the deterministic sandbox).
@@ -541,9 +558,17 @@ class FlowWorkflow:
             policy=policy,
             gate_waiter=self._await_human,
             max_call_limits=max_call_limits,
+            call_counts=call_counts,
         )
 
-        result: Result = await interpret(flow, inp.input, env)
+        try:
+            result: Result = await interpret(flow, inp.input, env)
+        except ComposableAgentsError as exc:
+            raise ApplicationError(
+                str(exc),
+                type=type(exc).__name__,
+                non_retryable=True,
+            ) from exc
         return result.value
 
 
@@ -571,6 +596,7 @@ class AgentWorkflow:
         granted_subflows = inp.granted_subflows
         contracts = dict(inp.granted_contracts or {})
         grants_supplied = inp.granted_tools is not None or inp.granted_tools_unconstrained
+        subflows_supplied = inp.granted_subflows is not None
 
         if inp.resolve_spec:
             spec = await workflow.execute_activity(
@@ -582,13 +608,23 @@ class AgentWorkflow:
             merged_config = dict(spec.get("config") or {})
             merged_config.update(config)
             config = merged_config
-            if not grants_supplied:
-                granted = spec.get("grantedTools")
+            spec_granted = spec.get("grantedTools")
+            if grants_supplied:
+                capability_tools = spec.get("capabilityTools")
+                if not inp.granted_tools_unconstrained and granted is not None and capability_tools is not None:
+                    granted = sorted(set(granted) & set(capability_tools))
+            else:
+                granted = spec_granted
             merged_contracts = dict(spec.get("grantedContracts") or {})
             merged_contracts.update(contracts)
             contracts = merged_contracts
-            if granted_subflows is None:
-                granted_subflows = spec.get("grantedSubflows")
+            spec_subflows = spec.get("grantedSubflows")
+            if subflows_supplied:
+                capability_subflows = spec.get("capabilitySubflows")
+                if granted_subflows is not None and capability_subflows is not None:
+                    granted_subflows = sorted(set(granted_subflows) & set(capability_subflows))
+            else:
+                granted_subflows = spec_subflows
 
         cfg = al.AgentConfig.from_json(config or {})
         unconstrained = inp.granted_tools_unconstrained or granted is None
@@ -617,13 +653,15 @@ class AgentWorkflow:
                 retry_policy=_BRAIN_RETRY,
             )
             state.charge(cfg.think_cost)
-            action = al.interpret_brain_reply(reply)
+            action = al.interpret_brain_reply(reply, strict=not cfg.permissive_controller)
 
             # 2) Terminal decisions end the loop.
             if action.decision is al.Decision.FINISH:
                 return al.terminal_result("done", state, output=action.payload)
             if action.decision is al.Decision.ESCALATE:
                 return al.terminal_result("escalated", state, reason=str(action.payload))
+            if action.decision is al.Decision.CONTROLLER_ERROR:
+                return al.terminal_result("controller_error", state, reason=str(action.payload))
 
             # 3) Budget guard before doing any work this round.
             cost = al.action_cost(action)
@@ -685,6 +723,8 @@ class AgentWorkflow:
                         input=sub_input,
                         ref=ref,
                         policy=policy.to_json(),
+                        max_call_limits=_max_call_limits_from_contracts(contracts),
+                        call_counts=dict(state.call_counts),
                     ),
                     id=child_id,
                     task_timeout=timedelta(seconds=policy.sub_task_timeout_s),

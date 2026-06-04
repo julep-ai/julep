@@ -233,7 +233,7 @@ def validate_plan(
     for n in checked.walk():
         if isinstance(n.step, CallStep):
             key = toolref_key(n.step.tool)
-            if key not in parent.tools:
+            if parent._has_tools and key not in parent.tools:
                 out.append(
                     Diagnostic(
                         "PLAN_TOOL_UNGRANTED",

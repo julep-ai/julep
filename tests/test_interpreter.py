@@ -8,9 +8,12 @@ from composable_agents import (
     Ann, ContextScope,
     call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
+    HAVE_TEMPORAL,
 )
 from composable_agents.errors import CapabilityDenied
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
+if HAVE_TEMPORAL:
+    from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
 from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 
@@ -232,3 +235,23 @@ def test_max_calls_over_limit_raises_before_extra_effect():
 
     assert calls["count"] == 1
     assert env.call_counts == {"srv/inc": 1}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_temporal_env_inherits_call_counts_for_child_flows() -> None:
+    async def gate_waiter(value, cid, timeout_s):  # noqa: ANN001
+        return value
+
+    env = _TemporalEnv(
+        manifest={},
+        emitter=ProjectionEmitter(InMemoryProjection()),
+        session_id="s",
+        manifest_json={},
+        policy=ExecutionPolicy(),
+        gate_waiter=gate_waiter,
+        max_call_limits={"srv/inc": 1},
+        call_counts={"srv/inc": 1},
+    )
+
+    with pytest.raises(CapabilityDenied):
+        env.charge_call("srv/inc")

@@ -31,8 +31,13 @@ def _pred(value):
     return bool(value)
 
 
+def _select_x(_value):
+    return "x"
+
+
 def _register_pures() -> None:
     register_pure("b1b.pred", _pred)
+    register_pure("b5a.select_x", _select_x)
 
 
 def _snapshot(version: str = "1") -> McpSnapshot:
@@ -130,6 +135,42 @@ def test_models_gate_app_controller_and_planner_brains() -> None:
     assert codes.count("CAP_MODEL_ID_DENIED") == 2
 
 
+def test_app_inline_tools_must_be_within_parent_capabilities() -> None:
+    caps = CapabilityManifest.from_dict(
+        {
+            "tools": [{"name": "srv/safe", "effect": "read", "idempotency": "native"}],
+            "mcp_servers": {"srv": None},
+        }
+    )
+
+    codes = _diagnostic_codes(app("ctrl", tools=["srv/dangerous"]), capabilities=caps)
+
+    assert "CAP_APP_TOOL_DENIED" in codes
+
+
+def test_app_inline_approval_required_tool_is_blocked_at_deploy() -> None:
+    caps = CapabilityManifest.from_dict(
+        {
+            "tools": [
+                {"name": "srv/dangerous", "effect": "dangerous", "idempotency": "none"}
+            ],
+            "mcp_servers": {"srv": None},
+        }
+    )
+
+    codes = _diagnostic_codes(app("ctrl", tools=["srv/dangerous"]), capabilities=caps)
+
+    assert "CAP_APP_APPROVAL_TOOL" in codes
+
+
+def test_app_inline_subflows_must_be_within_parent_capabilities() -> None:
+    caps = CapabilityManifest.from_dict({"subflows": ["child"]})
+
+    codes = _diagnostic_codes(app("ctrl", subflows=["other"]), capabilities=caps)
+
+    assert "CAP_APP_SUBFLOW_DENIED" in codes
+
+
 def test_mcp_server_version_pin_accepts_satisfied_comparator() -> None:
     flow = call(mcp("srv", "safe"))
     fr = freeze(flow, _snapshot(version="2026.6"))
@@ -189,6 +230,55 @@ def test_partial_gate_in_alt_does_not_dominate_later_dangerous_call() -> None:
     codes = _diagnostic_codes(
         seq(
             alt("b1b.pred", human_gate(), call("auto")),
+            call(mcp("srv", "dangerous")),
+        )
+    )
+
+    assert "APPROVAL_UNGATED" in codes
+
+
+def test_switch_without_default_all_gated_cases_dominate_later_dangerous_call() -> None:
+    _register_pures()
+
+    codes = _diagnostic_codes(
+        seq(
+            alt(
+                select="b5a.select_x",
+                cases={"x": human_gate(), "y": human_gate()},
+            ),
+            call(mcp("srv", "dangerous")),
+        )
+    )
+
+    assert "APPROVAL_UNGATED" not in codes
+
+
+def test_switch_without_default_one_ungated_case_does_not_dominate() -> None:
+    _register_pures()
+
+    codes = _diagnostic_codes(
+        seq(
+            alt(
+                select="b5a.select_x",
+                cases={"x": human_gate(), "y": call(mcp("srv", "safe"))},
+            ),
+            call(mcp("srv", "dangerous")),
+        )
+    )
+
+    assert "APPROVAL_UNGATED" in codes
+
+
+def test_switch_with_ungated_default_does_not_dominate() -> None:
+    _register_pures()
+
+    codes = _diagnostic_codes(
+        seq(
+            alt(
+                select="b5a.select_x",
+                cases={"x": human_gate(), "y": human_gate()},
+                default=call(mcp("srv", "safe")),
+            ),
             call(mcp("srv", "dangerous")),
         )
     )

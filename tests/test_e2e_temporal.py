@@ -28,6 +28,11 @@ if HAVE_TEMPORAL:
         call, mcp, seq, think, freeze, manifest_to_json,
         arr,
         register_brain, Brain,
+        app,
+        Budget,
+        CapabilityManifest,
+        Contract,
+        sub,
     )
     from composable_agents.derived import race, human_gate
     from composable_agents.freeze import (
@@ -376,6 +381,191 @@ async def _agent(env):
     assert [t["decision"] for t in allowed["trace"]] == ["sub"], allowed
 
 
+async def _app_inline_grant_attenuation(env):
+    async def app_llm(brain, value):  # noqa: ANN001
+        if brain.name == "inline_missing_ctrl":
+            if not value.get("trace"):
+                return {"tool": "srv/echo", "input": value["input"]}
+            return {"done": True, "output": value["input"]}
+        if brain.name == "inline_allowed_ctrl":
+            if not value.get("trace"):
+                return {"tool": "srv/double", "input": value["input"]}
+            return {"done": True, "output": value["input"]}
+        return await _llm(brain, value)
+
+    agents = {
+        "inline_missing_ctrl": {
+            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "grantedTools": ["srv/double"],
+        },
+        "inline_allowed_ctrl": {
+            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "grantedTools": ["only/spec-should-not-be-used"],
+        },
+    }
+    caps = CapabilityManifest.from_dict(
+        {
+            "tools": [{"name": "srv/double", "effect": "read", "idempotency": "native"}],
+            "mcp_servers": {"srv": None},
+        }
+    )
+    missing_tools = deploy(
+        app("inline_missing_ctrl", budget=Budget(usd=1000)),
+        _snapshot(),
+        capabilities=caps,
+    )
+    allowed_inline = deploy(
+        app("inline_allowed_ctrl", tools=["srv/double"], budget=Budget(usd=1000)),
+        _snapshot(),
+        capabilities=caps,
+    )
+
+    async with _worker(
+        env,
+        task_queue="ca-app-inline",
+        agents=agents,
+        llm=app_llm,
+        extra_brains=(
+            Brain(name="inline_missing_ctrl", model="test", system="inline missing"),
+            Brain(name="inline_allowed_ctrl", model="test", system="inline allowed"),
+        ),
+    ):
+        denied = await missing_tools.run(
+            env.client,
+            session_id=f"appinline-missing-{uuid.uuid4()}",
+            input=5,
+            task_queue="ca-app-inline",
+        )
+        allowed = await allowed_inline.run(
+            env.client,
+            session_id=f"appinline-allowed-{uuid.uuid4()}",
+            input=5,
+            task_queue="ca-app-inline",
+        )
+
+    assert denied["status"] == "denied", denied
+    assert denied["reason"] == "tool 'srv/echo' is not granted"
+    assert denied["trace"] == []
+    assert allowed["status"] == "done", allowed
+    assert allowed["output"] == 10, allowed
+    assert [t["decision"] for t in allowed["trace"]] == ["call"], allowed
+
+
+async def _strict_controller_contract(env):
+    async def malformed_llm(brain, value):  # noqa: ANN001
+        if brain.name in {"strict_malformed_ctrl", "permissive_malformed_ctrl"}:
+            return "plain prose"
+        return await _llm(brain, value)
+
+    agents = {
+        "strict_malformed_ctrl": {
+            "config": {"maxRounds": 1, "budget": {"usd": 1000}},
+        },
+        "permissive_malformed_ctrl": {
+            "config": {
+                "maxRounds": 1,
+                "budget": {"usd": 1000},
+                "permissiveController": True,
+            },
+        },
+    }
+    async with _worker(
+        env,
+        task_queue="ca-strict-controller",
+        agents=agents,
+        llm=malformed_llm,
+        extra_brains=(
+            Brain(name="strict_malformed_ctrl", model="test", system="strict"),
+            Brain(name="permissive_malformed_ctrl", model="test", system="permissive"),
+        ),
+    ):
+        strict = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="strict_malformed_ctrl",
+                session_id=f"strictctrl-{uuid.uuid4()}",
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=f"strictctrl-{uuid.uuid4()}",
+            task_queue="ca-strict-controller",
+        )
+        permissive = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="permissive_malformed_ctrl",
+                session_id=f"permissivectrl-{uuid.uuid4()}",
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=f"permissivectrl-{uuid.uuid4()}",
+            task_queue="ca-strict-controller",
+        )
+
+    assert strict["status"] == "controller_error", strict
+    assert "malformed controller reply" in strict["reason"]
+    assert permissive["status"] == "done", permissive
+    assert permissive["output"] == "plain prose", permissive
+
+
+async def _sub_max_calls_inherits_parent_counts(env):
+    effects = {"count": 0}
+
+    async def counted_mcp(server, tool, value, idempotency_key):  # noqa: ANN001
+        effects["count"] += 1
+        return await _mcp(server, tool, value, idempotency_key)
+
+    child = freeze(call(mcp("srv", "double")), _snapshot())
+    child_registry = {
+        "child-double": {
+            "flowJson": child.flow.to_json(),
+            "manifestJson": manifest_to_json(child.manifest),
+        }
+    }
+    parent = freeze(seq(call(mcp("srv", "double")), sub("child-double", Contract.pipeline())), _snapshot())
+
+    async with build_worker(
+        env.client,
+        WorkerContext(
+            mcp_call=counted_mcp,
+            llm=_llm,
+            subflows=child_registry,
+        ),
+        task_queue="ca-sub-maxcalls",
+    ):
+        with pytest.raises(WorkflowFailureError) as raised:
+            await run_flow(
+                env.client,
+                parent.flow.to_json(),
+                manifest_to_json(parent.manifest),
+                session_id=f"submax-denied-{uuid.uuid4()}",
+                input=5,
+                task_queue="ca-sub-maxcalls",
+                max_call_limits={"srv/double": 1},
+            )
+
+        ok = await run_flow(
+            env.client,
+            parent.flow.to_json(),
+            manifest_to_json(parent.manifest),
+            session_id=f"submax-ok-{uuid.uuid4()}",
+            input=5,
+            task_queue="ca-sub-maxcalls",
+            max_call_limits={"srv/double": 2},
+        )
+
+    cause = raised.value.__cause__
+    while cause is not None and not (
+        isinstance(cause, ApplicationError) and cause.type == "CapabilityDenied"
+    ):
+        cause = cause.__cause__
+
+    assert isinstance(cause, ApplicationError)
+    assert "exceeded maxCalls=1" in str(cause)
+    assert ok == 20
+    assert effects["count"] == 3
+
+
 async def _pure_drift_fails_before_effect(env):
     effects = {"count": 0}
 
@@ -416,6 +606,9 @@ async def _run_all():
         await _human_gate(env)
         await _human_gate_timeout(env)
         await _agent(env)
+        await _app_inline_grant_attenuation(env)
+        await _strict_controller_contract(env)
+        await _sub_max_calls_inherits_parent_counts(env)
         await _pure_drift_fails_before_effect(env)
 
 

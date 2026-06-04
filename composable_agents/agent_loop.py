@@ -52,6 +52,7 @@ class Decision(str, Enum):
     ESCALATE = "escalate"  # give up to a human/parent: payload is a reason
     CALL = "call"          # invoke a granted tool: payload is {"tool", "input"}
     SUB = "sub"            # invoke a registered sub-flow: payload is {"ref", "input", "shape"?}
+    CONTROLLER_ERROR = "controller_error"  # malformed controller output
 
 
 # Default per-action cost estimate (USD), used when the controller does not
@@ -71,19 +72,26 @@ class RoundAction:
 
     @property
     def is_terminal(self) -> bool:
-        return self.decision in (Decision.FINISH, Decision.ESCALATE)
+        return self.decision in (Decision.FINISH, Decision.ESCALATE, Decision.CONTROLLER_ERROR)
 
 
-def interpret_brain_reply(reply: Any) -> RoundAction:
+def interpret_brain_reply(reply: Any, *, strict: bool = True) -> RoundAction:
     """Map a controller's structured reply to a :class:`RoundAction`.
 
-    Accepts the small, closed action vocabulary the loop supports. A reply that
-    does not match any known shape is treated as a *finish* carrying the raw
-    reply as output — a controller that just answers in prose ends the loop
-    rather than erroring, which is the least-surprising default.
+    Accepts the small, closed action vocabulary the loop supports. In strict
+    mode, malformed output is a controller error. Set ``strict=False`` to retain
+    the legacy behavior where prose or unknown shapes finish with the raw reply.
     """
-    if not isinstance(reply, dict):
+    def malformed() -> RoundAction:
+        if strict:
+            return RoundAction(
+                Decision.CONTROLLER_ERROR,
+                f"malformed controller reply: {reply!r}",
+            )
         return RoundAction(Decision.FINISH, reply)
+
+    if not isinstance(reply, dict):
+        return malformed()
 
     # Finish: explicit done flag, or a bare {"output": ...}.
     if reply.get("done") is True or ("output" in reply and "tool" not in reply and "sub" not in reply):
@@ -108,8 +116,7 @@ def interpret_brain_reply(reply: Any) -> RoundAction:
             },
         )
 
-    # Unknown shape: end cleanly with whatever the controller produced.
-    return RoundAction(Decision.FINISH, reply)
+    return malformed()
 
 
 def action_cost(action: RoundAction, reported: Optional[float] = None) -> float:
@@ -145,6 +152,8 @@ class AgentConfig:
     continue_as_new_after: int = 0
     # Per-round controller call cost, charged in addition to the action.
     think_cost: float = DEFAULT_THINK_COST
+    # Spec §10: malformed controller output is an error unless explicitly opted out.
+    permissive_controller: bool = False
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentConfig":
@@ -155,6 +164,9 @@ class AgentConfig:
                 d.get("continueAsNewAfter", d.get("continue_as_new_after", 0))
             ),
             think_cost=float(d.get("thinkCost", d.get("think_cost", DEFAULT_THINK_COST))),
+            permissive_controller=bool(
+                d.get("permissiveController", d.get("permissive_controller", False))
+            ),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -162,6 +174,7 @@ class AgentConfig:
             "maxRounds": self.max_rounds,
             "continueAsNewAfter": self.continue_as_new_after,
             "thinkCost": self.think_cost,
+            "permissiveController": self.permissive_controller,
         }
         if self.budget is not None:
             b: dict[str, Any] = {}

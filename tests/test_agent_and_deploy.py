@@ -33,16 +33,20 @@ from conftest import read_snapshot, mixed_snapshot
     ({"tool": "search", "input": {"q": "x"}}, Decision.CALL),
     ({"sub": "child", "input": 1}, Decision.SUB),
     ({"escalate": "stuck"}, Decision.ESCALATE),
-    ("just prose", Decision.FINISH),
-    ({"unknown": "shape"}, Decision.FINISH),
 ])
 def test_interpret_brain_reply_maps_vocabulary(reply, decision):
     assert interpret_brain_reply(reply).decision is decision
 
 
+@pytest.mark.parametrize("reply", ["just prose", {"unknown": "shape"}])
+def test_interpret_brain_reply_permissive_mode_finishes_malformed_reply(reply):
+    assert interpret_brain_reply(reply, strict=False).decision is Decision.FINISH
+
+
 def test_terminal_actions_flagged():
     assert RoundAction(Decision.FINISH).is_terminal
     assert RoundAction(Decision.ESCALATE).is_terminal
+    assert RoundAction(Decision.CONTROLLER_ERROR).is_terminal
     assert not RoundAction(Decision.CALL).is_terminal
 
 
@@ -65,9 +69,15 @@ def test_state_json_round_trip():
 
 
 def test_config_json_round_trip():
-    c = AgentConfig(max_rounds=10, budget=Budget(usd=3.0, tokens=1000), continue_as_new_after=4)
+    c = AgentConfig(
+        max_rounds=10,
+        budget=Budget(usd=3.0, tokens=1000),
+        continue_as_new_after=4,
+        permissive_controller=True,
+    )
     c2 = AgentConfig.from_json(c.to_json())
     assert c2.max_rounds == 10 and c2.budget.usd == 3.0 and c2.continue_as_new_after == 4
+    assert c2.permissive_controller is True
 
 
 def test_budget_guard():

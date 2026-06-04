@@ -40,6 +40,10 @@ def _caps(*names: str) -> CapabilityManifest:
     )
 
 
+def _tool_ungranted_codes(diags) -> list[str]:  # noqa: ANN001
+    return [d.code for d in diags if d.code == "PLAN_TOOL_UNGRANTED"]
+
+
 def _frozen(
     name: str,
     *,
@@ -156,3 +160,36 @@ def test_trace_entry_refs_round_trip() -> None:
     )
 
     assert TraceEntry.from_json(entry.to_json()) == entry
+
+
+def test_validate_plan_absent_tools_section_allows_manifest_bound_call() -> None:
+    tool = _frozen("lookup")
+    manifest = {tool.execution_hash: tool}
+    parent = CapabilityManifest.from_dict({"budget": {"usd": 100}})
+
+    diags = validate_plan(call(mcp("srv", "lookup")), parent, manifest)
+
+    assert _tool_ungranted_codes(diags) == []
+
+
+def test_validate_plan_present_empty_tools_denies_every_call() -> None:
+    tool = _frozen("lookup")
+    manifest = {tool.execution_hash: tool}
+    parent = CapabilityManifest.from_dict({"tools": [], "budget": {"usd": 100}})
+
+    diags = validate_plan(call(mcp("srv", "lookup")), parent, manifest)
+
+    assert _tool_ungranted_codes(diags) == ["PLAN_TOOL_UNGRANTED"]
+
+
+def test_validate_plan_present_tools_denies_only_ungranted_calls() -> None:
+    lookup = _frozen("lookup")
+    other = _frozen("other")
+    manifest = {lookup.execution_hash: lookup, other.execution_hash: other}
+    parent = _caps("srv/lookup")
+
+    allowed = validate_plan(call(mcp("srv", "lookup")), parent, manifest)
+    denied = validate_plan(call(mcp("srv", "other")), parent, manifest)
+
+    assert _tool_ungranted_codes(allowed) == []
+    assert _tool_ungranted_codes(denied) == ["PLAN_TOOL_UNGRANTED"]
