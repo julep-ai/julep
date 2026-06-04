@@ -9,11 +9,12 @@ description = "A typed, durable framework for composable serverless agents on Te
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Composable Agents" }]
+authors = [{ name = "Julep AI" }]
 keywords = ["agents", "llm", "temporal", "durable-execution", "mcp", "workflow"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 
@@ -44,7 +45,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://example.com/composable-agents"
+Repository = "https://github.com/julep-ai/julep-v2"
+Issues = "https://github.com/julep-ai/julep-v2/issues"
 
 [project.scripts]
 composable-agents = "composable_agents.cli:main"

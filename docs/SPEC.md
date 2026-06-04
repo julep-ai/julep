@@ -388,11 +388,11 @@ The spec above is the **target**. This section tracks where the current
 implementation diverges, as a punch list. An item is *conformant* only when its
 invariant holds in code with a test.
 
-> **Status (2026-06-03): conformant.** Every P0/P1/P2 item below holds in code
-> with a test, the §13 golden corpus is pinned, and the El Niño worked example
-> (`examples/elnino/`) deploys clean and dry-runs end-to-end. Suite: 184 tests
-> (Temporal) / 164 + 6 skipped (no-Temporal) / 20 golden · mypy --strict 0 ·
-> ruff clean. See the `conformance` build history (`docs/conformance-plan.md`).
+> **Status: conformant.** Every P0/P1/P2 item below holds in code with a test,
+> the §13 golden corpus is pinned, and the El Niño worked example
+> (`examples/elnino/`) deploys clean and dry-runs end-to-end. The suite passes
+> with and without the Temporal extra; `mypy --strict` is clean and `ruff` is
+> clean.
 
 ### 12.1 Implemented
 

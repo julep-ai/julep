@@ -1,9 +1,8 @@
 # Typed Composable Flow — design
 
-**Status:** **implemented** on branch `typed-flow` (TF-1…TF-8 + a P1 safety fix,
-2026-06-04). Brainstormed 2026-06-03. Every phase JSON-equality-gated; the
-golden corpus never moved; the typed authoring layer sits entirely above the
-unchanged `Node` IR.
+**Status:** implemented. Every phase was JSON-equality-gated; the golden corpus
+never moved; the typed authoring layer sits entirely above the unchanged `Node`
+IR.
 **Scope:** a typed, composable *authoring* surface that unifies the `Agent`
 facade and the combinator algebra, without changing the IR.
 
