@@ -38,6 +38,7 @@ from .flow_registry import register_flow
 from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
+from .result import Result
 from .validate import Diagnostic
 
 _OBJECT_SCHEMA: JSONSchema = {"type": "object"}
@@ -625,7 +626,7 @@ class Agent(FlowLike[Any, Any]):
                         ]
                     )
 
-    async def arun(self, input: Any) -> dict[str, Any]:
+    async def arun(self, input: Any) -> "Result[Any]":
         deployment = self._deploy()
         emitter = ProjectionEmitter(InMemoryProjection())
         tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
@@ -696,9 +697,9 @@ class Agent(FlowLike[Any, Any]):
             mode=self._mode,
         )
         result = await interpret(deployment.flow, input, env)
-        return cast(dict[str, Any], result.value)
+        return Result(cast("dict[str, Any]", result.value))
 
-    def run(self, input: Any) -> dict[str, Any]:
+    def run(self, input: Any) -> "Result[Any]":
         try:
             asyncio.get_running_loop()
         except RuntimeError:
