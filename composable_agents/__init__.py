@@ -115,6 +115,11 @@ from .deploy import (
     deploy as deploy,
     snapshot_from_listings as snapshot_from_listings,
 )
+from .agent import (
+    Tool as Tool,
+    snapshot_from_tools as snapshot_from_tools,
+    tool as tool,
+)
 
 # --- brains (dotctx) ------------------------------------------------------- #
 from .dotctx import (
@@ -227,6 +232,7 @@ _BASE_EXPORTS = [
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
     "bind_plan_to_manifest",
     "deploy", "Deployment", "snapshot_from_listings",
+    "Tool", "tool", "snapshot_from_tools",
     # dotctx
     "Brain", "register_brain", "get_brain", "load_dotctx", "dotctx_flow",
     "brain_to_flow", "brain_from_settings",
