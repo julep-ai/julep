@@ -11,7 +11,9 @@ hash-addressed artifact, running every static gate in order:
    whole-session degrade warning for ``par``.
 3. **Capability enforcement** (§9): the flow may only use granted tools, brains,
    memory scopes and servers; ungranted use is blocking.
-4. **Race admission** (§5): every branch of a ``race``/``hedge``/``quorum`` must
+4. **Approval gates** (§7.3): dangerous or grant-approved tools must be dominated
+   by a human gate.
+5. **Race admission** (§5): every branch of a ``race``/``hedge``/``quorum`` must
    be read-only or contract-asserted idempotent, so a duplicated branch can do
    no harm.
 
@@ -37,7 +39,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
-from .capabilities import CapabilityManifest
+from .capabilities import CapabilityManifest, check_approval_gates
 from .contracts import ToolManifest, manifest_to_json
 from .derived import check_race_admission
 from .errors import ValidationError
@@ -172,8 +174,8 @@ def deploy(
 ) -> Deployment:
     """Compile ``flow`` against ``snapshot`` into a runnable :class:`Deployment`.
 
-    Runs freeze -> validate -> capability enforcement -> race admission. With
-    ``strict`` (default), any blocking diagnostic raises
+    Runs freeze -> validate -> capability enforcement -> approval gates -> race
+    admission. With ``strict`` (default), any blocking diagnostic raises
     :class:`~composable_agents.errors.ValidationError`; otherwise all diagnostics
     are returned on the deployment for the caller to triage.
 
@@ -199,7 +201,9 @@ def deploy(
     # 3. Capability enforcement (§9): granted tools/brains/servers only.
     if capabilities is not None:
         diagnostics.extend(capabilities.enforce_compile(fr.flow))
-    # 4. Race admission (§5): every race branch read-only or asserted-idempotent.
+    # 4. Approval gates (§7.3): dangerous or explicitly-approved calls need a gate.
+    diagnostics.extend(check_approval_gates(fr.flow, fr.manifest, capabilities))
+    # 5. Race admission (§5): every race branch read-only or asserted-idempotent.
     diagnostics.extend(check_race_admission(fr.flow, fr.manifest))
 
     if strict:
