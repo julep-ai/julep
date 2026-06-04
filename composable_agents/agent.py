@@ -10,23 +10,38 @@ import warnings
 from collections.abc import Mapping as AbcMapping
 from collections.abc import Sequence as AbcSequence
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, Sequence, Union, cast, get_args, get_origin, get_type_hints, overload
+from typing import (
+    Any,
+    Callable,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    overload,
+)
 
 from .agent_loop import AgentConfig, drive_agent_loop
 from .capabilities import Budget, CapabilityManifest, ToolGrant
 from .contracts import ToolContract
 from .deploy import Deployment, deploy
 from .dotctx import Brain, register_brain
-from .dsl import app
+from .dsl import app, call, native
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
-from .ir import JSONSchema, canonical_json
+from .flow import FlowLike
+from .ir import JSONSchema, Node, canonical_json
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
 
 _OBJECT_SCHEMA: JSONSchema = {"type": "object"}
 _ALLOWED_EFFECTS = ("read", "write", "external", "dangerous")
 _NONE_TYPE = type(None)
+In = TypeVar("In")
+Out = TypeVar("Out")
 
 AGENT_REPLY_SCHEMA: JSONSchema = {
     "oneOf": [
@@ -147,7 +162,7 @@ def _effect_from_string(effect: str) -> Effect:
         raise ValueError(f"invalid effect {effect!r}; allowed values: {allowed}") from exc
 
 
-def _schema_from_hints(fn: Callable[..., Any]) -> tuple[JSONSchema, JSONSchema]:
+def _schema_from_hints(fn: Callable[..., Any]) -> tuple[JSONSchema, JSONSchema, tuple[str, ...]]:
     try:
         hints = get_type_hints(fn)
     except Exception:
@@ -163,26 +178,63 @@ def _schema_from_hints(fn: Callable[..., Any]) -> tuple[JSONSchema, JSONSchema]:
             inspect.Parameter.POSITIONAL_OR_KEYWORD,
         }
     ]
-    if positional:
-        parameter = positional[0]
-        input_type = hints.get(parameter.name, parameter.annotation)
-    else:
-        input_type = inspect.Signature.empty
-
     output_type = hints.get("return", signature.return_annotation)
-    return python_type_to_schema(input_type), python_type_to_schema(output_type)
+    output_schema = python_type_to_schema(output_type)
+
+    if len(positional) <= 1:
+        if positional:
+            parameter = positional[0]
+            input_type = hints.get(parameter.name, parameter.annotation)
+        else:
+            input_type = inspect.Signature.empty
+        input_schema = python_type_to_schema(input_type)
+    else:
+        properties = {
+            parameter.name: python_type_to_schema(hints.get(parameter.name, parameter.annotation))
+            for parameter in positional
+        }
+        required = [
+            parameter.name
+            for parameter in positional
+            if parameter.default is inspect.Parameter.empty
+        ]
+        input_schema = {
+            "type": "object",
+            "properties": properties,
+            "required": required,
+            "additionalProperties": False,
+        }
+
+    param_names = tuple(parameter.name for parameter in positional)
+    return input_schema, output_schema, param_names
 
 
 @dataclass(frozen=True)
-class Tool:
+class Tool(FlowLike[In, Out]):
     name: str
-    fn: Callable[..., Any]
+    fn: Callable[..., Out]
     contract: ToolContract
     input_schema: JSONSchema
     output_schema: JSONSchema
+    param_names: tuple[str, ...] = ()
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return self.fn(*args, **kwargs)
+
+    def to_ir(self) -> Node:
+        return call(native(self.name))
+
+    @property
+    def bound_hand(self) -> Callable[[Any], Any]:
+        """Hand wrapper for the single threaded value."""
+        if len(self.param_names) > 1:
+            fn = self.fn
+
+            def _hand(value: Any) -> Any:
+                return fn(**value)
+
+            return _hand
+        return self.fn
 
     @property
     def native_spec(self) -> NativeToolSpec:
@@ -199,8 +251,8 @@ def _build_tool(
     effect: Effect,
     idempotent: bool,
     name: Optional[str],
-) -> Tool:
-    input_schema, output_schema = _schema_from_hints(fn)
+) -> Tool[Any, Any]:
+    input_schema, output_schema, param_names = _schema_from_hints(fn)
     return Tool(
         name=name or fn.__name__,
         fn=fn,
@@ -210,11 +262,17 @@ def _build_tool(
         ),
         input_schema=input_schema,
         output_schema=output_schema,
+        param_names=param_names,
     )
 
 
 @overload
-def tool(fn: Callable[..., Any], /) -> Tool:
+def tool(fn: Callable[[In], Out], /) -> Tool[In, Out]:
+    ...
+
+
+@overload
+def tool(fn: Callable[..., Out], /) -> Tool[Any, Out]:
     ...
 
 
@@ -226,7 +284,7 @@ def tool(
     effect: str = "write",
     idempotent: bool = False,
     name: Optional[str] = None,
-) -> Callable[[Callable[..., Any]], Tool]:
+) -> Callable[[Callable[..., Out]], Tool[Any, Out]]:
     ...
 
 
@@ -237,10 +295,10 @@ def tool(
     effect: str = "write",
     idempotent: bool = False,
     name: Optional[str] = None,
-) -> Tool | Callable[[Callable[..., Any]], Tool]:
+) -> Tool[Any, Any] | Callable[[Callable[..., Any]], Tool[Any, Any]]:
     mapped_effect = _effect_from_string(effect)
 
-    def decorate(inner: Callable[..., Any]) -> Tool:
+    def decorate(inner: Callable[..., Any]) -> Tool[Any, Any]:
         return _build_tool(inner, effect=mapped_effect, idempotent=idempotent, name=name)
 
     if fn is not None:
@@ -248,7 +306,7 @@ def tool(
     return decorate
 
 
-def snapshot_from_tools(tools: Sequence[Tool]) -> McpSnapshot:
+def snapshot_from_tools(tools: Sequence[Tool[Any, Any]]) -> McpSnapshot:
     return McpSnapshot(native={native_tool.name: native_tool.native_spec for native_tool in tools})
 
 
@@ -279,7 +337,7 @@ class Agent:
     def __init__(
         self,
         brain: str,
-        tools: Sequence[Tool] = (),
+        tools: Sequence[Tool[Any, Any]] = (),
         *,
         name: Optional[str] = None,
         llm: Optional[Callable[[str, Any], Any]] = None,
@@ -360,7 +418,7 @@ class Agent:
 
     async def arun(self, input: Any) -> dict[str, Any]:
         emitter = ProjectionEmitter(InMemoryProjection())
-        tool_fns = {native_tool.name: native_tool.fn for native_tool in self._tools}
+        tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
         max_call_limits = (
             self._deployment.capabilities.max_call_limits()
             if self._deployment.capabilities is not None
