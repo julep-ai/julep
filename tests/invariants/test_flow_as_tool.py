@@ -257,3 +257,26 @@ def test_safe_plain_flow_cap_still_runs_with_compiled_manifest() -> None:
     assert result["status"] == "done"
     assert calls == [("first", "start"), ("second", "first:start")]
     assert seen[1]["input"] == "second:first:start"
+
+
+def test_sub_caps_expose_deployments_and_deploy_fails_loud() -> None:
+    """Bounded seam guard: sub-cap deployments are discoverable; deploy() fails loud."""
+    import asyncio
+
+    @tool(effect="read", idempotent=True, name="tf_seam_read")
+    def r(value: str) -> str:
+        return value
+
+    plain = flow(r).named("seam.plain.v1")          # parent's own granted tool
+    sub_agent = Agent("m", tools=[r], name="seam.subagent.v1")
+    parent = Agent("m", tools=[r, plain, sub_agent], name="seam.parent")
+
+    # The compiled child deployments are exposed (not stuck in a private cache).
+    subs = parent.sub_deployments()
+    assert set(subs) == {"seam.plain.v1", "seam.subagent.v1"}
+    assert all(d.artifact_hash for d in subs.values())
+
+    # Temporal deploy fails loud (no silent divergence); the guard precedes the
+    # lazy temporalio import, so this runs without temporalio installed.
+    with pytest.raises(NotImplementedError, match="sub_deployments"):
+        asyncio.run(parent.deploy(object(), session_id="x"))

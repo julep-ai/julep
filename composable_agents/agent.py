@@ -756,6 +756,22 @@ class Agent(FlowLike[Any, Any]):
         """The per-component split children (ref -> marker)."""
         return dict(self._split_children)
 
+    def sub_deployments(self) -> dict[str, "Deployment"]:
+        """Compiled child deployments for this agent's sub-capabilities (ref -> Deployment).
+
+        Plain-`Flow` capabilities are compiled through the deploy gates here;
+        sub-`Agent` capabilities expose their own :meth:`deployment`. A worker
+        hosting this agent on Temporal MUST be configured with these (its
+        ``WorkerContext.subflows``) so a ``SUB`` decision resolves to the
+        validated/frozen child artifact rather than a stale/missing one.
+        (Auto-wiring this into :meth:`deploy` is a documented follow-on seam.)
+        """
+        out: dict[str, Deployment] = dict(self._plain_flow_cap_deployments(strict=False))
+        for ref, cap in self._flow_caps.items():
+            if isinstance(cap, Agent):
+                out[ref] = cap.deployment()
+        return out
+
     def check(self) -> list[Diagnostic]:
         """Force full freeze validation without executing and return diagnostics."""
         return self._deploy(strict=False).diagnostics
@@ -769,6 +785,19 @@ class Agent(FlowLike[Any, Any]):
         task_queue: str = "composable-agents",
         policy: Any = None,
     ) -> Any:
+        # Fail loud rather than diverge silently: the facade does not yet
+        # auto-wire sub-capability child deployments into the Temporal worker's
+        # registry, so a SUB decision would resolve via WorkerContext.subflows
+        # (possibly stale/missing). Tool-only agents deploy normally.
+        if self._flow_caps:
+            raise NotImplementedError(
+                "Agent.deploy() to Temporal does not yet auto-wire sub-capability "
+                f"deployments into the worker (a documented seam). This agent has "
+                f"sub-capabilities {sorted(self._flow_caps)}; their compiled child "
+                "deployments are available via agent.sub_deployments() — register "
+                "them on your worker (WorkerContext.subflows), then run the parent "
+                "via agent.deployment().run(...). Tool-only agents deploy normally."
+            )
         return await self._deploy().run(
             client,
             session_id=session_id,
