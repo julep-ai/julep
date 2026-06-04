@@ -23,7 +23,7 @@ def test_tool_only_agent_has_no_subflows_key() -> None:
 
 
 def test_flow_cap_becomes_app_subflow_and_is_registered() -> None:
-    named = flow(call(native("tf6_svc"))).named("tf6.svc.v1")
+    named = flow(ident()).named("tf6.svc.v1")
 
     parent = Agent("m", tools=[named], name="tf6_flowcap")
 
@@ -142,3 +142,40 @@ def test_app_json_subflows_are_omitted_for_tools_and_present_for_flow_caps() -> 
 
     assert "subflows" not in tool_only.to_ir().to_json()
     assert with_flow.to_ir().to_json()["subflows"] == [ref]
+
+
+def test_plain_flow_cap_with_ungranted_tool_is_rejected_cleanly() -> None:
+    @tool(effect="read", idempotent=True, name="c2_secret")
+    def secret(value: str) -> str:
+        return value
+
+    fc = flow(secret).named("c2.svc")
+
+    with pytest.raises(ValidationError, match="CAP_APP_FLOW_UNGRANTED_TOOL"):
+        Agent("m", tools=[fc], name="c2_bad")
+
+
+def test_plain_flow_cap_with_granted_tool_runs_through_parent_grant() -> None:
+    calls: list[str] = []
+
+    @tool(effect="read", idempotent=True, name="c2_t")
+    def t(value: str) -> str:
+        calls.append(value)
+        return f"t:{value}"
+
+    fc = flow(t).named("c2.ok")
+    replies = [
+        {"sub": "c2.ok", "input": "hi"},
+        {"output": "done"},
+    ]
+    parent = Agent(
+        "m",
+        tools=[t, fc],
+        name="c2_good",
+        llm=lambda _brain_name, _payload: replies.pop(0),
+    )
+
+    result = parent.run("x")
+
+    assert result["status"] == "done"
+    assert calls == ["hi"]

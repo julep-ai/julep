@@ -35,7 +35,7 @@ from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
 from .flow import Flow, FlowLike
 from .flow_registry import register_flow
-from .ir import JSONSchema, Node, canonical_json
+from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
 from .validate import Diagnostic
@@ -593,6 +593,27 @@ class Agent(FlowLike[Any, Any]):
                         for name in dangerous
                     ]
                 )
+        granted = set(self._tool_names)
+        for ref, cap in self._flow_caps.items():
+            if isinstance(cap, Agent):
+                continue
+            for tref in cap.to_ir().tool_refs():
+                key = toolref_key(tref)
+                if key == HUMAN_GATE_TOOL:
+                    continue
+                if key not in granted:
+                    raise ValidationError(
+                        [
+                            Diagnostic(
+                                "CAP_APP_FLOW_UNGRANTED_TOOL",
+                                self._flow.id,
+                                f"plain Flow capability {ref!r} calls tool {key!r} which "
+                                "the agent does not grant; a plain Flow capability may "
+                                "only call the agent's own granted tools - for a "
+                                "capability with its own tools, pass an Agent",
+                            )
+                        ]
+                    )
 
     async def arun(self, input: Any) -> dict[str, Any]:
         deployment = self._deploy()
