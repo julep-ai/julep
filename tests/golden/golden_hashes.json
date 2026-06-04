@@ -1,0 +1,342 @@
+{
+  "agent_app": {
+    "flowJson": "sha256:9c194725b090f48aebcbed00ba2c480fc8873a65c4171292510221527152a6f6",
+    "manifestJson": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Agent",
+          "id": "$",
+          "op": "app",
+          "surface": "Agent"
+        }
+      ],
+      "root": {
+        "closed": "Agent",
+        "surface": "Agent"
+      }
+    },
+    "shapes": "sha256:de700614a940b7a93aa9af4632a2bcf66c8dd294c46669373d108ba7f20167b1",
+    "snapshot": "sha256:86e33776011e55747e825ab237fa64f8e52876647138abf8b6835fb47b1df3ff",
+    "toolHashesCount": 0,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "capability_manifest": {
+    "flowJson": "sha256:0d37476b1a1e907f77c8f905f7b64553818cf2b87648218812d22ef1b08b8f59",
+    "manifestJson": "sha256:6a87de37236387da588482f07f7cd60a6f75982dd75d8ae765436341cb7f3be4",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Pipeline",
+          "id": "$",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Pipeline",
+        "surface": "Pipeline"
+      }
+    },
+    "shapes": "sha256:7de80cc9243ddb248bdbf61294562c9d027af2e07ae86787fdb6be9d48515d0c",
+    "snapshot": "sha256:2987a822623ed4ba445acf5fc7c13f703ba88c81f865ee17d4dd1b8b6b7074cd",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "frozen_manifest": {
+    "flowJson": "sha256:0be5bb0e43e575637d067fb8f1c499f3c3dfa321eb4f5263c0692f36f1246796",
+    "manifestJson": "sha256:6a00af398be62f323436ddad5e445287bdcd81f13b8f9e521018a51286f947d7",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Pipeline",
+          "id": "$",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Pipeline",
+        "surface": "Pipeline"
+      }
+    },
+    "shapes": "sha256:7de80cc9243ddb248bdbf61294562c9d027af2e07ae86787fdb6be9d48515d0c",
+    "snapshot": "sha256:6ead54ed27d4e6309365c60b64482ba64c2a29b947e87ce14972287b79101469",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "hedge": {
+    "flowJson": "sha256:39a621f6c013e0b2050e2decf6c2b04e441f3606c485088037832eb69f434132",
+    "manifestJson": "sha256:39c2480bb5d8df0607bedf6b7410d37a9e3adbc6ee60ef386e3f695ba595cd11",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:7130f7fda5e8072a4cecee856d669b768228a9cd616ab1621bb6ca949fc9b1c1",
+    "snapshot": "sha256:94e52f3bb9f5fd17d700e269d5579bfbd813d171859c8dcefeaab99978ec3604",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "human_gate": {
+    "flowJson": "sha256:4afe297de4cc6e38bd5386056cad78f088a849cbc335ae2d9ea0a2363c3bdc15",
+    "manifestJson": "sha256:0ec1f57501cabad4e1aad14d479bd3c277b80acfb698dc9fc2e4aa25711b68dd",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Pipeline",
+          "id": "$",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Pipeline",
+        "surface": "Pipeline"
+      }
+    },
+    "shapes": "sha256:7de80cc9243ddb248bdbf61294562c9d027af2e07ae86787fdb6be9d48515d0c",
+    "snapshot": "sha256:f2b324af9a1a4830f224eef276f29b3c18fc4da722592da8ff7f1caeb326b032",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "quorum": {
+    "flowJson": "sha256:a8e1360b41f134f7d51e2648a652329edcab7a4b9cd6f9a2aa565c98c277a95d",
+    "manifestJson": "sha256:f94c5440c8e2c7e8a92510919d61cfc1d09e622874c49abc4e8ed00bf5f5451a",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:6775df3b7ec71c0f56d50d6f0c6618f887aa0af84354968cd3fb2144a9a64a8e",
+    "snapshot": "sha256:c224625360350034309636ab23ad24fcf21c7ff001159c0b1f974af1afb7c319",
+    "toolHashesCount": 3,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "race": {
+    "flowJson": "sha256:c01c39cab06a2a5648922e6e9e776c05a4b1dc39a8de0e6e8d0f816677f8c023",
+    "manifestJson": "sha256:6669564635f2cf1e665de359c9c2856eae31b1fa65e1bcae06b64001fb3098b2",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:7130f7fda5e8072a4cecee856d669b768228a9cd616ab1621bb6ca949fc9b1c1",
+    "snapshot": "sha256:2de1b1fde42c93cefac8dc85283ec1f018d32c5c4912f0efb7573ebe959205ac",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "simple_pipeline": {
+    "flowJson": "sha256:7e99636ded4ef627fd2bcc92da8de81da5b110c469056dbda4519740bef89e4d",
+    "manifestJson": "sha256:25f67af39f9398dea096b603920583bab92d441fdb19211b3b80c0c73703b2c4",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Pipeline",
+          "id": "$",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Pipeline",
+        "surface": "Pipeline"
+      }
+    },
+    "shapes": "sha256:7de80cc9243ddb248bdbf61294562c9d027af2e07ae86787fdb6be9d48515d0c",
+    "snapshot": "sha256:276616c6ce1c228a3ff1612cb70bbf9054d543f171a2527fac9489bab211076c",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "staged_plan": {
+    "flowJson": "sha256:2d53d1925c6d34aa28608f54e34e78c2bcb1e94532ab40c4f349bf44e6f0ff1b",
+    "manifestJson": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Staged",
+          "id": "$",
+          "op": "eval_plan",
+          "surface": "Staged"
+        }
+      ],
+      "root": {
+        "closed": "Staged",
+        "surface": "Staged"
+      }
+    },
+    "shapes": "sha256:8d692480a1513b1b93ea612426aab8f77dd397733d6ac48eac056d68121bf587",
+    "snapshot": "sha256:b5b8eed81ac0d1c8b24e6dcb346630c95dafbf5bacbf105f4d83905317ed291a",
+    "toolHashesCount": 0,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "subagent_firewall": {
+    "flowJson": "sha256:f04aefe0a834c0209eb002a8b844a012fbe134dc16f8176983a2311632092de2",
+    "manifestJson": "sha256:c7d7d15a2be6e49f89743730c4324bd927b3eb9a7598fa64af1f848f23a3dbe7",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Agent",
+          "id": "$",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Agent",
+          "id": "$.L",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Agent",
+          "id": "$.L.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Agent",
+        "surface": "Pipeline"
+      }
+    },
+    "shapes": "sha256:2e9acfec97f3c48943212e25df44b4e523a1eadd63ce9d4a11cd1e5496c65d43",
+    "snapshot": "sha256:6cef64aa3d99646c56db4d639c4f4190289b561567162c5fba28ce99ee114172",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}
