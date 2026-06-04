@@ -88,3 +88,14 @@ def test_derived_local_name_is_deterministic_for_structurally_equal_flows() -> N
 
     assert flow(a1).local_name == flow(a2).local_name
     assert flow(a1).local_name.startswith("flow-")
+
+
+def test_named_is_idempotent_for_fresh_structurally_equal_flows() -> None:
+    flow(call(native("c1_x"))).named("c1.svc")
+
+    flow(call(native("c1_x"))).named("c1.svc")
+
+    assert get_flow("c1.svc").ref == "c1.svc"
+
+    with pytest.raises(FlowRegistryError, match="different flow"):
+        flow(call(native("c1_y"))).named("c1.svc")

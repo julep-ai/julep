@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from .ir import Node
+from .ir import Node, canonical_json
 from .registry import DEFAULT_REGISTRY, Registry
+from .transforms import normalize_ids
 
 
 class FlowRegistryError(ValueError):
@@ -20,6 +21,10 @@ class _Lowerable(Protocol):
 class FlowSpec:
     ref: str
     node: Node
+
+
+def _canonical_ir(node: Node) -> str:
+    return canonical_json(normalize_ids(Node.from_json(node.to_json())).to_json())
 
 
 class FlowRegistry:
@@ -46,7 +51,7 @@ class FlowRegistry:
         existing = self._flows.get(ref)
         if existing is not None and not replace:
             # Idempotent re-register of the same flow is fine; a different one collides.
-            if existing.node.to_json() != node.to_json():
+            if _canonical_ir(existing.node) != _canonical_ir(node):
                 raise FlowRegistryError(
                     f"flow ref {ref!r} already registered with a different flow"
                 )
