@@ -40,6 +40,7 @@ from .ir import (
     McpTool as McpTool,
     NativeTool as NativeTool,
     Node as Node,
+    SourceSpan as SourceSpan,
     SubContract as SubContract,
 )
 
@@ -58,6 +59,8 @@ from .dsl import (
     native as native,
     par as par,
     seq as seq,
+    set_source_capture as set_source_capture,
+    source_capture_enabled as source_capture_enabled,
     stage as stage,
     sub as sub,
     think as think,

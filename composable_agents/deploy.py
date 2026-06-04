@@ -328,6 +328,11 @@ def deploy(
     # 5. Race admission (§5): every race branch read-only or asserted-idempotent.
     diagnostics.extend(check_race_admission(fr.flow, fr.manifest))
 
+    for diagnostic in diagnostics:
+        source = fr.source_map.get(diagnostic.node_id)
+        if source is not None:
+            diagnostic.source = source
+
     raise_on_blocking = (enforcement_mode is EnforcementMode.STRICT) and strict
     if raise_on_blocking:
         bad = blocking(diagnostics)

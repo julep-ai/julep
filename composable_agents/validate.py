@@ -30,6 +30,7 @@ from .ir import (
     ContextPolicy,
     JSONSchema,
     Node,
+    SourceSpan,
     ThinkStep,
 )
 from .kinds import ContextScope, Op, Shape, shape_leq
@@ -46,6 +47,7 @@ class Diagnostic:
     severity: str = "error"  # "error" | "warning"
     hint: Optional[str] = None
     help_url: Optional[str] = None
+    source: Optional[SourceSpan] = None
 
 
 def blocking(diags: list[Diagnostic]) -> list[Diagnostic]:

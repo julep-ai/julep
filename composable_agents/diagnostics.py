@@ -67,6 +67,11 @@ def _section(title: str, diagnostics: list[Diagnostic]) -> str:
     lines = [f"{title}:"]
     for diag in diagnostics:
         lines.append(f"- [{diag.code}@{diag.node_id}] {diag.severity}: {diag.message}")
+        if diag.source is not None:
+            pointer = f"    --> {diag.source.file}:{diag.source.line}"
+            if diag.source.text:
+                pointer += f"  ({diag.source.text})"
+            lines.append(pointer)
         hint = diag.hint or hint_for(diag.code)
         if hint:
             lines.append(f"    fix: {hint}")

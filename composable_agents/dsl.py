@@ -13,7 +13,9 @@ about cost.
 
 from __future__ import annotations
 
+import inspect
 import itertools
+import os
 from typing import Any, Optional, Sequence, Union
 
 from .ir import (
@@ -23,6 +25,7 @@ from .ir import (
     McpTool,
     NativeTool,
     Node,
+    SourceSpan,
     SubContract,
     SubStep,
     ThinkStep,
@@ -31,10 +34,45 @@ from .ir import (
 from .kinds import ContextScope, Op, Shape, SummaryPolicy
 
 _counter = itertools.count()
+_PACKAGE_ROOT = os.path.dirname(__file__)
+_SOURCE_CAPTURE = os.environ.get("COMPOSABLE_AGENTS_SOURCE_CAPTURE") == "1"
 
 
 def _nid(tag: str) -> str:
     return f"{tag}#{next(_counter)}"
+
+
+def set_source_capture(enabled: bool) -> None:
+    global _SOURCE_CAPTURE
+    _SOURCE_CAPTURE = enabled
+
+
+def source_capture_enabled() -> bool:
+    return _SOURCE_CAPTURE
+
+
+def _capture_source() -> Optional[SourceSpan]:
+    if not source_capture_enabled():
+        return None
+    try:
+        for frame_info in inspect.stack(context=1):
+            package_root = os.path.abspath(_PACKAGE_ROOT)
+            filename = os.path.abspath(frame_info.filename)
+            if os.path.commonpath([package_root, filename]) != package_root:
+                text = frame_info.code_context[0].strip() if frame_info.code_context else None
+                return SourceSpan(
+                    file=frame_info.filename,
+                    line=frame_info.lineno,
+                    function=frame_info.function,
+                    text=text,
+                )
+    except Exception:
+        return None
+    return None
+
+
+def _node(**kwargs: Any) -> Node:
+    return Node(**kwargs, source=_capture_source())
 
 
 CtxArg = Union[ContextPolicy, ContextScope, None]
@@ -71,14 +109,14 @@ def call(ref_or_name: str | ToolRef, *, ctx: CtxArg = None, ann: Optional[Ann] =
     if not isinstance(ref, (NativeTool, McpTool)):
         raise TypeError("call() expects a ToolRef or native tool name")
     tag = "mcp" if isinstance(ref, McpTool) else "call"
-    return Node(op=Op.PRIM, id=_nid(tag), ann=ann,
-                step=CallStep(tool=ref, ctx=_ctx(ctx)))
+    return _node(op=Op.PRIM, id=_nid(tag), ann=ann,
+                 step=CallStep(tool=ref, ctx=_ctx(ctx)))
 
 
 def think(brain: str, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
     """A single model call against a named brain config."""
-    return Node(op=Op.PRIM, id=_nid("think"), ann=ann,
-                step=ThinkStep(brain=brain, ctx=_ctx(ctx)))
+    return _node(op=Op.PRIM, id=_nid("think"), ann=ann,
+                 step=ThinkStep(brain=brain, ctx=_ctx(ctx)))
 
 
 def brain_from_ctx(path: str, *, ctx: CtxArg = None) -> Node:
@@ -92,12 +130,12 @@ def brain_from_ctx(path: str, *, ctx: CtxArg = None) -> Node:
 
 
 def ident() -> Node:
-    return Node(op=Op.IDENT, id=_nid("ident"))
+    return _node(op=Op.IDENT, id=_nid("ident"))
 
 
 def arr(pure_name: str) -> Node:
     """Lift a registered pure function into a flow leaf."""
-    return Node(op=Op.ARR, id=_nid("arr"), pure=pure_name)
+    return _node(op=Op.ARR, id=_nid("arr"), pure=pure_name)
 
 
 def sub(
@@ -111,7 +149,7 @@ def sub(
         contract = SubContract(Shape.PIPELINE, summary_policy)
     if summary_policy is not None and contract.summary_policy is None:
         contract = SubContract(shape=contract.shape, summary_policy=summary_policy)
-    return Node(op=Op.PRIM, id=_nid("sub"), step=SubStep(ref=ref, contract=contract))
+    return _node(op=Op.PRIM, id=_nid("sub"), step=SubStep(ref=ref, contract=contract))
 
 
 # --------------------------------------------------------------------------- #
@@ -130,7 +168,7 @@ def _binary(op: Op, tag: str, flows: tuple[Node, ...]) -> Node:
         return flows[0]
     acc = flows[0]
     for nxt in flows[1:]:
-        acc = Node(op=op, id=_nid(tag), left=acc, right=nxt)
+        acc = _node(op=op, id=_nid(tag), left=acc, right=nxt)
     return acc
 
 
@@ -175,7 +213,7 @@ def alt(
             raise ValueError("alt switch needs a selector")
         if not cases:
             raise ValueError("alt switch needs at least one case")
-        return Node(
+        return _node(
             op=Op.ALT,
             id=_nid("alt"),
             select=select,
@@ -188,7 +226,7 @@ def alt(
         raise ValueError("alt needs a predicate")
     if if_true is None or if_false is None:
         raise ValueError("alt binary mode needs if_true and if_false")
-    return Node(op=Op.ALT, id=_nid("alt"), pure=pred, left=if_true, right=if_false)
+    return _node(op=Op.ALT, id=_nid("alt"), pure=pred, left=if_true, right=if_false)
 
 
 def iter_up_to(max: int, body: Node, *, until: Optional[str] = None) -> Node:
@@ -197,7 +235,7 @@ def iter_up_to(max: int, body: Node, *, until: Optional[str] = None) -> Node:
     ``until`` names a registered convergence predicate; when it returns truthy
     the loop stops early. Omit it to always run ``max`` rounds.
     """
-    return Node(op=Op.ITER_UP_TO, id=_nid("iter"), bound=max, body=body, pure=until)
+    return _node(op=Op.ITER_UP_TO, id=_nid("iter"), bound=max, body=body, pure=until)
 
 
 def stage(planner: str) -> Node:
@@ -206,7 +244,7 @@ def stage(planner: str) -> Node:
     ``planner`` is a brain/dotctx that emits a Plan. At runtime the plan is
     compiled, validated (<= Feedback, granted tools only) and run as ordinary IR.
     """
-    return Node(op=Op.EVAL_PLAN, id=_nid("stage"), controller=planner)
+    return _node(op=Op.EVAL_PLAN, id=_nid("stage"), controller=planner)
 
 
 def app(
@@ -218,7 +256,7 @@ def app(
     max_rounds: Optional[int] = None,
 ) -> Node:
     """Open-ended controller loop (Agent — the top of the lattice; use sparingly)."""
-    return Node(
+    return _node(
         op=Op.APP,
         id=_nid("app"),
         controller=controller,

@@ -377,6 +377,7 @@ class Node:
     subflows: Optional[Any] = None
     budget: Optional[Any] = None
     max_rounds: Optional[int] = None
+    source: Optional["SourceSpan"] = None
 
     # ----- traversal -------------------------------------------------------- #
     def children(self) -> list["Node"]:
@@ -470,6 +471,14 @@ class Node:
             budget=_budget_from_json(d["budget"]) if "budget" in d else None,
             max_rounds=d.get("maxRounds", d.get("max_rounds")),
         )
+
+
+@dataclass(frozen=True)
+class SourceSpan:
+    file: str
+    line: int
+    function: Optional[str] = None
+    text: Optional[str] = None
 
 
 def canonical_json(value: Any) -> str:

@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import Optional, Sequence
 
 from .contracts import ToolManifest
-from .dsl import _nid, think
+from .dsl import _nid, _node, think
 from .ir import (
     Ann,
     CallStep,
@@ -73,7 +73,7 @@ def _par_group(flows: Sequence[Node], merge: Merge, tag: str) -> Node:
         return flows[0]
     acc = flows[-1]
     for nxt in reversed(flows[:-1]):
-        acc = Node(op=Op.PAR, id=_nid(tag), left=nxt, right=acc, merge=merge)
+        acc = _node(op=Op.PAR, id=_nid(tag), left=nxt, right=acc, merge=merge)
     return acc
 
 
@@ -181,7 +181,7 @@ def review(main: Node, reviewer: str, k: int, *, agg: Optional[str] = None) -> N
         raise ValueError("review k must be >= 1")
     reviewers = _par_group([think(reviewer) for _ in range(k)],
                            Merge(kind="all", reducer=agg), "review")
-    return Node(op=Op.SEQ, id=_nid("seq"), left=main, right=reviewers)
+    return _node(op=Op.SEQ, id=_nid("seq"), left=main, right=reviewers)
 
 
 def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None) -> Node:
@@ -193,8 +193,8 @@ def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None)
     output. ``timeout_s`` (carried on the annotation) bounds the wait.
     """
     ann = Ann(timeout_s=timeout_s) if timeout_s is not None else None
-    return Node(op=Op.PRIM, id=_nid("gate"), ann=ann,
-                step=CallStep(tool=NativeTool(HUMAN_GATE_TOOL)), prompt=prompt)
+    return _node(op=Op.PRIM, id=_nid("gate"), ann=ann,
+                 step=CallStep(tool=NativeTool(HUMAN_GATE_TOOL)), prompt=prompt)
 
 
 # --------------------------------------------------------------------------- #

@@ -30,6 +30,7 @@ from .ir import (
     JSONSchema,
     NativeTool,
     Node,
+    SourceSpan,
     ToolRef,
     toolref_key,
 )
@@ -94,6 +95,7 @@ class CapabilityOverrides:
 class FreezeResult:
     flow: Node
     manifest: ToolManifest
+    source_map: dict[str, SourceSpan] = field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------- #
@@ -178,6 +180,13 @@ def freeze(
 
     # 2. Deep-copy via canonical JSON (unshares any DAG nodes); 3. normalize ids.
     frozen_flow = normalize_ids(Node.from_json(flow.to_json()))
+    authored_nodes = list(flow.walk())
+    frozen_nodes = list(frozen_flow.walk())
+    source_map: dict[str, SourceSpan] = {}
+    if len(authored_nodes) == len(frozen_nodes):
+        for authored, frozen in zip(authored_nodes, frozen_nodes, strict=True):
+            if authored.source is not None:
+                source_map[frozen.id] = authored.source
 
     # 4. Bind every call node to a frozen tool.
     manifest: ToolManifest = {}
@@ -189,7 +198,7 @@ def freeze(
         manifest[tool.hash] = tool
         step.frozen_hash = tool.hash
 
-    return FreezeResult(flow=frozen_flow, manifest=manifest)
+    return FreezeResult(flow=frozen_flow, manifest=manifest, source_map=source_map)
 
 
 def bind(node: Node, manifest: ToolManifest) -> FrozenTool:
