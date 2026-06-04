@@ -33,11 +33,11 @@ from enum import Enum
 from typing import Any, Optional
 
 from .capabilities import Budget, CapabilityManifest
-from .contracts import ToolManifest
+from .contracts import CONSERVATIVE_DEFAULT, ToolContract, ToolManifest
 from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
 from .ir import Node
-from .kinds import Shape
+from .kinds import Effect, Idempotency, Shape
 from .staged import admit_plan, estimate_cost, validate_plan
 from .validate import Diagnostic
 
@@ -121,6 +121,13 @@ def action_cost(action: RoundAction, reported: Optional[float] = None) -> float:
     if action.decision is Decision.SUB:
         return DEFAULT_SUB_COST
     return 0.0
+
+
+@dataclass(frozen=True)
+class CallDenial:
+    """A settled policy refusal for an agent CALL decision."""
+
+    reason: str
 
 
 # --------------------------------------------------------------------------- #
@@ -263,6 +270,69 @@ def terminal_result(status: str, state: AgentState, output: Any = None,
     return out
 
 
+AgentContractMap = dict[str, dict[str, Any]]
+
+
+def precheck_controller(state: AgentState, cfg: AgentConfig) -> Optional[dict[str, Any]]:
+    """Terminate before a controller call when the think cost would exceed budget."""
+    if would_exceed_budget(state, cfg.think_cost, cfg.budget):
+        return terminal_result("over_budget", state)
+    return None
+
+
+def _approval_bool(raw: Any) -> bool:
+    if isinstance(raw, str):
+        return raw.lower() in {"1", "true", "yes", "required"}
+    return bool(raw)
+
+
+def contract_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> ToolContract:
+    """Return the carried contract for ``tool``, defaulting conservatively."""
+    raw = (contracts or {}).get(tool)
+    if raw is None:
+        return CONSERVATIVE_DEFAULT
+    return ToolContract(
+        effect=Effect(raw.get("effect", CONSERVATIVE_DEFAULT.effect.value)),
+        idempotency=Idempotency(raw.get("idempotency", CONSERVATIVE_DEFAULT.idempotency.value)),
+    )
+
+
+def approval_required_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> bool:
+    """True when a carried contract/grant requires human approval."""
+    raw = (contracts or {}).get(tool) or {}
+    contract = contract_for_tool(tool, contracts)
+    return contract.effect == Effect.DANGEROUS or _approval_bool(raw.get("approval", False))
+
+
+def authorize_call(
+    tool: str,
+    *,
+    unconstrained: bool,
+    granted_set: set[str],
+    contracts: Optional[AgentContractMap],
+) -> Optional[CallDenial]:
+    """Authorize one agent CALL against grants and approval-only contracts."""
+    if not unconstrained and tool not in granted_set:
+        return CallDenial(reason=f"tool {tool!r} is not granted")
+    if approval_required_for_tool(tool, contracts):
+        return CallDenial(reason=f"approval-required tool {tool!r}; agent must ESCALATE")
+    return None
+
+
+def retry_max_attempts_for_contract(
+    contract: ToolContract,
+    *,
+    idempotent_max_attempts: int,
+    write_max_attempts: int,
+) -> int:
+    """Choose liberal vs cautious retry attempts from a pure tool contract."""
+    idempotent = (
+        contract.effect == Effect.READ
+        or contract.idempotency in (Idempotency.NATIVE, Idempotency.REQUIRED)
+    )
+    return idempotent_max_attempts if idempotent else write_max_attempts
+
+
 # --------------------------------------------------------------------------- #
 # Plan extraction (offline generalization of an observed trace).
 # --------------------------------------------------------------------------- #
@@ -336,6 +406,12 @@ __all__ = [
     "would_exceed_budget",
     "should_continue_as_new",
     "terminal_result",
+    "CallDenial",
+    "precheck_controller",
+    "contract_for_tool",
+    "approval_required_for_tool",
+    "authorize_call",
+    "retry_max_attempts_for_contract",
     "generalize_trace_to_plan",
     "extract_plan",
     "promote_plan",

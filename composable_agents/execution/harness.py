@@ -52,8 +52,7 @@ from temporalio.common import RetryPolicy
 with workflow.unsafe.imports_passed_through():
     from .. import agent_loop as al
     from ..contracts import ToolContract, manifest_from_json
-    from ..ir import Node
-    from ..kinds import Effect, Idempotency
+    from ..ir import Node, toolref_key
     from ..projection import InMemoryProjection, ProjectionEmitter
     from .interpreter import (
         BranchThunk,
@@ -130,11 +129,11 @@ _NON_RETRYABLE = ["CapabilityDenied", "PlanRejected", "ValidationError", "Freeze
 
 def _retry_policy_for(contract: ToolContract, policy: ExecutionPolicy) -> RetryPolicy:
     """Per-tool retry policy: liberal for idempotent reads, cautious otherwise."""
-    idempotent = (
-        contract.effect == Effect.READ
-        or contract.idempotency in (Idempotency.NATIVE, Idempotency.REQUIRED)
+    attempts = al.retry_max_attempts_for_contract(
+        contract,
+        idempotent_max_attempts=policy.idempotent_max_attempts,
+        write_max_attempts=policy.write_max_attempts,
     )
-    attempts = policy.idempotent_max_attempts if idempotent else policy.write_max_attempts
     return RetryPolicy(
         initial_interval=timedelta(seconds=policy.initial_retry_s),
         backoff_coefficient=policy.retry_backoff,
@@ -167,6 +166,20 @@ def _toolref_json_from_key(key: str) -> dict[str, Any]:
     return {"kind": "native", "name": key}
 
 
+def _manifest_contracts_for_agent(
+    manifest,
+    granted_tools: Optional[Sequence[str]],
+) -> dict[str, dict[str, Any]]:
+    """Serialize frozen contracts by tool key for the child agent workflow."""
+    wanted = None if granted_tools is None else set(granted_tools)
+    contracts: dict[str, dict[str, Any]] = {}
+    for frozen in manifest.values():
+        key = toolref_key(frozen.ref)
+        if wanted is None or key in wanted:
+            contracts[key] = frozen.contract.to_json()
+    return contracts
+
+
 # --------------------------------------------------------------------------- #
 # Workflow inputs (Temporal serializes these via the data converter).
 # --------------------------------------------------------------------------- #
@@ -189,8 +202,12 @@ class AgentInput:
     input: Any = None
     config: Optional[dict[str, Any]] = None
     granted_tools: Optional[list[str]] = None
+    granted_tools_unconstrained: bool = False
+    granted_subflows: Optional[list[str]] = None
+    granted_contracts: Optional[dict[str, dict[str, Any]]] = None
     state: Optional[dict[str, Any]] = None      # set on continue-as-new
     policy: Optional[dict[str, Any]] = None
+    resolve_spec: bool = True
 
 
 # --------------------------------------------------------------------------- #
@@ -276,12 +293,47 @@ class _TemporalEnv:
             task_timeout=timedelta(seconds=self._policy.sub_task_timeout_s),
         )
 
-    async def run_agent(self, controller: str, value: Any, cid: str) -> Any:
+    async def run_agent(
+        self,
+        controller: str,
+        value: Any,
+        cid: str,
+        app_config: Optional[dict[str, Any]] = None,
+    ) -> Any:
         child_id = self._child_id("agent", cid)
+        config: Optional[dict[str, Any]] = None
+        granted_tools: Optional[list[str]] = None
+        granted_subflows: Optional[list[str]] = None
+        granted_contracts: Optional[dict[str, dict[str, Any]]] = None
+        granted_tools_unconstrained = False
+
+        if app_config is not None:
+            config = {}
+            if "budget" in app_config:
+                config["budget"] = app_config["budget"]
+            if "maxRounds" in app_config:
+                config["maxRounds"] = app_config["maxRounds"]
+
+            tools = app_config.get("tools") if "tools" in app_config else None
+            granted_tools_unconstrained = tools is None
+            granted_tools = None if tools is None else list(tools)
+            subflows = app_config.get("subflows") if "subflows" in app_config else None
+            granted_subflows = None if subflows is None else list(subflows)
+            granted_contracts = _manifest_contracts_for_agent(self.manifest, granted_tools)
+
         return await workflow.execute_child_workflow(
             AgentWorkflow.run,
-            AgentInput(controller=controller, session_id=child_id, input=value,
-                       policy=self._policy.to_json()),
+            AgentInput(
+                controller=controller,
+                session_id=child_id,
+                input=value,
+                config=config,
+                granted_tools=granted_tools,
+                granted_tools_unconstrained=granted_tools_unconstrained,
+                granted_subflows=granted_subflows,
+                granted_contracts=granted_contracts,
+                policy=self._policy.to_json(),
+            ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.agent_task_timeout_s),
         )
@@ -426,22 +478,35 @@ class AgentWorkflow:
     async def run(self, inp: AgentInput) -> dict[str, Any]:
         policy = ExecutionPolicy.from_json(inp.policy)
 
-        # Resolve config + granted-tool allow-list once per (continue-as-new)
-        # segment. On a continue-as-new restart the caller re-supplies them so we
-        # avoid re-resolving, but a fresh start resolves from the registry.
-        config = inp.config
+        # Resolve config + grant metadata once, then carry it through
+        # continue-as-new. Inline app config can supply grant semantics while
+        # still using the resolved agent spec for default loop settings.
+        config = dict(inp.config or {})
         granted = inp.granted_tools
-        if config is None or granted is None:
+        granted_subflows = inp.granted_subflows
+        contracts = dict(inp.granted_contracts or {})
+        grants_supplied = inp.granted_tools is not None or inp.granted_tools_unconstrained
+
+        if inp.resolve_spec:
             spec = await workflow.execute_activity(
                 resolveAgentSpec,
                 inp.controller,
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE),
             )
-            config = config or spec["config"]
-            granted = granted if granted is not None else spec["grantedTools"]
+            merged_config = dict(spec.get("config") or {})
+            merged_config.update(config)
+            config = merged_config
+            if not grants_supplied:
+                granted = spec.get("grantedTools")
+            merged_contracts = dict(spec.get("grantedContracts") or {})
+            merged_contracts.update(contracts)
+            contracts = merged_contracts
+            if granted_subflows is None:
+                granted_subflows = spec.get("grantedSubflows")
 
         cfg = al.AgentConfig.from_json(config or {})
+        unconstrained = inp.granted_tools_unconstrained or granted is None
         granted_set = set(granted or [])
 
         state = al.AgentState.from_json(inp.state) if inp.state else al.AgentState(last=inp.input)
@@ -450,7 +515,12 @@ class AgentWorkflow:
             if state.round >= cfg.max_rounds:
                 return al.terminal_result("max_rounds", state)
 
-            # 1) Ask the controller what to do, charging the per-round think cost.
+            # 1) Check the controller's own cost before spending on it, then ask
+            # the controller what to do and charge the per-round think cost.
+            controller_precheck = al.precheck_controller(state, cfg)
+            if controller_precheck is not None:
+                return controller_precheck
+
             reply = await workflow.execute_activity(
                 invokeBrain,
                 InvokeBrainInput(
@@ -480,13 +550,18 @@ class AgentWorkflow:
             # current value (state.last) rather than passing None downstream.
             if action.decision is al.Decision.CALL:
                 tool = action.payload["tool"]
-                if granted_set and tool not in granted_set:
-                    return al.terminal_result(
-                        "denied", state, reason=f"tool {tool!r} is not granted"
-                    )
+                denial = al.authorize_call(
+                    tool,
+                    unconstrained=unconstrained,
+                    granted_set=granted_set,
+                    contracts=contracts,
+                )
+                if denial is not None:
+                    return al.terminal_result("denied", state, reason=denial.reason)
                 call_input = action.payload.get("input")
                 if call_input is None:
                     call_input = state.last
+                contract = al.contract_for_tool(tool, contracts)
                 out = await workflow.execute_activity(
                     callHand,
                     CallHandInput(
@@ -495,10 +570,7 @@ class AgentWorkflow:
                         cid=f"{inp.session_id}-call-{state.round}",
                     ),
                     start_to_close_timeout=timedelta(seconds=policy.hand_timeout_s),
-                    retry_policy=RetryPolicy(
-                        maximum_attempts=policy.idempotent_max_attempts,
-                        non_retryable_error_types=_NON_RETRYABLE,
-                    ),
+                    retry_policy=_retry_policy_for(contract, policy),
                 )
                 state.charge(cost)
                 state.last = out
@@ -537,9 +609,13 @@ class AgentWorkflow:
                         session_id=inp.session_id,
                         input=inp.input,
                         config=config,
-                        granted_tools=list(granted_set),
+                        granted_tools=None if unconstrained else sorted(granted_set),
+                        granted_tools_unconstrained=unconstrained,
+                        granted_subflows=granted_subflows,
+                        granted_contracts=contracts,
                         state=state.to_json(),
                         policy=policy.to_json(),
+                        resolve_spec=False,
                     )
                 )
 

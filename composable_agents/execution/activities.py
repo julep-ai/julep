@@ -27,10 +27,12 @@ from typing import Any, Awaitable, Callable, Optional
 
 from temporalio import activity
 
-from ..capabilities import CapabilityManifest
+from ..capabilities import CapabilityManifest, ToolGrant
+from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain, get_brain
 from ..errors import CapabilityDenied
 from ..ir import Node, toolref_from_json, toolref_key
+from ..kinds import Effect, Idempotency
 from ..staged import admit_plan
 
 # Caller signatures the worker supplies.
@@ -51,7 +53,8 @@ class WorkerContext:
     # by ref; an agent spec is the controller's loop policy. Both are fixed at
     # worker startup, so the resolve* activities below read them deterministically.
     subflows: dict[str, dict[str, Any]] = field(default_factory=dict)  # ref -> {flowJson, manifestJson}
-    agents: dict[str, dict[str, Any]] = field(default_factory=dict)    # controller -> {config, grantedTools}
+    # controller -> {config, grantedTools, grantedContracts, grantedSubflows}
+    agents: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 _CTX = WorkerContext()
@@ -176,6 +179,42 @@ async def resolveSubflow(ref: str) -> dict[str, Any]:
     return {"flowJson": spec["flowJson"], "manifestJson": spec.get("manifestJson", {})}
 
 
+def _approval_value(raw: Any) -> bool:
+    if isinstance(raw, str):
+        return raw.lower() in {"1", "true", "yes", "required"}
+    return bool(raw)
+
+
+def _contract_payload(contract: ToolContract, *, approval: Optional[bool] = None) -> dict[str, Any]:
+    payload = contract.to_json()
+    if approval is not None:
+        payload["approval"] = bool(approval)
+    return payload
+
+
+def _grant_contract_payload(grant: ToolGrant) -> dict[str, Any]:
+    return _contract_payload(
+        grant.contract() or CONSERVATIVE_DEFAULT,
+        approval=grant.approval,
+    )
+
+
+def _normalize_contract_payload(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, ToolContract):
+        return raw.to_json()
+    if not isinstance(raw, dict):
+        return CONSERVATIVE_DEFAULT.to_json()
+    payload = {
+        "effect": Effect(raw.get("effect", CONSERVATIVE_DEFAULT.effect.value)).value,
+        "idempotency": Idempotency(
+            raw.get("idempotency", CONSERVATIVE_DEFAULT.idempotency.value)
+        ).value,
+    }
+    if "approval" in raw:
+        payload["approval"] = _approval_value(raw["approval"])
+    return payload
+
+
 @activity.defn(name="resolveAgentSpec")
 async def resolveAgentSpec(controller: str) -> dict[str, Any]:
     """Resolve an agent controller to its loop config + granted-tool allow-list.
@@ -197,7 +236,38 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
             budget["wallSeconds"] = b.wall_seconds
         config["budget"] = budget
 
-    granted = spec.get("grantedTools")
-    if granted is None:
-        granted = list(_CTX.capabilities.tools.keys()) if _CTX.capabilities is not None else []
-    return {"config": config, "grantedTools": list(granted)}
+    if "grantedTools" in spec:
+        granted = spec.get("grantedTools")
+    elif _CTX.capabilities is not None and _CTX.capabilities._has_tools:
+        granted = list(_CTX.capabilities.tools.keys())
+    else:
+        granted = None
+
+    contracts: dict[str, dict[str, Any]] = {}
+    if _CTX.capabilities is not None:
+        contracts.update(
+            {
+                key: _grant_contract_payload(grant)
+                for key, grant in _CTX.capabilities.tools.items()
+            }
+        )
+    contracts.update(
+        {
+            key: _normalize_contract_payload(raw)
+            for key, raw in (spec.get("grantedContracts") or {}).items()
+        }
+    )
+
+    if "grantedSubflows" in spec:
+        granted_subflows = spec.get("grantedSubflows")
+    elif _CTX.capabilities is not None and _CTX.capabilities._has_subflows:
+        granted_subflows = sorted(_CTX.capabilities.subflows)
+    else:
+        granted_subflows = None
+
+    return {
+        "config": config,
+        "grantedTools": None if granted is None else list(granted),
+        "grantedContracts": contracts,
+        "grantedSubflows": None if granted_subflows is None else list(granted_subflows),
+    }

@@ -82,10 +82,17 @@ def _child_registry():
     return {"child": {"flowJson": fr.flow.to_json(), "manifestJson": manifest_to_json(fr.manifest)}}
 
 
-def _worker(env, *, task_queue, agents=None):
+def _worker(env, *, task_queue, agents=None, llm=None, extra_brains=()):
     register_brain(Brain(name="adder", model="test", system="add 10"))
     register_brain(Brain(name="ctrl", model="test", system="decide"))
-    ctx = WorkerContext(mcp_call=_mcp, llm=_llm, subflows=_child_registry(), agents=agents or {})
+    for brain in extra_brains:
+        register_brain(brain)
+    ctx = WorkerContext(
+        mcp_call=_mcp,
+        llm=llm or _llm,
+        subflows=_child_registry(),
+        agents=agents or {},
+    )
     return build_worker(env.client, ctx, task_queue=task_queue)
 
 
@@ -142,15 +149,40 @@ async def _agent(env):
     assert [t["decision"] for t in res["trace"]] == ["call", "sub"], res
 
     # Budget guard: a budget below the per-round think cost trips over_budget.
-    agents_b = {"ctrl": {"config": {"maxRounds": 6, "budget": {"usd": 0.5}}, "grantedTools": ["srv/double"]}}
-    async with _worker(env, task_queue="ca-agent-b", agents=agents_b):
+    budget_brain_calls = {"count": 0}
+
+    async def fail_if_budget_brain_invoked(brain, value):  # noqa: ANN001
+        budget_brain_calls["count"] += 1
+        raise RuntimeError("budget controller should not be invoked")
+
+    agents_b = {
+        "budget_ctrl": {
+            "config": {"maxRounds": 6, "budget": {"usd": 0.5}},
+            "grantedTools": ["srv/double"],
+        }
+    }
+    async with _worker(
+        env,
+        task_queue="ca-agent-b",
+        agents=agents_b,
+        llm=fail_if_budget_brain_invoked,
+        extra_brains=(Brain(name="budget_ctrl", model="test", system="budget"),),
+    ):
         sid = f"agentb-{uuid.uuid4()}"
         res2 = await env.client.execute_workflow(
             AgentWorkflow.run,
-            AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
+            AgentInput(
+                controller="budget_ctrl",
+                session_id=sid,
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
             id=sid, task_queue="ca-agent-b",
         )
     assert res2["status"] == "over_budget", res2
+    assert res2["spentUsd"] == 0, res2
+    assert res2["trace"] == [], res2
+    assert budget_brain_calls["count"] == 0
 
     # Capability deny: the requested tool is not granted.
     agents_d = {"ctrl": {"config": {"maxRounds": 6, "budget": {"usd": 1000}}, "grantedTools": ["only/other"]}}
@@ -162,6 +194,30 @@ async def _agent(env):
             id=sid, task_queue="ca-agent-d",
         )
     assert res3["status"] == "denied", res3
+
+    # Agent loops cannot open a human approval gate, so approval-required tools deny.
+    agents_a = {
+        "ctrl": {
+            "config": {"maxRounds": 6, "budget": {"usd": 1000}},
+            "grantedTools": ["srv/double"],
+            "grantedContracts": {
+                "srv/double": {
+                    "effect": "read",
+                    "idempotency": "native",
+                    "approval": True,
+                }
+            },
+        }
+    }
+    async with _worker(env, task_queue="ca-agent-a", agents=agents_a):
+        sid = f"agenta-{uuid.uuid4()}"
+        res4 = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
+            id=sid, task_queue="ca-agent-a",
+        )
+    assert res4["status"] == "denied", res4
+    assert res4["reason"] == "approval-required tool 'srv/double'; agent must ESCALATE"
 
 
 async def _run_all():

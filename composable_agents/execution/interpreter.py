@@ -86,7 +86,13 @@ class Env(Protocol):
     async def call_hand(self, node: Node, value: Any, cid: str) -> Any: ...
     async def invoke_brain(self, brain: str, value: Any, cid: str) -> Any: ...
     async def run_sub(self, ref: str, contract: SubContract, value: Any, cid: str) -> Any: ...
-    async def run_agent(self, controller: str, value: Any, cid: str) -> Any: ...
+    async def run_agent(
+        self,
+        controller: str,
+        value: Any,
+        cid: str,
+        app_config: Optional[dict[str, Any]] = None,
+    ) -> Any: ...
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node: ...
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any: ...
 
@@ -177,7 +183,7 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
 
     if op == Op.APP:
         assert node.controller is not None
-        out = await env.run_agent(node.controller, value, cid)
+        out = await env.run_agent(node.controller, value, cid, _app_config(node))
         return Result(out)
 
     raise ComposableAgentsError(f"interpreter: unhandled op {op!r}")
@@ -238,6 +244,16 @@ def _all_branches(node: Node) -> list[Node]:
 
     rec(node)
     return out
+
+
+def _app_config(node: Node) -> Optional[dict[str, Any]]:
+    encoded = node.to_json()
+    config = {
+        key: encoded[key]
+        for key in ("tools", "subflows", "budget", "maxRounds")
+        if key in encoded
+    }
+    return config or None
 
 
 async def _raise_branch_failure(exc: Exception) -> Any:
@@ -418,7 +434,13 @@ class InMemoryEnv:
             raise KeyError(f"no in-memory sub for {ref!r}")
         return self._subs[ref](value)
 
-    async def run_agent(self, controller: str, value: Any, cid: str) -> Any:
+    async def run_agent(
+        self,
+        controller: str,
+        value: Any,
+        cid: str,
+        app_config: Optional[dict[str, Any]] = None,
+    ) -> Any:
         if controller not in self._agents:
             raise KeyError(f"no in-memory agent for {controller!r}")
         return self._agents[controller](value)
