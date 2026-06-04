@@ -24,6 +24,14 @@ class AdmissionError(ComposableAgentsError):
     """A branch is illegal in a race/hedge/quorum position (§5 guarantee)."""
 
 
+class RaceAllFailed(ComposableAgentsError):
+    """A race/hedge/quorum group could not reach its required successes."""
+
+    def __init__(self, failures):
+        self.failures = list(failures)
+        super().__init__(f"race-family group failed with {len(self.failures)} branch failure(s)")
+
+
 class BudgetExceeded(ComposableAgentsError):
     """The Agent budget guard or a plan's budget estimate was exceeded."""
 

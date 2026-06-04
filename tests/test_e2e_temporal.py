@@ -45,7 +45,7 @@ def _snapshot():
     ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
     return McpSnapshot(servers={"srv": McpServerSnapshot(server="srv", version="1", tools={
         t: McpToolSpec(input_schema={}, annotations=ann)
-        for t in ("double", "inc", "echo", "slow")
+        for t in ("double", "inc", "echo", "fail", "slow")
     })})
 
 
@@ -56,6 +56,8 @@ async def _mcp(server, tool, value):
         return value + 1
     if tool == "echo":
         return value
+    if tool == "fail":
+        raise RuntimeError("intentional race failure")
     if tool == "slow":
         await asyncio.sleep(5)  # time-skipped by the server
         return value * 100
@@ -99,11 +101,12 @@ async def _pipeline_and_brain(env):
 
 
 async def _race(env):
-    fr = freeze(race(call(mcp("srv", "inc")), call(mcp("srv", "slow"))), _snapshot())
+    fr = freeze(race(call(mcp("srv", "fail")), call(mcp("srv", "slow"))), _snapshot())
     async with _worker(env, task_queue="ca-race"):
         out = await run_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-                             session_id=f"race-{uuid.uuid4()}", input=7, task_queue="ca-race")
-    assert out == 8, f"race expected fast branch 8, got {out}"
+                             session_id=f"race-{uuid.uuid4()}", input=7, task_queue="ca-race",
+                             policy=ExecutionPolicy(idempotent_max_attempts=1))
+    assert out == 700, f"race expected slow success 700 after fast failure, got {out}"
 
 
 async def _human_gate(env):

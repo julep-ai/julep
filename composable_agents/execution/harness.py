@@ -55,7 +55,14 @@ with workflow.unsafe.imports_passed_through():
     from ..ir import Node
     from ..kinds import Effect, Idempotency
     from ..projection import InMemoryProjection, ProjectionEmitter
-    from .interpreter import Result, call_contract, call_ref_key, interpret
+    from .interpreter import (
+        BranchThunk,
+        Result,
+        call_contract,
+        call_ref_key,
+        interpret,
+        race_first_from_thunks,
+    )
     from .activities import (
         CallHandInput,
         CompilePlanInput,
@@ -287,45 +294,21 @@ class _TemporalEnv:
         return list(await asyncio.gather(*coros))
 
     async def race_first(
-        self, coros: Sequence[Awaitable[Any]], *, kind: str, m: int, hedge_ms: Optional[int]
+        self, branches: Sequence[BranchThunk], *, kind: str, m: int, hedge_ms: Optional[int]
     ) -> Any:
-        need = m if kind == "quorum" else 1
-        tasks = [asyncio.ensure_future(c) for c in coros]
+        async def wait_first(
+            waitset: Sequence[Awaitable[Any]],
+        ) -> tuple[set[Awaitable[Any]], set[Awaitable[Any]]]:
+            done, pending = await workflow.wait(list(waitset), return_when=asyncio.FIRST_COMPLETED)
+            return set(done), set(pending)
 
-        def finished() -> list[Any]:
-            # Completed branch results in original branch order (quorum-stable).
-            return [t.result() for t in tasks if t.done() and not t.cancelled()]
-
-        try:
-            if kind == "hedge" and hedge_ms and len(tasks) > 1:
-                # Staggered start: branch 0 runs now; reveal one more every
-                # ``hedge_ms`` until enough branches have completed. asyncio.sleep
-                # is a durable Temporal timer; workflow.wait keeps the select
-                # deterministic under replay.
-                revealed = [tasks[0]]
-                next_idx = 1
-                while len(finished()) < need:
-                    timer = asyncio.ensure_future(asyncio.sleep(hedge_ms / 1000.0))
-                    waitset = list(revealed) + ([timer] if next_idx < len(tasks) else [])
-                    await workflow.wait(waitset, return_when=asyncio.FIRST_COMPLETED)
-                    if timer.done():
-                        if next_idx < len(tasks):
-                            revealed.append(tasks[next_idx])
-                            next_idx += 1
-                    else:
-                        timer.cancel()
-            else:
-                pending = list(tasks)
-                while pending and len(finished()) < need:
-                    _, pending_set = await workflow.wait(pending, return_when=asyncio.FIRST_COMPLETED)
-                    pending = list(pending_set)
-
-            results = finished()
-            return results[:need] if kind == "quorum" else results[0]
-        finally:
-            for t in tasks:
-                if not t.done():
-                    t.cancel()
+        return await race_first_from_thunks(
+            branches,
+            kind=kind,
+            m=m,
+            hedge_ms=hedge_ms,
+            wait_first=wait_first,
+        )
 
 
 def _make_emitter() -> tuple[InMemoryProjection, ProjectionEmitter]:

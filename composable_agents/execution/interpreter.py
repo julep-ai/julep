@@ -23,12 +23,13 @@ an activity, behind the ``Env`` boundary.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
 
 from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest
 from ..derived import flatten_race_group
-from ..errors import ComposableAgentsError
+from ..errors import ComposableAgentsError, RaceAllFailed
 from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import Op
@@ -43,6 +44,9 @@ class Result:
 
     value: Any
     event_id: Optional[str] = None
+
+
+BranchThunk = Callable[[], Awaitable[Any]]
 
 
 def call_ref_key(node: Node, manifest: ToolManifest) -> str:
@@ -88,7 +92,7 @@ class Env(Protocol):
 
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]: ...
     async def race_first(
-        self, coros: Sequence[Awaitable[Any]], *, kind: str, m: int, hedge_ms: Optional[int]
+        self, branches: Sequence[BranchThunk], *, kind: str, m: int, hedge_ms: Optional[int]
     ) -> Any: ...
 
 
@@ -201,10 +205,13 @@ async def _eval_par(node: Node, value: Any, env: Env, planned: str) -> Result:
     branches = flatten_race_group(node) if kind in {"race", "hedge", "quorum"} else _all_branches(node)
 
     if kind in {"race", "hedge", "quorum"}:
-        coros = [interpret(b, value, env, causes=(planned,)) for b in branches]
+        thunks = [
+            (lambda b=b: interpret(b, value, env, causes=(planned,)))
+            for b in branches
+        ]
         m = (merge.quorum_m if merge and merge.quorum_m else 1)
         hedge_ms = merge.hedge_ms if merge else None
-        winner = await env.race_first(coros, kind=kind, m=m, hedge_ms=hedge_ms)
+        winner = await env.race_first(thunks, kind=kind, m=m, hedge_ms=hedge_ms)
         results = winner if isinstance(winner, list) else [winner]
         values = [r.value if isinstance(r, Result) else r for r in results]
         out_value = values if kind == "quorum" else values[0]
@@ -231,6 +238,123 @@ def _all_branches(node: Node) -> list[Node]:
 
     rec(node)
     return out
+
+
+async def _raise_branch_failure(exc: Exception) -> Any:
+    raise exc
+
+
+async def race_first_from_thunks(
+    branches: Sequence[BranchThunk],
+    *,
+    kind: str,
+    m: int,
+    hedge_ms: Optional[int],
+    wait_first: Callable[
+        [Sequence[Awaitable[Any]]],
+        Awaitable[tuple[set[Awaitable[Any]], set[Awaitable[Any]]]],
+    ],
+) -> Any:
+    """Settle a race-family group on successful branch results.
+
+    ``wait_first`` is injected so the in-memory env can use ``asyncio.wait``
+    while the Temporal env uses ``workflow.wait`` for replay-safe waiting.
+    """
+
+    total = len(branches)
+    need = m if kind == "quorum" else 1
+    if total == 0:
+        raise RaceAllFailed([])
+
+    tasks: list[asyncio.Future[Any] | None] = [None] * total
+    running: set[asyncio.Future[Any]] = set()
+    successes: dict[int, Any] = {}
+    failures: dict[int, Exception] = {}
+    timer: asyncio.Future[Any] | None = None
+
+    def ordered_failures() -> list[Exception]:
+        return [failures[i] for i in range(total) if i in failures]
+
+    def start(idx: int) -> None:
+        try:
+            awaitable = branches[idx]()
+        except Exception as exc:  # Synchronous thunk construction failure.
+            awaitable = _raise_branch_failure(exc)
+        task = asyncio.ensure_future(awaitable)
+        tasks[idx] = task
+        running.add(task)
+
+    def process_done(done: set[Awaitable[Any]]) -> None:
+        for idx, task in enumerate(tasks):
+            if task is None or task not in done or idx in successes or idx in failures:
+                continue
+            try:
+                successes[idx] = task.result()
+            except Exception as exc:  # Branch failure; ignore until settlement is impossible.
+                failures[idx] = exc
+
+    def settlement() -> tuple[bool, Any]:
+        if len(successes) >= need:
+            ordered_successes = [successes[i] for i in sorted(successes)[:need]]
+            return True, ordered_successes if kind == "quorum" else ordered_successes[0]
+        if len(failures) > total - need:
+            raise RaceAllFailed(ordered_failures())
+        return False, None
+
+    async def wait_for_first(waitset: set[Awaitable[Any]]) -> set[Awaitable[Any]]:
+        done, _ = await wait_first(list(waitset))
+        return set(done)
+
+    try:
+        if kind == "hedge":
+            start(0)
+            next_idx = 1
+            delay_s = (hedge_ms or 0) / 1000.0
+            while True:
+                settled, value = settlement()
+                if settled:
+                    return value
+                if timer is None and next_idx < total:
+                    timer = asyncio.ensure_future(asyncio.sleep(delay_s))
+                waitset: set[Awaitable[Any]] = set(running)
+                if timer is not None:
+                    waitset.add(timer)
+                if not waitset:
+                    raise RaceAllFailed(ordered_failures())
+
+                done = await wait_for_first(waitset)
+                branch_done = {t for t in done if t is not timer}
+                running.difference_update(branch_done)
+                process_done(branch_done)
+
+                settled, value = settlement()
+                if settled:
+                    return value
+                if timer is not None and timer in done:
+                    timer = None
+                    if next_idx < total:
+                        start(next_idx)
+                        next_idx += 1
+
+        for idx in range(total):
+            start(idx)
+        pending = {t for t in tasks if t is not None}
+        while True:
+            settled, value = settlement()
+            if settled:
+                return value
+            if not pending:
+                raise RaceAllFailed(ordered_failures())
+            done, pending_after = await wait_first(list(pending))
+            done_set = set(done)
+            pending = set(pending_after)
+            process_done(done_set)
+    finally:
+        if timer is not None and not timer.done():
+            timer.cancel()
+        for task in tasks:
+            if task is not None and not task.done():
+                task.cancel()
 
 
 # --------------------------------------------------------------------------- #
@@ -314,28 +438,21 @@ class InMemoryEnv:
         return list(await asyncio.gather(*coros))
 
     async def race_first(
-        self, coros: Sequence[Awaitable[Any]], *, kind: str, m: int, hedge_ms: Optional[int]
+        self, branches: Sequence[BranchThunk], *, kind: str, m: int, hedge_ms: Optional[int]
     ) -> Any:
-        import asyncio
+        async def wait_first(
+            waitset: Sequence[Awaitable[Any]],
+        ) -> tuple[set[Awaitable[Any]], set[Awaitable[Any]]]:
+            done, pending = await asyncio.wait(waitset, return_when=asyncio.FIRST_COMPLETED)
+            return set(done), set(pending)
 
-        tasks = [asyncio.ensure_future(c) for c in coros]
-        done_results: list[Any] = []
-        need = m if kind == "quorum" else 1
-        try:
-            pending = set(tasks)
-            while pending and len(done_results) < need:
-                done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
-                # Preserve branch order among the just-completed set.
-                for t in tasks:
-                    if t in done:
-                        done_results.append(t.result())
-            if kind == "quorum":
-                return done_results[:need]
-            return done_results[0]
-        finally:
-            for t in tasks:
-                if not t.done():
-                    t.cancel()
+        return await race_first_from_thunks(
+            branches,
+            kind=kind,
+            m=m,
+            hedge_ms=hedge_ms,
+            wait_first=wait_first,
+        )
 
 
 def _ref_name(tool) -> str:

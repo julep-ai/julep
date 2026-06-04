@@ -78,7 +78,7 @@ from .projection import (
 # --- errors ---------------------------------------------------------------- #
 from .errors import (
     ComposableAgentsError, ValidationError, FreezeError, AdmissionError,
-    BudgetExceeded, PlanRejected, CapabilityDenied,
+    RaceAllFailed, BudgetExceeded, PlanRejected, CapabilityDenied,
 )
 
 # --- execution layer (always exposes the pure interpreter; Temporal guarded) #
@@ -130,7 +130,7 @@ _BASE_EXPORTS = [
     "to_otel_spans",
     # errors
     "ComposableAgentsError", "ValidationError", "FreezeError", "AdmissionError",
-    "BudgetExceeded", "PlanRejected", "CapabilityDenied",
+    "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
     # execution (pure)
     "Env", "InMemoryEnv", "Result", "interpret", "HAVE_TEMPORAL",
     "__version__",
