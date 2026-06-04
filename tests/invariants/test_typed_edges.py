@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from typing_extensions import assert_type
+if TYPE_CHECKING:  # mypy targets 3.10 (no typing.assert_type); runtime is 3.12
+    from typing_extensions import assert_type
+else:
+    from typing import assert_type
 
 from composable_agents import dsl
 from composable_agents.agent import tool
