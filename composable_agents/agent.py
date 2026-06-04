@@ -98,6 +98,7 @@ _DEFAULT_LOCAL_BRAIN_WARNING = (
     "Pass llm= for real behavior."
 )
 _default_local_brain_warned = False
+_KEEP: Any = object()
 
 
 def default_local_brain(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -377,6 +378,10 @@ class Agent(FlowLike[Any, Any]):
         self._name = resolved_name
         self._brain_model = brain
         self._tools = tuple(tools)
+        self._llm = llm
+        self._budget_usd = budget_usd
+        self._max_rounds = max_rounds
+        self._instructions = instructions
         self._brain_fn = llm or default_local_brain
         self._budget = Budget(usd=budget_usd) if budget_usd is not None else None
         self._mode = EnforcementMode.coerce(mode)
@@ -424,6 +429,70 @@ class Agent(FlowLike[Any, Any]):
 
     def to_ir(self) -> Node:
         return self._flow
+
+    def _params(self) -> dict[str, Any]:
+        return {
+            "brain": self._brain_model,
+            "tools": list(self._tools),
+            "llm": self._llm,
+            "budget_usd": self._budget_usd,
+            "max_rounds": self._max_rounds,
+            "instructions": self._instructions,
+            "mode": self._mode,
+        }
+
+    def _reconstruct(self, **overrides: Any) -> "Agent":
+        params = self._params()
+        params.update(overrides)
+        brain = params.pop("brain")
+        return Agent(brain, name=None, **params)
+
+    def with_tools(
+        self,
+        *,
+        add: Sequence["Tool[Any, Any]"] = (),
+        remove: Sequence["Tool[Any, Any] | str"] = (),
+    ) -> "Agent":
+        removed = {
+            native_tool.name if isinstance(native_tool, Tool) else native_tool
+            for native_tool in remove
+        }
+        kept = [native_tool for native_tool in self._tools if native_tool.name not in removed]
+        return self._reconstruct(tools=[*kept, *add])
+
+    def without(self, *tools: "Tool[Any, Any] | str") -> "Agent":
+        names = {
+            native_tool.name if isinstance(native_tool, Tool) else native_tool
+            for native_tool in tools
+        }
+        return self._reconstruct(
+            tools=[native_tool for native_tool in self._tools if native_tool.name not in names]
+        )
+
+    def replace(
+        self,
+        *,
+        brain: Optional[str] = None,
+        budget_usd: Any = _KEEP,
+        max_rounds: Optional[int] = None,
+        instructions: Any = _KEEP,
+        mode: Any = _KEEP,
+        llm: Any = _KEEP,
+    ) -> "Agent":
+        overrides: dict[str, Any] = {}
+        if brain is not None:
+            overrides["brain"] = brain
+        if max_rounds is not None:
+            overrides["max_rounds"] = max_rounds
+        if budget_usd is not _KEEP:
+            overrides["budget_usd"] = budget_usd
+        if instructions is not _KEEP:
+            overrides["instructions"] = instructions
+        if mode is not _KEEP:
+            overrides["mode"] = mode
+        if llm is not _KEEP:
+            overrides["llm"] = llm
+        return self._reconstruct(**overrides)
 
     def _deploy(self) -> Deployment:
         if self._deployment_cache is None:

@@ -9,11 +9,14 @@ apart from provisional node ids.
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any, Generic, Optional, Sequence, TypeVar, overload
 
 from . import dsl
 from .derived import map_n
-from .ir import Node
+from .flow_registry import register_flow
+from .ir import Node, canonical_json
+from .transforms import normalize_ids
 
 In = TypeVar("In")
 Out = TypeVar("Out")
@@ -30,6 +33,19 @@ _T7 = TypeVar("_T7")
 _T8 = TypeVar("_T8")
 
 
+def derive_local_name(node: Node) -> str:
+    """A deterministic content-hash local name for an anonymous flow.
+
+    This is for debug/inline use only; it is not a durable ref. Provisional node
+    ids are normalized first.
+    """
+    normalized = normalize_ids(Node.from_json(node.to_json()))
+    digest = hashlib.sha256(
+        canonical_json(normalized.to_json()).encode("utf-8")
+    ).hexdigest()[:8]
+    return f"flow-{digest}"
+
+
 class FlowLike(Generic[In, Out]):
     """Anything that lowers to a Node and composes with >> : Flow and Tool."""
 
@@ -42,18 +58,37 @@ class FlowLike(Generic[In, Out]):
         """`X[I,M] >> Y[M,O] -> Flow[I,O]`; lowers via the dsl.seq left-fold."""
         return Flow(dsl.seq(self.to_ir(), other.to_ir()))
 
+    def named(self, ref: str) -> "Flow[In, Out]":
+        """Mint a durable ref and return a Flow carrying it."""
+        register_flow(ref, self)
+        return Flow(self.to_ir(), name=ref)
+
+    def renamed(self, ref: str) -> "Flow[In, Out]":
+        """Reassert identity intentionally, replacing any existing flow ref."""
+        register_flow(ref, self, replace=True)
+        return Flow(self.to_ir(), name=ref)
+
 
 class Flow(FlowLike[In, Out]):
     """A typed authoring wrapper over a `Node`. Disappears before freeze."""
 
-    __slots__ = ("_node",)
+    __slots__ = ("_node", "_name")
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, name: Optional[str] = None) -> None:
         self._node = node
+        self._name = name
 
     def to_ir(self) -> Node:
         """The underlying IR node (the only thing that is ever serialized)."""
         return self._node
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
+
+    @property
+    def local_name(self) -> str:
+        return derive_local_name(self._node)
 
     def __repr__(self) -> str:
         return f"Flow({self._node.op.value}#{self._node.id})"
