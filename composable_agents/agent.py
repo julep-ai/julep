@@ -33,7 +33,8 @@ from .dsl import app, call, native
 from .errors import ValidationError
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
-from .flow import FlowLike
+from .flow import Flow, FlowLike
+from .flow_registry import register_flow
 from .ir import JSONSchema, Node, canonical_json
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
@@ -345,10 +346,12 @@ def _derive_agent_name(
 class Agent(FlowLike[Any, Any]):
     """Thin facade over the existing APP IR, local interpreter, and deployment."""
 
+    _name: str
+
     def __init__(
         self,
         brain: str,
-        tools: Sequence[Tool[Any, Any]] = (),
+        tools: Sequence[FlowLike[Any, Any]] = (),
         *,
         name: Optional[str] = None,
         llm: Optional[Callable[[str, Any], Any]] = None,
@@ -363,7 +366,33 @@ class Agent(FlowLike[Any, Any]):
         config. An explicit ``name`` is used unchanged and must be unique per
         distinct agent config in the current process.
         """
-        tool_names = tuple(native_tool.name for native_tool in tools)
+        caps = tuple(tools)
+        tool_caps: list[Tool[Any, Any]] = []
+        flow_cap_pairs: list[tuple[str, FlowLike[Any, Any]]] = []
+        for cap in caps:
+            if isinstance(cap, Tool):
+                tool_caps.append(cap)
+            elif isinstance(cap, Agent):
+                flow_cap_pairs.append((cap._name, cap))
+            elif isinstance(cap, Flow):
+                if cap.name is None:
+                    raise ValidationError(
+                        [
+                            Diagnostic(
+                                "CAP_APP_FLOW_UNNAMED",
+                                "app",
+                                "a flow used as an agent capability must be .named(ref)",
+                            )
+                        ]
+                    )
+                flow_cap_pairs.append((cap.name, cap))
+            else:
+                raise TypeError(
+                    "agent capability must be a Tool, Flow, or Agent; "
+                    f"got {type(cap).__name__}"
+                )
+        tool_names = tuple(native_tool.name for native_tool in tool_caps)
+        sub_refs = tuple(ref for ref, _ in flow_cap_pairs)
         system = instructions or ""
         if name is None:
             resolved_name = _derive_agent_name(
@@ -377,7 +406,13 @@ class Agent(FlowLike[Any, Any]):
             resolved_name = name
         self._name = resolved_name
         self._brain_model = brain
-        self._tools = tuple(tools)
+        self._caps = caps
+        self._tools = tuple(tool_caps)
+        self._flow_caps: dict[str, FlowLike[Any, Any]] = {
+            ref: cap for ref, cap in flow_cap_pairs
+        }
+        self._tool_names = tool_names
+        self._sub_refs = sub_refs
         self._llm = llm
         self._budget_usd = budget_usd
         self._max_rounds = max_rounds
@@ -395,6 +430,10 @@ class Agent(FlowLike[Any, Any]):
             for native_tool in self._tools
         }
 
+        for ref, cap in flow_cap_pairs:
+            if isinstance(cap, Flow):
+                register_flow(ref, cap)
+
         register_brain(
             Brain(
                 name=resolved_name,
@@ -408,6 +447,7 @@ class Agent(FlowLike[Any, Any]):
         self._flow = app(
             resolved_name,
             tools=list(tool_names),
+            subflows=(list(sub_refs) or None),
             budget=self._budget,
             max_rounds=max_rounds,
         )
@@ -422,7 +462,9 @@ class Agent(FlowLike[Any, Any]):
                 for native_tool in self._tools
             },
             budget=self._budget,
+            subflows=set(sub_refs),
             _has_tools=True,
+            _has_subflows=bool(sub_refs),
         )
         self._deployment_cache: Optional[Deployment] = None
         self._eager_capability_checks()
@@ -433,7 +475,7 @@ class Agent(FlowLike[Any, Any]):
     def _params(self) -> dict[str, Any]:
         return {
             "brain": self._brain_model,
-            "tools": list(self._tools),
+            "tools": list(self._caps),
             "llm": self._llm,
             "budget_usd": self._budget_usd,
             "max_rounds": self._max_rounds,
@@ -447,26 +489,36 @@ class Agent(FlowLike[Any, Any]):
         brain = params.pop("brain")
         return Agent(brain, name=None, **params)
 
+    @staticmethod
+    def _cap_name(cap: FlowLike[Any, Any]) -> Optional[str]:
+        if isinstance(cap, Tool):
+            return cap.name
+        if isinstance(cap, Agent):
+            return cap._name
+        if isinstance(cap, Flow):
+            return cap.name
+        return None
+
     def with_tools(
         self,
         *,
-        add: Sequence["Tool[Any, Any]"] = (),
-        remove: Sequence["Tool[Any, Any] | str"] = (),
+        add: Sequence[FlowLike[Any, Any]] = (),
+        remove: Sequence[FlowLike[Any, Any] | str] = (),
     ) -> "Agent":
         removed = {
-            native_tool.name if isinstance(native_tool, Tool) else native_tool
-            for native_tool in remove
+            cap if isinstance(cap, str) else self._cap_name(cap)
+            for cap in remove
         }
-        kept = [native_tool for native_tool in self._tools if native_tool.name not in removed]
+        kept = [cap for cap in self._caps if self._cap_name(cap) not in removed]
         return self._reconstruct(tools=[*kept, *add])
 
-    def without(self, *tools: "Tool[Any, Any] | str") -> "Agent":
+    def without(self, *tools: FlowLike[Any, Any] | str) -> "Agent":
         names = {
-            native_tool.name if isinstance(native_tool, Tool) else native_tool
-            for native_tool in tools
+            cap if isinstance(cap, str) else self._cap_name(cap)
+            for cap in tools
         }
         return self._reconstruct(
-            tools=[native_tool for native_tool in self._tools if native_tool.name not in names]
+            tools=[cap for cap in self._caps if self._cap_name(cap) not in names]
         )
 
     def replace(
@@ -505,17 +557,22 @@ class Agent(FlowLike[Any, Any]):
         return self._deployment_cache
 
     def _eager_capability_checks(self) -> None:
-        names = [native_tool.name for native_tool in self._tools]
-        duplicates = sorted({name for name in names if names.count(name) > 1})
-        if duplicates:
+        tool_names = list(self._tool_names)
+        sub_refs = list(self._sub_refs)
+        dup_tools = {name for name in tool_names if tool_names.count(name) > 1}
+        dup_subs = {ref for ref in sub_refs if sub_refs.count(ref) > 1}
+        overlap = set(tool_names) & set(sub_refs)
+        collisions = sorted(dup_tools | dup_subs | overlap)
+        if collisions:
             raise ValidationError(
                 [
                     Diagnostic(
                         "CAP_APP_TOOL_COLLISION",
                         self._flow.id,
-                        f"duplicate capability name {name!r} among agent tools",
+                        f"capability name {name!r} collides: tool and subflow names "
+                        "must be unique within an agent",
                     )
-                    for name in duplicates
+                    for name in collisions
                 ]
             )
         if self._mode is EnforcementMode.STRICT:
@@ -568,6 +625,26 @@ class Agent(FlowLike[Any, Any]):
                 return await result
             return result
 
+        run_subflow = None
+        granted_subflows = None
+        if self._flow_caps:
+            granted_subflows = set(self._flow_caps)
+
+            async def run_subflow(ref: str, value: Any) -> Any:
+                cap = self._flow_caps.get(ref)
+                if cap is None:
+                    return {"error": f"subflow {ref!r} unavailable"}
+                if isinstance(cap, Agent):
+                    return await cap.arun(value)
+                sub_env = InMemoryEnv(
+                    deployment.manifest,
+                    emitter,
+                    hands=tool_fns,
+                    mode=self._mode,
+                )
+                sub_result = await interpret(cap.to_ir(), value, sub_env)
+                return sub_result.value
+
         env = InMemoryEnv(
             deployment.manifest,
             emitter,
@@ -578,7 +655,9 @@ class Agent(FlowLike[Any, Any]):
                     cfg=self._cfg,
                     invoke_controller=invoke_controller,
                     call_tool=call_tool,
+                    run_subflow=run_subflow,
                     granted=self._granted,
+                    granted_subflows=granted_subflows,
                     contracts=contracts,
                 )
             },
