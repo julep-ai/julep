@@ -135,6 +135,44 @@ def test_registered_brain_carries_tools() -> None:
     assert get_brain("agent_brain_tools").tools == ("web_search",)
 
 
+def test_default_named_agents_with_distinct_tools_coexist() -> None:
+    @tool(effect="read", idempotent=True)
+    def search_tool(query: str) -> str:
+        return f"search:{query}"
+
+    @tool(effect="read", idempotent=True)
+    def email_tool(query: str) -> str:
+        return f"email:{query}"
+
+    search_agent = Agent("m", tools=[search_tool])
+    email_agent = Agent("m", tools=[email_tool])
+
+    assert search_agent._name != email_agent._name
+    assert search_agent.deployment().flow.controller != email_agent.deployment().flow.controller
+    assert search_agent.deployment().artifact_hash != email_agent.deployment().artifact_hash
+
+
+def test_identical_default_named_agents_share_name_brain_and_artifact_hash() -> None:
+    @tool(effect="read", idempotent=True)
+    def shared_tool(query: str) -> str:
+        return f"shared:{query}"
+
+    first = Agent("m", tools=[shared_tool])
+    second = Agent("m", tools=[shared_tool])
+
+    assert first._name == second._name
+    assert first.deployment().artifact_hash == second.deployment().artifact_hash
+    assert get_brain(first._name).tools == ("shared_tool",)
+
+
+def test_default_agent_name_is_deterministic_for_same_config() -> None:
+    @tool(effect="read", idempotent=True)
+    def deterministic_tool(query: str) -> str:
+        return f"deterministic:{query}"
+
+    assert Agent("m", tools=[deterministic_tool])._name == Agent("m", tools=[deterministic_tool])._name
+
+
 def test_dangerous_tool_is_rejected_at_construction() -> None:
     @tool(effect="dangerous")
     def danger(x: str) -> str:

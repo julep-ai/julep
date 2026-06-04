@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import inspect
 import types
 import warnings
@@ -19,7 +20,7 @@ from .dotctx import Brain, register_brain
 from .dsl import app
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
-from .ir import JSONSchema
+from .ir import JSONSchema, canonical_json
 from .kinds import Effect, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter
 
@@ -251,6 +252,27 @@ def snapshot_from_tools(tools: Sequence[Tool]) -> McpSnapshot:
     return McpSnapshot(native={native_tool.name: native_tool.native_spec for native_tool in tools})
 
 
+def _derive_agent_name(
+    *,
+    model: str,
+    tool_names: tuple[str, ...],
+    budget_usd: Optional[float],
+    max_rounds: int,
+    instructions: str,
+) -> str:
+    payload = canonical_json(
+        {
+            "budget_usd": budget_usd,
+            "instructions": instructions,
+            "max_rounds": max_rounds,
+            "model": model,
+            "tools": list(tool_names),
+        }
+    )
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:8]
+    return f"agent-{digest}"
+
+
 class Agent:
     """Thin facade over the existing APP IR, local interpreter, and deployment."""
 
@@ -259,13 +281,31 @@ class Agent:
         brain: str,
         tools: Sequence[Tool] = (),
         *,
-        name: str = "agent",
+        name: Optional[str] = None,
         llm: Optional[Callable[[str, Any], Any]] = None,
         budget_usd: Optional[float] = None,
         max_rounds: int = 24,
         instructions: Optional[str] = None,
     ) -> None:
-        self._name = name
+        """Create an agent facade.
+
+        When ``name`` is omitted, the controller name is derived from the agent
+        config. An explicit ``name`` is used unchanged and must be unique per
+        distinct agent config in the current process.
+        """
+        tool_names = tuple(native_tool.name for native_tool in tools)
+        system = instructions or ""
+        if name is None:
+            resolved_name = _derive_agent_name(
+                model=brain,
+                tool_names=tool_names,
+                budget_usd=budget_usd,
+                max_rounds=max_rounds,
+                instructions=system,
+            )
+        else:
+            resolved_name = name
+        self._name = resolved_name
         self._brain_model = brain
         self._tools = tuple(tools)
         self._brain_fn = llm or default_local_brain
@@ -282,17 +322,17 @@ class Agent:
 
         register_brain(
             Brain(
-                name=name,
+                name=resolved_name,
                 model=brain,
-                system=instructions or "",
+                system=system,
                 reply_schema=AGENT_REPLY_SCHEMA,
-                tools=tuple(native_tool.name for native_tool in self._tools),
+                tools=tool_names,
                 is_agent=True,
             )
         )
         self._flow = app(
-            name,
-            tools=[native_tool.name for native_tool in self._tools],
+            resolved_name,
+            tools=list(tool_names),
             budget=self._budget,
             max_rounds=max_rounds,
         )
