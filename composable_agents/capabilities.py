@@ -21,12 +21,14 @@ permits any brain, but listing two brains forbids a third.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from .contracts import ToolContract, ToolManifest
+from .dotctx import get_brain
 from .errors import CapabilityDenied
 from .freeze import CapabilityOverrides
-from .contracts import ToolContract, ToolManifest
 from .ir import CallStep, HUMAN_GATE_TOOL, Node, SubStep, ThinkStep, toolref_key
 from .kinds import ContextScope, Effect, Idempotency, Op
 from .validate import Diagnostic
@@ -72,6 +74,7 @@ class ToolGrant:
 class CapabilityManifest:
     tools: dict[str, ToolGrant] = field(default_factory=dict)
     brains: set[str] = field(default_factory=set)
+    models: set[str] = field(default_factory=set)
     subflows: set[str] = field(default_factory=set)
     memory: set[ContextScope] = field(default_factory=set)
     network: set[str] = field(default_factory=set)     # allowed egress domains
@@ -81,6 +84,7 @@ class CapabilityManifest:
     # "present but empty" (deny-all).
     _has_tools: bool = False
     _has_brains: bool = False
+    _has_models: bool = False
     _has_subflows: bool = False
     _has_memory: bool = False
     _has_network: bool = False
@@ -107,18 +111,21 @@ class CapabilityManifest:
                 max_calls=int(max_calls) if max_calls is not None else None,
             )
 
-        has_brains = "brains" in d or "models" in d
+        has_brains = "brains" in d
+        has_models = "models" in d
         has_subflows = "subflows" in d or "subFlows" in d
         has_memory = "memory" in d
         has_network = "network" in d
         has_servers = "mcp_servers" in d or "mcpServers" in d
-        brains_raw = d.get("brains", d.get("models", [])) or []
+        brains_raw = d.get("brains", []) or []
+        models_raw = d.get("models", []) or []
         subflows_raw = d.get("subflows", d.get("subFlows", [])) or []
         servers_raw = d.get("mcp_servers", d.get("mcpServers", {})) or {}
 
         return CapabilityManifest(
             tools=tools,
             brains=set(brains_raw),
+            models=set(models_raw),
             subflows=set(subflows_raw),
             memory={ContextScope(s) for s in (d.get("memory", []) or [])},
             network=set(d.get("network", []) or []),
@@ -126,6 +133,7 @@ class CapabilityManifest:
             budget=Budget.from_dict(d.get("budget")),
             _has_tools=has_tools,
             _has_brains=has_brains,
+            _has_models=has_models,
             _has_subflows=has_subflows,
             _has_memory=has_memory,
             _has_network=has_network,
@@ -174,6 +182,8 @@ class CapabilityManifest:
         }
         if self._has_brains:
             out["brains"] = sorted(self.brains)
+        if self._has_models:
+            out["models"] = sorted(self.models)
         if self._has_subflows:
             out["subflows"] = sorted(self.subflows)
         if self._has_memory:
@@ -199,13 +209,27 @@ class CapabilityManifest:
         }
         return CapabilityOverrides(contracts=contracts)
 
+    def max_call_limits(self) -> dict[str, int]:
+        """Per-tool maxCalls limits keyed by capability tool ref."""
+        return {
+            name: grant.max_calls
+            for name, grant in self.tools.items()
+            if grant.max_calls is not None
+        }
+
     # ----- compile-time enforcement (§9, seam 1) ---------------------------- #
-    def enforce_compile(self, flow: Node) -> list[Diagnostic]:
+    def enforce_compile(
+        self,
+        flow: Node,
+        manifest: Optional[ToolManifest] = None,
+    ) -> list[Diagnostic]:
         """Diagnostics for anything the flow references but the manifest denies.
 
-        Checks tool grants always; checks brains against ``brains``, memory
-        scopes against ``memory``, and MCP servers against ``mcp_servers`` only
-        when those sections are present (allow-list semantics).
+        Checks tool grants always; checks brains against ``brains``, resolved
+        model ids against ``models``, memory scopes against ``memory``, and MCP
+        servers/pins against ``mcp_servers`` only when those sections are
+        present (allow-list semantics). If a brain is not registered, model-id
+        enforcement skips it because there is no resolved model id to compare.
         """
         out: list[Diagnostic] = []
         for n in flow.walk():
@@ -220,14 +244,39 @@ class CapabilityManifest:
                     if server not in self.mcp_servers:
                         out.append(Diagnostic("CAP_SERVER_DENIED", n.id,
                                               f"MCP server {server!r} is not granted"))
+                    else:
+                        pin = self.mcp_servers[server]
+                        if pin is not None:
+                            version = _server_version(step, manifest)
+                            if not _version_satisfies(version, pin):
+                                actual = version if version is not None else "<unversioned>"
+                                out.append(Diagnostic(
+                                    "CAP_VERSION_PIN",
+                                    n.id,
+                                    f"MCP server {server!r} version {actual!r} "
+                                    f"does not satisfy pin {pin!r}",
+                                ))
                 ctx = step.ctx
                 if self._has_memory and ctx is not None and ctx.scope not in self.memory:
                     out.append(Diagnostic("CAP_MEMORY_DENIED", n.id,
                                           f"context scope {ctx.scope.value!r} is not granted"))
-            elif isinstance(step, ThinkStep):
-                if self._has_brains and step.brain not in self.brains:
+            for brain in _brain_refs(n):
+                if self._has_brains and brain not in self.brains:
                     out.append(Diagnostic("CAP_MODEL_DENIED", n.id,
-                                          f"brain {step.brain!r} is not granted by the manifest"))
+                                          f"brain {brain!r} is not granted by the manifest"))
+                if self._has_models:
+                    try:
+                        model = get_brain(brain).model
+                    except KeyError:
+                        model = None
+                    if model is not None and model not in self.models:
+                        out.append(Diagnostic(
+                            "CAP_MODEL_ID_DENIED",
+                            n.id,
+                            f"brain {brain!r} resolves to model {model!r}, "
+                            "which is not granted by the manifest",
+                        ))
+            if isinstance(step, ThinkStep):
                 ctx = step.ctx
                 if self._has_memory and ctx is not None and ctx.scope not in self.memory:
                     out.append(Diagnostic("CAP_MEMORY_DENIED", n.id,
@@ -253,6 +302,75 @@ class CapabilityManifest:
             raise CapabilityDenied(f"budget exceeded: ${usd:.4f} > ${self.budget.usd:.4f}")
         if self.budget.tokens is not None and tokens > self.budget.tokens:
             raise CapabilityDenied(f"budget exceeded: {tokens} > {self.budget.tokens} tokens")
+
+
+def _brain_refs(node: Node) -> list[str]:
+    refs: list[str] = []
+    step = node.step
+    if isinstance(step, ThinkStep):
+        refs.append(step.brain)
+    if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
+        refs.append(node.controller)
+    return refs
+
+
+def _server_version(step: CallStep, manifest: Optional[ToolManifest]) -> Optional[str]:
+    if manifest is None or step.frozen_hash is None:
+        return None
+    tool = manifest.get(step.frozen_hash)
+    return tool.server_version if tool is not None else None
+
+
+_VERSION_CONSTRAINT = re.compile(r"^\s*(>=|<=|==|>|<)?\s*(.+?)\s*$")
+
+
+def _version_tokens(version: str) -> list[tuple[int, int | str]]:
+    tokens: list[tuple[int, int | str]] = []
+    for part in str(version).strip().split("."):
+        for chunk in re.findall(r"\d+|[^\d]+", part):
+            if chunk.isdigit():
+                tokens.append((0, int(chunk)))
+            else:
+                tokens.append((1, chunk))
+    while tokens and tokens[-1] == (0, 0):
+        tokens.pop()
+    return tokens
+
+
+def _compare_versions(left: str, right: str) -> int:
+    left_tokens = _version_tokens(left)
+    right_tokens = _version_tokens(right)
+    size = max(len(left_tokens), len(right_tokens))
+    for i in range(size):
+        l_token = left_tokens[i] if i < len(left_tokens) else (0, 0)
+        r_token = right_tokens[i] if i < len(right_tokens) else (0, 0)
+        if l_token < r_token:
+            return -1
+        if l_token > r_token:
+            return 1
+    return 0
+
+
+def _version_satisfies(actual: Optional[str], constraint: str) -> bool:
+    if actual is None:
+        return False
+    match = _VERSION_CONSTRAINT.match(str(constraint))
+    if match is None:
+        return False
+    op = match.group(1) or "=="
+    expected = match.group(2)
+    cmp = _compare_versions(actual, expected)
+    if op == "==":
+        return cmp == 0
+    if op == ">=":
+        return cmp >= 0
+    if op == ">":
+        return cmp > 0
+    if op == "<=":
+        return cmp <= 0
+    if op == "<":
+        return cmp < 0
+    return False
 
 
 def check_approval_gates(

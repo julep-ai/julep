@@ -215,6 +215,7 @@ class AgentState:
     spent_usd: float = 0.0
     last: Any = None
     trace: list[TraceEntry] = field(default_factory=list)
+    call_counts: dict[str, int] = field(default_factory=dict)
 
     def charge(self, usd: float) -> None:
         self.spent_usd += usd
@@ -223,12 +224,15 @@ class AgentState:
         self.trace.append(entry)
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        out = {
             "round": self.round,
             "spentUsd": self.spent_usd,
             "last": self.last,
             "trace": [t.to_json() for t in self.trace],
         }
+        if self.call_counts:
+            out["callCounts"] = dict(sorted(self.call_counts.items()))
+        return out
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentState":
@@ -237,6 +241,10 @@ class AgentState:
             spent_usd=float(d.get("spentUsd", 0.0)),
             last=d.get("last"),
             trace=[TraceEntry.from_json(t) for t in d.get("trace", [])],
+            call_counts={
+                str(tool): int(count)
+                for tool, count in d.get("callCounts", d.get("call_counts", {})).items()
+            },
         )
 
 
@@ -316,6 +324,40 @@ def authorize_call(
         return CallDenial(reason=f"tool {tool!r} is not granted")
     if approval_required_for_tool(tool, contracts):
         return CallDenial(reason=f"approval-required tool {tool!r}; agent must ESCALATE")
+    return None
+
+
+def max_calls_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> Optional[int]:
+    """Return the carried maxCalls limit for ``tool``, if any."""
+    raw = (contracts or {}).get(tool) or {}
+    limit = raw.get("maxCalls", raw.get("max_calls"))
+    return int(limit) if limit is not None else None
+
+
+def charge_tool_call(
+    state: AgentState,
+    tool: str,
+    contracts: Optional[AgentContractMap],
+) -> Optional[CallDenial]:
+    """Increment the deterministic per-tool call counter, or return a denial."""
+    limit = max_calls_for_tool(tool, contracts)
+    if limit is None:
+        return None
+    count = state.call_counts.get(tool, 0)
+    if count >= limit:
+        return CallDenial(reason=f"tool {tool!r} exceeded maxCalls={limit}")
+    state.call_counts[tool] = count + 1
+    return None
+
+
+def authorize_subflow(
+    ref: str,
+    *,
+    granted_subflows: Optional[set[str]],
+) -> Optional[CallDenial]:
+    """Authorize one agent SUB decision against None/allow-list grants."""
+    if granted_subflows is not None and ref not in granted_subflows:
+        return CallDenial(reason=f"subflow {ref!r} is not granted")
     return None
 
 
@@ -411,6 +453,9 @@ __all__ = [
     "contract_for_tool",
     "approval_required_for_tool",
     "authorize_call",
+    "max_calls_for_tool",
+    "charge_tool_call",
+    "authorize_subflow",
     "retry_max_attempts_for_contract",
     "generalize_trace_to_plan",
     "extract_plan",

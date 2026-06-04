@@ -91,6 +91,7 @@ if HAVE_TEMPORAL:  # re-export the durable runtime only when temporalio is prese
         FlowWorkflow, AgentWorkflow, FlowInput, AgentInput, ExecutionPolicy,
         run_flow, start_flow, build_worker, run_worker, WorkerContext,
         callHand, invokeBrain, compilePlan, verifyPures, resolveSubflow, resolveAgentSpec,
+        resolveRuntimeCapabilities,
     )
 
 _BASE_EXPORTS = [
@@ -140,7 +141,7 @@ _TEMPORAL_EXPORTS = [
     "FlowWorkflow", "AgentWorkflow", "FlowInput", "AgentInput", "ExecutionPolicy",
     "run_flow", "start_flow", "build_worker", "run_worker", "WorkerContext",
     "callHand", "invokeBrain", "compilePlan", "verifyPures", "resolveSubflow",
-    "resolveAgentSpec",
+    "resolveAgentSpec", "resolveRuntimeCapabilities",
 ]
 
 __all__ = _BASE_EXPORTS + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else [])

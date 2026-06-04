@@ -236,6 +236,11 @@ class Deployment:
             client, self.flow_json, self.manifest_json,
             session_id=session_id, input=input, task_queue=task_queue, policy=policy,
             pinned_pures=self.artifact_components["pureSourceHashes"],
+            max_call_limits=(
+                self.capabilities.max_call_limits()
+                if self.capabilities is not None
+                else None
+            ),
         )
 
 
@@ -277,7 +282,7 @@ def deploy(
     diagnostics.extend(validate(fr.flow, fr.manifest))
     # 3. Capability enforcement (§9): granted tools/brains/servers only.
     if capabilities is not None:
-        diagnostics.extend(capabilities.enforce_compile(fr.flow))
+        diagnostics.extend(capabilities.enforce_compile(fr.flow, fr.manifest))
     # 4. Approval gates (§7.3): dangerous or explicitly-approved calls need a gate.
     diagnostics.extend(check_approval_gates(fr.flow, fr.manifest, capabilities))
     # 5. Race admission (§5): every race branch read-only or asserted-idempotent.

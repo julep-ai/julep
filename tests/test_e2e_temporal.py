@@ -94,13 +94,13 @@ def _child_registry():
     return {"child": {"flowJson": fr.flow.to_json(), "manifestJson": manifest_to_json(fr.manifest)}}
 
 
-def _worker(env, *, task_queue, agents=None, llm=None, extra_brains=()):
+def _worker(env, *, task_queue, agents=None, llm=None, extra_brains=(), mcp_call=None):
     register_brain(Brain(name="adder", model="test", system="add 10"))
     register_brain(Brain(name="ctrl", model="test", system="decide"))
     for brain in extra_brains:
         register_brain(brain)
     ctx = WorkerContext(
-        mcp_call=_mcp,
+        mcp_call=mcp_call or _mcp,
         llm=llm or _llm,
         subflows=_child_registry(),
         agents=agents or {},
@@ -230,6 +230,132 @@ async def _agent(env):
         )
     assert res4["status"] == "denied", res4
     assert res4["reason"] == "approval-required tool 'srv/double'; agent must ESCALATE"
+
+    # maxCalls: the per-tool counter is carried through continue-as-new and
+    # denies the second requested call before dispatching another effect.
+    max_call_effects = {"count": 0}
+
+    async def counted_mcp(server, tool, value, idempotency_key):  # noqa: ANN001
+        max_call_effects["count"] += 1
+        return await _mcp(server, tool, value, idempotency_key)
+
+    async def max_calls_llm(brain, value):  # noqa: ANN001
+        if brain.name == "max_ctrl":
+            return {"tool": "srv/double", "input": value["input"]}
+        return await _llm(brain, value)
+
+    agents_m = {
+        "max_ctrl": {
+            "config": {
+                "maxRounds": 6,
+                "budget": {"usd": 1000},
+                "continueAsNewAfter": 1,
+            },
+            "grantedTools": ["srv/double"],
+            "grantedContracts": {
+                "srv/double": {
+                    "effect": "read",
+                    "idempotency": "native",
+                    "maxCalls": 1,
+                }
+            },
+        }
+    }
+    async with _worker(
+        env,
+        task_queue="ca-agent-m",
+        agents=agents_m,
+        llm=max_calls_llm,
+        mcp_call=counted_mcp,
+        extra_brains=(Brain(name="max_ctrl", model="test", system="max calls"),),
+    ):
+        sid = f"agentm-{uuid.uuid4()}"
+        res5 = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(controller="max_ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
+            id=sid,
+            task_queue="ca-agent-m",
+        )
+    assert res5["status"] == "denied", res5
+    assert res5["reason"] == "tool 'srv/double' exceeded maxCalls=1"
+    assert [t["decision"] for t in res5["trace"]] == ["call"], res5
+    assert max_call_effects["count"] == 1
+
+    # Subflow grants: None is unconstrained, [] denies all, and a listed child
+    # is allowed through the agent SUB path.
+    async def subflow_llm(brain, value):  # noqa: ANN001
+        if brain.name.startswith("sub_ctrl_"):
+            if not value.get("trace"):
+                return {"sub": "child", "input": value["input"]}
+            return {"done": True, "output": value["input"]}
+        return await _llm(brain, value)
+
+    sub_agents = {
+        "sub_ctrl_denied": {
+            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "grantedSubflows": ["other"],
+        },
+        "sub_ctrl_empty": {
+            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "grantedSubflows": [],
+        },
+        "sub_ctrl_allowed": {
+            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "grantedSubflows": ["child"],
+        },
+    }
+    async with _worker(
+        env,
+        task_queue="ca-agent-sub",
+        agents=sub_agents,
+        llm=subflow_llm,
+        extra_brains=(
+            Brain(name="sub_ctrl_denied", model="test", system="sub denied"),
+            Brain(name="sub_ctrl_empty", model="test", system="sub empty"),
+            Brain(name="sub_ctrl_allowed", model="test", system="sub allowed"),
+        ),
+    ):
+        denied = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="sub_ctrl_denied",
+                session_id=f"agentsubd-{uuid.uuid4()}",
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=f"agentsubd-{uuid.uuid4()}",
+            task_queue="ca-agent-sub",
+        )
+        empty = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="sub_ctrl_empty",
+                session_id=f"agentsube-{uuid.uuid4()}",
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=f"agentsube-{uuid.uuid4()}",
+            task_queue="ca-agent-sub",
+        )
+        allowed = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="sub_ctrl_allowed",
+                session_id=f"agentsuba-{uuid.uuid4()}",
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=f"agentsuba-{uuid.uuid4()}",
+            task_queue="ca-agent-sub",
+        )
+    assert denied["status"] == "denied", denied
+    assert denied["reason"] == "subflow 'child' is not granted"
+    assert denied["trace"] == []
+    assert empty["status"] == "denied", empty
+    assert empty["reason"] == "subflow 'child' is not granted"
+    assert allowed["status"] == "done", allowed
+    assert allowed["output"] == 6, allowed
+    assert [t["decision"] for t in allowed["trace"]] == ["sub"], allowed
 
 
 async def _pure_drift_fails_before_effect(env):

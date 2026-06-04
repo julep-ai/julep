@@ -73,6 +73,8 @@ def _capability_json(capabilities: CapabilityManifest | None) -> dict[str, Any] 
     }
     if capabilities._has_brains:
         out["brains"] = sorted(capabilities.brains)
+    if capabilities._has_models:
+        out["models"] = sorted(capabilities.models)
     if capabilities._has_subflows:
         out["subflows"] = sorted(capabilities.subflows)
     if capabilities._has_memory:

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from composable_agents import (
+    Brain,
     CapabilityManifest,
     Contract,
     Effect,
     HUMAN_GATE_TOOL,
     Idempotency,
     alt,
+    app,
     blocking,
     call,
     deploy,
@@ -14,8 +16,10 @@ from composable_agents import (
     human_gate,
     mcp,
     par,
+    register_brain,
     register_pure,
     seq,
+    stage,
     sub,
     think,
 )
@@ -31,14 +35,14 @@ def _register_pures() -> None:
     register_pure("b1b.pred", _pred)
 
 
-def _snapshot() -> McpSnapshot:
+def _snapshot(version: str = "1") -> McpSnapshot:
     read = McpAnnotations(read_only_hint=True, idempotent_hint=True)
     dangerous = McpAnnotations(destructive_hint=True)
     return McpSnapshot(
         servers={
             "srv": McpServerSnapshot(
                 server="srv",
-                version="1",
+                version=version,
                 tools={
                     "dangerous": McpToolSpec(input_schema={}, annotations=dangerous),
                     "safe": McpToolSpec(input_schema={}, annotations=read),
@@ -88,6 +92,67 @@ def test_empty_subflows_denies_every_subflow_but_absent_subflows_allows() -> Non
 
     assert "CAP_SUBFLOW_DENIED" in [d.code for d in blocking(empty.enforce_compile(flow))]
     assert not blocking(absent.enforce_compile(flow))
+
+
+def test_models_gate_resolved_model_ids_independent_of_brain_names() -> None:
+    register_brain(Brain(name="b2b.model.brain", model="model-denied", system=""))
+    flow = think("b2b.model.brain")
+
+    model_only = CapabilityManifest.from_dict({"models": ["model-allowed"]})
+    absent_models = CapabilityManifest.from_dict({"brains": ["b2b.model.brain"]})
+    brain_only = CapabilityManifest.from_dict(
+        {"brains": ["other.brain"], "models": ["model-denied"]}
+    )
+
+    model_only_codes = [d.code for d in blocking(model_only.enforce_compile(flow))]
+    brain_only_codes = [d.code for d in blocking(brain_only.enforce_compile(flow))]
+
+    assert "CAP_MODEL_ID_DENIED" in model_only_codes
+    assert "CAP_MODEL_DENIED" not in model_only_codes
+    assert not blocking(absent_models.enforce_compile(flow))
+    assert "CAP_MODEL_DENIED" in brain_only_codes
+    assert "CAP_MODEL_ID_DENIED" not in brain_only_codes
+
+
+def test_models_gate_app_controller_and_planner_brains() -> None:
+    register_brain(Brain(name="b2b.model.controller", model="controller-model", system=""))
+    register_brain(Brain(name="b2b.model.planner", model="planner-model", system=""))
+    caps = CapabilityManifest.from_dict(
+        {
+            "brains": ["b2b.model.controller", "b2b.model.planner"],
+            "models": ["other-model"],
+        }
+    )
+    flow = seq(app("b2b.model.controller"), stage("b2b.model.planner"))
+
+    codes = [d.code for d in blocking(caps.enforce_compile(flow))]
+
+    assert codes.count("CAP_MODEL_ID_DENIED") == 2
+
+
+def test_mcp_server_version_pin_accepts_satisfied_comparator() -> None:
+    flow = call(mcp("srv", "safe"))
+    fr = freeze(flow, _snapshot(version="2026.6"))
+
+    caps = CapabilityManifest.from_dict({"mcp_servers": {"srv": ">=2026.5"}})
+
+    assert not blocking(caps.enforce_compile(fr.flow, fr.manifest))
+
+
+def test_mcp_server_version_pin_blocks_unsatisfied_comparator() -> None:
+    fr = freeze(call(mcp("srv", "safe")), _snapshot(version="2026.4"))
+    caps = CapabilityManifest.from_dict({"mcp_servers": {"srv": ">=2026.5"}})
+
+    codes = [d.code for d in blocking(caps.enforce_compile(fr.flow, fr.manifest))]
+
+    assert "CAP_VERSION_PIN" in codes
+
+
+def test_mcp_server_version_pin_null_skips_version_check() -> None:
+    fr = freeze(call(mcp("srv", "safe")), _snapshot(version="2026.4"))
+    caps = CapabilityManifest.from_dict({"mcp_servers": {"srv": None}})
+
+    assert not blocking(caps.enforce_compile(fr.flow, fr.manifest))
 
 
 def test_dangerous_tool_after_human_gate_deploys_cleanly() -> None:

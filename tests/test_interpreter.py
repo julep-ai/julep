@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import pytest
+
 from composable_agents import (
     call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
 )
+from composable_agents.errors import CapabilityDenied
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
@@ -110,3 +113,30 @@ def test_stage_compiles_then_runs_plan_with_late_binding():
     fr, env = _env(flow, hands=HANDS, planners={"planner": planner})
     out = run(interpret(fr.flow, 5, env))
     assert out.value == 12  # plan: (5+1)*2, executed via late-bound hands
+
+
+def test_max_calls_under_limit_succeeds():
+    flow = seq(call(mcp("srv", "inc")), call(mcp("srv", "inc")))
+    fr, env = _env(flow, hands=HANDS, max_calls={"srv/inc": 2})
+
+    out = run(interpret(fr.flow, 5, env))
+
+    assert out.value == 7
+    assert env.call_counts == {"srv/inc": 2}
+
+
+def test_max_calls_over_limit_raises_before_extra_effect():
+    calls = {"count": 0}
+
+    def inc(value):
+        calls["count"] += 1
+        return value + 1
+
+    flow = seq(call(mcp("srv", "inc")), call(mcp("srv", "inc")))
+    fr, env = _env(flow, hands={**HANDS, "srv/inc": inc}, max_calls={"srv/inc": 1})
+
+    with pytest.raises(CapabilityDenied):
+        run(interpret(fr.flow, 5, env))
+
+    assert calls["count"] == 1
+    assert env.call_counts == {"srv/inc": 1}

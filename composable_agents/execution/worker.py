@@ -33,13 +33,22 @@ from .activities import (
     configure,
     invokeBrain,
     resolveAgentSpec,
+    resolveRuntimeCapabilities,
     resolveSubflow,
     verifyPures,
 )
 from .harness import AgentWorkflow, FlowWorkflow
 
 # Every activity the two workflows can dispatch.
-ACTIVITIES = [callHand, invokeBrain, compilePlan, verifyPures, resolveSubflow, resolveAgentSpec]
+ACTIVITIES = [
+    callHand,
+    invokeBrain,
+    compilePlan,
+    verifyPures,
+    resolveSubflow,
+    resolveAgentSpec,
+    resolveRuntimeCapabilities,
+]
 WORKFLOWS = [FlowWorkflow, AgentWorkflow]
 
 DEFAULT_TASK_QUEUE = "composable-agents"

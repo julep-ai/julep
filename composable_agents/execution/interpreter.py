@@ -29,7 +29,7 @@ from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
 
 from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest
 from ..derived import flatten_race_group
-from ..errors import ComposableAgentsError, RaceAllFailed
+from ..errors import CapabilityDenied, ComposableAgentsError, RaceAllFailed
 from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import Op
@@ -82,6 +82,7 @@ class Env(Protocol):
 
     def next_cid(self, node_id: str) -> str: ...
     def get_pure(self, name: str) -> Callable[[Any], Any]: ...
+    def charge_call(self, tool_key: str) -> None: ...
 
     async def call_hand(self, node: Node, value: Any, cid: str) -> Any: ...
     async def invoke_brain(self, brain: str, value: Any, cid: str) -> Any: ...
@@ -192,6 +193,8 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
 async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
     step = node.step
     if isinstance(step, CallStep):
+        key = call_ref_key(node, env.manifest)
+        env.charge_call(key)
         # Reserved human-gate hand becomes a signal-wait, not an HTTP call.
         if step.tool.kind == "native" and getattr(step.tool, "name", None) == HUMAN_GATE_TOOL:
             timeout_s = node.ann.timeout if node.ann else None
@@ -397,6 +400,7 @@ class InMemoryEnv:
         agents: Optional[dict[str, Callable[[Any], Any]]] = None,
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
         gate: Optional[Callable[[Any], Any]] = None,
+        max_calls: Optional[dict[str, int]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -406,6 +410,8 @@ class InMemoryEnv:
         self._agents = agents or {}
         self._planners = planners or {}
         self._gate = gate or (lambda v: {"approved": True, "input": v})
+        self._max_calls = dict(max_calls or {})
+        self.call_counts: dict[str, int] = {}
         self._cid = 0
 
     # --- identity / pures --- #
@@ -415,6 +421,15 @@ class InMemoryEnv:
 
     def get_pure(self, name: str) -> Callable[[Any], Any]:
         return _registry_get_pure(name)
+
+    def charge_call(self, tool_key: str) -> None:
+        limit = self._max_calls.get(tool_key)
+        if limit is None:
+            return
+        count = self.call_counts.get(tool_key, 0)
+        if count >= limit:
+            raise CapabilityDenied(f"tool {tool_key!r} exceeded maxCalls={limit}")
+        self.call_counts[tool_key] = count + 1
 
     # --- effect handlers --- #
     async def call_hand(self, node: Node, value: Any, cid: str) -> Any:

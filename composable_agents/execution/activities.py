@@ -230,10 +230,13 @@ def _contract_payload(contract: ToolContract, *, approval: Optional[bool] = None
 
 
 def _grant_contract_payload(grant: ToolGrant) -> dict[str, Any]:
-    return _contract_payload(
+    payload = _contract_payload(
         grant.contract() or CONSERVATIVE_DEFAULT,
         approval=grant.approval,
     )
+    if grant.max_calls is not None:
+        payload["maxCalls"] = grant.max_calls
+    return payload
 
 
 def _normalize_contract_payload(raw: Any) -> dict[str, Any]:
@@ -249,7 +252,18 @@ def _normalize_contract_payload(raw: Any) -> dict[str, Any]:
     }
     if "approval" in raw:
         payload["approval"] = _approval_value(raw["approval"])
+    max_calls = raw.get("maxCalls", raw.get("max_calls"))
+    if max_calls is not None:
+        payload["maxCalls"] = int(max_calls)
     return payload
+
+
+@activity.defn(name="resolveRuntimeCapabilities")
+async def resolveRuntimeCapabilities() -> dict[str, Any]:
+    """Resolve deterministic workflow policy derived from worker capabilities."""
+    if _CTX.capabilities is None:
+        return {"maxCalls": {}}
+    return {"maxCalls": _CTX.capabilities.max_call_limits()}
 
 
 @activity.defn(name="resolveAgentSpec")

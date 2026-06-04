@@ -70,6 +70,7 @@ with workflow.unsafe.imports_passed_through():
         compilePlan,
         invokeBrain,
         resolveAgentSpec,
+        resolveRuntimeCapabilities,
         resolveSubflow,
         verifyPures,
     )
@@ -176,6 +177,7 @@ def _toolref_json_from_key(key: str) -> dict[str, Any]:
 def _manifest_contracts_for_agent(
     manifest,
     granted_tools: Optional[Sequence[str]],
+    max_call_limits: Optional[dict[str, int]] = None,
 ) -> dict[str, dict[str, Any]]:
     """Serialize frozen contracts by tool key for the child agent workflow."""
     wanted = None if granted_tools is None else set(granted_tools)
@@ -183,7 +185,10 @@ def _manifest_contracts_for_agent(
     for frozen in manifest.values():
         key = toolref_key(frozen.ref)
         if wanted is None or key in wanted:
-            contracts[key] = frozen.contract.to_json()
+            payload = frozen.contract.to_json()
+            if max_call_limits is not None and key in max_call_limits:
+                payload["maxCalls"] = int(max_call_limits[key])
+            contracts[key] = payload
     return contracts
 
 
@@ -199,6 +204,7 @@ class FlowInput:
     flow_json: Optional[dict[str, Any]] = None
     manifest_json: Optional[dict[str, Any]] = None
     pinned_pures: Optional[dict[str, str]] = None
+    max_call_limits: Optional[dict[str, int]] = None
     ref: Optional[str] = None
     policy: Optional[dict[str, Any]] = None
 
@@ -233,6 +239,7 @@ class _TemporalEnv:
         manifest_json: Optional[dict[str, Any]],
         policy: ExecutionPolicy,
         gate_waiter: Callable[[str, Optional[int]], Awaitable[Any]],
+        max_call_limits: Optional[dict[str, int]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -240,6 +247,8 @@ class _TemporalEnv:
         self._manifest_json = manifest_json
         self._policy = policy
         self._gate_waiter = gate_waiter
+        self._max_call_limits = dict(max_call_limits or {})
+        self._call_counts: dict[str, int] = {}
         self._cid = 0
         self._child = 0
 
@@ -254,6 +263,17 @@ class _TemporalEnv:
         from ..purity import get_pure as _gp
 
         return _gp(name)
+
+    def charge_call(self, tool_key: str) -> None:
+        limit = self._max_call_limits.get(tool_key)
+        if limit is None:
+            return
+        count = self._call_counts.get(tool_key, 0)
+        if count >= limit:
+            from ..errors import CapabilityDenied
+
+            raise CapabilityDenied(f"tool {tool_key!r} exceeded maxCalls={limit}")
+        self._call_counts[tool_key] = count + 1
 
     def _child_id(self, kind: str, cid: str) -> str:
         self._child += 1
@@ -296,7 +316,13 @@ class _TemporalEnv:
         child_id = self._child_id("sub", cid)
         return await workflow.execute_child_workflow(
             FlowWorkflow.run,
-            FlowInput(session_id=child_id, input=value, ref=ref, policy=self._policy.to_json()),
+            FlowInput(
+                session_id=child_id,
+                input=value,
+                ref=ref,
+                policy=self._policy.to_json(),
+                max_call_limits=self._max_call_limits,
+            ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.sub_task_timeout_s),
         )
@@ -327,7 +353,11 @@ class _TemporalEnv:
             granted_tools = None if tools is None else list(tools)
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
-            granted_contracts = _manifest_contracts_for_agent(self.manifest, granted_tools)
+            granted_contracts = _manifest_contracts_for_agent(
+                self.manifest,
+                granted_tools,
+                self._max_call_limits,
+            )
 
         return await workflow.execute_child_workflow(
             AgentWorkflow.run,
@@ -438,6 +468,7 @@ class FlowWorkflow:
         flow_json = inp.flow_json
         manifest_json = inp.manifest_json
         pinned_pures = inp.pinned_pures
+        max_call_limits = inp.max_call_limits
 
         # A ref-only input resolves to its frozen flow + manifest via activity
         # (kept outside the deterministic sandbox).
@@ -454,6 +485,8 @@ class FlowWorkflow:
             manifest_json = resolved.get("manifestJson", {})
             if pinned_pures is None:
                 pinned_pures = resolved.get("pinnedPures")
+            if max_call_limits is None:
+                max_call_limits = resolved.get("maxCalls")
 
         # Pure source lookup reads the worker registry, so it stays in an
         # activity. Each FlowWorkflow verifies the pins supplied with that flow;
@@ -470,6 +503,17 @@ class FlowWorkflow:
                 ),
             )
 
+        if max_call_limits is None:
+            runtime_caps = await workflow.execute_activity(
+                resolveRuntimeCapabilities,
+                start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+            max_call_limits = runtime_caps.get("maxCalls", {})
+
         flow = Node.from_json(flow_json)
         manifest = manifest_from_json(manifest_json or {})
 
@@ -482,6 +526,7 @@ class FlowWorkflow:
             manifest_json=manifest_json,
             policy=policy,
             gate_waiter=self._await_human,
+            max_call_limits=max_call_limits,
         )
 
         result: Result = await interpret(flow, inp.input, env)
@@ -584,6 +629,9 @@ class AgentWorkflow:
                 )
                 if denial is not None:
                     return al.terminal_result("denied", state, reason=denial.reason)
+                denial = al.charge_tool_call(state, tool, contracts)
+                if denial is not None:
+                    return al.terminal_result("denied", state, reason=denial.reason)
                 call_input = action.payload.get("input")
                 if call_input is None:
                     call_input = state.last
@@ -604,6 +652,14 @@ class AgentWorkflow:
 
             else:  # Decision.SUB
                 ref = action.payload["ref"]
+                denial = al.authorize_subflow(
+                    ref,
+                    granted_subflows=(
+                        None if granted_subflows is None else set(granted_subflows)
+                    ),
+                )
+                if denial is not None:
+                    return al.terminal_result("denied", state, reason=denial.reason)
                 sub_input = action.payload.get("input")
                 if sub_input is None:
                     sub_input = state.last
@@ -659,6 +715,7 @@ async def run_flow(
     task_queue: str = "composable-agents",
     policy: Optional[ExecutionPolicy] = None,
     pinned_pures: Optional[dict[str, str]] = None,
+    max_call_limits: Optional[dict[str, int]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
@@ -675,6 +732,7 @@ async def run_flow(
             flow_json=flow_json,
             manifest_json=manifest_json,
             pinned_pures=pinned_pures,
+            max_call_limits=max_call_limits,
             policy=(policy or ExecutionPolicy()).to_json(),
         ),
         id=session_id,
@@ -692,6 +750,7 @@ async def start_flow(
     task_queue: str = "composable-agents",
     policy: Optional[ExecutionPolicy] = None,
     pinned_pures: Optional[dict[str, str]] = None,
+    max_call_limits: Optional[dict[str, int]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
@@ -706,6 +765,7 @@ async def start_flow(
             flow_json=flow_json,
             manifest_json=manifest_json,
             pinned_pures=pinned_pures,
+            max_call_limits=max_call_limits,
             policy=(policy or ExecutionPolicy()).to_json(),
         ),
         id=session_id,
