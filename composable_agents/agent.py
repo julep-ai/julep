@@ -226,15 +226,23 @@ class Tool(FlowLike[In, Out]):
 
     @property
     def bound_hand(self) -> Callable[[Any], Any]:
-        """Hand wrapper for the single threaded value."""
-        if len(self.param_names) > 1:
-            fn = self.fn
+        """Hand wrapper for the single threaded value: positional-only params are
+        passed positionally (declared order), the rest by keyword."""
+        if len(self.param_names) <= 1:
+            return self.fn
+        fn = self.fn
+        positional_only = tuple(
+            parameter.name
+            for parameter in inspect.signature(fn).parameters.values()
+            if parameter.kind is inspect.Parameter.POSITIONAL_ONLY
+        )
 
-            def _hand(value: Any) -> Any:
-                return fn(**value)
+        def _hand(value: Any) -> Any:
+            args = [value[name] for name in positional_only if name in value]
+            kwargs = {key: item for key, item in value.items() if key not in positional_only}
+            return fn(*args, **kwargs)
 
-            return _hand
-        return self.fn
+        return _hand
 
     @property
     def native_spec(self) -> NativeToolSpec:
