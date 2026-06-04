@@ -33,7 +33,7 @@ from .dsl import app, call, native
 from .errors import ValidationError
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
-from .flow import Flow, FlowLike
+from .flow import Flow, FlowLike, SplitCapability
 from .flow_registry import register_flow
 from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency
@@ -351,7 +351,7 @@ class Agent(FlowLike[Any, Any]):
     def __init__(
         self,
         brain: str,
-        tools: Sequence[FlowLike[Any, Any]] = (),
+        tools: Sequence[FlowLike[Any, Any] | SplitCapability] = (),
         *,
         name: Optional[str] = None,
         llm: Optional[Callable[[str, Any], Any]] = None,
@@ -369,8 +369,12 @@ class Agent(FlowLike[Any, Any]):
         caps = tuple(tools)
         tool_caps: list[Tool[Any, Any]] = []
         flow_cap_pairs: list[tuple[str, FlowLike[Any, Any]]] = []
+        split_children: dict[str, SplitCapability] = {}
         for cap in caps:
-            if isinstance(cap, Tool):
+            if isinstance(cap, SplitCapability):
+                flow_cap_pairs.append((cap.ref, cap.target))
+                split_children[cap.ref] = cap
+            elif isinstance(cap, Tool):
                 tool_caps.append(cap)
             elif isinstance(cap, Agent):
                 flow_cap_pairs.append((cap._name, cap))
@@ -411,6 +415,7 @@ class Agent(FlowLike[Any, Any]):
         self._flow_caps: dict[str, FlowLike[Any, Any]] = {
             ref: cap for ref, cap in flow_cap_pairs
         }
+        self._split_children: dict[str, SplitCapability] = dict(split_children)
         self._tool_names = tool_names
         self._sub_refs = sub_refs
         self._llm = llm
@@ -472,6 +477,9 @@ class Agent(FlowLike[Any, Any]):
     def to_ir(self) -> Node:
         return self._flow
 
+    def _durable_ref(self) -> Optional[str]:
+        return self._name
+
     def _params(self) -> dict[str, Any]:
         return {
             "brain": self._brain_model,
@@ -490,7 +498,9 @@ class Agent(FlowLike[Any, Any]):
         return Agent(brain, name=None, **params)
 
     @staticmethod
-    def _cap_name(cap: FlowLike[Any, Any]) -> Optional[str]:
+    def _cap_name(cap: FlowLike[Any, Any] | SplitCapability) -> Optional[str]:
+        if isinstance(cap, SplitCapability):
+            return cap.ref
         if isinstance(cap, Tool):
             return cap.name
         if isinstance(cap, Agent):
@@ -502,8 +512,8 @@ class Agent(FlowLike[Any, Any]):
     def with_tools(
         self,
         *,
-        add: Sequence[FlowLike[Any, Any]] = (),
-        remove: Sequence[FlowLike[Any, Any] | str] = (),
+        add: Sequence[FlowLike[Any, Any] | SplitCapability] = (),
+        remove: Sequence[FlowLike[Any, Any] | SplitCapability | str] = (),
     ) -> "Agent":
         removed = {
             cap if isinstance(cap, str) else self._cap_name(cap)
@@ -512,7 +522,7 @@ class Agent(FlowLike[Any, Any]):
         kept = [cap for cap in self._caps if self._cap_name(cap) not in removed]
         return self._reconstruct(tools=[*kept, *add])
 
-    def without(self, *tools: FlowLike[Any, Any] | str) -> "Agent":
+    def without(self, *tools: FlowLike[Any, Any] | SplitCapability | str) -> "Agent":
         names = {
             cap if isinstance(cap, str) else self._cap_name(cap)
             for cap in tools
@@ -697,6 +707,10 @@ class Agent(FlowLike[Any, Any]):
 
     def deployment(self) -> Deployment:
         return self._deploy()
+
+    def split_children(self) -> dict[str, SplitCapability]:
+        """The per-component split children (ref -> marker)."""
+        return dict(self._split_children)
 
     def check(self) -> list[Diagnostic]:
         """Force full freeze validation without executing. In strict mode a blocking

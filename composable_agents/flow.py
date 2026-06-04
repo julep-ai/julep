@@ -10,6 +10,7 @@ apart from provisional node ids.
 from __future__ import annotations
 
 import hashlib
+from dataclasses import dataclass
 from typing import Any, Generic, Optional, Sequence, TypeVar, overload
 
 from . import dsl
@@ -54,9 +55,19 @@ class FlowLike(Generic[In, Out]):
     def to_ir(self) -> Node:
         raise NotImplementedError
 
+    def _durable_ref(self) -> Optional[str]:
+        return None
+
     def __rshift__(self, other: "FlowLike[Out, Next]") -> "Flow[In, Next]":
         """`X[I,M] >> Y[M,O] -> Flow[I,O]`; lowers via the dsl.seq left-fold."""
         return Flow(dsl.seq(self.to_ir(), other.to_ir()))
+
+    def as_sub(self, queue: Optional[str] = None) -> "SplitCapability":
+        """Promote a named flow/agent to its own split deployment unit."""
+        ref = self._durable_ref()
+        if ref is None:
+            raise ValueError("split requires a durable ref: call .named(ref) first")
+        return SplitCapability(ref=ref, target=self, queue=queue)
 
     def named(self, ref: str) -> "Flow[In, Out]":
         """Mint a durable ref and return a Flow carrying it."""
@@ -82,6 +93,9 @@ class Flow(FlowLike[In, Out]):
         """The underlying IR node (the only thing that is ever serialized)."""
         return self._node
 
+    def _durable_ref(self) -> Optional[str]:
+        return self._name
+
     @property
     def name(self) -> Optional[str]:
         return self._name
@@ -92,6 +106,15 @@ class Flow(FlowLike[In, Out]):
 
     def __repr__(self) -> str:
         return f"Flow({self._node.op.value}#{self._node.id})"
+
+
+@dataclass(frozen=True)
+class SplitCapability:
+    """A named flow/agent marked for per-component split deployment."""
+
+    ref: str
+    target: FlowLike[Any, Any]
+    queue: Optional[str] = None
 
 
 @overload
