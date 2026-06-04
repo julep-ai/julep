@@ -7,7 +7,7 @@ Three activities cover every leaf the interpreter can hit:
 * ``callHand`` — invoke a tool. A native hand is a stateless scale-to-zero HTTP
   endpoint; we POST the value with ``Idempotency-Key: <cid>`` so a Temporal retry
   is safe for idempotent tools (the blueprint's leases/heartbeats handle the
-  rest). An MCP tool goes through the frozen session's ``tools/call``.
+  rest). MCP callers receive the same ``cid`` as their transport idempotency key.
 * ``invokeBrain`` — one model call against a resolved :class:`~composable_agents.dotctx.Brain`
   (model, system prompt, reply schema, granted tools).
 * ``compilePlan`` — ask a planner brain for a Plan, parse it to IR, and run it
@@ -36,13 +36,20 @@ from ..kinds import Effect, Idempotency
 from ..staged import admit_plan
 
 # Caller signatures the worker supplies.
-McpCaller = Callable[[str, str, Any], Awaitable[Any]]      # (server, tool, args) -> result
+McpCaller = Callable[[str, str, Any, str], Awaitable[Any]]  # (server, tool, args, key) -> result
 LlmCaller = Callable[[Brain, Any], Awaitable[Any]]         # (brain, value) -> result
 
 
 @dataclass
 class WorkerContext:
-    """Process-global configuration read by the activities."""
+    """Process-global configuration read by the activities.
+
+    ``mcp_call`` receives ``(server, tool, value, idempotency_key)``. The key is
+    the deterministic activation ``cid`` from :class:`CallHandInput`; Temporal
+    retries re-invoke the activity with the same input, so MCP retry keys are
+    stable by construction. MCP now carries the key, so MCP tools that require
+    transport-level idempotency are admissible.
+    """
 
     hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
     mcp_call: Optional[McpCaller] = None
@@ -110,7 +117,7 @@ async def callHand(inp: CallHandInput) -> Any:
             raise RuntimeError("worker has no MCP caller configured")
         server = inp.tool_ref["server"]
         tool = inp.tool_ref["tool"]
-        return await _CTX.mcp_call(server, tool, inp.value)
+        return await _CTX.mcp_call(server, tool, inp.value, inp.cid)
 
     # Native hand: HTTP POST with an idempotency key derived from the cid.
     url = _CTX.hand_urls.get(key)

@@ -20,8 +20,8 @@
 
 ## Verified gap status (24 punch-list items)
 
-22 genuinely **open** · 1 **partial** (P1-5) · 1 **already-done** (P2-3, add a
-regression test only). Evidence gathered against real code; key anchors below.
+21 genuinely **open** · 1 **partial** (P1-5) · 2 **done** (P0-6, P2-3; add a
+regression test only for P2-3). Evidence gathered against real code; key anchors below.
 
 | Tier | Item | Status | Key anchor |
 |---|---|---|---|
@@ -30,7 +30,7 @@ regression test only). Evidence gathered against real code; key anchors below.
 | P0-3 | Approval gating unmodeled/unenforced | open | no `approval` on `ToolGrant`; no dangerous-effect gate check |
 | P0-4 | Empty grant list = allow-all in agent loop | open | `harness.py:500` `if granted_set and tool not in granted_set` |
 | P0-5 | Agent CALLs ignore tool contract for retry | open | `harness.py:515` hardcodes `idempotent_max_attempts` |
-| P0-6 | MCP calls carry no idempotency key | open | `activities.py:110` `mcp_call(server, tool, value)` (no cid) |
+| P0-6 | MCP calls carry no idempotency key | **done** | `activities.py:120` `mcp_call(server, tool, value, cid)` |
 | P1-1 | `canonical_json(default=str)` coerces | open | `ir.py:248` |
 | P1-2 | Pure-drift computed, never verified | open | `purity.source_hash_of` unused at startup |
 | P1-3 | Tool hash omits output_schema/contract/asserted | open | `contracts.py:84` `tool_hash` payload |

@@ -24,6 +24,8 @@ from temporalio.worker import Worker
 
 from ..capabilities import CapabilityManifest
 from .activities import (
+    LlmCaller,
+    McpCaller,
     WorkerContext,
     callHand,
     compilePlan,
@@ -55,6 +57,8 @@ def build_worker(
     ``async with worker`` / ``await worker.run()`` and shutdown). Extra
     ``worker_kwargs`` pass straight through to :class:`temporalio.worker.Worker`
     (e.g. ``max_concurrent_activities``, ``interceptors`` for the projection tail).
+    If ``context.mcp_call`` is set, it must be async
+    ``(server, tool, value, idempotency_key) -> result``.
     """
     configure(context)
     return Worker(
@@ -72,8 +76,8 @@ async def run_worker(
     namespace: str = "default",
     task_queue: str = DEFAULT_TASK_QUEUE,
     hand_urls: Optional[dict[str, str]] = None,
-    mcp_call=None,
-    llm=None,
+    mcp_call: Optional[McpCaller] = None,
+    llm: Optional[LlmCaller] = None,
     capabilities: Optional[CapabilityManifest] = None,
     subflows: Optional[dict[str, dict]] = None,
     agents: Optional[dict[str, dict]] = None,
@@ -85,6 +89,8 @@ async def run_worker(
     This is the batteries-included path for a standalone worker process; for
     finer control (custom client, shared client across workers, lifecycle
     management) use :func:`build_worker` with your own :class:`Client`.
+    ``mcp_call`` must be async ``(server, tool, value, idempotency_key) -> result``;
+    the idempotency key is the stable activation ``cid`` reused on activity retry.
     """
     client = await Client.connect(target_host, namespace=namespace)
     context = WorkerContext(

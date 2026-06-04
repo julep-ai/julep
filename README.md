@@ -71,11 +71,16 @@ register_brain(Brain(name="summarize", model="claude-...", system="Summarize."))
 await run_worker(
     target_host="localhost:7233",
     hand_urls={"native_tool": "https://my-hand.run.app"},
-    mcp_call=my_async_mcp_caller,   # async (server, tool, value) -> result
+    mcp_call=my_async_mcp_caller,   # async (server, tool, value, idempotency_key) -> result
     llm=my_async_llm,               # async (brain, value) -> reply
     capabilities=my_capability_manifest,
 )
 ```
+
+Temporal activity retries re-use the same deterministic activation `cid`, so
+`callHand` passes a stable idempotency key to both native HTTP hands and MCP
+callers. MCP transports therefore carry the key required for `required`
+idempotent tools to be admitted.
 
 ---
 

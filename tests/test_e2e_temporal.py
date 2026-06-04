@@ -49,7 +49,8 @@ def _snapshot():
     })})
 
 
-async def _mcp(server, tool, value):
+async def _mcp(server, tool, value, idempotency_key):
+    assert idempotency_key
     if tool == "double":
         return value * 2
     if tool == "inc":
