@@ -6,9 +6,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, Shape, deploy, snapshot_from_tools, tool
+from composable_agents import Agent, Shape, ValidationError, deploy, get_brain, snapshot_from_tools, tool
 from composable_agents.capabilities import Budget, CapabilityManifest, ToolGrant
 from composable_agents.dsl import app
+from composable_agents.ir import Op
 from composable_agents.kinds import Effect, Idempotency
 
 
@@ -108,6 +109,41 @@ def test_budget_flows_into_agent_config() -> None:
     assert result["trace"] == []
 
 
+def test_deployed_allow_list_is_encoded() -> None:
+    @tool(effect="read", idempotent=True)
+    def web_search(query: str) -> str:
+        return f"hit:{query}"
+
+    agent = Agent("m", tools=[web_search], name="agent_allow_list")
+    deployment = agent.deployment()
+
+    assert deployment.flow.op == Op.APP
+    assert deployment.flow.tools == ["web_search"]
+
+    deny_all = Agent("m", tools=[], name="agent_allow_list_empty")
+    assert deny_all.deployment().flow.op == Op.APP
+    assert deny_all.deployment().flow.tools == []
+
+
+def test_registered_brain_carries_tools() -> None:
+    @tool(effect="read", idempotent=True)
+    def web_search(query: str) -> str:
+        return f"hit:{query}"
+
+    Agent("m", tools=[web_search], name="agent_brain_tools")
+
+    assert get_brain("agent_brain_tools").tools == ("web_search",)
+
+
+def test_dangerous_tool_is_rejected_at_construction() -> None:
+    @tool(effect="dangerous")
+    def danger(x: str) -> str:
+        return x
+
+    with pytest.raises(ValidationError, match="CAP_APP_APPROVAL_TOOL"):
+        Agent("m", tools=[danger], name="agent_danger")
+
+
 def test_deploy_artifact_and_shape_are_deterministic() -> None:
     agent = Agent(
         "m",
@@ -135,7 +171,7 @@ def test_deploy_artifact_and_shape_are_deterministic() -> None:
         _has_tools=True,
     )
     rebuilt = deploy(
-        app("agent_artifact", budget=budget, max_rounds=24),
+        app("agent_artifact", tools=[a_read_tool.name], budget=budget, max_rounds=24),
         snapshot_from_tools([a_read_tool]),
         capabilities=capabilities,
     )

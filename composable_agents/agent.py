@@ -286,10 +286,16 @@ class Agent:
                 model=brain,
                 system=instructions or "",
                 reply_schema=AGENT_REPLY_SCHEMA,
+                tools=tuple(native_tool.name for native_tool in self._tools),
                 is_agent=True,
             )
         )
-        self._flow = app(name, budget=self._budget, max_rounds=max_rounds)
+        self._flow = app(
+            name,
+            tools=[native_tool.name for native_tool in self._tools],
+            budget=self._budget,
+            max_rounds=max_rounds,
+        )
         self._snapshot = snapshot_from_tools(self._tools)
         self._capabilities = CapabilityManifest(
             tools={
