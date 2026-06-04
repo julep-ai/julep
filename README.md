@@ -75,6 +75,21 @@ For iteration, use dev mode: `deploy(..., mode="dev")` or `Agent(..., mode="dev"
 
 ---
 
+## Documentation
+
+The documentation index is [docs/README.md](docs/README.md). Newcomers should start with [docs/getting-started.md](docs/getting-started.md), then read [docs/concepts.md](docs/concepts.md).
+
+Key guides:
+
+- [Getting started](docs/getting-started.md)
+- [Concepts](docs/concepts.md)
+- [Capabilities and safety](docs/capabilities-and-safety.md)
+- [Deploy to Temporal](docs/deploy-temporal.md)
+- [Examples](docs/examples.md)
+- [Specification](docs/SPEC.md) — the normative contract.
+
+---
+
 ## Typed composition (the `Flow` surface)
 
 The `composable_agents.flow` layer is a **typed authoring wrapper** over the same
@@ -292,4 +307,4 @@ composable_agents/
 
 ## License
 
-Apache-2.0.
+This project is licensed under Apache-2.0. See [LICENSE](LICENSE).
