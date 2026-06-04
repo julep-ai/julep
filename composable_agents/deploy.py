@@ -222,8 +222,15 @@ class Deployment:
             strict=True,
         )
 
-    async def run(self, client, *, session_id: str, input: Any = None,
-                  task_queue: str = "composable-agents", policy: Any = None) -> Any:
+    async def run(
+        self,
+        client: Any,
+        *,
+        session_id: str,
+        input: Any = None,
+        task_queue: str = "composable-agents",
+        policy: Any = None,
+    ) -> Any:
         """Run this deployment on Temporal and await the result.
 
         Imports the execution layer lazily so offline compilation never requires

@@ -286,12 +286,13 @@ def check_race_admission(flow: Node, manifest: ToolManifest) -> list[Diagnostic]
     seen: set[int] = set()
 
     def scan(n: Node, in_spine_of: Optional[str]) -> None:
-        is_race = n.op == Op.PAR and n.merge is not None and n.merge.kind in {
+        merge = n.merge
+        is_race = merge is not None and n.op == Op.PAR and merge.kind in {
             "race", "hedge", "quorum"
         }
         # Group root = a race-par that is not the spine-continuation of a
         # same-kind race-par directly above it.
-        if is_race and n.merge is not None and n.merge.kind != in_spine_of:
+        if is_race and merge is not None and merge.kind != in_spine_of:
             if id(n) not in seen:
                 seen.add(id(n))
                 for branch in flatten_race_group(n):
@@ -300,7 +301,7 @@ def check_race_admission(flow: Node, manifest: ToolManifest) -> list[Diagnostic]
                     scan(branch, None)
             return
         # Either not a race node, or we're walking down a same-kind spine.
-        next_spine = n.merge.kind if is_race else None
+        next_spine = merge.kind if is_race and merge is not None else None
         for child in n.children():
             scan(child, next_spine)
 

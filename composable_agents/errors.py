@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Iterable
+
+if TYPE_CHECKING:
+    from .validate import Diagnostic
+
 
 class ComposableAgentsError(Exception):
     """Base for everything this framework raises."""
@@ -10,7 +15,7 @@ class ComposableAgentsError(Exception):
 class ValidationError(ComposableAgentsError):
     """Raised at deploy when ``validate`` finds blocking diagnostics."""
 
-    def __init__(self, diagnostics):  # diagnostics: list[Diagnostic]
+    def __init__(self, diagnostics: list["Diagnostic"]) -> None:
         self.diagnostics = diagnostics
         msg = "; ".join(f"[{d.code}@{d.node_id}] {d.message}" for d in diagnostics)
         super().__init__(f"flow failed validation: {msg}")
@@ -31,7 +36,7 @@ class AdmissionError(ComposableAgentsError):
 class RaceAllFailed(ComposableAgentsError):
     """A race/hedge/quorum group could not reach its required successes."""
 
-    def __init__(self, failures):
+    def __init__(self, failures: Iterable[BaseException]) -> None:
         self.failures = list(failures)
         super().__init__(f"race-family group failed with {len(self.failures)} branch failure(s)")
 
@@ -43,7 +48,7 @@ class BudgetExceeded(ComposableAgentsError):
 class PlanRejected(ComposableAgentsError):
     """A model-generated plan violated a hard rule (blueprint §8)."""
 
-    def __init__(self, reasons):
+    def __init__(self, reasons: Iterable[str]) -> None:
         self.reasons = list(reasons)
         super().__init__("plan rejected: " + "; ".join(self.reasons))
 

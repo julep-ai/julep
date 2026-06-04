@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
@@ -31,7 +31,7 @@ from .kinds import ContextScope, Shape, SummaryPolicy
 from .registry import DEFAULT_REGISTRY
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class Brain:
     """A resolved model-call configuration, addressed by ``name``."""
 
@@ -45,6 +45,30 @@ class Brain:
     is_agent: bool = False                # explicit open-ended app
     sub_contract: Optional[SubContract] = None  # marks a child workflow
     context_scope: ContextScope = ContextScope.LOCAL
+
+    def __init__(
+        self,
+        name: str,
+        model: str,
+        system: str = "",
+        reply_schema: Optional[dict[str, Any]] = None,
+        tools: Sequence[str] = (),
+        temperature: Optional[float] = None,
+        max_rounds: Optional[int] = None,
+        is_agent: bool = False,
+        sub_contract: Optional[SubContract] = None,
+        context_scope: ContextScope = ContextScope.LOCAL,
+    ) -> None:
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "model", model)
+        object.__setattr__(self, "system", system)
+        object.__setattr__(self, "reply_schema", reply_schema)
+        object.__setattr__(self, "tools", tuple(tools))
+        object.__setattr__(self, "temperature", temperature)
+        object.__setattr__(self, "max_rounds", max_rounds)
+        object.__setattr__(self, "is_agent", is_agent)
+        object.__setattr__(self, "sub_contract", sub_contract)
+        object.__setattr__(self, "context_scope", context_scope)
 
 
 _BRAINS: dict[str, Brain] = DEFAULT_REGISTRY.brains

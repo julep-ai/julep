@@ -29,7 +29,7 @@ import hashlib
 import itertools
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Iterable, Optional, Protocol
+from typing import Any, Callable, Iterable, Optional, Protocol
 
 from .ir import canonical_json
 
@@ -215,7 +215,11 @@ class ProjectionEmitter:
     downstream activations, which is what knits the pomset together.
     """
 
-    def __init__(self, store: ProjectionStore, clock=None) -> None:
+    def __init__(
+        self,
+        store: ProjectionStore,
+        clock: Optional[Callable[[], float]] = None,
+    ) -> None:
         self._store = store
         self._ids = itertools.count()
         # clock() -> float; defaults to a monotonic logical counter so the

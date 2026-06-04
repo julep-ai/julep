@@ -29,7 +29,7 @@ from .contracts import ToolContract, ToolManifest
 from .dotctx import get_brain
 from .errors import CapabilityDenied
 from .freeze import CapabilityOverrides
-from .ir import CallStep, HUMAN_GATE_TOOL, Node, SubStep, ThinkStep, toolref_key
+from .ir import CallStep, HUMAN_GATE_TOOL, McpTool, Node, SubStep, ThinkStep, toolref_key
 from .kinds import ContextScope, Effect, Idempotency, Op
 from .validate import Diagnostic
 
@@ -239,8 +239,8 @@ class CapabilityManifest:
                 if self._has_tools and key not in self.tools:
                     out.append(Diagnostic("CAP_TOOL_DENIED", n.id,
                                           f"tool {key!r} is not granted by the capability manifest"))
-                if self._has_servers and step.tool.kind == "mcp":
-                    server = step.tool.server  # type: ignore[attr-defined]
+                if self._has_servers and isinstance(step.tool, McpTool):
+                    server = step.tool.server
                     if server not in self.mcp_servers:
                         out.append(Diagnostic("CAP_SERVER_DENIED", n.id,
                                               f"MCP server {server!r} is not granted"))

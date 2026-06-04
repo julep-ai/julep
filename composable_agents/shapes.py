@@ -18,6 +18,8 @@ this terminates and is decidable.
 
 from __future__ import annotations
 
+from typing import cast
+
 from .ir import CallStep, Node, SubStep, ThinkStep
 from .kinds import Op, Shape, shape_join
 
@@ -44,12 +46,16 @@ def _shape(n: Node, mode: str) -> Shape:
         return Shape.PIPELINE
 
     if op == Op.SEQ:
-        return shape_join(_shape(n.left, mode), _shape(n.right, mode))
+        return shape_join(_shape(cast(Node, n.left), mode), _shape(cast(Node, n.right), mode))
 
     if op == Op.PAR:
         # Concurrency is a structural property: at least Dataflow regardless of
         # how trivial the branches are.
-        return shape_join(Shape.DATAFLOW, _shape(n.left, mode), _shape(n.right, mode))
+        return shape_join(
+            Shape.DATAFLOW,
+            _shape(cast(Node, n.left), mode),
+            _shape(cast(Node, n.right), mode),
+        )
 
     if op == Op.ALT:
         # Two or more possible continuations -> at least Branching.
@@ -58,11 +64,15 @@ def _shape(n: Node, mode: str) -> Shape:
             if n.default is not None:
                 branches.append(_shape(n.default, mode))
             return shape_join(Shape.BRANCHING, *branches)
-        return shape_join(Shape.BRANCHING, _shape(n.left, mode), _shape(n.right, mode))
+        return shape_join(
+            Shape.BRANCHING,
+            _shape(cast(Node, n.left), mode),
+            _shape(cast(Node, n.right), mode),
+        )
 
     if op == Op.ITER_UP_TO:
         # A bounded loop owns its continuation across rounds -> at least Feedback.
-        return shape_join(Shape.FEEDBACK, _shape(n.body, mode))
+        return shape_join(Shape.FEEDBACK, _shape(cast(Node, n.body), mode))
 
     if op == Op.EVAL_PLAN:
         # Staging model-generated structure is Staged. The plan payload is

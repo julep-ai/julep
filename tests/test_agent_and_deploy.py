@@ -196,6 +196,10 @@ def test_deploy_per_run_refresh_seam():
 # --------------------------------------------------------------------------- #
 # Replay/freeze artifact hash (§6.2).
 # --------------------------------------------------------------------------- #
+def test_brain_tools_accepts_list_and_stores_tuple():
+    assert Brain(name="list.tools.brain", model="test", tools=["a", "b"]).tools == ("a", "b")
+
+
 def _pure_artifact_fn(value):
     return value
 

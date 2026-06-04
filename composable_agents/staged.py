@@ -129,8 +129,8 @@ def _bind_plan_to_manifest(
         pinned = step.frozen_hash
 
         if pinned is not None:
-            entry = manifest.get(pinned)
-            if entry is None:
+            pinned_entry = manifest.get(pinned)
+            if pinned_entry is None:
                 out.append(
                     Diagnostic(
                         "PLAN_TOOL_UNBOUND",
@@ -140,17 +140,17 @@ def _bind_plan_to_manifest(
                     )
                 )
                 continue
-            if toolref_key(entry.ref) != key:
+            if toolref_key(pinned_entry.ref) != key:
                 out.append(
                     Diagnostic(
                         "PLAN_TOOL_UNBOUND",
                         n.id,
                         f"plan pins {key!r} to {pinned}, but that manifest entry "
-                        f"is {toolref_key(entry.ref)!r}",
+                        f"is {toolref_key(pinned_entry.ref)!r}",
                     )
                 )
                 continue
-            step.frozen_hash = entry.execution_hash
+            step.frozen_hash = pinned_entry.execution_hash
             continue
 
         matches = by_key.get(key, [])
@@ -173,8 +173,8 @@ def _bind_plan_to_manifest(
                 )
             )
         else:
-            entry = matches[0]
-            step.frozen_hash = entry.execution_hash
+            matched_entry = matches[0]
+            step.frozen_hash = matched_entry.execution_hash
 
     return bound, out
 

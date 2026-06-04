@@ -7,7 +7,7 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Any, Optional, Sequence, TextIO
+from typing import Any, Callable, Optional, Sequence, TextIO, cast
 
 from .capabilities import CapabilityManifest, check_approval_gates
 from .contracts import McpAnnotations, ToolContract, ToolManifest, manifest_from_json
@@ -30,7 +30,8 @@ def main(argv: Optional[Sequence[str]] = None, *, stdout: TextIO | None = None) 
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        return args.func(args, out)
+        func = cast(Callable[[argparse.Namespace, TextIO], int], args.func)
+        return func(args, out)
     except (ComposableAgentsError, KeyError, ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -324,7 +325,7 @@ def _mcp_tool_spec(raw: dict[str, Any]) -> McpToolSpec:
     if not isinstance(raw, dict):
         raise ValueError("MCP tool spec must be an object")
     return McpToolSpec(
-        input_schema=raw.get("inputSchema", raw.get("input_schema", {})),
+        input_schema=cast(dict[str, Any], raw.get("inputSchema", raw.get("input_schema", {}))),
         annotations=McpAnnotations.from_mcp(raw.get("annotations", raw)),
         output_schema=raw.get("outputSchema", raw.get("output_schema")),
     )
@@ -336,7 +337,7 @@ def _native_specs(raw: dict[str, Any]) -> dict[str, NativeToolSpec]:
         if not isinstance(spec, dict):
             raise ValueError(f"native tool {name!r} must be an object")
         native[name] = NativeToolSpec(
-            input_schema=spec.get("inputSchema", spec.get("input_schema", {})),
+            input_schema=cast(dict[str, Any], spec.get("inputSchema", spec.get("input_schema", {}))),
             contract=ToolContract.from_json(spec["contract"]),
             output_schema=spec.get("outputSchema", spec.get("output_schema")),
         )

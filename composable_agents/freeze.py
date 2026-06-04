@@ -117,15 +117,15 @@ def _resolve(
         )
 
     if isinstance(ref, NativeTool):
-        spec = snapshot.native.get(ref.name)
-        if spec is None:
+        native_spec = snapshot.native.get(ref.name)
+        if native_spec is None:
             raise FreezeError(f"native tool not in snapshot: {ref.name!r}")
-        contract = asserted_contract or spec.contract
+        contract = asserted_contract or native_spec.contract
         return FrozenTool.create(
             ref=ref,
-            input_schema=spec.input_schema,
+            input_schema=native_spec.input_schema,
             contract=contract,
-            output_schema=spec.output_schema,
+            output_schema=native_spec.output_schema,
             server_version=None,
             asserted=True,  # native tools are ours: their contract is declared
         )
@@ -134,8 +134,8 @@ def _resolve(
     server = snapshot.servers.get(ref.server)
     if server is None:
         raise FreezeError(f"MCP server not in snapshot: {ref.server!r}")
-    spec = server.tools.get(ref.tool)
-    if spec is None:
+    mcp_spec = server.tools.get(ref.tool)
+    if mcp_spec is None:
         raise FreezeError(f"MCP tool not found: {ref.server}/{ref.tool}")
 
     if asserted_contract is not None:
@@ -143,17 +143,17 @@ def _resolve(
         asserted = True
     else:
         # Untrusted hints -> conservative default. Not asserted: illegal to race.
-        contract = contract_from_annotations(spec.annotations)
+        contract = contract_from_annotations(mcp_spec.annotations)
         asserted = False
 
     return FrozenTool.create(
         ref=ref,
-        input_schema=spec.input_schema,
+        input_schema=mcp_spec.input_schema,
         contract=contract,
-        output_schema=spec.output_schema,
+        output_schema=mcp_spec.output_schema,
         server_version=server.version,
         asserted=asserted,
-        annotations=spec.annotations,
+        annotations=mcp_spec.annotations,
     )
 
 

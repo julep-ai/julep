@@ -22,7 +22,7 @@ Rules implemented:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from .contracts import ToolManifest
 from .ir import (
@@ -85,9 +85,9 @@ def _entry_schema(n: Node, manifest: Optional[ToolManifest]) -> Optional[JSONSch
         tool = manifest.get(n.step.frozen_hash)
         return tool.input_schema if tool else None
     if op == Op.SEQ:
-        return _entry_schema(n.left, manifest)
+        return _entry_schema(cast(Node, n.left), manifest)
     if op == Op.ITER_UP_TO:
-        return _entry_schema(n.body, manifest)
+        return _entry_schema(cast(Node, n.body), manifest)
     return None  # par / alt / think / sub / ident / arr / staged / agent: unknown
 
 
@@ -100,9 +100,9 @@ def _exit_schema(n: Node, manifest: Optional[ToolManifest]) -> Optional[JSONSche
         tool = manifest.get(n.step.frozen_hash)
         return tool.output_schema if tool else None
     if op == Op.SEQ:
-        return _exit_schema(n.right, manifest)
+        return _exit_schema(cast(Node, n.right), manifest)
     if op == Op.ITER_UP_TO:
-        return _exit_schema(n.body, manifest)
+        return _exit_schema(cast(Node, n.body), manifest)
     return None
 
 

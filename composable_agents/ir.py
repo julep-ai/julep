@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, Iterator, Optional, Union
 
 from .kinds import ContextScope, Effect, Op, Shape, SummaryPolicy
 
@@ -388,7 +388,7 @@ class Node:
             out.append(self.default)
         return out
 
-    def walk(self):
+    def walk(self) -> Iterator["Node"]:
         """Pre-order traversal over the node and all descendants."""
         yield self
         for k in self.children():
