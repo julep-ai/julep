@@ -158,6 +158,14 @@ from .agent_loop import (
     interpret_brain_reply as interpret_brain_reply,
     promote_plan as promote_plan,
 )
+from .execution.cma import (
+    CMAAgentEnv as CMAAgentEnv,
+    CMAClient as CMAClient,
+    CMAEvent as CMAEvent,
+    CMASession as CMASession,
+    drive_cma_agent_loop as drive_cma_agent_loop,
+    manifest_to_custom_tools as manifest_to_custom_tools,
+)
 
 # --- observability projection ---------------------------------------------- #
 from .projection import (
@@ -248,6 +256,8 @@ _BASE_EXPORTS = [
     # agent loop
     "AgentConfig", "AgentState", "Decision", "interpret_brain_reply",
     "generalize_trace_to_plan", "extract_plan", "promote_plan",
+    "CMAEvent", "CMASession", "CMAClient", "CMAAgentEnv",
+    "drive_cma_agent_loop", "manifest_to_custom_tools",
     # projection
     "ProjectionEvent", "ProjectionEmitter", "ProjectionStore",
     "InMemoryProjection", "PostgresProjection", "ValueStore", "SpanData",
