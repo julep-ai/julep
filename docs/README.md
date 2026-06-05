@@ -18,6 +18,7 @@ New here? Read [getting-started.md](getting-started.md), then [concepts.md](conc
 - [Specification](SPEC.md) — the normative specification and conformance contract.
 - [Typed flow design](design/typed-flow.md) — design rationale for the typed authoring surface.
 - [Algebra sketch](design/algebra.hs) — algebraic model for the flow calculus.
+- [Claude Managed Agents as a runtime](design/cma-runtime.md) — design note (proposal): a CMA backend for the `app` node, with the capability manifest projected as custom tools.
 
 ## Contribute
 
