@@ -1,12 +1,52 @@
 # Design note: Claude Managed Agents as a runtime
 
-**Status: proposal / design sketch — not implemented.** This explores whether
-Anthropic's hosted *Claude Managed Agents* (CMA) runtime can sit alongside the
-in-memory and Temporal runtimes. It concludes that CMA is a *competing control
-plane*, so the only honest "third runtime" framing is a CMA backend for the
-`app` node — driving the agent loop's controller while the framework stays the
-capability and budget authority. It references [SPEC.md](../SPEC.md),
-[concepts.md](../concepts.md), and [deploy-temporal.md](../deploy-temporal.md).
+**Status: as-built (v1, experimental).** This started as a design exploration of
+whether Anthropic's hosted *Claude Managed Agents* (CMA) runtime can sit
+alongside the in-memory and Temporal runtimes. It concluded — and the
+implementation confirms — that CMA is a *competing control plane*, so the only
+honest "third runtime" framing is a CMA backend for the `app` node: driving the
+agent loop's controller while the framework stays the capability and budget
+authority. **Framing 4 is now implemented** (see *What shipped* below). It
+references [SPEC.md](../SPEC.md), [concepts.md](../concepts.md), and
+[deploy-temporal.md](../deploy-temporal.md).
+
+## What shipped
+
+A third `run_agent` backend, built as a control-flow inversion of the local
+`drive_agent_loop` and proven equivalent to it by a parity test
+(`assert cma == local` over the same scenario):
+
+- **`composable_agents/execution/cma.py`** (pure; no `temporalio`/`anthropic`/
+  `httpx` import):
+  - `CMAEvent` / `CMASession` / `CMAClient` — a normalized event surface. The
+    CMA-specific correlation (`agent.custom_tool_use` → `session.status_idle`
+    with `stop_reason.type == "requires_action"` and `stop_reason.event_ids` →
+    `user.custom_tool_result`; `end_turn`; `session.error`) is the adapter's job,
+    so the driver sees only `custom_tool_use` / `terminal` / `error`.
+  - `drive_cma_agent_loop(...)` — the hosted model drives; this loop is the
+    capability gateway + accountant, routing every tool call through the **same**
+    helpers as the other two backends (`authorize_call`, `charge_tool_call`,
+    `would_exceed_budget`/`action_cost`, `contract_for_tool`, `AgentState`,
+    `TraceEntry`, `terminal_result`). STRICT/DEV mode parity; per-call
+    idempotency cids (`{session_cid}-call-{round}`); a losing race branch (or any
+    early return/exception) terminates the session via `finally: cancel()`.
+  - `manifest_to_custom_tools(...)` — manifest-only projection; never the built-in
+    `agent_toolset_20260401` (SPEC §7 deny-by-default).
+  - `CMAAgentEnv` — wraps an inner `Env`, overrides only `run_agent`.
+- **`Agent.run_on_cma(...)` / `arun_on_cma(...)`** (`agent.py`) — a third run
+  surface beside `.run()` (local) and `.deploy()` (Temporal), reusing the
+  facade's existing grants/contracts/budget/manifest.
+- **`composable_agents/execution/cma_anthropic.py`** — an *experimental* HTTP
+  client (`AnthropicCMAClient`) for the documented managed-agents beta
+  (`anthropic-beta: managed-agents-2026-04-01`), behind the optional `cma` extra.
+  The installed `anthropic` SDK (0.79.0) does not yet expose managed agents, so
+  it targets the documented HTTP endpoints directly via `httpx`. It is **not**
+  verified against a live CMA endpoint — only against unit tests and
+  `httpx.MockTransport`. Swap the transport for SDK-typed calls once a new enough
+  SDK ships.
+
+The golden corpus did not move: this is all execution-layer code that emits no
+new IR. See *Status of the open obligations* below for what is and isn't solved.
 
 ## What CMA is
 
@@ -138,66 +178,96 @@ shaping, human-gate behavior, and continue-as-new/state durability. Concretely:
    since the parent only records "started CMA session `<id>`, received terminal
    value."
 
-### Sketch (schematic — real helper signatures)
+### The driver (as built)
+
+The real loop lives in `drive_cma_agent_loop` and is driven by `CMAAgentEnv`'s
+`run_agent`. Condensed (the committed code carries the full STRICT/DEV branching
+and accounting):
 
 ```python
-class CMAAgentEnv(Env):
-    async def run_agent(self, controller, value, cid, app_config):
-        spec = self._resolve_agent_spec(controller)        # grants + contracts + budget
-        state = AgentState(last=value)
-        session = await self._cma.create_session(
-            agent=self._manifest_as_custom_tools(spec),     # custom tools = manifest, no builtins
-            environment=self._environment,
-            idempotency_key=cid,                            # dedupe session create on replay
-        )
-        async for ev in session.events(value):
-            if ev.is_custom_tool_use:
-                denial = authorize_call(
-                    ev.tool,
-                    unconstrained=spec.unconstrained,
-                    granted_set=spec.granted,
-                    contracts=spec.contracts,
-                ) or charge_tool_call(state, ev.tool, spec.contracts)
-                # budget is a distinct guard; cost estimation is an open problem (below)
-                if denial:
-                    await session.tool_error(ev, denial.reason)
-                    continue
-                result = await self._call_hand(ev.tool, ev.input, cid=ev.call_id)
-                state.charge_tool(ev.tool)
-                await session.tool_result(ev, result)
-            elif ev.is_terminal:
-                return terminal_result("done", state, output=ev.output)
-        return terminal_result("controller_error", state, reason="session ended without output")
+async def drive_cma_agent_loop(*, input, cfg, session, call_tool,
+                               granted=None, contracts=None, state=None,
+                               session_cid="cma"):
+    state = state or AgentState(last=input)
+    unconstrained = granted is None
+    granted_set = set(granted or [])
+    try:
+        async for ev in session.events():
+            if ev.is_error:
+                return finish("controller_error", reason=ev.reason)
+            if ev.is_terminal:
+                state.charge(cfg.think_cost)
+                return finish("done", output=ev.output)
+            # ev.is_custom_tool_use — the model chose a tool this round:
+            if state.round >= cfg.max_rounds:    return finish("max_rounds")
+            if precheck_controller(state, cfg):  return ...           # think budget
+            state.charge(cfg.think_cost)
+            cost = action_cost(RoundAction(Decision.CALL, {"tool": ev.tool, "input": ev.input}))
+            if would_exceed_budget(state, cost, cfg.budget): return finish("over_budget")
+            # grant + approval, then maxCalls — STRICT denial => tool_error + finish("denied");
+            # DEV denial => record prodGap and proceed (warn-but-allow), exactly as the local loop:
+            if (d := authorize_call(ev.tool, unconstrained=unconstrained,
+                                    granted_set=granted_set, contracts=contracts)):
+                ... # STRICT: await session.tool_error(ev.call_id, d.reason); return finish("denied", d.reason)
+            if (d := charge_tool_call(state, ev.tool, contracts)):
+                ... # same STRICT/DEV handling
+            out = await call_tool(ev.tool, ev.input, f"{session_cid}-call-{state.round}")
+            state.charge(cost); state.last = out
+            state.record(TraceEntry(decision="call", ref=ev.tool, cost=cost))
+            state.round += 1
+            await session.tool_result(ev.call_id, out)
+        return finish("controller_error", reason="session ended without terminal output")
+    finally:
+        await session.cancel()   # terminate a losing-race / abandoned session
 ```
 
-## Open obligations (unsolved by the sketch)
+`CMAAgentEnv.run_agent` resolves the loop policy (with `app_config` budget/
+maxRounds overrides), builds the manifest-only custom-tool surface, calls
+`client.create_session(agent=..., environment=..., session_cid=cid, input=value)`,
+and hands a `call_tool` closure (name → bound hand) to the driver. The returned
+`terminal_result(...)` is byte-identical to the local/Temporal backends for the
+same scenario — the parity test asserts exactly that.
 
-These are the parts that need real design before this is buildable, not just
-wiring:
+## Status of the open obligations
 
-- **Per-tool-call idempotency keys.** A session-level `idempotency_key` is not
-  enough; contracts that require idempotency need a deterministic per-call key
-  ([SPEC §8.5](../SPEC.md#85-idempotency-keys)) derived from the event, mirroring
-  the `cid` discipline in the Temporal `callHand`.
-- **Cancellation and race admission.** `race`/`hedge`/`quorum` cancel losers
-  ([SPEC §8.3](../SPEC.md#83-racehedgequorum)). A long-running CMA session used in
-  a losing branch must be *interrupted/terminated*, or it keeps producing side
-  effects after the parent settles. (Today `app` inside a race is already
-  constrained; this backend must honor the same admission rules.)
-- **Budget reconciliation.** Framework budget is `AgentState.spent_usd` checked
-  *before* each action; CMA reports cumulative token/runtime usage that must be
-  *fetched* from session state. The backend needs a policy to estimate or poll
-  CMA spend and stop before overspend, plus a cost model converting
-  session-hours + tokens into the framework's USD accounting.
-- **Human gates.** `human_gate(...)` is a durable signal/wait with an explicit
-  timeout output ([SPEC §8.6](../SPEC.md#86-human-gate)). It must map onto CMA's
-  permission-policy confirmations / custom-tool pauses, and approval-required
-  tools must still force `ESCALATE`.
-- **Observability / projection.** If the loop internals are opaque, what
-  projection records cost, status, denial, cancellation, and the terminal trace?
-  The returned trace must satisfy the trace-richness requirements
-  ([SPEC §10.1](../SPEC.md#101-trace-richness)) rather than being fabricated or
-  missing content-addressed refs.
+What the v1 implementation settles, and what is deliberately deferred:
+
+- **Per-tool-call idempotency keys — addressed.** Each call gets a deterministic
+  `{session_cid}-call-{round}` cid, mirroring the Temporal `callHand` discipline
+  ([SPEC §8.5](../SPEC.md#85-idempotency-keys)). (There is no documented
+  session-create idempotency key in the CMA HTTP API, so session-create dedup on
+  replay remains the adapter's concern — e.g. reusing a known session id.)
+- **Cancellation — addressed; race admission — inherited.** The driver always
+  terminates the session in a `finally` (`cancel()` → `user.interrupt`), so a
+  losing `race`/`hedge`/`quorum` branch or any early return stops producing side
+  effects ([SPEC §8.3](../SPEC.md#83-racehedgequorum)). The existing IR-level race
+  admission rules for `app` apply unchanged (this is a `run_agent` backend, not a
+  new node).
+- **Budget — framework-authoritative; CMA usage is observability.** The same
+  pre-action `AgentState.spent_usd` guard runs as in the local/Temporal loops, so
+  the run stops before overspend by the framework's cost model. CMA's cumulative
+  token `usage` is carried through `CMAEvent.usage` for observability but is **not
+  yet** reconciled into the USD budget as the authority. A token/session-hour →
+  USD cost model and post-idle usage reconciliation are deferred.
+- **Human gates — partial.** Approval-required tools still force the loop to stop
+  (a denial → STRICT `denied`/`tool_error`), so they cannot be silently called
+  ([SPEC §7.3](../SPEC.md#73-approval-gating-new--required)). Mapping a durable
+  `human_gate(...)` signal/wait ([SPEC §8.6](../SPEC.md#86-human-gate)) onto CMA's
+  `user.tool_confirmation` permission flow *inside* the CMA loop is deferred;
+  `human_gate` remains a framework-level node outside the CMA subtree.
+- **Observability / projection — addressed for parity.** The driver returns a
+  real `terminal_result` with an `AgentState.trace` of `TraceEntry` per call, so
+  the parent projection records cost/status/trace exactly as it does for the local
+  backend. The trace matches local-loop richness; richer content-addressed refs
+  per [SPEC §10.1](../SPEC.md#101-trace-richness) (and a CMA-session-id projection
+  attribute) are a follow-on.
+- **Deferred surface.** v1 projects tool calls only — `sub`-flow controller
+  decisions are not exposed as CMA custom tools yet. A **Temporal-side** CMA
+  backend (running a CMA session from an activity, rather than the local-env
+  driver) is also future work; today CMA execution rides the in-memory `Env`
+  while the parent flow may still be local or Temporal.
+- **Not verified against live CMA.** The HTTP adapter is exercised only by unit
+  tests + `httpx.MockTransport`; it has never talked to a real session.
 
 ## Caveats
 
@@ -222,6 +292,11 @@ runtime (framing 3): it is a competing control plane, not an `Env`. The only
 principled "third runtime" is framing 4 — **a CMA backend for the `app` node**,
 a third implementation of the `run_agent` seam, with the capability manifest
 projected as CMA custom tools and every call routed through the existing gating
-helpers. That buys CMA's durability without surrendering the invariants the
-framework exists to enforce — provided the open obligations above (idempotency
-keys, cancellation, budget reconciliation, human gates, projection) are solved.
+helpers. **That is what shipped** (`CMAAgentEnv` / `drive_cma_agent_loop` /
+`Agent.run_on_cma`, with an experimental `AnthropicCMAClient` behind the `cma`
+extra): it buys CMA's durability without surrendering the invariants the
+framework exists to enforce, with the budget guard, cancellation, idempotency
+cids, and trace already in place. The deferred items above (CMA-usage→USD budget
+reconciliation, human gates inside the CMA loop, a Temporal-side backend, richer
+trace refs, and — above all — verification against a live CMA endpoint) are what
+stand between this v1 and production use.
