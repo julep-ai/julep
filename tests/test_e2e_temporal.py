@@ -171,7 +171,7 @@ async def _human_gate_timeout(env):
 
 
 async def _agent(env):
-    agents = {"ctrl": {"config": {"maxRounds": 6, "budget": {"usd": 1000}}, "grantedTools": ["srv/double"]}}
+    agents = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["srv/double"]}}
     async with _worker(env, task_queue="ca-agent", agents=agents):
         sid = f"agent-{uuid.uuid4()}"
         res = await env.client.execute_workflow(
@@ -192,7 +192,7 @@ async def _agent(env):
 
     agents_b = {
         "budget_ctrl": {
-            "config": {"maxRounds": 6, "budget": {"usd": 0.5}},
+            "config": {"maxRounds": 6, "budget": {"cost": 0.5}},
             "grantedTools": ["srv/double"],
         }
     }
@@ -215,12 +215,12 @@ async def _agent(env):
             id=sid, task_queue="ca-agent-b",
         )
     assert res2["status"] == "over_budget", res2
-    assert res2["spentUsd"] == 0, res2
+    assert res2["cost"] == 0, res2
     assert res2["trace"] == [], res2
     assert budget_brain_calls["count"] == 0
 
     # Capability deny: the requested tool is not granted.
-    agents_d = {"ctrl": {"config": {"maxRounds": 6, "budget": {"usd": 1000}}, "grantedTools": ["only/other"]}}
+    agents_d = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["only/other"]}}
     async with _worker(env, task_queue="ca-agent-d", agents=agents_d):
         sid = f"agentd-{uuid.uuid4()}"
         res3 = await env.client.execute_workflow(
@@ -233,7 +233,7 @@ async def _agent(env):
     # Agent loops cannot open a human approval gate, so approval-required tools deny.
     agents_a = {
         "ctrl": {
-            "config": {"maxRounds": 6, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 6, "budget": {"cost": 1000}},
             "grantedTools": ["srv/double"],
             "grantedContracts": {
                 "srv/double": {
@@ -271,7 +271,7 @@ async def _agent(env):
         "max_ctrl": {
             "config": {
                 "maxRounds": 6,
-                "budget": {"usd": 1000},
+                "budget": {"cost": 1000},
                 "continueAsNewAfter": 1,
             },
             "grantedTools": ["srv/double"],
@@ -315,15 +315,15 @@ async def _agent(env):
 
     sub_agents = {
         "sub_ctrl_denied": {
-            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
             "grantedSubflows": ["other"],
         },
         "sub_ctrl_empty": {
-            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
             "grantedSubflows": [],
         },
         "sub_ctrl_allowed": {
-            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
             "grantedSubflows": ["child"],
         },
     }
@@ -395,11 +395,11 @@ async def _app_inline_grant_attenuation(env):
 
     agents = {
         "inline_missing_ctrl": {
-            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
             "grantedTools": ["srv/double"],
         },
         "inline_allowed_ctrl": {
-            "config": {"maxRounds": 3, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
             "grantedTools": ["only/spec-should-not-be-used"],
         },
     }
@@ -410,12 +410,12 @@ async def _app_inline_grant_attenuation(env):
         }
     )
     missing_tools = deploy(
-        app("inline_missing_ctrl", budget=Budget(usd=1000)),
+        app("inline_missing_ctrl", budget=Budget(cost=1000)),
         _snapshot(),
         capabilities=caps,
     )
     allowed_inline = deploy(
-        app("inline_allowed_ctrl", tools=["srv/double"], budget=Budget(usd=1000)),
+        app("inline_allowed_ctrl", tools=["srv/double"], budget=Budget(cost=1000)),
         _snapshot(),
         capabilities=caps,
     )
@@ -459,12 +459,12 @@ async def _strict_controller_contract(env):
 
     agents = {
         "strict_malformed_ctrl": {
-            "config": {"maxRounds": 1, "budget": {"usd": 1000}},
+            "config": {"maxRounds": 1, "budget": {"cost": 1000}},
         },
         "permissive_malformed_ctrl": {
             "config": {
                 "maxRounds": 1,
-                "budget": {"usd": 1000},
+                "budget": {"cost": 1000},
                 "permissiveController": True,
             },
         },

@@ -72,7 +72,7 @@ def test_elnino_example_runs_under_in_memory_env_with_deterministic_stubs() -> N
     brains = _brains()
 
     def planner(value):
-        plan = call(swarm.T_SOLVE, ann=Ann(cost_usd=0.05))
+        plan = call(swarm.T_SOLVE, ann=Ann(cost=0.05))
         return bind_plan_to_manifest(plan, deployment.manifest)
 
     env = InMemoryEnv(
@@ -106,9 +106,9 @@ def test_elnino_example_runs_under_in_memory_env_with_deterministic_stubs() -> N
     assert store.cost_by_shape()
     assert "Pipeline" in store.cost_by_shape()
 
-    caps.assert_within_budget(usd=399.0)
+    caps.assert_within_budget(cost=399.0)
     with pytest.raises(CapabilityDenied):
-        caps.assert_within_budget(usd=401.0)
+        caps.assert_within_budget(cost=401.0)
 
     denied_caps = CapabilityManifest.from_dict({"tools": []})
     denied = deploy(swarm.season_plan, snapshot, capabilities=denied_caps, strict=False)

@@ -97,7 +97,7 @@ def test_terminal_event_honors_max_rounds_zero_parity_with_local_agent_loop() ->
     )
 
     assert local["status"] == "max_rounds"
-    assert local["spentUsd"] == 0.0
+    assert local["cost"] == 0.0
     assert cma == local
 
 
@@ -108,7 +108,7 @@ def test_terminal_event_honors_budget_precheck_parity_with_local_agent_loop() ->
     async def local_call_tool(_tool: str, _value: Any) -> Any:
         raise AssertionError("tool should not execute")
 
-    cfg = AgentConfig(budget=Budget(usd=0.5))
+    cfg = AgentConfig(budget=Budget(cost=0.5))
     local = run(
         drive_agent_loop(
             input="q",
@@ -133,7 +133,7 @@ def test_terminal_event_honors_budget_precheck_parity_with_local_agent_loop() ->
     )
 
     assert local["status"] == "over_budget"
-    assert local["spentUsd"] == 0.0
+    assert local["cost"] == 0.0
     assert cma == local
 
 
@@ -323,7 +323,7 @@ def test_over_budget_from_action_guard() -> None:
     out = run(
         drive_cma_agent_loop(
             input="q",
-            cfg=AgentConfig(budget=Budget(usd=0.75), think_cost=0.25),
+            cfg=AgentConfig(budget=Budget(cost=0.75), think_cost=0.25),
             session=session,
             call_tool=call_tool,
             granted={"search"},

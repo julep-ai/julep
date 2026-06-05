@@ -117,8 +117,8 @@ def test_race_emits_scheduling_attrs():
 
 def test_real_run_cost_rolls_up_from_annotations():
     flow = seq(
-        call(mcp("srv", "a"), ann=Ann(cost_usd=0.25)),
-        think("summarizer", ann=Ann(cost_usd=0.75)),
+        call(mcp("srv", "a"), ann=Ann(cost=0.25)),
+        think("summarizer", ann=Ann(cost=0.75)),
     )
     fr, env, store = _env_and_store(flow, hands=HANDS, brains={"summarizer": lambda v: v})
 

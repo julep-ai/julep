@@ -23,7 +23,7 @@ def test_app_inline_config_json_round_trips():
         "c",
         tools=["search", "archive"],
         subflows=["child"],
-        budget=Budget(usd=1),
+        budget=Budget(cost=1),
         max_rounds=5,
     )
 
@@ -36,14 +36,14 @@ def test_app_inline_config_json_round_trips():
         "controller": "c",
         "tools": ["search", "archive"],
         "subflows": ["child"],
-        "budget": {"usd": 1},
+        "budget": {"cost": 1},
         "maxRounds": 5,
     }
     assert back.to_json() == encoded
     assert back.tools == ["search", "archive"]
     assert back.subflows == ["child"]
     assert back.budget is not None
-    assert back.budget.usd == 1
+    assert back.budget.cost == 1
     assert back.max_rounds == 5
 
 
@@ -63,7 +63,7 @@ def test_app_inline_config_reaches_interpreter_env_run_agent() -> None:
         "ctrl",
         tools=[],
         subflows=["child"],
-        budget=Budget(usd=1),
+        budget=Budget(cost=1),
         max_rounds=5,
     )
 
@@ -76,7 +76,7 @@ def test_app_inline_config_reaches_interpreter_env_run_agent() -> None:
         "app_config": {
             "tools": [],
             "subflows": ["child"],
-            "budget": {"usd": 1},
+            "budget": {"cost": 1},
             "maxRounds": 5,
         },
     }

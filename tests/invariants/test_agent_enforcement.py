@@ -70,15 +70,15 @@ def test_contract_retry_attempts_use_cautious_or_liberal_policy() -> None:
 
 
 def test_controller_budget_precheck_stops_without_spend() -> None:
-    state = AgentState(spent_usd=0)
-    cfg = AgentConfig(think_cost=2, budget=Budget(usd=1))
+    state = AgentState(spent=0)
+    cfg = AgentConfig(think_cost=2, budget=Budget(cost=1))
 
     result = precheck_controller(state, cfg)
 
     assert result is not None
     assert result["status"] == "over_budget"
-    assert result["spentUsd"] == 0
-    assert state.spent_usd == 0
+    assert result["cost"] == 0
+    assert state.spent == 0
     assert state.trace == []
 
 

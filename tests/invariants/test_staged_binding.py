@@ -37,7 +37,7 @@ def _caps(*names: str) -> CapabilityManifest:
                 {"name": name, "effect": "read", "idempotency": "required"}
                 for name in names
             ],
-            "budget": {"usd": 100},
+            "budget": {"cost": 100},
         }
     )
 
@@ -167,7 +167,7 @@ def test_trace_entry_refs_round_trip() -> None:
 def test_validate_plan_absent_tools_section_allows_manifest_bound_call() -> None:
     tool = _frozen("lookup")
     manifest = {tool.execution_hash: tool}
-    parent = CapabilityManifest.from_dict({"budget": {"usd": 100}})
+    parent = CapabilityManifest.from_dict({"budget": {"cost": 100}})
 
     diags = validate_plan(call(mcp("srv", "lookup")), parent, manifest)
 
@@ -177,7 +177,7 @@ def test_validate_plan_absent_tools_section_allows_manifest_bound_call() -> None
 def test_validate_plan_present_empty_tools_denies_every_call() -> None:
     tool = _frozen("lookup")
     manifest = {tool.execution_hash: tool}
-    parent = CapabilityManifest.from_dict({"tools": [], "budget": {"usd": 100}})
+    parent = CapabilityManifest.from_dict({"tools": [], "budget": {"cost": 100}})
 
     diags = validate_plan(call(mcp("srv", "lookup")), parent, manifest)
 

@@ -56,7 +56,7 @@ class Decision(str, Enum):
     CONTROLLER_ERROR = "controller_error"  # malformed controller output
 
 
-# Default per-action cost estimate (USD), used when the controller does not
+# Default per-action cost estimate (cost units), used when the controller does not
 # report an actual cost. Deliberately conservative so the budget guard trips
 # early rather than late. Matches the structural defaults in ``staged``.
 DEFAULT_TOOL_COST = 1.0
@@ -182,8 +182,8 @@ class AgentConfig:
         }
         if self.budget is not None:
             b: dict[str, Any] = {}
-            if self.budget.usd is not None:
-                b["usd"] = self.budget.usd
+            if self.budget.cost is not None:
+                b["cost"] = self.budget.cost
             if self.budget.tokens is not None:
                 b["tokens"] = self.budget.tokens
             if self.budget.wall_seconds is not None:
@@ -241,13 +241,13 @@ class AgentState:
     """Mutable loop state. Round-trips through JSON for continue-as-new."""
 
     round: int = 0
-    spent_usd: float = 0.0
+    spent: float = 0.0
     last: Any = None
     trace: list[TraceEntry] = field(default_factory=list)
     call_counts: dict[str, int] = field(default_factory=dict)
 
-    def charge(self, usd: float) -> None:
-        self.spent_usd += usd
+    def charge(self, cost: float) -> None:
+        self.spent += cost
 
     def record(self, entry: TraceEntry) -> None:
         self.trace.append(entry)
@@ -255,7 +255,7 @@ class AgentState:
     def to_json(self) -> dict[str, Any]:
         out = {
             "round": self.round,
-            "spentUsd": self.spent_usd,
+            "cost": self.spent,
             "last": self.last,
             "trace": [t.to_json() for t in self.trace],
         }
@@ -267,7 +267,7 @@ class AgentState:
     def from_json(d: dict[str, Any]) -> "AgentState":
         return AgentState(
             round=int(d.get("round", 0)),
-            spent_usd=float(d.get("spentUsd", 0.0)),
+            spent=float(d.get("cost", d.get("spentUsd", 0.0))),
             last=d.get("last"),
             trace=[TraceEntry.from_json(t) for t in d.get("trace", [])],
             call_counts={
@@ -281,10 +281,10 @@ class AgentState:
 # Budget + continue-as-new policy (pure predicates the harness consults).
 # --------------------------------------------------------------------------- #
 def would_exceed_budget(state: AgentState, next_cost: float, budget: Optional[Budget]) -> bool:
-    """True if charging ``next_cost`` would push the run over its USD budget."""
-    if budget is None or budget.usd is None:
+    """True if charging ``next_cost`` would push the run over its cost budget."""
+    if budget is None or budget.cost is None:
         return False
-    return state.spent_usd + next_cost > budget.usd
+    return state.spent + next_cost > budget.cost
 
 
 def should_continue_as_new(state: AgentState, cfg: AgentConfig) -> bool:
@@ -299,7 +299,7 @@ def terminal_result(status: str, state: AgentState, output: Any = None,
         "status": status,
         "output": output if output is not None else state.last,
         "rounds": state.round,
-        "spentUsd": state.spent_usd,
+        "cost": state.spent,
         "trace": [t.to_json() for t in state.trace],
     }
     if reason is not None:

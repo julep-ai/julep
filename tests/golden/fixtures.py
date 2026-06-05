@@ -177,7 +177,7 @@ def capability_manifest() -> GoldenFixture:
             "mcp_servers": {"srv": None},
             "brains": [],
             "memory": [],
-            "budget": {"usd": 100.0, "tokens": 10000},
+            "budget": {"cost": 100.0, "tokens": 10000},
         }
     )
     return GoldenFixture(

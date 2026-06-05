@@ -54,7 +54,7 @@ def build() -> Agent:
         tools=[web_search],
         name="cookbook_research_assistant",
         llm=scripted_llm,
-        budget_usd=8.0,
+        budget_cost=8.0,
         instructions="Gather two fixed sources, then synthesize a short answer.",
     )
 
@@ -72,7 +72,7 @@ def run_ungranted_tool_demo() -> dict[str, Any]:
         tools=[],
         name="cookbook_research_assistant_denied",
         llm=bad_llm,
-        budget_usd=8.0,
+        budget_cost=8.0,
     )
     return agent.run(QUESTION)
 
@@ -81,10 +81,10 @@ def main() -> None:
     result = run_demo()
     print("Research answer:")
     print(result["output"]["answer"])
-    print(f"Spent: ${result['spentUsd']:.2f}")
+    print(f"Spent: {result['cost']:.2f} cost units")
     print("Trace:")
     for step in result["trace"]:
-        print(f"- {step['decision']} {step['ref']} (${step['cost']:.2f})")
+        print(f"- {step['decision']} {step['ref']} ({step['cost']:.2f} cost units)")
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ What it teaches: the same facade with a controller budget.
 
 Rung: local facade plus budget guard.
 
-Key APIs: `Agent`, `@tool`, `budget_usd=8.0`, multi-round `llm=scripted_llm`, `Agent.run(...)`, `spentUsd`, `trace`.
+Key APIs: `Agent`, `@tool`, `budget_cost=8.0`, multi-round `llm=scripted_llm`, `Agent.run(...)`, `cost`, `trace`.
 
 Run:
 

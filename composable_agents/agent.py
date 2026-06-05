@@ -374,13 +374,13 @@ def _derive_agent_name(
     *,
     model: str,
     tool_names: tuple[str, ...],
-    budget_usd: Optional[float],
+    budget_cost: Optional[float],
     max_rounds: int,
     instructions: str,
 ) -> str:
     payload = canonical_json(
         {
-            "budget_usd": budget_usd,
+            "budget_cost": budget_cost,
             "instructions": instructions,
             "max_rounds": max_rounds,
             "model": model,
@@ -403,7 +403,7 @@ class Agent(FlowLike[Any, Any]):
         *,
         name: Optional[str] = None,
         llm: Optional[Callable[[str, Any], Any]] = None,
-        budget_usd: Optional[float] = None,
+        budget_cost: Optional[float] = None,
         max_rounds: int = 24,
         instructions: Optional[str] = None,
         mode: EnforcementMode | str = EnforcementMode.STRICT,
@@ -450,7 +450,7 @@ class Agent(FlowLike[Any, Any]):
             resolved_name = _derive_agent_name(
                 model=brain,
                 tool_names=tool_names,
-                budget_usd=budget_usd,
+                budget_cost=budget_cost,
                 max_rounds=max_rounds,
                 instructions=system,
             )
@@ -467,11 +467,11 @@ class Agent(FlowLike[Any, Any]):
         self._tool_names = tool_names
         self._sub_refs = sub_refs
         self._llm = llm
-        self._budget_usd = budget_usd
+        self._budget_cost = budget_cost
         self._max_rounds = max_rounds
         self._instructions = instructions
         self._brain_fn = llm or default_local_brain
-        self._budget = Budget(usd=budget_usd) if budget_usd is not None else None
+        self._budget = Budget(cost=budget_cost) if budget_cost is not None else None
         self._mode = EnforcementMode.coerce(mode)
         self._cfg = AgentConfig(max_rounds=max_rounds, budget=self._budget, mode=self._mode)
         self._granted = {native_tool.name for native_tool in self._tools}
@@ -535,7 +535,7 @@ class Agent(FlowLike[Any, Any]):
             "brain": self._brain_model,
             "tools": list(self._caps),
             "llm": self._llm,
-            "budget_usd": self._budget_usd,
+            "budget_cost": self._budget_cost,
             "max_rounds": self._max_rounds,
             "instructions": self._instructions,
             "mode": self._mode,
@@ -585,7 +585,7 @@ class Agent(FlowLike[Any, Any]):
         self,
         *,
         brain: Optional[str] = None,
-        budget_usd: Any = _KEEP,
+        budget_cost: Any = _KEEP,
         max_rounds: Optional[int] = None,
         instructions: Any = _KEEP,
         mode: Any = _KEEP,
@@ -596,8 +596,8 @@ class Agent(FlowLike[Any, Any]):
             overrides["brain"] = brain
         if max_rounds is not None:
             overrides["max_rounds"] = max_rounds
-        if budget_usd is not _KEEP:
-            overrides["budget_usd"] = budget_usd
+        if budget_cost is not _KEEP:
+            overrides["budget_cost"] = budget_cost
         if instructions is not _KEEP:
             overrides["instructions"] = instructions
         if mode is not _KEEP:

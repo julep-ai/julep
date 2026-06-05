@@ -12,7 +12,7 @@ def test_result_dual_attribute_and_dict_access() -> None:
         "status": "done",
         "output": {"note": "x"},
         "trace": [{"decision": "call"}],
-        "spentUsd": 1.5,
+        "cost": 1.5,
         "rounds": 2,
     }
     r = Result(raw)
@@ -26,7 +26,7 @@ def test_result_dual_attribute_and_dict_access() -> None:
 
     assert r["status"] == "done"
     assert r["output"]["note"] == "x"
-    assert r["spentUsd"] == 1.5
+    assert r["cost"] == 1.5
     assert r.get("rounds") == 2
     assert "status" in r
     assert "denied" not in r

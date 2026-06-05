@@ -149,13 +149,13 @@ class Ann:
     def __init__(
         self,
         *,
-        cost_usd: Optional[float] = None,
+        cost: Optional[float] = None,
         risk: Optional[str] = None,
         cache: Optional[CacheHint] = None,
         effect: Optional[Effect] = None,
         timeout_s: Optional[int] = None,
     ) -> None:
-        self.cost = cost_usd
+        self.cost = cost
         self.risk = risk
         self.cache = cache
         self.effect = effect
@@ -178,7 +178,7 @@ class Ann:
     @staticmethod
     def from_json(d: dict[str, Any]) -> "Ann":
         return Ann(
-            cost_usd=d.get("cost"),
+            cost=d.get("cost"),
             risk=d.get("risk"),
             cache=CacheHint.from_json(d["cache"]) if d.get("cache") else None,
             effect=Effect(d["effect"]) if d.get("effect") else None,
@@ -272,8 +272,9 @@ def step_from_json(d: dict[str, Any]) -> Step:
 def _budget_to_json(budget: Any) -> dict[str, Any]:
     if isinstance(budget, dict):
         out: dict[str, Any] = {}
-        if "usd" in budget and budget["usd"] is not None:
-            out["usd"] = budget["usd"]
+        cost = budget.get("cost", budget.get("usd"))
+        if cost is not None:
+            out["cost"] = cost
         if "tokens" in budget and budget["tokens"] is not None:
             out["tokens"] = budget["tokens"]
         wall_seconds = budget.get("wallSeconds", budget.get("wall_seconds"))
@@ -282,11 +283,11 @@ def _budget_to_json(budget: Any) -> dict[str, Any]:
         return out
 
     out = {}
-    usd = getattr(budget, "usd", None)
+    cost = getattr(budget, "cost", None)
     tokens = getattr(budget, "tokens", None)
     wall_seconds = getattr(budget, "wall_seconds", None)
-    if usd is not None:
-        out["usd"] = usd
+    if cost is not None:
+        out["cost"] = cost
     if tokens is not None:
         out["tokens"] = tokens
     if wall_seconds is not None:
@@ -298,7 +299,7 @@ def _budget_from_json(d: dict[str, Any]) -> Any:
     from .capabilities import Budget
 
     return Budget(
-        usd=d.get("usd"),
+        cost=d.get("cost", d.get("usd")),
         tokens=d.get("tokens"),
         wall_seconds=d.get("wallSeconds", d.get("wall_seconds")),
     )

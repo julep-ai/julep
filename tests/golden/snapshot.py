@@ -81,8 +81,8 @@ def _capability_json(capabilities: CapabilityManifest | None) -> dict[str, Any] 
         out["memory"] = sorted(scope.value for scope in capabilities.memory)
     if capabilities.budget is not None:
         budget: dict[str, Any] = {}
-        if capabilities.budget.usd is not None:
-            budget["usd"] = capabilities.budget.usd
+        if capabilities.budget.cost is not None:
+            budget["cost"] = capabilities.budget.cost
         if capabilities.budget.tokens is not None:
             budget["tokens"] = capabilities.budget.tokens
         if capabilities.budget.wall_seconds is not None:

@@ -33,8 +33,8 @@ class Result(dict[str, Any], Generic[Out]):
 
     @property
     def cost(self) -> float:
-        """USD spent (the terminal dict's 'spentUsd')."""
-        return float(self.get("spentUsd", 0.0))
+        """Cost spent (the terminal dict's 'cost')."""
+        return float(self.get("cost", self.get("spentUsd", 0.0)))
 
     @property
     def rounds(self) -> int:

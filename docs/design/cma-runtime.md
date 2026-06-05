@@ -181,7 +181,7 @@ shaping, human-gate behavior, and continue-as-new/state durability. Concretely:
    affects *retry shaping* via the frozen `ToolContract`, not those two helpers.
    A denial maps to a `user.custom_tool_result` error (or an `ESCALATE`).
 3. **Preserve the run_agent boundary and terminal shape.** Carry an `AgentState`
-   (`round`, `spent_usd`, `last`, `trace`, `call_counts`) across events and
+   (`round`, `spent`, `last`, `trace`, `call_counts`) across events and
    return `terminal_result(status, state, output=...)` so local, Temporal, and
    CMA `app` nodes are indistinguishable upstream. The CMA session log is the
    durability substrate for that subtree alone — consistent with the parent's
@@ -255,7 +255,7 @@ What the v1 implementation settles, and what is deliberately deferred:
   admission rules for `app` apply unchanged (this is a `run_agent` backend, not a
   new node).
 - **Budget — framework-authoritative; CMA usage is observability.** The same
-  pre-action `AgentState.spent_usd` guard runs as in the local/Temporal loops, so
+  pre-action `AgentState.spent` guard runs as in the local/Temporal loops, so
   the run stops before overspend by the framework's cost model. CMA's cumulative
   token `usage` is carried through `CMAEvent.usage` for observability but is **not
   yet** reconciled into the USD budget as the authority. A token/session-hour →

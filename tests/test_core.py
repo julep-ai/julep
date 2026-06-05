@@ -30,12 +30,12 @@ def test_surface_shape_climbs_the_lattice():
     assert surface_shape(alt("p", call("a"), call("b"))) == Shape.BRANCHING
     assert surface_shape(iter_up_to(3, call("a"))) == Shape.FEEDBACK
     assert surface_shape(stage("planner")) == Shape.STAGED
-    agent = app("ctrl", tools=["a"], subflows=["child"], budget={"usd": 1}, max_rounds=2)
+    agent = app("ctrl", tools=["a"], subflows=["child"], budget={"cost": 1}, max_rounds=2)
     assert surface_shape(agent) == Shape.AGENT
     agent_json = agent.to_json()
     assert agent_json["tools"] == ["a"]
     assert agent_json["subflows"] == ["child"]
-    assert agent_json["budget"] == {"usd": 1}
+    assert agent_json["budget"] == {"cost": 1}
     assert agent_json["maxRounds"] == 2
     assert "max_rounds" not in agent_json
 
@@ -238,7 +238,7 @@ def test_race_admission_allows_asserted_idempotent_branches():
 # --------------------------------------------------------------------------- #
 def test_estimate_cost_folds_structure():
     # seq sums; alt takes max; iter multiplies by bound.
-    assert Ann(cost_usd=0.5, timeout_s=2).to_json() == {"cost": 0.5, "timeout": 2}
+    assert Ann(cost=0.5, timeout_s=2).to_json() == {"cost": 0.5, "timeout": 2}
     seq_flow = seq(call("a"), call("b"))
     assert estimate_cost(seq_flow) == estimate_cost(call("a")) + estimate_cost(call("b"))
     alt_flow = alt("p", call("a"), seq(call("b"), call("c")))
@@ -247,7 +247,7 @@ def test_estimate_cost_folds_structure():
 
 
 def test_admit_plan_rejects_staged_plan_shape():
-    parent = CapabilityManifest.from_dict({"tools": [], "budget": {"usd": 1000}})
+    parent = CapabilityManifest.from_dict({"tools": [], "budget": {"cost": 1000}})
     # A plan may not itself stage (closed shape > Feedback).
     with pytest.raises(PlanRejected):
         admit_plan(stage("inner"), parent)
@@ -255,7 +255,7 @@ def test_admit_plan_rejects_staged_plan_shape():
 
 def test_admit_plan_rejects_ungranted_tool():
     parent = CapabilityManifest.from_dict(
-        {"tools": [{"name": "a", "effect": "read", "idempotency": "native"}], "budget": {"usd": 1000}}
+        {"tools": [{"name": "a", "effect": "read", "idempotency": "native"}], "budget": {"cost": 1000}}
     )
     with pytest.raises(PlanRejected):
         admit_plan(seq(call("a"), call("b")), parent)

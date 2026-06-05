@@ -38,7 +38,7 @@ def test_drive_agent_loop_think_call_finish() -> None:
         "status": "done",
         "output": "done:4",
         "rounds": 1,
-        "spentUsd": 5.0,
+        "cost": 5.0,
         "trace": [{"decision": "call", "cost": 1.0, "ref": "calc/add"}],
     }
     assert seen_payloads == [
@@ -66,7 +66,7 @@ def test_drive_agent_loop_max_rounds() -> None:
     assert out["status"] == "max_rounds"
     assert out["output"] == 2
     assert out["rounds"] == 2
-    assert out["spentUsd"] == 6.0
+    assert out["cost"] == 6.0
     assert out["trace"] == [
         {"decision": "call", "cost": 1.0, "ref": "calc/add"},
         {"decision": "call", "cost": 1.0, "ref": "calc/add"},
@@ -92,7 +92,7 @@ def test_drive_agent_loop_denies_ungranted_tool() -> None:
 
     assert out["status"] == "denied"
     assert "not granted" in out["reason"]
-    assert out["spentUsd"] == 2.0
+    assert out["cost"] == 2.0
     assert out["trace"] == []
 
 
@@ -110,7 +110,7 @@ def test_drive_agent_loop_over_budget_before_think() -> None:
     out = asyncio.run(
         drive_agent_loop(
             input="q",
-            cfg=AgentConfig(budget=Budget(usd=1.0)),
+            cfg=AgentConfig(budget=Budget(cost=1.0)),
             invoke_controller=invoke_controller,
             call_tool=call_tool,
         )
@@ -118,7 +118,7 @@ def test_drive_agent_loop_over_budget_before_think() -> None:
 
     assert out["status"] == "over_budget"
     assert out["output"] == "q"
-    assert out["spentUsd"] == 0.0
+    assert out["cost"] == 0.0
     assert called is False
 
 
@@ -143,7 +143,7 @@ def test_drive_agent_loop_denies_second_call_via_contract_max_calls() -> None:
     assert "exceeded maxCalls" in out["reason"]
     assert out["output"] == 1
     assert out["rounds"] == 1
-    assert out["spentUsd"] == 5.0
+    assert out["cost"] == 5.0
     assert out["trace"] == [{"decision": "call", "cost": 1.0, "ref": "calc/add"}]
 
 
@@ -180,6 +180,6 @@ def test_drive_agent_loop_runs_end_to_end_through_interpreter() -> None:
         "status": "done",
         "output": "done:4",
         "rounds": 1,
-        "spentUsd": 5.0,
+        "cost": 5.0,
         "trace": [{"decision": "call", "cost": 1.0, "ref": "calc/add"}],
     }

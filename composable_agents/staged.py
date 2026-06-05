@@ -34,7 +34,7 @@ from .kinds import Op, Shape, shape_rank
 from .shapes import closed_shape
 from .validate import Diagnostic, blocking, validate
 
-# Rough per-leaf cost (in the same units as Ann.cost / Budget.usd) used only when
+# Rough per-leaf cost (in the same units as Ann.cost / Budget.cost) used only when
 # a node carries no explicit cost annotation. Deliberately small and overridable.
 _DEFAULT_CALL_COST = 1.0
 _DEFAULT_THINK_COST = 2.0
@@ -256,15 +256,15 @@ def validate_plan(
                 )
 
     # No budget raise: estimated spend must fit the parent envelope.
-    if parent.budget is not None and parent.budget.usd is not None:
+    if parent.budget is not None and parent.budget.cost is not None:
         est = estimate_cost(checked)
-        if est > parent.budget.usd:
+        if est > parent.budget.cost:
             out.append(
                 Diagnostic(
                     "PLAN_BUDGET",
                     checked.id,
                     f"plan estimated cost {est:.2f} exceeds parent budget "
-                    f"{parent.budget.usd:.2f}",
+                    f"{parent.budget.cost:.2f}",
                 )
             )
 

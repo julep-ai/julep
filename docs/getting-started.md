@@ -54,7 +54,7 @@ print(result["trace"])
 
 `llm=` is a controller callable with the shape `(brain, payload) -> reply`. In the local facade, `brain` is the model string passed to `Agent(...)`; `payload` contains the current `"input"` and the append-only `"trace"`. For a tool call, return `{"tool": "<granted tool name>", "input": value}`. To finish, return `{"output": value}`. The agent loop accepts a closed reply vocabulary; the other reply forms are used by more advanced subflow and escalation cases.
 
-`Agent(...)` freezes the controller identity around `brain`, `tools`, optional `name`, optional `llm`, `budget_usd`, `max_rounds`, `instructions`, and `mode`. The local `.run(...)` method executes the same bounded app loop through the in-memory interpreter. Use `await agent.arun(...)` instead when already inside an event loop.
+`Agent(...)` freezes the controller identity around `brain`, `tools`, optional `name`, optional `llm`, `budget_cost`, `max_rounds`, `instructions`, and `mode`. The local `.run(...)` method executes the same bounded app loop through the in-memory interpreter. Use `await agent.arun(...)` instead when already inside an event loop.
 
 ## Reading the result
 
@@ -70,10 +70,10 @@ print(result.trace)
 print(result.cost)
 
 print(result["status"])
-print(result.get("spentUsd"))
+print(result.get("cost"))
 ```
 
-The core fields are `.output`, `.status`, `.ok`, `.trace`, `.cost`, `.rounds`, `.reason`, and `.prod_gap`. `.cost` reads the terminal dict's `spentUsd` value. Dict compatibility is intentional, so existing code can use either `result.status` or `result["status"]`.
+The core fields are `.output`, `.status`, `.ok`, `.trace`, `.cost`, `.rounds`, `.reason`, and `.prod_gap`. `.cost` reads the terminal dict's `cost` value. Dict compatibility is intentional, so existing code can use either `result.status` or `result["status"]`.
 
 ## The keyless default brain
 
@@ -171,7 +171,7 @@ The worker must host the workflows, activities, tool hands, LLM callable, and ca
 ## Climb the ladder
 
 1. Local keyless `Agent.run(...)`: [examples/support_triage.py](../examples/support_triage.py), covered in [Examples](examples.md).
-2. Add a budget guard with `budget_usd`: [examples/research_assistant.py](../examples/research_assistant.py).
+2. Add a budget guard with `budget_cost`: [examples/research_assistant.py](../examples/research_assistant.py).
 3. Add approval structure with `human_gate(...)`: [examples/email_approval.py](../examples/email_approval.py), with safety context in [Capabilities and Safety](capabilities-and-safety.md).
 4. Run the admitted artifact durably on Temporal: [examples/temporal_durable_agent.py](../examples/temporal_durable_agent.py) and [Deploy on Temporal](deploy-temporal.md).
 5. Drop to raw combinators when you need full control: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `race`, `hedge`, `quorum`; see [Concepts](concepts.md), [Typed Flow](design/typed-flow.md), and the normative [SPEC](SPEC.md).

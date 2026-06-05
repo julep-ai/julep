@@ -102,11 +102,11 @@ def test_budget_flows_into_agent_config() -> None:
     def budget_tool(value: str) -> str:
         return value
 
-    agent = Agent("m", tools=[budget_tool], name="agent_budget", llm=llm, budget_usd=1.0)
+    agent = Agent("m", tools=[budget_tool], name="agent_budget", llm=llm, budget_cost=1.0)
     result = agent.run("hi")
 
     assert result["status"] == "over_budget"
-    assert result["spentUsd"] == 0.0
+    assert result["cost"] == 0.0
     assert result["trace"] == []
 
 
@@ -235,7 +235,7 @@ def test_deploy_artifact_and_shape_are_deterministic() -> None:
         tools=[a_read_tool],
         name="agent_artifact",
         llm=lambda _brain_name, _payload: {"output": "ok"},
-        budget_usd=1.0,
+        budget_cost=1.0,
     )
 
     deployment = agent.deployment()
@@ -243,7 +243,7 @@ def test_deploy_artifact_and_shape_are_deterministic() -> None:
     assert isinstance(deployment.artifact_hash, str)
     assert deployment.artifact_hash
 
-    budget = Budget(usd=1.0)
+    budget = Budget(cost=1.0)
     capabilities = CapabilityManifest(
         tools={
             a_read_tool.name: ToolGrant(

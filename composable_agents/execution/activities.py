@@ -291,8 +291,8 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
     if "budget" not in config and _CTX.capabilities is not None and _CTX.capabilities.budget is not None:
         b = _CTX.capabilities.budget
         budget: dict[str, Any] = {}
-        if b.usd is not None:
-            budget["usd"] = b.usd
+        if b.cost is not None:
+            budget["cost"] = b.cost
         if b.tokens is not None:
             budget["tokens"] = b.tokens
         if b.wall_seconds is not None:

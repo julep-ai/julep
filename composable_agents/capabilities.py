@@ -36,7 +36,7 @@ from .validate import Diagnostic
 
 @dataclass(frozen=True)
 class Budget:
-    usd: Optional[float] = None
+    cost: Optional[float] = None
     tokens: Optional[int] = None
     wall_seconds: Optional[int] = None
 
@@ -44,7 +44,7 @@ class Budget:
     def from_dict(d: Optional[dict[str, Any]]) -> Optional["Budget"]:
         if not d:
             return None
-        return Budget(usd=d.get("usd"), tokens=d.get("tokens"),
+        return Budget(cost=d.get("cost", d.get("usd")), tokens=d.get("tokens"),
                       wall_seconds=d.get("wallSeconds") or d.get("wall_seconds"))
 
 
@@ -190,8 +190,8 @@ class CapabilityManifest:
             out["memory"] = sorted(scope.value for scope in self.memory)
         if self.budget is not None:
             budget: dict[str, Any] = {}
-            if self.budget.usd is not None:
-                budget["usd"] = self.budget.usd
+            if self.budget.cost is not None:
+                budget["cost"] = self.budget.cost
             if self.budget.tokens is not None:
                 budget["tokens"] = self.budget.tokens
             if self.budget.wall_seconds is not None:
@@ -334,12 +334,12 @@ class CapabilityManifest:
             return True
         return domain in self.network
 
-    def assert_within_budget(self, *, usd: float = 0.0, tokens: int = 0) -> None:
+    def assert_within_budget(self, *, cost: float = 0.0, tokens: int = 0) -> None:
         """Raise :class:`CapabilityDenied` if a running estimate exceeds budget."""
         if self.budget is None:
             return
-        if self.budget.usd is not None and usd > self.budget.usd:
-            raise CapabilityDenied(f"budget exceeded: ${usd:.4f} > ${self.budget.usd:.4f}")
+        if self.budget.cost is not None and cost > self.budget.cost:
+            raise CapabilityDenied(f"cost budget exceeded: {cost:.4f} > {self.budget.cost:.4f}")
         if self.budget.tokens is not None and tokens > self.budget.tokens:
             raise CapabilityDenied(f"budget exceeded: {tokens} > {self.budget.tokens} tokens")
 

@@ -17,7 +17,7 @@ from composable_agents.agent_loop import (
     TraceEntry, action_cost, would_exceed_budget, should_continue_as_new,
     terminal_result, RoundAction,
 )
-from composable_agents.ir import Merge
+from composable_agents.ir import Merge, _budget_from_json
 from composable_agents.purity import PureEntry
 from composable_agents.errors import PlanRejected, ValidationError
 from composable_agents.derived import race
@@ -60,31 +60,37 @@ def test_action_cost_defaults():
 # State + budget + continue-as-new (continue-as-new safety = JSON round-trip).
 # --------------------------------------------------------------------------- #
 def test_state_json_round_trip():
-    s = AgentState(round=3, spent_usd=7.5, last={"k": 1})
+    s = AgentState(round=3, spent=7.5, last={"k": 1})
     s.record(TraceEntry(decision="call", ref="search", cost=1.0))
     s.record(TraceEntry(decision="sub", ref="child", shape="Pipeline", cost=5.0))
     s2 = AgentState.from_json(s.to_json())
-    assert s2.round == 3 and s2.spent_usd == 7.5
+    assert s2.round == 3 and s2.spent == 7.5
     assert [t.ref for t in s2.trace] == ["search", "child"]
 
 
 def test_config_json_round_trip():
     c = AgentConfig(
         max_rounds=10,
-        budget=Budget(usd=3.0, tokens=1000),
+        budget=Budget(cost=3.0, tokens=1000),
         continue_as_new_after=4,
         permissive_controller=True,
     )
     c2 = AgentConfig.from_json(c.to_json())
-    assert c2.max_rounds == 10 and c2.budget.usd == 3.0 and c2.continue_as_new_after == 4
+    assert c2.max_rounds == 10 and c2.budget.cost == 3.0 and c2.continue_as_new_after == 4
     assert c2.permissive_controller is True
 
 
 def test_budget_guard():
-    b = Budget(usd=10.0)
-    assert would_exceed_budget(AgentState(spent_usd=8.0), 5.0, b) is True
-    assert would_exceed_budget(AgentState(spent_usd=8.0), 1.0, b) is False
-    assert would_exceed_budget(AgentState(spent_usd=8.0), 5.0, None) is False
+    b = Budget(cost=10.0)
+    assert would_exceed_budget(AgentState(spent=8.0), 5.0, b) is True
+    assert would_exceed_budget(AgentState(spent=8.0), 1.0, b) is False
+    assert would_exceed_budget(AgentState(spent=8.0), 5.0, None) is False
+
+
+def test_legacy_budget_and_spent_keys_parse():
+    assert AgentState.from_json({"spentUsd": 5.0}).spent == 5.0
+    assert Budget.from_dict({"usd": 100}).cost == 100
+    assert _budget_from_json({"usd": 100}).cost == 100
 
 
 def test_continue_as_new_policy():
@@ -95,13 +101,13 @@ def test_continue_as_new_policy():
 
 
 def test_config_from_capabilities_inherits_budget():
-    caps = CapabilityManifest.from_dict({"budget": {"usd": 12.0}})
+    caps = CapabilityManifest.from_dict({"budget": {"cost": 12.0}})
     cfg = AgentConfig.from_capabilities(caps, max_rounds=7)
-    assert cfg.budget.usd == 12.0 and cfg.max_rounds == 7
+    assert cfg.budget.cost == 12.0 and cfg.max_rounds == 7
 
 
 def test_terminal_result_shape():
-    s = AgentState(round=2, spent_usd=3.0, last="x")
+    s = AgentState(round=2, spent=3.0, last="x")
     r = terminal_result("done", s, output="final")
     assert r["status"] == "done" and r["output"] == "final" and r["rounds"] == 2
 
@@ -122,7 +128,7 @@ def test_generalize_trace_to_plan_chains_calls_and_subs():
 def test_extract_plan_returns_diagnostics_without_raising():
     trace = [TraceEntry(decision="call", ref="search"), TraceEntry(decision="call", ref="writer")]
     caps = CapabilityManifest.from_dict(
-        {"tools": [{"name": "search", "effect": "read", "idempotency": "native"}], "budget": {"usd": 100}}
+        {"tools": [{"name": "search", "effect": "read", "idempotency": "native"}], "budget": {"cost": 100}}
     )
     plan, diags = extract_plan(trace, caps)
     assert any(d.code == "PLAN_TOOL_UNGRANTED" for d in diags)
@@ -130,7 +136,7 @@ def test_extract_plan_returns_diagnostics_without_raising():
 
 def test_promote_plan_enforces_admission():
     trace = [TraceEntry(decision="call", ref="writer")]
-    caps = CapabilityManifest.from_dict({"tools": [], "budget": {"usd": 100}})
+    caps = CapabilityManifest.from_dict({"tools": [], "budget": {"cost": 100}})
     with pytest.raises(PlanRejected):
         promote_plan(trace, caps)
 
@@ -138,7 +144,7 @@ def test_promote_plan_enforces_admission():
 def test_promote_plan_succeeds_when_granted():
     trace = [TraceEntry(decision="call", ref="search")]
     caps = CapabilityManifest.from_dict(
-        {"tools": [{"name": "search", "effect": "read", "idempotency": "native"}], "budget": {"usd": 100}}
+        {"tools": [{"name": "search", "effect": "read", "idempotency": "native"}], "budget": {"cost": 100}}
     )
     plan = promote_plan(trace, caps)
     assert plan.op.value == "prim"
@@ -299,8 +305,8 @@ def test_deployment_artifact_hash_changes_with_referenced_brain(monkeypatch):
 def test_deployment_artifact_hash_changes_with_capabilities():
     snap = read_snapshot("a")
     flow = call(mcp("srv", "a"))
-    low_budget = CapabilityManifest.from_dict({"budget": {"usd": 1.0}})
-    high_budget = CapabilityManifest.from_dict({"budget": {"usd": 2.0}})
+    low_budget = CapabilityManifest.from_dict({"budget": {"cost": 1.0}})
+    high_budget = CapabilityManifest.from_dict({"budget": {"cost": 2.0}})
 
     first = deploy(flow, snap, capabilities=low_budget)
     second = deploy(flow, snap, capabilities=high_budget)

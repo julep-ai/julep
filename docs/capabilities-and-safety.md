@@ -42,7 +42,7 @@ or `CapabilityManifest.from_dict(...)`. Its grant sections are:
   `whole_session`.
 - `network`: native hand egress domains.
 - `mcp_servers` / `mcpServers`: server -> optional version constraint.
-- `budget`: `usd`, `tokens`, and `wallSeconds` / `wall_seconds`.
+- `budget`: `cost`, `tokens`, and `wallSeconds` / `wall_seconds`.
 
 ```yaml
 tools:
@@ -63,7 +63,7 @@ network:
 mcp_servers:
   search: ">=1"
 budget:
-  usd: 0.25
+  cost: 0.25
   tokens: 20000
   wallSeconds: 60
 ```

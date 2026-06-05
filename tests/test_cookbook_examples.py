@@ -39,7 +39,7 @@ def test_research_assistant_runs_keyless_with_budget_and_denies_ungranted_tool()
         "answer": "Use Postgres advisory locks; pair them with a visibility timeout.",
         "sources": ["ops-note:advisory-locks", "runbook:visibility-timeouts"],
     }
-    assert result["spentUsd"] == 8.0
+    assert result["cost"] == 8.0
     assert result["trace"] == [
         {"decision": "call", "ref": "web_search", "cost": 1.0},
         {"decision": "call", "ref": "web_search", "cost": 1.0},

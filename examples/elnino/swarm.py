@@ -350,7 +350,7 @@ ingest = seq(
     # Synthesize a per-zone context vector. Annotated with a cost/timeout hint so
     # the projection can attribute spend to this step.
     think("forecast_synthesizer", ctx=ContextScope.WHOLE_SESSION,
-          ann=Ann(cost_usd=0.20, timeout_s=90)),
+          ann=Ann(cost=0.20, timeout_s=90)),
 )
 
 
@@ -378,7 +378,7 @@ zone_plan_flow = seq(
     iter_up_to(
         max=3,
         until="allocation_feasible.v1",
-        body=call(T_SOLVE, ann=Ann(cost_usd=0.05)),
+        body=call(T_SOLVE, ann=Ann(cost=0.05)),
     ),
 )
 
@@ -391,7 +391,7 @@ zone_adaptive_agent = app(
     controller="zone_agent_controller",
     tools=["soil/moisture_grid", "market/commodity_prices", "water/rights_registry"],
     subflows=[ZONE_PLAN_REF],
-    budget=Budget(usd=2.50, tokens=120_000, wall_seconds=180),
+    budget=Budget(cost=2.50, tokens=120_000, wall_seconds=180),
     max_rounds=8,
 )
 
@@ -427,7 +427,7 @@ reconcile = seq(
     iter_up_to(
         max=4,
         until="allocation_feasible.v1",
-        body=call(T_SOLVE, ann=Ann(cost_usd=0.05)),
+        body=call(T_SOLVE, ann=Ann(cost=0.05)),
     ),
 )
 
@@ -499,7 +499,7 @@ season_plan = seq(
 # --------------------------------------------------------------------------- #
 CAPS_YAML = """
 budget:
-  usd: 400
+  cost: 400
   tokens: 4000000
   wallSeconds: 90000
 

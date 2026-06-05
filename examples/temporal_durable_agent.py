@@ -131,7 +131,7 @@ async def main() -> None:
             )
 
         print("\n=== durable run result ===")
-        print("status:", result["status"], "| spent:", result.get("spentUsd"))
+        print("status:", result["status"], "| spent:", result.get("cost"))
         print("output:", json.dumps(result["output"]))
         print("trace:")
         for entry in result["trace"]:

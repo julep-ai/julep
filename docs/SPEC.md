@@ -216,7 +216,7 @@ grant ambient access.
 | `mcp_servers` | server → optional version pin | version pin MUST be enforced against the frozen tool's `server_version` |
 | `network` | egress domains | enforced for native hands at call time |
 | `subflows` | invokable sub-flow refs | distinct from tool grants; a sub may encapsulate powerful effects |
-| `budget` | usd / tokens / wall-seconds | inherited by agents unless overridden |
+| `budget` | cost / tokens / wall-seconds | inherited by agents unless overridden |
 | `approval` | tools requiring a human gate | see §7.3 |
 
 ### 7.3 Approval gating (new — required)
