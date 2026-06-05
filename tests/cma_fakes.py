@@ -51,6 +51,7 @@ class FakeCMAClient:
         self.agent: Optional[dict[str, Any]] = None
         self.environment: Any = None
         self.session_cid: Optional[str] = None
+        self.input: Any = None
 
     async def create_session(
         self,
@@ -58,8 +59,10 @@ class FakeCMAClient:
         agent: dict[str, Any],
         environment: Any,
         session_cid: str,
+        input: Any = None,
     ) -> FakeCMASession:
         self.agent = agent
         self.environment = environment
         self.session_cid = session_cid
+        self.input = input
         return self.session

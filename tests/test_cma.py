@@ -258,6 +258,7 @@ def test_cma_agent_env_runs_app_node_end_to_end() -> None:
         "name": "controller",
         "tools": manifest_to_custom_tools(["search"]),
     }
+    assert client.input == "q"
     assert client.environment == {"kind": "fake"}
     assert client.session_cid is not None
 

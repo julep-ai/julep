@@ -30,6 +30,8 @@ dependencies = [
 temporal = ["temporalio>=1.7"]
 # Native hand (HTTP tool) calls from the callHand activity.
 http = ["httpx>=0.24"]
+# Experimental Claude Managed Agents (CMA) backend (HTTP, beta-pinned).
+cma = ["httpx>=0.24"]
 # OpenTelemetry span export of the projection.
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
 # Everything needed to run the full test suite (including the Temporal E2E test).

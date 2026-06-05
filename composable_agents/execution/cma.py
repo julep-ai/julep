@@ -87,6 +87,7 @@ class CMAClient(Protocol):
         agent: dict[str, Any],
         environment: Any,
         session_cid: str,
+        input: Any = None,
     ) -> CMASession: ...
 
 
@@ -293,6 +294,7 @@ class CMAAgentEnv:
             agent=agent_payload,
             environment=self._environment,
             session_cid=cid,
+            input=value,
         )
 
         async def call_tool(tool: str, v: Any, _call_cid: str) -> Any:
