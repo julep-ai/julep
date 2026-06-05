@@ -31,6 +31,7 @@ from .deploy import Deployment, deploy
 from .dotctx import Brain, register_brain
 from .dsl import app, call, native
 from .errors import ValidationError
+from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
 from .flow import Flow, FlowLike, SplitCapability
@@ -742,12 +743,73 @@ class Agent(FlowLike[Any, Any]):
         result = await interpret(deployment.flow, input, env)
         return Result(cast("dict[str, Any]", result.value))
 
+    async def arun_on_cma(
+        self,
+        input: Any,
+        *,
+        client: CMAClient,
+        environment: Any = None,
+    ) -> "Result[Any]":
+        deployment = self._deploy()
+        emitter = ProjectionEmitter(InMemoryProjection())
+        tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
+        max_call_limits = (
+            deployment.capabilities.max_call_limits()
+            if deployment.capabilities is not None
+            else {}
+        )
+        contracts: dict[str, dict[str, Any]] = {
+            name: dict(contract) for name, contract in self._contracts.items()
+        }
+        for tool_name, limit in max_call_limits.items():
+            contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+        custom_tools = manifest_to_custom_tools(
+            self._tool_names,
+            input_schemas={native_tool.name: native_tool.input_schema for native_tool in self._tools},
+            descriptions={native_tool.name: native_tool.fn.__doc__ or "" for native_tool in self._tools},
+        )
+        inner = InMemoryEnv(
+            deployment.manifest,
+            emitter,
+            hands=tool_fns,
+            mode=self._mode,
+        )
+        cma_env = CMAAgentEnv(
+            inner,
+            client=client,
+            environment=environment,
+            hands=tool_fns,
+            cfg=self._cfg,
+            granted=self._granted,
+            contracts=contracts,
+            custom_tools=custom_tools,
+        )
+        result = await interpret(deployment.flow, input, cma_env)
+        return Result(cast("dict[str, Any]", result.value))
+
     def run(self, input: Any) -> "Result[Any]":
         try:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(self.arun(input))
         raise RuntimeError("Agent.run() cannot be called inside a running event loop; use await Agent.arun(...)")
+
+    def run_on_cma(
+        self,
+        input: Any,
+        *,
+        client: CMAClient,
+        environment: Any = None,
+    ) -> "Result[Any]":
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.arun_on_cma(input, client=client, environment=environment))
+        raise RuntimeError(
+            "Agent.run_on_cma() cannot be called inside a running event loop; "
+            "use await Agent.arun_on_cma(...)"
+        )
 
     def deployment(self) -> Deployment:
         return self._deploy()

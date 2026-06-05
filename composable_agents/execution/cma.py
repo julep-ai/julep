@@ -32,9 +32,7 @@ from ..kinds import EnforcementMode
 
 if TYPE_CHECKING:
     from .interpreter import BranchThunk, Env
-    from ..contracts import ToolManifest
     from ..ir import Node, SubContract
-    from ..projection import ProjectionEmitter
 else:
     Env = Any
 
@@ -245,6 +243,8 @@ class CMAAgentEnv:
         custom_tools: Optional[list[dict[str, Any]]] = None,
     ) -> None:
         self._inner = inner
+        self.manifest = inner.manifest
+        self.emitter = inner.emitter
         self._client = client
         self._environment = environment
         self._hands = hands
@@ -252,14 +252,6 @@ class CMAAgentEnv:
         self._granted = granted
         self._contracts = contracts
         self._custom_tools = custom_tools
-
-    @property
-    def manifest(self) -> ToolManifest:
-        return self._inner.manifest
-
-    @property
-    def emitter(self) -> ProjectionEmitter:
-        return self._inner.emitter
 
     def next_cid(self, node_id: str) -> str:
         return self._inner.next_cid(node_id)
