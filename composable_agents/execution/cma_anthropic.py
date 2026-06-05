@@ -1,12 +1,16 @@
 """Experimental Anthropic Claude Managed Agents HTTP adapter.
 
-This module targets the documented managed-agents beta HTTP surface directly.
-It is experimental and untested against live CMA; request/stream behavior is
-covered with unit tests and ``httpx.MockTransport`` only.
+This module targets the managed-agents beta HTTP surface directly. The protocol
+shapes here were verified against live CMA (``managed-agents-2026-04-01``) on
+2026-06-04: agent + environment + session creation, the SSE event stream, the
+``agent.custom_tool_use`` / ``session.status_idle`` correlation, and the
+``user.custom_tool_result`` reply. It remains experimental; request/stream
+behavior is also covered with unit tests and ``httpx.MockTransport``.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -67,6 +71,10 @@ class _Normalizer:
                 return []
             reason_type = stop_reason.get("type")
             if reason_type == "requires_action":
+                # A tool turn ends here; any narration so far belongs to this
+                # intermediate turn, not the final answer. Reset so the terminal
+                # output is only the model's post-last-tool-call text.
+                self._last_text.clear()
                 events: list[CMAEvent] = []
                 event_ids = stop_reason.get("event_ids")
                 if not isinstance(event_ids, list):
@@ -122,7 +130,7 @@ def _content_text(content: Any) -> list[str]:
 
 
 class AnthropicCMAClient(CMAClient):
-    """Experimental, untested-against-live Anthropic CMA HTTP client."""
+    """Experimental Anthropic CMA HTTP client (live-verified protocol)."""
 
     def __init__(
         self,
@@ -133,6 +141,8 @@ class AnthropicCMAClient(CMAClient):
         base_url: str = "https://api.anthropic.com",
         transport: Any = None,
         timeout: float = 600.0,
+        environment_id: Optional[str] = None,
+        environment_name: str = "composable-agents",
     ) -> None:
         resolved_api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not resolved_api_key:
@@ -158,6 +168,9 @@ class AnthropicCMAClient(CMAClient):
         )
         self._model = model
         self._system = system
+        self._environment_id = environment_id
+        self._environment_name = environment_name
+        self._env_lock = asyncio.Lock()
 
     async def create_session(
         self,
@@ -175,13 +188,43 @@ class AnthropicCMAClient(CMAClient):
         agent_response.raise_for_status()
         agent_id = agent_response.json()["id"]
 
+        environment_id = await self._resolve_environment_id(environment)
+
         session_response = await self._client.post(
             "/v1/sessions",
-            json={"agent_id": agent_id, "environment": {} if environment is None else environment},
+            json={
+                "agent": {"type": "agent", "id": agent_id},
+                "environment_id": environment_id,
+            },
         )
         session_response.raise_for_status()
         session_id = session_response.json()["id"]
         return _AnthropicCMASession(self._client, session_id=session_id, input=input)
+
+    async def _resolve_environment_id(self, environment: Any) -> str:
+        """Resolve the ``environment_id`` the session API requires.
+
+        ``str`` is an existing environment id; a ``dict`` is either a reference
+        (``{"id": ...}``) or a create body (e.g. with ``packages``/``networking``);
+        ``None`` lazily creates and reuses one shared environment for this client.
+        """
+        if isinstance(environment, str):
+            return environment
+        if isinstance(environment, dict):
+            ref = environment.get("id")
+            if isinstance(ref, str):
+                return ref
+            body = environment if environment.get("name") else {**environment, "name": self._environment_name}
+            return await self._create_environment(body)
+        async with self._env_lock:
+            if self._environment_id is None:
+                self._environment_id = await self._create_environment({"name": self._environment_name})
+            return self._environment_id
+
+    async def _create_environment(self, body: dict[str, Any]) -> str:
+        response = await self._client.post("/v1/environments", json=body)
+        response.raise_for_status()
+        return str(response.json()["id"])
 
 
 class _AnthropicCMASession(CMASession):

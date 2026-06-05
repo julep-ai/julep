@@ -84,6 +84,28 @@ def test_normalizer_buffers_tool_use_until_requires_action_then_emits_terminal()
     ]
 
 
+def test_normalizer_terminal_output_excludes_pre_tool_call_narration() -> None:
+    """Intermediate narration emitted before a tool call is not in the final output."""
+    normalizer = _Normalizer()
+    raw_events = [
+        {"type": "agent.message", "content": [{"type": "text", "text": "Let me look that up: "}]},
+        {"type": "agent.custom_tool_use", "id": "evt1", "name": "search", "input": {"q": "x"}},
+        {
+            "type": "session.status_idle",
+            "stop_reason": {"type": "requires_action", "event_ids": ["evt1"]},
+        },
+        {"type": "agent.message", "content": [{"type": "text", "text": "The answer is 42."}]},
+        {"type": "session.status_idle", "stop_reason": {"type": "end_turn"}},
+    ]
+
+    emitted = [event for raw in raw_events for event in normalizer.feed(raw)]
+
+    assert emitted == [
+        CMAEvent("custom_tool_use", tool="search", input={"q": "x"}, call_id="evt1"),
+        CMAEvent("terminal", output="The answer is 42."),
+    ]
+
+
 def test_normalizer_maps_session_error() -> None:
     emitted = _Normalizer().feed({"type": "session.error", "error": {"message": "bad"}})
 
@@ -145,8 +167,8 @@ def test_anthropic_cma_client_create_events_and_tool_posts() -> None:
             return httpx.Response(200, json={"id": "agnt_01"})
         if request.method == "POST" and request.url.path == "/v1/sessions":
             assert json.loads(request.content) == {
-                "agent_id": "agnt_01",
-                "environment": {"kind": "test"},
+                "agent": {"type": "agent", "id": "agnt_01"},
+                "environment_id": "env_test",
             }
             return httpx.Response(200, json={"id": "sesn_01", "usage": {"input_tokens": 1}})
         if request.method == "GET" and request.url.path == "/v1/sessions/sesn_01/events/stream":
@@ -186,7 +208,7 @@ def test_anthropic_cma_client_create_events_and_tool_posts() -> None:
                     }
                 ],
             },
-            environment={"kind": "test"},
+            environment={"id": "env_test"},
             session_cid="cid-1",
             input={"question": "hello"},
         )
@@ -232,6 +254,47 @@ def test_anthropic_cma_client_create_events_and_tool_posts() -> None:
     assert cancel_bodies == [{"events": [{"type": "user.interrupt"}]}]
 
 
+def test_create_session_lazily_creates_and_reuses_one_environment() -> None:
+    """environment=None creates one environment then reuses it across sessions."""
+    env_creates: list[dict[str, object]] = []
+    session_bodies: list[dict[str, object]] = []
+    counter = {"agent": 0, "session": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if request.method == "POST" and path == "/v1/agents":
+            counter["agent"] += 1
+            return httpx.Response(200, json={"id": f"agnt_{counter['agent']}"})
+        if request.method == "POST" and path == "/v1/environments":
+            env_creates.append(json.loads(request.content))
+            return httpx.Response(200, json={"id": "env_lazy"})
+        if request.method == "POST" and path == "/v1/sessions":
+            counter["session"] += 1
+            session_bodies.append(json.loads(request.content))
+            return httpx.Response(200, json={"id": f"sesn_{counter['session']}"})
+        raise AssertionError(f"unexpected request {request.method} {request.url}")
+
+    async def scenario() -> None:
+        client = AnthropicCMAClient(
+            api_key="test-key",
+            model="claude-sonnet",
+            transport=httpx.MockTransport(handler),
+        )
+        await client.create_session(
+            agent={"name": "controller", "tools": []}, environment=None, session_cid="c1"
+        )
+        await client.create_session(
+            agent={"name": "controller", "tools": []}, environment=None, session_cid="c2"
+        )
+
+    run(scenario())
+
+    # Exactly one environment created, named from the default, then reused.
+    assert env_creates == [{"name": "composable-agents"}]
+    assert [body["environment_id"] for body in session_bodies] == ["env_lazy", "env_lazy"]
+    assert session_bodies[0]["agent"] == {"type": "agent", "id": "agnt_1"}
+
+
 def test_anthropic_cma_session_events_yields_error_when_kickoff_post_fails() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "POST" and request.url.path == "/v1/agents":
@@ -252,7 +315,7 @@ def test_anthropic_cma_session_events_yields_error_when_kickoff_post_fails() -> 
         )
         session = await client.create_session(
             agent={"name": "controller", "tools": []},
-            environment=None,
+            environment={"id": "env_x"},
             session_cid="cid-1",
             input="hello",
         )

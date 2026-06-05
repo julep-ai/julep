@@ -92,7 +92,15 @@ def test_agent_run_on_cma_projects_custom_tool_manifest_in_tool_order() -> None:
     assert [item["type"] for item in tools] == ["custom", "custom"]
     assert all(item["name"] != "agent_toolset_20260401" for item in tools)
     assert tools[0]["description"] == "First tool."
-    assert tools[0]["input_schema"] == first.input_schema
+    # CMA requires an object input_schema; a single scalar-arg tool is projected
+    # as an object that names the parameter (here "query": {"type": "string"}).
+    assert tools[0]["input_schema"] == {
+        "type": "object",
+        "properties": {"query": {"type": "string"}},
+        "required": ["query"],
+        "additionalProperties": False,
+    }
+    assert first.input_schema == {"type": "string"}
 
 
 def test_agent_run_on_cma_passes_same_grants_and_contract_keys(monkeypatch: Any) -> None:

@@ -280,6 +280,38 @@ def _build_tool(
     )
 
 
+def cma_tool_binding(native_tool: Tool[Any, Any]) -> tuple[JSONSchema, Callable[[Any], Any]]:
+    """Bridge one native tool to the CMA custom-tool calling convention.
+
+    CMA requires every custom tool's ``input_schema`` to be a JSON object and the
+    hosted model emits a named-argument object (e.g. ``{"city": "Tokyo"}``). The
+    framework's native model threads a single value, so a single scalar-arg tool
+    has a non-object schema and a hand expecting the bare value. This returns the
+    CMA-valid object schema plus a hand that translates the model's argument
+    object back to the framework's threaded value. Multi-arg / already-object
+    tools pass through unchanged (``bound_hand`` already unpacks the object).
+    """
+    schema = native_tool.input_schema
+    bound = native_tool.bound_hand
+    if isinstance(schema, dict) and schema.get("type") == "object":
+        return schema, bound
+
+    param_name = native_tool.param_names[0] if native_tool.param_names else "input"
+    wrapped: JSONSchema = {
+        "type": "object",
+        "properties": {param_name: schema},
+        "required": [param_name],
+        "additionalProperties": False,
+    }
+
+    def adapt(value: Any) -> Any:
+        if isinstance(value, AbcMapping) and param_name in value:
+            return bound(value[param_name])
+        return bound(value)
+
+    return wrapped, adapt
+
+
 @overload
 def tool(fn: Callable[[In], Out], /) -> Tool[In, Out]:
     ...
@@ -764,9 +796,18 @@ class Agent(FlowLike[Any, Any]):
         for tool_name, limit in max_call_limits.items():
             contracts.setdefault(tool_name, {})["maxCalls"] = limit
 
+        # CMA needs object input schemas + named-argument objects; bind each tool
+        # to that calling convention (and adapt its hand to translate back).
+        cma_schemas: dict[str, JSONSchema] = {}
+        cma_hands: dict[str, Callable[[Any], Any]] = {}
+        for native_tool in self._tools:
+            schema, hand = cma_tool_binding(native_tool)
+            cma_schemas[native_tool.name] = schema
+            cma_hands[native_tool.name] = hand
+
         custom_tools = manifest_to_custom_tools(
             self._tool_names,
-            input_schemas={native_tool.name: native_tool.input_schema for native_tool in self._tools},
+            input_schemas=cma_schemas,
             descriptions={native_tool.name: native_tool.fn.__doc__ or "" for native_tool in self._tools},
         )
         inner = InMemoryEnv(
@@ -779,7 +820,7 @@ class Agent(FlowLike[Any, Any]):
             inner,
             client=client,
             environment=environment,
-            hands=tool_fns,
+            hands=cma_hands,
             cfg=self._cfg,
             granted=self._granted,
             contracts=contracts,
