@@ -37,13 +37,24 @@ A third `run_agent` backend, built as a control-flow inversion of the local
   surface beside `.run()` (local) and `.deploy()` (Temporal), reusing the
   facade's existing grants/contracts/budget/manifest.
 - **`composable_agents/execution/cma_anthropic.py`** — an *experimental* HTTP
-  client (`AnthropicCMAClient`) for the documented managed-agents beta
+  client (`AnthropicCMAClient`) for the managed-agents beta
   (`anthropic-beta: managed-agents-2026-04-01`), behind the optional `cma` extra.
   The installed `anthropic` SDK (0.79.0) does not yet expose managed agents, so
-  it targets the documented HTTP endpoints directly via `httpx`. It is **not**
-  verified against a live CMA endpoint — only against unit tests and
-  `httpx.MockTransport`. Swap the transport for SDK-typed calls once a new enough
-  SDK ships.
+  it targets the HTTP endpoints directly via `httpx`. **Verified against live CMA
+  on 2026-06-04** end-to-end through `Agent.run_on_cma` (a real multi-tool,
+  multi-round flow), which corrected the protocol from the original sketch:
+  - **Sessions reference a separately created *environment* resource.** Session
+    create is `{"agent": {"type": "agent", "id": ...}, "environment_id": ...}`
+    (not the sketch's `{"agent_id", "environment": {...inline...}}`).
+    `AnthropicCMAClient` resolves `environment_id` from an explicit id, a create
+    body, or a lazily-created+reused default cloud environment.
+  - **Custom tools take object schemas + named-argument objects.** CMA rejects a
+    non-object `input_schema` and the model emits `{"<param>": value}`. The
+    facade's `cma_tool_binding` projects an object schema naming the parameter and
+    adapts the hand to translate the model's arg object back to the framework's
+    single threaded value (multi-arg/object tools pass through). See *Tool
+    argument convention* below.
+  Swap the transport for SDK-typed calls once a new enough SDK ships.
 
 The golden corpus did not move: this is all execution-layer code that emits no
 new IR. See *Status of the open obligations* below for what is and isn't solved.
@@ -266,8 +277,28 @@ What the v1 implementation settles, and what is deliberately deferred:
   backend (running a CMA session from an activity, rather than the local-env
   driver) is also future work; today CMA execution rides the in-memory `Env`
   while the parent flow may still be local or Temporal.
-- **Not verified against live CMA.** The HTTP adapter is exercised only by unit
-  tests + `httpx.MockTransport`; it has never talked to a real session.
+- **Live-verified — addressed.** As of 2026-06-04 the HTTP adapter has driven a
+  real CMA session end-to-end through `Agent.run_on_cma` (agent + environment +
+  session creation, the SSE event stream, the `agent.custom_tool_use` →
+  `requires_action` → `user.custom_tool_result` round-trip, and `end_turn`
+  terminal), with the framework correctly charging budget, recording trace, and
+  bounding rounds. Live probing corrected the session/environment shape and the
+  custom-tool argument convention (see *What shipped*). Still exercised by unit
+  tests + `httpx.MockTransport` for the offline gate; a live integration test is
+  intentionally not in the default suite (needs a key + network).
+
+### Tool argument convention
+
+The framework models a native tool as `fn(value)` over a single threaded value,
+so a single scalar-arg tool's `input_schema` is that value's schema (e.g.
+`{"type": "string"}`) and a multi-arg tool's is an object the hand unpacks. CMA
+instead requires every custom tool's `input_schema` to be a JSON **object** and
+the hosted model emits a named-argument object (`{"city": "Tokyo"}`).
+`Agent.arun_on_cma` bridges the two with `cma_tool_binding`: object/multi-arg
+tools pass through unchanged; a scalar single-arg tool is projected as an object
+schema naming its parameter, and its hand is wrapped to unwrap the model's
+`{<param>: value}` back to the bare value. The local `.run()` path is untouched,
+so the *same* `fn` receives the *same* argument shape on both backends.
 
 ## Caveats
 
@@ -296,7 +327,7 @@ helpers. **That is what shipped** (`CMAAgentEnv` / `drive_cma_agent_loop` /
 `Agent.run_on_cma`, with an experimental `AnthropicCMAClient` behind the `cma`
 extra): it buys CMA's durability without surrendering the invariants the
 framework exists to enforce, with the budget guard, cancellation, idempotency
-cids, and trace already in place. The deferred items above (CMA-usage→USD budget
-reconciliation, human gates inside the CMA loop, a Temporal-side backend, richer
-trace refs, and — above all — verification against a live CMA endpoint) are what
-stand between this v1 and production use.
+cids, and trace already in place. The path is now **live-verified** end-to-end
+against the managed-agents beta. The remaining deferred items (CMA-usage→USD
+budget reconciliation, human gates inside the CMA loop, a Temporal-side backend,
+and richer trace refs) are what stand between this v1 and production use.
