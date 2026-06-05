@@ -12,38 +12,14 @@ to be installed. ``HAVE_TEMPORAL`` says whether it is.
 
 from __future__ import annotations
 
+from importlib import import_module
+from importlib.util import find_spec
+from typing import Any
+
 from .interpreter import Env, InMemoryEnv, Result, interpret
 from .timeouts import activity_timeout
 
-try:  # the workflow/activities only import cleanly with temporalio present
-    from .harness import (  # noqa: F401
-        AgentInput,
-        AgentWorkflow,
-        ExecutionPolicy,
-        FlowInput,
-        FlowWorkflow,
-        run_flow,
-        start_flow,
-    )
-    from .activities import (  # noqa: F401
-        CallHandInput,
-        CompilePlanInput,
-        InvokeBrainInput,
-        WorkerContext,
-        callHand,
-        compilePlan,
-        configure,
-        invokeBrain,
-        resolveAgentSpec,
-        resolveRuntimeCapabilities,
-        resolveSubflow,
-        verifyPures,
-    )
-    from .worker import build_worker, run_worker  # noqa: F401
-
-    HAVE_TEMPORAL = True
-except ModuleNotFoundError:
-    HAVE_TEMPORAL = False
+HAVE_TEMPORAL = find_spec("temporalio") is not None
 
 _TEMPORAL_EXPORTS = [
     "AgentInput",
@@ -68,6 +44,43 @@ _TEMPORAL_EXPORTS = [
     "build_worker",
     "run_worker",
 ]
+
+_TEMPORAL_ATTR_MODULES = {
+    "AgentInput": ".harness",
+    "AgentWorkflow": ".harness",
+    "ExecutionPolicy": ".harness",
+    "FlowInput": ".harness",
+    "FlowWorkflow": ".harness",
+    "run_flow": ".harness",
+    "start_flow": ".harness",
+    "CallHandInput": ".activities",
+    "CompilePlanInput": ".activities",
+    "InvokeBrainInput": ".activities",
+    "WorkerContext": ".activities",
+    "callHand": ".activities",
+    "compilePlan": ".activities",
+    "configure": ".activities",
+    "invokeBrain": ".activities",
+    "resolveAgentSpec": ".activities",
+    "resolveRuntimeCapabilities": ".activities",
+    "resolveSubflow": ".activities",
+    "verifyPures": ".activities",
+    "build_worker": ".worker",
+    "run_worker": ".worker",
+}
+
+
+def __getattr__(name: str) -> Any:
+    module_name = _TEMPORAL_ATTR_MODULES.get(name)
+    if module_name is None:
+        raise AttributeError(name)
+    if not HAVE_TEMPORAL:
+        raise AttributeError(name)
+    module = import_module(module_name, __name__)
+    value = getattr(module, name)
+    globals()[name] = value
+    return value
+
 
 __all__ = [
     "Env",

@@ -19,6 +19,9 @@ authoring/compile path here works with no Temporal install — and
 
 from __future__ import annotations
 
+from importlib import import_module
+from typing import Any
+
 __version__ = "0.1.0"
 
 # --- shape lattice + effect kinds ----------------------------------------- #
@@ -201,27 +204,6 @@ from .execution import (
     interpret as interpret,
 )
 
-if HAVE_TEMPORAL:  # re-export the durable runtime only when temporalio is present
-    from .execution import (  # noqa: F401
-        AgentInput as AgentInput,
-        AgentWorkflow as AgentWorkflow,
-        ExecutionPolicy as ExecutionPolicy,
-        FlowInput as FlowInput,
-        FlowWorkflow as FlowWorkflow,
-        WorkerContext as WorkerContext,
-        build_worker as build_worker,
-        callHand as callHand,
-        compilePlan as compilePlan,
-        invokeBrain as invokeBrain,
-        resolveAgentSpec as resolveAgentSpec,
-        resolveRuntimeCapabilities as resolveRuntimeCapabilities,
-        resolveSubflow as resolveSubflow,
-        run_flow as run_flow,
-        run_worker as run_worker,
-        start_flow as start_flow,
-        verifyPures as verifyPures,
-    )
-
 _BASE_EXPORTS = [
     # kinds
     "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
@@ -276,5 +258,17 @@ _TEMPORAL_EXPORTS = [
     "callHand", "invokeBrain", "compilePlan", "verifyPures", "resolveSubflow",
     "resolveAgentSpec", "resolveRuntimeCapabilities",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name not in _TEMPORAL_EXPORTS:
+        raise AttributeError(name)
+    if not HAVE_TEMPORAL:
+        raise AttributeError(name)
+    execution = import_module(".execution", __name__)
+    value = getattr(execution, name)
+    globals()[name] = value
+    return value
+
 
 __all__ = _BASE_EXPORTS + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else [])
