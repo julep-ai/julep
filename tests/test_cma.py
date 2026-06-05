@@ -65,6 +65,123 @@ def test_cross_parity_with_local_agent_loop() -> None:
     assert cma == local
 
 
+def test_terminal_event_honors_max_rounds_zero_parity_with_local_agent_loop() -> None:
+    async def invoke_controller(_payload: dict[str, Any]) -> dict[str, Any]:
+        return {"output": {"answer": 42}}
+
+    async def local_call_tool(_tool: str, _value: Any) -> Any:
+        raise AssertionError("tool should not execute")
+
+    cfg = AgentConfig(max_rounds=0)
+    local = run(
+        drive_agent_loop(
+            input="q",
+            cfg=cfg,
+            invoke_controller=invoke_controller,
+            call_tool=local_call_tool,
+        )
+    )
+
+    session = FakeCMASession([CMAEvent("terminal", output={"answer": 42})])
+
+    async def cma_call_tool(_tool: str, _value: Any, _cid: str) -> Any:
+        raise AssertionError("tool should not execute")
+
+    cma = run(
+        drive_cma_agent_loop(
+            input="q",
+            cfg=cfg,
+            session=session,
+            call_tool=cma_call_tool,
+        )
+    )
+
+    assert local["status"] == "max_rounds"
+    assert local["spentUsd"] == 0.0
+    assert cma == local
+
+
+def test_terminal_event_honors_budget_precheck_parity_with_local_agent_loop() -> None:
+    async def invoke_controller(_payload: dict[str, Any]) -> dict[str, Any]:
+        return {"output": {"answer": 42}}
+
+    async def local_call_tool(_tool: str, _value: Any) -> Any:
+        raise AssertionError("tool should not execute")
+
+    cfg = AgentConfig(budget=Budget(usd=0.5))
+    local = run(
+        drive_agent_loop(
+            input="q",
+            cfg=cfg,
+            invoke_controller=invoke_controller,
+            call_tool=local_call_tool,
+        )
+    )
+
+    session = FakeCMASession([CMAEvent("terminal", output={"answer": 42})])
+
+    async def cma_call_tool(_tool: str, _value: Any, _cid: str) -> Any:
+        raise AssertionError("tool should not execute")
+
+    cma = run(
+        drive_cma_agent_loop(
+            input="q",
+            cfg=cfg,
+            session=session,
+            call_tool=cma_call_tool,
+        )
+    )
+
+    assert local["status"] == "over_budget"
+    assert local["spentUsd"] == 0.0
+    assert cma == local
+
+
+def test_terminal_after_tool_honors_max_rounds_parity_with_local_agent_loop() -> None:
+    replies = iter([
+        {"tool": "search"},
+        {"output": {"answer": 42}},
+    ])
+
+    async def invoke_controller(_payload: dict[str, Any]) -> dict[str, Any]:
+        return next(replies)
+
+    async def local_call_tool(_tool: str, value: Any) -> dict[str, Any]:
+        return {"searched": value}
+
+    cfg = AgentConfig(max_rounds=1)
+    local = run(
+        drive_agent_loop(
+            input="q",
+            cfg=cfg,
+            invoke_controller=invoke_controller,
+            call_tool=local_call_tool,
+            granted={"search"},
+        )
+    )
+
+    session = FakeCMASession([
+        CMAEvent("custom_tool_use", tool="search", input=None, call_id="e1"),
+        CMAEvent("terminal", output={"answer": 42}),
+    ])
+
+    async def cma_call_tool(_tool: str, value: Any, _cid: str) -> dict[str, Any]:
+        return {"searched": value}
+
+    cma = run(
+        drive_cma_agent_loop(
+            input="q",
+            cfg=cfg,
+            session=session,
+            call_tool=cma_call_tool,
+            granted={"search"},
+        )
+    )
+
+    assert local["status"] == "max_rounds"
+    assert cma == local
+
+
 def test_ungranted_tool_strict_denies_and_sends_tool_error() -> None:
     session = FakeCMASession([
         CMAEvent("custom_tool_use", tool="secret", input={}, call_id="e1"),
@@ -87,6 +204,33 @@ def test_ungranted_tool_strict_denies_and_sends_tool_error() -> None:
     assert "secret" in out["reason"]
     assert session.errors == [("e1", out["reason"])]
     assert session.cancelled >= 1
+
+
+def test_tool_error_failure_does_not_mask_strict_denial() -> None:
+    class RaisingToolErrorSession(FakeCMASession):
+        async def tool_error(self, call_id: str, reason: str) -> None:
+            await super().tool_error(call_id, reason)
+            raise RuntimeError("notify failed")
+
+    session = RaisingToolErrorSession([
+        CMAEvent("custom_tool_use", tool="secret", input={}, call_id="e1"),
+    ])
+
+    async def call_tool(_tool: str, _value: Any, _cid: str) -> Any:
+        raise AssertionError("tool should not execute")
+
+    out = run(
+        drive_cma_agent_loop(
+            input="q",
+            cfg=AgentConfig(),
+            session=session,
+            call_tool=call_tool,
+            granted={"search"},
+        )
+    )
+
+    assert out["status"] == "denied"
+    assert "secret" in out["reason"]
 
 
 def test_ungranted_tool_dev_warns_but_executes() -> None:
@@ -137,6 +281,35 @@ def test_max_calls_exceeded_strict_denies_second_call() -> None:
     assert "maxCalls=1" in out["reason"]
     assert session.results == [("e1", "q")]
     assert session.errors == [("e2", out["reason"])]
+
+
+def test_tool_result_failure_returns_controller_error() -> None:
+    class RaisingToolResultSession(FakeCMASession):
+        async def tool_result(self, call_id: str, result: Any) -> None:
+            await super().tool_result(call_id, result)
+            raise RuntimeError("delivery failed")
+
+    session = RaisingToolResultSession([
+        CMAEvent("custom_tool_use", tool="search", input=None, call_id="e1"),
+        CMAEvent("terminal", output="done"),
+    ])
+
+    async def call_tool(_tool: str, value: Any, _cid: str) -> Any:
+        return value
+
+    out = run(
+        drive_cma_agent_loop(
+            input="q",
+            cfg=AgentConfig(),
+            session=session,
+            call_tool=call_tool,
+            granted={"search"},
+        )
+    )
+
+    assert out["status"] == "controller_error"
+    assert "deliver tool result" in out["reason"]
+    assert session.results == [("e1", "q")]
 
 
 def test_over_budget_from_action_guard() -> None:
@@ -261,6 +434,43 @@ def test_cma_agent_env_runs_app_node_end_to_end() -> None:
     assert client.input == "q"
     assert client.environment == {"kind": "fake"}
     assert client.session_cid is not None
+
+
+def test_cma_agent_env_unconstrained_projects_all_hands_and_grants_project_subset() -> None:
+    inner = InMemoryEnv({}, ProjectionEmitter(InMemoryProjection()))
+
+    unconstrained_session = FakeCMASession([CMAEvent("terminal", output="done")])
+    unconstrained_client = FakeCMAClient(unconstrained_session)
+    unconstrained_env = CMAAgentEnv(
+        inner,
+        client=unconstrained_client,
+        hands={"a": lambda value: value, "b": lambda value: value},
+        cfg=AgentConfig(),
+        granted=None,
+        custom_tools=None,
+    )
+
+    run(unconstrained_env.run_agent("controller", "q", "cid-unconstrained"))
+
+    assert unconstrained_client.agent is not None
+    assert unconstrained_client.agent["tools"] == manifest_to_custom_tools(["a", "b"])
+    assert all(tool["type"] == "custom" for tool in unconstrained_client.agent["tools"])
+
+    constrained_session = FakeCMASession([CMAEvent("terminal", output="done")])
+    constrained_client = FakeCMAClient(constrained_session)
+    constrained_env = CMAAgentEnv(
+        inner,
+        client=constrained_client,
+        hands={"a": lambda value: value, "b": lambda value: value},
+        cfg=AgentConfig(),
+        granted={"a"},
+        custom_tools=None,
+    )
+
+    run(constrained_env.run_agent("controller", "q", "cid-constrained"))
+
+    assert constrained_client.agent is not None
+    assert constrained_client.agent["tools"] == manifest_to_custom_tools(["a"])
 
 
 def test_manifest_to_custom_tools_shape_order_and_no_builtins() -> None:

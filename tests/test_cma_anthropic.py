@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import httpx
 import pytest
@@ -11,6 +12,7 @@ from composable_agents.execution.cma import CMAEvent
 from composable_agents.execution.cma_anthropic import (
     AnthropicCMAClient,
     _Normalizer,
+    _parse_sse_data_line,
     build_agent_params,
 )
 from conftest import run
@@ -86,6 +88,27 @@ def test_normalizer_maps_session_error() -> None:
     emitted = _Normalizer().feed({"type": "session.error", "error": {"message": "bad"}})
 
     assert emitted == [CMAEvent("error", reason="bad")]
+
+
+def test_normalizer_logs_unknown_requires_action_event_id(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    normalizer = _Normalizer()
+
+    with caplog.at_level(logging.WARNING, logger="composable_agents.execution.cma_anthropic"):
+        emitted = normalizer.feed(
+            {
+                "type": "session.status_idle",
+                "stop_reason": {"type": "requires_action", "event_ids": ["evt_missing"]},
+            }
+        )
+
+    assert emitted == []
+    assert "unknown event_id 'evt_missing'" in caplog.text
+
+
+def test_parse_sse_data_line_skips_malformed_json() -> None:
+    assert _parse_sse_data_line('data: {"truncated":') is None
 
 
 def test_anthropic_cma_client_requires_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -207,3 +230,36 @@ def test_anthropic_cma_client_create_events_and_tool_posts() -> None:
         and json.loads(request.content)["events"][0]["type"] == "user.interrupt"
     ]
     assert cancel_bodies == [{"events": [{"type": "user.interrupt"}]}]
+
+
+def test_anthropic_cma_session_events_yields_error_when_kickoff_post_fails() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST" and request.url.path == "/v1/agents":
+            return httpx.Response(200, json={"id": "agnt_01"})
+        if request.method == "POST" and request.url.path == "/v1/sessions":
+            return httpx.Response(200, json={"id": "sesn_01"})
+        if request.method == "GET" and request.url.path == "/v1/sessions/sesn_01/events/stream":
+            return httpx.Response(200, content=b"")
+        if request.method == "POST" and request.url.path == "/v1/sessions/sesn_01/events":
+            return httpx.Response(500, json={"error": {"message": "boom"}})
+        raise AssertionError(f"unexpected request {request.method} {request.url}")
+
+    async def scenario() -> list[CMAEvent]:
+        client = AnthropicCMAClient(
+            api_key="test-key",
+            model="claude-sonnet",
+            transport=httpx.MockTransport(handler),
+        )
+        session = await client.create_session(
+            agent={"name": "controller", "tools": []},
+            environment=None,
+            session_cid="cid-1",
+            input="hello",
+        )
+        return [event async for event in session.events()]
+
+    events = run(scenario())
+
+    assert len(events) == 1
+    assert events[0].kind == "error"
+    assert "kickoff failed" in (events[0].reason or "")

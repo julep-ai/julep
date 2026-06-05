@@ -76,6 +76,7 @@ class _Normalizer:
                         continue
                     pending = self._pending.pop(event_id, None)
                     if pending is None:
+                        logger.warning("requires_action references unknown event_id %r", event_id)
                         continue
                     name, inp = pending
                     events.append(
@@ -203,7 +204,12 @@ class _AnthropicCMASession(CMASession):
             headers={"accept": "text/event-stream"},
         ) as response:
             response.raise_for_status()
-            await self._kickoff_once()
+            try:
+                await self._kickoff_once()
+            except Exception as exc:
+                logger.warning("Anthropic CMA kickoff failed", exc_info=True)
+                yield CMAEvent("error", reason=f"kickoff failed: {exc}")
+                return
             async for line in response.aiter_lines():
                 raw = _parse_sse_data_line(line)
                 if raw is None:
@@ -277,7 +283,11 @@ def _parse_sse_data_line(line: str) -> Optional[dict[str, Any]]:
     payload = stripped.removeprefix("data:").strip()
     if not payload or payload == "[DONE]":
         return None
-    parsed = json.loads(payload)
+    try:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError:
+        logger.debug("skipping malformed CMA SSE data line", exc_info=True)
+        return None
     return parsed if isinstance(parsed, dict) else None
 
 

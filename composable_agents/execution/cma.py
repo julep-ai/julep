@@ -9,6 +9,7 @@ values and implements the protocols below.
 from __future__ import annotations
 
 import inspect
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Optional, Protocol
@@ -35,6 +36,8 @@ if TYPE_CHECKING:
     from ..ir import Node, SubContract
 else:
     Env = Any
+
+logger = logging.getLogger(__name__)
 
 
 # --------------------------------------------------------------------------- #
@@ -153,7 +156,10 @@ async def drive_cma_agent_loop(
         if mode is EnforcementMode.DEV:
             prod_gap.append(denial.reason)
             return False
-        await session.tool_error(_event_call_id(ev), denial.reason)
+        try:
+            await session.tool_error(_event_call_id(ev), denial.reason)
+        except Exception:
+            logger.warning("failed to deliver CMA tool error notification", exc_info=True)
         return True
 
     try:
@@ -162,6 +168,15 @@ async def drive_cma_agent_loop(
                 return finish("controller_error", reason=ev.reason or "session error")
 
             if ev.is_terminal:
+                if state.round >= cfg.max_rounds:
+                    return finish("max_rounds")
+
+                controller_precheck = precheck_controller(state, cfg)
+                if controller_precheck is not None:
+                    if prod_gap:
+                        controller_precheck["prodGap"] = list(prod_gap)
+                    return controller_precheck
+
                 state.charge(cfg.think_cost)
                 return finish("done", output=ev.output)
 
@@ -206,7 +221,14 @@ async def drive_cma_agent_loop(
             state.last = out
             state.record(TraceEntry(decision="call", ref=tool, cost=cost))
             state.round += 1
-            await session.tool_result(_event_call_id(ev), out)
+            try:
+                await session.tool_result(_event_call_id(ev), out)
+            except Exception as exc:
+                logger.warning("failed to deliver CMA tool result", exc_info=True)
+                return finish(
+                    "controller_error",
+                    reason=f"failed to deliver tool result: {exc}",
+                )
 
         return finish("controller_error", reason="session ended without terminal output")
     finally:
@@ -288,7 +310,10 @@ class CMAAgentEnv:
         cfg = _cfg_with_app_overrides(self._cfg, app_config)
         agent_payload = {
             "name": controller,
-            "tools": self._custom_tools or manifest_to_custom_tools(self._granted or []),
+            "tools": self._custom_tools
+            or manifest_to_custom_tools(
+                self._granted if self._granted is not None else self._hands.keys()
+            ),
         }
         session = await self._client.create_session(
             agent=agent_payload,
