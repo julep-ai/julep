@@ -5,9 +5,45 @@ from __future__ import annotations
 from typing import Any
 
 from composable_agents import Agent, tool
+from composable_agents.agent import cma_tool_binding
 from composable_agents.execution.cma import CMAAgentEnv as RealCMAAgentEnv
 from composable_agents.execution.cma import CMAEvent
 from cma_fakes import FakeCMAClient, FakeCMASession
+
+
+def test_cma_tool_binding_wraps_scalar_passes_object_and_ignores_zero_arg() -> None:
+    @tool
+    def scalar(city: str) -> str:
+        return f"in {city}"
+
+    @tool
+    def multi(a: int, b: int) -> int:
+        return a + b
+
+    @tool
+    def nullary() -> str:
+        return "ok"
+
+    # scalar single-arg: object schema naming the param; hand unwraps {param: v}
+    scalar_schema, scalar_hand = cma_tool_binding(scalar)
+    assert scalar_schema == {
+        "type": "object",
+        "properties": {"city": {"type": "string"}},
+        "required": ["city"],
+        "additionalProperties": False,
+    }
+    assert scalar_hand({"city": "Paris"}) == "in Paris"
+    assert scalar_hand("Paris") == "in Paris"  # tolerates a bare value too
+
+    # multi-arg: already an object schema; hand unpacks the emitted object
+    multi_schema, multi_hand = cma_tool_binding(multi)
+    assert multi_schema["type"] == "object"
+    assert multi_hand({"a": 2, "b": 3}) == 5
+
+    # zero-arg: object schema, input ignored (no TypeError)
+    nullary_schema, nullary_hand = cma_tool_binding(nullary)
+    assert nullary_schema["type"] == "object"
+    assert nullary_hand({}) == "ok"
 
 
 def test_agent_run_on_cma_happy_path_calls_tool_and_returns_result() -> None:

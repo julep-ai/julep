@@ -293,10 +293,24 @@ def cma_tool_binding(native_tool: Tool[Any, Any]) -> tuple[JSONSchema, Callable[
     """
     schema = native_tool.input_schema
     bound = native_tool.bound_hand
+
+    if not native_tool.param_names:
+        # Zero-argument tool: CMA still requires an object schema and emits an
+        # object (typically {}); the hand takes no value, so ignore the input.
+        zero_fn = native_tool.fn
+        zero_schema: JSONSchema = (
+            schema if isinstance(schema, dict) and schema.get("type") == "object" else _OBJECT_SCHEMA
+        )
+
+        def adapt_zero(_value: Any) -> Any:
+            return zero_fn()
+
+        return zero_schema, adapt_zero
+
     if isinstance(schema, dict) and schema.get("type") == "object":
         return schema, bound
 
-    param_name = native_tool.param_names[0] if native_tool.param_names else "input"
+    param_name = native_tool.param_names[0]
     wrapped: JSONSchema = {
         "type": "object",
         "properties": {param_name: schema},
