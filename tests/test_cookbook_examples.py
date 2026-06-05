@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import pytest
+
 from composable_agents import blocking, call, check_approval_gates, deploy, seq
 from composable_agents.errors import ValidationError
 from conftest import run
 
-from examples import email_approval, research_assistant, support_triage
+from examples import cma_managed_agent, email_approval, research_assistant, support_triage
 
 
 def _blocking_codes(diagnostics) -> list[str]:
@@ -79,6 +81,19 @@ def test_email_approval_runs_keyless_after_gate_and_rejects_ungated_send() -> No
         check_approval_gates(denied.flow, denied.manifest, denied.capabilities)
     )
     assert "APPROVAL_UNGATED" in _blocking_codes(denied.diagnostics)
+
+
+def test_cma_managed_agent_example_is_keyless_no_op_without_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The CMA example is the one example that talks to a live service. Without a
+    # key it must be a clean, network-free no-op (import-safe + run_demo None).
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    assert cma_managed_agent.run_demo() is None
+    # build() is keyless construction only (no network); the agent grants its tools.
+    agent = cma_managed_agent.build()
+    assert agent._granted == {"get_weather", "to_fahrenheit"}
 
 
 def test_email_approval_strict_deploy_rejects_ungated_send() -> None:

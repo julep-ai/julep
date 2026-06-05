@@ -72,6 +72,23 @@ python examples/temporal_durable_agent.py
 
 The controller is still keyless: `scripted_controller` is a deterministic async callable. The durability comes from Temporal. The example starts a tiny stdlib HTTP hand server, builds a worker with `WorkerContext`, runs `AgentWorkflow`, and prints the terminal result. For the production worker shape, see [Deploy on Temporal](deploy-temporal.md).
 
+## `examples/cma_managed_agent.py`
+
+What it teaches: running a facade `Agent` on Anthropic's hosted Claude Managed Agents, where the hosted model drives the loop while the framework stays the capability and budget authority.
+
+Rung: hosted execution path (the one example that talks to a live service).
+
+Key APIs: `Agent`, `@tool`, `Agent.run_on_cma(...)`, `AnthropicCMAClient` (the `composable-agents[cma]` extra), the granted tool surface projected as CMA custom tools, `cost`, `trace`.
+
+Set a key (this is the only example that needs one), then run:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+python examples/cma_managed_agent.py
+```
+
+Without `ANTHROPIC_API_KEY` the example is a clean no-op (it prints how to run). The hosted model picks the tools (`get_weather`, then `to_fahrenheit`); the framework dispatches each call locally, enforces deny-by-default grants and the budget, and records the same `cost`/`trace` as `.run()`. Note that `spent` is in the framework's abstract cost units, not dollars. This example talks to a beta API (`managed-agents-2026-04-01`) and is experimental.
+
 ## `examples/elnino/swarm.py`
 
 What it teaches: capstone composition across the largest part of the public surface.
