@@ -36,6 +36,7 @@ from ..errors import CapabilityDenied, PureDriftError
 from ..ir import Node, toolref_from_json, toolref_key
 from ..kinds import Effect, Idempotency
 from ..registry import DEFAULT_REGISTRY, Registry
+from ..prompt import rendered_brain_for
 from ..staged import admit_plan
 
 # Caller signatures the worker supplies.
@@ -158,7 +159,7 @@ async def callHand(inp: CallHandInput) -> Any:
 async def invokeBrain(inp: InvokeBrainInput) -> Any:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
-    brain = _registry().get_brain(inp.brain)
+    brain = rendered_brain_for(_registry().get_brain(inp.brain), inp.value)
     return await _CTX.llm(brain, inp.value)
 
 
