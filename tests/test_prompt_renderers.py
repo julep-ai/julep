@@ -73,3 +73,19 @@ def test_invoke_brain_renders_system_before_llm() -> None:
     assert out == {"ok": True}
     assert captured["system"] == "sys:42"
     assert captured["system_render"] is None
+
+
+from composable_agents.prompt import renderer, fragments, Ask, rendered_brain_for
+
+
+def test_fragment_backed_renderer_end_to_end() -> None:
+    @renderer("research.system.v1")
+    def research_system(ctx):
+        return fragments(
+            "You are a careful research agent.\n",
+            Ask("persona", fmt=lambda p: f"Persona: {p}"),
+        ).render(ctx)
+
+    b = Brain(name="researcher", model="m", system_render="research.system.v1")
+    out = rendered_brain_for(b, {"persona": "skeptic"})
+    assert out.system == "You are a careful research agent.\nPersona: skeptic"
