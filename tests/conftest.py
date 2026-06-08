@@ -7,13 +7,14 @@ tests, so the suite does not depend on a particular pytest-asyncio mode.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from typing import Any
 
 from composable_agents.contracts import McpAnnotations
 from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
 
-def run(coro) -> Any:
+def run(coro: Coroutine[Any, Any, Any]) -> Any:
     """Synchronously run a coroutine (helper for non-async test bodies)."""
     return asyncio.run(coro)
 
