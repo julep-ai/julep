@@ -10,7 +10,7 @@ the design note).
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
@@ -43,7 +43,9 @@ class Halt:
 
 
 StepResult = Union[AgentState, Halt]
-Step = Callable[[AgentState], Awaitable[StepResult]]
+# A Step is always an `async def` (a coroutine), which is what `asyncio.run`
+# accepts — narrower than Awaitable, and accurate for every Step in the codebase.
+Step = Callable[[AgentState], Coroutine[Any, Any, StepResult]]
 Halter = Callable[[AgentState], Optional[Halt]]
 Finalize = Callable[[dict[str, Any]], dict[str, Any]]
 

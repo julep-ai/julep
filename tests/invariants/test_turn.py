@@ -31,10 +31,10 @@ def test_drive_pre_round_halt_wins_before_step() -> None:
 
 
 def test_controller_turn_call_round_records_trace() -> None:
-    async def invoke_controller(_p):  # one CALL round
+    async def invoke_controller(_p: dict[str, Any]) -> dict[str, Any]:  # one CALL round
         return {"tool": "calc/add", "input": 5}
 
-    async def call_tool(tool, value):
+    async def call_tool(tool: str, value: Any) -> Any:
         assert (tool, value) == ("calc/add", 5)
         return value * 2
 
@@ -51,10 +51,10 @@ def test_controller_turn_call_round_records_trace() -> None:
 
 
 def test_controller_turn_finish_returns_halt() -> None:
-    async def invoke_controller(_p):
+    async def invoke_controller(_p: dict[str, Any]) -> dict[str, Any]:
         return {"output": "ok"}
 
-    async def call_tool(_t, _v):  # must not run on a finish round
+    async def call_tool(_t: str, _v: Any) -> Any:  # must not run on a finish round
         raise AssertionError("call_tool ran on a finish round")
 
     step = controller_turn(
