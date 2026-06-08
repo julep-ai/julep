@@ -58,6 +58,7 @@ from .freeze import (
 from .ir import Node, ThinkStep, canonical_json
 from .kinds import EnforcementMode, Op, Shape
 from .purity import is_registered, source_hash_of
+from .registry import DEFAULT_REGISTRY
 from .shapes import surface_shape as _compute_surface_shape
 from .validate import Diagnostic, blocking, validate
 
@@ -124,6 +125,18 @@ def _pure_source_hashes(flow: Node) -> dict[str, str | None]:
     }
 
 
+def _renderer_source_hashes(flow: Node) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for name in _referenced_brains(flow):
+        try:
+            render_name = get_brain(name).system_render
+        except KeyError:
+            continue
+        if render_name and render_name in DEFAULT_REGISTRY.renderers:
+            out[render_name] = DEFAULT_REGISTRY.renderer_source_hash_of(render_name)
+    return out
+
+
 def _referenced_brains(flow: Node) -> list[str]:
     names: set[str] = set()
     for node in flow.walk():
@@ -140,13 +153,16 @@ def _brain_identity(name: str) -> dict[str, Any]:
         brain: Brain = get_brain(name)
     except KeyError:
         return {"name": name}
-    return {
+    ident = {
         "name": brain.name,
         "model": brain.model,
         "system": brain.system,
         "replySchema": brain.reply_schema,
         "tools": list(brain.tools),
     }
+    if brain.system_render is not None:
+        ident["systemRender"] = brain.system_render
+    return ident
 
 
 def _framework_version() -> str:
@@ -183,7 +199,7 @@ class Deployment:
         capabilities_json = (
             self.capabilities.to_json() if self.capabilities is not None else None
         )
-        return {
+        components = {
             "flowJson": self.flow_json,
             "manifestJson": self.manifest_json,
             "pureSourceHashes": _pure_source_hashes(self.flow),
@@ -195,6 +211,10 @@ class Deployment:
             "executionPolicy": None,
             "frameworkVersion": _framework_version(),
         }
+        renderer_hashes = _renderer_source_hashes(self.flow)
+        if renderer_hashes:
+            components["rendererSourceHashes"] = renderer_hashes
+        return components
 
     @cached_property
     def artifact_hash(self) -> str:
