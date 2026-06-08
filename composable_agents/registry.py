@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -23,6 +24,13 @@ PureFn = Callable[[Any], Any]
 class PureEntry:
     name: str
     fn: PureFn
+    source_hash: str
+
+
+@dataclass(frozen=True)
+class RendererEntry:
+    name: str
+    fn: Callable[[Mapping[str, Any]], str]
     source_hash: str
 
 
@@ -42,6 +50,7 @@ class Registry:
     def __init__(self) -> None:
         self.brains: dict[str, Brain] = {}
         self.pures: dict[str, PureEntry] = {}
+        self.renderers: dict[str, RendererEntry] = {}
 
     def register_brain(self, brain: Brain) -> Brain:
         if brain.name in self.brains and self.brains[brain.name] != brain:
@@ -78,6 +87,24 @@ class Registry:
 
     def source_hash_of(self, name: str) -> str:
         return self.pures[name].source_hash
+
+    def register_renderer(self, name: str, fn: Callable[[Mapping[str, Any]], str]) -> RendererEntry:
+        if name in self.renderers and self.renderers[name].fn is not fn:
+            raise ValueError(f"renderer name already registered to a different fn: {name!r}")
+        entry = RendererEntry(
+            name=name, fn=fn, source_hash=_source_hash(fn).replace("pure:", "renderer:", 1)
+        )
+        self.renderers[name] = entry
+        return entry
+
+    def get_renderer(self, name: str) -> Callable[[Mapping[str, Any]], str]:
+        try:
+            return self.renderers[name].fn
+        except KeyError as e:
+            raise KeyError(f"unknown renderer {name!r}; register it with @renderer({name!r})") from e
+
+    def renderer_source_hash_of(self, name: str) -> str:
+        return self.renderers[name].source_hash
 
     def diff_pure_hashes(
         self,
