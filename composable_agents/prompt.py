@@ -12,15 +12,23 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Protocol
 
 from .dotctx import Brain
-from .registry import DEFAULT_REGISTRY
+from .registry import DEFAULT_REGISTRY, RendererEntry
 
 Context = Mapping[str, Any]
 
 
-def register_renderer(name: str, fn: Callable[[Context], str]):
+class Fragment(Protocol):
+    """Structural type for prompt fragments — anything that renders a Context to
+    a string. For annotations only; ``fragments()`` auto-lifts by matching the
+    concrete dataclasses in ``_FRAGMENT_TYPES``, not this Protocol."""
+
+    def render(self, ctx: Context) -> str: ...
+
+
+def register_renderer(name: str, fn: Callable[[Context], str]) -> RendererEntry:
     return DEFAULT_REGISTRY.register_renderer(name, fn)
 
 
@@ -28,7 +36,7 @@ def get_renderer(name: str) -> Callable[[Context], str]:
     return DEFAULT_REGISTRY.get_renderer(name)
 
 
-def renderer(name: str):
+def renderer(name: str) -> Callable[[Callable[[Context], str]], Callable[[Context], str]]:
     """Decorator: register a top-level ``def f(ctx) -> str`` as a renderer. Its
     source is what gets hashed for §6.4 drift, exactly like ``@pure``."""
     def deco(fn: Callable[[Context], str]) -> Callable[[Context], str]:
@@ -81,20 +89,20 @@ class Ask:
 
 @dataclass(frozen=True)
 class Concat:
-    parts: tuple[Any, ...]                            # tuple[Fragment, ...]
+    parts: tuple[Fragment, ...]
     def render(self, ctx: Context) -> str: return "".join(p.render(ctx) for p in self.parts)
 
 
 @dataclass(frozen=True)
 class Under:
     project: Callable[[Context], Context]
-    body: Any                                         # Fragment
+    body: Fragment
     def render(self, ctx: Context) -> str: return self.body.render(self.project(ctx))
 
 
 @dataclass(frozen=True)
 class Map:
-    body: Any                                         # Fragment
+    body: Fragment
     fn: Callable[[str], str]
     def render(self, ctx: Context) -> str: return self.fn(self.body.render(ctx))
 
@@ -107,7 +115,7 @@ def fragments(*parts: Any) -> Concat:
 
 
 __all__ = [
-    "Context", "register_renderer", "get_renderer", "renderer",
+    "Context", "Fragment", "register_renderer", "get_renderer", "renderer",
     "project_context", "render_system", "rendered_brain_for",
     "Lift", "Ask", "Concat", "Under", "Map", "fragments",
 ]

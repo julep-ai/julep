@@ -1,8 +1,9 @@
 import asyncio
 from typing import Any
 
-from composable_agents.agent_loop import AgentState
-from composable_agents.turn import Halt, drive
+from composable_agents.agent_loop import AgentConfig, AgentState
+from composable_agents.kinds import EnforcementMode
+from composable_agents.turn import Halt, controller_turn, drive, pre_round, with_retry
 
 
 def test_drive_accumulates_then_halts() -> None:
@@ -29,11 +30,6 @@ def test_drive_pre_round_halt_wins_before_step() -> None:
     assert out == {"status": "max_rounds", "output": "x", "rounds": 0, "cost": 0.0, "trace": []}
 
 
-from composable_agents.agent_loop import AgentConfig, Decision
-from composable_agents.kinds import EnforcementMode
-from composable_agents.turn import controller_turn, pre_round, make_finalize
-
-
 def test_controller_turn_call_round_records_trace() -> None:
     async def invoke_controller(_p):  # one CALL round
         return {"tool": "calc/add", "input": 5}
@@ -58,8 +54,11 @@ def test_controller_turn_finish_returns_halt() -> None:
     async def invoke_controller(_p):
         return {"output": "ok"}
 
+    async def call_tool(_t, _v):  # must not run on a finish round
+        raise AssertionError("call_tool ran on a finish round")
+
     step = controller_turn(
-        cfg=AgentConfig(), invoke_controller=invoke_controller, call_tool=None,
+        cfg=AgentConfig(), invoke_controller=invoke_controller, call_tool=call_tool,
         run_subflow=None, granted=None, granted_subflows=None, contracts=None,
         mode=EnforcementMode.STRICT, prod_gap=[],
     )
@@ -68,13 +67,11 @@ def test_controller_turn_finish_returns_halt() -> None:
 
 
 def test_pre_round_max_rounds_and_budget() -> None:
-    from composable_agents.capabilities import Budget
     over = pre_round(AgentConfig(max_rounds=1))
-    s = AgentState(); s.round = 1
-    assert isinstance(over(s), Halt) and over(s).status == "max_rounds"
-
-
-from composable_agents.turn import with_retry
+    s = AgentState()
+    s.round = 1
+    verdict = over(s)
+    assert isinstance(verdict, Halt) and verdict.status == "max_rounds"
 
 
 def test_with_retry_reissues_a_transient_round() -> None:

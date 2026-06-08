@@ -14,7 +14,21 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
-from .agent_loop import AgentState, terminal_result
+from .agent_loop import (
+    AgentConfig,
+    AgentContractMap,
+    AgentState,
+    CallDenial,
+    TraceEntry,
+    action_cost,
+    authorize_call,
+    authorize_subflow,
+    charge_tool_call,
+    interpret_brain_reply,
+    terminal_result,
+    would_exceed_budget,
+)
+from .kinds import EnforcementMode
 
 
 @dataclass(frozen=True)
@@ -59,16 +73,7 @@ async def drive(
         state = result
 
 
-__all__ = ["Halt", "StepResult", "Step", "Halter", "Finalize", "drive", "controller_turn", "pre_round", "make_finalize", "with_retry"]
-
-from .agent_loop import (
-    CallDenial, TraceEntry, action_cost, authorize_call, authorize_subflow,
-    charge_tool_call, interpret_brain_reply, would_exceed_budget,
-)
-from .kinds import EnforcementMode
-
-
-def pre_round(cfg) -> Halter:
+def pre_round(cfg: AgentConfig) -> Halter:
     """Pre-round guards from agent_loop.py:442-449: max_rounds, then think-cost
     budget (precheck_controller). Returns a Halt or None."""
     def halt(state: AgentState) -> Optional[Halt]:
@@ -91,8 +96,16 @@ def make_finalize(prod_gap: list[str]) -> Finalize:
 
 
 def controller_turn(
-    *, cfg, invoke_controller, call_tool, run_subflow, granted, granted_subflows,
-    contracts, mode: EnforcementMode, prod_gap: list[str],
+    *,
+    cfg: AgentConfig,
+    invoke_controller: Callable[[dict[str, Any]], Awaitable[Any]],
+    call_tool: Callable[[str, Any], Awaitable[Any]],
+    run_subflow: Optional[Callable[[str, Any], Awaitable[Any]]],
+    granted: Optional[set[str]],
+    granted_subflows: Optional[set[str]],
+    contracts: Optional[AgentContractMap],
+    mode: EnforcementMode,
+    prod_gap: list[str],
 ) -> Step:
     """One agent round, lifted verbatim from drive_agent_loop's while-body."""
     mode = EnforcementMode.coerce(mode)
@@ -178,3 +191,17 @@ def with_retry(step: Step, *, attempts: int) -> Step:
                 last_exc = exc
         raise last_exc  # type: ignore[misc]
     return wrapped
+
+
+__all__ = [
+    "Halt",
+    "StepResult",
+    "Step",
+    "Halter",
+    "Finalize",
+    "drive",
+    "pre_round",
+    "make_finalize",
+    "controller_turn",
+    "with_retry",
+]
