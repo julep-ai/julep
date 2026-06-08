@@ -59,4 +59,108 @@ async def drive(
         state = result
 
 
-__all__ = ["Halt", "StepResult", "Step", "Halter", "Finalize", "drive"]
+__all__ = ["Halt", "StepResult", "Step", "Halter", "Finalize", "drive", "controller_turn", "pre_round", "make_finalize"]
+
+from .agent_loop import (
+    CallDenial, TraceEntry, action_cost, authorize_call, authorize_subflow,
+    charge_tool_call, interpret_brain_reply, would_exceed_budget,
+)
+from .kinds import EnforcementMode
+
+
+def pre_round(cfg) -> Halter:
+    """Pre-round guards from agent_loop.py:442-449: max_rounds, then think-cost
+    budget (precheck_controller). Returns a Halt or None."""
+    def halt(state: AgentState) -> Optional[Halt]:
+        if state.round >= cfg.max_rounds:
+            return Halt("max_rounds")
+        if would_exceed_budget(state, cfg.think_cost, cfg.budget):
+            return Halt("over_budget")
+        return None
+    return halt
+
+
+def make_finalize(prod_gap: list[str]) -> Finalize:
+    """DEV-mode prodGap rides on every terminal result when non-empty
+    (agent_loop.py:426-428, 447-449)."""
+    def finalize(result: dict[str, Any]) -> dict[str, Any]:
+        if prod_gap:
+            result["prodGap"] = list(prod_gap)
+        return result
+    return finalize
+
+
+def controller_turn(
+    *, cfg, invoke_controller, call_tool, run_subflow, granted, granted_subflows,
+    contracts, mode: EnforcementMode, prod_gap: list[str],
+) -> Step:
+    """One agent round, lifted verbatim from drive_agent_loop's while-body."""
+    mode = EnforcementMode.coerce(mode)
+    unconstrained = granted is None
+    granted_set = set(granted or [])
+
+    def denial_to_halt(denial: Optional[CallDenial]) -> Optional[Halt]:
+        # STRICT: denial halts; DEV: warn-but-allow (record prodGap, proceed).
+        if denial is None:
+            return None
+        if mode is EnforcementMode.DEV:
+            prod_gap.append(denial.reason)
+            return None
+        return Halt("denied", reason=denial.reason)
+
+    async def step(state: AgentState) -> StepResult:
+        payload = {"input": state.last, "trace": [t.to_json() for t in state.trace]}
+        reply = await invoke_controller(payload)
+        state.charge(cfg.think_cost)
+        action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
+
+        if action.decision.value == "finish":
+            return Halt("done", output=action.payload)
+        if action.decision.value == "escalate":
+            return Halt("escalated", reason=str(action.payload))
+        if action.decision.value == "controller_error":
+            return Halt("controller_error", reason=str(action.payload))
+
+        cost = action_cost(action)
+        if would_exceed_budget(state, cost, cfg.budget):
+            return Halt("over_budget")
+
+        if action.decision.value == "call":
+            tool = action.payload["tool"]
+            halt = denial_to_halt(authorize_call(
+                tool, unconstrained=unconstrained, granted_set=granted_set,
+                contracts=contracts))
+            if halt is not None:
+                return halt
+            denial = charge_tool_call(state, tool, contracts)
+            halt = denial_to_halt(denial)
+            if halt is not None:
+                return halt
+            if denial is not None:  # DEV warn-but-allow: still count the call
+                state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
+            call_input = action.payload.get("input")
+            if call_input is None:
+                call_input = state.last
+            out = await call_tool(tool, call_input)
+            state.charge(cost)
+            state.last = out
+            state.record(TraceEntry(decision="call", ref=tool, cost=cost))
+        else:  # sub
+            ref = action.payload["ref"]
+            halt = denial_to_halt(authorize_subflow(ref, granted_subflows=granted_subflows))
+            if halt is not None:
+                return halt
+            if run_subflow is None:
+                return Halt("denied", reason=f"no subflow runner for {ref!r}")
+            sub_input = action.payload.get("input")
+            if sub_input is None:
+                sub_input = state.last
+            out = await run_subflow(ref, sub_input)
+            state.charge(cost)
+            state.last = out
+            state.record(TraceEntry(decision="sub", ref=ref, shape=action.payload.get("shape"), cost=cost))
+
+        state.round += 1
+        return state
+
+    return step
