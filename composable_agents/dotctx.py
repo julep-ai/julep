@@ -45,6 +45,7 @@ class Brain:
     is_agent: bool = False                # explicit open-ended app
     sub_contract: Optional[SubContract] = None  # marks a child workflow
     context_scope: ContextScope = ContextScope.LOCAL
+    system_render: Optional[str] = None   # registered renderer name (a string); None => use `system`
 
     def __init__(
         self,
@@ -58,6 +59,7 @@ class Brain:
         is_agent: bool = False,
         sub_contract: Optional[SubContract] = None,
         context_scope: ContextScope = ContextScope.LOCAL,
+        system_render: Optional[str] = None,
     ) -> None:
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "model", model)
@@ -69,6 +71,7 @@ class Brain:
         object.__setattr__(self, "is_agent", is_agent)
         object.__setattr__(self, "sub_contract", sub_contract)
         object.__setattr__(self, "context_scope", context_scope)
+        object.__setattr__(self, "system_render", system_render)
 
 
 _BRAINS: dict[str, Brain] = DEFAULT_REGISTRY.brains
@@ -142,6 +145,7 @@ def brain_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
         is_agent=bool(settings.get("agent", False)),
         sub_contract=_sub_from(settings.get("sub")),
         context_scope=scope,
+        system_render=settings.get("system_render") or settings.get("systemRender"),
     )
     return register_brain(brain)
 
