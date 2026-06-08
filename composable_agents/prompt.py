@@ -11,6 +11,7 @@ else ``{"value": value}``. Richer ContextScope/session projection is deferred.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, Callable
 
 from .dotctx import Brain
@@ -65,7 +66,48 @@ def rendered_brain_for(brain: Brain, value: Any) -> Brain:
     return _with_rendered_system(brain, render_system(brain, project_context(value)))
 
 
+@dataclass(frozen=True)
+class Lift:
+    text: str
+    def render(self, ctx: Context) -> str: return self.text
+
+
+@dataclass(frozen=True)
+class Ask:
+    key: str
+    fmt: Callable[[Any], str] = str
+    def render(self, ctx: Context) -> str: return self.fmt(ctx.get(self.key, ""))
+
+
+@dataclass(frozen=True)
+class Concat:
+    parts: tuple[Any, ...]                            # tuple[Fragment, ...]
+    def render(self, ctx: Context) -> str: return "".join(p.render(ctx) for p in self.parts)
+
+
+@dataclass(frozen=True)
+class Under:
+    project: Callable[[Context], Context]
+    body: Any                                         # Fragment
+    def render(self, ctx: Context) -> str: return self.body.render(self.project(ctx))
+
+
+@dataclass(frozen=True)
+class Map:
+    body: Any                                         # Fragment
+    fn: Callable[[str], str]
+    def render(self, ctx: Context) -> str: return self.fn(self.body.render(ctx))
+
+
+_FRAGMENT_TYPES = (Lift, Ask, Concat, Under, Map)
+
+
+def fragments(*parts: Any) -> Concat:
+    return Concat(tuple(p if isinstance(p, _FRAGMENT_TYPES) else Lift(p) for p in parts))
+
+
 __all__ = [
     "Context", "register_renderer", "get_renderer", "renderer",
     "project_context", "render_system", "rendered_brain_for",
+    "Lift", "Ask", "Concat", "Under", "Map", "fragments",
 ]
