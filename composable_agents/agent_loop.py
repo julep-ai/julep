@@ -417,105 +417,17 @@ async def drive_agent_loop(
     state: Optional[AgentState] = None,
 ) -> dict[str, Any]:
     """Run the bounded agent loop locally with injected async effects."""
+    from .turn import controller_turn, drive, make_finalize, pre_round
+
     mode = EnforcementMode.coerce(cfg.mode)
     prod_gap: list[str] = []
     state = state or AgentState(last=input)
-
-    def finish(status: str, output: Any = None, reason: Optional[str] = None) -> dict[str, Any]:
-        result = terminal_result(status, state, output=output, reason=reason)
-        if prod_gap:
-            result["prodGap"] = list(prod_gap)
-        return result
-
-    def denied_or_dev_gap(denial: Optional[CallDenial]) -> Optional[dict[str, Any]]:
-        if denial is None:
-            return None
-        if mode is EnforcementMode.DEV:
-            prod_gap.append(denial.reason)
-            return None
-        return finish("denied", reason=denial.reason)
-
-    unconstrained = granted is None
-    granted_set = set(granted or [])
-
-    while True:
-        if state.round >= cfg.max_rounds:
-            return finish("max_rounds")
-
-        controller_precheck = precheck_controller(state, cfg)
-        if controller_precheck is not None:
-            if prod_gap:
-                controller_precheck["prodGap"] = list(prod_gap)
-            return controller_precheck
-
-        payload = {"input": state.last, "trace": [t.to_json() for t in state.trace]}
-        reply = await invoke_controller(payload)
-        state.charge(cfg.think_cost)
-        action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
-
-        if action.decision is Decision.FINISH:
-            return finish("done", output=action.payload)
-        if action.decision is Decision.ESCALATE:
-            return finish("escalated", reason=str(action.payload))
-        if action.decision is Decision.CONTROLLER_ERROR:
-            return finish("controller_error", reason=str(action.payload))
-
-        cost = action_cost(action)
-        if would_exceed_budget(state, cost, cfg.budget):
-            return finish("over_budget")
-
-        if action.decision is Decision.CALL:
-            tool = action.payload["tool"]
-            denial = authorize_call(
-                tool,
-                unconstrained=unconstrained,
-                granted_set=granted_set,
-                contracts=contracts,
-            )
-            result = denied_or_dev_gap(denial)
-            if result is not None:
-                return result
-            denial = charge_tool_call(state, tool, contracts)
-            result = denied_or_dev_gap(denial)
-            if result is not None:
-                return result
-            if denial is not None:
-                state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
-            call_input = action.payload.get("input")
-            if call_input is None:
-                call_input = state.last
-            out = await call_tool(tool, call_input)
-            state.charge(cost)
-            state.last = out
-            state.record(TraceEntry(decision="call", ref=tool, cost=cost))
-
-        else:
-            ref = action.payload["ref"]
-            denial = authorize_subflow(ref, granted_subflows=granted_subflows)
-            result = denied_or_dev_gap(denial)
-            if result is not None:
-                return result
-            if run_subflow is None:
-                return finish(
-                    "denied",
-                    reason=f"no subflow runner for {ref!r}",
-                )
-            sub_input = action.payload.get("input")
-            if sub_input is None:
-                sub_input = state.last
-            out = await run_subflow(ref, sub_input)
-            state.charge(cost)
-            state.last = out
-            state.record(
-                TraceEntry(
-                    decision="sub",
-                    ref=ref,
-                    shape=action.payload.get("shape"),
-                    cost=cost,
-                )
-            )
-
-        state.round += 1
+    step = controller_turn(
+        cfg=cfg, invoke_controller=invoke_controller, call_tool=call_tool,
+        run_subflow=run_subflow, granted=granted, granted_subflows=granted_subflows,
+        contracts=contracts, mode=mode, prod_gap=prod_gap,
+    )
+    return await drive(step, state, halt=pre_round(cfg), finalize=make_finalize(prod_gap))
 
 
 # --------------------------------------------------------------------------- #
