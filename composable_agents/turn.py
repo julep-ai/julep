@@ -59,7 +59,7 @@ async def drive(
         state = result
 
 
-__all__ = ["Halt", "StepResult", "Step", "Halter", "Finalize", "drive", "controller_turn", "pre_round", "make_finalize"]
+__all__ = ["Halt", "StepResult", "Step", "Halter", "Finalize", "drive", "controller_turn", "pre_round", "make_finalize", "with_retry"]
 
 from .agent_loop import (
     CallDenial, TraceEntry, action_cost, authorize_call, authorize_subflow,
@@ -164,3 +164,17 @@ def controller_turn(
         return state
 
     return step
+
+
+def with_retry(step: Step, *, attempts: int) -> Step:
+    """Reissue a round that raises, up to ``attempts`` times. The Step must be
+    safe to retry (no half-applied effect); use only on idempotent rounds."""
+    async def wrapped(state: AgentState) -> StepResult:
+        last_exc: Optional[BaseException] = None
+        for _ in range(attempts):
+            try:
+                return await step(state)
+            except Exception as exc:  # noqa: BLE001 — re-raised after attempts
+                last_exc = exc
+        raise last_exc  # type: ignore[misc]
+    return wrapped

@@ -72,3 +72,19 @@ def test_pre_round_max_rounds_and_budget() -> None:
     over = pre_round(AgentConfig(max_rounds=1))
     s = AgentState(); s.round = 1
     assert isinstance(over(s), Halt) and over(s).status == "max_rounds"
+
+
+from composable_agents.turn import with_retry
+
+
+def test_with_retry_reissues_a_transient_round() -> None:
+    calls = {"n": 0}
+
+    async def flaky(s: AgentState) -> Any:
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise RuntimeError("transient")
+        return Halt("done", output="ok")
+
+    out = asyncio.run(drive(with_retry(flaky, attempts=3), AgentState(), halt=lambda s: None))
+    assert out["status"] == "done" and calls["n"] == 3
