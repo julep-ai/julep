@@ -1,0 +1,23 @@
+# A dotctx: a directory that describes ONE model call. `load_dotctx(<dir>)` reads
+# this file into a Brain (registered under `name`), and the framework lowers the
+# brain's round policy to an execution shape:
+#   - no max_rounds / not an agent  -> single `think`      (Pipeline)
+#   - max_rounds: N (>= 1)          -> bounded `iter_up_to` (Feedback)
+#   - agent: true                   -> open-ended `app`     (Agent)
+# Flip the commented lines below to see the shape change in the example output.
+name: ticket_triage
+
+# `provider:model` selects the provider for the any-llm-backed LlmCaller. Swap
+# this for openai:gpt-4o-mini, groq:llama-3.3-70b-versatile, gemini:gemini-2.5-flash,
+# etc. A bare model (no `provider:`) falls back to the default provider (anthropic).
+model: anthropic:claude-haiku-4-5-20251001
+
+temperature: 0.0
+
+# Context lives on the leaf, never ambient: the system prompt and reply schema are
+# files in this directory, referenced by name.
+system_file: system.md
+schema_file: schema.json
+
+# max_rounds: 3   # uncomment -> Feedback shape (bounded refinement loop)
+# agent: true     # uncomment -> Agent shape (open-ended controller loop)
