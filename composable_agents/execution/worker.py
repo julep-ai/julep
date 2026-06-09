@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from temporalio.client import Client
+from temporalio.converter import DataConverter
 from temporalio.worker import Worker
 
 from ..capabilities import CapabilityManifest
@@ -29,21 +30,30 @@ from .activities import (
     McpCaller,
     WorkerContext,
     callHand,
+    commitState,
     compilePlan,
     configure,
     invokeBrain,
+    loadState,
+    putBlob,
     resolveAgentSpec,
     resolveRuntimeCapabilities,
     resolveSubflow,
     verifyPures,
 )
+from .blobstore import BlobStore
+from .codec import ClaimCheckCodec
 from .harness import AgentWorkflow, FlowWorkflow
+from .session_store import SessionStore
 
 # Every activity the two workflows can dispatch.
 ACTIVITIES = [
     callHand,
+    commitState,
     invokeBrain,
+    loadState,
     compilePlan,
+    putBlob,
     verifyPures,
     resolveSubflow,
     resolveAgentSpec,
@@ -52,6 +62,28 @@ ACTIVITIES = [
 WORKFLOWS = [FlowWorkflow, AgentWorkflow]
 
 DEFAULT_TASK_QUEUE = "composable-agents"
+
+
+def claim_check_converter(
+    blob_store: BlobStore,
+    *,
+    tenant: str,
+    threshold_bytes: int = 131072,
+) -> DataConverter:
+    """A DataConverter that offloads oversized payloads via ClaimCheckCodec.
+
+    Pass this as ``data_converter=`` when CONNECTING the Temporal Client; the
+    worker inherits it from the client. Temporal enforces its size limits on the
+    post-codec payload.
+    """
+    import dataclasses
+
+    return dataclasses.replace(
+        DataConverter.default,
+        payload_codec=ClaimCheckCodec(
+            blob_store, tenant=tenant, threshold_bytes=threshold_bytes
+        ),
+    )
 
 
 def build_worker(
@@ -92,6 +124,8 @@ async def run_worker(
     capabilities: Optional[CapabilityManifest] = None,
     subflows: Optional[dict[str, dict]] = None,
     agents: Optional[dict[str, dict]] = None,
+    blob_store: Optional[BlobStore] = None,
+    session_store: Optional[SessionStore] = None,
     http_timeout_s: float = 30.0,
     **worker_kwargs: Any,
 ) -> None:
@@ -112,6 +146,8 @@ async def run_worker(
         http_timeout_s=http_timeout_s,
         subflows=subflows or {},
         agents=agents or {},
+        blob_store=blob_store,
+        session_store=session_store,
     )
     worker = build_worker(client, context, task_queue=task_queue, **worker_kwargs)
     await worker.run()
@@ -122,5 +158,6 @@ __all__ = [
     "WORKFLOWS",
     "DEFAULT_TASK_QUEUE",
     "build_worker",
+    "claim_check_converter",
     "run_worker",
 ]

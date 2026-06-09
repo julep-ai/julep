@@ -1,4 +1,16 @@
-from composable_agents.dotctx import Brain, brain_from_settings
+import asyncio
+
+from composable_agents.dotctx import Brain, brain_from_settings, register_brain
+from composable_agents.execution import activities as act
+from composable_agents.prompt import (
+    Ask,
+    fragments,
+    project_context,
+    register_renderer,
+    render_system,
+    rendered_brain_for,
+    renderer,
+)
 
 
 def test_brain_defaults_system_render_none() -> None:
@@ -16,10 +28,6 @@ def test_brain_carries_system_render() -> None:
 def test_brain_from_settings_parses_system_render() -> None:
     b = brain_from_settings({"name": "b", "model": "m", "system_render": "r1"})
     assert b.system_render == "r1"
-
-
-from composable_agents.dotctx import Brain
-from composable_agents.prompt import project_context, render_system, rendered_brain_for, register_renderer
 
 
 def test_project_context_unwraps_mapping_value() -> None:
@@ -46,12 +54,6 @@ def test_rendered_brain_for_passes_plain_brain_through_unchanged() -> None:
     assert rendered_brain_for(b, {"value": 1}) is b
 
 
-import asyncio
-from composable_agents.execution import activities as act
-from composable_agents.dotctx import register_brain
-from composable_agents.prompt import register_renderer
-
-
 def test_invoke_brain_renders_system_before_llm() -> None:
     register_renderer("inv.sys.v1", lambda ctx: f"sys:{ctx['input']}")
     register_brain(Brain(name="inv.brain", model="m", system_render="inv.sys.v1"))
@@ -73,9 +75,6 @@ def test_invoke_brain_renders_system_before_llm() -> None:
     assert out == {"ok": True}
     assert captured["system"] == "sys:42"
     assert captured["system_render"] is None
-
-
-from composable_agents.prompt import renderer, fragments, Ask, rendered_brain_for
 
 
 def test_fragment_backed_renderer_end_to_end() -> None:

@@ -11,6 +11,7 @@ no HTTP hand server is required; native hands would need one.
 from __future__ import annotations
 
 import asyncio
+import json
 import uuid
 
 import pytest
@@ -42,8 +43,13 @@ if HAVE_TEMPORAL:
     from composable_agents.execution.harness import (
         run_flow, start_flow, AgentWorkflow, AgentInput, ExecutionPolicy,
     )
-    from composable_agents.execution.worker import build_worker
-    from composable_agents.execution.activities import WorkerContext
+    from composable_agents.execution.worker import build_worker, WORKFLOWS, ACTIVITIES
+    from composable_agents.execution.activities import (
+        WorkerContext, configure,
+    )
+    from composable_agents.execution.session_store import InMemorySessionStore
+    from composable_agents.execution.blobstore import InMemoryBlobStore
+    from temporalio.worker import Worker
     from composable_agents import purity
     from composable_agents.purity import PureEntry
     from composable_agents.deploy import deploy
@@ -566,6 +572,216 @@ async def _sub_max_calls_inherits_parent_counts(env):
     assert effects["count"] == 3
 
 
+async def _agent_session_store(env):
+    """The gated session-store seam is behaviour-preserving: routing AgentState
+    through loadState/commitState at the continue-as-new boundary yields the same
+    output as the default inline path, and commits >=1 revision to the store."""
+    agents = {
+        "ctrl": {
+            "config": {
+                "maxRounds": 6,
+                "budget": {"cost": 1000},
+                "continueAsNewAfter": 1,
+            },
+            "grantedTools": ["srv/double"],
+        }
+    }
+    store = InMemorySessionStore()
+
+    register_brain(Brain(name="adder", model="test", system="add 10"))
+    register_brain(Brain(name="ctrl", model="test", system="decide"))
+    ctx = WorkerContext(
+        mcp_call=_mcp,
+        llm=_llm,
+        subflows=_child_registry(),
+        agents=agents,
+        session_store=store,
+    )
+    configure(ctx)
+    worker = Worker(
+        env.client,
+        task_queue="ca-agent-store",
+        workflows=WORKFLOWS,
+        activities=ACTIVITIES,
+    )
+    async with worker:
+        sid = f"agent-store-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="ctrl",
+                session_id=sid,
+                input=5,
+                use_session_store=True,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-store",
+        )
+
+    # Same terminal result as the default inline path in _agent(env).
+    assert res["status"] == "done", res
+    assert res["output"] == 11, f"session-store agent expected 11, got {res['output']}"
+    assert [t["decision"] for t in res["trace"]] == ["call", "sub"], res
+
+    # The store actually received committed revisions (cursor path exercised).
+    committed = sum(len(revs) for revs in store._revisions.values())
+    assert committed >= 1, f"expected >=1 committed revision, got {committed}"
+
+
+async def _agent_session_store_fencing(env):
+    """Design invariant 1: when use_session_store=True the session_id must equal
+    the Temporal workflow id (Temporal's one-running-execution-per-workflow-id is
+    the store's only mutual-exclusion mechanism). A mismatched workflow id fails
+    fast with a non-retryable ValidationError, before any LLM/brain effect."""
+    agents = {
+        "ctrl": {
+            "config": {
+                "maxRounds": 6,
+                "budget": {"cost": 1000},
+                "continueAsNewAfter": 1,
+            },
+            "grantedTools": ["srv/double"],
+        }
+    }
+    store = InMemorySessionStore()
+    llm_calls = {"count": 0}
+
+    async def counting_llm(brain, value):  # noqa: ANN001
+        llm_calls["count"] += 1
+        return await _llm(brain, value)
+
+    register_brain(Brain(name="adder", model="test", system="add 10"))
+    register_brain(Brain(name="ctrl", model="test", system="decide"))
+    ctx = WorkerContext(
+        mcp_call=_mcp,
+        llm=counting_llm,
+        subflows=_child_registry(),
+        agents=agents,
+        session_store=store,
+    )
+    configure(ctx)
+    worker = Worker(
+        env.client,
+        task_queue="ca-agent-store-fencing",
+        workflows=WORKFLOWS,
+        activities=ACTIVITIES,
+    )
+    async with worker:
+        sid = f"fenced-{uuid.uuid4()}"
+        with pytest.raises(WorkflowFailureError) as raised:
+            await env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="ctrl",
+                    session_id=sid,
+                    input=5,
+                    use_session_store=True,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=f"other-{uuid.uuid4()}",
+                task_queue="ca-agent-store-fencing",
+            )
+
+    cause = raised.value.__cause__
+    while cause is not None and not (
+        isinstance(cause, ApplicationError) and cause.type == "ValidationError"
+    ):
+        cause = cause.__cause__
+
+    assert isinstance(cause, ApplicationError)
+    assert cause.type == "ValidationError"
+    assert "fencing" in str(cause)
+    # The fence fires before any effect: the brain/LLM was never invoked.
+    assert llm_calls["count"] == 0, f"expected 0 LLM calls, got {llm_calls['count']}"
+
+
+async def _agent_trace_fidelity(env):
+    """Context fidelity (off by default): with policy.trace_content_refs=True the
+    CALL/SUB observations are offloaded through putBlob and stamped onto each
+    TraceEntry as outputRef. The terminal output is unchanged from the default
+    inline path, and the refs resolve through the blob store back to the recorded
+    outputs. A default run records no outputRef (regression guard)."""
+    agents = {
+        "ctrl": {
+            "config": {"maxRounds": 6, "budget": {"cost": 1000}},
+            "grantedTools": ["srv/double"],
+        }
+    }
+    blob_store = InMemoryBlobStore()
+
+    register_brain(Brain(name="adder", model="test", system="add 10"))
+    register_brain(Brain(name="ctrl", model="test", system="decide"))
+    ctx = WorkerContext(
+        mcp_call=_mcp,
+        llm=_llm,
+        subflows=_child_registry(),
+        agents=agents,
+        blob_store=blob_store,
+    )
+    configure(ctx)
+    worker = Worker(
+        env.client,
+        task_queue="ca-agent-fidelity",
+        workflows=WORKFLOWS,
+        activities=ACTIVITIES,
+    )
+    async with worker:
+        # Fidelity ON: trace entries carry resolvable outputRefs.
+        sid = f"agent-fidelity-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="ctrl",
+                session_id=sid,
+                input=5,
+                policy=ExecutionPolicy(trace_content_refs=True).to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-fidelity",
+        )
+
+        # Fidelity OFF (default): identical run, no outputRef recorded.
+        sid_off = f"agent-fidelity-off-{uuid.uuid4()}"
+        res_off = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="ctrl",
+                session_id=sid_off,
+                input=5,
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid_off,
+            task_queue="ca-agent-fidelity",
+        )
+
+    # Same terminal result as the default inline path in _agent(env).
+    assert res["status"] == "done", res
+    assert res["output"] == 11, f"fidelity agent expected 11, got {res['output']}"
+    assert [t["decision"] for t in res["trace"]] == ["call", "sub"], res
+    assert res_off["status"] == "done", res_off
+    assert res_off["output"] == 11, res_off
+
+    # Fidelity ON: each entry carries an outputRef that resolves to its output.
+    call_entry, sub_entry = res["trace"]
+    assert call_entry["decision"] == "call"
+    assert sub_entry["decision"] == "sub"
+    call_ref = call_entry.get("outputRef")
+    sub_ref = sub_entry.get("outputRef")
+    assert call_ref is not None, f"call entry missing outputRef: {call_entry}"
+    assert sub_ref is not None, f"sub entry missing outputRef: {sub_entry}"
+
+    # The refs are tenant-scoped to the session and resolve to the outputs:
+    # input 5 via srv/double is 10; the child sub then srv/inc gives 11.
+    call_out = json.loads(await blob_store.get(sid, call_ref))
+    sub_out = json.loads(await blob_store.get(sid, sub_ref))
+    assert call_out == 10, f"call outputRef resolved to {call_out}, expected 10"
+    assert sub_out == 11, f"sub outputRef resolved to {sub_out}, expected 11"
+
+    # Fidelity OFF: regression guard — no outputRef stamped on any entry.
+    assert all("outputRef" not in t for t in res_off["trace"]), res_off
+
+
 async def _pure_drift_fails_before_effect(env):
     effects = {"count": 0}
 
@@ -609,6 +825,9 @@ async def _run_all():
         await _app_inline_grant_attenuation(env)
         await _strict_controller_contract(env)
         await _sub_max_calls_inherits_parent_counts(env)
+        await _agent_session_store(env)
+        await _agent_session_store_fencing(env)
+        await _agent_trace_fidelity(env)
         await _pure_drift_fails_before_effect(env)
 
 

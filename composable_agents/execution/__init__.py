@@ -16,7 +16,9 @@ from importlib import import_module
 from importlib.util import find_spec
 from typing import Any
 
+from .blobstore import BlobStore, InMemoryBlobStore, content_ref
 from .interpreter import Env, InMemoryEnv, Result, interpret
+from .session_store import Cursor, InMemorySessionStore, SessionStore
 from .timeouts import activity_timeout
 
 HAVE_TEMPORAL = find_spec("temporalio") is not None
@@ -43,6 +45,14 @@ _TEMPORAL_EXPORTS = [
     "verifyPures",
     "build_worker",
     "run_worker",
+    "ClaimCheckCodec",
+    "claim_check_converter",
+    "loadState",
+    "commitState",
+    "putBlob",
+    "LoadStateInput",
+    "CommitStateInput",
+    "PutBlobInput",
 ]
 
 _TEMPORAL_ATTR_MODULES = {
@@ -67,6 +77,14 @@ _TEMPORAL_ATTR_MODULES = {
     "verifyPures": ".activities",
     "build_worker": ".worker",
     "run_worker": ".worker",
+    "ClaimCheckCodec": ".codec",
+    "claim_check_converter": ".worker",
+    "loadState": ".activities",
+    "commitState": ".activities",
+    "putBlob": ".activities",
+    "LoadStateInput": ".activities",
+    "CommitStateInput": ".activities",
+    "PutBlobInput": ".activities",
 }
 
 
@@ -89,4 +107,10 @@ __all__ = [
     "interpret",
     "activity_timeout",
     "HAVE_TEMPORAL",
+    "BlobStore",
+    "InMemoryBlobStore",
+    "content_ref",
+    "SessionStore",
+    "InMemorySessionStore",
+    "Cursor",
 ] + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else [])

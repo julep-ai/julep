@@ -67,11 +67,17 @@ with workflow.unsafe.imports_passed_through():
     )
     from .activities import (
         CallHandInput,
+        CommitStateInput,
         CompilePlanInput,
         InvokeBrainInput,
+        LoadStateInput,
+        PutBlobInput,
         callHand,
+        commitState,
         compilePlan,
         invokeBrain,
+        loadState,
+        putBlob,
         resolveAgentSpec,
         resolveRuntimeCapabilities,
         resolveSubflow,
@@ -95,6 +101,7 @@ class ExecutionPolicy:
     initial_retry_s: float = 1.0
     retry_backoff: float = 2.0
     max_retry_interval_s: int = 60
+    trace_content_refs: bool = False
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -108,6 +115,7 @@ class ExecutionPolicy:
             "initialRetryS": self.initial_retry_s,
             "retryBackoff": self.retry_backoff,
             "maxRetryIntervalS": self.max_retry_interval_s,
+            "traceContentRefs": self.trace_content_refs,
         }
 
     @staticmethod
@@ -125,6 +133,7 @@ class ExecutionPolicy:
             initial_retry_s=d.get("initialRetryS", base.initial_retry_s),
             retry_backoff=d.get("retryBackoff", base.retry_backoff),
             max_retry_interval_s=d.get("maxRetryIntervalS", base.max_retry_interval_s),
+            trace_content_refs=d.get("traceContentRefs", base.trace_content_refs),
         )
 
 
@@ -235,6 +244,8 @@ class AgentInput:
     granted_subflows: Optional[list[str]] = None
     granted_contracts: Optional[dict[str, dict[str, Any]]] = None
     state: Optional[dict[str, Any]] = None      # set on continue-as-new
+    state_cursor: Optional[int] = None          # set on continue-as-new under the store path
+    use_session_store: bool = False             # opt-in: route state through loadState/commitState
     policy: Optional[dict[str, Any]] = None
     resolve_spec: bool = True
 
@@ -586,6 +597,18 @@ class AgentWorkflow:
 
     @workflow.run
     async def run(self, inp: AgentInput) -> dict[str, Any]:
+        # Design invariant 1 (durable-session-store): session_id <-> workflow id
+        # must be 1:1 — Temporal's one-running-execution-per-workflow-id is the
+        # store's only mutual-exclusion mechanism. Enforce before any effect.
+        if inp.use_session_store and workflow.info().workflow_id != inp.session_id:
+            raise ApplicationError(
+                f"session store fencing violated: session_id {inp.session_id!r} != workflow id "
+                f"{workflow.info().workflow_id!r}; the session store delegates mutual exclusion to "
+                "Temporal's one-running-execution-per-workflow-id guarantee, so they must be 1:1",
+                type="ValidationError",
+                non_retryable=True,
+            )
+
         policy = ExecutionPolicy.from_json(inp.policy)
 
         # Resolve config + grant metadata once, then carry it through
@@ -630,7 +653,20 @@ class AgentWorkflow:
         unconstrained = inp.granted_tools_unconstrained or granted is None
         granted_set = set(granted or [])
 
-        state = al.AgentState.from_json(inp.state) if inp.state else al.AgentState(last=inp.input)
+        if inp.use_session_store and inp.state_cursor is not None:
+            state_json = await workflow.execute_activity(
+                loadState,
+                LoadStateInput(session_id=inp.session_id, cursor=inp.state_cursor),
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE
+                ),
+            )
+            state = al.AgentState.from_json(state_json)
+        elif inp.state:
+            state = al.AgentState.from_json(inp.state)
+        else:
+            state = al.AgentState(last=inp.input)
 
         while True:
             if state.round >= cfg.max_rounds:
@@ -700,7 +736,19 @@ class AgentWorkflow:
                 )
                 state.charge(cost)
                 state.last = out
-                state.record(al.TraceEntry(decision="call", ref=tool, cost=cost))
+                output_ref: Optional[str] = None
+                if policy.trace_content_refs:
+                    output_ref = await workflow.execute_activity(
+                        putBlob,
+                        PutBlobInput(tenant=inp.session_id, value=out),
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE
+                        ),
+                    )
+                state.record(
+                    al.TraceEntry(decision="call", ref=tool, cost=cost, output_ref=output_ref)
+                )
 
             else:  # Decision.SUB
                 ref = action.payload["ref"]
@@ -731,29 +779,78 @@ class AgentWorkflow:
                 )
                 state.charge(cost)
                 state.last = out
+                output_ref: Optional[str] = None
+                if policy.trace_content_refs:
+                    output_ref = await workflow.execute_activity(
+                        putBlob,
+                        PutBlobInput(tenant=inp.session_id, value=out),
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE
+                        ),
+                    )
                 state.record(
-                    al.TraceEntry(decision="sub", ref=ref, shape=action.payload.get("shape"), cost=cost)
+                    al.TraceEntry(
+                        decision="sub",
+                        ref=ref,
+                        shape=action.payload.get("shape"),
+                        cost=cost,
+                        output_ref=output_ref,
+                    )
                 )
 
             state.round += 1
 
             # 5) §6 seam: truncate history by continuing as new with carried state.
             if al.should_continue_as_new(state, cfg):
-                workflow.continue_as_new(
-                    AgentInput(
-                        controller=inp.controller,
-                        session_id=inp.session_id,
-                        input=inp.input,
-                        config=config,
-                        granted_tools=None if unconstrained else sorted(granted_set),
-                        granted_tools_unconstrained=unconstrained,
-                        granted_subflows=granted_subflows,
-                        granted_contracts=contracts,
-                        state=state.to_json(),
-                        policy=policy.to_json(),
-                        resolve_spec=False,
+                if inp.use_session_store:
+                    state_hash = al.state_fingerprint(state)
+                    cursor = await workflow.execute_activity(
+                        commitState,
+                        CommitStateInput(
+                            session_id=inp.session_id,
+                            base=inp.state_cursor or 0,
+                            state=state.to_json(),
+                            state_hash=state_hash,
+                        ),
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE
+                        ),
                     )
-                )
+                    workflow.continue_as_new(
+                        AgentInput(
+                            controller=inp.controller,
+                            session_id=inp.session_id,
+                            input=inp.input,
+                            config=config,
+                            granted_tools=None if unconstrained else sorted(granted_set),
+                            granted_tools_unconstrained=unconstrained,
+                            granted_subflows=granted_subflows,
+                            granted_contracts=contracts,
+                            state=None,
+                            state_cursor=cursor,
+                            use_session_store=True,
+                            policy=policy.to_json(),
+                            resolve_spec=False,
+                        )
+                    )
+                else:
+                    workflow.continue_as_new(
+                        AgentInput(
+                            controller=inp.controller,
+                            session_id=inp.session_id,
+                            input=inp.input,
+                            config=config,
+                            granted_tools=None if unconstrained else sorted(granted_set),
+                            granted_tools_unconstrained=unconstrained,
+                            granted_subflows=granted_subflows,
+                            granted_contracts=contracts,
+                            state=state.to_json(),
+                            policy=policy.to_json(),
+                            resolve_spec=False,
+                        )
+                    )
 
 
 # --------------------------------------------------------------------------- #

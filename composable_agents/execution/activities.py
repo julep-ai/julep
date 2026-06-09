@@ -29,6 +29,7 @@ from typing import Any, Awaitable, Callable, Optional
 
 from temporalio import activity
 
+from .. import agent_loop as al
 from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain
@@ -38,6 +39,8 @@ from ..kinds import Effect, Idempotency
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..prompt import rendered_brain_for
 from ..staged import admit_plan
+from .blobstore import BlobStore
+from .session_store import SessionStore
 
 # Caller signatures the worker supplies.
 McpCaller = Callable[[str, str, Any, str], Awaitable[Any]]  # (server, tool, args, key) -> result
@@ -58,6 +61,8 @@ class WorkerContext:
     hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
     mcp_call: Optional[McpCaller] = None
     llm: Optional[LlmCaller] = None
+    blob_store: Optional[BlobStore] = None
+    session_store: Optional[SessionStore] = None
     capabilities: Optional[CapabilityManifest] = None
     registry: Optional[Registry] = None
     http_timeout_s: float = 30.0
@@ -117,9 +122,63 @@ class CompilePlanInput:
     manifest: Optional[dict[str, Any]] = None  # parent frozen manifest (for schema checks)
 
 
+@dataclass
+class LoadStateInput:
+    session_id: str
+    cursor: int
+
+
+@dataclass
+class CommitStateInput:
+    session_id: str
+    base: int
+    state: dict[str, Any]
+    state_hash: str
+
+
+@dataclass
+class PutBlobInput:
+    tenant: str
+    value: Any
+
+
 # --------------------------------------------------------------------------- #
 # Activities.
 # --------------------------------------------------------------------------- #
+@activity.defn(name="loadState")
+async def loadState(inp: LoadStateInput) -> dict[str, Any]:
+    if _CTX.session_store is None:
+        raise RuntimeError("worker has no session store configured")
+    return (await _CTX.session_store.load(inp.session_id, inp.cursor)).to_json()
+
+
+@activity.defn(name="commitState")
+async def commitState(inp: CommitStateInput) -> int:
+    if _CTX.session_store is None:
+        raise RuntimeError("worker has no session store configured")
+    state = al.AgentState.from_json(inp.state)
+    return await _CTX.session_store.commit(
+        inp.session_id, inp.base, state, inp.state_hash
+    )
+
+
+@activity.defn(name="putBlob")
+async def putBlob(inp: PutBlobInput) -> str:
+    """JSON-canonical claim check for trace/context refs (``trace_content_refs``).
+
+    Refs address the canonical JSON encoding (``json.dumps(sort_keys=True)``) —
+    a deliberately distinct ref-space from the wire codec's raw-payload refs
+    (``codec.py``); non-JSON values are rejected loudly (``TypeError``).
+    """
+    if _CTX.blob_store is None:
+        raise RuntimeError("worker has no blob store configured")
+    import json
+
+    return await _CTX.blob_store.put(
+        inp.tenant, json.dumps(inp.value, sort_keys=True).encode()
+    )
+
+
 @activity.defn(name="callHand")
 async def callHand(inp: CallHandInput) -> Any:
     ref = toolref_from_json(inp.tool_ref)

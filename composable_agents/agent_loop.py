@@ -28,6 +28,8 @@ activities and continue-as-new lives in :mod:`composable_agents.execution.harnes
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -236,6 +238,9 @@ class TraceEntry:
         )
 
 
+STATE_SCHEMA_VERSION = 1
+
+
 @dataclass
 class AgentState:
     """Mutable loop state. Round-trips through JSON for continue-as-new."""
@@ -254,6 +259,7 @@ class AgentState:
 
     def to_json(self) -> dict[str, Any]:
         out = {
+            "schemaVersion": STATE_SCHEMA_VERSION,
             "round": self.round,
             "cost": self.spent,
             "last": self.last,
@@ -265,6 +271,12 @@ class AgentState:
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentState":
+        version = int(d.get("schemaVersion", STATE_SCHEMA_VERSION))
+        if version > STATE_SCHEMA_VERSION:
+            raise ValueError(
+                f"AgentState schemaVersion {version} is newer than supported "
+                f"{STATE_SCHEMA_VERSION}; add a migration in agent_loop.AgentState.from_json"
+            )
         return AgentState(
             round=int(d.get("round", 0)),
             spent=float(d.get("cost", d.get("spentUsd", 0.0))),
@@ -275,6 +287,29 @@ class AgentState:
                 for tool, count in d.get("callCounts", d.get("call_counts", {})).items()
             },
         )
+
+
+def state_fingerprint(state: AgentState) -> str:
+    """Stable sha256 hex of the canonical JSON of ``state.to_json()``.
+
+    The commit-idempotency key the SessionStore keys on (design invariant 2):
+    order-independent (equal states up to dict ordering hash identically) and
+    sensitive to any field change. The session-store path requires the whole
+    ``AgentState`` (including ``last`` and trace entries) to be
+    JSON-serializable — the same constraint the SessionStore's persistence of
+    ``state.to_json()`` already imposes.
+    """
+    try:
+        canonical = json.dumps(state.to_json(), sort_keys=True, separators=(",", ":"))
+    except TypeError as exc:
+        raise TypeError(
+            "state_fingerprint: AgentState is not JSON-serializable "
+            f"({exc}). The session-store path requires AgentState — including "
+            "`last` and trace entries — to be JSON-serializable, because the "
+            "SessionStore persists state.to_json() as canonical JSON. The "
+            "default inline continue-as-new path has no such restriction."
+        ) from exc
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 # --------------------------------------------------------------------------- #
@@ -501,9 +536,11 @@ __all__ = [
     "action_cost",
     "AgentConfig",
     "AgentState",
+    "STATE_SCHEMA_VERSION",
     "TraceEntry",
     "would_exceed_budget",
     "should_continue_as_new",
+    "state_fingerprint",
     "terminal_result",
     "CallDenial",
     "precheck_controller",
