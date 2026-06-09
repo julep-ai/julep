@@ -59,7 +59,9 @@ def test_scripted_think_call_finish() -> None:
     assert result["output"] == "final"
     assert result["trace"] == [{"decision": "call", "ref": "web_search", "cost": 1.0}]
     assert tool_calls == ["q"]
-    assert [entry[0] for entry in seen] == ["m", "m"]
+    # The controller receives the brain *name* (the registry key a real llm
+    # caller resolves), not the model string "m".
+    assert [entry[0] for entry in seen] == ["agent_scripted", "agent_scripted"]
     assert seen[1][1]["input"] == ["hit:q"]
 
 

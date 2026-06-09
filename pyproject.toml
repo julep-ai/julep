@@ -32,9 +32,17 @@ temporal = ["temporalio>=1.7"]
 http = ["httpx>=0.24"]
 # Experimental Claude Managed Agents (CMA) backend (HTTP, beta-pinned).
 cma = ["httpx>=0.24"]
+# Multi-provider LlmCaller via any-llm (execution/llm.py). Also install your
+# provider extras alongside it, e.g. pip install 'any-llm-sdk[anthropic,openai]'.
+# any-llm-sdk requires Python >=3.11; on 3.10 the LlmCaller raises a clear
+# ImportError at call time instead (the marker keeps the extra resolvable).
+providers = ["any-llm-sdk>=1.17; python_version >= '3.11'"]
 # OpenTelemetry span export of the projection.
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
-# Everything needed to run the full test suite (including the Temporal E2E test).
+# Everything needed to run the full test suite (including the Temporal E2E test)
+# and to drive real providers from the examples. The unit tests inject a fake
+# acompletion and never import any-llm, so the SDK + its provider plugins live
+# here (dev) rather than in core; end users pull the slim ``providers`` extra.
 dev = [
     "mypy>=1.10",
     "pytest>=7",
@@ -44,6 +52,7 @@ dev = [
     "opentelemetry-api>=1.20",
     "opentelemetry-sdk>=1.20",
     "types-PyYAML>=6.0",
+    "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]
 
 [project.urls]

@@ -731,7 +731,11 @@ class Agent(FlowLike[Any, Any]):
             contracts.setdefault(tool_name, {})["maxCalls"] = limit
 
         async def invoke_controller(payload: dict[str, Any]) -> Any:
-            reply = self._brain_fn(self._brain_model, payload)
+            # Pass the brain *name* (not the model string): it is the registry key
+            # a real llm caller resolves to recover system + reply_schema, and it
+            # matches the long-documented ``_brain_name`` parameter. Scripted
+            # callers ignore it, so this is behaviour-preserving for them.
+            reply = self._brain_fn(self._name, payload)
             if inspect.isawaitable(reply):
                 return await reply
             return reply

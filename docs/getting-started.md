@@ -52,7 +52,7 @@ print(result["trace"])
 
 `@tool(...)` turns a Python callable into a native tool capability. `effect=` must be one of `"read"`, `"write"`, `"external"`, or `"dangerous"`; the effect is used by capability enforcement and approval checks. `idempotent=True` marks the native hand as retry-safe for repeated execution with the same input. The decorator infers JSON-ish input and output schemas from type hints.
 
-`llm=` is a controller callable with the shape `(brain, payload) -> reply`. In the local facade, `brain` is the model string passed to `Agent(...)`; `payload` contains the current `"input"` and the append-only `"trace"`. For a tool call, return `{"tool": "<granted tool name>", "input": value}`. To finish, return `{"output": value}`. The agent loop accepts a closed reply vocabulary; the other reply forms are used by more advanced subflow and escalation cases.
+`llm=` is a controller callable with the shape `(brain, payload) -> reply`. In the local facade, `brain` is the agent's **brain name** — its registry key (the `name=` you passed, or a deterministic default derived from the config), not the model string. Scripted callers ignore it (as `scripted_llm` does above); a real caller resolves it through the brain registry (`get_brain(name)`) to recover that brain's system prompt and reply schema. `payload` contains the current `"input"` and the append-only `"trace"`. For a tool call, return `{"tool": "<granted tool name>", "input": value}`. To finish, return `{"output": value}`. The agent loop accepts a closed reply vocabulary; the other reply forms are used by more advanced subflow and escalation cases.
 
 `Agent(...)` freezes the controller identity around `brain`, `tools`, optional `name`, optional `llm`, `budget_cost`, `max_rounds`, `instructions`, and `mode`. The local `.run(...)` method executes the same bounded app loop through the in-memory interpreter. Use `await agent.arun(...)` instead when already inside an event loop.
 
@@ -102,7 +102,9 @@ def search_kb(ticket: str) -> dict[str, str]:
     return {"queue": "billing", "summary": "Use the duplicate-charge runbook."}
 
 
-async def llm_controller(brain: str, payload: dict[str, Any]) -> dict[str, Any]:
+async def llm_controller(brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    # `brain_name` is the registry key; `get_brain(brain_name)` recovers the
+    # brain's model, system prompt, and reply schema to build the request.
     ...
 
 
@@ -115,6 +117,18 @@ agent = Agent(
 ```
 
 The framework constrains the controller through the reply schema and the granted tool set; it does not prescribe the model client.
+
+For a batteries-included multi-provider controller, install the `providers` extra and use `make_local_brain` from `composable_agents.execution.llm`. It routes a `provider:model` prefix on `brain=` (e.g. `"openai:gpt-4o"`, `"gemini:gemini-2.5-flash"`) through [any-llm](https://github.com/mozilla-ai/any-llm), so the same agent runs on any supported provider:
+
+```python
+# pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic,openai]'
+from composable_agents import Agent, tool
+from composable_agents.execution.llm import make_local_brain
+
+agent = Agent(brain="openai:gpt-4o", tools=[search_kb], llm=make_local_brain())
+```
+
+A bare model string (no `provider:` prefix) falls back to the default provider (anthropic). See `examples/multi_provider_agent.py` for a runnable, key-guarded loop across several providers.
 
 ## Dev mode while iterating
 
