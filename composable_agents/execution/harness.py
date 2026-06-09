@@ -52,10 +52,12 @@ from temporalio.exceptions import ApplicationError
 # workflow sandbox does not trip over disallowed modules at definition time.
 with workflow.unsafe.imports_passed_through():
     from .. import agent_loop as al
+    from ..continuation import continuation_value, is_continuation
     from ..contracts import ToolContract, manifest_from_json
     from ..errors import ComposableAgentsError
     from ..ir import Node, toolref_key
     from ..projection import InMemoryProjection, ProjectionEmitter
+    from ..purity import get_pure as _get_pure_from_registry
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .timeouts import activity_timeout
@@ -221,11 +223,12 @@ class _TemporalEnv:
         return f"{node_id}@{self._cid}"
 
     def get_pure(self, name: str):
-        # Pure functions are resolved from the in-process registry; they must be
-        # deterministic by contract (see purity.py), so this is replay-safe.
-        from ..purity import get_pure as _gp
-
-        return _gp(name)
+        # Pure functions are resolved from the real worker-process registry via
+        # a passthrough import. Importing lazily inside the workflow sandbox
+        # would create an isolated registry copy and hide worker-registered
+        # pures. Registered pures must be deterministic by contract (see
+        # purity.py), so the lookup remains replay-safe.
+        return _get_pure_from_registry(name)
 
     def charge_call(self, tool_key: str) -> None:
         limit = self._max_call_limits.get(tool_key)
@@ -237,6 +240,9 @@ class _TemporalEnv:
 
             raise CapabilityDenied(f"tool {tool_key!r} exceeded maxCalls={limit}")
         self._call_counts[tool_key] = count + 1
+
+    def call_counts_snapshot(self) -> dict[str, int]:
+        return dict(self._call_counts)
 
     def _child_id(self, kind: str, cid: str) -> str:
         self._child += 1
@@ -520,6 +526,21 @@ class FlowWorkflow:
                 type=type(exc).__name__,
                 non_retryable=True,
             ) from exc
+        if is_continuation(result.value):
+            # Chain: same frozen flow, new input, cumulative call counts so
+            # maxCalls budgets span the whole chain, truncated history.
+            workflow.continue_as_new(
+                FlowInput(
+                    session_id=inp.session_id,
+                    input=continuation_value(result.value),
+                    flow_json=flow_json,
+                    manifest_json=manifest_json,
+                    pinned_pures=pinned_pures,
+                    max_call_limits=max_call_limits,
+                    call_counts=env.call_counts_snapshot(),
+                    policy=inp.policy,
+                )
+            )
         return result.value
 
 

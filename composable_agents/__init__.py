@@ -81,6 +81,12 @@ from .derived import (
     review as review,
     vote as vote,
 )
+from .continuation import (
+    continuation_value as continuation_value,
+    continue_with as continue_with,
+    is_continuation as is_continuation,
+    run_chained as run_chained,
+)
 
 # --- contracts + tool manifest --------------------------------------------- #
 from .contracts import (
@@ -219,6 +225,8 @@ _BASE_EXPORTS = [
     # derived
     "race", "hedge", "quorum", "map_n", "map_reduce", "vote", "review",
     "human_gate", "delay", "check_race_admission",
+    # continuation
+    "continue_with", "is_continuation", "continuation_value", "run_chained",
     # contracts
     "ToolContract", "FrozenTool", "McpAnnotations", "ToolManifest",
     "definition_hash", "execution_hash", "manifest_to_json", "manifest_from_json",
