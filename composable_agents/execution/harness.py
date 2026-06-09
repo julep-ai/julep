@@ -56,6 +56,8 @@ with workflow.unsafe.imports_passed_through():
     from ..errors import ComposableAgentsError
     from ..ir import Node, toolref_key
     from ..projection import InMemoryProjection, ProjectionEmitter
+    from .policy import ExecutionPolicy
+    from .effects import toolref_json_from_key as _toolref_json_from_key
     from .timeouts import activity_timeout
     from .interpreter import (
         BranchThunk,
@@ -83,58 +85,6 @@ with workflow.unsafe.imports_passed_through():
         resolveSubflow,
         verifyPures,
     )
-
-
-# --------------------------------------------------------------------------- #
-# Tunable execution policy (a §6 open seam; override per deployment).
-# --------------------------------------------------------------------------- #
-@dataclass(frozen=True)
-class ExecutionPolicy:
-    hand_timeout_s: int = 30
-    brain_timeout_s: int = 120
-    plan_timeout_s: int = 120
-    sub_task_timeout_s: int = 3600
-    agent_task_timeout_s: int = 3600
-    # Retry shaping.
-    idempotent_max_attempts: int = 5
-    write_max_attempts: int = 3
-    initial_retry_s: float = 1.0
-    retry_backoff: float = 2.0
-    max_retry_interval_s: int = 60
-    trace_content_refs: bool = False
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "handTimeoutS": self.hand_timeout_s,
-            "brainTimeoutS": self.brain_timeout_s,
-            "planTimeoutS": self.plan_timeout_s,
-            "subTaskTimeoutS": self.sub_task_timeout_s,
-            "agentTaskTimeoutS": self.agent_task_timeout_s,
-            "idempotentMaxAttempts": self.idempotent_max_attempts,
-            "writeMaxAttempts": self.write_max_attempts,
-            "initialRetryS": self.initial_retry_s,
-            "retryBackoff": self.retry_backoff,
-            "maxRetryIntervalS": self.max_retry_interval_s,
-            "traceContentRefs": self.trace_content_refs,
-        }
-
-    @staticmethod
-    def from_json(d: Optional[dict[str, Any]]) -> "ExecutionPolicy":
-        d = d or {}
-        base = ExecutionPolicy()
-        return ExecutionPolicy(
-            hand_timeout_s=d.get("handTimeoutS", base.hand_timeout_s),
-            brain_timeout_s=d.get("brainTimeoutS", base.brain_timeout_s),
-            plan_timeout_s=d.get("planTimeoutS", base.plan_timeout_s),
-            sub_task_timeout_s=d.get("subTaskTimeoutS", base.sub_task_timeout_s),
-            agent_task_timeout_s=d.get("agentTaskTimeoutS", base.agent_task_timeout_s),
-            idempotent_max_attempts=d.get("idempotentMaxAttempts", base.idempotent_max_attempts),
-            write_max_attempts=d.get("writeMaxAttempts", base.write_max_attempts),
-            initial_retry_s=d.get("initialRetryS", base.initial_retry_s),
-            retry_backoff=d.get("retryBackoff", base.retry_backoff),
-            max_retry_interval_s=d.get("maxRetryIntervalS", base.max_retry_interval_s),
-            trace_content_refs=d.get("traceContentRefs", base.trace_content_refs),
-        )
 
 
 # Errors that represent a settled policy decision must never be retried.
@@ -170,20 +120,6 @@ _BRAIN_RETRY = RetryPolicy(
     maximum_attempts=4,
     non_retryable_error_types=_NON_RETRYABLE,
 )
-
-
-def _toolref_json_from_key(key: str) -> dict[str, Any]:
-    """Reverse of :func:`~composable_agents.ir.toolref_key`.
-
-    A granted-tool key is ``"server/tool"`` for an MCP tool or a bare name for a
-    native hand; the agent loop calls tools by key, so this maps back to the
-    ``ToolRef`` JSON the ``callHand`` activity expects (MCP routes through the
-    worker's MCP caller, native through its hand URL).
-    """
-    if "/" in key:
-        server, tool = key.split("/", 1)
-        return {"kind": "mcp", "server": server, "tool": tool}
-    return {"kind": "native", "name": key}
 
 
 def _manifest_contracts_for_agent(
