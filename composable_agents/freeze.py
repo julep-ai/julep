@@ -31,6 +31,7 @@ from .ir import (
     McpTool,
     NativeTool,
     Node,
+    SLEEP_TOOL,
     SourceSpan,
     ToolRef,
     toolref_key,
@@ -43,6 +44,9 @@ from .transforms import detect_cycles, normalize_ids
 # entry: it waits on a human signal (external, non-idempotent, but ours so the
 # contract is asserted). It is intentionally not race-safe.
 _HUMAN_GATE_CONTRACT = ToolContract(effect=Effect.EXTERNAL, idempotency=Idempotency.NONE)
+
+# The reserved sleep hand is side-effect-free and replay-safe by construction.
+_SLEEP_CONTRACT = ToolContract(effect=Effect.READ, idempotency=Idempotency.NATIVE)
 
 
 # --------------------------------------------------------------------------- #
@@ -114,6 +118,17 @@ def _resolve(
             ref=ref,
             input_schema={},
             contract=asserted_contract or _HUMAN_GATE_CONTRACT,
+            output_schema=None,
+            server_version=None,
+            asserted=True,
+        )
+
+    # Reserved sleep hand: synthetic, no snapshot lookup.
+    if isinstance(ref, NativeTool) and ref.name == SLEEP_TOOL:
+        return FrozenTool.create(
+            ref=ref,
+            input_schema={},
+            contract=asserted_contract or _SLEEP_CONTRACT,
             output_schema=None,
             server_version=None,
             asserted=True,

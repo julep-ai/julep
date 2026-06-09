@@ -32,7 +32,7 @@ from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest
 from ..derived import flatten_race_group
 from ..errors import CapabilityDenied, ComposableAgentsError, RaceAllFailed
 from ..freeze import bind
-from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SubContract, SubStep, ThinkStep, toolref_key
+from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SLEEP_TOOL, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import EnforcementMode, Op
 from ..projection import ProjectionEmitter
 from ..registry import DEFAULT_REGISTRY, Registry
@@ -121,6 +121,7 @@ class Env(Protocol):
     ) -> Any: ...
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node: ...
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any: ...
+    async def sleep(self, seconds: int, cid: str) -> None: ...
 
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]: ...
     async def race_first(
@@ -232,6 +233,11 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         if step.tool.kind == "native" and getattr(step.tool, "name", None) == HUMAN_GATE_TOOL:
             timeout_s = node.ann.timeout if node.ann else None
             return Result(await env.human_gate(value, cid, timeout_s))
+        # Reserved sleep hand becomes a durable timer, not an HTTP call.
+        if step.tool.kind == "native" and getattr(step.tool, "name", None) == SLEEP_TOOL:
+            seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
+            await env.sleep(seconds, cid)
+            return Result(value)
         return Result(await env.call_hand(node, value, cid))
     if isinstance(step, ThinkStep):
         timeout_s = node.ann.timeout if node.ann else None
@@ -501,6 +507,7 @@ class InMemoryEnv:
         agents: Optional[dict[str, Callable[[Any], Any]]] = None,
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
         gate: Optional[Callable[[Any], Any]] = None,
+        sleeper: Optional[Callable[[int], Awaitable[None]]] = None,
         max_calls: Optional[dict[str, int]] = None,
         mode: EnforcementMode | str = EnforcementMode.STRICT,
         registry: Optional[Registry] = None,
@@ -513,11 +520,13 @@ class InMemoryEnv:
         self._agents = agents or {}
         self._planners = planners or {}
         self._gate = gate or (lambda v: {"approved": True, "input": v})
+        self._sleeper = sleeper
         self._max_calls = dict(max_calls or {})
         self.mode = EnforcementMode.coerce(mode)
         self.dev_warnings: list[dict[str, Any]] = []
         self._registry = registry
         self.call_counts: dict[str, int] = {}
+        self.sleeps: list[int] = []
         self._cid = 0
 
     # --- identity / pures --- #
@@ -591,6 +600,11 @@ class InMemoryEnv:
 
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return self._gate(value)
+
+    async def sleep(self, seconds: int, cid: str) -> None:
+        self.sleeps.append(seconds)
+        if self._sleeper is not None:
+            await self._sleeper(seconds)
 
     # --- concurrency --- #
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:

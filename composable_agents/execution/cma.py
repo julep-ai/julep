@@ -345,6 +345,9 @@ class CMAAgentEnv:
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return await self._inner.human_gate(value, cid, timeout_s)
 
+    async def sleep(self, seconds: int, cid: str) -> None:
+        await self._inner.sleep(seconds, cid)
+
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
         return await self._inner.gather(coros)
 

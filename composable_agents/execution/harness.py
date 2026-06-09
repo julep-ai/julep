@@ -356,6 +356,10 @@ class _TemporalEnv:
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return await self._gate_waiter(value, cid, timeout_s)
 
+    async def sleep(self, seconds: int, cid: str) -> None:
+        # asyncio.sleep inside a Temporal workflow is a durable timer.
+        await asyncio.sleep(seconds)
+
     # --- concurrency (deterministic under Temporal's asyncio) --- #
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
         return list(await asyncio.gather(*coros))

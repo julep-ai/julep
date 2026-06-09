@@ -30,6 +30,7 @@ from .ir import (
     Merge,
     NativeTool,
     Node,
+    SLEEP_TOOL,
     SubStep,
 )
 from .kinds import (
@@ -44,6 +45,7 @@ from .validate import Diagnostic
 
 __all__ = [
     "HUMAN_GATE_TOOL",
+    "SLEEP_TOOL",
     "race",
     "hedge",
     "quorum",
@@ -52,6 +54,7 @@ __all__ = [
     "vote",
     "review",
     "human_gate",
+    "delay",
     "flatten_race_group",
     "check_race_admission",
 ]
@@ -195,6 +198,19 @@ def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None)
     ann = Ann(timeout_s=timeout_s) if timeout_s is not None else None
     return _node(op=Op.PRIM, id=_nid("gate"), ann=ann,
                  step=CallStep(tool=NativeTool(HUMAN_GATE_TOOL)), prompt=prompt)
+
+
+def delay(*, seconds: int) -> Node:
+    """A leaf that durably pauses the flow, passing its input through unchanged.
+
+    Emits a ``call`` to the reserved hand ``__sleep__``; each harness turns it
+    into its engine's durable timer (Temporal timer / ``DBOS.sleep``) instead of
+    an HTTP call. The duration rides on the annotation's timeout.
+    """
+    if seconds < 1:
+        raise ValueError("delay seconds must be >= 1")
+    return _node(op=Op.PRIM, id=_nid("delay"), ann=Ann(timeout_s=seconds),
+                 step=CallStep(tool=NativeTool(SLEEP_TOOL)))
 
 
 # --------------------------------------------------------------------------- #

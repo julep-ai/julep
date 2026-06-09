@@ -27,6 +27,11 @@ JSONSchema = dict[str, Any]
 # rather than an HTTP request (see derived.human_gate / the interpreter).
 HUMAN_GATE_TOOL = "__human_gate__"
 
+# Reserved native hand: the harness turns a call to this into a durable timer
+# (Temporal: workflow timer; DBOS: DBOS.sleep) rather than an HTTP request.
+# The duration in seconds rides on the node's Ann.timeout.
+SLEEP_TOOL = "__sleep__"
+
 
 # --------------------------------------------------------------------------- #
 # camelCase <-> snake_case helpers for the canonical JSON form.

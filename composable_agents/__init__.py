@@ -37,6 +37,7 @@ from .kinds import (
 # --- IR value types (rarely built by hand; useful for typing/introspection) #
 from .ir import (
     HUMAN_GATE_TOOL as HUMAN_GATE_TOOL,
+    SLEEP_TOOL as SLEEP_TOOL,
     Ann as Ann,
     CacheHint as CacheHint,
     ContextPolicy as ContextPolicy,
@@ -70,6 +71,7 @@ from .dsl import (
 )
 from .derived import (
     check_race_admission as check_race_admission,
+    delay as delay,
     hedge as hedge,
     human_gate as human_gate,
     map_n as map_n,
@@ -209,14 +211,14 @@ _BASE_EXPORTS = [
     "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
     # ir
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
-    "NativeTool", "McpTool", "HUMAN_GATE_TOOL",
+    "NativeTool", "McpTool", "HUMAN_GATE_TOOL", "SLEEP_TOOL",
     # dsl
     "call", "native", "mcp", "think", "brain_from_ctx", "ident", "arr", "sub",
     "seq", "par", "fanout", "alt", "iter_up_to", "stage", "app",
     "Contract",
     # derived
     "race", "hedge", "quorum", "map_n", "map_reduce", "vote", "review",
-    "human_gate", "check_race_admission",
+    "human_gate", "delay", "check_race_admission",
     # contracts
     "ToolContract", "FrozenTool", "McpAnnotations", "ToolManifest",
     "definition_hash", "execution_hash", "manifest_to_json", "manifest_from_json",
