@@ -22,6 +22,7 @@ from .session_store import Cursor, InMemorySessionStore, SessionStore
 from .timeouts import activity_timeout
 
 HAVE_TEMPORAL = find_spec("temporalio") is not None
+HAVE_DBOS = find_spec("dbos") is not None
 
 _TEMPORAL_EXPORTS = [
     "AgentInput",
@@ -107,6 +108,7 @@ __all__ = [
     "interpret",
     "activity_timeout",
     "HAVE_TEMPORAL",
+    "HAVE_DBOS",
     "BlobStore",
     "InMemoryBlobStore",
     "content_ref",
