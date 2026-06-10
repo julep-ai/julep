@@ -7,7 +7,9 @@ no Temporal dependency at all, so it is unit-tested in-process. The Temporal
 pieces — the ``run`` workflow, the ``callHand`` / ``invokeBrain`` / ``compilePlan``
 activities, the worker, and the OTel exporter — live in sibling modules whose
 ``temporalio`` import is guarded; importing this package never requires Temporal
-to be installed. ``HAVE_TEMPORAL`` says whether it is.
+to be installed. ``HAVE_TEMPORAL`` says whether it is. The container host shell
+in :mod:`composable_agents.execution.serve` (settings, health probes, ``serve``)
+is itself import-safe; only calling :func:`serve` needs the ``temporal`` extra.
 """
 
 from __future__ import annotations
@@ -20,6 +22,13 @@ from .blobstore import BlobStore, InMemoryBlobStore, content_ref
 from .effects import RunPrincipal, WorkerContext, configure
 from .interpreter import Env, InMemoryEnv, Result, interpret
 from .policy import ExecutionPolicy
+from .serve import (
+    DEFAULT_TASK_QUEUE,
+    HealthServer,
+    WorkerServeSettings,
+    load_context_factory,
+    serve,
+)
 from .session_store import Cursor, InMemorySessionStore, SessionStore
 from .timeouts import activity_timeout
 
@@ -135,4 +144,9 @@ __all__ = [
     "SessionStore",
     "InMemorySessionStore",
     "Cursor",
+    "DEFAULT_TASK_QUEUE",
+    "HealthServer",
+    "WorkerServeSettings",
+    "load_context_factory",
+    "serve",
 ] + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else []) + (_DBOS_EXPORTS if HAVE_DBOS else [])

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Callable, Optional, Sequence, TextIO, cast
@@ -40,7 +41,8 @@ def main(argv: Optional[Sequence[str]] = None, *, stdout: TextIO | None = None) 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="composable-agents",
-        description="Validate, freeze, inspect, locally run, and graph Composable Agents JSON IR.",
+        description="Validate, freeze, inspect, locally run, and graph Composable Agents "
+        "JSON IR; host a Temporal worker (`worker`).",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -73,6 +75,23 @@ def _parser() -> argparse.ArgumentParser:
     graph_p = sub.add_parser("graph", help="emit Graphviz DOT for the IR tree")
     graph_p.add_argument("flow_json")
     graph_p.set_defaults(func=_cmd_graph)
+
+    worker_p = sub.add_parser(
+        "worker",
+        help="run a Temporal worker configured from the environment "
+        "(container entrypoint: SIGTERM drain + /healthz + /readyz)",
+    )
+    worker_p.add_argument(
+        "--context-factory",
+        help="module:attr returning a WorkerContext (overrides WORKER_CONTEXT_FACTORY)",
+    )
+    worker_p.add_argument("--address", help="Temporal frontend (overrides TEMPORAL_ADDRESS)")
+    worker_p.add_argument("--namespace", help="Temporal namespace (overrides TEMPORAL_NAMESPACE)")
+    worker_p.add_argument("--task-queue", help="task queue (overrides TEMPORAL_TASK_QUEUE)")
+    worker_p.add_argument(
+        "--health-port", type=int, help="probe HTTP port (overrides WORKER_HEALTH_PORT)"
+    )
+    worker_p.set_defaults(func=_cmd_worker)
 
     return parser
 
@@ -172,6 +191,31 @@ def _cmd_run_local(args: argparse.Namespace, out: TextIO) -> int:
 def _cmd_graph(args: argparse.Namespace, out: TextIO) -> int:
     flow = _load_flow(args.flow_json)
     print(graph_dot(flow), file=out)
+    return 0
+
+
+def _cmd_worker(args: argparse.Namespace, out: TextIO) -> int:
+    from .execution.serve import WorkerServeSettings, serve
+
+    # Flags overlay the environment, then one parser produces the settings.
+    env = dict(os.environ)
+    if args.context_factory:
+        env["WORKER_CONTEXT_FACTORY"] = args.context_factory
+    if args.address:
+        env["TEMPORAL_ADDRESS"] = args.address
+    if args.namespace:
+        env["TEMPORAL_NAMESPACE"] = args.namespace
+    if args.task_queue:
+        env["TEMPORAL_TASK_QUEUE"] = args.task_queue
+    if args.health_port is not None:
+        env["WORKER_HEALTH_PORT"] = str(args.health_port)
+    settings = WorkerServeSettings.from_env(env)
+    print(
+        f"worker: address={settings.address} namespace={settings.namespace} "
+        f"task_queue={settings.task_queue} health_port={settings.health_port}",
+        file=out,
+    )
+    asyncio.run(serve(settings))
     return 0
 
 

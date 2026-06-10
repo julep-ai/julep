@@ -91,6 +91,12 @@ functions. The six boundary/resolution activities are below; the seventh,
 `resolveRuntimeCapabilities`, supplies deterministic run-time policy such as
 `maxCalls`.
 
+For containers there is a third entry point: `composable-agents worker` reads
+the connection and tuning knobs from the environment, resolves the
+`WorkerContext` from a `WORKER_CONTEXT_FACTORY=module:attr` factory, drains
+gracefully on SIGTERM, and serves `/healthz` + `/readyz` probes. That is the
+Kubernetes/KEDA path — see [deploy-kubernetes.md](deploy-kubernetes.md).
+
 ## Activities
 
 - `verifyPures`: compare deploy-pinned pure source hashes to the worker
@@ -225,6 +231,7 @@ defines the replay-integrity constraints around them.
   sinks such as Postgres or OTel are fed from history outside the workflow.
 
 Related: [docs index](README.md), [getting-started.md](getting-started.md),
+[deploy-kubernetes.md](deploy-kubernetes.md),
 [capabilities-and-safety.md](capabilities-and-safety.md), [examples.md](examples.md),
 [design/typed-flow.md](design/typed-flow.md), [SPEC.md](SPEC.md), and
 [CONTRIBUTING.md](../CONTRIBUTING.md).

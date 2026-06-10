@@ -304,6 +304,7 @@ composable_agents/
     harness.py      FlowWorkflow, AgentWorkflow, Temporal Env, client helpers
     activities.py   callHand / invokeBrain / compilePlan / resolve* activities
     worker.py       Client + Worker wiring
+    serve.py        container worker entrypoint (env config, SIGTERM drain, probes)
     debounce.py     dispatch-layer batch collator (Temporal signal-with-start)
     otel.py         OpenTelemetry export of the projection
 ```
