@@ -83,14 +83,23 @@ def _is_auth_error(exc: BaseException) -> bool:
 
 
 def _chain(exc: BaseException) -> list[BaseException]:
-    """``exc`` plus its ``__cause__``/``__context__`` ancestry (cycle-safe)."""
+    """``exc`` plus its full ``__cause__``/``__context__`` ancestry (cycle-safe).
+
+    Both links are followed: ``raise X from Y`` inside an ``except Z:`` block
+    leaves ``__cause__ = Y`` *and* ``__context__ = Z`` populated, and an auth
+    error hiding in either branch must be found.
+    """
     out: list[BaseException] = []
     seen: set[int] = set()
-    current: Optional[BaseException] = exc
-    while current is not None and id(current) not in seen:
+    stack: list[Optional[BaseException]] = [exc]
+    while stack:
+        current = stack.pop()
+        if current is None or id(current) in seen:
+            continue
         seen.add(id(current))
         out.append(current)
-        current = current.__cause__ or current.__context__
+        stack.append(current.__cause__)
+        stack.append(current.__context__)
     return out
 
 
@@ -190,6 +199,11 @@ class CircuitBreaker:
     """Per-key (provider) breaker: closed -> open after N consecutive failures,
     half-open after a cooldown (one probe through; failure re-arms the cooldown).
 
+    ``allow`` *consumes* the half-open probe: the first caller after the
+    cooldown re-arms the window, so concurrent callers on the same event loop
+    stay blocked until that probe settles (success closes, failure re-arms).
+    ``state`` is a pure read and never consumes the probe.
+
     Process-local worker state with an injectable monotonic clock. Thread-safety
     is not provided; use one breaker per event loop / worker process.
     """
@@ -209,12 +223,27 @@ class CircuitBreaker:
         self._failures: dict[str, int] = {}
         self._opened_at: dict[str, float] = {}
 
-    def allow(self, key: str) -> bool:
-        """True when a call to ``key`` may proceed (closed, or half-open probe)."""
+    def _cooldown_elapsed(self, key: str) -> Optional[bool]:
+        """None when closed; else whether the open window's cooldown has passed."""
         opened_at = self._opened_at.get(key)
         if opened_at is None:
-            return True
+            return None
         return (self._clock() - opened_at) >= self._cooldown_s
+
+    def allow(self, key: str) -> bool:
+        """True when a call to ``key`` may proceed (closed, or half-open probe).
+
+        Consuming: when the cooldown has elapsed, the caller is granted the
+        single half-open probe and the window is re-armed so other callers are
+        blocked until this probe records a success or failure.
+        """
+        elapsed = self._cooldown_elapsed(key)
+        if elapsed is None:
+            return True
+        if elapsed:
+            self._opened_at[key] = self._clock()
+            return True
+        return False
 
     def record_success(self, key: str) -> None:
         self._failures.pop(key, None)
@@ -228,10 +257,12 @@ class CircuitBreaker:
             self._opened_at[key] = self._clock()
 
     def state(self, key: str) -> str:
-        """``"closed"``, ``"open"``, or ``"half_open"`` — for dashboards/tests."""
-        if key not in self._opened_at:
+        """``"closed"``, ``"open"``, or ``"half_open"`` — a pure read for
+        dashboards/tests; never consumes the half-open probe."""
+        elapsed = self._cooldown_elapsed(key)
+        if elapsed is None:
             return "closed"
-        return "half_open" if self.allow(key) else "open"
+        return "half_open" if elapsed else "open"
 
 
 def summarize_attempts(attempts: Sequence[AttemptRecord]) -> str:

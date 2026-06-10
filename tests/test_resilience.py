@@ -91,6 +91,20 @@ def test_non_auth_config_in_chain_does_not_propagate() -> None:
     assert classify_error(chained) is ErrorClass.TRANSIENT
 
 
+def test_auth_error_found_on_context_branch_when_cause_is_set() -> None:
+    # raise X from Y inside `except Z:` populates BOTH __cause__ (Y) and
+    # __context__ (Z); an auth error on the context branch must still win.
+    try:
+        try:
+            raise HttpError("invalid api key", 401)         # Z (context)
+        except HttpError:
+            raise HttpError("overloaded", 503) from HttpError("connection reset", 502)
+    except HttpError as exc:
+        chained = exc
+    assert chained.__cause__ is not None and chained.__context__ is not None
+    assert classify_error(chained) is ErrorClass.CONFIG
+
+
 def test_chain_walk_survives_cycles() -> None:
     a = Exception("a")
     b = Exception("b")
@@ -156,8 +170,9 @@ def test_breaker_opens_after_threshold_and_recovers() -> None:
     assert breaker.state("openai") == "open"
 
     clock.now = 10.0
+    assert breaker.state("openai") == "half_open"   # pure read, not consuming
     assert breaker.allow("openai")          # cooldown elapsed: half-open probe
-    assert breaker.state("openai") == "half_open"
+    assert not breaker.allow("openai")      # probe consumed: concurrents blocked
 
     breaker.record_failure("openai")        # probe failed: cooldown re-armed
     assert not breaker.allow("openai")
@@ -182,6 +197,19 @@ def test_breaker_keys_are_independent() -> None:
 def test_breaker_rejects_bad_threshold() -> None:
     with pytest.raises(ValueError):
         CircuitBreaker(failure_threshold=0)
+
+
+def test_half_open_grants_exactly_one_probe() -> None:
+    clock = Clock()
+    breaker = CircuitBreaker(failure_threshold=1, cooldown_s=5.0, clock=clock)
+    breaker.record_failure("openai")
+
+    clock.now = 5.0
+    grants = [breaker.allow("openai") for _ in range(4)]
+    assert grants == [True, False, False, False]
+
+    breaker.record_success("openai")        # the one probe succeeded
+    assert all(breaker.allow("openai") for _ in range(4))   # closed again
 
 
 # --------------------------------------------------------------------------- #

@@ -159,6 +159,23 @@ def test_open_circuit_skips_provider_deterministically() -> None:
     assert breaker.state("anthropic") == "closed"
 
 
+def test_circuit_opened_mid_candidate_stops_same_model_retries() -> None:
+    # threshold=1: the first failure opens the circuit; the remaining
+    # same-model retry budget must not keep hammering the provider.
+    breaker = CircuitBreaker(failure_threshold=1, cooldown_s=60.0, clock=lambda: 0.0)
+    script = Script([HttpError("down", 503), _reply("rescued")])
+    policy = ResiliencePolicy(fallbacks=_CHAIN, transient_attempts=3)
+    caller, attempts, sleeps = _caller(script, policy, breaker=breaker)
+
+    assert run(caller(_brain(), "hi")) == "rescued"
+    assert [(a.model, a.outcome) for a in attempts] == [
+        ("openai:gpt-a", "transient"),
+        ("anthropic:claude-b", "ok"),
+    ]
+    assert sleeps == []                # no backoff: we advanced, not retried
+    assert len(script.calls) == 2      # exactly one call to the opened provider
+
+
 def test_failures_charge_the_breaker() -> None:
     breaker = CircuitBreaker(failure_threshold=2, cooldown_s=60.0, clock=lambda: 0.0)
     script = Script([HttpError("down", 503), HttpError("down", 503), _reply("rescued")])

@@ -319,6 +319,10 @@ def make_resilient_llm_caller(
                         breaker.record_failure(provider)
                     attempt += 1
                     if attempt < policy.attempts_for(error_class):
+                        # A failure can open the circuit mid-candidate: stop
+                        # hammering the provider, advance down the chain.
+                        if breaker is not None and not breaker.allow(provider):
+                            break
                         await sleep(policy.backoff_s(attempt - 1))
                         continue
                     break  # candidate exhausted; advance down the chain
