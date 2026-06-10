@@ -93,6 +93,8 @@ _DBOS_EXPORTS = [
     "run_flow_dbos",
     "set_projection_sink",
     "submit_human_dbos",
+    "agent_workflow",
+    "run_agent_dbos",
 ]
 
 _DBOS_ATTR_MODULES = {name: ".dbos_backend" for name in _DBOS_EXPORTS}
