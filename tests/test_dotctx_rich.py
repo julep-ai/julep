@@ -19,6 +19,8 @@ from typing import Any, Optional
 import pytest
 import yaml
 
+pytest.importorskip("jinja2")
+
 from composable_agents.capabilities import ToolGrant
 from composable_agents.deploy import _brain_identity, _renderer_source_hashes, snapshot_from_listings
 from composable_agents.dotctx import load_dotctx
