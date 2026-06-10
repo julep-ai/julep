@@ -14,12 +14,19 @@ Outside the IR (dispatch-layer concerns):
 | Dedup / idempotent submission | Identity of a *run*, not of a step | Workflow ids (both engines dedupe per id) |
 | Webhook / event triggers | Transport, auth, replay protection | Your HTTP layer |
 | Queue/worker routing | Capacity management across replicas | Temporal task queues, DBOS queues + roles |
+| Principal minting | *Who* a run acts for is decided before work begins | `principal=` on `run_flow` / `run_flow_dbos` / `Deployment.run` (SPEC §8.11) |
 
 Inside the IR (processing concerns): sequencing, fan-out (`par`, bounded by
 `ExecutionPolicy.max_parallel`), branching (`alt`), bounded loops
 (`iter_up_to`), durable waits (`delay`, `human_gate`), staged plans, sub-flows,
 budgets, and the capability surface the flow runs against (grants live in the
 capability manifest frozen alongside the flow).
+
+**Dispatch owns principal minting.** The run principal (an opaque
+tenant/credential reference, never a secret) is supplied at dispatch as
+workflow input; the IR never names a tenant, and the principal cannot change
+mid-run -- children and continuation segments inherit it unchanged. A flow that
+genuinely spans tenants is two runs at this layer.
 
 **Continuation sits exactly on the boundary.** A flow ends with
 `continue_with(next_input)` to say "the processing of *this* segment is done;

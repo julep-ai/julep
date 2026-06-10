@@ -268,6 +268,7 @@ class CMAAgentEnv:
         self._inner = inner
         self.manifest = inner.manifest
         self.emitter = inner.emitter
+        self.principal = getattr(inner, "principal", None)
         self._client = client
         self._environment = environment
         self._hands = hands

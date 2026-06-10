@@ -286,12 +286,15 @@ class Deployment:
         input: Any = None,
         task_queue: str = "composable-agents",
         policy: Any = None,
+        principal: Optional[dict[str, Any]] = None,
     ) -> Any:
         """Run this deployment on Temporal and await the result.
 
         Imports the execution layer lazily so offline compilation never requires
         ``temporalio``. For the per-run freeze seam, callers that want a fresh
         snapshot each launch should ``deployment.refresh(...).run(...)``.
+        ``principal`` is the run's opaque tenant/credential reference (never a
+        secret); it is workflow input, not part of the frozen artifact.
         """
         if self.mode is EnforcementMode.DEV:
             raise ValueError(
@@ -312,6 +315,7 @@ class Deployment:
                 if self.capabilities is not None
                 else None
             ),
+            principal=principal,
         )
 
 

@@ -9,6 +9,7 @@ worker process), exactly as before.
 
 from __future__ import annotations
 
+import inspect
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional
@@ -28,20 +29,31 @@ from .session_store import SessionStore
 
 logger = logging.getLogger("composable_agents.execution.effects")
 
+# An opaque, JSON-serializable tenant/credential *reference* supplied at
+# dispatch and threaded through workflow input into every effect payload. The
+# framework never interprets it, and it must never contain a secret: Temporal
+# history is a durable, replayable record — carry a token *ref* and let the
+# worker resolve the actual credential at call time.
+RunPrincipal = dict[str, Any]
+
 # Caller signatures the worker supplies.
-McpCaller = Callable[[str, str, Any, str], Awaitable[Any]]  # (server, tool, args, key) -> result
-LlmCaller = Callable[[Brain, Any], Awaitable[Any]]         # (brain, value) -> result
+# (server, tool, args, key, principal) -> result
+McpCaller = Callable[[str, str, Any, str, Optional[RunPrincipal]], Awaitable[Any]]
+# (brain, value, principal) -> result
+LlmCaller = Callable[[Brain, Any, Optional[RunPrincipal]], Awaitable[Any]]
 
 
 @dataclass
 class WorkerContext:
     """Process-global configuration read by the activities.
 
-    ``mcp_call`` receives ``(server, tool, value, idempotency_key)``. The key is
-    the deterministic activation ``cid`` from :class:`CallHandInput`; Temporal
-    retries re-invoke the activity with the same input, so MCP retry keys are
-    stable by construction. MCP now carries the key, so MCP tools that require
-    transport-level idempotency are admissible.
+    ``mcp_call`` receives ``(server, tool, value, idempotency_key, principal)``.
+    The key is the deterministic activation ``cid`` from :class:`CallHandInput`;
+    Temporal retries re-invoke the activity with the same input, so MCP retry
+    keys are stable by construction. MCP now carries the key, so MCP tools that
+    require transport-level idempotency are admissible. ``principal`` is the
+    run's :data:`RunPrincipal` (or ``None``); legacy 4-argument callers are
+    wrapped once by :func:`configure` and keep working unchanged.
     """
 
     hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
@@ -52,6 +64,9 @@ class WorkerContext:
     capabilities: Optional[CapabilityManifest] = None
     registry: Optional[Registry] = None
     http_timeout_s: float = 30.0
+    # Resolves the run principal into extra transport headers for native hands.
+    # Absent means no extra headers; native hands keep working unchanged.
+    principal_headers: Optional[Callable[[RunPrincipal], dict[str, str]]] = None
     # Deploy-time registries. A sub-flow is a separately frozen flow addressable
     # by ref; an agent spec is the controller's loop policy. Both are fixed at
     # worker startup, so the resolve* activities below read them deterministically.
@@ -64,9 +79,58 @@ class WorkerContext:
 _CTX = WorkerContext()
 
 
+def _accepts_principal(fn: Callable[..., Any], arity: int) -> bool:
+    """True when ``fn`` can take ``arity`` positional arguments (new signature)."""
+    try:
+        sig = inspect.signature(fn)
+    except (TypeError, ValueError):  # uninspectable callables: assume new-style
+        return True
+    positional = 0
+    for param in sig.parameters.values():
+        if param.kind is inspect.Parameter.VAR_POSITIONAL:
+            return True
+        if param.kind in (
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            positional += 1
+    return positional >= arity
+
+
+def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
+    if _accepts_principal(fn, 5):
+        return fn
+
+    async def legacy(
+        server: str, tool: str, value: Any, key: str, principal: Optional[RunPrincipal]
+    ) -> Any:
+        return await fn(server, tool, value, key)
+
+    return legacy
+
+
+def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
+    if _accepts_principal(fn, 3):
+        return fn
+
+    async def legacy(brain: Brain, value: Any, principal: Optional[RunPrincipal]) -> Any:
+        return await fn(brain, value)
+
+    return legacy
+
+
 def configure(ctx: WorkerContext) -> None:
-    """Install the worker-wide context the activities read."""
+    """Install the worker-wide context the activities read.
+
+    Legacy callers (``mcp_call`` without the trailing ``principal``, ``llm``
+    taking only ``(brain, value)``) are wrapped here, once, so they keep
+    working unchanged; new callers receive the run principal positionally.
+    """
     global _CTX
+    if ctx.mcp_call is not None:
+        ctx.mcp_call = _adapt_mcp_caller(ctx.mcp_call)
+    if ctx.llm is not None:
+        ctx.llm = _adapt_llm_caller(ctx.llm)
     _CTX = ctx
 
 
@@ -91,6 +155,7 @@ class CallHandInput:
     # Advisory CacheHint JSON. The hand/transport may honor it; the framework
     # does not provide a cache backend or change replay behavior from this hint.
     cache: Optional[dict[str, Any]] = None
+    principal: Optional[RunPrincipal] = None  # run principal (opaque, never a secret)
 
 
 @dataclass
@@ -98,6 +163,7 @@ class InvokeBrainInput:
     brain: str
     value: Any
     cid: str
+    principal: Optional[RunPrincipal] = None
 
 
 @dataclass
@@ -106,6 +172,7 @@ class CompilePlanInput:
     value: Any
     cid: str
     manifest: Optional[dict[str, Any]] = None  # parent frozen manifest (for schema checks)
+    principal: Optional[RunPrincipal] = None
 
 
 @dataclass
@@ -171,7 +238,7 @@ async def callHand(inp: CallHandInput) -> Any:
             raise RuntimeError("worker has no MCP caller configured")
         server = inp.tool_ref["server"]
         tool = inp.tool_ref["tool"]
-        return await _CTX.mcp_call(server, tool, inp.value, inp.cid)
+        return await _CTX.mcp_call(server, tool, inp.value, inp.cid, inp.principal)
 
     # Native hand: HTTP POST with an idempotency key derived from the cid.
     url = _CTX.hand_urls.get(key)
@@ -183,6 +250,9 @@ async def callHand(inp: CallHandInput) -> Any:
     import httpx  # imported in-activity so the module loads without httpx
 
     logger.debug("callHand %s -> %s", key, url)
+    headers = {"Idempotency-Key": inp.cid}
+    if inp.principal is not None and _CTX.principal_headers is not None:
+        headers.update(_CTX.principal_headers(inp.principal))
     async with httpx.AsyncClient(timeout=_CTX.http_timeout_s) as client:
         body = {"input": inp.value}
         if inp.cache is not None:
@@ -190,7 +260,7 @@ async def callHand(inp: CallHandInput) -> Any:
         resp = await client.post(
             url,
             json=body,
-            headers={"Idempotency-Key": inp.cid},
+            headers=headers,
         )
         resp.raise_for_status()
         return resp.json()
@@ -200,7 +270,7 @@ async def invokeBrain(inp: InvokeBrainInput) -> Any:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     brain = rendered_brain_for(_registry().get_brain(inp.brain), inp.value)
-    return await _CTX.llm(brain, inp.value)
+    return await _CTX.llm(brain, inp.value, inp.principal)
 
 
 async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
@@ -213,7 +283,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     planner = _registry().get_brain(inp.planner)
-    raw = await _CTX.llm(planner, inp.value)
+    raw = await _CTX.llm(planner, inp.value, inp.principal)
 
     plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
     plan = Node.from_json(plan_json)
