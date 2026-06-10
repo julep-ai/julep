@@ -113,6 +113,36 @@ class ProjectionStore(Protocol):
     def events(self) -> list[ProjectionEvent]: ...
 
 
+class ProjectionSink(Protocol):
+    """A write-only consumer of projection events (observability adapters)."""
+
+    def append(self, event: ProjectionEvent) -> None: ...
+
+
+class TeeStore:
+    """A :class:`ProjectionStore` that fans every append out to extra sinks.
+
+    Queries (``events``) are served by the primary store; sinks are
+    fire-and-forget appenders (a Logfire exporter, a metrics counter). A sink
+    exception propagates — a broken observability pipe should fail loudly in
+    dev; production adapters are expected to catch their own transport errors.
+    """
+
+    def __init__(self, primary: "InMemoryProjection", *sinks: ProjectionSink) -> None:
+        self._primary = primary
+        self._sinks = tuple(sinks)
+        # ProjectionEmitter discovers a value store via getattr(store, "values").
+        self.values = primary.values
+
+    def append(self, event: ProjectionEvent) -> None:
+        self._primary.append(event)
+        for sink in self._sinks:
+            sink.append(event)
+
+    def events(self) -> list[ProjectionEvent]:
+        return self._primary.events()
+
+
 class InMemoryProjection:
     """A complete, queryable projection backed by a Python list (tests/dev)."""
 
