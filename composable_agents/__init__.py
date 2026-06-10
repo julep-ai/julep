@@ -184,8 +184,10 @@ from .projection import (
     PostgresProjection as PostgresProjection,
     ProjectionEmitter as ProjectionEmitter,
     ProjectionEvent as ProjectionEvent,
+    ProjectionSink as ProjectionSink,
     ProjectionStore as ProjectionStore,
     SpanData as SpanData,
+    TeeStore as TeeStore,
     ValueStore as ValueStore,
     to_otel_spans as to_otel_spans,
 )
@@ -200,16 +202,19 @@ from .errors import (
     PlanRejected as PlanRejected,
     PureDriftError as PureDriftError,
     RaceAllFailed as RaceAllFailed,
+    UnsupportedShapeError as UnsupportedShapeError,
     ValidationError as ValidationError,
 )
 
 # --- execution layer (always exposes the pure interpreter; Temporal guarded) #
 from .execution import (
     Env as Env,
+    ExecutionPolicy as ExecutionPolicy,
     HAVE_DBOS as HAVE_DBOS,
     HAVE_TEMPORAL as HAVE_TEMPORAL,
     InMemoryEnv as InMemoryEnv,
     Result as Result,
+    WorkerContext as WorkerContext,
     interpret as interpret,
 )
 
@@ -252,20 +257,22 @@ _BASE_EXPORTS = [
     "CMAEvent", "CMASession", "CMAClient", "CMAAgentEnv",
     "drive_cma_agent_loop", "manifest_to_custom_tools",
     # projection
-    "ProjectionEvent", "ProjectionEmitter", "ProjectionStore",
-    "InMemoryProjection", "PostgresProjection", "ValueStore", "SpanData",
+    "ProjectionEvent", "ProjectionEmitter", "ProjectionSink", "ProjectionStore",
+    "InMemoryProjection", "PostgresProjection", "TeeStore", "ValueStore", "SpanData",
     "to_otel_spans",
     # errors
     "ComposableAgentsError", "ValidationError", "FreezeError", "AdmissionError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
+    "UnsupportedShapeError",
     # execution (pure)
-    "Env", "InMemoryEnv", "Result", "interpret", "HAVE_DBOS", "HAVE_TEMPORAL",
+    "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "WorkerContext", "interpret",
+    "HAVE_DBOS", "HAVE_TEMPORAL",
     "__version__",
 ]
 
 _TEMPORAL_EXPORTS = [
-    "FlowWorkflow", "AgentWorkflow", "FlowInput", "AgentInput", "ExecutionPolicy",
-    "run_flow", "start_flow", "build_worker", "run_worker", "WorkerContext",
+    "FlowWorkflow", "AgentWorkflow", "FlowInput", "AgentInput",
+    "run_flow", "start_flow", "build_worker", "run_worker",
     "callHand", "invokeBrain", "compilePlan", "verifyPures", "resolveSubflow",
     "resolveAgentSpec", "resolveRuntimeCapabilities",
 ]

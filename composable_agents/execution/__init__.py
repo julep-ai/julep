@@ -17,7 +17,9 @@ from importlib.util import find_spec
 from typing import Any
 
 from .blobstore import BlobStore, InMemoryBlobStore, content_ref
+from .effects import WorkerContext, configure
 from .interpreter import Env, InMemoryEnv, Result, interpret
+from .policy import ExecutionPolicy
 from .session_store import Cursor, InMemorySessionStore, SessionStore
 from .timeouts import activity_timeout
 
@@ -27,7 +29,6 @@ HAVE_DBOS = find_spec("dbos") is not None
 _TEMPORAL_EXPORTS = [
     "AgentInput",
     "AgentWorkflow",
-    "ExecutionPolicy",
     "FlowInput",
     "FlowWorkflow",
     "run_flow",
@@ -35,10 +36,8 @@ _TEMPORAL_EXPORTS = [
     "CallHandInput",
     "CompilePlanInput",
     "InvokeBrainInput",
-    "WorkerContext",
     "callHand",
     "compilePlan",
-    "configure",
     "invokeBrain",
     "resolveAgentSpec",
     "resolveRuntimeCapabilities",
@@ -59,7 +58,6 @@ _TEMPORAL_EXPORTS = [
 _TEMPORAL_ATTR_MODULES = {
     "AgentInput": ".harness",
     "AgentWorkflow": ".harness",
-    "ExecutionPolicy": ".harness",
     "FlowInput": ".harness",
     "FlowWorkflow": ".harness",
     "run_flow": ".harness",
@@ -67,10 +65,8 @@ _TEMPORAL_ATTR_MODULES = {
     "CallHandInput": ".activities",
     "CompilePlanInput": ".activities",
     "InvokeBrainInput": ".activities",
-    "WorkerContext": ".activities",
     "callHand": ".activities",
     "compilePlan": ".activities",
-    "configure": ".activities",
     "invokeBrain": ".activities",
     "resolveAgentSpec": ".activities",
     "resolveRuntimeCapabilities": ".activities",
@@ -121,8 +117,11 @@ def __getattr__(name: str) -> Any:
 
 __all__ = [
     "Env",
+    "ExecutionPolicy",
     "InMemoryEnv",
     "Result",
+    "WorkerContext",
+    "configure",
     "interpret",
     "activity_timeout",
     "HAVE_TEMPORAL",
