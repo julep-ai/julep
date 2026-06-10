@@ -182,7 +182,7 @@ class _FakeAsyncClient:
 
 
 def _native_hand_post(monkeypatch, ctx: WorkerContext, inp: CallHandInput) -> dict[str, Any]:
-    import httpx
+    httpx = pytest.importorskip("httpx")
 
     _FakeAsyncClient.posted = []
     monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncClient)
