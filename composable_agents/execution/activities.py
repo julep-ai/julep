@@ -21,6 +21,7 @@ from .effects import (
     LoadStateInput as LoadStateInput,
     McpCaller as McpCaller,
     PutBlobInput as PutBlobInput,
+    RunPrincipal as RunPrincipal,
     WorkerContext as WorkerContext,
     configure as configure,
 )

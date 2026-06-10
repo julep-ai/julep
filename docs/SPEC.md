@@ -328,6 +328,34 @@ bookkeeping keys; consumers MUST read the next input only from `__continue__`.
 Triggering (schedules, debounce, dedup ids, webhooks, queue routing) is not
 representable in the IR by design. See docs/dispatch-boundary.md.
 
+### 8.11 Run principal
+
+A run MAY carry a **principal**: an opaque, JSON-serializable object
+(`RunPrincipal`) naming the tenant and a credential *reference* on whose behalf
+the run executes.
+
+- **Input, not artifact.** The principal is workflow input (`principal` on
+  `FlowInput`/`AgentInput` and the DBOS payloads), so it is replay-stable and
+  identical across activity retries. It MUST NOT enter the frozen artifact:
+  freeze hashes and the golden corpus do not move when a principal is supplied.
+- **Opaque.** The framework MUST NOT interpret the principal. It is threaded
+  into every effect payload (`callHand`, `invokeBrain`, `compilePlan`) and
+  handed to the worker's callers as one extra argument
+  (`McpCaller`/`LlmCaller`); native hands MAY resolve it into transport headers
+  via a worker-supplied `principal_headers`.
+- **Never a secret.** The principal names a credential reference (e.g.
+  `{"storeId": 413, "tokenRef": "cred_abc"}`); the worker resolves the actual
+  token from its own secret store at call time. Workflow history is a durable,
+  replayable record — bearer tokens MUST NOT enter it.
+- **Children inherit.** Sub-flows and sub-agents receive the parent's principal
+  unchanged; there is deliberately no API to substitute a different principal
+  on a `sub`. Every `continue_as_new` segment MUST carry the principal forward.
+- **Failure semantics.** A worker that requires a principal and receives `None`
+  MUST fail fast with `PrincipalRequired`, a non-retryable policy error
+  (joins `CapabilityDenied` et al., §8.7).
+- **Back-compat.** `configure` MUST wrap legacy callers (without the trailing
+  `principal`) once at configure time so they keep working unchanged.
+
 ---
 
 ## 9. Staged plans

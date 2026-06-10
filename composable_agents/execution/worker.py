@@ -105,7 +105,8 @@ def build_worker(
     ``worker_kwargs`` pass straight through to :class:`temporalio.worker.Worker`
     (e.g. ``max_concurrent_activities``, ``interceptors`` for the projection tail).
     If ``context.mcp_call`` is set, it must be async
-    ``(server, tool, value, idempotency_key) -> result``.
+    ``(server, tool, value, idempotency_key, principal) -> result``; legacy
+    4-argument callers are wrapped by ``configure`` and keep working.
 
     The default workflow sandbox passes ``composable_agents`` through so
     workflow-side registry lookups (pures, brains) see the worker process's real
@@ -152,8 +153,10 @@ async def run_worker(
     This is the batteries-included path for a standalone worker process; for
     finer control (custom client, shared client across workers, lifecycle
     management) use :func:`build_worker` with your own :class:`Client`.
-    ``mcp_call`` must be async ``(server, tool, value, idempotency_key) -> result``;
-    the idempotency key is the stable activation ``cid`` reused on activity retry.
+    ``mcp_call`` must be async
+    ``(server, tool, value, idempotency_key, principal) -> result`` (legacy
+    4-argument callers are wrapped by ``configure``); the idempotency key is the
+    stable activation ``cid`` reused on activity retry.
     """
     client = await Client.connect(target_host, namespace=namespace)
     context = WorkerContext(

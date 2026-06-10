@@ -17,7 +17,7 @@ from importlib.util import find_spec
 from typing import Any
 
 from .blobstore import BlobStore, InMemoryBlobStore, content_ref
-from .effects import WorkerContext, configure
+from .effects import RunPrincipal, WorkerContext, configure
 from .interpreter import Env, InMemoryEnv, Result, interpret
 from .policy import ExecutionPolicy
 from .session_store import Cursor, InMemorySessionStore, SessionStore
@@ -122,6 +122,7 @@ __all__ = [
     "ExecutionPolicy",
     "InMemoryEnv",
     "Result",
+    "RunPrincipal",
     "WorkerContext",
     "configure",
     "interpret",
