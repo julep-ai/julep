@@ -229,6 +229,27 @@ def alt(
     return _node(op=Op.ALT, id=_nid("alt"), pure=pred, left=if_true, right=if_false)
 
 
+def each(body: Node, *, max_parallel: Optional[int] = None, reducer: Optional[str] = None) -> Node:
+    """Run ``body`` once per element of the input list, concurrently (Dataflow).
+
+    The dynamic counterpart of :func:`par`: ``par`` fans one value out to a
+    *static* set of branches, ``each`` fans a *runtime list* out to one body per
+    element and collects the outputs in input order (``[x] -> [y]``). The input
+    must be a list at runtime; anything else is an error, never coerced.
+
+    ``max_parallel`` bounds in-flight bodies for this node (evaluated in waves
+    of that size); the engine-wide ``ExecutionPolicy.max_parallel`` still
+    applies underneath. ``reducer`` names a registered pure folded over the
+    collected list (``[y] -> z``), e.g. to flatten or aggregate.
+
+    A model-generated (staged) plan may not contain ``each``: its cost scales
+    with runtime data, so §8 plan admission cannot bound it.
+    """
+    if max_parallel is not None and max_parallel < 1:
+        raise ValueError("each max_parallel must be >= 1")
+    return _node(op=Op.EACH, id=_nid("each"), body=body, bound=max_parallel, pure=reducer)
+
+
 def iter_up_to(max: int, body: Node, *, until: Optional[str] = None) -> Node:
     """Iterate ``body`` up to ``max`` times (Feedback).
 

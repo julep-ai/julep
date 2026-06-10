@@ -186,6 +186,14 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
         if n.pure is not None and not is_registered(n.pure):
             err("UNKNOWN_PURE", f"convergence predicate not registered: {n.pure!r}")
 
+    if op == Op.EACH:
+        if n.body is None:
+            err("EACH_NO_BODY", "each requires a body")
+        if n.bound is not None and n.bound < 1:
+            err("EACH_BAD_BOUND", "each max_parallel must be >= 1")
+        if n.pure is not None and not is_registered(n.pure):
+            err("UNKNOWN_PURE", f"each reducer not registered: {n.pure!r}")
+
     if op == Op.EVAL_PLAN:
         # A plan is either baked in (extracted/pre-validated) or produced at
         # runtime by `controller` (a planner brain). At least one must be present.
@@ -304,5 +312,18 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
                             severity="warning",
                         )
                     )
+
+        # Same legality rule for dynamic fan-out: a whole-session body can't
+        # run per-item concurrently without racing on the transcript.
+        if n.op == Op.EACH and n.body is not None and reads_whole_session(n.body):
+            out.append(
+                Diagnostic(
+                    "CTX_EACH_DEGRADED",
+                    n.id,
+                    "each body reads whole session; per-item fan-out will be "
+                    "degraded to sequential",
+                    severity="warning",
+                )
+            )
 
     return out

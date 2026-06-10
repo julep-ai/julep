@@ -197,6 +197,9 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
     if op == Op.PAR:
         return await _eval_par(node, value, env, planned)
 
+    if op == Op.EACH:
+        return await _eval_each(node, value, env, planned)
+
     if op == Op.ALT:
         if node.cases is not None:
             assert node.select is not None
@@ -303,6 +306,46 @@ async def _eval_par(node: Node, value: Any, env: Env, planned: str) -> Result:
 
     if merge is not None and merge.reducer is not None:
         out_value = env.get_pure(merge.reducer)(out_value)
+    return Result(out_value, attrs=attrs)
+
+
+async def _eval_each(node: Node, value: Any, env: Env, planned: str) -> Result:
+    """Dynamic fan-out: run ``body`` once per input-list element, in order.
+
+    Per-node ``bound`` (max_parallel) is honored in *waves* — chunks of that
+    size submitted through ``Env.gather`` — so the interpreter stays free of
+    direct asyncio primitives and the schedule is deterministic under replay.
+    The engine-wide ``ExecutionPolicy.max_parallel`` still bounds each wave
+    inside ``Env.gather``.
+    """
+    assert node.body is not None
+    if not isinstance(value, (list, tuple)):
+        raise ComposableAgentsError(
+            f"each: input must be a list, got {type(value).__name__} at {node.id!r}"
+        )
+    items = list(value)
+    body = node.body
+
+    attrs: Optional[dict[str, Any]] = {"items": len(items)}
+    if reads_whole_session(body):
+        results: list[Any] = []
+        for item in items:
+            results.append(await interpret(body, item, env, causes=(planned,)))
+        attrs = {"items": len(items), "merge": "degraded", "reason": "whole_session"}
+    else:
+        wave = node.bound if node.bound is not None else len(items) or 1
+        results = []
+        for start in range(0, len(items), wave):
+            chunk = items[start:start + wave]
+            results.extend(
+                await env.gather(
+                    [interpret(body, item, env, causes=(planned,)) for item in chunk]
+                )
+            )
+
+    out_value: Any = [r.value if isinstance(r, Result) else r for r in results]
+    if node.pure is not None:
+        out_value = env.get_pure(node.pure)(out_value)
     return Result(out_value, attrs=attrs)
 
 

@@ -1,7 +1,7 @@
 """Composable Serverless Agents — a typed, durable agent framework.
 
 A flow is written with the combinator DSL (:func:`seq`, :func:`par`,
-:func:`alt`, :func:`iter_up_to`, :func:`stage`, :func:`app`, plus the
+:func:`each`, :func:`alt`, :func:`iter_up_to`, :func:`stage`, :func:`app`, plus the
 derived :func:`race`/:func:`hedge`/:func:`quorum`/:func:`map_reduce`/…). Its
 *shape* — where it sits on the Pipeline < Dataflow < Branching < Feedback <
 Staged < Agent lattice — is inferred, not declared, and bounds what static
@@ -56,6 +56,7 @@ from .dsl import (
     arr as arr,
     brain_from_ctx as brain_from_ctx,
     call as call,
+    each as each,
     fanout as fanout,
     ident as ident,
     iter_up_to as iter_up_to,
@@ -239,7 +240,7 @@ _BASE_EXPORTS = [
     "NativeTool", "McpTool", "HUMAN_GATE_TOOL", "SLEEP_TOOL",
     # dsl
     "call", "native", "mcp", "think", "brain_from_ctx", "ident", "arr", "sub",
-    "seq", "par", "fanout", "alt", "iter_up_to", "stage", "app",
+    "seq", "par", "fanout", "each", "alt", "iter_up_to", "stage", "app",
     "Contract",
     # derived
     "race", "hedge", "quorum", "map_n", "map_reduce", "vote", "review",

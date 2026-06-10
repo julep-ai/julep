@@ -153,6 +153,7 @@ Shape is computed (`surface_shape`), not declared, and it bounds what static gua
 |---|---|---|
 | `seq(a, b, ...)` | Pipeline | run in sequence, threading output -> input |
 | `par(a, b, ...)` / `fanout(...)` | Dataflow | run concurrently on the same input, collect results |
+| `each(body, max_parallel=..., reducer=...)` | Dataflow | run `body` once per element of the input list, collect in order |
 | `alt(pred, if_true, if_false)` | Branching | choose a branch by a registered pure predicate |
 | `iter_up_to(max, body, until=...)` | Feedback | iterate `body` up to `max` times, optional convergence predicate |
 | `stage(planner=...)` | Staged | a brain emits a plan; it is compiled, admitted (§8), and run as IR |
@@ -303,6 +304,7 @@ composable_agents/
     harness.py      FlowWorkflow, AgentWorkflow, Temporal Env, client helpers
     activities.py   callHand / invokeBrain / compilePlan / resolve* activities
     worker.py       Client + Worker wiring
+    debounce.py     dispatch-layer batch collator (Temporal signal-with-start)
     otel.py         OpenTelemetry export of the projection
 ```
 

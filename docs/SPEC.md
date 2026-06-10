@@ -99,6 +99,7 @@ Pipeline  <  Dataflow  <  Branching  <  Feedback  <  Staged  <  Agent
 | `call` / `think` / `gate` | Leaf effect | Pipeline |
 | `seq` | Sequential composition | join of children |
 | `par` | Concurrent fan-out / fan-in | Dataflow |
+| `each` | Dynamic per-item fan-out over a runtime list | Dataflow |
 | `alt` / `branch` | Data-dependent choice | Branching |
 | `iter` / `loop` | Bounded feedback | Feedback |
 | `stage` | Runtime-compiled plan | Staged |
@@ -326,7 +327,10 @@ bookkeeping keys; consumers MUST read the next input only from `__continue__`.
 ### 8.10 The dispatch boundary
 
 Triggering (schedules, debounce, dedup ids, webhooks, queue routing) is not
-representable in the IR by design. See docs/dispatch-boundary.md.
+representable in the IR by design. See docs/dispatch-boundary.md. Engines MAY
+ship dispatch-layer helpers (e.g. the Temporal `DebounceCollector`, which
+collates signal-with-start submissions into one batched run); such helpers
+start ordinary runs and are not part of the IR contract.
 
 ### 8.11 Run principal
 
@@ -355,6 +359,29 @@ the run executes.
   (joins `CapabilityDenied` et al., §8.7).
 - **Back-compat.** `configure` MUST wrap legacy callers (without the trailing
   `principal`) once at configure time so they keep working unchanged.
+
+### 8.12 each (dynamic fan-out)
+
+`each` runs its body once per element of the input value, which MUST be a list
+at runtime — any other input is an error, never coerced. Outputs are collected
+in input order; an optional registered pure (`pure`) reduces the collected
+list. An empty input yields an empty output (the reducer, if any, still runs).
+
+- **Concurrency.** Bodies run concurrently through `Env.gather`. A per-node
+  `bound` (max_parallel >= 1) MUST be honored by submitting items in waves of
+  that size; the engine-wide `ExecutionPolicy.max_parallel` applies within each
+  wave. The schedule MUST stay deterministic under replay.
+- **WHOLE_SESSION degradation.** A body that reads `WHOLE_SESSION` context
+  degrades the fan-out to sequential, exactly as §8.2 does for `par`, and the
+  projection MUST record the degraded-scheduling decision.
+- **Not admissible in staged plans.** A model-generated plan MUST NOT contain
+  `each`: its cost scales with runtime data, which §9 admission cannot bound
+  (`PLAN_DYNAMIC_FANOUT`). Plans express repetition with `iter_up_to` and a
+  literal bound.
+- **Approval gating.** Compile-time approval analysis MUST descend into the
+  body: an approval-required tool inside `each` is reachable per item and an
+  ungated path is a blocking diagnostic. A gate inside the body does not count
+  as "always gates" for downstream calls (the input list may be empty).
 
 ---
 

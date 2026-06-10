@@ -228,7 +228,7 @@ def _graph_children(node: Node) -> list[tuple[str, Node]]:
                 out.append(("true", node.left))
             if node.right is not None:
                 out.append(("false", node.right))
-    elif node.op == Op.ITER_UP_TO:
+    elif node.op in {Op.ITER_UP_TO, Op.EACH}:
         if node.body is not None:
             out.append(("body", node.body))
     elif node.op == Op.EVAL_PLAN:
