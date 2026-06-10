@@ -322,9 +322,18 @@ def would_exceed_budget(state: AgentState, next_cost: float, budget: Optional[Bu
     return state.spent + next_cost > budget.cost
 
 
-def should_continue_as_new(state: AgentState, cfg: AgentConfig) -> bool:
-    """True when the durable harness should truncate history via continue-as-new."""
-    return cfg.continue_as_new_after > 0 and state.round >= cfg.continue_as_new_after
+def should_continue_as_new(state: AgentState, cfg: AgentConfig, *, baseline_round: int = 0) -> bool:
+    """True when the durable harness should truncate history via continue-as-new.
+
+    ``baseline_round`` is the cumulative round count at segment entry. Carried
+    state keeps the cumulative ``state.round`` across truncations, so the
+    cadence is measured per segment: fire once the current segment has run
+    ``cfg.continue_as_new_after`` rounds past its baseline.
+    """
+    return (
+        cfg.continue_as_new_after > 0
+        and (state.round - baseline_round) >= cfg.continue_as_new_after
+    )
 
 
 def terminal_result(status: str, state: AgentState, output: Any = None,

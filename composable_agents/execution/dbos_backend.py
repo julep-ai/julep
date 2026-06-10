@@ -372,6 +372,15 @@ class DbosEnv:
                     self._max_call_limits,
                 )
 
+        # Parity with run_sub: parent call counts seed the child agent so an
+        # app node cannot reset an already-consumed maxCalls budget. Counts
+        # flow one-way; the child's counts are not merged back.
+        state_json = (
+            al.AgentState(last=value, call_counts=dict(self._call_counts)).to_json()
+            if self._call_counts
+            else None
+        )
+
         base_id = f"{self._session}-agent-{cid}"
         payload = {
             "controller": controller,
@@ -382,7 +391,7 @@ class DbosEnv:
             "grantedToolsUnconstrained": granted_tools_unconstrained,
             "grantedSubflows": granted_subflows,
             "grantedContracts": granted_contracts,
-            "state": None,
+            "state": state_json,
             "policy": self._policy.to_json(),
             "resolveSpec": True,
         }
@@ -537,6 +546,10 @@ async def agent_workflow(inp: dict) -> Any:
         al.AgentState.from_json(inp["state"]) if inp.get("state")
         else al.AgentState(last=inp.get("input"))
     )
+    # Per-segment continue-as-new cadence: carried state keeps the cumulative
+    # round count, so truncation is measured from this segment's entry round,
+    # not from zero (parity with the Temporal AgentWorkflow).
+    baseline_round = state.round
 
     # Emitter only serves inline sub-flow interpretation; the agent loop itself
     # emits no per-round projection events (parity with Temporal's AgentWorkflow,
@@ -616,7 +629,7 @@ async def agent_workflow(inp: dict) -> Any:
             )
         # §6 seam, POST-action exactly like the Temporal harness: a top-of-loop
         # check would re-fire forever once round >= continueAsNewAfter.
-        if al.should_continue_as_new(state, cfg):
+        if al.should_continue_as_new(state, cfg, baseline_round=baseline_round):
             return {CONTINUATION_KEY: {
                 "controller": inp["controller"],
                 "sessionId": session,

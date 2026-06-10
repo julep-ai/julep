@@ -36,6 +36,7 @@ if HAVE_DBOS and DB_URL:
         manifest_to_json,
         mcp,
         register_brain,
+        seq,
     )
     from composable_agents.contracts import McpAnnotations
     from composable_agents.derived import human_gate
@@ -88,8 +89,12 @@ if HAVE_DBOS and DB_URL:
         if name == "dbos_budget_ctrl":
             _LLM_CALLS["dbos_budget_ctrl"] += 1
             raise RuntimeError("budget controller should not be invoked")
-        if name in ("dbos_denied_ctrl", "dbos_approval_ctrl", "dbos_max_ctrl"):
+        if name in ("dbos_denied_ctrl", "dbos_approval_ctrl", "dbos_max_ctrl", "dbos_seed_ctrl"):
             return {"tool": "srv/double", "input": value["input"]}
+        if name == "dbos_seg_ctrl":
+            if len(value.get("trace", [])) < 5:
+                return {"tool": "srv/double", "input": value["input"]}
+            return {"done": True, "output": value["input"]}
         if name.startswith("dbos_sub_ctrl_"):
             if not value.get("trace"):
                 return {"sub": "child", "input": value["input"]}
@@ -161,6 +166,18 @@ if HAVE_DBOS and DB_URL:
                 }
             },
         },
+        "dbos_seg_ctrl": {
+            "config": {
+                "maxRounds": 10,
+                "budget": {"cost": 1000},
+                "continueAsNewAfter": 2,
+            },
+            "grantedTools": ["srv/double"],
+        },
+        "dbos_seed_ctrl": {
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
+            "grantedTools": ["srv/double"],
+        },
         "dbos_sub_ctrl_denied": {
             "config": {"maxRounds": 3, "budget": {"cost": 1000}},
             "grantedSubflows": ["other"],
@@ -185,6 +202,8 @@ if HAVE_DBOS and DB_URL:
         "dbos_denied_ctrl",
         "dbos_approval_ctrl",
         "dbos_max_ctrl",
+        "dbos_seg_ctrl",
+        "dbos_seed_ctrl",
         "dbos_sub_ctrl_denied",
         "dbos_sub_ctrl_empty",
         "dbos_sub_ctrl_allowed",
@@ -289,6 +308,32 @@ def test_agent_max_calls_across_segments(
     assert run_async(seg1_status()) is not None
 
 
+def test_agent_segment_local_continue_as_new_cadence(
+    dbos_runtime: None, run_async: Callable[[Awaitable[dict[str, Any]]], dict[str, Any]]
+) -> None:
+    # 5 tool rounds then finish, with continueAsNewAfter=2: truncation fires
+    # every 2 segment-local rounds, so the chain is base (rounds 1-2),
+    # seg1 (rounds 3-4), seg2 (round 5 + finish). Under the old cumulative
+    # check, every segment after the first ran exactly one round, so a seg3
+    # (and seg4) would exist.
+    sid = f"agentseg-{uuid.uuid4().hex[:8]}"
+    res = run_async(run_agent_dbos("dbos_seg_ctrl", session_id=sid, input=1))
+    assert res["status"] == "done", res
+    assert res["output"] == 32, res
+    assert res["rounds"] == 5, res
+    assert [t["decision"] for t in res["trace"]] == ["call"] * 5, res
+
+    async def segment_statuses() -> list[Any]:
+        return [
+            await DBOS.get_workflow_status_async(f"{sid}-seg{i}") for i in (1, 2, 3)
+        ]
+
+    seg1, seg2, seg3 = run_async(segment_statuses())
+    assert seg1 is not None, f"expected {sid}-seg1 (rounds 3-4)"
+    assert seg2 is not None, f"expected {sid}-seg2 (round 5 + finish)"
+    assert seg3 is None, f"{sid}-seg3 must not exist: cadence is per segment"
+
+
 def test_agent_subflow_grants(
     dbos_runtime: None, run_async: Callable[[Awaitable[dict[str, Any]]], dict[str, Any]]
 ) -> None:
@@ -353,6 +398,33 @@ def test_app_node_inside_flow(
     assert done["status"] == "done", done
     assert done["output"] == 10, done
     assert [t["decision"] for t in done["trace"]] == ["call"], done
+
+
+def test_app_node_cannot_reset_parent_call_budget(
+    dbos_runtime: None, run_async: Callable[[Awaitable[dict[str, Any]]], dict[str, Any]]
+) -> None:
+    # Parent call counts seed the inline app's state (parity with Sub): with
+    # maxCalls=1 already consumed by the parent's own call, the agent's first
+    # use of the same tool is denied instead of starting from a fresh budget.
+    frozen = freeze(
+        seq(
+            call(mcp("srv", "double")),
+            app("dbos_seed_ctrl", tools=["srv/double"], budget=Budget(cost=1000)),
+        ),
+        _snapshot(),
+    )
+    res = run_async(
+        run_flow_dbos(
+            frozen.flow.to_json(),
+            manifest_to_json(frozen.manifest),
+            session_id=f"appseed-{uuid.uuid4().hex[:8]}",
+            input=5,
+            max_call_limits={"srv/double": 1},
+        )
+    )
+    assert res["status"] == "denied", res
+    assert res["reason"] == "tool 'srv/double' exceeded maxCalls=1", res
+    assert res["trace"] == [], res
 
 
 def test_gate_inside_agent_subflow_releases(

@@ -314,6 +314,15 @@ class _TemporalEnv:
                     self._max_call_limits,
                 )
 
+        # Parity with run_sub: parent call counts seed the child agent so an
+        # app node cannot reset an already-consumed maxCalls budget. Counts
+        # flow one-way; the child's counts are not merged back.
+        state_json = (
+            al.AgentState(last=value, call_counts=dict(self._call_counts)).to_json()
+            if self._call_counts
+            else None
+        )
+
         return await workflow.execute_child_workflow(
             AgentWorkflow.run,
             AgentInput(
@@ -325,6 +334,7 @@ class _TemporalEnv:
                 granted_tools_unconstrained=granted_tools_unconstrained,
                 granted_subflows=granted_subflows,
                 granted_contracts=granted_contracts,
+                state=state_json,
                 policy=self._policy.to_json(),
             ),
             id=child_id,
@@ -601,6 +611,11 @@ class AgentWorkflow:
         else:
             state = al.AgentState(last=inp.input)
 
+        # Per-segment continue-as-new cadence: carried state keeps the
+        # cumulative round count, so truncation is measured from this
+        # segment's entry round, not from zero.
+        baseline_round = state.round
+
         while True:
             if state.round >= cfg.max_rounds:
                 return al.terminal_result("max_rounds", state)
@@ -735,7 +750,7 @@ class AgentWorkflow:
             state.round += 1
 
             # 5) §6 seam: truncate history by continuing as new with carried state.
-            if al.should_continue_as_new(state, cfg):
+            if al.should_continue_as_new(state, cfg, baseline_round=baseline_round):
                 if inp.use_session_store:
                     state_hash = al.state_fingerprint(state)
                     cursor = await workflow.execute_activity(
