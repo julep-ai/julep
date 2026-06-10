@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+
+import pytest
 import subprocess
 import sys
+
+from composable_agents import HAVE_TEMPORAL
 
 
 def test_effects_importable_without_temporalio():
@@ -52,6 +56,7 @@ def test_toolref_json_roundtrip():
     assert toolref_json_from_key("fetch") == {"kind": "native", "name": "fetch"}
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_activities_reexport_worker_context():
     # Backward compat: existing imports from .activities keep working.
     from composable_agents.execution.activities import WorkerContext as A

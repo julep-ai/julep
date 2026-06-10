@@ -1,7 +1,12 @@
 import asyncio
 
+import pytest
+
+from composable_agents import HAVE_TEMPORAL
 from composable_agents.dotctx import Brain, brain_from_settings, register_brain
-from composable_agents.execution import activities as act
+
+if HAVE_TEMPORAL:
+    from composable_agents.execution import activities as act
 from composable_agents.prompt import (
     Ask,
     fragments,
@@ -54,6 +59,7 @@ def test_rendered_brain_for_passes_plain_brain_through_unchanged() -> None:
     assert rendered_brain_for(b, {"value": 1}) is b
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_invoke_brain_renders_system_before_llm() -> None:
     register_renderer("inv.sys.v1", lambda ctx: f"sys:{ctx['input']}")
     register_brain(Brain(name="inv.brain", model="m", system_render="inv.sys.v1"))

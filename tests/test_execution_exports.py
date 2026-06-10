@@ -8,6 +8,8 @@ and only when Temporal is installed.
 
 from __future__ import annotations
 
+import pytest
+
 import composable_agents.execution as ex
 
 PURE_SYMBOLS = [
@@ -61,12 +63,14 @@ def test_pure_symbols_resolve_to_real_objects() -> None:
     assert ex.Cursor is Cursor
 
 
+@pytest.mark.skipif(not ex.HAVE_TEMPORAL, reason="temporalio not installed")
 def test_temporal_gated_symbols_listed_when_temporal_present() -> None:
     assert ex.HAVE_TEMPORAL is True
     for name in TEMPORAL_GATED_SYMBOLS:
         assert name in ex.__all__, name
 
 
+@pytest.mark.skipif(not ex.HAVE_TEMPORAL, reason="temporalio not installed")
 def test_temporal_gated_symbols_lazy_resolve() -> None:
     assert ex.HAVE_TEMPORAL is True
 

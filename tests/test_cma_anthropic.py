@@ -5,8 +5,11 @@ from __future__ import annotations
 import json
 import logging
 
-import httpx
 import pytest
+
+pytest.importorskip("httpx")
+
+import httpx
 
 from composable_agents.execution.cma import CMAEvent
 from composable_agents.execution.cma_anthropic import (
