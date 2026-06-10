@@ -59,11 +59,13 @@ plain-string fallback).
 ### Templates become registered renderers
 
 A `prompt.j2` or `messages/*.yml` body is **never** stored on the `Brain` and
-never enters the artifact. Loading compiles each template and registers a
-renderer (the prompt-renderers mechanism): name
-`dotctx/<package-name>/system@v<content-hash-prefix>`, hashed like any
-registered pure so §6.4 drift detection covers prompt edits. The `Brain` gets
-`system_render=<that name>`; `Brain.system` stays `""`.
+never enters the artifact. Loading compiles each template and registers **one
+renderer per template**, named by role:
+`dotctx/<package-name>/system@v<content-hash-prefix>` for the system body and
+`dotctx/<package-name>/user@v<content-hash-prefix>` for a bundle's user body —
+each hashed like any registered pure so §6.4 drift detection covers prompt
+edits to either. The `Brain` gets `system_render` and (for bundles)
+`user_render` set to the matching names; `Brain.system` stays `""`.
 
 Renderer input is the projected `Context` from the prompt-renderers plan. The
 Jinja2 environment is strict (`StrictUndefined`), with no filesystem loader at

@@ -59,15 +59,25 @@ design).
   by `policy.max_tokens`. When the bound is exceeded the *oldest* turns are
   dropped and the transcript is prefixed with an explicit
   `{"role": "system", "content": "<n> earlier turns elided"}` marker — the
-  model is told, never silently lied to.
+  model is told, never silently lied to. `max_tokens` is optional on
+  `ContextPolicy` in general, but **required for this scope and `SUMMARY` on
+  an `app`**: declaring either without a budget is a deploy-time blocking
+  diagnostic. There is no implicit default — an unbounded transcript for
+  exactly the tool-heavy agents this targets is the failure mode, not a
+  fallback.
 - **`SUMMARY`**: hydrated recent turns within budget plus a running summary
   of elided turns. The summary is produced by a **named summarizer brain
   declared in `AgentConfig`** (`summarizer: Optional[str]`); declaring
   `SUMMARY` scope without a summarizer is a deploy-time blocking diagnostic.
   No implicit default model, no silent downgrade to truncation.
 
-The policy rides where it already rides (the brain / the `app` node's
-context declaration); nothing ambient.
+Carriage: dotctx-authored agents derive the policy from
+`Brain.context_scope` as today. Directly-authored `app(...)` flows have
+nowhere to put it — `ContextPolicy` lives on `CallStep`/`ThinkStep` and the
+serialized APP node emits only tools/subflows/budget/maxRounds — so `app()`
+gains an optional `ctx: ContextPolicy`, serialized on the APP node with
+conditional-key inclusion (existing flows' hashes are stable). Nothing
+ambient either way.
 
 ### Where it executes
 
@@ -83,9 +93,11 @@ transcript to the `LlmCaller`:
 LlmCaller = Callable[[Brain, Any, Optional[RunPrincipal], Optional[Transcript]], Awaitable[Any]]
 ```
 
-(Fourth argument; the arity shim from `docs/design/run-principal.md` covers
-the widening — both designs land on the same seam and should sequence
-principal first.)
+(Fourth argument. The `configure`-time arity shim must wrap **both** legacy
+2-arg callers and principal-aware 3-arg callers — adopters who already moved
+to `(brain, value, principal)` keep working when transcripts land. The 4-arg
+form is canonical; both designs land on the same seam and sequence principal
+first.)
 
 ### `continue_as_new` and summaries
 
@@ -130,9 +142,9 @@ argument for C1, not against the stopgap.
 |---|---|
 | `composable_agents/transcript.py` | create: `Turn`, `transcript_for` (pure, strict) |
 | `composable_agents/agent_loop.py` | `AgentState.summary`; transcript plan in the turn body (via `turn.py` step) |
-| `composable_agents/ir.py` | none expected (`ContextPolicy` already carries scope + `max_tokens`) |
+| `composable_agents/ir.py` / `dsl.py` | optional `ctx: ContextPolicy` on `app()` and the APP node codec (conditional-key, hash-stable) |
 | `composable_agents/execution/effects.py` | `InvokeBrainInput.transcript`; hydration + budget + summarizer in `invoke_brain`; `LlmCaller` widening |
 | `composable_agents/execution/harness.py` / `dbos_backend.py` | thread the plan into `InvokeBrainInput` for `app` rounds |
-| `validate.py` / deploy pipeline | `SUMMARY` without `summarizer` = blocking diagnostic |
+| `validate.py` / deploy pipeline | blocking diagnostics: `SUMMARY` without `summarizer`; `WHOLE_SESSION`/`SUMMARY` on an `app` without `max_tokens` |
 | `docs/SPEC.md` | transcript semantics per scope; elision marker; summarizer requirement |
 | tests | `transcript_for` determinism + budget edge cases; elision marker; summary persistence across `continue_as_new`; deploy diagnostic; golden corpus unmoved |

@@ -72,6 +72,9 @@ agent.deploy(client, session_id=..., input=..., principal={...})
 ```
 
 `principal` defaults to `None`; single-tenant deployments change nothing.
+Every public entry point grows the keyword — `Agent.run` / `Agent.deploy`,
+`Deployment.run()`, and the exported `run_flow` / `start_flow` helpers — so
+raw-flow users never have to construct `FlowInput` by hand to set it.
 
 ### Threading
 
@@ -87,6 +90,11 @@ agent.deploy(client, session_id=..., input=..., principal={...})
   `principal_headers: Callable[[RunPrincipal], dict[str, str]] | None` on
   `WorkerContext`; absent means no extra headers — native hands keep working).
 - `effects.invoke_brain` passes it to the `LlmCaller`.
+- **Every `continue_as_new` path copies it forward.** Both `FlowWorkflow` and
+  `AgentWorkflow` segment via `continue_as_new`; the principal is part of the
+  next segment's input, so a long-running run keeps its tenant identity across
+  history segments. A segment restarting with `principal=None` when the run
+  had one is a bug class the tests must pin.
 
 ### Propagation to children
 
@@ -126,13 +134,13 @@ non-retryable class list in the retry policy.
 |---|---|
 | `execution/effects.py` | `RunPrincipal`, widened caller signatures + arity shim in `configure`, `principal` on `CallHandInput`/`InvokeBrainInput`/`CompilePlanInput`, `principal_headers` on `WorkerContext` |
 | `execution/interpreter.py` | `interpret(..., principal=None)`, `InMemoryEnv` carries + stamps it |
-| `execution/harness.py` | `FlowInput`/`AgentInput` field, `_TemporalEnv` stamping, child workflow propagation |
+| `execution/harness.py` | `FlowInput`/`AgentInput` field, `_TemporalEnv` stamping, child workflow propagation, `continue_as_new` carry-forward in both workflows |
 | `execution/dbos_backend.py` | same for `DbosEnv` / `flow_workflow` / `ca_agent` |
 | `errors.py` | `PrincipalRequired` |
-| `facade` (`Agent.run` / `Agent.deploy`) | `principal=` passthrough |
+| public entry points (`Agent.run` / `Agent.deploy`, `Deployment.run`, `run_flow` / `start_flow`) | `principal=` passthrough |
 | `docs/SPEC.md` | §: run principal (input, opacity, no-secrets rule, child propagation) |
 | `docs/dispatch-boundary.md` | dispatch owns principal minting |
-| tests | arity shim; in-memory + Temporal + DBOS threading; child propagation; `PrincipalRequired` non-retryable; golden corpus unmoved |
+| tests | arity shim; in-memory + Temporal + DBOS threading; child propagation; principal survives `continue_as_new` in flow and agent workflows; `PrincipalRequired` non-retryable; golden corpus unmoved |
 
 Everything flows through the one effects seam, so the change is cross-cutting
 but mechanical. The only design-bearing decisions are the two invariants above.
