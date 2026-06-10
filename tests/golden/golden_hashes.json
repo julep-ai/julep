@@ -55,6 +55,46 @@
     "toolHashesCount": 2,
     "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
+  "each_fanout": {
+    "flowJson": "sha256:670c56c56bc727af47daa93e0f52acae8c1e64524621b3292b742d1212d8f59a",
+    "manifestJson": "sha256:d8ab444616968fa9e8116e58602e16d7edfead661a7127ac5d45671c3a72dd95",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R",
+          "op": "each",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:b8371debdc0fe39ea978ecdd1b856f16f05984a3c0b2c04c1613e2b8875a1f35",
+    "snapshot": "sha256:2ccceb041857ee81de635cd3e8723cb2ac2f33daf714316dfdbe20a0649b6923",
+    "toolHashesCount": 2,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
   "frozen_manifest": {
     "flowJson": "sha256:0be5bb0e43e575637d067fb8f1c499f3c3dfa321eb4f5263c0692f36f1246796",
     "manifestJson": "sha256:6a00af398be62f323436ddad5e445287bdcd81f13b8f9e521018a51286f947d7",

@@ -50,9 +50,10 @@ come from workflow history, not from the projection store
 ## The IR is a frozen tree
 
 Authoring surfaces emit a finite `Node` tree. The core node operators are
-`prim`, `ident`, `arr`, `seq`, `par`, `alt`, `iter_up_to`, `eval_plan`, and
-`app`. `prim` carries one of three step kinds: `call`, `think`, or `sub`.
-`par` may carry a merge policy (`all`, `race`, `hedge`, or `quorum`).
+`prim`, `ident`, `arr`, `seq`, `par`, `each`, `alt`, `iter_up_to`, `eval_plan`,
+and `app`. `prim` carries one of three step kinds: `call`, `think`, or `sub`.
+`par` may carry a merge policy (`all`, `race`, `hedge`, or `quorum`); `each`
+fans its body out over a runtime list ([SPEC §8.12](SPEC.md#812-each-dynamic-fan-out)).
 
 Freeze turns the authored tree into canonical JSON: cycles are rejected, shared
 host-language objects are unshared through a JSON round-trip, ids are normalized
@@ -82,7 +83,7 @@ than its children or its operator floor ([SPEC §4.1](SPEC.md#41-shape-lattice))
 | Shape | Produced by | Static guarantee |
 |---|---|---|
 | `Pipeline` | `ident`, `arr`, `call`, `think`, `sub`, and `seq` of pipeline-shaped children | Straight-line control. The next continuation is known once the previous value exists. |
-| `Dataflow` | `par`, `fanout`, `map_n`, `map_reduce`, `vote`, `review` | Concurrent fan-out/fan-in exists, but all branches are structurally present before execution. |
+| `Dataflow` | `par`, `fanout`, `each`, `map_n`, `map_reduce`, `vote`, `review` | Concurrent fan-out/fan-in exists. `par`-family branches are structurally present before execution; `each` has one structural body whose fan-out width is the runtime list length (so it is never admissible in a staged plan). |
 | `Branching` | `alt` | A deterministic pure chooses one continuation, so the full set of possible continuations is still statically present. |
 | `Feedback` | `iter_up_to` | A bounded loop owns the continuation across rounds; the bound keeps the tree analyzable. |
 | `Staged` | `stage` / `eval_plan` | Runtime structure is model-produced and admitted before execution; the plan may be rich up to `Feedback` but may not stage another plan or open an agent loop ([SPEC §9](SPEC.md#9-staged-plans)). |

@@ -1,6 +1,6 @@
 """Derived combinators (blueprint §3.1, "sugar over the core").
 
-Everything here lowers to the same nine core ops — there is no new runtime
+Everything here lowers to the same core ops — there is no new runtime
 primitive. The interesting cases are the *race family* (``race`` / ``hedge`` /
 ``quorum``): they emit an ordinary ``par`` tree, but every ``par`` node in the
 group carries a :class:`~composable_agents.ir.Merge` marker describing the join

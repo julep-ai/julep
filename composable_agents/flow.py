@@ -239,3 +239,26 @@ def par(
 def alt(pred: str, if_true: FlowLike[In, Out], if_false: FlowLike[In, Out]) -> Flow[In, Out]:
     """Binary branch on a registered pure predicate; both arms share I->O."""
     return Flow(dsl.alt(pred, if_true.to_ir(), if_false.to_ir()))
+
+
+@overload
+def each(body: FlowLike[In, Out], *, max_parallel: Optional[int] = None) -> Flow[Sequence[In], list[Out]]: ...
+
+
+@overload
+def each(body: FlowLike[In, Out], *, max_parallel: Optional[int] = None, reducer: str) -> Flow[Sequence[In], Any]: ...
+
+
+def each(
+    body: FlowLike[In, Any],
+    *,
+    max_parallel: Optional[int] = None,
+    reducer: Optional[str] = None,
+) -> Flow[Sequence[In], Any]:
+    """Run ``body`` once per input-list element, collecting outputs in order.
+
+    The typed face of :func:`composable_agents.dsl.each`. ``reducer`` names a
+    registered pure folded over the collected list; like ``par``'s ``join``, the
+    output is honestly ``Any`` across that reduce boundary.
+    """
+    return Flow(dsl.each(body.to_ir(), max_parallel=max_parallel, reducer=reducer))

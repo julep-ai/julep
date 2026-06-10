@@ -502,7 +502,7 @@ def check_approval_gates(
                 walk(node.right, gated or always_gates(node.left))
             return
 
-        if node.op in {Op.PAR, Op.ITER_UP_TO, Op.EVAL_PLAN}:
+        if node.op in {Op.PAR, Op.EACH, Op.ITER_UP_TO, Op.EVAL_PLAN}:
             for child in (node.left, node.right, node.body, node.plan):
                 if child is not None:
                     walk(child, gated)

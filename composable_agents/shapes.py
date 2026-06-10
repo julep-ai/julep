@@ -57,6 +57,11 @@ def _shape(n: Node, mode: str) -> Shape:
             _shape(cast(Node, n.right), mode),
         )
 
+    if op == Op.EACH:
+        # Dynamic fan-out over a runtime list: concurrency is structural, same
+        # floor as `par`; the per-item body raises the join like any branch.
+        return shape_join(Shape.DATAFLOW, _shape(cast(Node, n.body), mode))
+
     if op == Op.ALT:
         # Two or more possible continuations -> at least Branching.
         if n.cases is not None:

@@ -184,6 +184,31 @@ Watch `http://localhost:8233`. Open the latest `AgentWorkflow` and inspect
 `invokeBrain` / `callHand` activity history across the loop rounds. The final
 stdout prints the terminal status, output, and trace.
 
+## Debounced batch dispatch
+
+`composable_agents.execution.debounce` collapses a burst of single-item
+submissions into one batched flow run — the Temporal counterpart of
+`dbos.Debouncer`, living at the [dispatch boundary](dispatch-boundary.md):
+
+```python
+from composable_agents.execution.debounce import submit_debounced
+
+# Each call contributes one item; the collector for `key` fires after 30s of
+# quiet, or at 50 items, or 5 minutes after the batch opened.
+await submit_debounced(
+    client, deployment.flow_json, deployment.manifest_json,
+    key=f"ingest:{tenant_id}", item=item_id,
+    quiet_s=30, max_items=50, max_wait_s=300,
+    principal={"tenant": tenant_id, "tokenRef": cred_ref},
+)
+```
+
+The target flow receives the collected list (arrival order) as its input —
+typically fanning out per item with `each(...)`. The collector is a workflow
+(`DebounceCollector`, registered by `build_worker`), so batches survive worker
+crashes; items that arrive while a batch is executing roll into the next one
+via continue-as-new. Query `pending` to see the open batch.
+
 ## Open seams
 
 These are explicit knobs, not hidden defaults. [SPEC §6](SPEC.md#6-freeze--replay-integrity)

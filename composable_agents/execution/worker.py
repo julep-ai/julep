@@ -47,6 +47,7 @@ from .activities import (
 )
 from .blobstore import BlobStore
 from .codec import ClaimCheckCodec
+from .debounce import DebounceCollector
 from .harness import AgentWorkflow, FlowWorkflow
 from .session_store import SessionStore
 
@@ -63,7 +64,7 @@ ACTIVITIES = [
     resolveAgentSpec,
     resolveRuntimeCapabilities,
 ]
-WORKFLOWS = [FlowWorkflow, AgentWorkflow]
+WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector]
 
 DEFAULT_TASK_QUEUE = "composable-agents"
 

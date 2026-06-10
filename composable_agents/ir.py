@@ -365,7 +365,8 @@ class Node:
     select: Optional[str] = None
     cases: Optional[dict[str, "Node"]] = None
     default: Optional["Node"] = None
-    # iter_up_to:
+    # iter_up_to (bound = max iterations) / each (bound = optional max_parallel,
+    # pure = optional reducer over the collected per-item outputs):
     bound: Optional[int] = None
     body: Optional["Node"] = None
     # eval_plan:

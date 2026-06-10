@@ -82,8 +82,9 @@ def estimate_cost(plan: Node) -> float:
         body = estimate_cost(plan.body) if plan.body else 0.0
         bound = plan.bound or 1
         return (own or 0.0) + bound * body
-    # eval_plan / app should never appear in a bounded plan; charge their own ann
-    # if present so an illegal plan still produces a finite number.
+    # each / eval_plan / app should never appear in a bounded plan (each's cost
+    # scales with runtime data); charge their own ann if present so an illegal
+    # plan still produces a finite number.
     return own or _DEFAULT_SUB_COST
 
 
@@ -228,6 +229,21 @@ def validate_plan(
                 "not stage another plan or open an agent loop",
             )
         )
+
+    # Dynamic fan-out is unbounded by construction: `each` multiplies its body
+    # by the runtime list length, which admission cannot see. A plan that wants
+    # repetition must use iter_up_to with a literal bound.
+    for n in checked.walk():
+        if n.op == Op.EACH:
+            out.append(
+                Diagnostic(
+                    "PLAN_DYNAMIC_FANOUT",
+                    n.id,
+                    "staged plan contains `each` (dynamic fan-out); its cost "
+                    "scales with runtime data and cannot be admitted. Use "
+                    "iter_up_to with a literal bound instead",
+                )
+            )
 
     # Granted tools only: the plan can't reach past the parent's tool grants.
     for n in checked.walk():

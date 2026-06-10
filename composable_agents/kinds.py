@@ -19,6 +19,7 @@ class Op(str, Enum):
     ARR = "arr"
     SEQ = "seq"
     PAR = "par"
+    EACH = "each"
     ALT = "alt"
     ITER_UP_TO = "iter_up_to"
     EVAL_PLAN = "eval_plan"

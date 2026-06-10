@@ -12,6 +12,7 @@ from composable_agents import (
     app,
     call,
     deploy,
+    each,
     hedge,
     human_gate,
     mcp,
@@ -89,6 +90,17 @@ def subagent_firewall() -> GoldenFixture:
             call(mcp("srv", "parent_summarize")),
         ),
         snapshot=_read_snapshot("parent_read", "parent_summarize"),
+    )
+
+
+def each_fanout() -> GoldenFixture:
+    return GoldenFixture(
+        name="each_fanout",
+        flow=seq(
+            call(mcp("srv", "list_items")),
+            each(call(mcp("srv", "process_item")), max_parallel=4),
+        ),
+        snapshot=_read_snapshot("list_items", "process_item"),
     )
 
 
@@ -191,6 +203,7 @@ def capability_manifest() -> GoldenFixture:
 FIXTURE_BUILDERS = {
     "simple_pipeline": simple_pipeline,
     "subagent_firewall": subagent_firewall,
+    "each_fanout": each_fanout,
     "race": race_fixture,
     "quorum": quorum_fixture,
     "hedge": hedge_fixture,
