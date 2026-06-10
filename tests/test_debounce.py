@@ -32,16 +32,20 @@ def _snapshot():
     ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
     return McpSnapshot(servers={"srv": McpServerSnapshot(server="srv", version="1", tools={
         "inc": McpToolSpec(input_schema={}, annotations=ann),
+        "slow_inc": McpToolSpec(input_schema={}, annotations=ann),
     })})
 
 
 async def _mcp(server, tool, value, idempotency_key):
+    if tool == "slow_inc":
+        await asyncio.sleep(2)  # real time: activities are never time-skipped
+        return value + 1
     assert tool == "inc"
     return value + 1
 
 
-def _frozen_each():
-    fr = freeze(each(call(mcp("srv", "inc"))), _snapshot())
+def _frozen_each(tool="inc"):
+    fr = freeze(each(call(mcp("srv", tool))), _snapshot())
     return fr.flow.to_json(), manifest_to_json(fr.manifest)
 
 
@@ -102,10 +106,32 @@ async def _new_batch_after_completion(env):
     assert out["result"] == [6], out
 
 
+async def _max_items_caps_the_batch_and_carries_surplus(env):
+    # The slow child keeps the collector alive while the third item lands, so
+    # the surplus deterministically rolls into a continue-as-new segment with
+    # its clocks carried (it fires after one window, not two).
+    flow_json, manifest_json = _frozen_each("slow_inc")
+    key = f"cap-{uuid.uuid4()}"
+    async with _worker(env, task_queue="ca-debounce-cap"):
+        with env.auto_time_skipping_disabled():
+            for item in (1, 2, 3):
+                handle = await submit_debounced(
+                    env.client, flow_json, manifest_json,
+                    key=key, item=item, quiet_s=600, max_items=2,
+                    task_queue="ca-debounce-cap",
+                )
+        await env.sleep(601)
+        out = await handle.result()  # follows continue-as-new to the last segment
+    assert out["items"] == 1, out
+    assert out["result"] == [4], out
+    assert out["batchId"].endswith(":b1"), out
+
+
 async def _run_all():
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _quiet_window_collates_a_burst(env)
         await _max_items_fires_without_quiet(env)
+        await _max_items_caps_the_batch_and_carries_surplus(env)
         await _new_batch_after_completion(env)
 
 

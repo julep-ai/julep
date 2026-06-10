@@ -14,10 +14,15 @@ Semantics:
   opens a fresh one under the same id.
 * The collector **fires** when the batch has been quiet for ``quiet_s``
   seconds, or holds ``max_items`` items, or ``max_wait_s`` has elapsed since
-  the batch opened — whichever comes first.
+  the batch opened — whichever comes first. ``max_items`` is a hard batch cap:
+  a fire sends at most that many items and rolls the surplus into the next
+  segment.
 * On fire it runs the frozen flow as a child workflow (id ``{key}:b{seq}``,
   deduplicated by Temporal like any dispatch), then continues-as-new with any
-  items that arrived during execution, or completes when drained.
+  remaining items — capped surplus plus arrivals during execution — or
+  completes when drained. The batch-open and last-arrival clocks are carried
+  across continue-as-new, so a carried batch that already satisfied the fire
+  condition fires immediately instead of waiting a fresh window.
 
 The collector is deterministic: time comes from ``workflow.now()`` / durable
 timers, items from signals (workflow input on continue-as-new), and the only
@@ -56,10 +61,21 @@ class DebounceInput:
     # whole batch runs as one principal — a multi-tenant stream is one
     # collector per tenant key, by construction of `key`.
     principal: Optional[dict[str, Any]] = None
-    # Continue-as-new carriage: batch ordinal and items that arrived while the
-    # previous batch was executing.
+    # Continue-as-new carriage: batch ordinal, items left over from the
+    # previous segment (capped surplus + arrivals during execution), and the
+    # carried batch clocks (ISO timestamps from workflow.now()).
     batch_seq: int = 0
     pending: list[Any] = field(default_factory=list)
+    pending_first_at: Optional[str] = None
+    pending_last_at: Optional[str] = None
+
+
+def _iso(dt: Optional[datetime]) -> Optional[str]:
+    return dt.isoformat() if dt is not None else None
+
+
+def _parse_at(s: Optional[str]) -> Optional[datetime]:
+    return datetime.fromisoformat(s) if s else None
 
 
 @workflow.defn(name="DebounceCollector")
@@ -68,10 +84,13 @@ class DebounceCollector:
 
     def __init__(self) -> None:
         self._items: list[Any] = []
+        self._first_at: Optional[datetime] = None
         self._last_at: Optional[datetime] = None
 
     @workflow.signal(name="submit")
     def submit(self, item: Any) -> None:
+        if not self._items:
+            self._first_at = workflow.now()
         self._items.append(item)
         self._last_at = workflow.now()
 
@@ -85,9 +104,11 @@ class DebounceCollector:
         # Items handed over by a previous segment precede this segment's signals.
         if inp.pending:
             self._items = list(inp.pending) + self._items
-        opened = workflow.now()
+        # Restore the carried batch clocks: a carried batch keeps its original
+        # open/last-arrival times, so an already-due batch fires immediately.
+        opened = _parse_at(inp.pending_first_at) or self._first_at or workflow.now()
         if self._items and self._last_at is None:
-            self._last_at = opened
+            self._last_at = _parse_at(inp.pending_last_at) or opened
 
         # --- collect until the fire condition holds -------------------------- #
         while True:
@@ -114,7 +135,14 @@ class DebounceCollector:
                 pass  # re-evaluate the fire condition against workflow.now()
 
         # --- fire: one child FlowWorkflow per batch --------------------------- #
-        batch, self._items = self._items, []
+        # max_items is a hard cap, not just a fire threshold: a burst that
+        # outruns the loop sends only the first cap items; the surplus stays
+        # queued (keeping its clocks) and rolls into the next segment.
+        cap = inp.max_items if inp.max_items is not None else len(self._items)
+        batch, self._items = self._items[:cap], self._items[cap:]
+        if not self._items:
+            self._first_at = None
+            self._last_at = None
         child_id = f"{workflow.info().workflow_id}:b{inp.batch_seq}"
         result = await workflow.execute_child_workflow(
             FlowWorkflow.run,
@@ -131,13 +159,16 @@ class DebounceCollector:
             id=child_id,
         )
 
-        # Late arrivals (signals during the batch run) open the next segment.
+        # Capped surplus and late arrivals (signals during the batch run) open
+        # the next segment, carrying their clocks.
         if self._items:
             workflow.continue_as_new(
                 replace(
                     inp,
                     batch_seq=inp.batch_seq + 1,
                     pending=list(self._items),
+                    pending_first_at=_iso(self._first_at) or _iso(opened),
+                    pending_last_at=_iso(self._last_at),
                 )
             )
         return {"batchId": child_id, "items": len(batch), "result": result}
@@ -164,7 +195,8 @@ async def submit_debounced(
     Starts a :class:`DebounceCollector` with workflow id ``debounce:{key}`` if
     none is open, and signals ``submit(item)`` either way — Temporal makes the
     two cases atomic. Returns the workflow handle; the run result is the last
-    segment's batch summary.
+    segment's batch summary. ``max_items`` both fires a full batch early and
+    hard-caps the batch size — surplus items roll into the next segment.
 
     ``flow_json`` / ``manifest_json`` come from
     :func:`composable_agents.freeze.freeze` (then serialized), exactly as for

@@ -60,7 +60,11 @@ def _shape(n: Node, mode: str) -> Shape:
     if op == Op.EACH:
         # Dynamic fan-out over a runtime list: concurrency is structural, same
         # floor as `par`; the per-item body raises the join like any branch.
-        return shape_join(Shape.DATAFLOW, _shape(cast(Node, n.body), mode))
+        # A missing body is malformed (EACH_NO_BODY) — return the floor so a
+        # model-generated plan is rejected by diagnostics, not an AttributeError.
+        if n.body is None:
+            return Shape.DATAFLOW
+        return shape_join(Shape.DATAFLOW, _shape(n.body, mode))
 
     if op == Op.ALT:
         # Two or more possible continuations -> at least Branching.

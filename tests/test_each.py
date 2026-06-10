@@ -199,6 +199,17 @@ def test_staged_plan_rejects_each():
     assert any(d.code == "PLAN_DYNAMIC_FANOUT" for d in diags)
 
 
+def test_bodyless_each_plan_is_rejected_cleanly_not_crashed():
+    # A model-generated plan can be malformed; shape analysis must return the
+    # floor (so admission rejects via diagnostics) rather than raise.
+    malformed = Node(op=Op.EACH, id="e3")
+    assert surface_shape(malformed) == Shape.DATAFLOW
+    assert closed_shape(malformed) == Shape.DATAFLOW
+    diags = validate_plan(malformed, CapabilityManifest.from_dict({}))
+    codes = {d.code for d in diags}
+    assert "EACH_NO_BODY" in codes and "PLAN_DYNAMIC_FANOUT" in codes
+
+
 # --------------------------------------------------------------------------- #
 # Approval gating must see through the each body.
 # --------------------------------------------------------------------------- #
