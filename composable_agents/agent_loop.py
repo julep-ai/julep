@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
@@ -39,7 +39,7 @@ from .capabilities import Budget, CapabilityManifest
 from .contracts import CONSERVATIVE_DEFAULT, ToolContract, ToolManifest
 from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
-from .ir import Node
+from .ir import Node, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency, Shape
 from .staged import admit_plan, estimate_cost, validate_plan
 from .validate import Diagnostic
@@ -439,6 +439,35 @@ def retry_max_attempts_for_contract(
     return idempotent_max_attempts if idempotent else write_max_attempts
 
 
+def manifest_contracts_for_agent(
+    manifest: ToolManifest,
+    granted_tools: Optional[Sequence[str]],
+    max_call_limits: Optional[dict[str, int]] = None,
+) -> dict[str, dict[str, Any]]:
+    """Serialize frozen contracts by tool key for the child agent workflow."""
+    wanted = None if granted_tools is None else set(granted_tools)
+    contracts: dict[str, dict[str, Any]] = {}
+    for frozen in manifest.values():
+        key = toolref_key(frozen.ref)
+        if wanted is None or key in wanted:
+            payload = frozen.contract.to_json()
+            if max_call_limits is not None and key in max_call_limits:
+                payload["maxCalls"] = int(max_call_limits[key])
+            contracts[key] = payload
+    return contracts
+
+
+def max_call_limits_from_contracts(
+    contracts: Optional[dict[str, dict[str, Any]]],
+) -> Optional[dict[str, int]]:
+    limits: dict[str, int] = {}
+    for tool, raw in (contracts or {}).items():
+        limit = raw.get("maxCalls", raw.get("max_calls"))
+        if limit is not None:
+            limits[tool] = int(limit)
+    return limits or None
+
+
 async def drive_agent_loop(
     *,
     input: Any,
@@ -551,6 +580,8 @@ __all__ = [
     "charge_tool_call",
     "authorize_subflow",
     "retry_max_attempts_for_contract",
+    "manifest_contracts_for_agent",
+    "max_call_limits_from_contracts",
     "drive_agent_loop",
     "generalize_trace_to_plan",
     "extract_plan",
