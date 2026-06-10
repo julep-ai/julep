@@ -108,7 +108,7 @@ class DebounceCollector:
             count = len(self._items)
             try:
                 await workflow.wait_condition(
-                    lambda: len(self._items) > count, timeout=timeout
+                    lambda count=count: len(self._items) > count, timeout=timeout
                 )
             except asyncio.TimeoutError:
                 pass  # re-evaluate the fire condition against workflow.now()
