@@ -277,11 +277,15 @@ async def serve(
     try:
         context = await _resolve_context(settings.context_factory)
 
-        connect_kwargs: dict[str, Any] = {"namespace": settings.namespace}
+        connect_kwargs: dict[str, Any] = {
+            "namespace": settings.namespace,
+            # Always pass tls explicitly: the SDK auto-enables TLS whenever
+            # api_key is set and tls is left unset, which would silently
+            # override an explicit TEMPORAL_TLS=false.
+            "tls": settings.tls,
+        }
         if settings.api_key is not None:
             connect_kwargs["api_key"] = settings.api_key
-        if settings.tls:
-            connect_kwargs["tls"] = True
         client = await Client.connect(settings.address, **connect_kwargs)
 
         worker_kwargs: dict[str, Any] = {
