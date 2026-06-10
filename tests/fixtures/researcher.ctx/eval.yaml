@@ -1,0 +1,2 @@
+# Consumer-side eval config; the framework loader must ignore this file.
+cases: []

@@ -69,6 +69,14 @@ class CapabilityDenied(ComposableAgentsError):
     """A capability-manifest gate (compile/schedule/run) refused."""
 
 
+class PrincipalRequired(ComposableAgentsError):
+    """A worker caller required a run principal and the run supplied none.
+
+    Raised by worker-supplied callers (never by the framework itself); a settled
+    policy decision, so it is non-retryable like :class:`CapabilityDenied`.
+    """
+
+
 class ResilienceExhausted(ComposableAgentsError):
     """Every candidate model in a resilience fallback chain failed or was skipped.
 

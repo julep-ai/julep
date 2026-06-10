@@ -328,6 +328,34 @@ bookkeeping keys; consumers MUST read the next input only from `__continue__`.
 Triggering (schedules, debounce, dedup ids, webhooks, queue routing) is not
 representable in the IR by design. See docs/dispatch-boundary.md.
 
+### 8.11 Run principal
+
+A run MAY carry a **principal**: an opaque, JSON-serializable object
+(`RunPrincipal`) naming the tenant and a credential *reference* on whose behalf
+the run executes.
+
+- **Input, not artifact.** The principal is workflow input (`principal` on
+  `FlowInput`/`AgentInput` and the DBOS payloads), so it is replay-stable and
+  identical across activity retries. It MUST NOT enter the frozen artifact:
+  freeze hashes and the golden corpus do not move when a principal is supplied.
+- **Opaque.** The framework MUST NOT interpret the principal. It is threaded
+  into every effect payload (`callHand`, `invokeBrain`, `compilePlan`) and
+  handed to the worker's callers as one extra argument
+  (`McpCaller`/`LlmCaller`); native hands MAY resolve it into transport headers
+  via a worker-supplied `principal_headers`.
+- **Never a secret.** The principal names a credential reference (e.g.
+  `{"storeId": 413, "tokenRef": "cred_abc"}`); the worker resolves the actual
+  token from its own secret store at call time. Workflow history is a durable,
+  replayable record — bearer tokens MUST NOT enter it.
+- **Children inherit.** Sub-flows and sub-agents receive the parent's principal
+  unchanged; there is deliberately no API to substitute a different principal
+  on a `sub`. Every `continue_as_new` segment MUST carry the principal forward.
+- **Failure semantics.** A worker that requires a principal and receives `None`
+  MUST fail fast with `PrincipalRequired`, a non-retryable policy error
+  (joins `CapabilityDenied` et al., §8.7).
+- **Back-compat.** `configure` MUST wrap legacy callers (without the trailing
+  `principal`) once at configure time so they keep working unchanged.
+
 ---
 
 ## 9. Staged plans
@@ -383,6 +411,40 @@ Trace entries MUST be rich enough to support honest plan extraction:
 `decision`, `ref`, content-addressed `input_ref` / `output_ref`, `schema_ref`,
 `shape`, `cost`. Until extraction infers patterns/branches/loops/reducers from
 these, it is **macro-recording**, not procedure discovery — name it honestly.
+
+### 10.2 Transcripts
+
+A transcript is **derived, not stored**: a deterministic projection of the
+agent's trace (plus the run input) into a neutral, provider-agnostic `Turn`
+list. The *plan* (turns carrying blob refs) is computed in workflow code;
+hydration of refs, the token budget, and summarization happen in the
+`invokeBrain` effect, where blob refs resolve outside workflow history.
+Provider message formats are the `LlmCaller`'s business — the canonical caller
+signature is `(brain, value, principal, transcript)`; `configure` MUST wrap
+narrower legacy callers.
+
+`ContextPolicy` scope on an `app` selects the shape:
+
+- **`local`** (default) — `{input, trace, last}` with refs, unchanged.
+  Zero-cost, replay-identical.
+- **`whole_session`** — full hydrated transcript, oldest-first, hard-bounded by
+  `ctx.max_tokens`. On overflow the *oldest* turns are dropped and the
+  transcript MUST be prefixed with an explicit
+  `{"role": "system", "content": "<n> earlier turns elided"}` marker — the
+  model is told, never silently lied to.
+- **`summary`** — hydrated recent turns within budget plus a running summary of
+  elided turns, produced by the **named summarizer brain** on the APP node
+  (`summarizer`). The summary persists in agent state across
+  `continue_as_new`; replays MUST NOT re-summarize.
+
+There is no implicit budget and no implicit summarizer model: `whole_session`
+or `summary` on an `app` without `ctx.max_tokens` is the blocking diagnostic
+`APP_CTX_NO_BUDGET`; `summary` without `summarizer` is
+`APP_SUMMARY_NO_SUMMARIZER`. `ctx` and `summarizer` serialize on the APP node
+with conditional-key inclusion — existing flows' hashes do not move.
+Transcripts are one run's working history; cross-run memory is the consumer's
+product. `think` / `iter_up_to` keep value-threading semantics — only `app`
+gets transcripts.
 
 ---
 
@@ -494,6 +556,66 @@ staged plan · agent app · frozen manifest · capability manifest.
 
 The golden hashes MUST be asserted as known values (not merely "deterministic"),
 so a refactor that changes the IR or the hashing is caught immediately.
+
+---
+
+## 14. dotctx rich layout
+
+One loader, one format. `load_dotctx(path)` reads the minimal layout
+(settings-only, inline/`system_file` prompt, optional `schema_file`) unchanged.
+A package carrying any of `prompt.j2`, `messages/`, `schema.pyi`, `tools.pyi`
+is **rich** and is loaded by `composable_agents.dotctx_rich`, which requires
+the `composable-agents[dotctx]` extra (jinja2). Importing the rich loader
+without jinja2 MUST raise — a package with a template and a loader that cannot
+render it never degrades to a plain-string prompt.
+
+```
+<name>.ctx/
+├── settings.yaml      # name, model, temperature, max_rounds, max_tokens, agent, sub, context, tools
+├── schema.pyi         # `Output` stub -> JSON Schema -> Brain.reply_schema
+├── tools.pyi          # tool stubs (+ module-level __server__) -> grants + expected schemas
+├── prompt.j2          # single system template, OR
+└── messages/          # 00_system.yml + 01_user.yml (role + Jinja2 content)
+eval.py / eval.yaml    # consumer-side; ignored, never an error
+```
+
+### 14.1 Templates become registered renderers
+
+A template never lives on the `Brain` and never enters the artifact. Loading
+compiles each template and registers one renderer per template, named
+`dotctx/<package>/<role>@v<sha256(content)[:12]>` and source-hashed by template
+content, so §6.4 drift detection covers prompt edits. The Brain carries only
+the renderer names (`system_render`, and `user_render` for bundles);
+`Brain.system` stays `""`. Rendering is strict (`StrictUndefined`, no
+filesystem loader at render time): renderers read only the projected `Context`,
+and a template referencing a variable the Context does not carry fails at first
+render with the package name and variable. Bundles are one system message plus
+at most one user message; anything else is rejected at load with the file name.
+The rendered user string is the user turn in `complete_brain`; without
+`user_render` the value-as-JSON behavior is unchanged.
+
+### 14.2 Settings
+
+Settings keys are an allow-list; unknown keys are a load-time error listing the
+offending keys. `max_tokens` rides on the `Brain` and is forwarded to the
+provider call. Model strings keep `@low/@medium/@high/@none` reasoning-effort
+suffixes untouched (an LlmCaller convention, not a framework concern).
+`user_render` / `max_tokens` enter the brain identity (`userRender` /
+`maxTokens`) only when set, so existing artifacts hash byte-identically.
+
+### 14.3 tools.pyi asserts, never creates
+
+`.pyi` compilation is dependency-free (stdlib `ast` -> JSON Schema: scalars,
+lists/dicts/sets/tuples, `Optional`/unions, `Literal`, TypedDict with
+`Required`/`NotRequired`, nested classes, docstrings as descriptions, constant
+defaults — no pydantic). Stubs set `Brain.tools` to toolref keys
+(`server/tool` when `__server__` names the MCP server), emit a `ToolGrant`
+manifest fragment the caller merges into the deployment's capability manifest,
+and record each tool's expected input schema. At freeze, when the snapshot
+resolves an expected tool (call leaf, app inline grant, or a referenced brain's
+granted tool), the served schema is compared by canonical hash; a mismatch
+raises the blocking **`TOOL_SCHEMA_DRIFT`** diagnostic naming the `.ctx` path
+and server.
 
 ---
 

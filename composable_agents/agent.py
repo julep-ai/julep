@@ -714,7 +714,9 @@ class Agent(FlowLike[Any, Any]):
                         ]
                     )
 
-    async def arun(self, input: Any) -> "Result[Any]":
+    async def arun(
+        self, input: Any, *, principal: Optional[dict[str, Any]] = None
+    ) -> "Result[Any]":
         deployment = self._deploy()
         plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
         emitter = ProjectionEmitter(InMemoryProjection())
@@ -789,6 +791,7 @@ class Agent(FlowLike[Any, Any]):
             },
             max_calls=max_call_limits,
             mode=self._mode,
+            principal=principal,
         )
         result = await interpret(deployment.flow, input, env)
         return Result(cast("dict[str, Any]", result.value))
@@ -847,11 +850,13 @@ class Agent(FlowLike[Any, Any]):
         result = await interpret(deployment.flow, input, cma_env)
         return Result(cast("dict[str, Any]", result.value))
 
-    def run(self, input: Any) -> "Result[Any]":
+    def run(
+        self, input: Any, *, principal: Optional[dict[str, Any]] = None
+    ) -> "Result[Any]":
         try:
             asyncio.get_running_loop()
         except RuntimeError:
-            return asyncio.run(self.arun(input))
+            return asyncio.run(self.arun(input, principal=principal))
         raise RuntimeError("Agent.run() cannot be called inside a running event loop; use await Agent.arun(...)")
 
     def run_on_cma(
@@ -905,6 +910,7 @@ class Agent(FlowLike[Any, Any]):
         input: Any = None,
         task_queue: str = "composable-agents",
         policy: Any = None,
+        principal: Optional[dict[str, Any]] = None,
     ) -> Any:
         # Fail loud rather than diverge silently: the facade does not yet
         # auto-wire sub-capability child deployments into the Temporal worker's
@@ -925,4 +931,5 @@ class Agent(FlowLike[Any, Any]):
             input=input,
             task_queue=task_queue,
             policy=policy,
+            principal=principal,
         )

@@ -130,6 +130,25 @@ async def _pipeline_and_brain(env):
     assert out == 20, f"pipeline+brain expected 20, got {out}"
 
 
+async def _principal_threading(env):
+    """Dispatch-supplied principal reaches a new-style MCP caller end-to-end."""
+    seen = {}
+
+    async def principal_mcp(server, tool, value, idempotency_key, principal):
+        seen["principal"] = principal
+        return await _mcp(server, tool, value, idempotency_key)
+
+    fr = freeze(call(mcp("srv", "double")), _snapshot())
+    async with _worker(env, task_queue="ca-principal", mcp_call=principal_mcp):
+        out = await run_flow(
+            env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
+            session_id=f"principal-{uuid.uuid4()}", input=3, task_queue="ca-principal",
+            principal={"storeId": 413, "tokenRef": "cred_abc"},
+        )
+    assert out == 6, f"principal flow expected 6, got {out}"
+    assert seen["principal"] == {"storeId": 413, "tokenRef": "cred_abc"}, seen
+
+
 async def _race(env):
     fr = freeze(race(call(mcp("srv", "fail")), call(mcp("srv", "slow"))), _snapshot())
     async with _worker(env, task_queue="ca-race"):
@@ -863,6 +882,7 @@ async def _pure_drift_fails_before_effect(env):
 async def _run_all():
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _pipeline_and_brain(env)
+        await _principal_threading(env)
         await _race(env)
         await _human_gate(env)
         await _human_gate_timeout(env)

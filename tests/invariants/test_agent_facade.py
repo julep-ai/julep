@@ -276,6 +276,7 @@ def test_deploy_forwards_to_deployment_run(monkeypatch: pytest.MonkeyPatch) -> N
         input: Any = None,
         task_queue: str = "composable-agents",
         policy: Any = None,
+        principal: Any = None,
     ) -> dict[str, Any]:
         calls.append(
             {
@@ -284,6 +285,7 @@ def test_deploy_forwards_to_deployment_run(monkeypatch: pytest.MonkeyPatch) -> N
                 "input": input,
                 "task_queue": task_queue,
                 "policy": policy,
+                "principal": principal,
             }
         )
         return {"status": "done"}
@@ -297,6 +299,7 @@ def test_deploy_forwards_to_deployment_run(monkeypatch: pytest.MonkeyPatch) -> N
             input="payload",
             task_queue="queue",
             policy={"p": True},
+            principal={"storeId": 413, "tokenRef": "cred_abc"},
         )
     )
 
@@ -308,5 +311,6 @@ def test_deploy_forwards_to_deployment_run(monkeypatch: pytest.MonkeyPatch) -> N
             "input": "payload",
             "task_queue": "queue",
             "policy": {"p": True},
+            "principal": {"storeId": 413, "tokenRef": "cred_abc"},
         }
     ]

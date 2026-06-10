@@ -98,6 +98,9 @@ class Env(Protocol):
 
     manifest: ToolManifest
     emitter: ProjectionEmitter
+    # The run's principal (opaque tenant/credential reference, never a secret).
+    # The interpreter never reads it; engine envs stamp it into effect payloads.
+    principal: Optional[dict[str, Any]]
 
     def next_cid(self, node_id: str) -> str: ...
     def get_pure(self, name: str) -> Callable[[Any], Any]: ...
@@ -129,8 +132,22 @@ class Env(Protocol):
     ) -> Any: ...
 
 
-async def interpret(node: Node, value: Any, env: Env, causes: tuple[str, ...] = ()) -> Result:
-    """Evaluate ``node`` on ``value``; return its result and recording event id."""
+async def interpret(
+    node: Node,
+    value: Any,
+    env: Env,
+    causes: tuple[str, ...] = (),
+    *,
+    principal: Optional[dict[str, Any]] = None,
+) -> Result:
+    """Evaluate ``node`` on ``value``; return its result and recording event id.
+
+    ``principal`` installs a run principal on ``env`` for the in-memory path
+    (the engine envs receive theirs from workflow input). It is set once at the
+    top-level call; recursion never passes it.
+    """
+    if principal is not None:
+        env.principal = principal
     cid = env.next_cid(node.id)
     shape = surface_shape(node).value
     planned = env.emitter.plan(node.id, cid, causes=causes, shape=shape)
@@ -360,7 +377,7 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
     encoded = node.to_json()
     config = {
         key: encoded[key]
-        for key in ("tools", "subflows", "budget", "maxRounds")
+        for key in ("tools", "subflows", "budget", "maxRounds", "ctx", "summarizer")
         if key in encoded
     }
     return config or None
@@ -536,9 +553,11 @@ class InMemoryEnv:
         max_calls: Optional[dict[str, int]] = None,
         mode: EnforcementMode | str = EnforcementMode.STRICT,
         registry: Optional[Registry] = None,
+        principal: Optional[dict[str, Any]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
+        self.principal = principal
         self._hands = hands or {}
         self._brains = brains or {}
         self._subs = subs or {}

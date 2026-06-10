@@ -10,6 +10,7 @@ from composable_agents.errors import (
     ComposableAgentsError,
     FreezeError,
     PlanRejected,
+    PrincipalRequired,
     ValidationError,
 )
 from composable_agents.execution import harness
@@ -17,7 +18,13 @@ from composable_agents.kinds import Effect, Idempotency
 
 
 def test_policy_errors_are_framework_errors_and_temporal_non_retryable() -> None:
-    policy_errors = [CapabilityDenied, PlanRejected, ValidationError, FreezeError]
+    policy_errors = [
+        CapabilityDenied,
+        PlanRejected,
+        ValidationError,
+        FreezeError,
+        PrincipalRequired,
+    ]
     expected_names = {cls.__name__ for cls in policy_errors}
 
     for cls in policy_errors:

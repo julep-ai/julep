@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Protocol
+from typing import Any, Callable, Optional, Protocol
 
 from .dotctx import Brain
 from .registry import DEFAULT_REGISTRY, RendererEntry
@@ -56,6 +56,20 @@ def render_system(brain: Brain, ctx: Context) -> str:
     return brain.system
 
 
+def render_user(brain: Brain, ctx: Context) -> Optional[str]:
+    """The rendered user turn, or ``None`` when the brain names no user renderer
+    (callers fall back to the value-as-JSON user turn)."""
+    if brain.user_render is None:
+        return None
+    return DEFAULT_REGISTRY.get_renderer(brain.user_render)(ctx)
+
+
+def rendered_user_for(brain: Brain, value: Any) -> Optional[str]:
+    if brain.user_render is None:
+        return None
+    return render_user(brain, project_context(value))
+
+
 def _with_rendered_system(brain: Brain, system: str) -> Brain:
     return Brain(
         name=brain.name, model=brain.model, system=system,
@@ -63,12 +77,15 @@ def _with_rendered_system(brain: Brain, system: str) -> Brain:
         temperature=brain.temperature, max_rounds=brain.max_rounds,
         is_agent=brain.is_agent, sub_contract=brain.sub_contract,
         context_scope=brain.context_scope, system_render=None,
+        user_render=brain.user_render, max_tokens=brain.max_tokens,
     )
 
 
 def rendered_brain_for(brain: Brain, value: Any) -> Brain:
     """The invoke seam: a no-renderer brain passes through identically; a
-    renderer-bearing brain becomes a derived brain with the rendered system."""
+    renderer-bearing brain becomes a derived brain with the rendered system.
+    ``user_render`` rides along — the LLM caller renders the user turn via
+    :func:`rendered_user_for` against the same value."""
     if brain.system_render is None:
         return brain
     return _with_rendered_system(brain, render_system(brain, project_context(value)))
@@ -117,5 +134,6 @@ def fragments(*parts: Any) -> Concat:
 __all__ = [
     "Context", "Fragment", "register_renderer", "get_renderer", "renderer",
     "project_context", "render_system", "rendered_brain_for",
+    "render_user", "rendered_user_for",
     "Lift", "Ask", "Concat", "Under", "Map", "fragments",
 ]

@@ -13,6 +13,8 @@ admission has a real contract to check.
 
 from __future__ import annotations
 
+import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -33,10 +35,13 @@ from .ir import (
     Node,
     SLEEP_TOOL,
     SourceSpan,
+    ThinkStep,
     ToolRef,
+    canonical_json,
     toolref_key,
 )
 from .kinds import Effect, Idempotency, Op
+from .registry import DEFAULT_REGISTRY, ToolSchemaExpectation
 from .transforms import detect_cycles, normalize_ids
 
 
@@ -183,19 +188,99 @@ def _toolref_from_key(key: str) -> ToolRef:
     return NativeTool(name=key)
 
 
+# --------------------------------------------------------------------------- #
+# Expected-schema verification (dotctx tools.pyi contract assertions).
+# --------------------------------------------------------------------------- #
+def _schema_hash(schema: JSONSchema) -> str:
+    return "sha256:" + hashlib.sha256(canonical_json(schema).encode("utf-8")).hexdigest()
+
+
+def _served_input_schema(key: str, snapshot: McpSnapshot) -> Optional[JSONSchema]:
+    ref = _toolref_from_key(key)
+    if isinstance(ref, NativeTool):
+        native_spec = snapshot.native.get(ref.name)
+        return native_spec.input_schema if native_spec is not None else None
+    server = snapshot.servers.get(ref.server)
+    if server is None:
+        return None
+    mcp_spec = server.tools.get(ref.tool)
+    return mcp_spec.input_schema if mcp_spec is not None else None
+
+
+def _expected_tool_keys(flow: Node) -> set[str]:
+    """Every toolref key the flow can reach: call leaves, app inline grants,
+    and the granted tools of each registered brain the flow references."""
+    keys: set[str] = set()
+    brains: set[str] = set()
+    for node in flow.walk():
+        step = node.step
+        if isinstance(step, CallStep):
+            keys.add(toolref_key(step.tool))
+        if isinstance(step, ThinkStep):
+            brains.add(step.brain)
+        if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
+            brains.add(node.controller)
+        if node.op == Op.APP and node.tools:
+            keys.update(str(k) for k in node.tools)
+    for name in brains:
+        brain = DEFAULT_REGISTRY.brains.get(name)
+        if brain is not None:
+            keys.update(brain.tools)
+    return keys
+
+
+def _check_tool_schema_drift(
+    flow: Node,
+    snapshot: McpSnapshot,
+    expectations: Mapping[str, ToolSchemaExpectation],
+) -> None:
+    """TOOL_SCHEMA_DRIFT: a dotctx package's expected tool schema (tools.pyi)
+    must match the served schema by canonical hash when the snapshot resolves
+    the tool. A prompt written against one tool contract silently running
+    against another is exactly the class of bug freeze exists to stop."""
+    if not expectations:
+        return
+    for key in sorted(_expected_tool_keys(flow)):
+        expectation = expectations.get(key)
+        if expectation is None:
+            continue
+        served = _served_input_schema(key, snapshot)
+        if served is None:
+            continue  # not resolved by this snapshot; missing call tools raise in _resolve
+        expected_hash = _schema_hash(expectation.input_schema)
+        served_hash = _schema_hash(served)
+        if expected_hash != served_hash:
+            ref = _toolref_from_key(key)
+            server = ref.server if isinstance(ref, McpTool) else "<native>"
+            raise FreezeError(
+                f"TOOL_SCHEMA_DRIFT: tool {key!r} (server {server!r}) serves schema "
+                f"{served_hash}, but {expectation.ctx_path!r} was written against "
+                f"{expected_hash}"
+            )
+
+
 def freeze(
     flow: Node,
     snapshot: McpSnapshot,
     overrides: Optional[CapabilityOverrides] = None,
+    *,
+    expected_tool_schemas: Optional[Mapping[str, ToolSchemaExpectation]] = None,
 ) -> FreezeResult:
     """Bind every ToolRef in ``flow`` to a frozen, hash-addressed contract.
 
     Returns a *copy* of the flow that is a clean tree (cycles rejected, sharing
     removed, ids normalized to deterministic paths) with each ``call`` node's
     ``frozen_hash`` set, plus the manifest keyed by hash. Raises
-    :class:`FreezeError` if the flow has a cycle or any tool can't be resolved.
+    :class:`FreezeError` if the flow has a cycle, any tool can't be resolved, or
+    a served tool schema drifts from a recorded dotctx expectation
+    (``expected_tool_schemas``; defaults to the registry's recorded ones).
     """
     overrides = overrides or CapabilityOverrides()
+    expectations: Mapping[str, ToolSchemaExpectation] = (
+        expected_tool_schemas
+        if expected_tool_schemas is not None
+        else DEFAULT_REGISTRY.tool_expectations
+    )
 
     # 1. Reject host-language knots before to_json would recurse forever.
     cycle = detect_cycles(flow)
@@ -231,6 +316,9 @@ def freeze(
         for key in node.tools:
             tool = _resolve(_toolref_from_key(key), snapshot, overrides)
             manifest[tool.hash] = tool
+
+    # 6. Verify recorded dotctx tool-schema expectations against the snapshot.
+    _check_tool_schema_drift(frozen_flow, snapshot, expectations)
 
     return FreezeResult(flow=frozen_flow, manifest=manifest, source_map=source_map)
 

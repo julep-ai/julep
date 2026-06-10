@@ -254,8 +254,17 @@ def app(
     subflows: Optional[Any] = None,
     budget: Optional[Any] = None,
     max_rounds: Optional[int] = None,
+    ctx: CtxArg = None,
+    summarizer: Optional[str] = None,
 ) -> Node:
-    """Open-ended controller loop (Agent — the top of the lattice; use sparingly)."""
+    """Open-ended controller loop (Agent — the top of the lattice; use sparingly).
+
+    ``ctx`` declares how much session context the controller sees each round
+    (docs/design/agent-transcripts.md): ``WHOLE_SESSION``/``SUMMARY`` require
+    ``ctx.max_tokens``, and ``SUMMARY`` additionally requires ``summarizer``
+    (a named brain) — both are deploy-time blocking diagnostics, never implicit
+    defaults. Omitting ``ctx`` keeps today's LOCAL behavior and wire format.
+    """
     return _node(
         op=Op.APP,
         id=_nid("app"),
@@ -264,6 +273,8 @@ def app(
         subflows=subflows,
         budget=budget,
         max_rounds=max_rounds,
+        ctx=_ctx(ctx),
+        summarizer=summarizer,
     )
 
 

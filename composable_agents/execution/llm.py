@@ -5,7 +5,8 @@ module fills it with a caller that dispatches to any provider any-llm supports.
 Two factories expose the same core under the two seam shapes in the codebase:
 
 * :func:`make_llm_caller` — the activity seam (``activities.py``):
-  ``(Brain, value) -> reply``. Wire it via ``start_worker(llm=...)``.
+  ``(Brain, value, principal, transcript) -> reply``, the canonical 4-arg
+  ``LlmCaller``. Wire it via ``start_worker(llm=...)``.
 * :func:`make_local_brain` — the facade seam (``agent.py``):
   ``(brain_name, payload) -> reply``. Wire it via ``Agent(..., llm=...)``; it
   resolves the registered :class:`~composable_agents.dotctx.Brain` by name to
@@ -37,6 +38,7 @@ from typing import Any, Optional
 
 from ..dotctx import Brain, get_brain
 from ..errors import ResilienceExhausted
+from ..prompt import rendered_brain_for, rendered_user_for
 from ..resilience import (
     AttemptRecord,
     CircuitBreaker,
@@ -90,8 +92,54 @@ def _response_format(schema: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _messages(system: str, value: Any, *, schema_hint: Optional[dict[str, Any]]) -> list[dict[str, Any]]:
-    """System (optionally with an injected schema block) + the value as a user turn."""
+def _ref_label(ref: Optional[dict[str, Any]]) -> str:
+    if not ref:
+        return ""
+    if ref.get("kind") == "mcp":
+        return f"{ref.get('server')}/{ref.get('tool')}"
+    if ref.get("kind") == "sub":
+        return f"sub:{ref.get('ref')}"
+    return str(ref.get("name", ""))
+
+
+def _transcript_messages(transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Map neutral transcript turns to provider messages (reference mapping).
+
+    Assistant action turns render as assistant text and tool results as
+    user-visible text — replayed turns carry no provider tool-call ids, so
+    the OpenAI-style ``tool`` role cannot be used. System turns (the elision
+    marker / running summary) pass through as system messages.
+    """
+    out: list[dict[str, Any]] = []
+    for turn in transcript:
+        role = turn.get("role", "user")
+        content = turn.get("content")
+        text = content if isinstance(content, str) else json.dumps(content, sort_keys=True)
+        label = _ref_label(turn.get("ref"))
+        if role == "assistant" and label:
+            text = f"[called {label}]" if content is None else f"[called {label}] {text}"
+            out.append({"role": "assistant", "content": text})
+        elif role == "tool":
+            prefix = f"[{label} result] " if label else "[tool result] "
+            out.append({"role": "user", "content": prefix + text})
+        elif role in ("system", "user", "assistant"):
+            out.append({"role": role, "content": text})
+        else:
+            out.append({"role": "user", "content": text})
+    return out
+
+
+def _messages(
+    system: str,
+    value: Any,
+    *,
+    schema_hint: Optional[dict[str, Any]],
+    user_text: Optional[str] = None,
+    transcript: Optional[list[dict[str, Any]]] = None,
+) -> list[dict[str, Any]]:
+    """System (optionally with an injected schema block), the materialized
+    transcript turns when given, then the user turn: a rendered ``user_text``
+    when given, else the value as a user turn."""
     system_text = system or ""
     if schema_hint is not None:
         block = (
@@ -103,7 +151,12 @@ def _messages(system: str, value: Any, *, schema_hint: Optional[dict[str, Any]])
     messages: list[dict[str, Any]] = []
     if system_text:
         messages.append({"role": "system", "content": system_text})
-    user = value if isinstance(value, str) else json.dumps(value)
+    if transcript:
+        messages.extend(_transcript_messages(transcript))
+    if user_text is not None:
+        user = user_text
+    else:
+        user = value if isinstance(value, str) else json.dumps(value)
     messages.append({"role": "user", "content": user})
     return messages
 
@@ -140,20 +193,37 @@ async def complete_brain(
     *,
     acompletion: AnyCompletion,
     default_provider: str = DEFAULT_PROVIDER,
+    transcript: Optional[list[dict[str, Any]]] = None,
 ) -> Any:
-    """One model call for ``brain`` against ``value``, returning its parsed reply."""
+    """One model call for ``brain`` against ``value``, returning its parsed reply.
+
+    ``transcript`` is the materialized neutral turn list for transcript-scoped
+    app rounds (agent-transcripts design); it renders as provider messages
+    between the system prompt and the user turn."""
+    # Render named system/user templates here so both seams (activity + facade)
+    # see the same strings; already-rendered brains pass through unchanged.
+    brain = rendered_brain_for(brain, value)
+    user_text = rendered_user_for(brain, value)
     provider, model = _split_model(brain.model, default_provider)
     schema = brain.reply_schema
 
     async def call(*, native: bool) -> Any:
         if native and schema is not None:
-            messages = _messages(brain.system, value, schema_hint=None)
+            messages = _messages(
+                brain.system, value,
+                schema_hint=None, user_text=user_text, transcript=transcript,
+            )
             kwargs: dict[str, Any] = {"response_format": _response_format(schema)}
         else:
-            messages = _messages(brain.system, value, schema_hint=schema)
+            messages = _messages(
+                brain.system, value,
+                schema_hint=schema, user_text=user_text, transcript=transcript,
+            )
             kwargs = {}
         if brain.temperature is not None:
             kwargs["temperature"] = brain.temperature
+        if brain.max_tokens is not None:
+            kwargs["max_tokens"] = brain.max_tokens
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
     if schema is not None and provider not in _PROMPT_FALLBACK_PROVIDERS:
@@ -190,16 +260,26 @@ def make_llm_caller(
     *,
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
-) -> Callable[[Brain, Any], Awaitable[Any]]:
-    """Activity-seam ``LlmCaller``: ``(Brain, value) -> reply``.
+) -> Callable[..., Awaitable[Any]]:
+    """Activity-seam ``LlmCaller``: ``(Brain, value, principal, transcript) -> reply``.
 
-    Pass ``acompletion`` to inject a client (tests); otherwise any-llm's is
-    imported lazily on first call.
+    The canonical 4-argument caller form: the principal is accepted (this
+    caller resolves no per-tenant credentials itself) and the transcript is
+    rendered into provider messages. Pass ``acompletion`` to inject a client
+    (tests); otherwise any-llm's is imported lazily on first call.
     """
 
-    async def caller(brain: Brain, value: Any) -> Any:
+    async def caller(
+        brain: Brain,
+        value: Any,
+        principal: Optional[dict[str, Any]] = None,
+        transcript: Optional[list[dict[str, Any]]] = None,
+    ) -> Any:
         return await complete_brain(
-            brain, value, acompletion=_resolve_acompletion(acompletion), default_provider=default_provider
+            brain, value,
+            acompletion=_resolve_acompletion(acompletion),
+            default_provider=default_provider,
+            transcript=transcript,
         )
 
     return caller
@@ -246,7 +326,7 @@ def make_resilient_llm_caller(
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
-) -> Callable[[Brain, Any], Awaitable[Any]]:
+) -> Callable[..., Awaitable[Any]]:
     """An ``LlmCaller`` that survives provider outages deterministically.
 
     Walks ``policy.candidates(brain.model)`` strictly in order. Per candidate:
@@ -278,7 +358,12 @@ def make_resilient_llm_caller(
         if on_attempt is not None:
             on_attempt(record)
 
-    async def caller(brain: Brain, value: Any) -> Any:
+    async def caller(
+        brain: Brain,
+        value: Any,
+        principal: Optional[dict[str, Any]] = None,
+        transcript: Optional[list[dict[str, Any]]] = None,
+    ) -> Any:
         resolved = _resolve_acompletion(acompletion)
         attempts: list[AttemptRecord] = []
         last_exc: Optional[Exception] = None
@@ -303,6 +388,7 @@ def make_resilient_llm_caller(
                     reply = await complete_brain(
                         candidate, value,
                         acompletion=resolved, default_provider=default_provider,
+                        transcript=transcript,
                     )
                 except Exception as exc:
                     error_class = classifier(exc)

@@ -210,6 +210,7 @@ from .errors import (
     ComposableAgentsError as ComposableAgentsError,
     FreezeError as FreezeError,
     PlanRejected as PlanRejected,
+    PrincipalRequired as PrincipalRequired,
     PureDriftError as PureDriftError,
     RaceAllFailed as RaceAllFailed,
     ResilienceExhausted as ResilienceExhausted,
@@ -225,6 +226,7 @@ from .execution import (
     HAVE_TEMPORAL as HAVE_TEMPORAL,
     InMemoryEnv as InMemoryEnv,
     Result as Result,
+    RunPrincipal as RunPrincipal,
     WorkerContext as WorkerContext,
     interpret as interpret,
 )
@@ -277,9 +279,9 @@ _BASE_EXPORTS = [
     # errors
     "ComposableAgentsError", "ValidationError", "FreezeError", "AdmissionError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
-    "ResilienceExhausted", "UnsupportedShapeError",
+    "PrincipalRequired", "ResilienceExhausted", "UnsupportedShapeError",
     # execution (pure)
-    "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "WorkerContext", "interpret",
+    "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "RunPrincipal", "WorkerContext", "interpret",
     "HAVE_DBOS", "HAVE_TEMPORAL",
     "__version__",
 ]

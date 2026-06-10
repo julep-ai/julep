@@ -202,6 +202,25 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
     if op == Op.APP:
         if n.controller is None:
             err("APP_NO_CONTROLLER", "app requires a controller ref")
+        # Transcript scopes (agent-transcripts design): no implicit budget, no
+        # implicit summarizer model — declaring either without its requirement
+        # is a blocking diagnostic, never a silent fallback.
+        if n.ctx is not None and n.ctx.scope in (
+            ContextScope.WHOLE_SESSION,
+            ContextScope.SUMMARY,
+        ):
+            if n.ctx.max_tokens is None:
+                err(
+                    "APP_CTX_NO_BUDGET",
+                    f"app with {n.ctx.scope.value} context requires ctx.max_tokens; "
+                    "there is no implicit transcript budget",
+                )
+            if n.ctx.scope == ContextScope.SUMMARY and n.summarizer is None:
+                err(
+                    "APP_SUMMARY_NO_SUMMARIZER",
+                    "app with summary context requires a named summarizer brain "
+                    "(summarizer=...); there is no implicit default model",
+                )
 
 
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:

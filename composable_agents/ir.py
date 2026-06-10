@@ -383,6 +383,11 @@ class Node:
     subflows: Optional[Any] = None
     budget: Optional[Any] = None
     max_rounds: Optional[int] = None
+    # APP transcript carriage (docs/design/agent-transcripts.md): how much
+    # session context the controller sees per round, and the named summarizer
+    # brain for SUMMARY scope. Conditional keys: absent == today's LOCAL.
+    ctx: Optional[ContextPolicy] = None
+    summarizer: Optional[str] = None
     source: Optional["SourceSpan"] = None
 
     # ----- traversal -------------------------------------------------------- #
@@ -444,6 +449,10 @@ class Node:
                 out["budget"] = _budget_to_json(self.budget)
             if self.max_rounds is not None:
                 out["maxRounds"] = self.max_rounds
+            if self.ctx is not None:
+                out["ctx"] = self.ctx.to_json()
+            if self.summarizer is not None:
+                out["summarizer"] = self.summarizer
         if self.pure is not None:
             out["pure"] = self.pure
         if self.merge is not None:
@@ -476,6 +485,8 @@ class Node:
             subflows=d.get("subflows"),
             budget=_budget_from_json(d["budget"]) if "budget" in d else None,
             max_rounds=d.get("maxRounds", d.get("max_rounds")),
+            ctx=ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None,
+            summarizer=d.get("summarizer"),
         )
 
 

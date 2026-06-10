@@ -46,6 +46,8 @@ class Brain:
     sub_contract: Optional[SubContract] = None  # marks a child workflow
     context_scope: ContextScope = ContextScope.LOCAL
     system_render: Optional[str] = None   # registered renderer name (a string); None => use `system`
+    user_render: Optional[str] = None     # registered renderer name for the user turn
+    max_tokens: Optional[int] = None      # forwarded to the provider call when set
 
     def __init__(
         self,
@@ -60,6 +62,8 @@ class Brain:
         sub_contract: Optional[SubContract] = None,
         context_scope: ContextScope = ContextScope.LOCAL,
         system_render: Optional[str] = None,
+        user_render: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> None:
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "model", model)
@@ -72,6 +76,8 @@ class Brain:
         object.__setattr__(self, "sub_contract", sub_contract)
         object.__setattr__(self, "context_scope", context_scope)
         object.__setattr__(self, "system_render", system_render)
+        object.__setattr__(self, "user_render", user_render)
+        object.__setattr__(self, "max_tokens", max_tokens)
 
 
 _BRAINS: dict[str, Brain] = DEFAULT_REGISTRY.brains
@@ -146,16 +152,35 @@ def brain_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
         sub_contract=_sub_from(settings.get("sub")),
         context_scope=scope,
         system_render=settings.get("system_render") or settings.get("systemRender"),
+        user_render=settings.get("user_render") or settings.get("userRender"),
+        max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
     )
     return register_brain(brain)
+
+
+# Rich-layout markers: any of these turns the package over to dotctx_rich
+# (which requires the ``composable-agents[dotctx]`` extra). One loader, one
+# format — the minimal settings-only layout below stays unchanged.
+_RICH_MARKERS = ("prompt.j2", "messages", "schema.pyi", "tools.pyi")
+
+
+def is_rich_dotctx(path: str) -> bool:
+    return any(os.path.exists(os.path.join(path, m)) for m in _RICH_MARKERS)
 
 
 def load_dotctx(path: str) -> Brain:
     """Read ``<path>/settings.yaml`` (or ``settings.yml``) into a Brain.
 
     The brain's name defaults to the directory name when ``settings.yaml`` omits
-    one, so a dotctx at ``brains/planner/`` registers as ``planner``.
+    one, so a dotctx at ``brains/planner/`` registers as ``planner``. Packages
+    carrying rich-layout files (``prompt.j2``, ``messages/``, ``schema.pyi``,
+    ``tools.pyi``) are loaded by :mod:`composable_agents.dotctx_rich`.
     """
+    if is_rich_dotctx(path):
+        from . import dotctx_rich  # hard ImportError without the [dotctx] extra
+
+        return dotctx_rich.load_rich_dotctx(path).brain
+
     try:
         import yaml
     except ModuleNotFoundError as e:  # pragma: no cover
@@ -194,7 +219,15 @@ def brain_to_flow(brain: Brain, *, ctx: Optional[ContextPolicy] = None) -> Node:
 
     if brain.is_agent or (brain.max_rounds is not None and brain.max_rounds <= 0):
         # Open-ended controller loop. The brain name is the controller ref.
-        return app(brain.name)
+        # Transcript policy: an explicit ctx wins; else derive it from the
+        # brain's declared context scope. LOCAL adds no ctx key (hash-stable).
+        app_ctx = ctx
+        if app_ctx is None and brain.context_scope in (
+            ContextScope.SUMMARY,
+            ContextScope.WHOLE_SESSION,
+        ):
+            app_ctx = ContextPolicy(scope=brain.context_scope)
+        return app(brain.name, ctx=app_ctx)
 
     if brain.max_rounds is not None and brain.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.

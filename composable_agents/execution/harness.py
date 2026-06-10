@@ -58,6 +58,7 @@ with workflow.unsafe.imports_passed_through():
     from ..ir import Node
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import get_pure as _get_pure_from_registry
+    from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .timeouts import activity_timeout
@@ -97,6 +98,7 @@ _NON_RETRYABLE = [
     "ValidationError",
     "FreezeError",
     "PureDriftError",
+    "PrincipalRequired",
 ]
 
 
@@ -148,6 +150,9 @@ class FlowInput:
     call_counts: Optional[dict[str, int]] = None
     ref: Optional[str] = None
     policy: Optional[dict[str, Any]] = None
+    # Run principal: opaque tenant/credential reference (never a secret),
+    # workflow input so it is replay-stable and absent from the frozen artifact.
+    principal: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -165,6 +170,7 @@ class AgentInput:
     use_session_store: bool = False             # opt-in: route state through loadState/commitState
     policy: Optional[dict[str, Any]] = None
     resolve_spec: bool = True
+    principal: Optional[dict[str, Any]] = None  # run principal (see FlowInput.principal)
 
 
 # --------------------------------------------------------------------------- #
@@ -184,9 +190,11 @@ class _TemporalEnv:
         gate_waiter: Callable[[Any, str, Optional[int]], Awaitable[Any]],
         max_call_limits: Optional[dict[str, int]] = None,
         call_counts: Optional[dict[str, int]] = None,
+        principal: Optional[dict[str, Any]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
+        self.principal = principal
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -243,6 +251,7 @@ class _TemporalEnv:
                 value=value,
                 cid=cid,
                 cache=cache,
+                principal=self.principal,
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.hand_timeout_s),
             retry_policy=_retry_policy_for(contract, self._policy),
@@ -257,7 +266,7 @@ class _TemporalEnv:
     ) -> Any:
         return await workflow.execute_activity(
             invokeBrain,
-            InvokeBrainInput(brain=brain, value=value, cid=cid),
+            InvokeBrainInput(brain=brain, value=value, cid=cid, principal=self.principal),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
             retry_policy=_brain_retry(self._policy),
         )
@@ -265,7 +274,13 @@ class _TemporalEnv:
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         plan_json = await workflow.execute_activity(
             compilePlan,
-            CompilePlanInput(planner=planner, value=value, cid=cid, manifest=self._manifest_json),
+            CompilePlanInput(
+                planner=planner,
+                value=value,
+                cid=cid,
+                manifest=self._manifest_json,
+                principal=self.principal,
+            ),
             start_to_close_timeout=timedelta(seconds=self._policy.plan_timeout_s),
             retry_policy=_brain_retry(self._policy),
         )
@@ -273,7 +288,8 @@ class _TemporalEnv:
 
     async def run_sub(self, ref: str, contract, value: Any, cid: str) -> Any:
         # A Sub is a child flow; the firewall is structural (surface shape is
-        # already opaque), so the child's value crosses unchanged.
+        # already opaque), so the child's value crosses unchanged. The child
+        # inherits the parent's principal unchanged (no substitution API).
         child_id = self._child_id("sub", cid)
         return await workflow.execute_child_workflow(
             FlowWorkflow.run,
@@ -284,6 +300,7 @@ class _TemporalEnv:
                 policy=self._policy.to_json(),
                 max_call_limits=self._max_call_limits,
                 call_counts=dict(self._call_counts),
+                principal=self.principal,
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.sub_task_timeout_s),
@@ -309,6 +326,10 @@ class _TemporalEnv:
                 config["budget"] = app_config["budget"]
             if "maxRounds" in app_config:
                 config["maxRounds"] = app_config["maxRounds"]
+            if "ctx" in app_config:
+                config["ctx"] = app_config["ctx"]
+            if "summarizer" in app_config:
+                config["summarizer"] = app_config["summarizer"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -343,6 +364,7 @@ class _TemporalEnv:
                 granted_contracts=granted_contracts,
                 state=state_json,
                 policy=self._policy.to_json(),
+                principal=self.principal,
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.agent_task_timeout_s),
@@ -505,6 +527,7 @@ class FlowWorkflow:
             gate_waiter=self._await_human,
             max_call_limits=max_call_limits,
             call_counts=call_counts,
+            principal=inp.principal,
         )
 
         try:
@@ -517,7 +540,8 @@ class FlowWorkflow:
             ) from exc
         if is_continuation(result.value):
             # Chain: same frozen flow, new input, cumulative call counts so
-            # maxCalls budgets span the whole chain, truncated history.
+            # maxCalls budgets span the whole chain, truncated history. The
+            # principal is carried so the run keeps its tenant identity.
             workflow.continue_as_new(
                 FlowInput(
                     session_id=inp.session_id,
@@ -528,6 +552,7 @@ class FlowWorkflow:
                     max_call_limits=max_call_limits,
                     call_counts=env.call_counts_snapshot(),
                     policy=inp.policy,
+                    principal=inp.principal,
                 )
             )
         return result.value
@@ -633,16 +658,35 @@ class AgentWorkflow:
             if controller_precheck is not None:
                 return controller_precheck
 
+            # Transcript plan (agent-transcripts): deterministic, ref-bearing,
+            # computed here in workflow code; hydration, the token budget, and
+            # summarization are activity work inside invokeBrain.
+            transcript_plan = None
+            if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
+                transcript_plan = transcript_for(state, cfg.ctx, input=inp.input)
+
             reply = await workflow.execute_activity(
                 invokeBrain,
                 InvokeBrainInput(
                     brain=inp.controller,
                     value={"input": state.last, "trace": [t.to_json() for t in state.trace]},
                     cid=f"{inp.session_id}-round-{state.round}",
+                    principal=inp.principal,
+                    transcript=transcript_plan,
+                    ctx=(
+                        cfg.ctx.to_json()
+                        if transcript_plan is not None and cfg.ctx is not None
+                        else None
+                    ),
+                    summarizer=cfg.summarizer if transcript_plan is not None else None,
+                    summary=state.summary if transcript_plan is not None else None,
                 ),
                 start_to_close_timeout=timedelta(seconds=policy.brain_timeout_s),
                 retry_policy=_brain_retry(policy),
             )
+            new_summary, reply = split_summary_reply(reply)
+            if new_summary is not None:
+                state.summary = new_summary
             state.charge(cfg.think_cost)
             action = al.interpret_brain_reply(reply, strict=not cfg.permissive_controller)
 
@@ -685,6 +729,7 @@ class AgentWorkflow:
                         tool_ref=_toolref_json_from_key(tool),
                         value=call_input,
                         cid=f"{inp.session_id}-call-{state.round}",
+                        principal=inp.principal,
                     ),
                     start_to_close_timeout=timedelta(seconds=policy.hand_timeout_s),
                     retry_policy=_retry_policy_for(contract, policy),
@@ -728,6 +773,7 @@ class AgentWorkflow:
                         policy=policy.to_json(),
                         max_call_limits=al.max_call_limits_from_contracts(contracts),
                         call_counts=dict(state.call_counts),
+                        principal=inp.principal,
                     ),
                     id=child_id,
                     task_timeout=timedelta(seconds=policy.sub_task_timeout_s),
@@ -788,6 +834,7 @@ class AgentWorkflow:
                             use_session_store=True,
                             policy=policy.to_json(),
                             resolve_spec=False,
+                            principal=inp.principal,
                         )
                     )
                 else:
@@ -804,6 +851,7 @@ class AgentWorkflow:
                             state=state.to_json(),
                             policy=policy.to_json(),
                             resolve_spec=False,
+                            principal=inp.principal,
                         )
                     )
 
@@ -822,13 +870,16 @@ async def run_flow(
     policy: Optional[ExecutionPolicy] = None,
     pinned_pures: Optional[dict[str, str]] = None,
     max_call_limits: Optional[dict[str, int]] = None,
+    principal: Optional[dict[str, Any]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
     ``client`` is a connected ``temporalio.client.Client``. ``flow_json`` /
     ``manifest_json`` come from :func:`composable_agents.freeze.freeze` (then
     serialized). The workflow id is the session id, so a re-submission with the
-    same id is deduplicated by Temporal.
+    same id is deduplicated by Temporal. ``principal`` is the run's opaque
+    tenant/credential reference (never a secret) — see
+    :data:`~composable_agents.execution.effects.RunPrincipal`.
     """
     return await client.execute_workflow(
         FlowWorkflow.run,
@@ -840,6 +891,7 @@ async def run_flow(
             pinned_pures=pinned_pures,
             max_call_limits=max_call_limits,
             policy=(policy or ExecutionPolicy()).to_json(),
+            principal=principal,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -857,6 +909,7 @@ async def start_flow(
     policy: Optional[ExecutionPolicy] = None,
     pinned_pures: Optional[dict[str, str]] = None,
     max_call_limits: Optional[dict[str, int]] = None,
+    principal: Optional[dict[str, Any]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
@@ -873,6 +926,7 @@ async def start_flow(
             pinned_pures=pinned_pures,
             max_call_limits=max_call_limits,
             policy=(policy or ExecutionPolicy()).to_json(),
+            principal=principal,
         ),
         id=session_id,
         task_queue=task_queue,

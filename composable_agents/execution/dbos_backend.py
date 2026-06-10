@@ -50,6 +50,7 @@ from ..errors import (
     ComposableAgentsError,
     FreezeError,
     PlanRejected,
+    PrincipalRequired,
     PureDriftError,
     UnsupportedShapeError,
     ValidationError,
@@ -80,7 +81,14 @@ from .policy import ExecutionPolicy
 # still letting an abandoned workflow drain. Override per node via ann.timeout.
 _GATE_DEFAULT_TIMEOUT_S = 7 * 24 * 3600
 
-_POLICY_ERRORS = (CapabilityDenied, PlanRejected, ValidationError, FreezeError, PureDriftError)
+_POLICY_ERRORS = (
+    CapabilityDenied,
+    PlanRejected,
+    ValidationError,
+    FreezeError,
+    PureDriftError,
+    PrincipalRequired,
+)
 _POLICY_ERROR_KEY = "__ca_policy_error__"
 _POLICY_ERROR_TYPES = {e.__name__: e for e in _POLICY_ERRORS}
 
@@ -153,7 +161,14 @@ async def callHandWrite(inp: dict) -> Any:
 async def invokeBrainStep(inp: dict) -> Any:
     try:
         return await effects.invokeBrain(
-            InvokeBrainInput(brain=inp["brain"], value=inp["value"], cid=inp["cid"])
+            InvokeBrainInput(
+                brain=inp["brain"], value=inp["value"], cid=inp["cid"],
+                principal=inp.get("principal"),
+                transcript=inp.get("transcript"),
+                ctx=inp.get("ctx"),
+                summarizer=inp.get("summarizer"),
+                summary=inp.get("summary"),
+            )
         )
     except _POLICY_ERRORS as exc:
         return encode_policy_error(exc)
@@ -165,7 +180,7 @@ async def compilePlanStep(inp: dict) -> Any:
         return await effects.compilePlan(
             CompilePlanInput(
                 planner=inp["planner"], value=inp["value"], cid=inp["cid"],
-                manifest=inp.get("manifest"),
+                manifest=inp.get("manifest"), principal=inp.get("principal"),
             )
         )
     except _POLICY_ERRORS as exc:
@@ -204,7 +219,7 @@ async def putBlobStep(inp: dict) -> str:
 def _call_hand_input(inp: dict) -> CallHandInput:
     return CallHandInput(
         tool_ref=inp["tool_ref"], value=inp["value"], cid=inp["cid"],
-        cache=inp.get("cache"),
+        cache=inp.get("cache"), principal=inp.get("principal"),
     )
 
 
@@ -220,12 +235,14 @@ async def _run_subflow_inline(
     policy: ExecutionPolicy,
     max_call_limits: dict[str, int],
     call_counts: dict[str, int],
+    principal: Optional[dict[str, Any]] = None,
 ) -> Any:
     """Resolve ``ref`` and interpret the frozen child flow inline.
 
     The child's steps checkpoint into the calling workflow's history;
     ``session_id`` prefixes the child's cids so Idempotency-Keys stay distinct.
-    Child call counts are seeded from the caller but NOT merged back.
+    Child call counts are seeded from the caller but NOT merged back. The child
+    inherits the caller's principal unchanged.
     """
     resolved = await resolveSubflowStep(ref)
     child = Node.from_json(resolved["flowJson"])
@@ -241,6 +258,7 @@ async def _run_subflow_inline(
         policy=policy,
         max_call_limits=max_call_limits,
         call_counts=call_counts,
+        principal=principal,
     )
     r: Result = await interpret(child, value, child_env)
     return r.value
@@ -263,9 +281,11 @@ class DbosEnv:
         policy: ExecutionPolicy,
         max_call_limits: Optional[dict[str, int]] = None,
         call_counts: Optional[dict[str, int]] = None,
+        principal: Optional[dict[str, Any]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
+        self.principal = principal
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -311,19 +331,24 @@ class DbosEnv:
         out = await step({
             "tool_ref": toolref_json_from_key(ref_key),
             "value": value, "cid": cid, "cache": cache,
+            "principal": self.principal,
         })
         return decode_policy_error(out)
 
     async def invoke_brain(
         self, brain: str, value: Any, cid: str, timeout_s: Optional[int],
     ) -> Any:
-        out = await invokeBrainStep({"brain": brain, "value": value, "cid": cid})
+        out = await invokeBrainStep({
+            "brain": brain, "value": value, "cid": cid,
+            "principal": self.principal,
+        })
         return decode_policy_error(out)
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         out = await compilePlanStep({
             "planner": planner, "value": value, "cid": cid,
             "manifest": self._manifest_json,
+            "principal": self.principal,
         })
         plan = Node.from_json(decode_policy_error(out))
         assert_dbos_executable(plan)  # a compiled plan must obey backend limits too
@@ -338,6 +363,7 @@ class DbosEnv:
             policy=self._policy,
             max_call_limits=self._max_call_limits,
             call_counts=dict(self._call_counts),
+            principal=self.principal,
         )
 
     async def run_agent(
@@ -360,6 +386,10 @@ class DbosEnv:
                 config["budget"] = app_config["budget"]
             if "maxRounds" in app_config:
                 config["maxRounds"] = app_config["maxRounds"]
+            if "ctx" in app_config:
+                config["ctx"] = app_config["ctx"]
+            if "summarizer" in app_config:
+                config["summarizer"] = app_config["summarizer"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -394,6 +424,7 @@ class DbosEnv:
             "state": state_json,
             "policy": self._policy.to_json(),
             "resolveSpec": True,
+            "principal": self.principal,
         }
         return await _run_agent_chain(payload, base_id=base_id)
 
@@ -467,6 +498,7 @@ async def flow_workflow(inp: dict) -> Any:
         policy=policy,
         max_call_limits=max_call_limits,
         call_counts=inp.get("callCounts"),
+        principal=inp.get("principal"),
     )
     result: Result = await interpret(flow, inp.get("input"), env)
 
@@ -559,13 +591,24 @@ async def agent_workflow(inp: dict) -> Any:
     emitter = ProjectionEmitter(TeeStore(store, sink) if sink is not None else store)
 
     session = inp["sessionId"]
+    principal = inp.get("principal")
 
     # controller_turn mutates `state` in place and returns the same object, so
     # these cid closures read state.round live: one deterministic cid per round.
+    # controller_turn attaches the transcript plan beside the controller value
+    # for transcript-scoped rounds; split those keys onto the step input.
+    _transcript_keys = ("transcript", "ctx", "summarizer", "summary")
+
     async def _invoke(payload: dict) -> Any:
+        value = {k: v for k, v in payload.items() if k not in _transcript_keys}
         out = await invokeBrainStep({
-            "brain": inp["controller"], "value": payload,
+            "brain": inp["controller"], "value": value,
             "cid": f"{session}-round-{state.round}",
+            "principal": principal,
+            "transcript": payload.get("transcript"),
+            "ctx": payload.get("ctx"),
+            "summarizer": payload.get("summarizer"),
+            "summary": payload.get("summary"),
         })
         return decode_policy_error(out)
 
@@ -582,6 +625,7 @@ async def agent_workflow(inp: dict) -> Any:
         out = await step({
             "tool_ref": toolref_json_from_key(tool), "value": value,
             "cid": f"{session}-call-{state.round}", "cache": None,
+            "principal": principal,
         })
         return decode_policy_error(out)
 
@@ -594,6 +638,7 @@ async def agent_workflow(inp: dict) -> Any:
             policy=policy,
             max_call_limits=al.max_call_limits_from_contracts(contracts) or {},
             call_counts=dict(state.call_counts),
+            principal=principal,
         )
 
     prod_gap: list[str] = []
@@ -607,6 +652,7 @@ async def agent_workflow(inp: dict) -> Any:
         contracts=contracts,
         mode=cfg.mode,
         prod_gap=prod_gap,
+        run_input=inp.get("input"),
     )
     halt = pre_round(cfg)
     finalize = make_finalize(prod_gap)
@@ -642,6 +688,7 @@ async def agent_workflow(inp: dict) -> Any:
                 "state": state.to_json(),
                 "policy": policy.to_json(),
                 "resolveSpec": False,
+                "principal": principal,
             }}
 
 
@@ -659,6 +706,7 @@ async def run_flow_dbos(
     max_call_limits: Optional[dict[str, int]] = None,
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
+    principal: Optional[dict[str, Any]] = None,
 ) -> Any:
     """Run a frozen flow to settlement, following continuation segments.
 
@@ -684,6 +732,8 @@ async def run_flow_dbos(
             "maxCallLimits": max_call_limits,
             "callCounts": call_counts,
             "policy": (policy or ExecutionPolicy()).to_json(),
+            # Every segment of the chain keeps the run's tenant identity.
+            "principal": principal,
         }
         with SetWorkflowID(wfid):
             if queue is not None:
@@ -743,6 +793,7 @@ async def run_agent_dbos(
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
     resolve_spec: bool = True,
+    principal: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Run an agent loop to settlement, following continuation segments.
 
@@ -765,6 +816,7 @@ async def run_agent_dbos(
         "state": None,
         "policy": (policy or ExecutionPolicy()).to_json(),
         "resolveSpec": resolve_spec,
+        "principal": principal,
     }
     return await _run_agent_chain(
         payload, base_id=session_id, queue=queue, max_segments=max_segments
