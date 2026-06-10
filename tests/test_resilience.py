@@ -66,6 +66,39 @@ def test_unknown_errors_default_transient() -> None:
     assert classify_error(Exception("the provider sneezed")) is ErrorClass.TRANSIENT
 
 
+def test_auth_error_in_chain_wins_over_transient_top() -> None:
+    # A reissued call's transient failure must not mask the original 401.
+    try:
+        try:
+            raise HttpError("invalid api key", 401)
+        except HttpError:
+            raise HttpError("overloaded", 503) from None  # implicit __context__ kept
+    except HttpError as exc:
+        chained = exc
+    assert classify_error(chained) is ErrorClass.CONFIG
+
+
+def test_non_auth_config_in_chain_does_not_propagate() -> None:
+    # A 422 native failure (e.g. response_format unsupported) is ambiguous:
+    # the top error still decides, so a transient reissue failure stays transient.
+    try:
+        try:
+            raise HttpError("response_format unsupported", 422)
+        except HttpError:
+            raise HttpError("overloaded", 503) from None
+    except HttpError as exc:
+        chained = exc
+    assert classify_error(chained) is ErrorClass.TRANSIENT
+
+
+def test_chain_walk_survives_cycles() -> None:
+    a = Exception("a")
+    b = Exception("b")
+    a.__context__ = b
+    b.__context__ = a
+    assert classify_error(a) is ErrorClass.TRANSIENT
+
+
 # --------------------------------------------------------------------------- #
 # ResiliencePolicy
 # --------------------------------------------------------------------------- #

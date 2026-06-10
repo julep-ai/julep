@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterable
 
+# resilience is stdlib-only and must never import errors (one-way dependency).
+from .resilience import summarize_attempts
+
 if TYPE_CHECKING:
     from .resilience import AttemptRecord
     from .validate import Diagnostic
@@ -75,8 +78,6 @@ class ResilienceExhausted(ComposableAgentsError):
 
     def __init__(self, attempts: list["AttemptRecord"]) -> None:
         self.attempts = attempts
-        from .resilience import summarize_attempts
-
         super().__init__(
             f"all {len(attempts)} model attempt(s) failed: {summarize_attempts(attempts)}"
         )

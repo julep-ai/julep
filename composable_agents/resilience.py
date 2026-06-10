@@ -42,6 +42,9 @@ class ErrorClass(Enum):
 TRANSIENT_STATUS = frozenset({408, 409, 425, 429, 500, 502, 503, 504, 520, 529})
 # HTTP status codes that indicate a request/configuration problem on our side.
 CONFIG_STATUS = frozenset({400, 401, 403, 404, 422})
+# The unambiguous subset of CONFIG: an auth failure anywhere in an exception
+# chain means misconfiguration even when a later attempt failed differently.
+AUTH_STATUS = frozenset({401, 403})
 
 _CONFIG_HINTS = (
     "api key",
@@ -53,6 +56,7 @@ _CONFIG_HINTS = (
     "no such model",
     "invalid request",
 )
+_AUTH_HINTS = ("api key", "api_key", "authentication", "unauthorized", "permission")
 _TIMEOUT_HINTS = ("timed out", "timeout")
 
 
@@ -70,13 +74,41 @@ def _status_of(exc: BaseException) -> Optional[int]:
     return None
 
 
+def _is_auth_error(exc: BaseException) -> bool:
+    status = _status_of(exc)
+    if status in AUTH_STATUS:
+        return True
+    message = str(exc).lower()
+    return any(hint in message for hint in _AUTH_HINTS)
+
+
+def _chain(exc: BaseException) -> list[BaseException]:
+    """``exc`` plus its ``__cause__``/``__context__`` ancestry (cycle-safe)."""
+    out: list[BaseException] = []
+    seen: set[int] = set()
+    current: Optional[BaseException] = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        out.append(current)
+        current = current.__cause__ or current.__context__
+    return out
+
+
 def classify_error(exc: BaseException) -> ErrorClass:
     """Map a model-call exception to its :class:`ErrorClass`.
 
-    Order: explicit timeout types, then HTTP status, then message hints. The
+    An auth error anywhere in the ``__cause__``/``__context__`` chain wins:
+    callers like ``complete_brain`` reissue a failed native structured call
+    with a prompt-injected schema, and the reissue's failure (often transient)
+    would otherwise mask the original 401/403 — a bad key must stay CONFIG no
+    matter what the second attempt died of. For the rest, the *top* exception
+    decides: explicit timeout types, then HTTP status, then message hints. The
     default is TRANSIENT — an unrecognized provider error should be survivable,
     while genuinely settled errors are expected to carry a status or hint.
     """
+    if any(_is_auth_error(link) for link in _chain(exc)):
+        return ErrorClass.CONFIG
+
     if isinstance(exc, TimeoutError):
         return ErrorClass.TIMEOUT
 
@@ -212,6 +244,7 @@ def summarize_attempts(attempts: Sequence[AttemptRecord]) -> str:
 
 __all__ = [
     "AttemptRecord",
+    "AUTH_STATUS",
     "CircuitBreaker",
     "CONFIG_STATUS",
     "ErrorClass",

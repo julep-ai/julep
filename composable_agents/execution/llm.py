@@ -30,6 +30,7 @@ any-llm is imported lazily, so this module loads without it. Install
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
 from collections.abc import Awaitable, Callable
 from typing import Any, Optional
@@ -233,19 +234,7 @@ def _with_model(brain: Brain, model: str) -> Brain:
     """A copy of ``brain`` addressed at a different model (not re-registered)."""
     if model == brain.model:
         return brain
-    return Brain(
-        name=brain.name,
-        model=model,
-        system=brain.system,
-        reply_schema=brain.reply_schema,
-        tools=brain.tools,
-        temperature=brain.temperature,
-        max_rounds=brain.max_rounds,
-        is_agent=brain.is_agent,
-        sub_contract=brain.sub_contract,
-        context_scope=brain.context_scope,
-        system_render=brain.system_render,
-    )
+    return dataclasses.replace(brain, model=model)
 
 
 def make_resilient_llm_caller(
@@ -253,6 +242,7 @@ def make_resilient_llm_caller(
     policy: ResiliencePolicy,
     breaker: Optional[CircuitBreaker] = None,
     on_attempt: Optional[OnAttempt] = None,
+    classifier: Callable[[BaseException], ErrorClass] = classify_error,
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
@@ -273,7 +263,9 @@ def make_resilient_llm_caller(
 
     Every attempt is reported through ``on_attempt`` (an
     :class:`~composable_agents.resilience.AttemptRecord`) so workers can feed
-    projection sinks / OTel with which model actually served. When the chain is
+    projection sinks / OTel with which model actually served. Providers whose
+    SDKs wrap errors in custom hierarchies can swap ``classifier`` for their
+    own ``exception -> ErrorClass`` mapping. When the chain is
     exhausted, raises :class:`~composable_agents.errors.ResilienceExhausted`
     carrying the full attempt log.
 
@@ -313,7 +305,7 @@ def make_resilient_llm_caller(
                         acompletion=resolved, default_provider=default_provider,
                     )
                 except Exception as exc:
-                    error_class = classify_error(exc)
+                    error_class = classifier(exc)
                     record = AttemptRecord(
                         model=model, provider=provider,
                         outcome=error_class.value, detail=str(exc),

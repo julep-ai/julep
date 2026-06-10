@@ -20,22 +20,10 @@ from conftest import run
 
 
 # --------------------------------------------------------------------------- #
-# Fakes (completion shapes match tests/test_llm.py).
+# Fakes. Completion shapes are shared with tests/test_llm.py; Script differs
+# from its Recorder in that a scripted step may RAISE (the point of this file).
 # --------------------------------------------------------------------------- #
-@dataclass
-class FakeMessage:
-    content: Any = None
-    parsed: Any = None
-
-
-@dataclass
-class FakeChoice:
-    message: FakeMessage
-
-
-@dataclass
-class FakeCompletion:
-    choices: list[FakeChoice]
+from test_llm import FakeChoice, FakeCompletion, FakeMessage
 
 
 def _reply(content: Any) -> FakeCompletion:
@@ -180,6 +168,34 @@ def test_failures_charge_the_breaker() -> None:
     assert run(caller(_brain(), "hi")) == "rescued"
     assert breaker.state("openai") == "open"      # two transient failures
     assert breaker.state("anthropic") == "closed"
+
+
+def test_auth_error_chained_under_transient_still_fails_fast() -> None:
+    # complete_brain reissues a failed native structured call with the schema
+    # prompt-injected; the reissue's (transient) failure implicitly chains the
+    # original auth error as __context__. The bad key must still win.
+    schema = {"type": "object"}
+    script = Script([HttpError("invalid api key", 401), HttpError("overloaded", 503)])
+    caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN))
+
+    with pytest.raises(HttpError, match="overloaded"):
+        run(caller(_brain(reply_schema=schema), "hi"))
+    assert [a.outcome for a in attempts] == ["config"]
+    assert len(script.calls) == 2  # native + injected; no fallback model consulted
+
+
+def test_custom_classifier_overrides_default() -> None:
+    from composable_agents.resilience import ErrorClass
+
+    script = Script([RuntimeError("sdk-wrapped quota error"), _reply("rescued")])
+    policy = ResiliencePolicy(fallbacks=_CHAIN, timeout_attempts=1)
+    caller, attempts, sleeps = _caller(
+        script, policy, classifier=lambda exc: ErrorClass.TIMEOUT
+    )
+
+    assert run(caller(_brain(), "hi")) == "rescued"
+    assert [a.outcome for a in attempts] == ["timeout", "ok"]
+    assert sleeps == []
 
 
 def test_model_behavior_advances_without_charging_breaker() -> None:
