@@ -292,6 +292,7 @@ composable_agents/
   capabilities.py   §9 capability manifest, budget, grants, overrides
   staged.py         §8 plan cost estimation + plan admission
   projection.py     pomset events, value store, in-memory/Postgres sinks, OTel data
+  resilience.py     provider fallback policy, error taxonomy, circuit breaker
   dotctx.py         §3.2 Brain definitions and lowering to Think nodes
   agent_loop.py     P4 agent loop logic + plan extraction (pure)
   agent.py          Agent facade + @tool decorator for Python-callable hands
