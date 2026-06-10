@@ -306,6 +306,28 @@ Settled policy decisions (`CapabilityDenied`, `PlanRejected`, `ValidationError`,
 `FreezeError`) MUST be raised as explicitly non-retryable application errors —
 not matched by class-name string — so the contract survives refactors.
 
+### 8.8 Reserved hand: `__sleep__`
+
+A `call` to the reserved native hand `__sleep__` is a durable timer, not an
+HTTP call. The duration in seconds rides on the node's `ann.timeout`. Freeze
+resolves it synthetically (no snapshot entry) with an asserted
+read/naturally-idempotent contract, so it is race-safe. Capability semantics
+match `__human_gate__`: under a `tools:` allow-list it must be granted
+explicitly.
+
+### 8.9 Continuation (chaining) convention
+
+A flow whose final value is `{"__continue__": <next input>}` requests
+re-dispatch with that input as a fresh segment. Backends MUST run the next
+segment under the same frozen flow + manifest and SHOULD carry cumulative
+`maxCalls` counts across segments. Backends MAY enrich the sentinel object with
+bookkeeping keys; consumers MUST read the next input only from `__continue__`.
+
+### 8.10 The dispatch boundary
+
+Triggering (schedules, debounce, dedup ids, webhooks, queue routing) is not
+representable in the IR by design. See docs/dispatch-boundary.md.
+
 ---
 
 ## 9. Staged plans
