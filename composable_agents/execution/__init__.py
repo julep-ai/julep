@@ -88,13 +88,31 @@ _TEMPORAL_ATTR_MODULES = {
     "PutBlobInput": ".activities",
 }
 
+_DBOS_EXPORTS = [
+    "DbosEnv",
+    "assert_dbos_executable",
+    "decode_policy_error",
+    "encode_policy_error",
+    "flow_workflow",
+    "run_flow_dbos",
+    "set_projection_sink",
+    "submit_human_dbos",
+]
+
+_DBOS_ATTR_MODULES = {name: ".dbos_backend" for name in _DBOS_EXPORTS}
+
 
 def __getattr__(name: str) -> Any:
     module_name = _TEMPORAL_ATTR_MODULES.get(name)
-    if module_name is None:
-        raise AttributeError(name)
-    if not HAVE_TEMPORAL:
-        raise AttributeError(name)
+    if module_name is not None:
+        if not HAVE_TEMPORAL:
+            raise AttributeError(name)
+    else:
+        module_name = _DBOS_ATTR_MODULES.get(name)
+        if module_name is None:
+            raise AttributeError(name)
+        if not HAVE_DBOS:
+            raise AttributeError(name)
     module = import_module(module_name, __name__)
     value = getattr(module, name)
     globals()[name] = value
@@ -115,4 +133,4 @@ __all__ = [
     "SessionStore",
     "InMemorySessionStore",
     "Cursor",
-] + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else [])
+] + (_TEMPORAL_EXPORTS if HAVE_TEMPORAL else []) + (_DBOS_EXPORTS if HAVE_DBOS else [])

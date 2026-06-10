@@ -41,6 +41,14 @@ class RaceAllFailed(ComposableAgentsError):
         super().__init__(f"race-family group failed with {len(self.failures)} branch failure(s)")
 
 
+class UnsupportedShapeError(ComposableAgentsError):
+    """The flow uses an operator this execution backend cannot run.
+
+    Raised at dispatch time (pre-execution IR scan), never mid-run: a flow that
+    starts on a backend always finishes there or fails for a different reason.
+    """
+
+
 class BudgetExceeded(ComposableAgentsError):
     """The Agent budget guard or a plan's budget estimate was exceeded."""
 
