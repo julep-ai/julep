@@ -483,6 +483,30 @@ async def race_first_from_thunks(
                 task.cancel()
 
 
+async def gather_bounded(
+    coros: Sequence[Awaitable[Any]],
+    *,
+    max_parallel: Optional[int],
+) -> list[Any]:
+    """``asyncio.gather`` with an optional concurrency ceiling.
+
+    ``None`` (or a non-positive value) means unbounded — the existing behavior.
+    A semaphore is replay-deterministic under Temporal's sandboxed event loop,
+    so both engine envs share this helper.
+    """
+    items = list(coros)
+    if max_parallel is None or max_parallel <= 0 or len(items) <= max_parallel:
+        return list(await asyncio.gather(*items))
+
+    sem = asyncio.Semaphore(max_parallel)
+
+    async def gated(coro: Awaitable[Any]) -> Any:
+        async with sem:
+            return await coro
+
+    return list(await asyncio.gather(*(gated(c) for c in items)))
+
+
 # --------------------------------------------------------------------------- #
 # In-memory Env for tests and local dry-runs (no Temporal, no network).
 # --------------------------------------------------------------------------- #
@@ -508,6 +532,7 @@ class InMemoryEnv:
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
         gate: Optional[Callable[[Any], Any]] = None,
         sleeper: Optional[Callable[[int], Awaitable[None]]] = None,
+        max_parallel: Optional[int] = None,
         max_calls: Optional[dict[str, int]] = None,
         mode: EnforcementMode | str = EnforcementMode.STRICT,
         registry: Optional[Registry] = None,
@@ -521,6 +546,7 @@ class InMemoryEnv:
         self._planners = planners or {}
         self._gate = gate or (lambda v: {"approved": True, "input": v})
         self._sleeper = sleeper
+        self.max_parallel = max_parallel
         self._max_calls = dict(max_calls or {})
         self.mode = EnforcementMode.coerce(mode)
         self.dev_warnings: list[dict[str, Any]] = []
@@ -608,9 +634,7 @@ class InMemoryEnv:
 
     # --- concurrency --- #
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
-        import asyncio
-
-        return list(await asyncio.gather(*coros))
+        return await gather_bounded(coros, max_parallel=self.max_parallel)
 
     async def race_first(
         self, branches: Sequence[BranchThunk], *, kind: str, m: int, hedge_ms: Optional[int]

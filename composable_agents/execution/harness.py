@@ -66,6 +66,7 @@ with workflow.unsafe.imports_passed_through():
         Result,
         call_contract,
         call_ref_key,
+        gather_bounded,
         interpret,
         race_first_from_thunks,
     )
@@ -368,7 +369,7 @@ class _TemporalEnv:
 
     # --- concurrency (deterministic under Temporal's asyncio) --- #
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
-        return list(await asyncio.gather(*coros))
+        return await gather_bounded(coros, max_parallel=self._policy.max_parallel)
 
     async def race_first(
         self, branches: Sequence[BranchThunk], *, kind: str, m: int, hedge_ms: Optional[int]

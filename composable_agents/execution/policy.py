@@ -24,9 +24,10 @@ class ExecutionPolicy:
     retry_backoff: float = 2.0
     max_retry_interval_s: int = 60
     trace_content_refs: bool = False
+    max_parallel: Optional[int] = None
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        out = {
             "handTimeoutS": self.hand_timeout_s,
             "brainTimeoutS": self.brain_timeout_s,
             "planTimeoutS": self.plan_timeout_s,
@@ -39,6 +40,9 @@ class ExecutionPolicy:
             "maxRetryIntervalS": self.max_retry_interval_s,
             "traceContentRefs": self.trace_content_refs,
         }
+        if self.max_parallel is not None:
+            out["maxParallel"] = self.max_parallel
+        return out
 
     @staticmethod
     def from_json(d: Optional[dict[str, Any]]) -> "ExecutionPolicy":
@@ -56,4 +60,5 @@ class ExecutionPolicy:
             retry_backoff=d.get("retryBackoff", base.retry_backoff),
             max_retry_interval_s=d.get("maxRetryIntervalS", base.max_retry_interval_s),
             trace_content_refs=d.get("traceContentRefs", base.trace_content_refs),
+            max_parallel=d.get("maxParallel", base.max_parallel),
         )
