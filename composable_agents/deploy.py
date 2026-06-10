@@ -129,11 +129,12 @@ def _renderer_source_hashes(flow: Node) -> dict[str, str]:
     out: dict[str, str] = {}
     for name in _referenced_brains(flow):
         try:
-            render_name = get_brain(name).system_render
+            brain = get_brain(name)
         except KeyError:
             continue
-        if render_name and render_name in DEFAULT_REGISTRY.renderers:
-            out[render_name] = DEFAULT_REGISTRY.renderer_source_hash_of(render_name)
+        for render_name in (brain.system_render, brain.user_render):
+            if render_name and render_name in DEFAULT_REGISTRY.renderers:
+                out[render_name] = DEFAULT_REGISTRY.renderer_source_hash_of(render_name)
     return out
 
 
@@ -153,15 +154,20 @@ def _brain_identity(name: str) -> dict[str, Any]:
         brain: Brain = get_brain(name)
     except KeyError:
         return {"name": name}
-    ident = {
+    ident: dict[str, Any] = {
         "name": brain.name,
         "model": brain.model,
         "system": brain.system,
         "replySchema": brain.reply_schema,
         "tools": list(brain.tools),
     }
+    # New fields enter only when set, so pre-existing artifacts hash identically.
     if brain.system_render is not None:
         ident["systemRender"] = brain.system_render
+    if brain.user_render is not None:
+        ident["userRender"] = brain.user_render
+    if brain.max_tokens is not None:
+        ident["maxTokens"] = brain.max_tokens
     return ident
 
 

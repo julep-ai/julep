@@ -497,5 +497,65 @@ so a refactor that changes the IR or the hashing is caught immediately.
 
 ---
 
+## 14. dotctx rich layout
+
+One loader, one format. `load_dotctx(path)` reads the minimal layout
+(settings-only, inline/`system_file` prompt, optional `schema_file`) unchanged.
+A package carrying any of `prompt.j2`, `messages/`, `schema.pyi`, `tools.pyi`
+is **rich** and is loaded by `composable_agents.dotctx_rich`, which requires
+the `composable-agents[dotctx]` extra (jinja2). Importing the rich loader
+without jinja2 MUST raise — a package with a template and a loader that cannot
+render it never degrades to a plain-string prompt.
+
+```
+<name>.ctx/
+├── settings.yaml      # name, model, temperature, max_rounds, max_tokens, agent, sub, context, tools
+├── schema.pyi         # `Output` stub -> JSON Schema -> Brain.reply_schema
+├── tools.pyi          # tool stubs (+ module-level __server__) -> grants + expected schemas
+├── prompt.j2          # single system template, OR
+└── messages/          # 00_system.yml + 01_user.yml (role + Jinja2 content)
+eval.py / eval.yaml    # consumer-side; ignored, never an error
+```
+
+### 14.1 Templates become registered renderers
+
+A template never lives on the `Brain` and never enters the artifact. Loading
+compiles each template and registers one renderer per template, named
+`dotctx/<package>/<role>@v<sha256(content)[:12]>` and source-hashed by template
+content, so §6.4 drift detection covers prompt edits. The Brain carries only
+the renderer names (`system_render`, and `user_render` for bundles);
+`Brain.system` stays `""`. Rendering is strict (`StrictUndefined`, no
+filesystem loader at render time): renderers read only the projected `Context`,
+and a template referencing a variable the Context does not carry fails at first
+render with the package name and variable. Bundles are one system message plus
+at most one user message; anything else is rejected at load with the file name.
+The rendered user string is the user turn in `complete_brain`; without
+`user_render` the value-as-JSON behavior is unchanged.
+
+### 14.2 Settings
+
+Settings keys are an allow-list; unknown keys are a load-time error listing the
+offending keys. `max_tokens` rides on the `Brain` and is forwarded to the
+provider call. Model strings keep `@low/@medium/@high/@none` reasoning-effort
+suffixes untouched (an LlmCaller convention, not a framework concern).
+`user_render` / `max_tokens` enter the brain identity (`userRender` /
+`maxTokens`) only when set, so existing artifacts hash byte-identically.
+
+### 14.3 tools.pyi asserts, never creates
+
+`.pyi` compilation is dependency-free (stdlib `ast` -> JSON Schema: scalars,
+lists/dicts/sets/tuples, `Optional`/unions, `Literal`, TypedDict with
+`Required`/`NotRequired`, nested classes, docstrings as descriptions, constant
+defaults — no pydantic). Stubs set `Brain.tools` to toolref keys
+(`server/tool` when `__server__` names the MCP server), emit a `ToolGrant`
+manifest fragment the caller merges into the deployment's capability manifest,
+and record each tool's expected input schema. At freeze, when the snapshot
+resolves an expected tool (call leaf, app inline grant, or a referenced brain's
+granted tool), the served schema is compared by canonical hash; a mismatch
+raises the blocking **`TOOL_SCHEMA_DRIFT`** diagnostic naming the `.ctx` path
+and server.
+
+---
+
 *This spec is the contract. When code and spec disagree, fix one of them on
 purpose — never let them drift silently.*

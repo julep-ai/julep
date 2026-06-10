@@ -37,6 +37,7 @@ from typing import Any, Optional
 
 from ..dotctx import Brain, get_brain
 from ..errors import ResilienceExhausted
+from ..prompt import rendered_brain_for, rendered_user_for
 from ..resilience import (
     AttemptRecord,
     CircuitBreaker,
@@ -90,8 +91,15 @@ def _response_format(schema: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _messages(system: str, value: Any, *, schema_hint: Optional[dict[str, Any]]) -> list[dict[str, Any]]:
-    """System (optionally with an injected schema block) + the value as a user turn."""
+def _messages(
+    system: str,
+    value: Any,
+    *,
+    schema_hint: Optional[dict[str, Any]],
+    user_text: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    """System (optionally with an injected schema block) + the user turn:
+    a rendered ``user_text`` when given, else the value as a user turn."""
     system_text = system or ""
     if schema_hint is not None:
         block = (
@@ -103,7 +111,10 @@ def _messages(system: str, value: Any, *, schema_hint: Optional[dict[str, Any]])
     messages: list[dict[str, Any]] = []
     if system_text:
         messages.append({"role": "system", "content": system_text})
-    user = value if isinstance(value, str) else json.dumps(value)
+    if user_text is not None:
+        user = user_text
+    else:
+        user = value if isinstance(value, str) else json.dumps(value)
     messages.append({"role": "user", "content": user})
     return messages
 
@@ -142,18 +153,24 @@ async def complete_brain(
     default_provider: str = DEFAULT_PROVIDER,
 ) -> Any:
     """One model call for ``brain`` against ``value``, returning its parsed reply."""
+    # Render named system/user templates here so both seams (activity + facade)
+    # see the same strings; already-rendered brains pass through unchanged.
+    brain = rendered_brain_for(brain, value)
+    user_text = rendered_user_for(brain, value)
     provider, model = _split_model(brain.model, default_provider)
     schema = brain.reply_schema
 
     async def call(*, native: bool) -> Any:
         if native and schema is not None:
-            messages = _messages(brain.system, value, schema_hint=None)
+            messages = _messages(brain.system, value, schema_hint=None, user_text=user_text)
             kwargs: dict[str, Any] = {"response_format": _response_format(schema)}
         else:
-            messages = _messages(brain.system, value, schema_hint=schema)
+            messages = _messages(brain.system, value, schema_hint=schema, user_text=user_text)
             kwargs = {}
         if brain.temperature is not None:
             kwargs["temperature"] = brain.temperature
+        if brain.max_tokens is not None:
+            kwargs["max_tokens"] = brain.max_tokens
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
     if schema is not None and provider not in _PROMPT_FALLBACK_PROVIDERS:
