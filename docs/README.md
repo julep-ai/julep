@@ -11,7 +11,10 @@ New here? Read [getting-started.md](getting-started.md), then [concepts.md](conc
 
 - [Concepts](concepts.md) — the core model: typed flows, frozen IR, shape analysis, capabilities, and projection.
 - [Capabilities and safety](capabilities-and-safety.md) — deny-by-default grants, approval gates, race admission, and bounded authority.
+- [Dispatch boundary](dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer.
+- [Provider resilience](provider-resilience.md) — deterministic model fallback chains, error taxonomy, and per-provider circuit breakers at the `LlmCaller` seam.
 - [Deploy to Temporal](deploy-temporal.md) — durable execution, workers, activities, guarded Temporal imports, and deployment artifacts.
+- [Deploy on DBOS](deploy-dbos.md) — durable flows and agent loops on Postgres via dbos-transact.
 
 ## Reference
 

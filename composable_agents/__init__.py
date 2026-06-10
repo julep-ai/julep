@@ -192,6 +192,16 @@ from .projection import (
     to_otel_spans as to_otel_spans,
 )
 
+# --- provider resilience ---------------------------------------------------- #
+from .resilience import (
+    AttemptRecord as AttemptRecord,
+    CircuitBreaker as CircuitBreaker,
+    ErrorClass as ErrorClass,
+    ResiliencePolicy as ResiliencePolicy,
+    classify_error as classify_error,
+    summarize_attempts as summarize_attempts,
+)
+
 # --- errors ---------------------------------------------------------------- #
 from .errors import (
     AdmissionError as AdmissionError,
@@ -202,6 +212,7 @@ from .errors import (
     PlanRejected as PlanRejected,
     PureDriftError as PureDriftError,
     RaceAllFailed as RaceAllFailed,
+    ResilienceExhausted as ResilienceExhausted,
     UnsupportedShapeError as UnsupportedShapeError,
     ValidationError as ValidationError,
 )
@@ -260,10 +271,13 @@ _BASE_EXPORTS = [
     "ProjectionEvent", "ProjectionEmitter", "ProjectionSink", "ProjectionStore",
     "InMemoryProjection", "PostgresProjection", "TeeStore", "ValueStore", "SpanData",
     "to_otel_spans",
+    # provider resilience
+    "AttemptRecord", "CircuitBreaker", "ErrorClass", "ResiliencePolicy",
+    "classify_error", "summarize_attempts",
     # errors
     "ComposableAgentsError", "ValidationError", "FreezeError", "AdmissionError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
-    "UnsupportedShapeError",
+    "ResilienceExhausted", "UnsupportedShapeError",
     # execution (pure)
     "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "WorkerContext", "interpret",
     "HAVE_DBOS", "HAVE_TEMPORAL",
