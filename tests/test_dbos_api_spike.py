@@ -59,6 +59,19 @@ if HAVE_DBOS and DB_URL:
         msg = await DBOS.recv_async(topic="spike", timeout_seconds=timeout_s)
         return {"msg": msg}
 
+    @DBOS.workflow()
+    async def spike_parent(xs: list[int]) -> list[list[int]]:
+        # Child-workflow chaining pattern the agent backend relies on:
+        # SetWorkflowID + DBOS.start_workflow_async from *inside* a workflow,
+        # with explicit, deterministic child ids derived from the parent id.
+        # Verified working on dbos 2.23.0 — no correction needed.
+        results: list[list[int]] = []
+        for i, x in enumerate(xs):
+            with SetWorkflowID(f"{DBOS.workflow_id}-child-{i}"):
+                handle = await DBOS.start_workflow_async(spike_gather, [x])
+            results.append(await handle.get_result())
+        return results
+
 
 @pytest.fixture(scope="module")
 def run_async() -> Iterator[Callable[[Awaitable[T]], T]]:
@@ -118,6 +131,24 @@ def test_recv_times_out_to_none(
         return await handle.get_result()
 
     assert run_async(main()) == {"msg": None}
+
+
+def test_start_workflow_from_workflow_with_explicit_id(
+    dbos_runtime: None,
+    run_async: Callable[[Awaitable[list[list[int]]]], list[list[int]]],
+) -> None:
+    parent_id = f"spike-parent-{uuid.uuid4().hex[:8]}"
+
+    async def main() -> list[list[int]]:
+        with SetWorkflowID(parent_id):
+            handle = await DBOS.start_workflow_async(spike_parent, [3, 4])
+        return await handle.get_result()
+
+    first = run_async(main())
+    assert first == [[6], [8]]
+    # Re-invoking the parent with the same workflow id is deduplicated: DBOS
+    # returns the recorded answer without re-running children.
+    assert run_async(main()) == first
 
 
 def test_queue_enqueue(
