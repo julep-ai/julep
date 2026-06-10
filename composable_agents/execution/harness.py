@@ -116,13 +116,20 @@ def _retry_policy_for(contract: ToolContract, policy: ExecutionPolicy) -> RetryP
     )
 
 
-_BRAIN_RETRY = RetryPolicy(
-    initial_interval=timedelta(seconds=1),
-    backoff_coefficient=2.0,
-    maximum_interval=timedelta(seconds=60),
-    maximum_attempts=4,
-    non_retryable_error_types=_NON_RETRYABLE,
-)
+def _brain_retry(policy: ExecutionPolicy) -> RetryPolicy:
+    """Engine retries for brain/plan activities (``brain_max_attempts``).
+
+    Workers whose ``LlmCaller`` owns resilience (fallback chains, breakers —
+    ``make_resilient_llm_caller``) should run with ``brain_max_attempts=1`` so
+    these blind retries don't multiply the caller's ladder.
+    """
+    return RetryPolicy(
+        initial_interval=timedelta(seconds=1),
+        backoff_coefficient=2.0,
+        maximum_interval=timedelta(seconds=60),
+        maximum_attempts=policy.brain_max_attempts,
+        non_retryable_error_types=_NON_RETRYABLE,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -252,7 +259,7 @@ class _TemporalEnv:
             invokeBrain,
             InvokeBrainInput(brain=brain, value=value, cid=cid),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
-            retry_policy=_BRAIN_RETRY,
+            retry_policy=_brain_retry(self._policy),
         )
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
@@ -260,7 +267,7 @@ class _TemporalEnv:
             compilePlan,
             CompilePlanInput(planner=planner, value=value, cid=cid, manifest=self._manifest_json),
             start_to_close_timeout=timedelta(seconds=self._policy.plan_timeout_s),
-            retry_policy=_BRAIN_RETRY,
+            retry_policy=_brain_retry(self._policy),
         )
         return Node.from_json(plan_json)
 
@@ -634,7 +641,7 @@ class AgentWorkflow:
                     cid=f"{inp.session_id}-round-{state.round}",
                 ),
                 start_to_close_timeout=timedelta(seconds=policy.brain_timeout_s),
-                retry_policy=_BRAIN_RETRY,
+                retry_policy=_brain_retry(policy),
             )
             state.charge(cfg.think_cost)
             action = al.interpret_brain_reply(reply, strict=not cfg.permissive_controller)

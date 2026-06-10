@@ -29,11 +29,21 @@ any-llm is imported lazily, so this module loads without it. Install
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Awaitable, Callable
 from typing import Any, Optional
 
 from ..dotctx import Brain, get_brain
+from ..errors import ResilienceExhausted
+from ..resilience import (
+    AttemptRecord,
+    CircuitBreaker,
+    ErrorClass,
+    OnAttempt,
+    ResiliencePolicy,
+    classify_error,
+)
 
 # any-llm's ``acompletion``-shaped callable: keyword-driven, returns an
 # OpenAI-typed completion (``.choices[0].message.{content,parsed}``).
@@ -216,10 +226,137 @@ def make_local_brain(
     return caller
 
 
+# --------------------------------------------------------------------------- #
+# Resilient caller: deterministic fallback + circuit breaker around the core.
+# --------------------------------------------------------------------------- #
+def _with_model(brain: Brain, model: str) -> Brain:
+    """A copy of ``brain`` addressed at a different model (not re-registered)."""
+    if model == brain.model:
+        return brain
+    return Brain(
+        name=brain.name,
+        model=model,
+        system=brain.system,
+        reply_schema=brain.reply_schema,
+        tools=brain.tools,
+        temperature=brain.temperature,
+        max_rounds=brain.max_rounds,
+        is_agent=brain.is_agent,
+        sub_contract=brain.sub_contract,
+        context_scope=brain.context_scope,
+        system_render=brain.system_render,
+    )
+
+
+def make_resilient_llm_caller(
+    *,
+    policy: ResiliencePolicy,
+    breaker: Optional[CircuitBreaker] = None,
+    on_attempt: Optional[OnAttempt] = None,
+    default_provider: str = DEFAULT_PROVIDER,
+    acompletion: Optional[AnyCompletion] = None,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> Callable[[Brain, Any], Awaitable[Any]]:
+    """An ``LlmCaller`` that survives provider outages deterministically.
+
+    Walks ``policy.candidates(brain.model)`` strictly in order. Per candidate:
+
+    * an open circuit for the candidate's provider skips it (recorded, never
+      silent);
+    * TRANSIENT/TIMEOUT failures charge the breaker and retry the same model up
+      to the policy's per-class budget (with backoff), then advance;
+    * a CONFIG failure (bad key, unknown model, malformed request) re-raises
+      immediately — a fallback must never mask misconfiguration;
+    * when ``brain.reply_schema`` is set and the reply did not parse into a
+      JSON object, that is MODEL_BEHAVIOR: advance to the next model without
+      charging the breaker (the provider answered; the model misbehaved).
+
+    Every attempt is reported through ``on_attempt`` (an
+    :class:`~composable_agents.resilience.AttemptRecord`) so workers can feed
+    projection sinks / OTel with which model actually served. When the chain is
+    exhausted, raises :class:`~composable_agents.errors.ResilienceExhausted`
+    carrying the full attempt log.
+
+    On Temporal, pair this with ``ExecutionPolicy(brain_max_attempts=1)`` so the
+    engine's blind ``invokeBrain`` retries do not multiply the ladder; on DBOS
+    brain steps never retry, so this caller is the whole story by design.
+    """
+
+    def _notify(record: AttemptRecord) -> None:
+        if on_attempt is not None:
+            on_attempt(record)
+
+    async def caller(brain: Brain, value: Any) -> Any:
+        resolved = _resolve_acompletion(acompletion)
+        attempts: list[AttemptRecord] = []
+        last_exc: Optional[Exception] = None
+
+        for model in policy.candidates(brain.model):
+            provider, _ = _split_model(model, default_provider)
+            if breaker is not None and not breaker.allow(provider):
+                record = AttemptRecord(
+                    model=model,
+                    provider=provider,
+                    outcome="skipped_open_circuit",
+                    detail=f"circuit open for provider {provider!r}",
+                )
+                attempts.append(record)
+                _notify(record)
+                continue
+
+            candidate = _with_model(brain, model)
+            attempt = 0
+            while True:
+                try:
+                    reply = await complete_brain(
+                        candidate, value,
+                        acompletion=resolved, default_provider=default_provider,
+                    )
+                except Exception as exc:
+                    error_class = classify_error(exc)
+                    record = AttemptRecord(
+                        model=model, provider=provider,
+                        outcome=error_class.value, detail=str(exc),
+                    )
+                    attempts.append(record)
+                    _notify(record)
+                    if error_class is ErrorClass.CONFIG:
+                        raise
+                    last_exc = exc
+                    if breaker is not None:
+                        breaker.record_failure(provider)
+                    attempt += 1
+                    if attempt < policy.attempts_for(error_class):
+                        await sleep(policy.backoff_s(attempt - 1))
+                        continue
+                    break  # candidate exhausted; advance down the chain
+
+                if breaker is not None:
+                    breaker.record_success(provider)
+                if brain.reply_schema is not None and not isinstance(reply, dict):
+                    record = AttemptRecord(
+                        model=model, provider=provider,
+                        outcome=ErrorClass.MODEL_BEHAVIOR.value,
+                        detail="reply did not parse into a JSON object",
+                    )
+                    attempts.append(record)
+                    _notify(record)
+                    break  # model misbehaved; the provider is healthy
+                record = AttemptRecord(model=model, provider=provider, outcome="ok")
+                attempts.append(record)
+                _notify(record)
+                return reply
+
+        raise ResilienceExhausted(attempts) from last_exc
+
+    return caller
+
+
 __all__ = [
     "AnyCompletion",
     "DEFAULT_PROVIDER",
     "complete_brain",
     "make_llm_caller",
     "make_local_brain",
+    "make_resilient_llm_caller",
 ]

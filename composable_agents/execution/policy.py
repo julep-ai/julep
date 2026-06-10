@@ -20,6 +20,10 @@ class ExecutionPolicy:
     # Retry shaping.
     idempotent_max_attempts: int = 5
     write_max_attempts: int = 3
+    # Engine retries for invokeBrain/compilePlan (Temporal only; DBOS brain
+    # steps never retry). Set to 1 when the worker's LlmCaller owns resilience
+    # (make_resilient_llm_caller) so engine retries don't multiply the ladder.
+    brain_max_attempts: int = 4
     initial_retry_s: float = 1.0
     retry_backoff: float = 2.0
     max_retry_interval_s: int = 60
@@ -35,6 +39,7 @@ class ExecutionPolicy:
             "agentTaskTimeoutS": self.agent_task_timeout_s,
             "idempotentMaxAttempts": self.idempotent_max_attempts,
             "writeMaxAttempts": self.write_max_attempts,
+            "brainMaxAttempts": self.brain_max_attempts,
             "initialRetryS": self.initial_retry_s,
             "retryBackoff": self.retry_backoff,
             "maxRetryIntervalS": self.max_retry_interval_s,
@@ -56,6 +61,7 @@ class ExecutionPolicy:
             agent_task_timeout_s=d.get("agentTaskTimeoutS", base.agent_task_timeout_s),
             idempotent_max_attempts=d.get("idempotentMaxAttempts", base.idempotent_max_attempts),
             write_max_attempts=d.get("writeMaxAttempts", base.write_max_attempts),
+            brain_max_attempts=d.get("brainMaxAttempts", base.brain_max_attempts),
             initial_retry_s=d.get("initialRetryS", base.initial_retry_s),
             retry_backoff=d.get("retryBackoff", base.retry_backoff),
             max_retry_interval_s=d.get("maxRetryIntervalS", base.max_retry_interval_s),
