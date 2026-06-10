@@ -23,6 +23,10 @@ from typing import Any, Optional
 from temporalio.client import Client
 from temporalio.converter import DataConverter
 from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import (
+    SandboxedWorkflowRunner,
+    SandboxRestrictions,
+)
 
 from ..capabilities import CapabilityManifest
 from .activities import (
@@ -102,8 +106,22 @@ def build_worker(
     (e.g. ``max_concurrent_activities``, ``interceptors`` for the projection tail).
     If ``context.mcp_call`` is set, it must be async
     ``(server, tool, value, idempotency_key) -> result``.
+
+    The default workflow sandbox passes ``composable_agents`` through so
+    workflow-side registry lookups (pures, brains) see the worker process's real
+    registries; without it, sandbox re-imports yield empty registries and flows
+    with ``arr``/registry-dependent leaves hang in a WorkflowTaskFailed retry
+    loop. Pass your own ``workflow_runner`` to override.
     """
     configure(context)
+    worker_kwargs.setdefault(
+        "workflow_runner",
+        SandboxedWorkflowRunner(
+            restrictions=SandboxRestrictions.default.with_passthrough_modules(
+                "composable_agents"
+            )
+        ),
+    )
     return Worker(
         client,
         task_queue=task_queue,

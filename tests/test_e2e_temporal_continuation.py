@@ -13,10 +13,6 @@ pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not instal
 
 if HAVE_TEMPORAL:
     from temporalio.testing import WorkflowEnvironment
-    from temporalio.worker.workflow_sandbox import (
-        SandboxedWorkflowRunner,
-        SandboxRestrictions,
-    )
 
     from composable_agents import arr, freeze, manifest_to_json, seq
     from composable_agents.derived import delay
@@ -44,14 +40,6 @@ def test_flow_chains_and_sleeps():
                 env.client,
                 WorkerContext(),
                 task_queue="cont-test",
-                # Pures resolve from the worker-process registry at workflow
-                # runtime; the default sandbox re-imports composable_agents per
-                # run (empty registry), so pass the deterministic core through.
-                workflow_runner=SandboxedWorkflowRunner(
-                    restrictions=SandboxRestrictions.default.with_passthrough_modules(
-                        "composable_agents"
-                    )
-                ),
             )
             async with worker:
                 out = await run_flow(
