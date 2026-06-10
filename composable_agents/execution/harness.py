@@ -58,6 +58,7 @@ with workflow.unsafe.imports_passed_through():
     from ..ir import Node
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import get_pure as _get_pure_from_registry
+    from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .timeouts import activity_timeout
@@ -325,6 +326,10 @@ class _TemporalEnv:
                 config["budget"] = app_config["budget"]
             if "maxRounds" in app_config:
                 config["maxRounds"] = app_config["maxRounds"]
+            if "ctx" in app_config:
+                config["ctx"] = app_config["ctx"]
+            if "summarizer" in app_config:
+                config["summarizer"] = app_config["summarizer"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -653,6 +658,13 @@ class AgentWorkflow:
             if controller_precheck is not None:
                 return controller_precheck
 
+            # Transcript plan (agent-transcripts): deterministic, ref-bearing,
+            # computed here in workflow code; hydration, the token budget, and
+            # summarization are activity work inside invokeBrain.
+            transcript_plan = None
+            if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
+                transcript_plan = transcript_for(state, cfg.ctx, input=inp.input)
+
             reply = await workflow.execute_activity(
                 invokeBrain,
                 InvokeBrainInput(
@@ -660,10 +672,21 @@ class AgentWorkflow:
                     value={"input": state.last, "trace": [t.to_json() for t in state.trace]},
                     cid=f"{inp.session_id}-round-{state.round}",
                     principal=inp.principal,
+                    transcript=transcript_plan,
+                    ctx=(
+                        cfg.ctx.to_json()
+                        if transcript_plan is not None and cfg.ctx is not None
+                        else None
+                    ),
+                    summarizer=cfg.summarizer if transcript_plan is not None else None,
+                    summary=state.summary if transcript_plan is not None else None,
                 ),
                 start_to_close_timeout=timedelta(seconds=policy.brain_timeout_s),
                 retry_policy=_brain_retry(policy),
             )
+            new_summary, reply = split_summary_reply(reply)
+            if new_summary is not None:
+                state.summary = new_summary
             state.charge(cfg.think_cost)
             action = al.interpret_brain_reply(reply, strict=not cfg.permissive_controller)
 

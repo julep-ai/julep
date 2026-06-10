@@ -66,7 +66,7 @@ def test_invoke_brain_renders_system_before_llm() -> None:
 
     captured: dict = {}
 
-    async def fake_llm(brain, value, principal):
+    async def fake_llm(brain, value, principal, transcript):
         captured["system"] = brain.system
         captured["system_render"] = brain.system_render
         return {"ok": True}

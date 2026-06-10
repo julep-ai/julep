@@ -39,7 +39,7 @@ from .capabilities import Budget, CapabilityManifest
 from .contracts import CONSERVATIVE_DEFAULT, ToolContract, ToolManifest
 from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
-from .ir import Node, toolref_key
+from .ir import ContextPolicy, Node, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency, Shape
 from .staged import admit_plan, estimate_cost, validate_plan
 from .validate import Diagnostic
@@ -158,6 +158,10 @@ class AgentConfig:
     think_cost: float = DEFAULT_THINK_COST
     # Spec §10: malformed controller output is an error unless explicitly opted out.
     permissive_controller: bool = False
+    # Transcript carriage (docs/design/agent-transcripts.md): context policy for
+    # the controller's rounds, and the named summarizer brain for SUMMARY scope.
+    ctx: Optional[ContextPolicy] = None
+    summarizer: Optional[str] = None
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentConfig":
@@ -172,6 +176,8 @@ class AgentConfig:
             permissive_controller=bool(
                 d.get("permissiveController", d.get("permissive_controller", False))
             ),
+            ctx=ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None,
+            summarizer=d.get("summarizer"),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -191,6 +197,10 @@ class AgentConfig:
             if self.budget.wall_seconds is not None:
                 b["wallSeconds"] = self.budget.wall_seconds
             out["budget"] = b
+        if self.ctx is not None:
+            out["ctx"] = self.ctx.to_json()
+        if self.summarizer is not None:
+            out["summarizer"] = self.summarizer
         return out
 
     @staticmethod
@@ -250,6 +260,9 @@ class AgentState:
     last: Any = None
     trace: list[TraceEntry] = field(default_factory=list)
     call_counts: dict[str, int] = field(default_factory=dict)
+    # Running summary of elided transcript turns (SUMMARY scope only); persists
+    # across continue_as_new so a new segment never re-summarizes from blobs.
+    summary: Optional[str] = None
 
     def charge(self, cost: float) -> None:
         self.spent += cost
@@ -267,6 +280,8 @@ class AgentState:
         }
         if self.call_counts:
             out["callCounts"] = dict(sorted(self.call_counts.items()))
+        if self.summary is not None:
+            out["summary"] = self.summary
         return out
 
     @staticmethod
@@ -286,6 +301,7 @@ class AgentState:
                 str(tool): int(count)
                 for tool, count in d.get("callCounts", d.get("call_counts", {})).items()
             },
+            summary=d.get("summary"),
         )
 
 
@@ -498,7 +514,7 @@ async def drive_agent_loop(
     step = controller_turn(
         cfg=cfg, invoke_controller=invoke_controller, call_tool=call_tool,
         run_subflow=run_subflow, granted=granted, granted_subflows=granted_subflows,
-        contracts=contracts, mode=mode, prod_gap=prod_gap,
+        contracts=contracts, mode=mode, prod_gap=prod_gap, run_input=input,
     )
     return await drive(step, state, halt=pre_round(cfg), finalize=make_finalize(prod_gap))
 

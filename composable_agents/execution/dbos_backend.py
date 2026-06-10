@@ -164,6 +164,10 @@ async def invokeBrainStep(inp: dict) -> Any:
             InvokeBrainInput(
                 brain=inp["brain"], value=inp["value"], cid=inp["cid"],
                 principal=inp.get("principal"),
+                transcript=inp.get("transcript"),
+                ctx=inp.get("ctx"),
+                summarizer=inp.get("summarizer"),
+                summary=inp.get("summary"),
             )
         )
     except _POLICY_ERRORS as exc:
@@ -382,6 +386,10 @@ class DbosEnv:
                 config["budget"] = app_config["budget"]
             if "maxRounds" in app_config:
                 config["maxRounds"] = app_config["maxRounds"]
+            if "ctx" in app_config:
+                config["ctx"] = app_config["ctx"]
+            if "summarizer" in app_config:
+                config["summarizer"] = app_config["summarizer"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -587,11 +595,20 @@ async def agent_workflow(inp: dict) -> Any:
 
     # controller_turn mutates `state` in place and returns the same object, so
     # these cid closures read state.round live: one deterministic cid per round.
+    # controller_turn attaches the transcript plan beside the controller value
+    # for transcript-scoped rounds; split those keys onto the step input.
+    _transcript_keys = ("transcript", "ctx", "summarizer", "summary")
+
     async def _invoke(payload: dict) -> Any:
+        value = {k: v for k, v in payload.items() if k not in _transcript_keys}
         out = await invokeBrainStep({
-            "brain": inp["controller"], "value": payload,
+            "brain": inp["controller"], "value": value,
             "cid": f"{session}-round-{state.round}",
             "principal": principal,
+            "transcript": payload.get("transcript"),
+            "ctx": payload.get("ctx"),
+            "summarizer": payload.get("summarizer"),
+            "summary": payload.get("summary"),
         })
         return decode_policy_error(out)
 
@@ -635,6 +652,7 @@ async def agent_workflow(inp: dict) -> Any:
         contracts=contracts,
         mode=cfg.mode,
         prod_gap=prod_gap,
+        run_input=inp.get("input"),
     )
     halt = pre_round(cfg)
     finalize = make_finalize(prod_gap)

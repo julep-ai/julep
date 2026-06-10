@@ -412,6 +412,40 @@ Trace entries MUST be rich enough to support honest plan extraction:
 `shape`, `cost`. Until extraction infers patterns/branches/loops/reducers from
 these, it is **macro-recording**, not procedure discovery — name it honestly.
 
+### 10.2 Transcripts
+
+A transcript is **derived, not stored**: a deterministic projection of the
+agent's trace (plus the run input) into a neutral, provider-agnostic `Turn`
+list. The *plan* (turns carrying blob refs) is computed in workflow code;
+hydration of refs, the token budget, and summarization happen in the
+`invokeBrain` effect, where blob refs resolve outside workflow history.
+Provider message formats are the `LlmCaller`'s business — the canonical caller
+signature is `(brain, value, principal, transcript)`; `configure` MUST wrap
+narrower legacy callers.
+
+`ContextPolicy` scope on an `app` selects the shape:
+
+- **`local`** (default) — `{input, trace, last}` with refs, unchanged.
+  Zero-cost, replay-identical.
+- **`whole_session`** — full hydrated transcript, oldest-first, hard-bounded by
+  `ctx.max_tokens`. On overflow the *oldest* turns are dropped and the
+  transcript MUST be prefixed with an explicit
+  `{"role": "system", "content": "<n> earlier turns elided"}` marker — the
+  model is told, never silently lied to.
+- **`summary`** — hydrated recent turns within budget plus a running summary of
+  elided turns, produced by the **named summarizer brain** on the APP node
+  (`summarizer`). The summary persists in agent state across
+  `continue_as_new`; replays MUST NOT re-summarize.
+
+There is no implicit budget and no implicit summarizer model: `whole_session`
+or `summary` on an `app` without `ctx.max_tokens` is the blocking diagnostic
+`APP_CTX_NO_BUDGET`; `summary` without `summarizer` is
+`APP_SUMMARY_NO_SUMMARIZER`. `ctx` and `summarizer` serialize on the APP node
+with conditional-key inclusion — existing flows' hashes do not move.
+Transcripts are one run's working history; cross-run memory is the consumer's
+product. `think` / `iter_up_to` keep value-threading semantics — only `app`
+gets transcripts.
+
 ---
 
 ## 11. Projection

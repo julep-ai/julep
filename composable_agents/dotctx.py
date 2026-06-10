@@ -219,7 +219,15 @@ def brain_to_flow(brain: Brain, *, ctx: Optional[ContextPolicy] = None) -> Node:
 
     if brain.is_agent or (brain.max_rounds is not None and brain.max_rounds <= 0):
         # Open-ended controller loop. The brain name is the controller ref.
-        return app(brain.name)
+        # Transcript policy: an explicit ctx wins; else derive it from the
+        # brain's declared context scope. LOCAL adds no ctx key (hash-stable).
+        app_ctx = ctx
+        if app_ctx is None and brain.context_scope in (
+            ContextScope.SUMMARY,
+            ContextScope.WHOLE_SESSION,
+        ):
+            app_ctx = ContextPolicy(scope=brain.context_scope)
+        return app(brain.name, ctx=app_ctx)
 
     if brain.max_rounds is not None and brain.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.

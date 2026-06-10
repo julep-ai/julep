@@ -29,6 +29,7 @@ from .agent_loop import (
     would_exceed_budget,
 )
 from .kinds import EnforcementMode
+from .transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
 
 
 @dataclass(frozen=True)
@@ -108,8 +109,12 @@ def controller_turn(
     contracts: Optional[AgentContractMap],
     mode: EnforcementMode,
     prod_gap: list[str],
+    run_input: Any = None,
 ) -> Step:
-    """One agent round, lifted verbatim from drive_agent_loop's while-body."""
+    """One agent round, lifted verbatim from drive_agent_loop's while-body.
+
+    ``run_input`` is the run's original input, used only for the transcript
+    plan when ``cfg.ctx`` declares a transcript scope (agent-transcripts)."""
     mode = EnforcementMode.coerce(mode)
     unconstrained = granted is None
     granted_set = set(granted or [])
@@ -124,8 +129,24 @@ def controller_turn(
         return Halt("denied", reason=denial.reason)
 
     async def step(state: AgentState) -> StepResult:
-        payload = {"input": state.last, "trace": [t.to_json() for t in state.trace]}
+        payload: dict[str, Any] = {
+            "input": state.last,
+            "trace": [t.to_json() for t in state.trace],
+        }
+        if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
+            # Transcript plan: deterministic, ref-bearing, computed in workflow
+            # code. Hydration/budget/summarization happen in the invoke_brain
+            # effect; the engine binding moves these keys onto InvokeBrainInput.
+            payload["transcript"] = transcript_for(state, cfg.ctx, input=run_input)
+            payload["ctx"] = cfg.ctx.to_json()
+            if cfg.summarizer is not None:
+                payload["summarizer"] = cfg.summarizer
+            if state.summary is not None:
+                payload["summary"] = state.summary
         reply = await invoke_controller(payload)
+        new_summary, reply = split_summary_reply(reply)
+        if new_summary is not None:
+            state.summary = new_summary
         state.charge(cfg.think_cost)
         action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
 

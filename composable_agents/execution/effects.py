@@ -19,12 +19,20 @@ from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain
 from ..errors import CapabilityDenied, PureDriftError
-from ..ir import Node, toolref_from_json, toolref_key
-from ..kinds import Effect, Idempotency
+from ..ir import ContextPolicy, Node, toolref_from_json, toolref_key
+from ..kinds import ContextScope, Effect, Idempotency
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..prompt import rendered_brain_for
 from ..staged import admit_plan
-from .blobstore import BlobStore
+from ..transcript import (
+    SUMMARY_KEY,
+    Transcript,
+    approx_token_count,
+    elision_marker,
+    split_to_budget,
+    summary_turn,
+)
+from .blobstore import BlobStore, parse_ref
 from .session_store import SessionStore
 
 logger = logging.getLogger("composable_agents.execution.effects")
@@ -39,8 +47,12 @@ RunPrincipal = dict[str, Any]
 # Caller signatures the worker supplies.
 # (server, tool, args, key, principal) -> result
 McpCaller = Callable[[str, str, Any, str, Optional[RunPrincipal]], Awaitable[Any]]
-# (brain, value, principal) -> result
-LlmCaller = Callable[[Brain, Any, Optional[RunPrincipal]], Awaitable[Any]]
+# (brain, value, principal, transcript) -> result. ``transcript`` is the
+# hydrated, budget-bounded neutral turn list for transcript-scoped app rounds
+# (None everywhere else); the caller maps it to its provider's wire format.
+# The 4-arg form is canonical; :func:`configure` wraps legacy 2-arg and
+# principal-aware 3-arg callers once (those fail fast if a transcript arrives).
+LlmCaller = Callable[[Brain, Any, Optional[RunPrincipal], Optional[Transcript]], Awaitable[Any]]
 
 
 @dataclass
@@ -67,6 +79,10 @@ class WorkerContext:
     # Resolves the run principal into extra transport headers for native hands.
     # Absent means no extra headers; native hands keep working unchanged.
     principal_headers: Optional[Callable[[RunPrincipal], dict[str, str]]] = None
+    # Tokenizer hook for transcript budgets (text -> token count). Absent means
+    # the char heuristic (transcript.approx_token_count); the real count is the
+    # LlmCaller's business.
+    count_tokens: Optional[Callable[[str], int]] = None
     # Deploy-time registries. A sub-flow is a separately frozen flow addressable
     # by ref; an agent spec is the controller's loop policy. Both are fixed at
     # worker startup, so the resolve* activities below read them deterministically.
@@ -79,7 +95,7 @@ class WorkerContext:
 _CTX = WorkerContext()
 
 
-def _accepts_principal(fn: Callable[..., Any], arity: int) -> bool:
+def _accepts_positional(fn: Callable[..., Any], arity: int) -> bool:
     """True when ``fn`` can take ``arity`` positional arguments (new signature)."""
     try:
         sig = inspect.signature(fn)
@@ -98,7 +114,7 @@ def _accepts_principal(fn: Callable[..., Any], arity: int) -> bool:
 
 
 def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
-    if _accepts_principal(fn, 5):
+    if _accepts_positional(fn, 5):
         return fn
 
     async def legacy(
@@ -109,11 +125,41 @@ def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
     return legacy
 
 
+def _reject_transcript(fn: Callable[..., Awaitable[Any]]) -> RuntimeError:
+    return RuntimeError(
+        f"this worker's LlmCaller {getattr(fn, '__name__', fn)!r} does not accept a "
+        "transcript, but a transcript-scoped app round produced one; update the "
+        "caller to the canonical 4-argument form (brain, value, principal, transcript)"
+    )
+
+
 def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
-    if _accepts_principal(fn, 3):
+    if _accepts_positional(fn, 4):
         return fn
 
-    async def legacy(brain: Brain, value: Any, principal: Optional[RunPrincipal]) -> Any:
+    if _accepts_positional(fn, 3):
+        # Principal-aware caller from the run-principal design. No silent drop:
+        # a transcript it cannot receive is a hard error (G-8).
+        async def principal_aware(
+            brain: Brain,
+            value: Any,
+            principal: Optional[RunPrincipal],
+            transcript: Optional[Transcript],
+        ) -> Any:
+            if transcript is not None:
+                raise _reject_transcript(fn)
+            return await fn(brain, value, principal)
+
+        return principal_aware
+
+    async def legacy(
+        brain: Brain,
+        value: Any,
+        principal: Optional[RunPrincipal],
+        transcript: Optional[Transcript],
+    ) -> Any:
+        if transcript is not None:
+            raise _reject_transcript(fn)
         return await fn(brain, value)
 
     return legacy
@@ -122,9 +168,11 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
 def configure(ctx: WorkerContext) -> None:
     """Install the worker-wide context the activities read.
 
-    Legacy callers (``mcp_call`` without the trailing ``principal``, ``llm``
-    taking only ``(brain, value)``) are wrapped here, once, so they keep
-    working unchanged; new callers receive the run principal positionally.
+    Legacy callers (``mcp_call`` without the trailing ``principal``; ``llm``
+    taking ``(brain, value)`` or ``(brain, value, principal)``) are wrapped
+    here, once, so they keep working unchanged. The canonical ``llm`` form is
+    ``(brain, value, principal, transcript)``; wrapped narrower callers fail
+    fast if a transcript-scoped app round hands them a transcript.
     """
     global _CTX
     if ctx.mcp_call is not None:
@@ -164,6 +212,14 @@ class InvokeBrainInput:
     value: Any
     cid: str
     principal: Optional[RunPrincipal] = None
+    # Transcript plan for transcript-scoped app rounds (agent-transcripts
+    # design): ref-bearing turns projected deterministically in workflow code.
+    # invokeBrain hydrates the refs, enforces ctx.max_tokens, and (SUMMARY
+    # scope) folds elided turns into the running summary via ``summarizer``.
+    transcript: Optional[list[dict[str, Any]]] = None
+    ctx: Optional[dict[str, Any]] = None         # ContextPolicy JSON (scope + maxTokens)
+    summarizer: Optional[str] = None             # named summarizer brain (SUMMARY scope)
+    summary: Optional[str] = None                # running summary from AgentState
 
 
 @dataclass
@@ -266,11 +322,100 @@ async def callHand(inp: CallHandInput) -> Any:
         return resp.json()
 
 
+async def _hydrate_turn(turn: dict[str, Any]) -> dict[str, Any]:
+    """Resolve a turn's ``content_ref`` to its blob content (canonical JSON)."""
+    ref = turn.get("content_ref")
+    if ref is None:
+        return dict(turn)
+    if _CTX.blob_store is None:
+        raise RuntimeError(
+            "worker has no blob store configured; transcript content refs cannot hydrate"
+        )
+    import json
+
+    tenant, _ = parse_ref(ref)
+    data = await _CTX.blob_store.get(tenant, ref)
+    hydrated = {k: v for k, v in turn.items() if k != "content_ref"}
+    hydrated["content"] = json.loads(data)
+    return hydrated
+
+
+def _summary_text(reply: Any, summarizer: str) -> str:
+    if isinstance(reply, str):
+        return reply
+    if isinstance(reply, dict) and isinstance(reply.get("summary"), str):
+        return reply["summary"]
+    raise RuntimeError(
+        f"summarizer brain {summarizer!r} must reply with text or {{'summary': str}}; "
+        f"got {type(reply).__name__}"
+    )
+
+
+async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Optional[str]]:
+    """Hydrate the transcript plan, enforce the hard token budget, and (SUMMARY
+    scope) fold elided turns into the running summary via the named summarizer.
+
+    Returns ``(turns, new_summary)``; ``new_summary`` is non-None only when the
+    summarizer actually ran this round. Runs inside the recorded activity, so
+    retries re-summarize from the same refs and replays never re-summarize.
+    """
+    assert inp.transcript is not None
+    policy = ContextPolicy.from_json(inp.ctx or {})
+    if policy.scope not in (ContextScope.WHOLE_SESSION, ContextScope.SUMMARY):
+        raise RuntimeError(
+            f"invokeBrain received a transcript with scope {policy.scope.value!r}; "
+            "only whole_session/summary app rounds carry transcripts"
+        )
+    if policy.max_tokens is None:
+        raise RuntimeError(
+            f"transcript for brain {inp.brain!r} carries no max_tokens budget; "
+            "whole_session/summary scopes require an explicit budget (no implicit default)"
+        )
+    count_tokens = _CTX.count_tokens or approx_token_count
+    hydrated = [await _hydrate_turn(t) for t in inp.transcript]
+    elided, kept = split_to_budget(hydrated, policy.max_tokens, count_tokens)
+
+    if policy.scope is ContextScope.WHOLE_SESSION:
+        if elided:
+            return [elision_marker(len(elided)), *kept], None
+        return kept, None
+
+    # SUMMARY: a named summarizer is mandatory — no silent downgrade to truncation.
+    if inp.summarizer is None:
+        raise RuntimeError(
+            "summary transcript scope requires a named summarizer brain "
+            "(AgentConfig.summarizer); none was supplied"
+        )
+    assert _CTX.llm is not None
+    summary = inp.summary
+    new_summary: Optional[str] = None
+    if elided:
+        summarizer_payload = {"summary": summary, "turns": elided}
+        summarizer = rendered_brain_for(
+            _registry().get_brain(inp.summarizer), summarizer_payload
+        )
+        raw = await _CTX.llm(summarizer, summarizer_payload, inp.principal, None)
+        new_summary = _summary_text(raw, inp.summarizer)
+        summary = new_summary
+    if summary:
+        return [summary_turn(summary), *kept], new_summary
+    return kept, new_summary
+
+
 async def invokeBrain(inp: InvokeBrainInput) -> Any:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
+    transcript: Optional[Transcript] = None
+    new_summary: Optional[str] = None
+    if inp.transcript is not None:
+        transcript, new_summary = await _materialize_transcript(inp)
     brain = rendered_brain_for(_registry().get_brain(inp.brain), inp.value)
-    return await _CTX.llm(brain, inp.value, inp.principal)
+    reply = await _CTX.llm(brain, inp.value, inp.principal, transcript)
+    if new_summary is not None:
+        # Envelope so the workflow can persist the running summary in
+        # AgentState.summary; split_summary_reply unwraps it deterministically.
+        return {SUMMARY_KEY: new_summary, "reply": reply}
+    return reply
 
 
 async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
@@ -283,7 +428,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     planner = _registry().get_brain(inp.planner)
-    raw = await _CTX.llm(planner, inp.value, inp.principal)
+    raw = await _CTX.llm(planner, inp.value, inp.principal, None)
 
     plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
     plan = Node.from_json(plan_json)
