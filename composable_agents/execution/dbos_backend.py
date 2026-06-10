@@ -385,3 +385,67 @@ async def flow_workflow(inp: dict) -> Any:
             "callCounts": env.call_counts_snapshot(),
         }
     return result.value
+
+
+# --------------------------------------------------------------------------- #
+# Client helpers.
+# --------------------------------------------------------------------------- #
+async def run_flow_dbos(
+    flow_json: dict[str, Any],
+    manifest_json: dict[str, Any],
+    *,
+    session_id: str,
+    input: Any = None,
+    policy: Optional[ExecutionPolicy] = None,
+    pinned_pures: Optional[dict[str, str]] = None,
+    max_call_limits: Optional[dict[str, int]] = None,
+    queue: Optional[Queue] = None,
+    max_segments: int = 1000,
+) -> Any:
+    """Run a frozen flow to settlement, following continuation segments.
+
+    Segment ``i`` runs as workflow id ``session_id`` (i=0) /
+    ``f"{session_id}-seg{i}"``, so a re-submission with the same session id is
+    deduplicated by DBOS's one-execution-per-workflow-id guarantee, and a chain
+    is inspectable in ``workflow_status`` by id prefix. Call this from inside a
+    DBOS workflow for durable chaining (each enqueue checkpoints); from plain
+    code, a crash between segments stalls the chain -- the same contract as any
+    other dispatch your process performs.
+    """
+    assert_dbos_executable(Node.from_json(flow_json))
+    seg_input = input
+    call_counts: Optional[dict[str, int]] = None
+    for seg in range(max_segments):
+        wfid = session_id if seg == 0 else f"{session_id}-seg{seg}"
+        seg_payload = {
+            "sessionId": wfid,
+            "input": seg_input,
+            "flowJson": flow_json,
+            "manifestJson": manifest_json,
+            "pinnedPures": pinned_pures,
+            "maxCallLimits": max_call_limits,
+            "callCounts": call_counts,
+            "policy": (policy or ExecutionPolicy()).to_json(),
+        }
+        with SetWorkflowID(wfid):
+            if queue is not None:
+                handle = await queue.enqueue_async(flow_workflow, seg_payload)
+            else:
+                handle = await DBOS.start_workflow_async(flow_workflow, seg_payload)
+        out = await handle.get_result()
+        if not is_continuation(out):
+            return out
+        call_counts = out.get("callCounts") if isinstance(out, dict) else None
+        seg_input = continuation_value(out)
+    raise ComposableAgentsError(
+        f"flow {session_id!r} did not settle within {max_segments} segments"
+    )
+
+
+async def submit_human_dbos(workflow_id: str, cid: str, value: Any) -> None:
+    """Release a parked human gate in a running ``ca_flow`` workflow.
+
+    ``cid`` is the gate's activation id; with the DBOS env's session-prefixed
+    cids, the first gate of a root flow is ``f"{workflow_id}/{gate_node_id}@1"``.
+    """
+    await DBOS.send_async(workflow_id, value, topic=f"gate:{cid}")

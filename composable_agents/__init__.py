@@ -206,6 +206,7 @@ from .errors import (
 # --- execution layer (always exposes the pure interpreter; Temporal guarded) #
 from .execution import (
     Env as Env,
+    HAVE_DBOS as HAVE_DBOS,
     HAVE_TEMPORAL as HAVE_TEMPORAL,
     InMemoryEnv as InMemoryEnv,
     Result as Result,
@@ -258,7 +259,7 @@ _BASE_EXPORTS = [
     "ComposableAgentsError", "ValidationError", "FreezeError", "AdmissionError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
     # execution (pure)
-    "Env", "InMemoryEnv", "Result", "interpret", "HAVE_TEMPORAL",
+    "Env", "InMemoryEnv", "Result", "interpret", "HAVE_DBOS", "HAVE_TEMPORAL",
     "__version__",
 ]
 
