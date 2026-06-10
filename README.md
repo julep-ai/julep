@@ -86,7 +86,7 @@ Key guides:
 - [Dispatch boundary](docs/dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer
 - [Capabilities and safety](docs/capabilities-and-safety.md)
 - [Deploy to Temporal](docs/deploy-temporal.md)
-- [Deploy on DBOS](docs/deploy-dbos.md) — durable flows on Postgres via dbos-transact
+- [Deploy on DBOS](docs/deploy-dbos.md) — durable flows and agent loops on Postgres via dbos-transact
 - [Examples](docs/examples.md)
 - [Specification](docs/SPEC.md) — the normative contract.
 

@@ -31,10 +31,9 @@ def test_scan_rejects_race():
         assert_dbos_executable(flow)
 
 
-def test_scan_rejects_app():
+def test_scan_accepts_app():
     flow = app("triage_controller")
-    with pytest.raises(UnsupportedShapeError, match="app"):
-        assert_dbos_executable(flow)
+    assert_dbos_executable(flow)  # no raise: app runs via the ca_agent chain
 
 
 def test_policy_error_envelope_roundtrip():

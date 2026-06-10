@@ -457,6 +457,51 @@ async def _app_inline_grant_attenuation(env):
     assert [t["decision"] for t in allowed["trace"]] == ["call"], allowed
 
 
+async def _app_max_calls_inherits_parent_counts(env):
+    """An inline app cannot reset an already-consumed maxCalls budget: the
+    parent env's call counts seed the child agent's state (parity with Sub)."""
+
+    async def seed_llm(brain, value):  # noqa: ANN001
+        if brain.name == "seeded_app_ctrl":
+            return {"tool": "srv/double", "input": value["input"]}
+        return await _llm(brain, value)
+
+    agents = {
+        "seeded_app_ctrl": {
+            "config": {"maxRounds": 3, "budget": {"cost": 1000}},
+            "grantedTools": ["srv/double"],
+        },
+    }
+    parent = freeze(
+        seq(
+            call(mcp("srv", "double")),
+            app("seeded_app_ctrl", tools=["srv/double"], budget=Budget(cost=1000)),
+        ),
+        _snapshot(),
+    )
+
+    async with _worker(
+        env,
+        task_queue="ca-app-seeded",
+        agents=agents,
+        llm=seed_llm,
+        extra_brains=(Brain(name="seeded_app_ctrl", model="test", system="seeded app"),),
+    ):
+        res = await run_flow(
+            env.client,
+            parent.flow.to_json(),
+            manifest_to_json(parent.manifest),
+            session_id=f"appseed-{uuid.uuid4()}",
+            input=5,
+            task_queue="ca-app-seeded",
+            max_call_limits={"srv/double": 1},
+        )
+
+    assert res["status"] == "denied", res
+    assert res["reason"] == "tool 'srv/double' exceeded maxCalls=1", res
+    assert res["trace"] == [], res
+
+
 async def _strict_controller_contract(env):
     async def malformed_llm(brain, value):  # noqa: ANN001
         if brain.name in {"strict_malformed_ctrl", "permissive_malformed_ctrl"}:
@@ -823,6 +868,7 @@ async def _run_all():
         await _human_gate_timeout(env)
         await _agent(env)
         await _app_inline_grant_attenuation(env)
+        await _app_max_calls_inherits_parent_counts(env)
         await _strict_controller_contract(env)
         await _sub_max_calls_inherits_parent_counts(env)
         await _agent_session_store(env)

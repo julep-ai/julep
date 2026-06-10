@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
@@ -39,7 +39,7 @@ from .capabilities import Budget, CapabilityManifest
 from .contracts import CONSERVATIVE_DEFAULT, ToolContract, ToolManifest
 from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
-from .ir import Node
+from .ir import Node, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency, Shape
 from .staged import admit_plan, estimate_cost, validate_plan
 from .validate import Diagnostic
@@ -322,9 +322,18 @@ def would_exceed_budget(state: AgentState, next_cost: float, budget: Optional[Bu
     return state.spent + next_cost > budget.cost
 
 
-def should_continue_as_new(state: AgentState, cfg: AgentConfig) -> bool:
-    """True when the durable harness should truncate history via continue-as-new."""
-    return cfg.continue_as_new_after > 0 and state.round >= cfg.continue_as_new_after
+def should_continue_as_new(state: AgentState, cfg: AgentConfig, *, baseline_round: int = 0) -> bool:
+    """True when the durable harness should truncate history via continue-as-new.
+
+    ``baseline_round`` is the cumulative round count at segment entry. Carried
+    state keeps the cumulative ``state.round`` across truncations, so the
+    cadence is measured per segment: fire once the current segment has run
+    ``cfg.continue_as_new_after`` rounds past its baseline.
+    """
+    return (
+        cfg.continue_as_new_after > 0
+        and (state.round - baseline_round) >= cfg.continue_as_new_after
+    )
 
 
 def terminal_result(status: str, state: AgentState, output: Any = None,
@@ -439,6 +448,35 @@ def retry_max_attempts_for_contract(
     return idempotent_max_attempts if idempotent else write_max_attempts
 
 
+def manifest_contracts_for_agent(
+    manifest: ToolManifest,
+    granted_tools: Optional[Sequence[str]],
+    max_call_limits: Optional[dict[str, int]] = None,
+) -> dict[str, dict[str, Any]]:
+    """Serialize frozen contracts by tool key for the child agent workflow."""
+    wanted = None if granted_tools is None else set(granted_tools)
+    contracts: dict[str, dict[str, Any]] = {}
+    for frozen in manifest.values():
+        key = toolref_key(frozen.ref)
+        if wanted is None or key in wanted:
+            payload = frozen.contract.to_json()
+            if max_call_limits is not None and key in max_call_limits:
+                payload["maxCalls"] = int(max_call_limits[key])
+            contracts[key] = payload
+    return contracts
+
+
+def max_call_limits_from_contracts(
+    contracts: Optional[dict[str, dict[str, Any]]],
+) -> Optional[dict[str, int]]:
+    limits: dict[str, int] = {}
+    for tool, raw in (contracts or {}).items():
+        limit = raw.get("maxCalls", raw.get("max_calls"))
+        if limit is not None:
+            limits[tool] = int(limit)
+    return limits or None
+
+
 async def drive_agent_loop(
     *,
     input: Any,
@@ -551,6 +589,8 @@ __all__ = [
     "charge_tool_call",
     "authorize_subflow",
     "retry_max_attempts_for_contract",
+    "manifest_contracts_for_agent",
+    "max_call_limits_from_contracts",
     "drive_agent_loop",
     "generalize_trace_to_plan",
     "extract_plan",

@@ -44,16 +44,55 @@ result = await run_flow_dbos(
 across the chain. Human gates park on `DBOS.recv_async`; release with
 `submit_human_dbos(workflow_id, cid, value)`.
 
+## Running an agent
+
+`app` (agent-loop) nodes run on a dedicated `ca_agent` workflow. Dispatch one
+standalone with `run_agent_dbos` (the counterpart of starting Temporal's
+`AgentWorkflow` directly); an `app` node inside a flow reaches the same chain
+automatically through the env.
+
+```python
+from composable_agents.execution.dbos_backend import run_agent_dbos
+
+result = await run_agent_dbos(
+    "triage_controller",                 # registered agent spec / brain
+    session_id="agent-123",
+    input={"ticket": "..."},
+    config={"continueAsNewAfter": 20},   # optional overrides over the spec
+    granted_tools=["kb/search"],         # optional grant attenuation
+    queue=my_dbos_queue,                 # optional queue routing
+)
+# result: {"status", "output", "rounds", "cost", "trace", ...}
+```
+
+Segment-id convention: where Temporal calls `continue_as_new`, DBOS runs **one
+workflow per history segment** -- ids `agent-123`, `agent-123-seg1`,
+`agent-123-seg2`, ... A run with `continueAsNewAfter: N` starts a new segment
+every N completed rounds, so a run of R rounds spans `ceil(R / N)` segments.
+The whole `AgentState` (round, cost, trace, per-tool call counts) crosses
+segments inside the continuation payload, so budgets and `maxCalls` span the
+chain.
+
+Gates inside agent-invoked sub-flows park in the **agent segment's** workflow:
+release with `submit_human_dbos(segment_workflow_id, cid, value)` where the
+cid is `f"{session_id}-sub-{round}/{gate_node_id}@{n}"` (the inline child
+env's session-prefixed activation id).
+
+Limitation: the durable session-store path (`use_session_store` /
+`state_cursor`) is Temporal-only for now; on DBOS, state always crosses
+segments in the continuation payload.
+
 ## Differences from the Temporal backend
 
 | | Temporal | DBOS |
 |---|---|---|
 | race / hedge / quorum | supported | **rejected at dispatch** (no step cancellation) |
-| `app` (agent loop) nodes | child `AgentWorkflow` | **rejected at dispatch** (v1) |
+| `app` (agent loop) nodes | child `AgentWorkflow` + continue-as-new | inline `ca_agent` workflow per segment (`run_agent_dbos` / app nodes in flows) |
 | Brain retries | engine retry (4 attempts) | **none -- your `LlmCaller` owns resilience** |
 | Hand retries | per-contract `RetryPolicy` | quantized: idempotent 5 / write 3 attempts |
 | Sub-flows | child workflow | inline in the parent workflow |
 | Chaining | `continue_as_new` | one workflow per segment |
+| Agent state across segments | inline or durable session store | continuation payload only (session store is Temporal-only) |
 | Projection | interceptor over history | in-env emit + `set_projection_sink` |
 
 `assert_dbos_executable(flow)` runs the rejection scan; call it at deploy time

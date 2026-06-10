@@ -10,6 +10,10 @@ tenant / threshold.
 
 from __future__ import annotations
 
+import pytest
+
+pytest.importorskip("temporalio")
+
 from temporalio.converter import DataConverter
 
 from composable_agents.execution import worker as worker_mod

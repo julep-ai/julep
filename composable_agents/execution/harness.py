@@ -55,7 +55,7 @@ with workflow.unsafe.imports_passed_through():
     from ..continuation import continuation_value, is_continuation
     from ..contracts import ToolContract, manifest_from_json
     from ..errors import ComposableAgentsError
-    from ..ir import Node, toolref_key
+    from ..ir import Node
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import get_pure as _get_pure_from_registry
     from .policy import ExecutionPolicy
@@ -123,35 +123,6 @@ _BRAIN_RETRY = RetryPolicy(
     maximum_attempts=4,
     non_retryable_error_types=_NON_RETRYABLE,
 )
-
-
-def _manifest_contracts_for_agent(
-    manifest,
-    granted_tools: Optional[Sequence[str]],
-    max_call_limits: Optional[dict[str, int]] = None,
-) -> dict[str, dict[str, Any]]:
-    """Serialize frozen contracts by tool key for the child agent workflow."""
-    wanted = None if granted_tools is None else set(granted_tools)
-    contracts: dict[str, dict[str, Any]] = {}
-    for frozen in manifest.values():
-        key = toolref_key(frozen.ref)
-        if wanted is None or key in wanted:
-            payload = frozen.contract.to_json()
-            if max_call_limits is not None and key in max_call_limits:
-                payload["maxCalls"] = int(max_call_limits[key])
-            contracts[key] = payload
-    return contracts
-
-
-def _max_call_limits_from_contracts(
-    contracts: Optional[dict[str, dict[str, Any]]],
-) -> Optional[dict[str, int]]:
-    limits: dict[str, int] = {}
-    for tool, raw in (contracts or {}).items():
-        limit = raw.get("maxCalls", raw.get("max_calls"))
-        if limit is not None:
-            limits[tool] = int(limit)
-    return limits or None
 
 
 # --------------------------------------------------------------------------- #
@@ -337,11 +308,20 @@ class _TemporalEnv:
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
             if tools is not None:
-                granted_contracts = _manifest_contracts_for_agent(
+                granted_contracts = al.manifest_contracts_for_agent(
                     self.manifest,
                     granted_tools,
                     self._max_call_limits,
                 )
+
+        # Parity with run_sub: parent call counts seed the child agent so an
+        # app node cannot reset an already-consumed maxCalls budget. Counts
+        # flow one-way; the child's counts are not merged back.
+        state_json = (
+            al.AgentState(last=value, call_counts=dict(self._call_counts)).to_json()
+            if self._call_counts
+            else None
+        )
 
         return await workflow.execute_child_workflow(
             AgentWorkflow.run,
@@ -354,6 +334,7 @@ class _TemporalEnv:
                 granted_tools_unconstrained=granted_tools_unconstrained,
                 granted_subflows=granted_subflows,
                 granted_contracts=granted_contracts,
+                state=state_json,
                 policy=self._policy.to_json(),
             ),
             id=child_id,
@@ -630,6 +611,11 @@ class AgentWorkflow:
         else:
             state = al.AgentState(last=inp.input)
 
+        # Per-segment continue-as-new cadence: carried state keeps the
+        # cumulative round count, so truncation is measured from this
+        # segment's entry round, not from zero.
+        baseline_round = state.round
+
         while True:
             if state.round >= cfg.max_rounds:
                 return al.terminal_result("max_rounds", state)
@@ -733,7 +719,7 @@ class AgentWorkflow:
                         input=sub_input,
                         ref=ref,
                         policy=policy.to_json(),
-                        max_call_limits=_max_call_limits_from_contracts(contracts),
+                        max_call_limits=al.max_call_limits_from_contracts(contracts),
                         call_counts=dict(state.call_counts),
                     ),
                     id=child_id,
@@ -764,7 +750,7 @@ class AgentWorkflow:
             state.round += 1
 
             # 5) §6 seam: truncate history by continuing as new with carried state.
-            if al.should_continue_as_new(state, cfg):
+            if al.should_continue_as_new(state, cfg, baseline_round=baseline_round):
                 if inp.use_session_store:
                     state_hash = al.state_fingerprint(state)
                     cursor = await workflow.execute_activity(

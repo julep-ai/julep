@@ -160,13 +160,12 @@ def test_freeze_binds_raw_app_inline_tools_to_manifest() -> None:
 
 
 def test_deployed_agent_contract_derivation_reads_manifest_contracts() -> None:
-    pytest.importorskip("temporalio")
-    from composable_agents.execution.harness import _manifest_contracts_for_agent
+    from composable_agents.agent_loop import manifest_contracts_for_agent
 
     agent = Agent("m", tools=[a_read_tool], name="agent_temporal_contract")
     deployment = agent.deployment()
 
-    contracts = _manifest_contracts_for_agent(deployment.manifest, {a_read_tool.name})
+    contracts = manifest_contracts_for_agent(deployment.manifest, {a_read_tool.name})
 
     assert contracts[a_read_tool.name] == {
         "effect": Effect.READ.value,

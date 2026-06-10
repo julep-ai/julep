@@ -100,6 +100,20 @@ def test_continue_as_new_policy():
     assert should_continue_as_new(AgentState(round=99), AgentConfig(continue_as_new_after=0)) is False
 
 
+def test_continue_as_new_policy_is_segment_local():
+    cfg = AgentConfig(continue_as_new_after=5)
+    # baseline_round=0 keeps the original cadence.
+    assert should_continue_as_new(AgentState(round=5), cfg, baseline_round=0) is True
+    assert should_continue_as_new(AgentState(round=4), cfg, baseline_round=0) is False
+    # A carried cumulative round only fires after N rounds past the segment baseline.
+    assert should_continue_as_new(AgentState(round=6), cfg, baseline_round=5) is False
+    assert should_continue_as_new(AgentState(round=9), cfg, baseline_round=5) is False
+    assert should_continue_as_new(AgentState(round=10), cfg, baseline_round=5) is True
+    assert should_continue_as_new(
+        AgentState(round=99), AgentConfig(continue_as_new_after=0), baseline_round=5
+    ) is False
+
+
 def test_config_from_capabilities_inherits_budget():
     caps = CapabilityManifest.from_dict({"budget": {"cost": 12.0}})
     cfg = AgentConfig.from_capabilities(caps, max_rounds=7)

@@ -1,10 +1,15 @@
 import json
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:  # mypy targets 3.10 (no typing.assert_type); runtime is 3.12
+if TYPE_CHECKING:  # mypy targets 3.10 (no typing.assert_type); runtime may be 3.10 too
     from typing_extensions import assert_type
 else:
-    from typing import assert_type
+    try:
+        from typing import assert_type
+    except ImportError:  # Python 3.10: assert_type is a static-only helper; no-op at runtime
+
+        def assert_type(val, typ, /):
+            return val
 
 from composable_agents import dsl
 from composable_agents.dsl import native
