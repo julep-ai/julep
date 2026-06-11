@@ -304,10 +304,12 @@ def test_linear_authored_flow_dry_run_matches_combinator_flow() -> None:
 
 def test_handle_bool_iter_and_attribute_errors_are_actionable() -> None:
     handle = Handle.synthetic("source")
-    with pytest.raises(TypeError, match=r"Handle truthiness.*cond\(.*<synthetic>:1"):
+    with pytest.raises(TypeError, match=r"Handle truthiness.*<synthetic>:1.*cond\(") as truthiness:
         bool(handle)
-    with pytest.raises(TypeError, match=r"Handle iteration.*each\(.*<synthetic>:1"):
+    assert str(truthiness.value).count("<synthetic>:1") == 1
+    with pytest.raises(TypeError, match=r"Handle iteration.*<synthetic>:1.*each\(") as iteration:
         iter(handle)
+    assert str(iteration.value).count("<synthetic>:1") == 1
     with pytest.raises(AttributeError, match=r"Handle attribute access.*source.foo.*Use source\['foo'\]"):
         attr = "foo"
         getattr(handle, attr)
@@ -333,6 +335,248 @@ def test_rebinding_step_output_names_location_and_hint() -> None:
         def bad(source: dict[str, Any]) -> dict[str, Any]:
             source = p51_identity(source)
             return source
+
+
+def test_unused_flow_parameter_is_rejected_with_location_and_policy() -> None:
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"@flow function 'bad' has unused parameter 'extra' at .*test_define_frontend.py:\d+.*"
+            r"@flow uses single-assignment dataflow; remove the parameter or pass it to a step"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any], extra: dict[str, Any]) -> dict[str, Any]:
+            copied = p51_identity(source)
+            return copied
+
+
+def test_flow_returning_none_or_plain_value_names_return_site_and_alternative() -> None:
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"@flow function 'returns_none' must return a Handle at .*test_define_frontend.py:\d+.*"
+            r"return the result of a Tool, Pure, think\(\.\.\.\), h\[key\], or h1 \| h2"
+        ),
+    ):
+
+        @flow
+        def returns_none(source: dict[str, Any]) -> None:
+            _copied = p51_identity(source)
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"@flow function 'returns_plain' must return a Handle at .*test_define_frontend.py:\d+.*"
+            r"return the result of a Tool, Pure, think\(\.\.\.\), h\[key\], or h1 \| h2"
+        ),
+    ):
+
+        @flow
+        def returns_plain(source: dict[str, Any]) -> dict[str, Any]:
+            _copied = p51_identity(source)
+            return {"plain": True}
+
+
+def test_returning_unsaturated_bound_flow_names_return_site_and_each_alternative() -> None:
+    @flow
+    def two_params(source: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+        merged = source | config
+        return merged
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"unsaturated @flow application cannot be returned as runtime data "
+            r"at .*test_define_frontend.py:\d+.*"
+            r"apply it to a Handle or pass it directly to each\(body, items"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> object:
+            return two_params(config={"limit": 3})
+
+
+def test_using_unsaturated_bound_flow_as_value_names_site_and_alternative() -> None:
+    @flow
+    def two_params(source: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+        merged = source | config
+        return merged
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"unsaturated @flow application is define-time only "
+            r"at .*test_define_frontend.py:\d+.*"
+            r"apply it to a Handle or pass it directly to each\(body, items"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            partial = two_params(config={"limit": 3})
+            merged = source | partial
+            return merged
+
+
+def test_truthiness_and_iteration_inside_flow_point_at_offending_source() -> None:
+    with pytest.raises(
+        TypeError,
+        match=r"Handle truthiness is not runtime data at .*test_define_frontend.py:\d+.*use cond\(",
+    ):
+
+        @flow
+        def bad_bool(source: dict[str, Any]) -> dict[str, Any]:
+            if source:
+                return source
+            return source
+
+    with pytest.raises(
+        TypeError,
+        match=r"Handle iteration is not runtime data at .*test_define_frontend.py:\d+.*use each\(",
+    ):
+
+        @flow
+        def bad_iter(source: dict[str, Any]) -> dict[str, Any]:
+            for _item in source:
+                return source
+            return source
+
+
+def test_unregistered_plain_function_message_points_to_registration_alternatives() -> None:
+    def plain(value: object) -> object:
+        return value
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"unregistered callable 'plain' at .*test_define_frontend.py:\d+.*"
+            r"decorate it with @pure or @tool, or call think\(\.\.\.\) for a brain step"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> object:
+            value = plain(source)
+            return value
+
+
+def test_foreign_scope_handle_capture_is_rejected_at_define_time() -> None:
+    foreign = Handle.synthetic("foreign")
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"foreign-scope handle 'foreign' captured in @flow 'bad' "
+            r"at .*test_define_frontend.py:\d+.*"
+            r"pass it as a parameter or bind it through each\(body, items"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            merged = source | foreign
+            return merged
+
+
+def test_non_json_and_secret_shaped_const_captures_are_define_errors() -> None:
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"bound value 'limit' must be canonical JSON at .*test_define_frontend.py:\d+.*"
+            r"use JSON primitives, lists, and dicts only"
+        ),
+    ):
+
+        @flow
+        def bad_non_json(source: dict[str, Any]) -> dict[str, Any]:
+            copied = p51_echo_with_limit(source, limit=object())
+            return copied
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"bound value 'api_key' looks secret-shaped at .*test_define_frontend.py:\d+.*"
+            r"secrets belong in environment-backed tools"
+        ),
+    ):
+
+        @flow
+        def bad_secret(source: dict[str, Any]) -> dict[str, Any]:
+            copied = p51_echo_with_limit(source, api_key="sk-test")
+            return copied
+
+
+def test_oversized_each_const_capture_warns_with_variable_name() -> None:
+    @flow
+    def label_one(cluster: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+        merged = cluster | config
+        return merged
+
+    large_config = {"payload": "x" * 5000}
+
+    with pytest.warns(UserWarning, match=r"const capture 'config' is \d+ bytes"):
+
+        @flow
+        def labels(source: dict[str, Any]) -> dict[str, Any]:
+            clusters = source["clusters"]
+            out = each(label_one(config=large_config), clusters)
+            return out
+
+
+def test_tuple_unpacking_handle_assignment_is_rejected_with_documented_alternative() -> None:
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"tuple-unpacking targets cannot bind Handle results at .*test_define_frontend.py:\d+.*"
+            r"assign the step to one name or pass name="
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            left, right = p51_identity(source)
+            return left | right
+
+
+def test_multiline_expression_position_name_escape_and_exec_fallbacks() -> None:
+    @flow
+    def multiline(source: dict[str, Any]) -> dict[str, Any]:
+        result = p51_outer(
+            p51_inner(
+                source,
+            ),
+        )
+        return result
+
+    assert any(step.ref == "p51.outer" and step.output == "result" for step in multiline.graph.steps)
+
+    @flow
+    def expression_position(source: dict[str, Any]) -> dict[str, Any]:
+        return p51_inner(source)
+
+    assert expression_position.graph.output_name.startswith("p51_inner_")
+
+    @flow
+    def escaped(source: dict[str, Any]) -> dict[str, Any]:
+        captured = p51_inner(source, name="explicit_name")
+        return captured
+
+    assert escaped.graph.output_name == "explicit_name"
+
+    namespace: dict[str, Any] = {"flow": flow, "p51_inner": p51_inner}
+    exec(
+        "from __future__ import annotations\n"
+        "@flow\n"
+        "def repl_like(source: dict[str, object]) -> dict[str, object]:\n"
+        "    return p51_inner(source)\n",
+        namespace,
+    )
+    repl_like = namespace["repl_like"]
+
+    assert repl_like.graph.output_name == "p51_inner_1"
 
 
 def test_public_flow_name_is_decorator_and_as_flow_is_lift() -> None:

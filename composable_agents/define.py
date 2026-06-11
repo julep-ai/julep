@@ -1,14 +1,39 @@
 """Define-by-construction ``@flow`` frontend.
 
-The decorator runs the authored function once with :class:`Handle` values. Calls
-on those handles append steps to a :mod:`composable_agents.dag.Graph`; lowering
-then goes through the DAG compiler like every other frontend.
+``@flow`` is the primary authoring surface for composable-agents. The decorator
+runs the user's function once at definition time with :class:`Handle` values:
+registered tools, registered pures, ``think(...)``, ``cond(...)``,
+``switch(...)``, ``each(...)``, and ``reschedule(...)`` append graph steps rather
+than executing runtime work. Handles support only the deterministic dataflow
+operators ``h1 | h2`` (``std.merge``) and ``h["key"]`` (``std.pluck``). Lowering
+always goes through :mod:`composable_agents.dag` and the compiler; this frontend
+does not emit wire-format IR directly.
+
+Determinism contract: every callable used on a Handle must be registered by its
+raw function source (``@tool`` or ``@pure``), every captured constant must be
+canonical JSON, and secret-shaped config must stay in environment-backed tools
+rather than the frozen flow artifact. Static binding is capture-by-value for
+JSON and capture-by-handle only from the enclosing graph. Names are
+single-assignment graph fields derived from whole-function AST source when
+available, with ``name=`` as the explicit escape hatch and deterministic
+fallback names for REPL/``exec`` contexts.
+
+Define-time diagnostics are part of the API: truthiness and iteration on
+Handles point to ``cond``/``each``; unregistered callables point to
+``@pure``/``@tool`` registration; unsaturated flows point to applying them or
+passing them directly to ``each``; rebinding, unused parameters, foreign-scope
+handle captures, invalid/secret/oversized captures, tuple-unpacking Handle
+targets, and non-Handle returns all include a :class:`SourceSpan` when source is
+available. Unused ``@flow`` parameters are blocking errors, not warnings,
+because they otherwise freeze a misleading API and make closure conversion
+ambiguous.
 """
 
 from __future__ import annotations
 
 import ast
 import inspect
+import math
 import re
 import textwrap
 from collections import defaultdict
@@ -20,6 +45,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, overload
 from . import dag, dsl
 from .flow import FlowLike
 from .ir import SLEEP_TOOL, Ann, CallStep, NativeTool, Node, SourceSpan, canonical_json
+from .validate import _SECRET_KEY_RE
 
 if TYPE_CHECKING:
     from .dotctx import Brain
@@ -55,6 +81,8 @@ class _SourceMap:
         self._tree: Optional[ast.FunctionDef | ast.AsyncFunctionDef] = None
         self._globals = fn.__globals__
         self._closure = inspect.getclosurevars(fn)
+        self._param_lines: dict[str, int] = {}
+        self._return_lines: list[int] = []
         self._parse()
 
     def _parse(self) -> None:
@@ -72,7 +100,11 @@ class _SourceMap:
         if not functions:
             return
         self._tree = functions[0]
+        for arg in self._tree.args.args:
+            self._param_lines[arg.arg] = self._actual_line(arg)
         for node in ast.walk(self._tree):
+            if isinstance(node, ast.Return):
+                self._return_lines.append(self._actual_line(node))
             if not isinstance(node, ast.Assign):
                 continue
             target_names = [target.id for target in node.targets if isinstance(target, ast.Name)]
@@ -118,13 +150,21 @@ class _SourceMap:
             return
         handle_names = set(param_names)
         for stmt in self._tree.body:
+            if isinstance(stmt, ast.Assign) and any(isinstance(target, (ast.Tuple, ast.List)) for target in stmt.targets):
+                if self._expr_produces_handle(stmt.value, handle_names):
+                    raise DefineError(
+                        "tuple-unpacking targets cannot bind Handle results"
+                        f"{_source_suffix(self._span(stmt))}; "
+                        "assign the step to one name or pass name=... to the step"
+                    )
             for call in [node for node in ast.walk(stmt) if isinstance(node, ast.Call)]:
                 if self._call_uses_handle(call, handle_names) and not self._is_allowed_call(call):
                     name = self._call_name(call)
                     raise DefineError(
                         "unregistered callable "
                         f"{name!r}{_source_suffix(self._span(call))}; "
-                        "use a registered Tool, Pure, @flow function, or think(...)"
+                        "decorate it with @pure or @tool, or call think(...) for a brain step; "
+                        "registered Tool, Pure, and @flow functions are the only direct Handle callables"
                     )
             if isinstance(stmt, ast.Assign):
                 target_names = [target.id for target in stmt.targets if isinstance(target, ast.Name)]
@@ -150,19 +190,41 @@ class _SourceMap:
         return _is_tool(target) or _is_pure(target) or isinstance(target, FlowDef)
 
     def _resolve_call_target(self, call: ast.Call) -> Any:
-        if not isinstance(call.func, ast.Name):
-            return None
-        name = call.func.id
-        if name in self._closure.nonlocals:
-            return self._closure.nonlocals[name]
-        if name in self._closure.globals:
-            return self._closure.globals[name]
-        return self._globals.get(name)
+        return self._resolve_expr(call.func)
+
+    def _resolve_expr(self, expr: ast.AST) -> Any:
+        if isinstance(expr, ast.Name):
+            name = expr.id
+            if name in self._closure.nonlocals:
+                return self._closure.nonlocals[name]
+            if name in self._closure.globals:
+                return self._closure.globals[name]
+            return self._globals.get(name)
+        if isinstance(expr, ast.Attribute):
+            parent = self._resolve_expr(expr.value)
+            if parent is None:
+                return None
+            return getattr(parent, expr.attr, None)
+        return None
 
     def _call_name(self, call: ast.Call) -> str:
-        if isinstance(call.func, ast.Name):
-            return call.func.id
         return ast.unparse(call.func)
+
+    def return_span(self) -> SourceSpan:
+        if self._return_lines:
+            return self._span_for_line(self._return_lines[-1])
+        if self._source_lines:
+            return self._span_for_line(self._base_line + len(self._source_lines) - 1)
+        return self._span_for_line(1)
+
+    def param_span(self, name: str) -> SourceSpan:
+        return self._span_for_line(self._param_lines.get(name, self._base_line))
+
+    def current_span(self, fallback: Optional[SourceSpan]) -> Optional[SourceSpan]:
+        frame = _CTX_STACK[-1].frame() if _CTX_STACK else None
+        if frame is not None:
+            return self._span_for_line(frame.f_lineno)
+        return fallback
 
     def call_site(self, frame: Optional[FrameType], ref: str) -> _CallSite:
         if frame is not None:
@@ -223,6 +285,15 @@ class _BuildContext:
         self.bound_names.add(name)
         return name
 
+    def validate_current_handle(self, handle: "Handle", span: Optional[SourceSpan]) -> None:
+        if handle.graph is self.graph:
+            return
+        raise DefineError(
+            f"foreign-scope handle {handle.label!r} captured in @flow {self.flow_def.name!r}"
+            f"{_source_suffix(span)}; "
+            "pass it as a parameter or bind it through each(body, items, ...) closure conversion"
+        )
+
 
 class Handle:
     """Authoring-time data handle produced by ``@flow`` step applications."""
@@ -239,10 +310,12 @@ class Handle:
         return cls(label, None, SourceSpan(file="<synthetic>", line=1, function=None))
 
     def __or__(self, other: object) -> "Handle":
-        rhs = _ensure_handle(other)
         ctx = _current_context()
         site = _call_site(ctx, "std.merge")
         span = site.span
+        ctx.validate_current_handle(self, span)
+        rhs = _ensure_handle(other, span)
+        ctx.validate_current_handle(rhs, span)
         output = ctx.output_name("merge", None, site)
         ctx.graph.add_step(
             dag.StepKind.PURE,
@@ -257,6 +330,7 @@ class Handle:
         ctx = _current_context()
         site = _call_site(ctx, "std.pluck")
         span = site.span
+        ctx.validate_current_handle(self, span)
         output = ctx.output_name(str(key), None, site)
         ctx.graph.add_step(
             dag.StepKind.PURE,
@@ -275,15 +349,19 @@ class Handle:
         )
 
     def __bool__(self) -> bool:
+        source = _active_source(self.source)
+        suffix = _source_suffix(source)
         raise TypeError(
-            "Handle truthiness is not runtime data; "
-            f"use cond(pred, input, then=..., orelse=...){_source_suffix(self.source)}."
+            f"Handle truthiness is not runtime data{suffix}; "
+            "use cond(pred, input, then=..., orelse=...) instead."
         )
 
     def __iter__(self) -> object:
+        source = _active_source(self.source)
+        suffix = _source_suffix(source)
         raise TypeError(
-            "Handle iteration is not runtime data; "
-            f"use each(body, items, max_parallel=..., reducer=...){_source_suffix(self.source)}."
+            f"Handle iteration is not runtime data{suffix}; "
+            "use each(body, items, max_parallel=..., reducer=...) instead."
         )
 
     def __repr__(self) -> str:
@@ -313,15 +391,20 @@ class FlowDef(FlowLike[Any, Any]):
         finally:
             _CTX_STACK.pop()
         if isinstance(result, BoundFlow):
+            span = self._source_map.return_span()
             raise DefineError(
-                "unsaturated @flow application cannot be returned as runtime data; "
-                "pass it directly to each(...) or call it with a Handle"
+                "unsaturated @flow application cannot be returned as runtime data"
+                f"{_source_suffix(span)}; "
+                "apply it to a Handle or pass it directly to each(body, items, ...)"
             )
         if not isinstance(result, Handle):
+            span = self._source_map.return_span()
             raise DefineError(
-                f"@flow function {self.name!r} must return a Handle; "
+                f"@flow function {self.name!r} must return a Handle"
+                f"{_source_suffix(span)}; "
                 "return the result of a Tool, Pure, think(...), h[key], or h1 | h2"
             )
+        self._validate_used_params(result)
         if result.label == self.graph.input_name and self.graph.steps:
             raise DefineError(
                 f"@flow function {self.name!r} returns its own input "
@@ -330,6 +413,31 @@ class FlowDef(FlowLike[Any, Any]):
                 "merge the input into the returned value with input | step_output"
             )
         self.graph.output_name = result.label
+
+    def _validate_used_params(self, result: Handle) -> None:
+        used: set[str] = set()
+        if result.label in self.param_names:
+            used.add(result.label)
+        for step in self.graph.steps:
+            if not step.inputs and step.kind in {
+                dag.StepKind.TOOL,
+                dag.StepKind.THINK,
+                dag.StepKind.PURE,
+                dag.StepKind.PASSTHROUGH,
+            }:
+                used.add(self.graph.input_name)
+            for edge in step.inputs:
+                used.add(edge.source)
+            if step.branch_subject is not None:
+                used.add(step.branch_subject)
+        for name in self.param_names:
+            if name not in used:
+                span = self._source_map.param_span(name)
+                raise DefineError(
+                    f"@flow function {self.name!r} has unused parameter {name!r}"
+                    f"{_source_suffix(span)}; "
+                    "@flow uses single-assignment dataflow; remove the parameter or pass it to a step"
+                )
 
     def __call__(self, *args: Any, **kwargs: Any) -> Handle | "BoundFlow":
         supplied = self._supplied(args, kwargs)
@@ -443,9 +551,10 @@ def cond(
     need to author env-aware predicates.
     """
     ctx = _current_context()
-    handle = _ensure_handle(subject)
     site = _call_site(ctx, "cond")
     span = site.span
+    handle = _ensure_handle(subject, span)
+    ctx.validate_current_handle(handle, span)
     pred_name = _registered_pure_name(pred, "cond predicate", span)
     then_graph, _ = _flow_graph_and_captures(then, "cond then arm", span, allow_consts=False)
     else_graph, _ = _flow_graph_and_captures(orelse, "cond orelse arm", span, allow_consts=False)
@@ -475,9 +584,10 @@ def switch(
     internal ``__branch__`` env field consumed by ``std.branch_selector``.
     """
     ctx = _current_context()
-    handle = _ensure_handle(subject)
     site = _call_site(ctx, "switch")
     span = site.span
+    handle = _ensure_handle(subject, span)
+    ctx.validate_current_handle(handle, span)
     selector_name = _registered_pure_name(selector, "switch selector", span)
     if not cases:
         raise DefineError(
@@ -524,9 +634,10 @@ def each(
         )
 
     ctx = _current_context()
-    item_handle = _ensure_handle(items)
     site = _call_site(ctx, "each")
     span = site.span
+    item_handle = _ensure_handle(items, span)
+    ctx.validate_current_handle(item_handle, span)
     body_graph, consts = _flow_graph_and_captures(body, "each body", span, allow_consts=True)
     reducer_name = None if reducer is None else _registered_pure_name(reducer, "each reducer", span)
     output = ctx.output_name("each", None, site)
@@ -558,9 +669,10 @@ def reschedule(
     re-enqueue dirty rows.
     """
     ctx = _current_context()
-    current = _ensure_handle(state)
     site = _call_site(ctx, "reschedule")
     span = site.span
+    current = _ensure_handle(state, span)
+    ctx.validate_current_handle(current, span)
     seconds = _reschedule_seconds(after_s=after_s, after=after, source=span)
     if mark is not None:
         if not _is_tool(mark):
@@ -627,20 +739,22 @@ def _append_step(
     **kwargs: Any,
 ) -> Handle:
     ctx = _current_context()
+    site = _call_site(ctx, ref)
+    span = site.span
+    ctx.validate_current_handle(handle, span)
     explicit_name = _pop_optional_name(kwargs)
     ann = _ann_from_kwargs(kwargs)
     consts = {key: value for key, value in kwargs.items() if not isinstance(value, Handle)}
     handle_kwargs = {key: value for key, value in kwargs.items() if isinstance(value, Handle)}
     if handle_kwargs:
         raise DefineError(
-            f"step {ref!r} got Handle keyword arguments; use h1 | h2 to build the flowing input"
+            f"step {ref!r} got Handle keyword arguments{_source_suffix(span)}; "
+            "use h1 | h2 to build the flowing input"
         )
     current = handle
     if consts:
         for key, value in consts.items():
-            _validate_json_value(key, value)
-        site = _call_site(ctx, ref)
-        span = site.span
+            _validate_json_value(key, value, span)
         bind_output = ctx.source_map.fallback_name(f"{ref}_bind")
         ctx.bound_names.add(bind_output)
         ctx.graph.add_step(
@@ -652,9 +766,6 @@ def _append_step(
             args={"consts": consts},
         )
         current = Handle(bind_output, ctx.graph, span)
-    else:
-        site = _call_site(ctx, ref)
-        span = site.span
     output = ctx.output_name(ref, explicit_name, site)
     ctx.graph.add_step(
         kind,
@@ -673,6 +784,7 @@ def _apply_flowdef(flow_def: FlowDef, handle: Handle) -> Handle:
     ctx = _current_context()
     site = _call_site(ctx, flow_def.name)
     span = site.span
+    ctx.validate_current_handle(handle, span)
     output = ctx.output_name(flow_def.name, None, site)
     if not flow_def.graph.steps or flow_def.graph.output_name == flow_def.graph.input_name:
         ctx.graph.add_step(
@@ -826,15 +938,19 @@ def _single_input(handle: Handle, input_name: str) -> list[str]:
     return [] if handle.label == input_name else [handle.label]
 
 
-def _ensure_handle(value: object) -> Handle:
+def _ensure_handle(value: object, source: Optional[SourceSpan] = None) -> Handle:
     if isinstance(value, Handle):
         return value
     if isinstance(value, BoundFlow):
         raise DefineError(
-            "unsaturated @flow application is define-time only; "
-            "pass it to each(...) or supply a Handle for the remaining parameter"
+            "unsaturated @flow application is define-time only"
+            f"{_source_suffix(source)}; "
+            "apply it to a Handle or pass it directly to each(body, items, ...)"
         )
-    raise DefineError("expected a Handle; pass runtime values through @flow parameters")
+    raise DefineError(
+        f"expected a Handle{_source_suffix(source)}; "
+        "pass runtime values through @flow parameters"
+    )
 
 
 def _contains_handle(args: tuple[Any, ...], kwargs: dict[str, Any]) -> bool:
@@ -978,15 +1094,63 @@ def _reschedule_seconds(
     )
 
 
-def _validate_json_value(name: str, value: Any) -> None:
+def _validate_json_value(name: str, value: Any, source: Optional[SourceSpan] = None) -> None:
     if isinstance(value, Handle):
         return
-    if not isinstance(value, _JSON):
-        raise DefineError(f"bound value {name!r} must be canonical JSON")
+    secret_path = _secret_path(name, value)
+    if secret_path is not None:
+        raise DefineError(
+            f"bound value {secret_path!r} looks secret-shaped{_source_suffix(source)}; "
+            "secrets belong in environment-backed tools or run principals, not frozen flow constants"
+        )
+    if not _json_value_ok(value):
+        raise DefineError(
+            f"bound value {name!r} must be canonical JSON{_source_suffix(source)}; "
+            "use JSON primitives, lists, and dicts only"
+        )
     try:
         canonical_json(value)
     except TypeError as exc:
-        raise DefineError(f"bound value {name!r} must be canonical JSON") from exc
+        raise DefineError(
+            f"bound value {name!r} must be canonical JSON{_source_suffix(source)}; "
+            "use JSON primitives, lists, and dicts only"
+        ) from exc
+
+
+def _json_value_ok(value: Any) -> bool:
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _json_value_ok(child) for key, child in value.items())
+    if isinstance(value, list):
+        return all(_json_value_ok(item) for item in value)
+    if value is None or isinstance(value, (str, bool, int)):
+        return True
+    if isinstance(value, float):
+        return math.isfinite(value)
+    return False
+
+
+def _secret_path(name: str, value: Any) -> Optional[str]:
+    if _SECRET_KEY_RE.search(name):
+        return name
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if _SECRET_KEY_RE.search(str(key)):
+                return f"{name}.{key}"
+            found = _secret_path(f"{name}.{key}", child)
+            if found is not None:
+                return found
+    if isinstance(value, list):
+        for index, child in enumerate(value):
+            found = _secret_path(f"{name}[{index}]", child)
+            if found is not None:
+                return found
+    return None
+
+
+def _active_source(fallback: Optional[SourceSpan]) -> Optional[SourceSpan]:
+    if not _CTX_STACK:
+        return fallback
+    return _CTX_STACK[-1].source_map.current_span(fallback)
 
 
 def _brain_name(value: str | Brain) -> str:
