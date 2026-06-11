@@ -90,6 +90,46 @@ def dag_decorate_decision(decision: dict[str, Any]) -> dict[str, Any]:
     return decorated
 
 
+@pure("dag.input_identity")
+def dag_input_identity(value: dict[str, Any]) -> dict[str, Any]:
+    return {"input": value["episode_id"]}
+
+
+@pure("dag.process_source")
+def dag_process_source(value: dict[str, Any]) -> dict[str, Any]:
+    return {"proc": value["episode_id"]}
+
+
+@pure("dag.combine_input_and_wrote")
+def dag_combine_input_and_wrote(value: dict[str, Any]) -> dict[str, Any]:
+    return {"input": value["episode_id"], "wrote": value["wrote"]}
+
+
+@pure("dag.combine_input_and_proc")
+def dag_combine_input_and_proc(value: dict[str, Any]) -> dict[str, Any]:
+    return {"input": value["episode_id"], "proc": value["proc"]}
+
+
+@pure("dag.branch_true_from_source")
+def dag_branch_true_from_source(value: dict[str, Any]) -> dict[str, Any]:
+    return {"branch": "true", "episode_id": value["episode_id"]}
+
+
+@pure("dag.branch_false_const")
+def dag_branch_false_const(value: dict[str, Any]) -> dict[str, Any]:
+    return {"branch": "false"}
+
+
+@pure("dag.input_flag")
+def dag_input_flag(value: dict[str, Any]) -> bool:
+    return bool(value["__input__"]["found"])
+
+
+@pure("dag.branch_from_input")
+def dag_branch_from_input(value: dict[str, Any]) -> dict[str, Any]:
+    return {"branch": value["episode_id"]}
+
+
 @pure("dag.make_cluster_label")
 def dag_make_cluster_label(value: dict[str, Any]) -> dict[str, Any]:
     return {
@@ -318,6 +358,419 @@ def test_compile_rejects_cycles_and_names_cycle_members() -> None:
 
     with pytest.raises(GraphDefinitionError, match="cycle.*first.*second"):
         compile(graph)
+
+
+def test_compile_rejects_forward_referenced_edges_across_write_barriers() -> None:
+    from composable_agents.dag import Graph, GraphDefinitionError, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.PURE, "dag.input_identity", inputs=["late_read"], output="pure_result")
+    graph.add_step(
+        StepKind.TOOL,
+        "cas_write",
+        output="write_result",
+        contract=WRITE_CONTRACT,
+    )
+    graph.add_step(
+        StepKind.TOOL,
+        "verify_read",
+        output="late_read",
+        contract=READ_CONTRACT,
+    )
+
+    with pytest.raises(
+        GraphDefinitionError,
+        match="forward input edge.*pure_result.*late_read.*dependency order",
+    ):
+        compile(graph)
+
+    two_writes = Graph()
+    two_writes.add_step(
+        StepKind.TOOL,
+        "write_two",
+        inputs=["write_one_result"],
+        output="write_two_result",
+        contract=WRITE_CONTRACT,
+    )
+    two_writes.add_step(
+        StepKind.TOOL,
+        "write_one",
+        output="write_one_result",
+        contract=WRITE_CONTRACT,
+    )
+
+    with pytest.raises(
+        GraphDefinitionError,
+        match="forward input edge.*write_two_result.*write_one_result.*dependency order",
+    ):
+        compile(two_writes)
+
+    ordered = Graph()
+    ordered.add_step(
+        StepKind.TOOL,
+        "write_one",
+        output="write_one_result",
+        contract=WRITE_CONTRACT,
+    )
+    ordered.add_step(
+        StepKind.TOOL,
+        "write_two",
+        inputs=["write_one_result"],
+        output="write_two_result",
+        contract=WRITE_CONTRACT,
+    )
+
+    assert compile(ordered).op is Op.SEQ
+
+
+def test_singleton_first_layer_preserves_raw_input_for_later_declared_consumer() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    graph.add_step(
+        StepKind.TOOL,
+        "write_status",
+        inputs=["source"],
+        output="wrote",
+        contract=WRITE_CONTRACT,
+    )
+    graph.add_step(StepKind.PURE, "dag.input_identity", inputs=["__input__"], output="result")
+
+    calls: list[str] = []
+
+    def read_episode(value: dict[str, Any]) -> dict[str, Any]:
+        calls.append("read")
+        return {"episode_id": value["episode_id"]}
+
+    def write_status(value: dict[str, Any]) -> dict[str, Any]:
+        calls.append("write")
+        return {"wrote": value["episode_id"]}
+
+    compiled = compile(graph)
+    compiled_json = _canonical_ir(compiled)
+    write_index = compiled_json.index('"name":"write_status"')
+    result_index = compiled_json.index('"pure":"dag.input_identity"')
+    assert write_index < result_index
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={"read_episode": read_episode, "write_status": write_status},
+    )
+
+    result = run(interpret(compiled, {"episode_id": "ep-1"}, env))
+
+    assert calls == ["read", "write"]
+    assert result.value == {"input": "ep-1"}
+
+
+def test_singleton_first_layer_preserves_raw_input_for_later_implicit_consumer() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    graph.add_step(
+        StepKind.TOOL,
+        "write_status",
+        inputs=["source"],
+        output="wrote",
+        contract=WRITE_CONTRACT,
+    )
+    graph.add_step(StepKind.TOOL, "verify_read", output="verified", contract=READ_CONTRACT)
+
+    observed: list[dict[str, Any]] = []
+
+    def read_episode(value: dict[str, Any]) -> dict[str, Any]:
+        return {"episode_id": value["episode_id"]}
+
+    def write_status(value: dict[str, Any]) -> dict[str, Any]:
+        return {"wrote": value["episode_id"]}
+
+    def verify_read(value: dict[str, Any]) -> dict[str, Any]:
+        observed.append(value)
+        return {"verified": value["episode_id"]}
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={
+            "read_episode": read_episode,
+            "write_status": write_status,
+            "verify_read": verify_read,
+        },
+    )
+
+    result = run(interpret(compile(graph), {"episode_id": "ep-1"}, env))
+
+    assert observed == [{"episode_id": "ep-1"}]
+    assert result.value == {"verified": "ep-1"}
+
+
+def test_raw_input_survives_write_fence_and_fence_free_mid_graph_combine() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    fenced = Graph()
+    fenced.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    fenced.add_step(
+        StepKind.TOOL,
+        "write_status",
+        inputs=["source"],
+        output="wrote",
+        contract=WRITE_CONTRACT,
+    )
+    fenced.add_step(
+        StepKind.PURE,
+        "dag.combine_input_and_wrote",
+        inputs=["__input__", "wrote"],
+        output="result",
+    )
+
+    control = Graph()
+    control.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    control.add_step(StepKind.PURE, "dag.process_source", inputs=["source"], output="proc")
+    control.add_step(
+        StepKind.PURE,
+        "dag.combine_input_and_proc",
+        inputs=["__input__", "proc"],
+        output="result",
+    )
+
+    def read_episode(value: dict[str, Any]) -> dict[str, Any]:
+        return {"episode_id": value["episode_id"]}
+
+    def write_status(value: dict[str, Any]) -> dict[str, Any]:
+        return {"wrote": value["episode_id"]}
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={"read_episode": read_episode, "write_status": write_status},
+    )
+
+    assert run(interpret(compile(fenced), {"episode_id": "ep-1"}, env)).value == {
+        "input": "ep-1",
+        "wrote": "ep-1",
+    }
+    assert run(interpret(compile(control), {"episode_id": "ep-2"}, env)).value == {
+        "input": "ep-2",
+        "proc": "ep-2",
+    }
+
+
+def test_liveness_keeps_raw_input_for_implicit_consumer_after_write() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_a", output="a", contract=READ_CONTRACT)
+    graph.add_step(StepKind.TOOL, "read_b", output="b", contract=READ_CONTRACT)
+    graph.add_step(
+        StepKind.TOOL,
+        "write_status",
+        inputs=["a", "b"],
+        output="wrote",
+        contract=WRITE_CONTRACT,
+    )
+    graph.add_step(StepKind.TOOL, "verify_read", output="verified", contract=READ_CONTRACT)
+
+    observed: list[dict[str, Any]] = []
+
+    def read_a(value: dict[str, Any]) -> dict[str, Any]:
+        return {"a": value["episode_id"]}
+
+    def read_b(value: dict[str, Any]) -> dict[str, Any]:
+        return {"b": value["episode_id"]}
+
+    def write_status(value: dict[str, Any]) -> dict[str, Any]:
+        return {"wrote": sorted(value)}
+
+    def verify_read(value: dict[str, Any]) -> dict[str, Any]:
+        observed.append(value)
+        return {"verified": value["episode_id"]}
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={
+            "read_a": read_a,
+            "read_b": read_b,
+            "write_status": write_status,
+            "verify_read": verify_read,
+        },
+    )
+
+    result = run(interpret(compile(graph), {"episode_id": "ep-1"}, env))
+
+    assert observed == [{"episode_id": "ep-1"}]
+    assert result.value == {"verified": "ep-1"}
+
+
+@pytest.mark.parametrize(
+    ("found", "expected"),
+    [
+        (True, {"branch": "true", "episode_id": "ep-1"}),
+        (False, {"branch": "false"}),
+    ],
+)
+def test_cond_arm_with_no_declared_inputs_receives_raw_input(
+    found: bool,
+    expected: dict[str, Any],
+) -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    then_arm = Graph(output_name="then_result")
+    then_arm.add_step(
+        StepKind.PURE,
+        "dag.branch_true_from_source",
+        inputs=["source"],
+        output="then_result",
+    )
+    else_arm = Graph(output_name="else_result")
+    else_arm.add_step(StepKind.PURE, "dag.branch_false_const", output="else_result")
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    graph.add_cond(
+        "dag.is_found",
+        inputs=["source"],
+        output="result",
+        if_true=then_arm,
+        if_false=else_arm,
+    )
+
+    def read_episode(value: dict[str, Any]) -> dict[str, Any]:
+        return {"episode_id": value["episode_id"], "found": found}
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={"read_episode": read_episode},
+    )
+
+    assert run(interpret(compile(graph), {"episode_id": "ep-1"}, env)).value == expected
+
+
+@pytest.mark.parametrize("found", [True, False])
+def test_lone_cond_bootstraps_env_for_raw_input_arms(found: bool) -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    then_arm = Graph(output_name="then_result")
+    then_arm.add_step(StepKind.PURE, "dag.branch_from_input", output="then_result")
+    else_arm = Graph(output_name="else_result")
+    else_arm.add_step(StepKind.PURE, "dag.branch_false_const", output="else_result")
+
+    graph = Graph()
+    graph.add_cond(
+        "dag.input_flag",
+        inputs=["__input__"],
+        output="result",
+        if_true=then_arm,
+        if_false=else_arm,
+    )
+
+    result = run(
+        interpret(
+            compile(graph),
+            {"episode_id": "ep-1", "found": found},
+            InMemoryEnv({}, ProjectionEmitter(InMemoryProjection())),
+        )
+    )
+
+    assert result.value == ({"branch": "ep-1"} if found else {"branch": "false"})
+
+
+@pytest.mark.parametrize("found", [True, False])
+def test_lone_cond_arms_can_declare_raw_input_edges(found: bool) -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    then_arm = Graph(output_name="then_result")
+    then_arm.add_step(
+        StepKind.PURE,
+        "dag.branch_from_input",
+        inputs=["__input__"],
+        output="then_result",
+    )
+    else_arm = Graph(output_name="else_result")
+    else_arm.add_step(
+        StepKind.PURE,
+        "dag.branch_from_input",
+        inputs=["__input__"],
+        output="else_result",
+    )
+
+    graph = Graph()
+    graph.add_cond(
+        "dag.input_flag",
+        inputs=["__input__"],
+        output="result",
+        if_true=then_arm,
+        if_false=else_arm,
+    )
+
+    result = run(
+        interpret(
+            compile(graph),
+            {"episode_id": "ep-1", "found": found},
+            InMemoryEnv({}, ProjectionEmitter(InMemoryProjection())),
+        )
+    )
+
+    assert result.value == {"branch": "ep-1"}
+
+
+def test_each_body_no_input_step_does_not_become_handle_capture() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="item", output_name="copied")
+    body.add_step(StepKind.PURE, "dag.branch_from_input", output="copied")
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_items", output="items", contract=READ_CONTRACT)
+    graph.add_each(body, items="items", output="copied")
+
+    def read_items(value: dict[str, Any]) -> list[dict[str, Any]]:
+        return [{"episode_id": value["episode_id"]}, {"episode_id": "ep-2"}]
+
+    compiled = compile(graph)
+    assert all(node.pure != "std.each_pack" for node in compiled.walk())
+
+    result = run(
+        interpret(
+            compiled,
+            {"episode_id": "ep-1"},
+            InMemoryEnv(
+                {},
+                ProjectionEmitter(InMemoryProjection()),
+                hands={"read_items": read_items},
+            ),
+        )
+    )
+
+    assert result.value == [{"branch": "ep-1"}, {"branch": "ep-2"}]
+
+
+def test_raw_input_is_pruned_after_last_consumer() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    graph.add_step(StepKind.PURE, "dag.input_identity", inputs=["__input__"], output="processed")
+    graph.add_step(
+        StepKind.TOOL,
+        "write_status",
+        inputs=["processed"],
+        output="status",
+        contract=WRITE_CONTRACT,
+    )
+
+    pack_args = [
+        node.args
+        for node in compile(graph).walk()
+        if node.op is Op.ARR and node.pure == "std.pack"
+    ]
+
+    assert {"fields": {"processed": {"field": "processed"}}} in pack_args
+    assert {"fields": {"__input__": {"field": "__input__"}, "processed": {"field": "processed"}}} not in pack_args
 
 
 def test_cond_branch_compiles_to_hand_written_alt_with_pruned_arm_envs() -> None:

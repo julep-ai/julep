@@ -277,18 +277,33 @@ def compile(graph: Graph) -> Node:
     for index, layer in enumerate(layers):
         if index == len(layers) - 1 and len(layer) == 1 and layer[0].output == final_output:
             if not env_started:
-                pieces.append(_leaf(layer[0]))
+                if layer[0].kind in {StepKind.COND, StepKind.SWITCH}:
+                    pieces.append(_arr("std.init", {"key": graph.input_name}, None))
+                    pieces.extend(_seq_items(_step_from_env(layer[0], graph.input_name)))
+                else:
+                    pieces.append(_leaf(layer[0]))
             else:
                 pieces.extend(_seq_items(_step_from_env(layer[0], graph.input_name)))
             return _stamp_missing_sources(_seq(pieces))
 
-        if not env_started and len(layer) == 1 and not layer[0].inputs:
+        if (
+            not env_started
+            and len(layer) == 1
+            and not layer[0].inputs
+            and not _later_layers_consume_input(layers, index, graph.input_name)
+        ):
             first = layer[0]
             pieces.append(_leaf(first))
             pieces.append(_arr("std.init", {"key": first.output}, first.source))
             env_started = True
             current_fields = [first.output]
-            live = _live_fields_after_layer(layers, index, final_output, current_fields)
+            live = _live_fields_after_layer(
+                layers,
+                index,
+                final_output,
+                current_fields,
+                graph.input_name,
+            )
             if live != current_fields:
                 pieces.append(_prune_env(live, first.source))
                 current_fields = live
@@ -301,7 +316,13 @@ def compile(graph: Graph) -> Node:
 
         pieces.extend(_compile_env_layer(layer, graph.input_name))
         current_fields = _append_unique(current_fields, [step.output for step in layer])
-        live = _live_fields_after_layer(layers, index, final_output, current_fields)
+        live = _live_fields_after_layer(
+            layers,
+            index,
+            final_output,
+            current_fields,
+            graph.input_name,
+        )
         if live != current_fields:
             pieces.append(_prune_env(live, layer[0].source))
             current_fields = live
@@ -373,6 +394,12 @@ def _toposort(graph: Graph, external_sources: Iterable[str] = ()) -> list[StepNo
             dep = by_output.get(source)
             if dep is not None:
                 visit(dep, stack)
+                if dep.order > step.order:
+                    raise GraphDefinitionError(
+                        "forward input edge "
+                        f"{step.output!r} consumes {source!r}; steps must be declared "
+                        "in dependency order"
+                    )
             elif source != graph.input_name and source not in external:
                 raise GraphDefinitionError(f"unknown input edge source: {source}")
         stack.pop()
@@ -649,6 +676,8 @@ def _branch_external_sources(step: StepNode) -> list[str]:
     fields: list[str] = []
     for arm in _branch_arms(step):
         fields = _append_unique(fields, _external_sources(arm))
+        if _graph_consumes_input(arm):
+            fields = _append_unique(fields, [arm.input_name])
     return fields
 
 
@@ -681,6 +710,29 @@ def _external_sources(graph: Graph) -> list[str]:
     if graph.output_name is not None and graph.output_name not in produced:
         fields.append(graph.output_name)
     return _dedupe(fields)
+
+
+def _graph_consumes_input(graph: Graph) -> bool:
+    if graph.output_name == graph.input_name:
+        return True
+    for step in graph.steps:
+        if _step_consumes_field(step, graph.input_name):
+            return True
+    return False
+
+
+def _step_consumes_field(step: StepNode, field: str) -> bool:
+    if any(edge.source == field for edge in step.inputs):
+        return True
+    if (
+        not step.inputs
+        and step.kind
+        in {StepKind.TOOL, StepKind.THINK, StepKind.PURE, StepKind.PASSTHROUGH}
+    ):
+        return True
+    if step.kind in {StepKind.COND, StepKind.SWITCH}:
+        return field in _branch_input_fields(step)
+    return False
 
 
 def _branch_has_barrier(step: StepNode) -> bool:
@@ -730,6 +782,8 @@ def _compile_branch_arm(graph: Graph, incoming_fields: Sequence[str]) -> Node:
 
 def _arm_entry_fields(graph: Graph, incoming_fields: Sequence[str]) -> list[str]:
     needed = _external_sources(graph)
+    if _graph_consumes_input(graph):
+        needed = _append_unique(needed, [graph.input_name])
     allowed = set(incoming_fields)
     return [field for field in incoming_fields if field in needed and field in allowed]
 
@@ -755,7 +809,13 @@ def _compile_env_graph(graph: Graph, initial_fields: Sequence[str]) -> Node:
 
         pieces.extend(_compile_env_layer(layer, graph.input_name))
         current_fields = _append_unique(current_fields, [step.output for step in layer])
-        live = _live_fields_after_layer(layers, index, final_output, current_fields)
+        live = _live_fields_after_layer(
+            layers,
+            index,
+            final_output,
+            current_fields,
+            graph.input_name,
+        )
         if live != current_fields:
             pieces.append(_prune_env(live, layer[0].source))
             current_fields = live
@@ -771,15 +831,35 @@ def _live_fields_after_layer(
     index: int,
     final_output: str,
     current_fields: Sequence[str],
+    input_name: str,
 ) -> list[str]:
     needed: list[str] = []
     for future_layer in layers[index + 1:]:
         for step in future_layer:
-            needed = _append_unique(needed, _input_sources(step))
+            needed = _append_unique(needed, _live_input_sources(step, input_name))
     if final_output in current_fields:
         needed.append(final_output)
     needed_set = set(needed)
     return [field for field in current_fields if field in needed_set]
+
+
+def _live_input_sources(step: StepNode, input_name: str) -> list[str]:
+    sources = _input_sources(step)
+    if _step_consumes_field(step, input_name):
+        sources = _append_unique(sources, [input_name])
+    return sources
+
+
+def _later_layers_consume_input(
+    layers: Sequence[Sequence[StepNode]],
+    index: int,
+    input_name: str,
+) -> bool:
+    return any(
+        _step_consumes_field(step, input_name)
+        for future_layer in layers[index + 1:]
+        for step in future_layer
+    )
 
 
 def _prune_env(fields: Sequence[str], source: Optional[SourceSpan]) -> Node:
