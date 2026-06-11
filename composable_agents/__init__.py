@@ -56,7 +56,6 @@ from .dsl import (
     arr as arr,
     brain_from_ctx as brain_from_ctx,
     call as call,
-    each as each,
     fanout as fanout,
     ident as ident,
     iter_up_to as iter_up_to,
@@ -171,10 +170,14 @@ from .registry import DEFAULT_REGISTRY as DEFAULT_REGISTRY, Registry as Registry
 from . import std as _std
 from .define import (
     BoundFlow as BoundFlow,
+    cond as cond,
     DefineError as DefineError,
+    each as each,
     FlowDef as FlowDef,
     Handle as Handle,
     flow as flow,
+    reschedule as reschedule,
+    switch as switch,
     think as think,
 )
 from .flow import as_flow as as_flow
@@ -259,7 +262,8 @@ _BASE_EXPORTS = [
     "NativeTool", "McpTool", "HUMAN_GATE_TOOL", "SLEEP_TOOL",
     # dsl
     "call", "native", "mcp", "think", "brain_from_ctx", "ident", "arr", "sub",
-    "seq", "par", "fanout", "each", "alt", "iter_up_to", "stage", "app",
+    "seq", "par", "fanout", "each", "alt", "cond", "switch", "reschedule",
+    "iter_up_to", "stage", "app",
     "Contract",
     # derived
     "race", "hedge", "quorum", "map_n", "map_reduce", "vote", "review",

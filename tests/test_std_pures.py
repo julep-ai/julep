@@ -21,6 +21,9 @@ STD_PURES = (
     "std.unpack",
     "std.bind",
     "std.each_pack",
+    "std.branch_predicate",
+    "std.branch_selector",
+    "std.continue_with",
 )
 
 
@@ -37,6 +40,9 @@ EXPECTED_STD_SOURCE_HASHES = {
     "std.unpack": "pure:82b536c49d7cee7e",
     "std.bind": "pure:9936960359bdf9a3",
     "std.each_pack": "pure:d40a26dcb92b73a8",
+    "std.branch_predicate": "pure:bee903d8d036cbe7",
+    "std.branch_selector": "pure:a65863c731e19705",
+    "std.continue_with": "pure:1fcb10b5d8eef05d",
 }
 
 
@@ -188,3 +194,13 @@ def test_std_each_pack_maps_items_with_handle_fields_and_consts() -> None:
         {"cluster": {"id": "c1"}, "store_context": {"store_id": "s1"}, "model": "small"},
         {"cluster": {"id": "c2"}, "store_context": {"store_id": "s1"}, "model": "small"},
     ]
+
+
+def test_std_branch_pures_read_internal_branch_value() -> None:
+    assert _run_std("std.branch_predicate", {"__branch__": 1}) is True
+    assert _run_std("std.branch_predicate", {"__branch__": 0}) is False
+    assert _run_std("std.branch_selector", {"__branch__": "success"}) == "success"
+
+
+def test_std_continue_with_wraps_continuation_sentinel() -> None:
+    assert _run_std("std.continue_with", {"cursor": 10}) == {"__continue__": {"cursor": 10}}

@@ -159,6 +159,35 @@ def std_each_pack(
     return packed_items
 
 
+def std_branch_predicate(value: Any) -> bool:
+    """Wire-format-stable std.branch_predicate; body frozen once referenced.
+
+    Frontends use this fixed adapter after evaluating an authored subject-shaped
+    predicate into the internal ``__branch__`` env field. Deliberate behavior
+    changes require registering a new std name.
+    """
+    return bool(value["__branch__"])
+
+
+def std_branch_selector(value: Any) -> str:
+    """Wire-format-stable std.branch_selector; body frozen once referenced.
+
+    Frontends use this fixed adapter after evaluating an authored subject-shaped
+    selector into the internal ``__branch__`` env field. Deliberate behavior
+    changes require registering a new std name.
+    """
+    return str(value["__branch__"])
+
+
+def std_continue_with(value: Any) -> dict[str, Any]:
+    """Wire-format-stable std.continue_with; body frozen once referenced.
+
+    Wraps the final value in the continuation sentinel. Deliberate behavior
+    changes require registering a new std name.
+    """
+    return {"__continue__": value}
+
+
 DEFAULT_REGISTRY.register_pure("std.merge", std_merge)
 DEFAULT_REGISTRY.register_pure("std.pluck", std_pluck)
 DEFAULT_REGISTRY.register_pure("std.init", std_init)
@@ -168,3 +197,6 @@ DEFAULT_REGISTRY.register_pure("std.pack", std_pack)
 DEFAULT_REGISTRY.register_pure("std.unpack", std_unpack)
 DEFAULT_REGISTRY.register_pure("std.bind", std_bind)
 DEFAULT_REGISTRY.register_pure("std.each_pack", std_each_pack)
+DEFAULT_REGISTRY.register_pure("std.branch_predicate", std_branch_predicate)
+DEFAULT_REGISTRY.register_pure("std.branch_selector", std_branch_selector)
+DEFAULT_REGISTRY.register_pure("std.continue_with", std_continue_with)

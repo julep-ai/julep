@@ -26,6 +26,9 @@ class GraphDefinitionError(ValueError):
 CAPTURE_SIZE_WARNING_BYTES = 4096
 """Warn when one static closure capture exceeds this canonical JSON byte size."""
 
+BRANCH_VALUE_KEY = "__branch__"
+"""Internal env key for frontend subject-shaped branch predicates/selectors."""
+
 
 class StepKind(str, Enum):
     TOOL = "tool"
@@ -71,6 +74,7 @@ class StepNode:
     max_parallel: Optional[int] = None
     reducer: Optional[str] = None
     const_captures: Optional[dict[str, Any]] = None
+    branch_subject: Optional[str] = None
 
 
 InputSpec = str | InputEdge | tuple[str, str]
@@ -143,6 +147,7 @@ class Graph:
         if_true: "Graph",
         if_false: "Graph",
         source: Optional[SourceSpan] = None,
+        branch_subject: Optional[InputSpec] = None,
     ) -> StepNode:
         """Add a binary branch step whose arms are sub-graphs over env fields."""
         return self._add_branch(
@@ -153,6 +158,7 @@ class Graph:
             if_true=if_true,
             if_false=if_false,
             source=source,
+            branch_subject=branch_subject,
         )
 
     def add_switch(
@@ -164,6 +170,7 @@ class Graph:
         cases: dict[str, "Graph"],
         default: Optional["Graph"] = None,
         source: Optional[SourceSpan] = None,
+        branch_subject: Optional[InputSpec] = None,
     ) -> StepNode:
         """Add a selector branch step lowered to the existing select/cases alt."""
         if not cases:
@@ -176,6 +183,7 @@ class Graph:
             cases=dict(cases),
             default=default,
             source=source,
+            branch_subject=branch_subject,
         )
 
     def add_each(
@@ -246,9 +254,11 @@ class Graph:
         if_false: Optional["Graph"] = None,
         cases: Optional[dict[str, "Graph"]] = None,
         default: Optional["Graph"] = None,
+        branch_subject: Optional[InputSpec] = None,
     ) -> StepNode:
         if output in self._outputs:
             raise GraphDefinitionError(f"output name collision: {output}")
+        subject = None if branch_subject is None else _coerce_user_input(branch_subject, source).source
         node = StepNode(
             kind=kind,
             ref=ref,
@@ -260,6 +270,7 @@ class Graph:
             if_false=if_false,
             cases=cases,
             default=default,
+            branch_subject=subject,
         )
         self.steps.append(node)
         self._outputs[output] = node
@@ -858,26 +869,45 @@ def _branch_from_env(step: StepNode) -> Node:
     if step.kind is StepKind.COND:
         if step.if_true is None or step.if_false is None:
             raise GraphDefinitionError(f"cond branch {step.output!r} needs both arms")
+        pred = "std.branch_predicate" if step.branch_subject is not None else step.ref
         alt = dsl.alt(
-            step.ref,
+            pred,
             _compile_branch_arm(step.if_true, fields),
             _compile_branch_arm(step.if_false, fields),
         )
     elif step.kind is StepKind.SWITCH:
         if step.cases is None:
             raise GraphDefinitionError(f"switch branch {step.output!r} needs cases")
+        select = "std.branch_selector" if step.branch_subject is not None else step.ref
         alt = dsl.alt(
-            select=step.ref,
+            select=select,
             cases={key: _compile_branch_arm(step.cases[key], fields) for key in sorted(step.cases)},
             default=None if step.default is None else _compile_branch_arm(step.default, fields),
         )
     else:
         raise AssertionError(f"unhandled branch kind: {step.kind}")
-    return _seq([prefix, _with_source(alt, step.source)])
+    if step.branch_subject is None:
+        return _seq([prefix, _with_source(alt, step.source)])
+    decision = _seq(
+        [
+            _arr("std.pluck", {"key": step.branch_subject}, step.source),
+            _with_source(dsl.arr(step.ref), step.source),
+        ]
+    )
+    return _seq(
+        [
+            prefix,
+            _par([_with_source(dsl.ident(), step.source), decision], step.source),
+            _arr("std.assign", {"key": BRANCH_VALUE_KEY}, step.source),
+            _with_source(alt, step.source),
+        ]
+    )
 
 
 def _branch_input_fields(step: StepNode) -> list[str]:
     fields = [edge.source for edge in step.inputs]
+    if step.branch_subject is not None:
+        fields = _append_unique(fields, [step.branch_subject])
     fields = _append_unique(fields, _branch_external_sources(step))
     return fields
 

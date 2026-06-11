@@ -222,6 +222,18 @@ named JSON objects only.
   static JSON values. This pure is additive because `std.pack` builds one
   record but cannot map a list-valued env field into per-item records while
   copying captured runtime handles exactly once before fan-out.
+- `std.branch_predicate`: no `args`. Reads the frontend-internal
+  `value["__branch__"]` field and returns its truth value. The `@flow`
+  frontend uses it after evaluating an authored subject-shaped predicate on the
+  branch subject, because low-level DAG branch predicates receive a pruned env
+  record.
+- `std.branch_selector`: no `args`. Reads the frontend-internal
+  `value["__branch__"]` field and returns it as a string. The `@flow` frontend
+  uses it after evaluating an authored subject-shaped selector on the branch
+  subject.
+- `std.continue_with`: no `args`. Wraps the flowing value as the continuation
+  sentinel `{"__continue__": value}` for frontend-owned reschedule lowering
+  after any dirty-mark step and reserved `__sleep__` delay.
 
 ---
 

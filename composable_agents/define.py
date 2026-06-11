@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, overload
 
 from . import dag, dsl
 from .flow import FlowLike
-from .ir import Ann, Node, SourceSpan, canonical_json
+from .ir import SLEEP_TOOL, Ann, CallStep, NativeTool, Node, SourceSpan, canonical_json
 
 if TYPE_CHECKING:
     from .dotctx import Brain
@@ -29,6 +29,7 @@ In = TypeVar("In")
 Out = TypeVar("Out")
 _JSON = (str, int, float, bool, type(None), list, dict)
 _RESERVED_STEP_KWARGS = {"name", "retries", "retry_interval_s", "backoff_rate", "timeout_s"}
+_CONTROL_HELPERS = {"cond", "switch", "each", "reschedule"}
 _CTX_STACK: list["_BuildContext"] = []
 
 
@@ -141,7 +142,7 @@ class _SourceMap:
         return False
 
     def _is_allowed_call(self, call: ast.Call) -> bool:
-        if isinstance(call.func, ast.Name) and call.func.id == "think":
+        if isinstance(call.func, ast.Name) and call.func.id in {"think", *_CONTROL_HELPERS}:
             return True
         target = self._resolve_call_target(call)
         if target is None:
@@ -333,12 +334,18 @@ class FlowDef(FlowLike[Any, Any]):
     def __call__(self, *args: Any, **kwargs: Any) -> Handle | "BoundFlow":
         supplied = self._supplied(args, kwargs)
         if _CTX_STACK and all(isinstance(value, Handle) for value in supplied.values()):
-            if len(supplied) != 1 or len(self.param_names) != 1:
+            if len(supplied) == len(self.param_names):
+                if len(supplied) != 1:
+                    return BoundFlow.from_supplied(self, supplied)
+                return _apply_flowdef(self, _ensure_handle(next(iter(supplied.values()))))
+            if len(supplied) == 1 and len(self.param_names) == 1:
+                return _apply_flowdef(self, _ensure_handle(next(iter(supplied.values()))))
+            if not supplied:
                 raise DefineError(
-                    f"@flow subcall {self.name!r} currently needs exactly one Handle argument; "
-                    "partially apply JSON kwargs outside the parent flow for multi-parameter flows"
+                    f"@flow subcall {self.name!r} needs a Handle argument; "
+                    "pass it directly to each(...) after binding captures"
                 )
-            return _apply_flowdef(self, _ensure_handle(next(iter(supplied.values()))))
+            return BoundFlow.from_supplied(self, supplied)
         return BoundFlow.from_supplied(self, supplied)
 
     def _supplied(self, args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -418,6 +425,170 @@ def think(brain_or_name: str | Brain, value: Optional[Handle] = None, /, **kwarg
         return dsl.think(name, **kwargs)
     handle = _ensure_handle(value)
     return _append_step(dag.StepKind.THINK, name, handle, target=None, **kwargs)
+
+
+def cond(
+    pred: str | Any,
+    subject: Handle,
+    *,
+    then: FlowDef | BoundFlow,
+    orelse: FlowDef | BoundFlow,
+) -> Handle:
+    """Branch on ``pred(subject)`` while lowering through DAG env branches.
+
+    DAG branch predicates receive the pruned env record. The frontend bridges
+    authored subject-shaped predicates by evaluating ``pred`` on ``subject``
+    immediately before ``alt`` and storing the boolean in the internal
+    ``__branch__`` env field consumed by ``std.branch_predicate``. Users do not
+    need to author env-aware predicates.
+    """
+    ctx = _current_context()
+    handle = _ensure_handle(subject)
+    site = _call_site(ctx, "cond")
+    span = site.span
+    pred_name = _registered_pure_name(pred, "cond predicate", span)
+    then_graph, _ = _flow_graph_and_captures(then, "cond then arm", span, allow_consts=False)
+    else_graph, _ = _flow_graph_and_captures(orelse, "cond orelse arm", span, allow_consts=False)
+    output = ctx.output_name("cond", None, site)
+    ctx.graph.add_cond(
+        pred_name,
+        output=output,
+        if_true=then_graph,
+        if_false=else_graph,
+        source=span,
+        branch_subject=handle.label,
+    )
+    return Handle(output, ctx.graph, span)
+
+
+def switch(
+    selector: str | Any,
+    subject: Handle,
+    *,
+    cases: dict[str, FlowDef | BoundFlow],
+    default: FlowDef | BoundFlow | None = None,
+) -> Handle:
+    """Select one arm by ``selector(subject)`` without env-aware user pures.
+
+    Like :func:`cond`, the frontend evaluates the authored subject-shaped
+    selector before the low-level ``alt`` and stores the selected key in the
+    internal ``__branch__`` env field consumed by ``std.branch_selector``.
+    """
+    ctx = _current_context()
+    handle = _ensure_handle(subject)
+    site = _call_site(ctx, "switch")
+    span = site.span
+    selector_name = _registered_pure_name(selector, "switch selector", span)
+    if not cases:
+        raise DefineError(
+            f"switch needs at least one case{_source_suffix(span)}; "
+            "pass cases={key: flow, ...} and optionally default=flow"
+        )
+    arm_graphs = {
+        str(key): _flow_graph_and_captures(arm, f"switch case {key!r}", span, allow_consts=False)[0]
+        for key, arm in cases.items()
+    }
+    default_graph = (
+        None
+        if default is None
+        else _flow_graph_and_captures(default, "switch default arm", span, allow_consts=False)[0]
+    )
+    output = ctx.output_name("switch", None, site)
+    ctx.graph.add_switch(
+        selector_name,
+        output=output,
+        cases=arm_graphs,
+        default=default_graph,
+        source=span,
+        branch_subject=handle.label,
+    )
+    return Handle(output, ctx.graph, span)
+
+
+def each(
+    body: FlowDef | BoundFlow | Node,
+    items: Optional[Handle] = None,
+    *,
+    max_parallel: Optional[int] = None,
+    reducer: str | Any | None = None,
+) -> Node | Handle:
+    """Frontend dynamic fan-out or the existing ``dsl.each`` outside ``@flow``."""
+    if items is None or not isinstance(items, Handle):
+        if isinstance(body, Node):
+            reducer_name = None if reducer is None else _pure_name_unchecked(reducer)
+            return dsl.each(body, max_parallel=max_parallel, reducer=reducer_name)
+        source = _call_site(_CTX_STACK[-1], "each").span if _CTX_STACK else None
+        raise DefineError(
+            f"each(body, items, ...) needs a Handle items argument inside @flow{_source_suffix(source)}; "
+            "outside @flow use dsl.each(Node, ...) or composable_agents.flow.each(FlowLike, ...)"
+        )
+
+    ctx = _current_context()
+    item_handle = _ensure_handle(items)
+    site = _call_site(ctx, "each")
+    span = site.span
+    body_graph, consts = _flow_graph_and_captures(body, "each body", span, allow_consts=True)
+    reducer_name = None if reducer is None else _registered_pure_name(reducer, "each reducer", span)
+    output = ctx.output_name("each", None, site)
+    ctx.graph.add_each(
+        body_graph,
+        items=item_handle.label,
+        output=output,
+        max_parallel=max_parallel,
+        reducer=reducer_name,
+        const_captures=consts,
+        source=span,
+    )
+    return Handle(output, ctx.graph, span)
+
+
+def reschedule(
+    state: Handle,
+    *,
+    after_s: Optional[int] = None,
+    after: Optional[Node] = None,
+    mark: Any = None,
+) -> Handle:
+    """Terminal owned-continuation primitive for ``@flow`` authoring.
+
+    Lowering reuses the existing reserved ``__sleep__`` delay hand and the
+    continuation sentinel: optional dirty-mark step, sleep, then
+    ``std.continue_with``. External-dispatch dirty marking is not a primitive:
+    author a normal terminal dirty-mark tool/status flow and let the dispatcher
+    re-enqueue dirty rows.
+    """
+    ctx = _current_context()
+    current = _ensure_handle(state)
+    site = _call_site(ctx, "reschedule")
+    span = site.span
+    seconds = _reschedule_seconds(after_s=after_s, after=after, source=span)
+    if mark is not None:
+        if not _is_tool(mark):
+            raise DefineError(
+                f"reschedule mark must be a registered Tool{_source_suffix(span)}; "
+                "for external dispatch, end with the dirty-mark tool and return a status"
+            )
+        current = _append_step(dag.StepKind.TOOL, mark.name, current, target=mark)
+    sleep_output = ctx.source_map.fallback_name("reschedule_sleep")
+    ctx.bound_names.add(sleep_output)
+    ctx.graph.add_step(
+        dag.StepKind.TOOL,
+        SLEEP_TOOL,
+        inputs=_single_input(current, ctx.graph.input_name),
+        output=sleep_output,
+        ann=Ann(timeout_s=seconds),
+        source=span,
+    )
+    current = Handle(sleep_output, ctx.graph, span)
+    output = ctx.output_name("reschedule", None, site)
+    ctx.graph.add_step(
+        dag.StepKind.PURE,
+        "std.continue_with",
+        inputs=_single_input(current, ctx.graph.input_name),
+        output=output,
+        source=span,
+    )
+    return Handle(output, ctx.graph, span)
 
 
 def apply_if_authoring(fn: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
@@ -581,6 +752,7 @@ def _copy_step(
             if_true=step.if_true,
             if_false=step.if_false,
             source=step.source,
+            branch_subject=_remap_source(step.branch_subject, remap, source_input, target_input),
         )
         return
     if step.kind is dag.StepKind.SWITCH:
@@ -593,6 +765,7 @@ def _copy_step(
             cases=step.cases,
             default=step.default,
             source=step.source,
+            branch_subject=_remap_source(step.branch_subject, remap, source_input, target_input),
         )
         return
     if step.kind is dag.StepKind.EACH:
@@ -623,6 +796,20 @@ def _remap_inputs(
         mapped = remap[source_input]
         return [] if mapped == target_input else [mapped]
     return [remap.get(edge.source, edge.source) for edge in step.inputs]
+
+
+def _remap_source(
+    source: Optional[str],
+    remap: dict[str, str],
+    source_input: str,
+    target_input: str,
+) -> Optional[str]:
+    if source is None:
+        return None
+    if source == source_input:
+        mapped = remap[source_input]
+        return target_input if mapped == target_input else mapped
+    return remap.get(source, source)
 
 
 def _current_context() -> _BuildContext:
@@ -680,6 +867,117 @@ def _ann_from_kwargs(kwargs: dict[str, Any]) -> Optional[Ann]:
     )
 
 
+def _registered_pure_name(value: Any, role: str, source: Optional[SourceSpan]) -> str:
+    from .purity import Pure, is_registered
+
+    if isinstance(value, Pure):
+        return value.name
+    if isinstance(value, str):
+        if not is_registered(value):
+            raise DefineError(
+                f"{role} {value!r} is not a registered Pure{_source_suffix(source)}; "
+                "decorate a deterministic function with @pure or pass a Pure object"
+            )
+        return value
+    raise DefineError(
+        f"{role} must be a registered Pure or pure name{_source_suffix(source)}; "
+        "decorate a deterministic function with @pure or pass its registered name"
+    )
+
+
+def _pure_name_unchecked(value: Any) -> str:
+    from .purity import Pure
+
+    if isinstance(value, Pure):
+        return value.name
+    if isinstance(value, str):
+        return value
+    raise DefineError("reducer must be a Pure object or pure name")
+
+
+def _flow_graph_and_captures(
+    value: FlowDef | BoundFlow | Node,
+    role: str,
+    source: Optional[SourceSpan],
+    *,
+    allow_consts: bool,
+) -> tuple[dag.Graph, dict[str, Any]]:
+    if isinstance(value, FlowDef):
+        if len(value.param_names) != 1:
+            raise DefineError(
+                f"{role} {value.name!r} must be a one-parameter @flow{_source_suffix(source)}; "
+                "partially apply JSON or handle captures until one item parameter remains"
+            )
+        return value.graph, {}
+    if isinstance(value, BoundFlow):
+        remaining = value.remaining_param_names
+        if len(remaining) != 1:
+            raise DefineError(
+                f"{role} {value.flow.name!r} must leave exactly one runtime parameter"
+                f"{_source_suffix(source)}; remaining={remaining!r}; "
+                "pass a bare one-parameter @flow or bind all captures before using it"
+            )
+        if remaining[0] != value.flow.graph.input_name:
+            raise DefineError(
+                f"{role} {value.flow.name!r} leaves item parameter {remaining[0]!r}"
+                f"{_source_suffix(source)}; "
+                f"put the item parameter first ({value.flow.graph.input_name!r}) or wrap it "
+                "in a one-parameter @flow"
+            )
+        consts: dict[str, Any] = {}
+        for name, bound in value.bound_args.items():
+            if isinstance(bound, Handle):
+                if bound.label != name:
+                    raise DefineError(
+                        f"{role} captures handle {bound.label!r} for parameter {name!r}"
+                        f"{_source_suffix(source)}; "
+                        "use matching Python variable names or wrap the body in a one-parameter @flow"
+                    )
+                continue
+            if not allow_consts:
+                raise DefineError(
+                    f"{role} has JSON capture {name!r}{_source_suffix(source)}; "
+                    "wrap the arm in a one-parameter @flow or use each(...) for closure conversion"
+                )
+            consts[name] = bound
+        return value.flow.graph, consts
+    raise DefineError(
+        f"{role} must be an @flow function or partially applied @flow{_source_suffix(source)}; "
+        "decorate the body with @flow"
+    )
+
+
+def _reschedule_seconds(
+    *,
+    after_s: Optional[int],
+    after: Optional[Node],
+    source: Optional[SourceSpan],
+) -> int:
+    if after_s is not None and after is not None:
+        raise DefineError(
+            f"reschedule accepts either after_s= or after=delay(...), not both{_source_suffix(source)}"
+        )
+    if after_s is not None:
+        if after_s < 1:
+            raise DefineError(f"reschedule after_s must be >= 1{_source_suffix(source)}")
+        return after_s
+    if after is not None:
+        if not (
+            isinstance(after.step, CallStep)
+            and after.step.tool == NativeTool(SLEEP_TOOL)
+            and after.ann is not None
+            and after.ann.timeout is not None
+        ):
+            raise DefineError(
+                f"reschedule after= must be delay(seconds=...){_source_suffix(source)}; "
+                "use after_s=seconds or after=delay(seconds=seconds)"
+            )
+        return int(after.ann.timeout)
+    raise DefineError(
+        f"reschedule needs after_s=seconds or after=delay(seconds=...){_source_suffix(source)}"
+    )
+
+
 def _validate_json_value(name: str, value: Any) -> None:
     if isinstance(value, Handle):
         return
@@ -718,4 +1016,16 @@ def _source_suffix(source: Optional[SourceSpan]) -> str:
     return "".join(parts)
 
 
-__all__ = ["BoundFlow", "DefineError", "FlowDef", "Handle", "flow", "think", "apply_if_authoring"]
+__all__ = [
+    "BoundFlow",
+    "DefineError",
+    "FlowDef",
+    "Handle",
+    "cond",
+    "each",
+    "flow",
+    "reschedule",
+    "switch",
+    "think",
+    "apply_if_authoring",
+]
