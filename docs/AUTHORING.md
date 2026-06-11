@@ -80,3 +80,8 @@ The combinator kernel (`seq`, `par`, `alt`, `each`, `iter_up_to`, `stage`,
 remains the wire-format ground truth. The typed facade lives in
 `composable_agents.typed`; use it when typed composition is the clearer escape
 hatch.
+
+To promote a `@flow` definition to a named, split-deployable unit, lift it with
+`as_flow(...)` first: `as_flow(my_flow).named("my-flow")` mints a durable ref,
+and `.as_sub(queue=...)` marks it for per-component split deployment — the same
+machinery the typed facade uses.

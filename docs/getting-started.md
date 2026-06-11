@@ -1,6 +1,6 @@
 # Getting Started
 
-This tutorial starts from the pure `Agent` facade and ends at the durable Temporal path. For the compact overview, read the repository [README](../README.md); this page expands the same surface without changing the model.
+This tutorial starts from the pure `Agent` facade and ends at the durable Temporal path. For the compact overview, read the repository [README](../README.md); this page expands the same surface without changing the model. For *workflow* authoring — pipelines over tools and brains rather than an agent loop — the primary surface is the `@flow` define-by-construction frontend, covered in the [Authoring Guide](AUTHORING.md) and the README quickstart.
 
 ## Install
 
@@ -188,7 +188,8 @@ The worker must host the workflows, activities, tool hands, LLM callable, and ca
 2. Add a budget guard with `budget_cost`: [examples/research_assistant.py](../examples/research_assistant.py).
 3. Add approval structure with `human_gate(...)`: [examples/email_approval.py](../examples/email_approval.py), with safety context in [Capabilities and Safety](capabilities-and-safety.md).
 4. Run the admitted artifact durably on Temporal: [examples/temporal_durable_agent.py](../examples/temporal_durable_agent.py) and [Deploy on Temporal](deploy-temporal.md).
-5. Drop to raw combinators when you need full control: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `race`, `hedge`, `quorum`; see [Concepts](concepts.md), [Typed Flow](design/typed-flow.md), and the normative [SPEC](SPEC.md).
-6. Read the capstone composition last: [examples/elnino/swarm.py](../examples/elnino/swarm.py).
+5. Author workflows on the primary `@flow` surface: [examples/episode_summary_flow.py](../examples/episode_summary_flow.py) and [examples/cluster_labeling_flow.py](../examples/cluster_labeling_flow.py), with the full surface in the [Authoring Guide](AUTHORING.md).
+6. Drop to raw combinators when you need full control: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `race`, `hedge`, `quorum`; see [Concepts](concepts.md), [Typed Flow](design/typed-flow.md), and the normative [SPEC](SPEC.md).
+7. Read the capstone composition last: [examples/elnino/swarm.py](../examples/elnino/swarm.py).
 
 For repository workflow and contribution rules, see [CONTRIBUTING](../CONTRIBUTING.md). The docs index is [docs/README.md](README.md).
