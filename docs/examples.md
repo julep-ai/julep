@@ -1,6 +1,48 @@
 # Examples
 
-The `examples/` directory is a ladder. Start with the keyless local facade, then add budget, approval, durable execution, and finally the full combinator surface.
+The `examples/` directory is a ladder. Start with define-by-construction
+`@flow`, then use the facade, approval, durable execution, and combinator
+kernel examples as focused references.
+
+## `examples/episode_summary_flow.py`
+
+What it teaches: the core `@flow` loop plus CAS-guarded writes.
+
+Rung: primary authoring surface with keyless `deploy(...).dry_run(...)`.
+
+Key APIs: `@flow`, `@tool`, `@pure`, `Brain`, `register_brain`, `think`, `cond`, `each`, `deploy(tools=..., brains=...)`, `Deployment.dry_run(...)`.
+
+Run:
+
+```bash
+python examples/episode_summary_flow.py
+```
+
+This example is keyless and deterministic. It reads an episode, runs two fake
+brain passes in dry-run mode, and writes summary surfaces only if the source
+hash is unchanged. The demo rollup stays at two `success`, one `stale_source`,
+and one `not_found`.
+
+## `examples/cluster_labeling_flow.py`
+
+What it teaches: fan-out, closure captures, `switch`, inferred parallel brain
+steps, and retry options.
+
+Rung: product-shaped `@flow` porting example.
+
+Key APIs: `each(..., max_parallel=3)`, keyword closure capture,
+`think(...)` siblings from the same source, `switch(...)`, per-step
+`retries=`, `retry_interval_s=`, and `backoff_rate=`.
+
+Run:
+
+```bash
+python examples/cluster_labeling_flow.py
+```
+
+This example is keyless and deterministic. It reads one global macrocluster
+snapshot, fans out bounded per-cluster labeling work, then performs a single
+transactional CAS-guarded snapshot write and status tally.
 
 ## `examples/support_triage.py`
 
@@ -58,17 +100,8 @@ Rung: durable execution path.
 
 Key APIs: `Agent`, `@tool`, `Agent.deployment()`, `Agent.deploy(...)`, `WorkerContext`, `build_worker`, Temporal `Client`, HTTP native hands.
 
-Run a Temporal dev server in another terminal:
-
-```bash
-temporal server start-dev
-```
-
-Then run:
-
-```bash
-python examples/temporal_durable_agent.py
-```
+Run a Temporal dev server in another terminal with `temporal server start-dev`,
+then run `python examples/temporal_durable_agent.py`.
 
 The controller is still keyless: `scripted_controller` is a deterministic async callable. The durability comes from Temporal. The example starts a tiny stdlib HTTP hand server, builds a worker with `WorkerContext`, runs `AgentWorkflow`, and prints the terminal result. For the production worker shape, see [Deploy on Temporal](deploy-temporal.md).
 
@@ -80,12 +113,8 @@ Rung: hosted execution path (the one example that talks to a live service).
 
 Key APIs: `Agent`, `@tool`, `Agent.run_on_cma(...)`, `AnthropicCMAClient` (the `composable-agents[cma]` extra), the granted tool surface projected as CMA custom tools, `cost`, `trace`.
 
-Set a key (this is the only example that needs one), then run:
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-python examples/cma_managed_agent.py
-```
+Set `ANTHROPIC_API_KEY` first, then run
+`python examples/cma_managed_agent.py`.
 
 Without `ANTHROPIC_API_KEY` the example is a clean no-op (it prints how to run). The hosted model picks the tools (`get_weather`, then `to_fahrenheit`); the framework dispatches each call locally, enforces deny-by-default grants and the budget, and records the same `cost`/`trace` as `.run()`. Note that `spent` is in the framework's abstract cost units, not dollars. This example talks to a beta API (`managed-agents-2026-04-01`) and is experimental.
 
@@ -108,11 +137,13 @@ The file prints its own reference text when run directly. Treat it as a source-r
 ## Run the keyless local examples
 
 ```bash
+python examples/episode_summary_flow.py
+python examples/cluster_labeling_flow.py
 python examples/support_triage.py
 python examples/research_assistant.py
 python examples/email_approval.py
 ```
 
-These three do not require an API key or a Temporal server. The durable example requires `temporal server start-dev`; the capstone is the largest reference and should be read after the smaller examples.
+These five do not require an API key or a Temporal server. The durable example requires `temporal server start-dev`; the capstone is the largest reference and should be read after the smaller examples.
 
-Related docs: [Getting Started](getting-started.md), [Concepts](concepts.md), [Capabilities and Safety](capabilities-and-safety.md), [Deploy on Temporal](deploy-temporal.md), [SPEC](SPEC.md), [Typed Flow](design/typed-flow.md), [README](../README.md), [docs index](README.md), and [CONTRIBUTING](../CONTRIBUTING.md).
+Related docs: [Authoring Guide](AUTHORING.md), [Getting Started](getting-started.md), [Concepts](concepts.md), [Capabilities and Safety](capabilities-and-safety.md), [Deploy on Temporal](deploy-temporal.md), [SPEC](SPEC.md), [Typed Flow](design/typed-flow.md), [README](../README.md), [docs index](README.md), and [CONTRIBUTING](../CONTRIBUTING.md).

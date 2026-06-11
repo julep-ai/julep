@@ -1,6 +1,6 @@
 # Composable Serverless Agents
 
-A typed framework for building agents as **composable, durable dataflows** instead of ad-hoc loops: flows can crash and resume, retry safely, explain every step through a derived projection, and deny any tool the model was not explicitly allowed to call. You can start with a pure, keyless local `Agent` facade and later deploy the same frozen control flow to Temporal for durable execution; the pure core stays dependency-free, while the Temporal layer is optional.
+A framework for building agents as **composable, durable dataflows** instead of ad-hoc loops: flows can crash and resume, retry safely, explain every step through a derived projection, and deny any tool the model was not explicitly allowed to call. The primary authoring surface is define-by-construction `@flow`: ordinary Python names graph steps while registered tools, pures, brains, branches, fan-out, retries, and timeouts compile to the same frozen wire-format IR. The pure core stays dependency-free, while the Temporal layer is optional.
 
 ---
 
@@ -9,27 +9,61 @@ A typed framework for building agents as **composable, durable dataflows** inste
 Install the base package and run this as a normal Python script:
 
 ```python
-from composable_agents import Agent, tool
+from typing import TypedDict
+
+from composable_agents import Brain, deploy, flow, pure, register_brain, think, tool
+
+
+class SupportReply(TypedDict):
+    reply: str
+
 
 @tool(effect="read", idempotent=True)
-def search_kb(ticket: str) -> dict[str, str]:
-    return {"queue": "billing", "summary": "Use the duplicate-charge runbook."}
+def lookup_ticket(ticket: str) -> dict[str, str]:
+    return {
+        "ticket": ticket,
+        "queue": "billing",
+        "summary": "Use the duplicate-charge runbook.",
+    }
 
-def scripted_llm(_brain: str, payload: dict) -> dict:
-    if not payload["trace"]:
-        return {"tool": "search_kb", "input": payload["input"]}
-    hit = payload["input"]
-    return {"output": {"queue": hit["queue"], "reply": hit["summary"]}}
 
-agent = Agent(brain="claude-sonnet-4-6", tools=[search_kb], llm=scripted_llm)
-result = agent.run("Customer was charged twice and renewal access is blocked.")
-print(result["status"], result["output"], result["trace"])
+@pure("ticket_prompt")
+def ticket_prompt(hit: dict[str, str]) -> dict[str, str]:
+    return {"queue": hit["queue"], "context": hit["summary"]}
 
-# Later, with the temporal extra and a Temporal client:
-# await agent.deploy(client, session_id="ticket-123", input="Customer was charged twice.")
+
+register_brain(
+    Brain(
+        name="support_reply",
+        model="anthropic:claude-haiku-4-5-20251001",
+        system="Draft one concise support reply as JSON.",
+        reply=SupportReply,
+    )
+)
+
+
+@flow
+def triage(ticket: str) -> dict[str, str]:
+    hit = lookup_ticket(ticket, retries=2, timeout_s=5)
+    prompt = ticket_prompt(hit)
+    answer = think("support_reply", prompt, timeout_s=10)
+    return hit | answer
+
+
+def fake_support_reply(value: dict[str, str]) -> SupportReply:
+    return {"reply": f"{value['queue']}: {value['context']}"}
+
+
+deployment = deploy(triage, tools=[lookup_ticket], brains=["support_reply"])
+result = deployment.dry_run(
+    "Customer was charged twice.",
+    brains={"support_reply": fake_support_reply},
+)
+
+print(result.value)
 ```
 
-`llm=` is just a `(brain, payload) -> reply` callable, so examples and tests can stay keyless and deterministic. If you omit `llm`, the facade uses a keyless stub that warns and returns the input unprocessed. See the runnable version in `examples/support_triage.py`.
+`@flow` runs once at definition time with data handles. Registered tools, registered pures, `think(...)`, `cond(...)`, `switch(...)`, `each(...)`, and `reschedule(...)` append graph steps instead of doing runtime work; `|` merges records and `h["key"]` plucks fields. `deploy(..., tools=..., brains=...)` freezes the tool and brain surface, and `dry_run(...)` executes locally with in-memory tools and deterministic fake brains. See the larger `@flow` examples in `examples/episode_summary_flow.py` and `examples/cluster_labeling_flow.py`.
 
 ---
 
@@ -66,22 +100,24 @@ For iteration, use dev mode: `deploy(..., mode="dev")` or `Agent(..., mode="dev"
 
 ## Climb the ladder
 
-1. `Agent.run` for a keyless local loop: `examples/support_triage.py`.
-2. Add a budget guard to the same facade: `examples/research_assistant.py`.
-3. Add approvals via `human_gate` in a combinator flow: `examples/email_approval.py`.
-4. Deploy the same admitted artifact to Temporal with `deploy()` / `agent.deploy(...)`.
-5. Drop to raw combinators (`seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`) when you need full control.
-6. Study the capstone composition in `examples/elnino/swarm.py`.
+1. Start with `@flow` authoring and local `dry_run`: `examples/episode_summary_flow.py` teaches the core loop plus CAS-guarded writes.
+2. Scale the same surface: `examples/cluster_labeling_flow.py` teaches fan-out, closure captures, `switch`, inferred parallel brain steps, and retry options.
+3. Use the `Agent` facade for a keyless local controller loop: `examples/support_triage.py`.
+4. Add a budget guard to the facade: `examples/research_assistant.py`.
+5. Add approvals via `human_gate` in a combinator-kernel flow: `examples/email_approval.py`.
+6. Deploy the same admitted artifact to Temporal with `deploy()` / `agent.deploy(...)`.
+7. Drop to raw combinators (`seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`) when you need full control, or use `composable_agents.typed` when you want typed composition as an escape hatch.
 
 ---
 
 ## Documentation
 
-The documentation index is [docs/README.md](docs/README.md). Newcomers should start with [docs/getting-started.md](docs/getting-started.md), then read [docs/concepts.md](docs/concepts.md).
+The documentation index is [docs/README.md](docs/README.md). Newcomers should start with the quickstart above, then read [docs/AUTHORING.md](docs/AUTHORING.md) and [docs/concepts.md](docs/concepts.md).
 
 Key guides:
 
 - [Getting started](docs/getting-started.md)
+- [Authoring guide](docs/AUTHORING.md)
 - [Concepts](docs/concepts.md)
 - [Dispatch boundary](docs/dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer
 - [Capabilities and safety](docs/capabilities-and-safety.md)
@@ -92,43 +128,40 @@ Key guides:
 
 ---
 
-## Typed composition (the `Flow` surface)
+## Typed Composition Escape Hatch
 
 The `composable_agents.typed` layer is a **typed authoring wrapper** over the same
 `Node` IR — it carries Python types while you build, then *elaborates to the
-identical IR and disappears before freeze* (the golden corpus never moves). Tools,
-flows, and agents become first-class **values** you import, type-check, and
-recombine — closing the gap between the ergonomic facade and the composable algebra.
+identical IR and disappears before freeze* (the golden corpus never moves). Use
+it when type-checkable composition is clearer than `@flow`; it is not the primary
+authoring path.
 
 ```python
-import composable_agents as ca                       # ca.flow decorator
-from composable_agents.typed import seq               # typed combinators
-from composable_agents.flow_adapters import as_type    # explicit Any-edge cast
+from composable_agents import tool
+from composable_agents.typed import as_flow
 
-# A @tool is a typed leaf; >> threads types (a mismatch is a mypy error):
-research = search >> classify                 # Flow[Query, Priority]
 
-# An Agent IS a Flow — it composes as a node, and decomposes:
-inbox = Agent(brain="claude-sonnet-4-6", tools=[search])
-pipeline = fetch >> inbox >> notify           # an agent mid-pipeline
-vip      = inbox.with_tools(add=[escalate]).replace(brain="opus")
+@tool(effect="read", idempotent=True)
+def fetch(ticket: str) -> dict[str, str]:
+    return {"ticket": ticket}
 
-# Capabilities are uniform: Tools (→ call) and named Flows/Agents (→ sub).
-# A sub-agent runs with its OWN authority — the parent never inherits its tools:
-triage = Agent(brain="haiku", tools=[search, classify]).named("triage.v1")
-desk   = Agent(brain="claude-sonnet-4-6", tools=[lookup, triage])   # triage = an attenuated sub-agent
 
-# Scale a part independently: pass it as a split capability (own worker/queue):
-desk_scaled = Agent(brain="claude-sonnet-4-6",
-                    tools=[lookup, triage.as_sub(queue="triage-pool")])
+@tool(effect="read", idempotent=True)
+def classify(hit: dict[str, str]) -> dict[str, str]:
+    return {"priority": "normal", **hit}
 
-r = desk.run("ticket text")    # r: Result[Any] — r.output / r.status / r.cost, and r["status"] (dict-compatible)
+
+pipeline = fetch >> classify
+named = pipeline.named("support.triage.v1")
+
+print(named.local_name)
+print(as_flow(fetch).local_name)
 ```
 
 Typing is **hybrid and honest**: leaves and pipelines are typed; the agent/LLM/JSON
 boundary is `Any`, made *loud* by `as_type(...)`/`expect(...)` adapters and the
-`any_edges(...)` reporter rather than hidden. The string DSL and the original
-`Agent` facade keep working unchanged — this surface is additive.
+`any_edges(...)` reporter rather than hidden. The combinator kernel and the
+`Agent` facade keep working unchanged; this surface is additive.
 
 ---
 
@@ -146,7 +179,12 @@ Shape is computed (`surface_shape`), not declared, and it bounds what static gua
 
 ---
 
-## Authoring DSL
+## Combinator Kernel
+
+`@flow` compiles through the combinator kernel. The kernel is still fully
+supported, and the frozen IR it emits is the wire-format ground truth. Reach for
+it when you need exact structural control or when you are implementing another
+frontend.
 
 **Structural combinators** (the name documents the shape it produces):
 
@@ -202,40 +240,73 @@ The execution layer is the only part that imports `temporalio`, and it does so b
 Going to production is the same deploy artifact plus a worker process that wires the environment once:
 
 ```python
-import asyncio
-from temporalio.client import Client
 from composable_agents import (
-    call, mcp, think, seq, deploy, snapshot_from_listings,
-    register_brain, Brain,
+    Brain,
+    call,
+    deploy,
+    mcp,
+    register_brain,
+    seq,
+    snapshot_from_listings,
+    think,
 )
-from composable_agents.execution.worker import run_worker
 
+register_brain(Brain(name="summarize", model="claude-...", system="Summarize."))
 flow = seq(call(mcp("search", "web")), think("summarize"))
-snapshot = snapshot_from_listings({
-    "search": {"web": {"inputSchema": {"type": "object"},
-                       "annotations": {"readOnlyHint": True, "idempotentHint": True}}},
-})
-deployment = deploy(flow, snapshot)          # raises if any blocking diagnostic
+snapshot = snapshot_from_listings(
+    {
+        "search": {
+            "web": {
+                "inputSchema": {"type": "object"},
+                "annotations": {"readOnlyHint": True, "idempotentHint": True},
+            }
+        }
+    }
+)
+deployment = deploy(flow, snapshot)
 
-async def main():
-    client = await Client.connect("localhost:7233")
-    result = await deployment.run(client, session_id="run-1", input={"q": "temporal vs dbos"})
-    print(result)
 
-asyncio.run(main())
+async def run_on_temporal(client: object) -> object:
+    return await deployment.run(
+        client,
+        session_id="run-1",
+        input={"q": "temporal vs dbos"},
+    )
 ```
 
 A worker hosts the workflow + activities:
 
 ```python
+from typing import Any
+
+from composable_agents import Brain, register_brain
+from composable_agents.execution.worker import run_worker
+
+
+async def my_async_mcp_caller(
+    server: str,
+    tool: str,
+    value: Any,
+    idempotency_key: str | None,
+) -> Any:
+    return {"server": server, "tool": tool, "value": value, "key": idempotency_key}
+
+
+async def my_async_llm(brain: str, value: Any) -> Any:
+    return {"brain": brain, "value": value}
+
+
 register_brain(Brain(name="summarize", model="claude-...", system="Summarize."))
-await run_worker(
-    target_host="localhost:7233",
-    hand_urls={"native_tool": "https://my-hand.run.app"},
-    mcp_call=my_async_mcp_caller,   # async (server, tool, value, idempotency_key) -> result
-    llm=my_async_llm,               # async (brain, value) -> reply
-    capabilities=my_capability_manifest,
-)
+
+
+async def serve_worker() -> None:
+    await run_worker(
+        target_host="localhost:7233",
+        hand_urls={"native_tool": "https://my-hand.run.app"},
+        mcp_call=my_async_mcp_caller,
+        llm=my_async_llm,
+        capabilities=None,
+    )
 ```
 
 Temporal activity retries re-use the same deterministic activation `cid`, so `callHand` passes a stable idempotency key to both native HTTP hands and MCP callers. MCP transports therefore carry the key required for `required` idempotent tools to be admitted.
@@ -254,7 +325,7 @@ The offline complement is **plan extraction**: an observed agent action trace ca
 
 This split is deliberate and load-bearing:
 
-- **Pure core** (`kinds`, `ir`, `shapes`, `contracts`, `freeze`, `validate`, `dsl`, `derived`, `capabilities`, `staged`, `projection`, `dotctx`, `agent_loop`, `deploy`, and `execution.interpreter`) has **no Temporal dependency**. The interpreter takes an injected `Env` of effect handlers and concurrency primitives, so the same control-flow logic runs under Temporal *and* under an in-memory `InMemoryEnv` in tests.
+- **Pure core** (`kinds`, `ir`, `shapes`, `contracts`, `freeze`, `validate`, `define`, `typed`, `dsl`, `derived`, `capabilities`, `staged`, `projection`, `dotctx`, `agent_loop`, `deploy`, and `execution.interpreter`) has **no Temporal dependency**. The interpreter takes an injected `Env` of effect handlers and concurrency primitives, so the same control-flow logic runs under Temporal *and* under an in-memory `InMemoryEnv` in tests.
 - **Execution layer** (`execution.harness`, `execution.activities`, `execution.worker`, `execution.otel`) binds to Temporal and is import-guarded.
 
 **Testing.** The full suite passes with the pure core covered without `temporalio`; install the dev extra to include Temporal E2E coverage when available. Run:
@@ -289,6 +360,8 @@ composable_agents/
   transforms.py     cycle detection, id normalization
   freeze.py         snapshot -> content-hash binding of every tool
   validate.py       well-formedness + schema diagnostics
+  define.py         define-by-construction @flow frontend
+  typed.py          typed authoring escape hatch over the same IR
   dsl.py            structural combinators + Contract helpers
   derived.py        race/hedge/quorum/map/vote/human_gate + §5 admission
   capabilities.py   §9 capability manifest, budget, grants, overrides

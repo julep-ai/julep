@@ -1,11 +1,13 @@
 # Documentation
 
-New here? Read [getting-started.md](getting-started.md), then [concepts.md](concepts.md).
+New here? Read the repository [README](../README.md), then
+[AUTHORING.md](AUTHORING.md) and [concepts.md](concepts.md).
 
 ## Start here
 
-- [Getting started](getting-started.md) — install the package, run a keyless local agent, and understand the first deploy path.
-- [Examples](examples.md) — runnable examples that show the facade, approvals, budgets, and lower-level combinators.
+- [Getting started](getting-started.md) — install the package, run a keyless local agent facade, and understand the first deploy path.
+- [Authoring guide](AUTHORING.md) — the `@flow` surfaces, determinism contract, and define-time diagnostics.
+- [Examples](examples.md) — runnable examples that show `@flow`, the facade, approvals, budgets, and lower-level combinators.
 
 ## Understand it
 
