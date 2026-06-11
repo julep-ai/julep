@@ -24,6 +24,15 @@ dist/
 .codex-runs/
 *.codex-out.txt
 
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+*.tfplan
+crash.log
+crash.*.log
+
 # Editor / OS
 .DS_Store
 *.swp

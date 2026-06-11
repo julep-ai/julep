@@ -1,0 +1,20 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ca-llm-worker-temporal
+spec:
+  scaleTargetRef:
+    name: ca-llm-worker
+  pollingInterval: {{ .Values.scaling.pollingInterval }}
+  cooldownPeriod: {{ .Values.scaling.cooldownPeriod }}
+  minReplicaCount: {{ .Values.scaling.minReplicas }}
+  maxReplicaCount: {{ .Values.scaling.maxReplicas }}
+  triggers:
+    - type: temporal
+      metadata:
+        endpoint: {{ .Values.temporal.address | quote }}
+        namespace: {{ .Values.temporal.namespace | quote }}
+        taskQueue: {{ .Values.temporal.taskQueue | quote }}
+        queueTypes: workflow,activity
+        targetQueueSize: {{ .Values.scaling.targetQueueSize | quote }}
+        activationTargetQueueSize: {{ .Values.scaling.activationTargetQueueSize | quote }}

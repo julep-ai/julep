@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-llm-worker
+  labels:
+    app.kubernetes.io/name: ca-llm-worker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ca-llm-worker
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ca-llm-worker
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: {{ .Values.temporal.address | quote }}
+            - name: TEMPORAL_TASK_QUEUE
+              value: {{ .Values.temporal.taskQueue | quote }}
+            - name: WORKER_GRACEFUL_SHUTDOWN_S
+              value: {{ .Values.worker.gracefulShutdownSeconds | quote }}
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.worker.secretName | quote }}
+                  key: ANTHROPIC_API_KEY
+          ports:
+            - containerPort: {{ .Values.worker.healthPort }}
+              name: health
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            periodSeconds: 2
+          resources:
+{{ toYaml .Values.resources | indent 12 }}

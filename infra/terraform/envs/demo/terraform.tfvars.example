@@ -1,0 +1,8 @@
+aws_region         = "us-east-1"
+name_prefix        = "julep-v2-temporal-demo"
+worker_image_tag   = "latest"
+db_instance_class  = "db.t4g.micro"
+db_engine_version  = "16.6"
+db_multi_az        = false
+worker_min_replicas = 0
+worker_max_replicas = 4

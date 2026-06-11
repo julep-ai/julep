@@ -1,0 +1,27 @@
+image:
+  repository: ""
+  tag: latest
+  pullPolicy: IfNotPresent
+
+temporal:
+  address: temporal-frontend.temporal.svc.cluster.local:7233
+  namespace: default
+  taskQueue: composable-agents
+
+worker:
+  gracefulShutdownSeconds: 20
+  healthPort: 8080
+  secretName: llm-keys
+
+scaling:
+  minReplicas: 0
+  maxReplicas: 4
+  pollingInterval: 5
+  cooldownPeriod: 60
+  targetQueueSize: "1"
+  activationTargetQueueSize: "0"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
