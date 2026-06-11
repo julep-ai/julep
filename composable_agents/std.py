@@ -63,6 +63,23 @@ def std_assign(value: Any, *, key: str) -> dict[str, Any]:
     return copied
 
 
+def std_collect(value: Any, *, fields: list[str]) -> dict[str, Any]:
+    """Wire-format-stable std.collect; body frozen once any artifact references it.
+
+    Extends an env record from the flat par fold-back layout
+    ``[env, item1, item2, ...]``. ``fields`` names each item in order. This is
+    the multi-result sibling of std.assign. Deliberate behavior changes require
+    registering a new std name.
+    """
+    expected = len(fields) + 1
+    if len(value) != expected:
+        raise ValueError(f"std.collect expected {expected} values, got {len(value)}")
+    copied = dict(value[0])
+    for idx, field in enumerate(fields, start=1):
+        copied[field] = value[idx]
+    return copied
+
+
 def std_pack(value: Any, *, fields: dict[str, Any]) -> dict[str, Any]:
     """Wire-format-stable std.pack; body frozen once any artifact references it.
 
@@ -119,6 +136,7 @@ DEFAULT_REGISTRY.register_pure("std.merge", std_merge)
 DEFAULT_REGISTRY.register_pure("std.pluck", std_pluck)
 DEFAULT_REGISTRY.register_pure("std.init", std_init)
 DEFAULT_REGISTRY.register_pure("std.assign", std_assign)
+DEFAULT_REGISTRY.register_pure("std.collect", std_collect)
 DEFAULT_REGISTRY.register_pure("std.pack", std_pack)
 DEFAULT_REGISTRY.register_pure("std.unpack", std_unpack)
 DEFAULT_REGISTRY.register_pure("std.bind", std_bind)

@@ -16,6 +16,7 @@ STD_PURES = (
     "std.pluck",
     "std.init",
     "std.assign",
+    "std.collect",
     "std.pack",
     "std.unpack",
     "std.bind",
@@ -30,6 +31,7 @@ EXPECTED_STD_SOURCE_HASHES = {
     "std.pluck": "pure:29fc760c408afde4",
     "std.init": "pure:7b74da9294bdf489",
     "std.assign": "pure:e844f98f93635b01",
+    "std.collect": "pure:ff671d8f4dcc85a4",
     "std.pack": "pure:9a0d3873bbef3f97",
     "std.unpack": "pure:82b536c49d7cee7e",
     "std.bind": "pure:9936960359bdf9a3",
@@ -69,6 +71,21 @@ def test_std_init_and_assign_are_distinct_without_shape_sniffing() -> None:
         "summary": {"summary": "done"},
     }
     assert env == {"episode_id": "ep-1"}
+
+
+def test_std_collect_extends_env_from_multi_result_par_layout() -> None:
+    env = {"source": {"episode_id": "ep-1"}}
+    value = [env, {"summary": "done"}, {"embedding": [4, 8]}]
+
+    assert _run_std("std.collect", value, {"fields": ["summary", "embedding"]}) == {
+        "source": {"episode_id": "ep-1"},
+        "summary": {"summary": "done"},
+        "embedding": {"embedding": [4, 8]},
+    }
+    assert env == {"source": {"episode_id": "ep-1"}}
+
+    with pytest.raises(ValueError, match="std.collect expected 3 values, got 2"):
+        _run_std("std.collect", [env, {"summary": "done"}], {"fields": ["summary", "embedding"]})
 
 
 def test_std_merge_binary_pair_uses_right_wins_dict_union() -> None:

@@ -195,6 +195,13 @@ named JSON objects only.
   `name` set to `item`. `std.init` and `std.assign` are distinct pures; std
   bodies MUST NOT sniff the flowing value to choose between env-entry and
   env-extend behavior.
+- `std.collect`: `args: {"fields": ["a", "b"]}`. Extends an existing env
+  record from the flat multi-result `par` fold-back layout
+  `[env, itemForA, itemForB]`, returning a fresh record with each listed field
+  assigned from the matching item. This is the multi-result sibling of
+  `std.assign`; it exists because `[env, item1, item2, ...]` cannot be expressed
+  by the binary `std.assign` layout without serializing independent parallel
+  branches.
 - `std.pack`: `args: {"fields": {...}}`. Builds a named closure-conversion
   record. Each output field maps to one selector:
   `{"field": "source"}` copies `value["source"]`, `{"input": true}` copies the

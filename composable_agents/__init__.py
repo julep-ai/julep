@@ -131,6 +131,14 @@ from .deploy import (
     deploy as deploy,
     snapshot_from_listings as snapshot_from_listings,
 )
+from .dag import (
+    Graph as Graph,
+    GraphDefinitionError as GraphDefinitionError,
+    InputEdge as InputEdge,
+    StepKind as StepKind,
+    StepNode as StepNode,
+    compile as compile_dag,
+)
 from .agent import (
     AGENT_REPLY_SCHEMA as AGENT_REPLY_SCHEMA,
     Agent as Agent,
