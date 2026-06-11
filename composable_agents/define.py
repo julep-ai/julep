@@ -9,6 +9,12 @@ operators ``h1 | h2`` (``std.merge``) and ``h["key"]`` (``std.pluck``). Lowering
 always goes through :mod:`composable_agents.dag` and the compiler; this frontend
 does not emit wire-format IR directly.
 
+Branch arms receive the branch subject by name: the remaining item parameter of
+a ``cond``/``switch`` arm must match the subject Handle label. Other enclosing
+values must be supplied as keyword captures with matching variable names.
+``each`` bodies are different: the item parameter is positional and may be named
+independently from the list-valued items Handle.
+
 Determinism contract: every callable used on a Handle must be registered by its
 raw function source (``@tool`` or ``@pure``), every captured constant must be
 canonical JSON, and secret-shaped config must stay in environment-backed tools
@@ -549,6 +555,10 @@ def cond(
     immediately before ``alt`` and storing the boolean in the internal
     ``__branch__`` env field consumed by ``std.branch_predicate``. Users do not
     need to author env-aware predicates.
+
+    Arm item parameters bind the branch subject by name, so each arm's remaining
+    runtime parameter must equal ``subject.label``. Bind other enclosing values
+    as keyword captures.
     """
     ctx = _current_context()
     site = _call_site(ctx, "cond")
@@ -556,8 +566,20 @@ def cond(
     handle = _ensure_handle(subject, span)
     ctx.validate_current_handle(handle, span)
     pred_name = _registered_pure_name(pred, "cond predicate", span)
-    then_graph, _ = _flow_graph_and_captures(then, "cond then arm", span, allow_consts=False)
-    else_graph, _ = _flow_graph_and_captures(orelse, "cond orelse arm", span, allow_consts=False)
+    then_graph, _ = _flow_graph_and_captures(
+        then,
+        "cond then arm",
+        span,
+        allow_consts=False,
+        subject_label=handle.label,
+    )
+    else_graph, _ = _flow_graph_and_captures(
+        orelse,
+        "cond orelse arm",
+        span,
+        allow_consts=False,
+        subject_label=handle.label,
+    )
     output = ctx.output_name("cond", None, site)
     ctx.graph.add_cond(
         pred_name,
@@ -582,6 +604,10 @@ def switch(
     Like :func:`cond`, the frontend evaluates the authored subject-shaped
     selector before the low-level ``alt`` and stores the selected key in the
     internal ``__branch__`` env field consumed by ``std.branch_selector``.
+
+    Case and default arm item parameters bind the branch subject by name, so
+    each arm's remaining runtime parameter must equal ``subject.label``. Bind
+    other enclosing values as keyword captures.
     """
     ctx = _current_context()
     site = _call_site(ctx, "switch")
@@ -595,13 +621,25 @@ def switch(
             "pass cases={key: flow, ...} and optionally default=flow"
         )
     arm_graphs = {
-        str(key): _flow_graph_and_captures(arm, f"switch case {key!r}", span, allow_consts=False)[0]
+        str(key): _flow_graph_and_captures(
+            arm,
+            f"switch case {key!r}",
+            span,
+            allow_consts=False,
+            subject_label=handle.label,
+        )[0]
         for key, arm in cases.items()
     }
     default_graph = (
         None
         if default is None
-        else _flow_graph_and_captures(default, "switch default arm", span, allow_consts=False)[0]
+        else _flow_graph_and_captures(
+            default,
+            "switch default arm",
+            span,
+            allow_consts=False,
+            subject_label=handle.label,
+        )[0]
     )
     output = ctx.output_name("switch", None, site)
     ctx.graph.add_switch(
@@ -861,8 +899,8 @@ def _copy_step(
             step.ref,
             inputs=inputs,
             output=output,
-            if_true=step.if_true,
-            if_false=step.if_false,
+            if_true=_copy_graph_with_external_renames(step.if_true, remap, remap_input_name=True),
+            if_false=_copy_graph_with_external_renames(step.if_false, remap, remap_input_name=True),
             source=step.source,
             branch_subject=_remap_source(step.branch_subject, remap, source_input, target_input),
         )
@@ -874,8 +912,13 @@ def _copy_step(
             step.ref,
             inputs=inputs,
             output=output,
-            cases=step.cases,
-            default=step.default,
+            cases={
+                key: _copy_graph_with_external_renames(arm, remap, remap_input_name=True)
+                for key, arm in step.cases.items()
+            },
+            default=None
+            if step.default is None
+            else _copy_graph_with_external_renames(step.default, remap, remap_input_name=True),
             source=step.source,
             branch_subject=_remap_source(step.branch_subject, remap, source_input, target_input),
         )
@@ -886,7 +929,12 @@ def _copy_step(
         if len(inputs) != 1:
             raise DefineError(f"@flow subcall each {step.output!r} needs one list input")
         graph.add_each(
-            step.body,
+            _copy_graph_with_external_renames(
+                step.body,
+                remap,
+                remap_input_name=False,
+                excluded=set(step.const_captures or {}),
+            ),
             items=inputs[0],
             output=output,
             max_parallel=step.max_parallel,
@@ -896,6 +944,186 @@ def _copy_step(
         )
         return
     raise AssertionError(f"unhandled step kind: {step.kind}")
+
+
+def _copy_graph_with_external_renames(
+    graph: dag.Graph,
+    remap: dict[str, str],
+    *,
+    remap_input_name: bool,
+    excluded: set[str] | None = None,
+) -> dag.Graph:
+    """Copy a nested graph only when external references need inline renaming."""
+    shadowed = {step.output for step in graph.steps}
+    excluded_names = set(excluded or ())
+    effective = {
+        source: target
+        for source, target in remap.items()
+        if source != target and source not in shadowed and source not in excluded_names
+    }
+    if not remap_input_name:
+        effective.pop(graph.input_name, None)
+
+    step_copies: list[dag.StepNode] = []
+    nested_changed = False
+    for step in graph.steps:
+        copied_step, changed = _copy_step_node_with_external_renames(step, effective)
+        step_copies.append(copied_step)
+        nested_changed = nested_changed or changed
+
+    direct_refs = _graph_direct_references(graph, remap_input_name=remap_input_name)
+    direct_changed = any(name in effective for name in direct_refs)
+    if not direct_changed and not nested_changed:
+        return graph
+
+    input_name = effective.get(graph.input_name, graph.input_name) if remap_input_name else graph.input_name
+    output_name = graph.output_name
+    if output_name is not None and output_name not in shadowed:
+        output_name = effective.get(output_name, output_name)
+    copied = dag.Graph(input_name=input_name, output_name=output_name, source=graph.source)
+    for step in step_copies:
+        _append_copied_step(copied, step)
+    return copied
+
+
+def _copy_step_node_with_external_renames(
+    step: dag.StepNode,
+    effective: dict[str, str],
+) -> tuple[dag.StepNode, bool]:
+    inputs = tuple(
+        dag.InputEdge(name=edge.name, source=effective.get(edge.source, edge.source))
+        for edge in step.inputs
+    )
+    branch_subject = None if step.branch_subject is None else effective.get(step.branch_subject, step.branch_subject)
+    changed = inputs != step.inputs or branch_subject != step.branch_subject
+
+    if_true = step.if_true
+    if step.if_true is not None:
+        if_true = _copy_graph_with_external_renames(step.if_true, effective, remap_input_name=True)
+        changed = changed or if_true is not step.if_true
+
+    if_false = step.if_false
+    if step.if_false is not None:
+        if_false = _copy_graph_with_external_renames(step.if_false, effective, remap_input_name=True)
+        changed = changed or if_false is not step.if_false
+
+    cases = step.cases
+    if step.cases is not None:
+        cases = {
+            key: _copy_graph_with_external_renames(arm, effective, remap_input_name=True)
+            for key, arm in step.cases.items()
+        }
+        changed = changed or any(cases[key] is not step.cases[key] for key in step.cases)
+
+    default = step.default
+    if step.default is not None:
+        default = _copy_graph_with_external_renames(step.default, effective, remap_input_name=True)
+        changed = changed or default is not step.default
+
+    body = step.body
+    if step.body is not None:
+        body = _copy_graph_with_external_renames(
+            step.body,
+            effective,
+            remap_input_name=False,
+            excluded=set(step.const_captures or {}),
+        )
+        changed = changed or body is not step.body
+
+    if not changed:
+        return step, False
+
+    return (
+        dag.StepNode(
+            kind=step.kind,
+            ref=step.ref,
+            inputs=inputs,
+            output=step.output,
+            contract=step.contract,
+            ann=step.ann,
+            source=step.source,
+            args=None if step.args is None else dict(step.args),
+            order=step.order,
+            if_true=if_true,
+            if_false=if_false,
+            cases=cases,
+            default=default,
+            body=body,
+            max_parallel=step.max_parallel,
+            reducer=step.reducer,
+            const_captures=None if step.const_captures is None else dict(step.const_captures),
+            branch_subject=branch_subject,
+        ),
+        True,
+    )
+
+
+def _append_copied_step(graph: dag.Graph, step: dag.StepNode) -> None:
+    if step.kind in {dag.StepKind.TOOL, dag.StepKind.THINK, dag.StepKind.PURE, dag.StepKind.PASSTHROUGH}:
+        graph.add_step(
+            step.kind,
+            step.ref,
+            inputs=[edge.source for edge in step.inputs],
+            output=step.output,
+            contract=step.contract,
+            ann=step.ann,
+            source=step.source,
+            args=None if step.args is None else dict(step.args),
+        )
+        return
+    if step.kind is dag.StepKind.COND:
+        if step.if_true is None or step.if_false is None:
+            raise DefineError(f"copied cond step {step.output!r} is missing an arm")
+        graph.add_cond(
+            step.ref,
+            inputs=[edge.source for edge in step.inputs],
+            output=step.output,
+            if_true=step.if_true,
+            if_false=step.if_false,
+            source=step.source,
+            branch_subject=step.branch_subject,
+        )
+        return
+    if step.kind is dag.StepKind.SWITCH:
+        if step.cases is None:
+            raise DefineError(f"copied switch step {step.output!r} is missing cases")
+        graph.add_switch(
+            step.ref,
+            inputs=[edge.source for edge in step.inputs],
+            output=step.output,
+            cases=step.cases,
+            default=step.default,
+            source=step.source,
+            branch_subject=step.branch_subject,
+        )
+        return
+    if step.kind is dag.StepKind.EACH:
+        if step.body is None or len(step.inputs) != 1:
+            raise DefineError(f"copied each step {step.output!r} is malformed")
+        graph.add_each(
+            step.body,
+            items=step.inputs[0].source,
+            output=step.output,
+            max_parallel=step.max_parallel,
+            reducer=step.reducer,
+            const_captures=step.const_captures,
+            source=step.source,
+        )
+        return
+    raise AssertionError(f"unhandled step kind: {step.kind}")
+
+
+def _graph_direct_references(graph: dag.Graph, *, remap_input_name: bool) -> set[str]:
+    references: set[str] = set()
+    if remap_input_name:
+        references.add(graph.input_name)
+    if graph.output_name is not None:
+        references.add(graph.output_name)
+    for step in graph.steps:
+        references.update(edge.source for edge in step.inputs)
+        if step.branch_subject is not None:
+            references.add(step.branch_subject)
+    return references
 
 
 def _remap_inputs(
@@ -1017,6 +1245,7 @@ def _flow_graph_and_captures(
     source: Optional[SourceSpan],
     *,
     allow_consts: bool,
+    subject_label: Optional[str] = None,
 ) -> tuple[dag.Graph, dict[str, Any]]:
     if isinstance(value, FlowDef):
         if len(value.param_names) != 1:
@@ -1024,6 +1253,13 @@ def _flow_graph_and_captures(
                 f"{role} {value.name!r} must be a one-parameter @flow{_source_suffix(source)}; "
                 "partially apply JSON or handle captures until one item parameter remains"
             )
+        _validate_branch_item_parameter(
+            role,
+            value.name,
+            value.param_names[0],
+            subject_label,
+            source,
+        )
         return value.graph, {}
     if isinstance(value, BoundFlow):
         remaining = value.remaining_param_names
@@ -1040,6 +1276,13 @@ def _flow_graph_and_captures(
                 f"put the item parameter first ({value.flow.graph.input_name!r}) or wrap it "
                 "in a one-parameter @flow"
             )
+        _validate_branch_item_parameter(
+            role,
+            value.flow.name,
+            remaining[0],
+            subject_label,
+            source,
+        )
         consts: dict[str, Any] = {}
         for name, bound in value.bound_args.items():
             if isinstance(bound, Handle):
@@ -1060,6 +1303,25 @@ def _flow_graph_and_captures(
     raise DefineError(
         f"{role} must be an @flow function or partially applied @flow{_source_suffix(source)}; "
         "decorate the body with @flow"
+    )
+
+
+def _validate_branch_item_parameter(
+    role: str,
+    flow_name: str,
+    item_parameter: str,
+    subject_label: Optional[str],
+    source: Optional[SourceSpan],
+) -> None:
+    if subject_label is None or item_parameter == subject_label:
+        return
+    raise DefineError(
+        f"{role} {flow_name!r} item parameter {item_parameter!r} does not match "
+        f"branch subject {subject_label!r}{_source_suffix(source)}; "
+        f"rename the arm's item parameter to {subject_label!r} because cond/switch "
+        "arms receive the branch subject; bind other enclosing values as keyword "
+        "captures with matching variable names; for an unnamed or expression subject, "
+        "bind it to a Python variable or pass name=... to the producing step"
     )
 
 

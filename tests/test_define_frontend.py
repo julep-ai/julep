@@ -100,6 +100,69 @@ def p52_tally_cluster_labels(labels: list[dict[str, Any]]) -> dict[str, Any]:
     return {"count": len(labels), "ids": [label["cluster_id"] for label in labels]}
 
 
+@pure("p5fix.parent_ctx")
+def p5fix_parent_ctx(_source: dict[str, Any]) -> dict[str, Any]:
+    return {"ctx": "parent-ctx"}
+
+
+@pure("p5fix.child_ctx")
+def p5fix_child_ctx(_source: dict[str, Any]) -> dict[str, Any]:
+    return {"ctx": "child-ctx"}
+
+
+@pure("p5fix.parent_subject")
+def p5fix_parent_subject(_source: dict[str, Any]) -> dict[str, Any]:
+    return {"subject": "parent-subject", "ok": True, "case": "hit"}
+
+
+@pure("p5fix.child_subject")
+def p5fix_child_subject(_source: dict[str, Any]) -> dict[str, Any]:
+    return {"subject": "child-subject", "ok": True, "case": "hit"}
+
+
+@pure("p5fix.items")
+def p5fix_items(_source: dict[str, Any]) -> list[dict[str, Any]]:
+    return [{"item": "one"}, {"item": "two"}]
+
+
+@pure("p5fix.truthy")
+def p5fix_truthy(value: dict[str, Any]) -> bool:
+    return bool(value.get("ok", True))
+
+
+@pure("p5fix.selector")
+def p5fix_selector(value: dict[str, Any]) -> str:
+    return str(value.get("case", "hit"))
+
+
+@pure("p5fix.report_ctx")
+def p5fix_report_ctx(payload: dict[str, Any]) -> dict[str, Any]:
+    result = {"ctx_seen": payload["ctx"]}
+    if "item" in payload:
+        result["item"] = payload["item"]
+    return result
+
+
+@pure("p5fix.report_parent_ctx")
+def p5fix_report_parent_ctx(payload: dict[str, Any]) -> dict[str, Any]:
+    return {"parent_ctx_seen": payload["ctx"]}
+
+
+@pure("p5fix.wrap_items")
+def p5fix_wrap_items(items: list[dict[str, Any]]) -> dict[str, Any]:
+    return {"items": items}
+
+
+@pure("p5fix.report_subject")
+def p5fix_report_subject(subject: dict[str, Any]) -> dict[str, Any]:
+    return {"subject_seen": subject["subject"]}
+
+
+@pure("p5fix.report_a")
+def p5fix_report_a(a: dict[str, Any]) -> dict[str, Any]:
+    return {"saw": a}
+
+
 def test_think_string_form_still_emits_dsl_think_directly() -> None:
     assert _canonical_ir(think("p51.brain")) == _canonical_ir(dsl.think("p51.brain"))
 
@@ -748,13 +811,23 @@ def test_frontend_multiple_cond_switch_labels_are_unique() -> None:
         return out
 
     @flow
+    def yes_first(first: dict[str, Any]) -> dict[str, Any]:
+        out = p51_inner(first)
+        return out
+
+    @flow
+    def no_first(first: dict[str, Any]) -> dict[str, Any]:
+        out = p51_outer(first)
+        return out
+
+    @flow
     def routed(source: dict[str, Any]) -> dict[str, Any]:
         first = cond("p52.episode_found", source, then=yes, orelse=no)
         second = switch(
             "p52.cas_status",
             first,
-            cases={"success": yes, "stale_source": no},
-            default=no,
+            cases={"success": yes_first, "stale_source": no_first},
+            default=no_first,
         )
         return second
 
@@ -1168,6 +1241,331 @@ def test_frontend_each_with_captured_handle_golden_and_behavior() -> None:
             "clusters": [{"cluster_id": "c1"}, {"cluster_id": "c2"}],
         }
     ).value == {"count": 2, "ids": ["c1", "c2"]}
+
+
+def test_inlined_each_body_capture_collision_uses_child_binding_and_parent_stays_live() -> None:
+    @flow
+    def body(item: dict[str, Any], ctx: dict[str, Any]) -> dict[str, Any]:
+        payload = item | ctx
+        seen = p5fix_report_ctx(payload)
+        return seen
+
+    @flow
+    def child(source: dict[str, Any]) -> dict[str, Any]:
+        ctx = p5fix_child_ctx(source)
+        items = p5fix_items(source)
+        seen = each(body(ctx=ctx), items)
+        return seen
+
+    @flow
+    def parent(source: dict[str, Any]) -> dict[str, Any]:
+        ctx = p5fix_parent_ctx(source)
+        child_items = child(source)
+        wrapped = p5fix_wrap_items(child_items)
+        parent_seen = p5fix_report_parent_ctx(ctx)
+        result = wrapped | parent_seen
+        return result
+
+    assert deploy(parent, tools=[]).dry_run({"ok": True}).value == {
+        "items": [
+            {"ctx_seen": "child-ctx", "item": "one"},
+            {"ctx_seen": "child-ctx", "item": "two"},
+        ],
+        "parent_ctx_seen": "parent-ctx",
+    }
+
+
+def test_inlined_cond_arm_capture_collision_uses_child_binding() -> None:
+    @flow
+    def arm(source: dict[str, Any], ctx: dict[str, Any]) -> dict[str, Any]:
+        payload = source | ctx
+        seen = p5fix_report_ctx(payload)
+        return seen
+
+    @flow
+    def child(source: dict[str, Any]) -> dict[str, Any]:
+        ctx = p5fix_child_ctx(source)
+        out = cond(p5fix_truthy, source, then=arm(ctx=ctx), orelse=arm(ctx=ctx))
+        return out
+
+    @flow
+    def parent(source: dict[str, Any]) -> dict[str, Any]:
+        ctx = p5fix_parent_ctx(source)
+        child_seen = child(source)
+        parent_seen = p5fix_report_parent_ctx(ctx)
+        result = child_seen | parent_seen
+        return result
+
+    assert deploy(parent, tools=[]).dry_run({"ok": True}).value == {
+        "ctx_seen": "child-ctx",
+        "parent_ctx_seen": "parent-ctx",
+    }
+    assert deploy(child, tools=[]).dry_run({"ok": True}).value == {"ctx_seen": "child-ctx"}
+
+
+def test_inlined_switch_case_and_default_capture_collisions_use_child_binding() -> None:
+    @flow
+    def arm(source: dict[str, Any], ctx: dict[str, Any]) -> dict[str, Any]:
+        payload = source | ctx
+        seen = p5fix_report_ctx(payload)
+        return seen
+
+    @flow
+    def child(source: dict[str, Any]) -> dict[str, Any]:
+        ctx = p5fix_child_ctx(source)
+        out = switch(
+            p5fix_selector,
+            source,
+            cases={"hit": arm(ctx=ctx)},
+            default=arm(ctx=ctx),
+        )
+        return out
+
+    @flow
+    def parent(source: dict[str, Any]) -> dict[str, Any]:
+        ctx = p5fix_parent_ctx(source)
+        child_seen = child(source)
+        parent_seen = p5fix_report_parent_ctx(ctx)
+        result = child_seen | parent_seen
+        return result
+
+    assert deploy(parent, tools=[]).dry_run({"case": "hit"}).value["ctx_seen"] == "child-ctx"
+    assert deploy(parent, tools=[]).dry_run({"case": "miss"}).value["ctx_seen"] == "child-ctx"
+    assert deploy(child, tools=[]).dry_run({"case": "hit"}).value == {"ctx_seen": "child-ctx"}
+
+
+def test_inlined_branch_subject_collision_keeps_arm_input_on_child_subject() -> None:
+    @flow
+    def cond_arm(subject: dict[str, Any]) -> dict[str, Any]:
+        seen = p5fix_report_subject(subject)
+        return seen
+
+    @flow
+    def switch_arm(subject: dict[str, Any]) -> dict[str, Any]:
+        seen = p5fix_report_subject(subject)
+        return seen
+
+    @flow
+    def child(source: dict[str, Any]) -> dict[str, Any]:
+        subject = p5fix_child_subject(source)
+        cond_seen = cond(p5fix_truthy, subject, then=cond_arm, orelse=cond_arm)
+        switch_seen = switch(p5fix_selector, subject, cases={"hit": switch_arm}, default=switch_arm)
+        result = cond_seen | switch_seen
+        return result
+
+    @flow
+    def parent(source: dict[str, Any]) -> dict[str, Any]:
+        subject = p5fix_parent_subject(source)
+        child_seen = child(source)
+        _parent_seen = p5fix_report_subject(subject)
+        return child_seen
+
+    value = deploy(parent, tools=[]).dry_run({"ok": True, "case": "hit"}).value
+    assert value["subject_seen"] == "child-subject"
+    assert deploy(child, tools=[]).dry_run({"ok": True, "case": "hit"}).value == {"subject_seen": "child-subject"}
+
+
+def test_inlined_nested_branch_each_capture_collision_remaps_deepest_reference() -> None:
+    @flow
+    def body(item: dict[str, Any], subject: dict[str, Any]) -> dict[str, Any]:
+        payload = item | subject
+        seen = p5fix_report_subject(payload)
+        return seen
+
+    @flow
+    def arm(subject: dict[str, Any]) -> dict[str, Any]:
+        items = p5fix_items(subject)
+        seen = each(body(subject=subject), items)
+        wrapped = p5fix_wrap_items(seen)
+        return wrapped
+
+    @flow
+    def child(source: dict[str, Any]) -> dict[str, Any]:
+        subject = p5fix_child_subject(source)
+        out = cond(p5fix_truthy, subject, then=arm, orelse=arm)
+        return out
+
+    @flow
+    def parent(source: dict[str, Any]) -> dict[str, Any]:
+        subject = p5fix_parent_subject(source)
+        child_seen = child(source)
+        _parent_seen = p5fix_report_subject(subject)
+        return child_seen
+
+    assert deploy(parent, tools=[]).dry_run({"ok": True}).value == {
+        "items": [
+            {"subject_seen": "child-subject"},
+            {"subject_seen": "child-subject"},
+        ],
+    }
+
+
+def test_inlined_branch_and_each_without_collisions_match_inline_authoring_ir() -> None:
+    @flow
+    def body(item: dict[str, Any], child_ctx: dict[str, Any]) -> dict[str, Any]:
+        payload = item | child_ctx
+        seen = p5fix_report_ctx(payload)
+        return seen
+
+    @flow
+    def arm(source: dict[str, Any], child_ctx: dict[str, Any]) -> dict[str, Any]:
+        payload = source | child_ctx
+        seen = p5fix_report_ctx(payload)
+        return seen
+
+    @flow
+    def child(source: dict[str, Any]) -> dict[str, Any]:
+        child_ctx = p5fix_child_ctx(source)
+        items = p5fix_items(source)
+        seen = each(body(child_ctx=child_ctx), items)
+        wrapped = p5fix_wrap_items(seen)
+        routed = cond(p5fix_truthy, source, then=arm(child_ctx=child_ctx), orelse=arm(child_ctx=child_ctx))
+        result = wrapped | routed
+        return result
+
+    @flow
+    def parent(source: dict[str, Any]) -> dict[str, Any]:
+        child_result = child(source)
+        return child_result
+
+    @flow
+    def inline(source: dict[str, Any]) -> dict[str, Any]:
+        child_ctx = p5fix_child_ctx(source)
+        items = p5fix_items(source)
+        seen = each(body(child_ctx=child_ctx), items)
+        wrapped = p5fix_wrap_items(seen)
+        routed = cond(p5fix_truthy, source, then=arm(child_ctx=child_ctx), orelse=arm(child_ctx=child_ctx))
+        child_result = wrapped | routed
+        return child_result
+
+    assert _canonical_ir(parent.to_ir()) == _canonical_ir(inline.to_ir())
+    assert deploy(parent, tools=[]).dry_run({"ok": True}).value["ctx_seen"] == "child-ctx"
+
+
+def test_cond_rejects_bare_flow_arm_parameter_named_after_another_live_variable() -> None:
+    @flow
+    def saw_a(a: dict[str, Any]) -> dict[str, Any]:
+        out = p5fix_report_a(a)
+        return out
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"cond then arm 'saw_a' item parameter 'a' does not match branch subject 'b' "
+            r"at .*test_define_frontend.py:\d+.*"
+            r"rename the arm's item parameter to 'b'.*pass name="
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            a = p5fix_parent_subject(source)
+            _a_seen = p5fix_report_subject(a)
+            b = p5fix_child_subject(source)
+            result = cond(p5fix_truthy, b, then=saw_a, orelse=saw_a)
+            return result
+
+
+def test_cond_rejects_bare_flow_arm_parameter_that_matches_no_live_variable() -> None:
+    @flow
+    def saw_zzz(zzz: dict[str, Any]) -> dict[str, Any]:
+        out = p5fix_report_a(zzz)
+        return out
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"cond then arm 'saw_zzz' item parameter 'zzz' does not match branch subject 'b' "
+            r"at .*test_define_frontend.py:\d+.*cond/switch arms receive the branch subject"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            b = p5fix_child_subject(source)
+            result = cond(p5fix_truthy, b, then=saw_zzz, orelse=saw_zzz)
+            return result
+
+
+def test_switch_rejects_mismatched_case_and_default_arm_parameters() -> None:
+    @flow
+    def saw_a(a: dict[str, Any]) -> dict[str, Any]:
+        out = p5fix_report_a(a)
+        return out
+
+    @flow
+    def saw_b(b: dict[str, Any]) -> dict[str, Any]:
+        out = p5fix_report_a(b)
+        return out
+
+    with pytest.raises(DefineError, match=r"switch case 'hit' 'saw_a' item parameter 'a'.*branch subject 'b'"):
+
+        @flow
+        def bad_case(source: dict[str, Any]) -> dict[str, Any]:
+            b = p5fix_child_subject(source)
+            result = switch(p5fix_selector, b, cases={"hit": saw_a}, default=saw_b)
+            return result
+
+    with pytest.raises(DefineError, match=r"switch default arm 'saw_a' item parameter 'a'.*branch subject 'b'"):
+
+        @flow
+        def bad_default(source: dict[str, Any]) -> dict[str, Any]:
+            b = p5fix_child_subject(source)
+            result = switch(p5fix_selector, b, cases={"hit": saw_b}, default=saw_a)
+            return result
+
+
+def test_cond_rejects_bound_flow_arm_remaining_parameter_mismatch() -> None:
+    @flow
+    def saw_a(a: dict[str, Any], ctx: dict[str, Any]) -> dict[str, Any]:
+        payload = a | ctx
+        out = p5fix_report_ctx(payload)
+        return out
+
+    with pytest.raises(
+        DefineError,
+        match=r"cond then arm 'saw_a' item parameter 'a' does not match branch subject 'b'",
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            b = p5fix_child_subject(source)
+            ctx = p5fix_child_ctx(source)
+            result = cond(p5fix_truthy, b, then=saw_a(ctx=ctx), orelse=saw_a(ctx=ctx))
+            return result
+
+
+def test_cond_subject_named_with_name_escape_matches_arm_parameter() -> None:
+    @flow
+    def picked(picked: dict[str, Any]) -> dict[str, Any]:
+        seen = p5fix_report_subject(picked)
+        return seen
+
+    @flow
+    def route(source: dict[str, Any]) -> dict[str, Any]:
+        subject = p5fix_child_subject(source, name="picked")
+        result = cond(p5fix_truthy, subject, then=picked, orelse=picked)
+        return result
+
+    assert deploy(route, tools=[]).dry_run({"ok": True}).value == {"subject_seen": "child-subject"}
+
+
+def test_each_item_parameter_can_differ_from_items_handle_label() -> None:
+    @flow
+    def body(item: dict[str, Any]) -> dict[str, Any]:
+        seen = p5fix_report_a(item)
+        return seen
+
+    @flow
+    def route(source: dict[str, Any]) -> dict[str, Any]:
+        clusters = p5fix_items(source)
+        result = each(body, clusters)
+        return result
+
+    assert deploy(route, tools=[]).dry_run({}).value == [
+        {"saw": {"item": "one"}},
+        {"saw": {"item": "two"}},
+    ]
 
 
 def test_exported_each_still_dispatches_to_dsl_for_node_body() -> None:
