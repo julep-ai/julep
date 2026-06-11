@@ -39,7 +39,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence
 
 from . import __version__
 from .capabilities import CapabilityManifest, check_approval_gates
@@ -61,6 +61,10 @@ from .purity import is_registered, source_hash_of
 from .registry import DEFAULT_REGISTRY
 from .shapes import surface_shape as _compute_surface_shape
 from .validate import Diagnostic, blocking, validate
+
+if TYPE_CHECKING:
+    from .agent import Tool
+    from .flow import FlowLike
 
 
 def _merge_overrides(*overrides: Optional[CapabilityOverrides]) -> CapabilityOverrides:
@@ -177,6 +181,25 @@ def _framework_version() -> str:
     return getattr(package, "__version__", __version__)
 
 
+def _capabilities_from_tools(
+    tools: Sequence[Tool[Any, Any]],
+    brains: Optional[Sequence[str]],
+) -> CapabilityManifest:
+    data: dict[str, Any] = {
+        "tools": [
+            {
+                "name": native_tool.name,
+                "effect": native_tool.contract.effect.value,
+                "idempotency": native_tool.contract.idempotency.value,
+            }
+            for native_tool in tools
+        ]
+    }
+    if brains is not None:
+        data["brains"] = list(brains)
+    return CapabilityManifest.from_dict(data)
+
+
 @dataclass
 class Deployment:
     """A compiled, frozen flow ready to run, with its compile diagnostics."""
@@ -191,6 +214,7 @@ class Deployment:
     # and the overrides to re-apply, so each launch can re-freeze.
     _snapshot_source: Optional[Callable[[], McpSnapshot]] = None
     _overrides: CapabilityOverrides = field(default_factory=CapabilityOverrides)
+    _tools: Optional[Sequence[Tool[Any, Any]]] = None
 
     @property
     def flow_json(self) -> dict[str, Any]:
@@ -320,9 +344,11 @@ class Deployment:
 
 
 def deploy(
-    flow: Node,
-    snapshot: McpSnapshot,
+    flow: Node | FlowLike[Any, Any],
+    snapshot: Optional[McpSnapshot] = None,
     *,
+    tools: Optional[Sequence[Tool[Any, Any]]] = None,
+    brains: Optional[Sequence[str]] = None,
     capabilities: Optional[CapabilityManifest] = None,
     extra_overrides: Optional[CapabilityOverrides] = None,
     strict: bool = True,
@@ -345,6 +371,26 @@ def deploy(
     ``snapshot_source`` for the per-run case so :meth:`Deployment.refresh` can
     re-freeze without an explicit snapshot.
     """
+    if brains is not None and tools is None:
+        raise ValueError("brains= requires tools= so deploy can derive capabilities")
+    if snapshot is not None and tools is not None:
+        raise ValueError("pass either snapshot or tools=, not both")
+    if snapshot is None and tools is None:
+        raise ValueError("pass either snapshot or tools=; one is required")
+
+    if not isinstance(flow, Node):
+        flow = flow.to_ir()
+
+    retained_tools: Optional[Sequence[Tool[Any, Any]]] = None
+    if tools is not None:
+        from .agent import snapshot_from_tools  # lazy: deploy.py must not import agent.py at module load
+
+        snapshot = snapshot_from_tools(tools)
+        retained_tools = tools
+        if capabilities is None:
+            capabilities = _capabilities_from_tools(tools, brains)
+    assert snapshot is not None
+
     enforcement_mode = EnforcementMode.coerce(mode)
     if freeze_timing not in ("deploy_time", "per_run"):
         raise ValueError("freeze_timing must be 'deploy_time' or 'per_run'")
@@ -386,6 +432,7 @@ def deploy(
         freeze_timing=freeze_timing,
         _snapshot_source=snapshot_source,
         _overrides=overrides,
+        _tools=retained_tools,
     )
     _ = deployment.artifact_hash
     return deployment
