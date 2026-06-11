@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from composable_agents import (
@@ -136,3 +138,51 @@ def test_deploy_accepts_flow_like_to_ir() -> None:
 
     assert deployment.flow_json["op"] == "prim"
     assert list(deployment._tools or []) == episode.TOOLS
+
+
+def test_deployment_dry_run_reproduces_episode_demo_rollup() -> None:
+    episode.reset_store()
+    deployment = deploy(
+        _episode_batch(),
+        tools=episode.TOOLS,
+        brains=[episode.SUMMARIZER, episode.ONE_LINER],
+    )
+
+    result = deployment.dry_run(
+        episode.EPISODE_BATCH,
+        brains={
+            episode.SUMMARIZER: episode._fake_summarizer,
+            episode.ONE_LINER: episode._fake_one_liner,
+        },
+    )
+
+    assert result.value["counts"] == {
+        "success": 2,
+        "stale_source": 1,
+        "not_found": 1,
+    }
+
+
+def test_deployment_dry_run_requires_deploy_tools_path() -> None:
+    deployment = deploy(
+        _episode_batch(),
+        snapshot_from_tools(episode.TOOLS),
+        capabilities=_episode_capabilities(),
+    )
+
+    with pytest.raises(ValueError, match=r"deploy\(tools=\.\.\.\)"):
+        deployment.dry_run(episode.EPISODE_BATCH)
+
+
+def test_deployment_adry_run_requires_deploy_tools_path() -> None:
+    deployment = deploy(
+        _episode_batch(),
+        snapshot_from_tools(episode.TOOLS),
+        capabilities=_episode_capabilities(),
+    )
+
+    async def run() -> None:
+        with pytest.raises(ValueError, match=r"deploy\(tools=\.\.\.\)"):
+            await deployment.adry_run(episode.EPISODE_BATCH)
+
+    asyncio.run(run())

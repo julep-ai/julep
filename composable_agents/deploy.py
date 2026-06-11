@@ -36,6 +36,7 @@ are guarded so this module is usable for offline compilation without Temporal.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -64,6 +65,7 @@ from .validate import Diagnostic, blocking, validate
 
 if TYPE_CHECKING:
     from .agent import Tool
+    from .execution.interpreter import Result as InterpreterResult
     from .flow import FlowLike
 
 
@@ -341,6 +343,45 @@ class Deployment:
             ),
             principal=principal,
         )
+
+    async def adry_run(
+        self,
+        value: Any,
+        *,
+        brains: Optional[dict[str, Callable[[Any], Any]]] = None,
+    ) -> "InterpreterResult":
+        """Run this deployment locally with stashed native tools and fake brains."""
+        if self._tools is None:
+            raise ValueError(
+                "Deployment.dry_run() requires a deployment built with "
+                "deploy(tools=...). Rebuild with deploy(..., tools=...) so local "
+                "dry runs can bind native tool hands."
+            )
+
+        from .execution.interpreter import InMemoryEnv, interpret  # lazy: keeps deploy import-light
+        from .projection import InMemoryProjection, ProjectionEmitter
+
+        env = InMemoryEnv(
+            self.manifest,
+            ProjectionEmitter(InMemoryProjection()),
+            hands={native_tool.name: native_tool.bound_hand for native_tool in self._tools},
+            brains=brains,
+            max_calls=(
+                self.capabilities.max_call_limits()
+                if self.capabilities is not None
+                else {}
+            ),
+        )
+        return await interpret(self.flow, value, env)
+
+    def dry_run(
+        self,
+        value: Any,
+        *,
+        brains: Optional[dict[str, Callable[[Any], Any]]] = None,
+    ) -> "InterpreterResult":
+        """Synchronously run this deployment locally via :meth:`adry_run`."""
+        return asyncio.run(self.adry_run(value, brains=brains))
 
 
 def deploy(
