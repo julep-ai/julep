@@ -6,7 +6,13 @@ from composable_agents import blocking, call, check_approval_gates, deploy, seq
 from composable_agents.errors import ValidationError
 from conftest import run
 
-from examples import cma_managed_agent, email_approval, research_assistant, support_triage
+from examples import (
+    cma_managed_agent,
+    email_approval,
+    episode_summary_flow,
+    research_assistant,
+    support_triage,
+)
 
 
 def _blocking_codes(diagnostics) -> list[str]:
@@ -94,6 +100,34 @@ def test_cma_managed_agent_example_is_keyless_no_op_without_key(
     # build() is keyless construction only (no network); the agent grants its tools.
     agent = cma_managed_agent.build()
     assert agent._granted == {"get_weather", "to_fahrenheit"}
+
+
+def test_episode_summary_flow_deploys_clean_and_rolls_up_statuses_in_order() -> None:
+    deployment = episode_summary_flow.build()
+
+    assert not blocking(deployment.diagnostics)
+
+    result = run(episode_summary_flow.run_demo())
+
+    assert result.value["counts"] == {"success": 2, "stale_source": 1, "not_found": 1}
+    assert [(r["episodeId"], r["status"]) for r in result.value["results"]] == [
+        ("ep-1001", "success"),
+        ("ep-1002", "success"),
+        ("ep-1003", "stale_source"),
+        ("ep-9999", "not_found"),
+    ]
+
+
+def test_episode_summary_flow_cas_guard_blocks_stale_write() -> None:
+    run(episode_summary_flow.run_demo())
+
+    store = episode_summary_flow._store
+    for episode_id in ("ep-1001", "ep-1002"):
+        assert store[episode_id]["summary"] is not None
+        assert store[episode_id]["oneLiner"] is not None
+    # ep-1003 was edited between read and write, so the CAS write must not land.
+    assert store["ep-1003"]["summary"] is None
+    assert store["ep-1003"]["oneLiner"] is None
 
 
 def test_email_approval_strict_deploy_rejects_ungated_send() -> None:

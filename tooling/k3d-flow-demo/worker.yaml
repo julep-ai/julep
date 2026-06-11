@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-flow-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: ca-flow-worker}
+  template:
+    metadata:
+      labels: {app: ca-flow-worker}
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: worker
+          image: ca-worker:flow-demo
+          imagePullPolicy: Never   # imported via `k3d image import`
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: host.k3d.internal:7233
+            - name: TEMPORAL_TASK_QUEUE
+              value: ca-flow-demo
+            - name: WORKER_GRACEFUL_SHUTDOWN_S
+              value: "20"
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef: {name: llm-keys, key: ANTHROPIC_API_KEY}
+          ports:
+            - containerPort: 8080
+              name: health
+          livenessProbe:
+            httpGet: {path: /healthz, port: health}
+            periodSeconds: 5
+          readinessProbe:
+            httpGet: {path: /readyz, port: health}
+            periodSeconds: 2
