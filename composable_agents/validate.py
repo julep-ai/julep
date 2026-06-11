@@ -48,7 +48,7 @@ from .transforms import collect_duplicate_ids, detect_cycles
 
 
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-_SECRET_KEY_RE = re.compile(
+SECRET_KEY_RE = re.compile(
     r"token|secret|password|api_?key|credential|private_?key",
     re.IGNORECASE,
 )
@@ -291,7 +291,7 @@ def _check_json_value(
                     f"arr static arg key {path}.{key!r} must be a valid Python identifier",
                 )
                 ok = False
-            elif _SECRET_KEY_RE.search(key):
+            elif SECRET_KEY_RE.search(key):
                 err(
                     "ARR_ARGS_SECRET",
                     f"arr static arg key {path}.{key} looks secret-shaped; use env/hands instead",

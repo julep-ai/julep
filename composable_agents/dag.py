@@ -7,6 +7,7 @@ plain data so tests and other frontends can construct it directly.
 from __future__ import annotations
 
 import math
+import re
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
@@ -28,6 +29,9 @@ CAPTURE_SIZE_WARNING_BYTES = 4096
 
 BRANCH_VALUE_KEY = "__branch__"
 """Internal env key for frontend subject-shaped branch predicates/selectors."""
+
+RESERVED_ENV_NAME_RE = re.compile(r"__.*__")
+"""Reserved internal env/output-name pattern for compiler-owned fields."""
 
 
 class StepKind(str, Enum):
@@ -89,6 +93,8 @@ class Graph:
     source: Optional[SourceSpan] = None
 
     def __post_init__(self) -> None:
+        if self.output_name is not None:
+            _validate_public_output_name(self.output_name, self.source)
         self.steps: list[StepNode] = []
         self._outputs: dict[str, StepNode] = {}
         self._explicit_output_name = self.output_name is not None
@@ -108,6 +114,7 @@ class Graph:
     ) -> StepNode:
         """Add a step, rejecting output-name collisions immediately."""
         step_kind = StepKind(kind)
+        _validate_public_output_name(output, source)
         if output in self._outputs:
             raise GraphDefinitionError(f"output name collision: {output}")
 
@@ -206,6 +213,7 @@ class Graph:
         """
         if output in self._outputs:
             raise GraphDefinitionError(f"output name collision: {output}")
+        _validate_public_output_name(output, source)
         if max_parallel is not None and max_parallel < 1:
             raise GraphDefinitionError("each max_parallel must be >= 1")
 
@@ -256,6 +264,7 @@ class Graph:
         default: Optional["Graph"] = None,
         branch_subject: Optional[InputSpec] = None,
     ) -> StepNode:
+        _validate_public_output_name(output, source)
         if output in self._outputs:
             raise GraphDefinitionError(f"output name collision: {output}")
         subject = None if branch_subject is None else _coerce_user_input(branch_subject, source).source
@@ -434,6 +443,15 @@ def _validate_output_name(graph: Graph, ordered: Sequence[StepNode], final_outpu
         f"unknown output name: {final_output}"
         f"{_source_suffix(graph.source)}; available outputs: {available}; "
         "return one of the available handles or set Graph(output_name=...) to one"
+    )
+
+
+def _validate_public_output_name(name: str, source: Optional[SourceSpan]) -> None:
+    if not RESERVED_ENV_NAME_RE.fullmatch(name):
+        return
+    raise GraphDefinitionError(
+        f"output name {name!r} is reserved{_source_suffix(source)}; "
+        "__*__ names are internal env keys"
     )
 
 

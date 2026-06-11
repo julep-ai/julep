@@ -3,7 +3,7 @@ from typing import Any
 
 from composable_agents import dsl
 from composable_agents.dsl import call, mcp, native
-from composable_agents.flow import Flow, as_flow, seq
+from composable_agents.typed import Flow, as_flow, seq
 from composable_agents.ir import Node
 from composable_agents.transforms import normalize_ids
 

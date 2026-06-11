@@ -66,7 +66,7 @@ from .validate import Diagnostic, blocking, validate
 if TYPE_CHECKING:
     from .agent import Tool
     from .execution.interpreter import Result as InterpreterResult
-    from .flow import FlowLike
+    from .typed import FlowLike
 
 
 def _merge_overrides(*overrides: Optional[CapabilityOverrides]) -> CapabilityOverrides:

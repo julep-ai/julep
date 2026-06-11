@@ -180,7 +180,7 @@ from .define import (
     switch as switch,
     think as think,
 )
-from .flow import as_flow as as_flow
+from .typed import as_flow as as_flow
 
 # --- agent loop + plan extraction (P4) ------------------------------------- #
 from .agent_loop import (

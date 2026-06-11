@@ -34,7 +34,7 @@ from .errors import ValidationError
 from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpSnapshot, NativeToolSpec
-from .flow import Flow, FlowLike, SplitCapability
+from .typed import Flow, FlowLike, SplitCapability
 from .flow_registry import register_flow
 from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency

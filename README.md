@@ -94,14 +94,15 @@ Key guides:
 
 ## Typed composition (the `Flow` surface)
 
-The `composable_agents.flow` layer is a **typed authoring wrapper** over the same
+The `composable_agents.typed` layer is a **typed authoring wrapper** over the same
 `Node` IR — it carries Python types while you build, then *elaborates to the
 identical IR and disappears before freeze* (the golden corpus never moves). Tools,
 flows, and agents become first-class **values** you import, type-check, and
 recombine — closing the gap between the ergonomic facade and the composable algebra.
 
 ```python
-from composable_agents.flow import flow, seq          # typed combinators
+import composable_agents as ca                       # ca.flow decorator
+from composable_agents.typed import seq               # typed combinators
 from composable_agents.flow_adapters import as_type    # explicit Any-edge cast
 
 # A @tool is a typed leaf; >> threads types (a mismatch is a mypy error):

@@ -1,5 +1,8 @@
 """Typed authoring wrappers over the core :class:`~composable_agents.ir.Node` IR.
 
+This module was renamed from the old typed ``flow`` module after the
+package-root ``flow`` name became the public ``@flow`` decorator.
+
 ``Flow`` is authoring-only: it carries Python type information while building a
 program, elaborates to a ``Node``, and disappears before freeze. Composition
 lowers through the same :mod:`composable_agents.dsl` helpers, including

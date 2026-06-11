@@ -6,7 +6,7 @@ import pytest
 
 from composable_agents import Agent, ValidationError, call, ident, native, tool
 from composable_agents.derived import race
-from composable_agents.flow import as_flow, seq
+from composable_agents.typed import as_flow, seq
 from composable_agents.flow_registry import get_flow
 
 

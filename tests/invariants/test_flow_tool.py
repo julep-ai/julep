@@ -7,7 +7,7 @@ from composable_agents import dsl
 from composable_agents.agent import Tool, tool
 from composable_agents.derived import map_n
 from composable_agents.dsl import call, native
-from composable_agents.flow import Flow, alt, as_flow, par, seq
+from composable_agents.typed import Flow, alt, as_flow, par, seq
 from composable_agents.ir import Node
 from composable_agents.transforms import normalize_ids
 

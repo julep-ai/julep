@@ -13,7 +13,7 @@ else:
 
 from composable_agents import dsl
 from composable_agents.dsl import native
-from composable_agents.flow import Flow, as_flow
+from composable_agents.typed import Flow, as_flow
 from composable_agents.flow_adapters import AnyEdge, any_edges, as_type, expect
 from composable_agents.ir import Node
 from composable_agents.kinds import Op

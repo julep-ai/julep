@@ -6,7 +6,7 @@ IR.
 **Scope:** a typed, composable *authoring* surface that unifies the `Agent`
 facade and the combinator algebra, without changing the IR.
 
-> **As-built (2026-06-04).** Modules: `flow.py` (`Flow`/`FlowLike`, `>>`, typed
+> **As-built (2026-06-04).** Modules: `typed.py` (`Flow`/`FlowLike`, `>>`, typed
 > `seq`, typed `Tool` leaves, `par`/`alt`, affine `.named()`/`.renamed()`,
 > derived local names), `flow_adapters.py` (`as_type`/`expect`, `any_edges`),
 > `flow_registry.py` (`FlowRegistry` + collision policy), `result.py`

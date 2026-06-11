@@ -1,13 +1,25 @@
 from __future__ import annotations
 
+import importlib
+import sys
+
 import pytest
 
+import composable_agents.typed as _typed
 from composable_agents import deploy
 from composable_agents import dsl
 from composable_agents.ir import Node, canonical_json
 from composable_agents.transforms import normalize_ids
-from spikes.flow_spike import cluster_slice
-from spikes.flow_spike.core import each, flow, think
+
+# spikes/ is frozen reference code that still imports the pre-rename typed
+# module path; alias it to composable_agents.typed for these tests only.
+sys.modules.setdefault("composable_agents." + "flow", _typed)
+
+cluster_slice = importlib.import_module("spikes.flow_spike.cluster_slice")
+_spike_core = importlib.import_module("spikes.flow_spike.core")
+each = _spike_core.each
+flow = _spike_core.flow
+think = _spike_core.think
 
 
 def _canonical_ir(node: Node) -> str:

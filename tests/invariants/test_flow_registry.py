@@ -4,7 +4,7 @@ import pytest
 
 from composable_agents.agent import Agent, tool
 from composable_agents.dsl import call, native
-from composable_agents.flow import as_flow
+from composable_agents.typed import as_flow
 from composable_agents.flow_registry import FlowRegistryError, get_flow
 
 

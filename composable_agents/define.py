@@ -49,9 +49,9 @@ from types import FrameType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, overload
 
 from . import dag, dsl
-from .flow import FlowLike
+from .typed import FlowLike
 from .ir import SLEEP_TOOL, Ann, CallStep, NativeTool, Node, SourceSpan, canonical_json
-from .validate import _SECRET_KEY_RE
+from .validate import SECRET_KEY_RE
 
 if TYPE_CHECKING:
     from .dotctx import Brain
@@ -62,6 +62,7 @@ Out = TypeVar("Out")
 _JSON = (str, int, float, bool, type(None), list, dict)
 _RESERVED_STEP_KWARGS = {"name", "retries", "retry_interval_s", "backoff_rate", "timeout_s"}
 _CONTROL_HELPERS = {"cond", "switch", "each", "reschedule"}
+_RESERVED_ENV_NAME_RE = re.compile(r"__.*__")
 _CTX_STACK: list["_BuildContext"] = []
 
 
@@ -73,6 +74,7 @@ class DefineError(dag.GraphDefinitionError):
 class _CallSite:
     output_name: Optional[str]
     span: SourceSpan
+    callee: Optional[str] = None
 
 
 class _SourceMap:
@@ -134,16 +136,16 @@ class _SourceMap:
             for keyword in node.keywords:
                 if keyword.value is not None:
                     sites.extend(self._expr_call_sites(keyword.value, target_name, is_outer=False))
-            sites.append((node, _CallSite(output_name, self._span(node))))
+            sites.append((node, _CallSite(output_name, self._span(node), self._call_name(node))))
             return sites
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
             sites = self._expr_call_sites(node.left, target_name, is_outer=False)
             sites.extend(self._expr_call_sites(node.right, target_name, is_outer=False))
-            sites.append((node, _CallSite(output_name, self._span(node))))
+            sites.append((node, _CallSite(output_name, self._span(node), "std.merge")))
             return sites
         if isinstance(node, ast.Subscript):
             sites = self._expr_call_sites(node.value, target_name, is_outer=False)
-            sites.append((node, _CallSite(output_name, self._span(node))))
+            sites.append((node, _CallSite(output_name, self._span(node), "std.pluck")))
             return sites
 
         sites = []
@@ -188,12 +190,10 @@ class _SourceMap:
         return False
 
     def _is_allowed_call(self, call: ast.Call) -> bool:
-        if isinstance(call.func, ast.Name) and call.func.id in {"think", *_CONTROL_HELPERS}:
-            return True
         target = self._resolve_call_target(call)
         if target is None:
             return False
-        return _is_tool(target) or _is_pure(target) or isinstance(target, FlowDef)
+        return _is_control_helper(target) or _is_tool(target) or _is_pure(target) or isinstance(target, FlowDef)
 
     def _resolve_call_target(self, call: ast.Call) -> Any:
         return self._resolve_expr(call.func)
@@ -236,6 +236,9 @@ class _SourceMap:
         if frame is not None:
             sites = self._by_line.get(frame.f_lineno)
             if sites:
+                for index, site in enumerate(sites):
+                    if _site_matches_ref(site, ref):
+                        return sites.pop(index)
                 return sites.pop(0)
             return _CallSite(None, self._span_for_line(frame.f_lineno))
         self._fallback_counts[ref] += 1
@@ -283,6 +286,11 @@ class _BuildContext:
         name = explicit or site.output_name
         if name is None:
             name = self.source_map.fallback_name(ref)
+        if _RESERVED_ENV_NAME_RE.fullmatch(name):
+            raise DefineError(
+                f"step output name {name!r} is reserved{_source_suffix(span)}; "
+                "__*__ names are internal env keys"
+            )
         if name in self.bound_names:
             raise DefineError(
                 f"step output name {name!r} is already bound{_source_suffix(span)}; "
@@ -370,6 +378,24 @@ class Handle:
             "use each(body, items, max_parallel=..., reducer=...) instead."
         )
 
+    def __eq__(self, other: object) -> bool:
+        source = _active_source(self.source)
+        suffix = _source_suffix(source)
+        raise DefineError(
+            f"Handle equality comparison is not runtime data{suffix}; "
+            "use cond(pred, input, then=..., orelse=...) instead."
+        )
+
+    def __ne__(self, other: object) -> bool:
+        source = _active_source(self.source)
+        suffix = _source_suffix(source)
+        raise DefineError(
+            f"Handle equality comparison is not runtime data{suffix}; "
+            "use cond(pred, input, then=..., orelse=...) instead."
+        )
+
+    __hash__ = object.__hash__
+
     def __repr__(self) -> str:
         return f"Handle({self.label})"
 
@@ -450,7 +476,12 @@ class FlowDef(FlowLike[Any, Any]):
         if _CTX_STACK and all(isinstance(value, Handle) for value in supplied.values()):
             if len(supplied) == len(self.param_names):
                 if len(supplied) != 1:
-                    return BoundFlow.from_supplied(self, supplied)
+                    site = _call_site(_CTX_STACK[-1], self.name)
+                    raise DefineError(
+                        f"fully bound multi-parameter @flow cannot be inlined"
+                        f"{_source_suffix(site.span)}; "
+                        "merge handles (h1 | h2) into a one-parameter @flow before calling it"
+                    )
                 return _apply_flowdef(self, _ensure_handle(next(iter(supplied.values()))))
             if len(supplied) == 1 and len(self.param_names) == 1:
                 return _apply_flowdef(self, _ensure_handle(next(iter(supplied.values()))))
@@ -668,7 +699,7 @@ def each(
         source = _call_site(_CTX_STACK[-1], "each").span if _CTX_STACK else None
         raise DefineError(
             f"each(body, items, ...) needs a Handle items argument inside @flow{_source_suffix(source)}; "
-            "outside @flow use dsl.each(Node, ...) or composable_agents.flow.each(FlowLike, ...)"
+            "outside @flow use dsl.each(Node, ...) or composable_agents.typed.each(FlowLike, ...)"
         )
 
     ctx = _current_context()
@@ -746,7 +777,10 @@ def apply_if_authoring(fn: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -
     if not _contains_handle(args, kwargs):
         return NotImplemented
     if not _CTX_STACK:
-        return NotImplemented
+        raise DefineError(
+            "Handle escaped its @flow definition; "
+            "a tool or pure was called outside @flow authoring"
+        )
     if not args or not isinstance(args[0], Handle):
         raise DefineError(
             "step application needs a Handle as the first argument; "
@@ -1392,11 +1426,11 @@ def _json_value_ok(value: Any) -> bool:
 
 
 def _secret_path(name: str, value: Any) -> Optional[str]:
-    if _SECRET_KEY_RE.search(name):
+    if SECRET_KEY_RE.search(name):
         return name
     if isinstance(value, dict):
         for key, child in value.items():
-            if _SECRET_KEY_RE.search(str(key)):
+            if SECRET_KEY_RE.search(str(key)):
                 return f"{name}.{key}"
             found = _secret_path(f"{name}.{key}", child)
             if found is not None:
@@ -1429,6 +1463,20 @@ def _is_pure(value: Any) -> bool:
     from .purity import Pure
 
     return isinstance(value, Pure)
+
+
+def _is_control_helper(value: Any) -> bool:
+    return any(value is helper for helper in (think, cond, switch, each, reschedule))
+
+
+def _site_matches_ref(site: _CallSite, ref: str) -> bool:
+    if site.callee is None:
+        return False
+    if site.callee == ref:
+        return True
+    if ref in {"think", *_CONTROL_HELPERS}:
+        return site.callee.endswith(f".{ref}")
+    return False
 
 
 def _source_suffix(source: Optional[SourceSpan]) -> str:

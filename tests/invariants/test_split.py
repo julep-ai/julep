@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from composable_agents import Agent, call, native, tool
-from composable_agents.flow import as_flow
+from composable_agents.typed import as_flow
 from composable_agents.ir import Node
 from composable_agents.transforms import normalize_ids
 

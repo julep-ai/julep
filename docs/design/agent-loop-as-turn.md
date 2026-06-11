@@ -33,7 +33,7 @@ one would regress behavior — that's the next section.)
 Keep the two categories `algebra.hs` separates:
 
 - **The value category** — `Flow[In, Out]`, morphisms over business values
-  (`flow.py`). The authoring layer over the frozen `Node` IR. Untouched.
+  (`typed.py`). The authoring layer over the frozen `Node` IR. Untouched.
 - **The turn category** — endomorphisms on `AgentState` (the Writer-state:
   `last` + the `trace` pomset + `spent` + `call_counts`). The agent loop lives
   here.

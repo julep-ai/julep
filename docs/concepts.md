@@ -164,7 +164,7 @@ a procedure, and the plan freezes it into ordinary IR.
 
 ## Typed authoring surface
 
-The `composable_agents.flow` layer is a typed authoring surface over the same
+The `composable_agents.typed` layer is a typed authoring surface over the same
 IR. `Flow[In, Out]`, typed tools, `>>`, typed combinators, adapters such as
 `as_type` / `expect`, and the `Agent` facade carry Python types while authoring,
 then elaborate to the identical `Node` tree before freeze. Types do not enter

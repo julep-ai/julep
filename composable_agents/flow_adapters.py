@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any, TypeVar
 
 from . import dsl
-from .flow import Flow
+from .typed import Flow
 from .ir import Node, ThinkStep
 from .kinds import Op
 
@@ -40,7 +40,7 @@ def expect(f: Flow[In, Any], t: type[T]) -> Flow[In, T]:
     """Retype the output of ``f`` to ``T``.
 
     This is the free-function spelling of a hypothetical ``f.expect(T)`` method,
-    which would require editing ``flow.py``. It re-types the output of ``f`` to
+    which would require editing ``typed.py``. It re-types the output of ``f`` to
     ``T`` and lowers to ``seq(f, ident)``.
 
     Example:

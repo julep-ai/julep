@@ -4,10 +4,12 @@ from typing import Any
 
 import pytest
 
+import composable_agents as ca
 from composable_agents import as_flow, cond, delay, deploy, dsl, each, flow, pure, reschedule, switch, think, tool
 from composable_agents.define import DefineError, Handle
 from composable_agents.ir import Node, SLEEP_TOOL, CallStep, NativeTool, ThinkStep, canonical_json
 from composable_agents.kinds import Op
+from composable_agents.validate import SECRET_KEY_RE
 from composable_agents.transforms import normalize_ids
 
 
@@ -379,6 +381,37 @@ def test_handle_bool_iter_and_attribute_errors_are_actionable() -> None:
     assert not hasattr(handle, "foo")
 
 
+def test_handle_equality_and_inequality_raise_cond_teaching_error() -> None:
+    with pytest.raises(
+        DefineError,
+        match=r"Handle equality comparison is not runtime data at .*test_define_frontend.py:\d+.*use cond\(",
+    ):
+
+        @flow
+        def bad_eq(source: dict[str, Any], other: dict[str, Any]) -> dict[str, Any]:
+            if source == other:
+                out = p51_inner(source)
+            else:
+                out = p51_outer(other)
+            return out
+
+    with pytest.raises(
+        DefineError,
+        match=r"Handle equality comparison is not runtime data at .*test_define_frontend.py:\d+.*use cond\(",
+    ):
+
+        @flow
+        def bad_ne(source: dict[str, Any], other: dict[str, Any]) -> dict[str, Any]:
+            if source != other:
+                out = p51_inner(source)
+            else:
+                out = p51_outer(other)
+            return out
+
+    handle = Handle.synthetic("source")
+    assert {handle: "value"}[handle] == "value"
+
+
 def test_unregistered_plain_function_on_handle_names_location_and_hint() -> None:
     def plain(value: object) -> object:
         return value
@@ -545,6 +578,8 @@ def test_foreign_scope_handle_capture_is_rejected_at_define_time() -> None:
 
 
 def test_non_json_and_secret_shaped_const_captures_are_define_errors() -> None:
+    assert SECRET_KEY_RE.search("api_key")
+
     with pytest.raises(
         DefineError,
         match=(
@@ -569,6 +604,28 @@ def test_non_json_and_secret_shaped_const_captures_are_define_errors() -> None:
         @flow
         def bad_secret(source: dict[str, Any]) -> dict[str, Any]:
             copied = p51_echo_with_limit(source, api_key="sk-test")
+            return copied
+
+
+def test_reserved_dunder_step_names_are_rejected_before_env_collision() -> None:
+    with pytest.raises(
+        DefineError,
+        match=r"step output name '__branch__' is reserved at .*test_define_frontend.py:\d+.*__\*__ names are internal",
+    ):
+
+        @flow
+        def bad_assigned_name(source: dict[str, Any]) -> dict[str, Any]:
+            __branch__ = p51_inner(source)
+            return __branch__
+
+    with pytest.raises(
+        DefineError,
+        match=r"step output name '__user__' is reserved at .*test_define_frontend.py:\d+.*__\*__ names are internal",
+    ):
+
+        @flow
+        def bad_explicit_name(source: dict[str, Any]) -> dict[str, Any]:
+            copied = p51_inner(source, name="__user__")
             return copied
 
 
@@ -642,6 +699,24 @@ def test_multiline_expression_position_name_escape_and_exec_fallbacks() -> None:
     assert repl_like.graph.output_name == "p51_inner_1"
 
 
+def test_single_line_each_uses_outer_assignment_name_when_body_is_bound_inline() -> None:
+    @flow
+    def label_one(cluster: dict[str, Any], store_context: dict[str, Any]) -> dict[str, Any]:
+        payload = store_context | cluster
+        label = p52_make_cluster_label(payload)
+        return label
+
+    @flow
+    def label_clusters(source: dict[str, Any]) -> dict[str, Any]:
+        store_context = source["store_context"]
+        clusters = source["clusters"]
+        labels = each(label_one(store_context=store_context), clusters, max_parallel=3)
+        return labels
+
+    assert label_clusters.graph.output_name == "labels"
+    assert label_clusters.graph.steps[-1].output == "labels"
+
+
 def test_public_flow_name_is_decorator_and_as_flow_is_lift() -> None:
     @flow
     def identity(value: dict[str, Any]) -> dict[str, Any]:
@@ -691,6 +766,48 @@ def test_bound_flow_with_one_runtime_argument_is_flowlike() -> None:
     }
 
 
+def test_handle_escape_to_tool_or_pure_outside_flow_is_define_error() -> None:
+    handle = Handle.synthetic("source")
+
+    with pytest.raises(
+        DefineError,
+        match=r"Handle escaped its @flow definition.*tool or pure was called outside @flow authoring",
+    ):
+        p51_echo_with_limit(handle)
+
+    with pytest.raises(
+        DefineError,
+        match=r"Handle escaped its @flow definition.*tool or pure was called outside @flow authoring",
+    ):
+        p51_identity(handle)
+
+
+def test_pure_outside_authoring_preserves_python_typeerror_for_stray_kwargs() -> None:
+    with pytest.raises(TypeError, match=r"unexpected keyword argument 'limit'"):
+        p51_identity({"episode_id": "ep-1"}, limit=3)
+
+
+def test_saturated_multi_handle_flow_call_teaches_merge_before_inline() -> None:
+    @flow
+    def needs_two(source: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+        merged = source | config
+        return merged
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"fully bound multi-parameter @flow cannot be inlined at .*test_define_frontend.py:\d+.*"
+            r"merge handles \(h1 \| h2\) into a one-parameter @flow"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> dict[str, Any]:
+            config = p51_inner(source)
+            merged = needs_two(source, config)
+            return merged
+
+
 def test_frontend_cond_subject_shaped_predicate_works_unmodified() -> None:
     from composable_agents import cond
 
@@ -713,6 +830,68 @@ def test_frontend_cond_subject_shaped_predicate_works_unmodified() -> None:
 
     assert deployment.dry_run({"found": True}).value == {"found": True, "inner": True}
     assert deployment.dry_run({"found": False}).value == {"found": False, "outer": True}
+
+
+def test_qualified_and_aliased_control_helpers_are_allowed_by_identity() -> None:
+    from composable_agents import cond as c
+    from composable_agents import each as e
+
+    @flow
+    def found(source: dict[str, Any]) -> dict[str, Any]:
+        out = p51_inner(source)
+        return out
+
+    @flow
+    def missing(source: dict[str, Any]) -> dict[str, Any]:
+        out = p51_outer(source)
+        return out
+
+    @flow
+    def label_one(cluster: dict[str, Any]) -> dict[str, Any]:
+        label = p52_make_cluster_label(cluster)
+        return label
+
+    @flow
+    def qualified(source: dict[str, Any]) -> dict[str, Any]:
+        result = ca.cond(p52_episode_found, source, then=found, orelse=missing)
+        return result
+
+    @flow
+    def aliased(source: dict[str, Any]) -> dict[str, Any]:
+        result = c(p52_episode_found, source, then=found, orelse=missing)
+        return result
+
+    @flow
+    def aliased_each(source: dict[str, Any]) -> dict[str, Any]:
+        clusters = source["clusters"]
+        labels = e(label_one, clusters)
+        return labels
+
+    assert qualified.graph.output_name == "result"
+    assert aliased.graph.output_name == "result"
+    assert aliased_each.graph.output_name == "labels"
+
+
+def test_genuinely_unregistered_qualified_callable_still_gets_existing_diagnostic() -> None:
+    class Helpers:
+        @staticmethod
+        def plain(value: object) -> object:
+            return value
+
+    helpers = Helpers()
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"unregistered callable 'helpers.plain' at .*test_define_frontend.py:\d+.*"
+            r"decorate it with @pure or @tool, or call think\(\.\.\.\) for a brain step"
+        ),
+    ):
+
+        @flow
+        def bad(source: dict[str, Any]) -> object:
+            value = helpers.plain(source)
+            return value
 
 
 def test_frontend_switch_on_cas_status_golden_and_all_arms() -> None:
@@ -1166,7 +1345,7 @@ def test_each_rejects_non_handle_items_inside_flow_with_span_and_hint() -> None:
         match=(
             r"each\(body, items, \.\.\.\) needs a Handle items argument inside @flow "
             r"at .*test_define_frontend.py:\d+.*"
-            r"outside @flow use dsl.each\(Node, \.\.\.\) or composable_agents.flow.each\(FlowLike, \.\.\.\)"
+            r"outside @flow use dsl.each\(Node, \.\.\.\) or composable_agents.typed.each\(FlowLike, \.\.\.\)"
         ),
     ):
 

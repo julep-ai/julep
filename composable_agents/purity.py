@@ -17,7 +17,7 @@ from functools import update_wrapper
 from typing import Any, Callable, overload
 
 from . import dsl
-from .flow import FlowLike
+from .typed import FlowLike
 from .ir import Node
 from .registry import DEFAULT_REGISTRY, PureEntry, PureFn, _source_hash as _registry_source_hash
 
@@ -45,7 +45,7 @@ class Pure(FlowLike[Any, Any]):
         authored = apply_if_authoring(self, (value,), kwargs)
         if authored is not NotImplemented:
             return authored
-        return self.fn(value)
+        return self.fn(value, **kwargs)
 
     def to_ir(self) -> Node:
         return dsl.arr(self.name)
