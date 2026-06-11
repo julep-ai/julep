@@ -152,6 +152,7 @@ from .dotctx import (
 
 # --- purity registry ------------------------------------------------------- #
 from .purity import (
+    Pure as Pure,
     diff_pure_hashes as diff_pure_hashes,
     get_pure as get_pure,
     is_registered as is_registered,

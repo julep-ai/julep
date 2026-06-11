@@ -13,8 +13,12 @@ non-deterministic predicate will desync replay. Keep them total and pure.
 
 from __future__ import annotations
 
-from typing import Callable
+from functools import update_wrapper
+from typing import Any, Callable, overload
 
+from . import dsl
+from .flow import FlowLike
+from .ir import Node
 from .registry import DEFAULT_REGISTRY, PureEntry, PureFn, _source_hash as _registry_source_hash
 
 _REGISTRY: dict[str, PureEntry] = DEFAULT_REGISTRY.pures
@@ -24,19 +28,53 @@ def _source_hash(fn: PureFn) -> str:
     return _registry_source_hash(fn)
 
 
-def pure(name: str) -> Callable[[PureFn], PureFn]:
+class Pure(FlowLike[Any, Any]):
+    """A registered pure function as a first-class authoring object."""
+
+    fn: PureFn
+    name: str
+
+    def __init__(self, name: str, fn: PureFn) -> None:
+        self.name = name
+        self.fn = fn
+        update_wrapper(self, fn)
+
+    def __call__(self, value: Any) -> Any:
+        return self.fn(value)
+
+    def to_ir(self) -> Node:
+        return dsl.arr(self.name)
+
+
+@overload
+def pure(fn: PureFn, /) -> Pure: ...
+
+
+@overload
+def pure(name: str, /) -> Callable[[PureFn], Pure]: ...
+
+
+def pure(name: str | PureFn, /) -> Pure | Callable[[PureFn], Pure]:
     """Register a deterministic predicate/map under ``name``.
 
     Usage::
+
+        @pure
+        def normalize(x):
+            return x
 
         @pure("route.is_long")
         def is_long(x):
             return len(x["text"]) > 1000
     """
 
-    def deco(fn: PureFn) -> PureFn:
+    if not isinstance(name, str):
+        register_pure(name.__name__, name)
+        return Pure(name.__name__, name)
+
+    def deco(fn: PureFn) -> Pure:
         register_pure(name, fn)
-        return fn
+        return Pure(name, fn)
 
     return deco
 

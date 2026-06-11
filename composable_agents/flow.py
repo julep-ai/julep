@@ -11,13 +11,15 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Generic, Optional, Sequence, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Optional, Sequence, TypeVar, overload
 
 from . import dsl
-from .derived import map_n
 from .flow_registry import register_flow
 from .ir import Node, canonical_json
 from .transforms import normalize_ids
+
+if TYPE_CHECKING:
+    from .purity import Pure
 
 In = TypeVar("In")
 Out = TypeVar("Out")
@@ -115,6 +117,12 @@ class SplitCapability:
     ref: str
     target: FlowLike[Any, Any]
     queue: Optional[str] = None
+
+
+def _pure_name(pure: str | Pure) -> str:
+    if isinstance(pure, str):
+        return pure
+    return pure.name
 
 
 @overload
@@ -222,7 +230,7 @@ def seq(*flows: FlowLike[Any, Any]) -> Flow[Any, Any]:
 def par(
     branches: Sequence[FlowLike[In, Any]],
     *,
-    join: Optional[str] = None,
+    join: str | Pure | None = None,
 ) -> Flow[In, Any]:
     """Run branches concurrently on the same input.
 
@@ -233,12 +241,14 @@ def par(
     nodes = [branch.to_ir() for branch in branches]
     if join is None:
         return Flow(dsl.par(*nodes))
-    return Flow(map_n(*nodes, reducer=join))
+    from .derived import map_n
+
+    return Flow(map_n(*nodes, reducer=_pure_name(join)))
 
 
-def alt(pred: str, if_true: FlowLike[In, Out], if_false: FlowLike[In, Out]) -> Flow[In, Out]:
+def alt(pred: str | Pure, if_true: FlowLike[In, Out], if_false: FlowLike[In, Out]) -> Flow[In, Out]:
     """Binary branch on a registered pure predicate; both arms share I->O."""
-    return Flow(dsl.alt(pred, if_true.to_ir(), if_false.to_ir()))
+    return Flow(dsl.alt(_pure_name(pred), if_true.to_ir(), if_false.to_ir()))
 
 
 @overload
@@ -246,14 +256,19 @@ def each(body: FlowLike[In, Out], *, max_parallel: Optional[int] = None) -> Flow
 
 
 @overload
-def each(body: FlowLike[In, Out], *, max_parallel: Optional[int] = None, reducer: str) -> Flow[Sequence[In], Any]: ...
+def each(
+    body: FlowLike[In, Out],
+    *,
+    max_parallel: Optional[int] = None,
+    reducer: str | Pure,
+) -> Flow[Sequence[In], Any]: ...
 
 
 def each(
     body: FlowLike[In, Any],
     *,
     max_parallel: Optional[int] = None,
-    reducer: Optional[str] = None,
+    reducer: str | Pure | None = None,
 ) -> Flow[Sequence[In], Any]:
     """Run ``body`` once per input-list element, collecting outputs in order.
 
@@ -261,4 +276,5 @@ def each(
     registered pure folded over the collected list; like ``par``'s ``join``, the
     output is honestly ``Any`` across that reduce boundary.
     """
-    return Flow(dsl.each(body.to_ir(), max_parallel=max_parallel, reducer=reducer))
+    reducer_name = None if reducer is None else _pure_name(reducer)
+    return Flow(dsl.each(body.to_ir(), max_parallel=max_parallel, reducer=reducer_name))
