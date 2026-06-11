@@ -44,6 +44,14 @@ def _assert_no_assign_then_same_key_pluck(node: Node) -> None:
                 assert left.args != right.args
 
 
+DEAD_ASSIGN_ENV_FOLD_BACK_NOTE = (
+    "A write-barrier layer whose result is not live still needs std.assign before "
+    "liveness pruning: std.assign is the existing std-family fold-back from "
+    "[env, side_effect_result] to env, and eliding it would require a new "
+    "wire-format-stable std pure."
+)
+
+
 READ_CONTRACT = ToolContract(effect=Effect.READ, idempotency=Idempotency.NATIVE)
 WRITE_CONTRACT = ToolContract(effect=Effect.WRITE, idempotency=Idempotency.NONE)
 
@@ -145,6 +153,11 @@ def dag_attach_const_model(value: dict[str, Any]) -> dict[str, Any]:
     return dict(value)
 
 
+@pure("dag.cluster_count")
+def dag_cluster_count(value: list[dict[str, Any]]) -> dict[str, int]:
+    return {"cluster_count": len(value)}
+
+
 @pure("dag.tally_cluster_statuses")
 def dag_tally_cluster_statuses(statuses: list[dict[str, Any]]) -> dict[str, int]:
     tally = {"success": 0, "stale": 0}
@@ -236,7 +249,6 @@ def test_authored_std_merge_multi_input_collapses_to_env_projection_only() -> No
             dsl.arr("std.merge", {"fields": ["a", "b"]}),
         ),
         dsl.arr("std.assign", {"key": "merged"}),
-        dsl.arr("std.pack", {"fields": {"merged": {"field": "merged"}}}),
         dsl.arr("std.pluck", {"key": "merged"}),
         dsl.call("consume_merged"),
     )
@@ -246,6 +258,67 @@ def test_authored_std_merge_multi_input_collapses_to_env_projection_only() -> No
     ]
     assert [node.args for node in merge_nodes] == [{"fields": ["a", "b"]}]
     assert _canonical_ir(compiled) == _canonical_ir(expected)
+
+
+def test_nested_binary_merge_chain_compiles_as_declared_and_runs() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "produce_a", output="a", contract=READ_CONTRACT)
+    graph.add_step(StepKind.TOOL, "produce_b", output="b", contract=READ_CONTRACT)
+    graph.add_step(StepKind.TOOL, "produce_c", output="c", contract=READ_CONTRACT)
+    graph.add_step(StepKind.PURE, "std.merge", inputs=["a", "b"], output="m1")
+    graph.add_step(StepKind.PURE, "std.merge", inputs=["m1", "c"], output="m2")
+
+    compiled = compile(graph)
+    expected = dsl.seq(
+        dsl.arr("std.init", {"key": "__input__"}),
+        dsl.par(
+            dsl.ident(),
+            dsl.seq(dsl.arr("std.pluck", {"key": "__input__"}), dsl.call("produce_a")),
+            dsl.seq(dsl.arr("std.pluck", {"key": "__input__"}), dsl.call("produce_b")),
+            dsl.seq(dsl.arr("std.pluck", {"key": "__input__"}), dsl.call("produce_c")),
+        ),
+        dsl.arr("std.collect", {"fields": ["a", "b", "c"]}),
+        dsl.arr(
+            "std.pack",
+            {"fields": {"a": {"field": "a"}, "b": {"field": "b"}, "c": {"field": "c"}}},
+        ),
+        dsl.par(
+            dsl.ident(),
+            dsl.arr("std.merge", {"fields": ["a", "b"]}),
+        ),
+        dsl.arr("std.assign", {"key": "m1"}),
+        dsl.arr("std.pack", {"fields": {"c": {"field": "c"}, "m1": {"field": "m1"}}}),
+        dsl.arr("std.merge", {"fields": ["m1", "c"]}),
+    )
+
+    merge_args = [
+        node.args
+        for node in compiled.walk()
+        if node.op is Op.ARR and node.pure == "std.merge"
+    ]
+    assert merge_args == [{"fields": ["a", "b"]}, {"fields": ["m1", "c"]}]
+    assert _canonical_ir(compiled) == _canonical_ir(expected)
+
+    def produce_a(value: dict[str, Any]) -> dict[str, Any]:
+        return {"a": value["seed"], "shared": "a"}
+
+    def produce_b(value: dict[str, Any]) -> dict[str, Any]:
+        return {"b": value["seed"], "shared": "b"}
+
+    def produce_c(value: dict[str, Any]) -> dict[str, Any]:
+        return {"c": value["seed"], "shared": "c"}
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={"produce_a": produce_a, "produce_b": produce_b, "produce_c": produce_c},
+    )
+
+    result = run(interpret(compiled, {"seed": "s1"}, env))
+
+    assert result.value == {"a": "s1", "b": "s1", "c": "s1", "shared": "c"}
 
 
 def test_write_barrier_keeps_later_read_sequential() -> None:
@@ -271,11 +344,11 @@ def test_write_barrier_keeps_later_read_sequential() -> None:
             dsl.seq(dsl.arr("std.pluck", {"key": "source"}), dsl.call("write_status")),
         ),
         dsl.arr("std.assign", {"key": "write_result"}),
-        dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
         dsl.arr("std.pluck", {"key": "source"}),
         dsl.call("read_after"),
     )
 
+    assert "write-barrier layer" in DEAD_ASSIGN_ENV_FOLD_BACK_NOTE
     _assert_no_assign_then_same_key_pluck(compiled)
     assert _canonical_ir(compiled) == _canonical_ir(expected)
 
@@ -358,6 +431,60 @@ def test_compile_rejects_cycles_and_names_cycle_members() -> None:
 
     with pytest.raises(GraphDefinitionError, match="cycle.*first.*second"):
         compile(graph)
+
+
+def test_compile_rejects_explicit_unknown_output_name_before_runtime() -> None:
+    from composable_agents.dag import Graph, GraphDefinitionError, StepKind, compile
+
+    span = SourceSpan("flow.py", 12, "build", "return typo")
+    graph = Graph(output_name="typo", source=span)
+    graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+    graph.add_step(StepKind.PURE, "dag.process_source", inputs=["source"], output="processed")
+
+    with pytest.raises(
+        GraphDefinitionError,
+        match=(
+            r"unknown output name: typo.*flow.py:12.*"
+            r"available outputs: processed, source.*return one of the available handles"
+        ),
+    ):
+        compile(graph)
+
+
+def test_user_input_edge_rename_is_rejected_at_definition_time() -> None:
+    from composable_agents.dag import Graph, GraphDefinitionError, InputEdge, StepKind
+
+    span = SourceSpan("flow.py", 22, "build", "renamed = consume(source)")
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
+
+    with pytest.raises(
+        GraphDefinitionError,
+        match=(
+            r"input edge renaming is not supported.*flow.py:22.*"
+            r"name='renamed'.*source='source'.*use inputs=\['source'\]"
+        ),
+    ):
+        graph.add_step(
+            StepKind.PURE,
+            "dag.process_source",
+            inputs=[InputEdge(name="renamed", source="source")],
+            output="processed",
+            source=span,
+        )
+
+
+def test_add_each_internal_items_edge_is_still_allowed_after_rename_rejection() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="cluster", output_name="copied")
+    body.add_step(StepKind.PURE, "dag.branch_from_input", output="copied")
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_items", output="items", contract=READ_CONTRACT)
+    graph.add_each(body, items="items", output="copied")
+
+    assert compile(graph).op is Op.SEQ
 
 
 def test_compile_rejects_forward_referenced_edges_across_write_barriers() -> None:
@@ -769,7 +896,7 @@ def test_raw_input_is_pruned_after_last_consumer() -> None:
         if node.op is Op.ARR and node.pure == "std.pack"
     ]
 
-    assert {"fields": {"processed": {"field": "processed"}}} in pack_args
+    assert {"fields": {"processed": {"field": "processed"}}} not in pack_args
     assert {"fields": {"__input__": {"field": "__input__"}, "processed": {"field": "processed"}}} not in pack_args
 
 
@@ -805,12 +932,10 @@ def test_cond_branch_compiles_to_hand_written_alt_with_pruned_arm_envs() -> None
         dsl.alt(
             "dag.is_found",
             dsl.seq(
-                dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
                 dsl.arr("std.pluck", {"key": "source"}),
                 dsl.call("write_episode"),
             ),
             dsl.seq(
-                dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
                 dsl.arr("std.pluck", {"key": "source"}),
                 dsl.arr("dag.missing_result"),
             ),
@@ -822,7 +947,7 @@ def test_cond_branch_compiles_to_hand_written_alt_with_pruned_arm_envs() -> None
         for node in compiled.walk()
         if _is_std_arr(node, "std.pack", {"fields": {"source": {"field": "source"}}})
     ]
-    assert len(arm_packs) == 3
+    assert len(arm_packs) == 1
     assert _canonical_ir(compiled) == _canonical_ir(expected)
 
 
@@ -857,23 +982,19 @@ def test_switch_branch_compiles_to_select_cases_alt() -> None:
             select="dag.status_selector",
             cases={
                 "success": dsl.seq(
-                    dsl.arr("std.pack", {"fields": {"status": {"field": "status"}}}),
                     dsl.arr("std.pluck", {"key": "status"}),
                     dsl.arr("dag.case_success"),
                 ),
                 "stale_source": dsl.seq(
-                    dsl.arr("std.pack", {"fields": {"status": {"field": "status"}}}),
                     dsl.arr("std.pluck", {"key": "status"}),
                     dsl.arr("dag.case_stale"),
                 ),
                 "not_found": dsl.seq(
-                    dsl.arr("std.pack", {"fields": {"status": {"field": "status"}}}),
                     dsl.arr("std.pluck", {"key": "status"}),
                     dsl.arr("dag.case_missing"),
                 ),
             },
             default=dsl.seq(
-                dsl.arr("std.pack", {"fields": {"status": {"field": "status"}}}),
                 dsl.arr("std.pluck", {"key": "status"}),
                 dsl.arr("dag.case_default"),
             ),
@@ -919,12 +1040,10 @@ def test_mid_flow_cond_result_feeds_later_step_and_prunes_source() -> None:
                 dsl.alt(
                     "dag.is_found",
                     dsl.seq(
-                        dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
                         dsl.arr("std.pluck", {"key": "source"}),
                         dsl.call("write_episode"),
                     ),
                     dsl.seq(
-                        dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
                         dsl.arr("std.pluck", {"key": "source"}),
                         dsl.arr("dag.missing_result"),
                     ),
@@ -932,7 +1051,6 @@ def test_mid_flow_cond_result_feeds_later_step_and_prunes_source() -> None:
             ),
         ),
         dsl.arr("std.assign", {"key": "decision"}),
-        dsl.arr("std.pack", {"fields": {"decision": {"field": "decision"}}}),
         dsl.arr("std.pluck", {"key": "decision"}),
         dsl.arr("dag.decorate_decision"),
     )
@@ -1129,8 +1247,8 @@ def test_branch_arm_liveness_prunes_fields_per_arm() -> None:
     ]
 
     assert {"fields": {"source": {"field": "source"}, "status": {"field": "status"}}} in pack_args
-    assert {"fields": {"status": {"field": "status"}}} in pack_args
-    assert {"fields": {"source": {"field": "source"}}} in pack_args
+    assert {"fields": {"status": {"field": "status"}}} not in pack_args
+    assert {"fields": {"source": {"field": "source"}}} not in pack_args
 
 
 def test_each_with_handle_capture_compiles_to_pre_each_env_projection() -> None:
@@ -1196,6 +1314,57 @@ def test_each_with_handle_capture_compiles_to_pre_each_env_projection() -> None:
     ]
     assert len(each_pack_nodes) == 1
     assert _canonical_ir(compiled) == _canonical_ir(expected)
+
+
+def test_each_that_captures_its_items_source_uses_env_path() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="cluster", output_name="labeled")
+    body.add_step(
+        StepKind.PURE,
+        "dag.cluster_count",
+        inputs=["clusters"],
+        output="cluster_count",
+    )
+    body.add_step(
+        StepKind.PURE,
+        "std.merge",
+        inputs=["cluster", "cluster_count"],
+        output="labeled",
+    )
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_clusters", output="clusters", contract=READ_CONTRACT)
+    graph.add_each(body, items="clusters", output="labels")
+
+    compiled = compile(graph)
+    each_pack_nodes = [
+        node for node in compiled.walk() if node.op is Op.ARR and node.pure == "std.each_pack"
+    ]
+    assert [node.args for node in each_pack_nodes] == [
+        {
+            "items": "clusters",
+            "item": "cluster",
+            "fields": {"clusters": "clusters"},
+            "consts": {},
+        }
+    ]
+
+    def read_clusters(value: dict[str, Any]) -> list[dict[str, Any]]:
+        return [{"cluster_id": value["first"]}, {"cluster_id": "c2"}]
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={"read_clusters": read_clusters},
+    )
+
+    result = run(interpret(compiled, {"first": "c1"}, env))
+
+    assert result.value == [
+        {"cluster_id": "c1", "cluster_count": 2},
+        {"cluster_id": "c2", "cluster_count": 2},
+    ]
 
 
 def test_each_with_const_captures_only_pins_consts_in_body_pack() -> None:

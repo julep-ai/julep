@@ -39,7 +39,12 @@ class StepKind(str, Enum):
 
 @dataclass(frozen=True)
 class InputEdge:
-    """A declared data edge from a prior step output into a named input slot."""
+    """A declared data edge from a prior step output into a named input slot.
+
+    Public graph construction does not support input renaming yet: user-supplied
+    input specs must use the same ``name`` and ``source``. The compiler reserves
+    distinct names for internal slots such as the ``items`` edge on ``each``.
+    """
 
     name: str
     source: str
@@ -76,6 +81,7 @@ class Graph:
 
     input_name: str = "__input__"
     output_name: Optional[str] = None
+    source: Optional[SourceSpan] = None
 
     def __post_init__(self) -> None:
         self.steps: list[StepNode] = []
@@ -112,7 +118,7 @@ class Graph:
         node = StepNode(
             kind=step_kind,
             ref=resolved_ref,
-            inputs=tuple(_coerce_input(inp) for inp in inputs),
+            inputs=_coerce_user_inputs(inputs, source),
             output=output,
             contract=resolved_contract,
             ann=ann,
@@ -206,7 +212,7 @@ class Graph:
             if capture not in available:
                 raise GraphDefinitionError(f"foreign-scope handle capture: {capture}")
 
-        item_edge = _coerce_input(items)
+        item_edge = _coerce_user_input(items, source)
         node = StepNode(
             kind=StepKind.EACH,
             ref="each",
@@ -243,7 +249,7 @@ class Graph:
         node = StepNode(
             kind=kind,
             ref=ref,
-            inputs=tuple(_coerce_input(inp) for inp in inputs),
+            inputs=_coerce_user_inputs(inputs, source),
             output=output,
             source=source,
             order=len(self.steps),
@@ -262,10 +268,11 @@ class Graph:
 def compile(graph: Graph) -> Node:
     """Compile a frontend DAG into core :class:`~composable_agents.ir.Node` IR."""
     ordered = _toposort(graph, (graph.input_name,))
+    final_output = graph.output_name or (ordered[-1].output if ordered else graph.input_name)
+    _validate_output_name(graph, ordered, final_output)
     if not ordered:
         return dsl.ident()
 
-    final_output = graph.output_name or ordered[-1].output
     if _is_linear_chain(ordered, final_output):
         return _stamp_missing_sources(_seq([_leaf(step) for step in ordered]))
 
@@ -373,6 +380,50 @@ def _coerce_input(value: InputSpec) -> InputEdge:
     return InputEdge(name=name, source=source)
 
 
+def _coerce_user_inputs(
+    values: Sequence[InputSpec],
+    source: Optional[SourceSpan],
+) -> tuple[InputEdge, ...]:
+    return tuple(_coerce_user_input(value, source) for value in values)
+
+
+def _coerce_user_input(value: InputSpec, source: Optional[SourceSpan]) -> InputEdge:
+    edge = _coerce_input(value)
+    if edge.name != edge.source:
+        raise GraphDefinitionError(
+            "input edge renaming is not supported"
+            f"{_source_suffix(source)}: name={edge.name!r}, source={edge.source!r}; "
+            f"use inputs=[{edge.source!r}] and add an explicit pure step if the value "
+            "must be reshaped"
+        )
+    return edge
+
+
+def _validate_output_name(graph: Graph, ordered: Sequence[StepNode], final_output: str) -> None:
+    if final_output == graph.input_name:
+        return
+    outputs = {step.output for step in ordered}
+    if final_output in outputs:
+        return
+    available = ", ".join(sorted(outputs)) if outputs else "<none>"
+    raise GraphDefinitionError(
+        f"unknown output name: {final_output}"
+        f"{_source_suffix(graph.source)}; available outputs: {available}; "
+        "return one of the available handles or set Graph(output_name=...) to one"
+    )
+
+
+def _source_suffix(source: Optional[SourceSpan]) -> str:
+    if source is None:
+        return ""
+    parts = [f" at {source.file}:{source.line}"]
+    if source.function:
+        parts.append(f" in {source.function}")
+    if source.text:
+        parts.append(f": {source.text}")
+    return "".join(parts)
+
+
 def _toposort(graph: Graph, external_sources: Iterable[str] = ()) -> list[StepNode]:
     by_output = {step.output: step for step in graph.steps}
     external = set(external_sources)
@@ -417,6 +468,8 @@ def _is_linear_chain(steps: Sequence[StepNode], final_output: str) -> bool:
     if not steps or steps[-1].output != final_output:
         return False
     if any(step.kind in {StepKind.COND, StepKind.SWITCH} for step in steps):
+        return False
+    if any(step.kind is StepKind.EACH and _handle_captures(step) for step in steps):
         return False
     if steps[0].inputs:
         return False
@@ -493,6 +546,9 @@ def _compile_env_layer(layer: Sequence[StepNode], input_name: str) -> list[Node]
     branches = [_step_from_env(step, input_name) for step in layer]
     if len(branches) == 1:
         step = layer[0]
+        # Even when later liveness drops this output, std.assign is the current
+        # std-family fold-back from [env, step_result] to env. Eliding it would
+        # need a new wire-format-stable discard pure.
         return [
             _par([_with_source(dsl.ident(), step.source), branches[0]], step.source),
             _arr("std.assign", {"key": step.output}, step.source),
@@ -638,7 +694,47 @@ def _with_source(node: Node, source: Optional[SourceSpan]) -> Node:
 
 
 def _seq(nodes: Iterable[Node]) -> Node:
-    return _stamp_missing_sources(dsl.seq(list(nodes)))
+    return _stamp_missing_sources(dsl.seq(_collapse_prune_pluck_pairs(list(nodes))))
+
+
+def _collapse_prune_pluck_pairs(nodes: Sequence[Node]) -> list[Node]:
+    collapsed: list[Node] = []
+    index = 0
+    while index < len(nodes):
+        current = nodes[index]
+        if index + 1 < len(nodes):
+            next_node = nodes[index + 1]
+            key = _single_field_prune_key(current)
+            if key is not None and _is_pluck_key(next_node, key):
+                if next_node.source is None:
+                    next_node.source = current.source
+                collapsed.append(next_node)
+                index += 2
+                continue
+        collapsed.append(current)
+        index += 1
+    return collapsed
+
+
+def _single_field_prune_key(node: Node) -> Optional[str]:
+    if node.op is not Op.ARR or node.pure != "std.pack" or not isinstance(node.args, dict):
+        return None
+    fields = node.args.get("fields")
+    if not isinstance(fields, dict) or len(fields) != 1:
+        return None
+    key, selector = next(iter(fields.items()))
+    if selector == {"field": key}:
+        return str(key)
+    return None
+
+
+def _is_pluck_key(node: Node, key: str) -> bool:
+    return (
+        node.op is Op.ARR
+        and node.pure == "std.pluck"
+        and isinstance(node.args, dict)
+        and node.args == {"key": key}
+    )
 
 
 def _par(nodes: Sequence[Node], source: Optional[SourceSpan]) -> Node:
