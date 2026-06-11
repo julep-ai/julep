@@ -11,12 +11,16 @@ from composable_agents.dotctx import Brain, register_brain
 from composable_agents.ir import canonical_json
 from composable_agents.registry import DEFAULT_REGISTRY
 
-pydantic = pytest.importorskip("pydantic")
 
+@pytest.fixture
+def decision_model() -> type[object]:
+    pydantic = pytest.importorskip("pydantic")
 
-class Decision(pydantic.BaseModel):
-    route: str
-    confidence: float
+    class Decision(pydantic.BaseModel):
+        route: str
+        confidence: float
+
+    return Decision
 
 
 class TypedReply(TypedDict):
@@ -53,13 +57,17 @@ def _registered_identity(brain: Brain) -> dict[str, object]:
         DEFAULT_REGISTRY.brains.pop(brain.name, None)
 
 
-def test_reply_model_materializes_to_model_json_schema() -> None:
+def test_reply_model_materializes_to_model_json_schema(decision_model: type[object]) -> None:
+    Decision = decision_model
     brain = Brain(name="reply.model", model="openai:gpt-4o", reply=Decision)
 
     assert brain.reply_schema == Decision.model_json_schema()
 
 
-def test_reply_model_serializes_identically_to_equivalent_reply_schema() -> None:
+def test_reply_model_serializes_identically_to_equivalent_reply_schema(
+    decision_model: type[object],
+) -> None:
+    Decision = decision_model
     schema = Decision.model_json_schema()
     from_reply = _registered_identity(
         Brain(name="reply.model.from_type", model="openai:gpt-4o", reply=Decision)
@@ -73,7 +81,8 @@ def test_reply_model_serializes_identically_to_equivalent_reply_schema() -> None
     )
 
 
-def test_reply_and_reply_schema_are_mutually_exclusive() -> None:
+def test_reply_and_reply_schema_are_mutually_exclusive(decision_model: type[object]) -> None:
+    Decision = decision_model
     with pytest.raises(ValueError, match="reply.*reply_schema"):
         Brain(
             name="reply.both",

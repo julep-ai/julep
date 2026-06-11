@@ -293,7 +293,7 @@ class Deployment:
             if self._snapshot_source is None:
                 raise ValueError("no snapshot source retained; pass a snapshot to refresh()")
             snap = self._snapshot_source()
-        return deploy(
+        refreshed = deploy(
             self.flow,
             snap,
             capabilities=self.capabilities,
@@ -303,6 +303,8 @@ class Deployment:
             strict=True,
             mode=self.mode,
         )
+        refreshed._tools = self._tools
+        return refreshed
 
     async def run(
         self,
@@ -412,6 +414,8 @@ def deploy(
     ``snapshot_source`` for the per-run case so :meth:`Deployment.refresh` can
     re-freeze without an explicit snapshot.
     """
+    if brains is not None and capabilities is not None:
+        raise ValueError("pass either capabilities or brains=, not both")
     if brains is not None and tools is None:
         raise ValueError("brains= requires tools= so deploy can derive capabilities")
     if snapshot is not None and tools is not None:

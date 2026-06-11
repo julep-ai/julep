@@ -115,18 +115,38 @@ def test_deploy_rejects_brains_without_tools() -> None:
         )
 
 
-def test_deploy_tools_path_respects_explicit_capabilities() -> None:
+def test_deploy_rejects_brains_with_explicit_capabilities() -> None:
     explicit = _episode_capabilities(include_brains=False)
 
+    with pytest.raises(ValueError, match="capabilities.*brains"):
+        deploy(
+            _episode_batch(),
+            tools=episode.TOOLS,
+            brains=["not-the-derived-brain-set"],
+            capabilities=explicit,
+        )
+
+
+def test_deployment_refresh_retains_tools_for_dry_run() -> None:
+    episode.reset_store()
     deployment = deploy(
         _episode_batch(),
         tools=episode.TOOLS,
-        brains=["not-the-derived-brain-set"],
-        capabilities=explicit,
+        brains=[episode.SUMMARIZER, episode.ONE_LINER],
     )
 
-    assert deployment.capabilities is explicit
-    assert "brains" not in deployment.capabilities.to_json()
+    refreshed = deployment.refresh(snapshot_from_tools(episode.TOOLS))
+
+    assert list(refreshed._tools or []) == episode.TOOLS
+    assert "_tools" not in refreshed.artifact_components
+    result = refreshed.dry_run(
+        episode.EPISODE_BATCH,
+        brains={
+            episode.SUMMARIZER: episode._fake_summarizer,
+            episode.ONE_LINER: episode._fake_one_liner,
+        },
+    )
+    assert result.value["counts"]["success"] == 2
 
 
 def test_deploy_accepts_flow_like_to_ir() -> None:
