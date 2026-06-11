@@ -19,7 +19,9 @@ Rules implemented:
 * ``arr.args``: static args are canonical JSON objects with identifier keys and
   no secret-shaped keys at any nesting level
 * ``Ann`` retry fields: ``max_attempts >= 1``, finite ``retry_interval_s >= 0``,
-  and finite ``backoff_rate >= 1`` are blocking well-formedness requirements
+  and finite ``backoff_rate >= 1`` are blocking well-formedness requirements;
+  wire values of the wrong JSON type (strings, bools, lists) are blocking
+  ``RETRY_FIELD_TYPE`` diagnostics rather than host-language exceptions
 * post-freeze: every ``call`` resolves to a manifest entry
 """
 
@@ -28,7 +30,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
-from typing import Any, Optional, cast
+from typing import Any, Optional, TypeGuard, cast
 
 from .contracts import ToolManifest, contract_allows_retry
 from .ir import (
@@ -339,18 +341,47 @@ def _check_ann_retry_fields(n: Node, out: list[Diagnostic]) -> None:
             )
         )
 
-    if ann.max_attempts is not None and ann.max_attempts < 1:
-        err("max_attempts", ann.max_attempts, "integer >= 1")
+    def type_err(field: str, value: object, expected: str) -> None:
+        out.append(
+            Diagnostic(
+                "RETRY_FIELD_TYPE",
+                n.id,
+                f"Ann retry field {field}={value!r} has wire type "
+                f"{type(value).__name__}; expected {expected}",
+            )
+        )
+
+    if ann.max_attempts is not None:
+        if not _is_real_int(ann.max_attempts):
+            type_err("max_attempts", ann.max_attempts, "an integer")
+        elif ann.max_attempts < 1:
+            err("max_attempts", ann.max_attempts, "integer >= 1")
 
     if ann.retry_interval_s is not None:
-        value = float(ann.retry_interval_s)
-        if not math.isfinite(value) or value < 0:
-            err("retry_interval_s", ann.retry_interval_s, "seconds >= 0")
+        if not _is_real_number(ann.retry_interval_s):
+            type_err("retry_interval_s", ann.retry_interval_s, "a finite number")
+        else:
+            value = float(ann.retry_interval_s)
+            if not math.isfinite(value) or value < 0:
+                err("retry_interval_s", ann.retry_interval_s, "seconds >= 0")
 
     if ann.backoff_rate is not None:
-        value = float(ann.backoff_rate)
-        if not math.isfinite(value) or value < 1:
-            err("backoff_rate", ann.backoff_rate, "multiplier >= 1")
+        if not _is_real_number(ann.backoff_rate):
+            type_err("backoff_rate", ann.backoff_rate, "a finite number")
+        else:
+            value = float(ann.backoff_rate)
+            if not math.isfinite(value) or value < 1:
+                err("backoff_rate", ann.backoff_rate, "multiplier >= 1")
+
+
+def _is_real_int(value: object) -> TypeGuard[int]:
+    """A genuine JSON integer: bools are not retry counts."""
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _is_real_number(value: object) -> bool:
+    """A genuine JSON number type: not bool, not str (range checked separately)."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:
@@ -370,7 +401,7 @@ def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Dia
             tool = manifest[step.frozen_hash]
             if (
                 n.ann is not None
-                and n.ann.max_attempts is not None
+                and _is_real_int(n.ann.max_attempts)
                 and n.ann.max_attempts > 1
                 and tool.contract.effect == Effect.DANGEROUS
                 and not contract_allows_retry(tool.contract)

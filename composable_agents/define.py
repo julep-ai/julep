@@ -24,6 +24,11 @@ single-assignment graph fields derived from whole-function AST source when
 available, with ``name=`` as the explicit escape hatch and deterministic
 fallback names for REPL/``exec`` contexts.
 
+JSON constant kwargs on registered pures become ``arr`` static args and execute
+as ``fn(value, **kwargs)`` at runtime (SPEC §4.4). JSON constant kwargs on tools
+and ``think`` lower to a ``std.bind`` const-merge into the flowing record before
+the call.
+
 Define-time diagnostics are part of the API: truthiness and iteration on
 Handles point to ``cond``/``each``; unregistered callables point to
 ``@pure``/``@tool`` registration; unsaturated flows point to applying them or
@@ -827,17 +832,18 @@ def _append_step(
     if consts:
         for key, value in consts.items():
             _validate_json_value(key, value, span)
-        bind_output = ctx.source_map.fallback_name(f"{ref}_bind")
-        ctx.bound_names.add(bind_output)
-        ctx.graph.add_step(
-            dag.StepKind.PURE,
-            "std.bind",
-            inputs=_single_input(current, ctx.graph.input_name),
-            output=bind_output,
-            source=span,
-            args={"consts": consts},
-        )
-        current = Handle(bind_output, ctx.graph, span)
+        if kind is not dag.StepKind.PURE:
+            bind_output = ctx.source_map.fallback_name(f"{ref}_bind")
+            ctx.bound_names.add(bind_output)
+            ctx.graph.add_step(
+                dag.StepKind.PURE,
+                "std.bind",
+                inputs=_single_input(current, ctx.graph.input_name),
+                output=bind_output,
+                source=span,
+                args={"consts": consts},
+            )
+            current = Handle(bind_output, ctx.graph, span)
     output = ctx.output_name(ref, explicit_name, site)
     ctx.graph.add_step(
         kind,
@@ -847,6 +853,7 @@ def _append_step(
         contract=getattr(target, "contract", None),
         ann=ann,
         source=span,
+        args=consts if kind is dag.StepKind.PURE and consts else None,
         tool=target if kind is dag.StepKind.TOOL else None,
     )
     return Handle(output, ctx.graph, span)

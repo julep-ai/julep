@@ -48,6 +48,21 @@ def p51_outer(value: dict[str, Any]) -> dict[str, Any]:
     return {**value, "outer": True}
 
 
+@pure("p6fix.scale")
+def p6fix_scale(value: dict[str, Any], factor: int = 1) -> dict[str, Any]:
+    return {"scaled": value["n"] * factor}
+
+
+@pure("p6fix.affix")
+def p6fix_affix(value: str, prefix: str = "", suffix: str = "") -> str:
+    return f"{prefix}{value}{suffix}"
+
+
+@pure("p6fix.scale_offset")
+def p6fix_scale_offset(value: dict[str, Any], factor: int = 1, offset: int = 0) -> dict[str, Any]:
+    return {"scaled": value["n"] * factor + offset}
+
+
 @tool(effect="write")
 def p52_write_cas(payload: dict[str, Any]) -> dict[str, Any]:
     return {"status": payload["status"], "episode_id": payload["episode_id"]}
@@ -349,6 +364,93 @@ def test_tool_kwargs_lower_to_std_bind_before_call() -> None:
     )
 
     assert _canonical_ir(bind_limit.to_ir()) == _canonical_ir(expected)
+
+
+def test_pure_kwargs_lower_to_arr_static_args_without_std_bind() -> None:
+    @flow
+    def scale(source: dict[str, Any]) -> dict[str, Any]:
+        scaled = p6fix_scale(source, factor=2)
+        return scaled
+
+    expected = dsl.arr("p6fix.scale", {"factor": 2})
+
+    assert _canonical_ir(scale.to_ir()) == _canonical_ir(expected)
+    assert all(node.pure != "std.bind" for node in scale.to_ir().walk())
+
+
+def test_pure_kwargs_inside_flow_match_direct_pure_call() -> None:
+    @flow
+    def scale(source: dict[str, Any]) -> dict[str, Any]:
+        scaled = p6fix_scale(source, factor=2)
+        return scaled
+
+    direct = p6fix_scale({"n": 3}, factor=2)
+    authored = deploy(scale, tools=[]).dry_run({"n": 3}).value
+
+    assert authored == direct == {"scaled": 6}
+
+
+def test_pure_kwargs_with_scalar_flowing_input_do_not_bind_merge() -> None:
+    @flow
+    def affix(source: str) -> str:
+        rendered = p6fix_affix(source, prefix=">", suffix="<")
+        return rendered
+
+    assert deploy(affix, tools=[]).dry_run("abc").value == ">abc<"
+
+
+def test_multiple_pure_const_kwargs_land_in_one_args_object() -> None:
+    @flow
+    def scale_offset(source: dict[str, Any]) -> dict[str, Any]:
+        scaled = p6fix_scale_offset(source, factor=3, offset=4)
+        return scaled
+
+    expected = dsl.arr("p6fix.scale_offset", {"factor": 3, "offset": 4})
+
+    assert _canonical_ir(scale_offset.to_ir()) == _canonical_ir(expected)
+    assert deploy(scale_offset, tools=[]).dry_run({"n": 5}).value == {"scaled": 19}
+
+
+def test_pure_const_kwargs_with_name_and_ann_do_not_leak_options_into_args() -> None:
+    @flow
+    def named_scale(source: dict[str, Any]) -> dict[str, Any]:
+        scaled = p6fix_scale(source, factor=4, name="explicit_scaled", retries=2)
+        return scaled
+
+    step = next(step for step in named_scale.graph.steps if step.ref == "p6fix.scale")
+
+    assert step.output == "explicit_scaled"
+    assert step.args == {"factor": 4}
+    assert step.ann is not None
+    assert step.ann.to_json() == {"maxAttempts": 2}
+
+
+def test_pure_const_kwargs_keep_define_time_json_and_secret_validation() -> None:
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"bound value 'factor' must be canonical JSON at .*test_define_frontend.py:\d+.*"
+            r"use JSON primitives, lists, and dicts only"
+        ),
+    ):
+
+        @flow
+        def bad_non_json(source: dict[str, Any]) -> dict[str, Any]:
+            scaled = p6fix_scale(source, factor=object())
+            return scaled
+
+    with pytest.raises(
+        DefineError,
+        match=(
+            r"bound value 'api_key' looks secret-shaped at .*test_define_frontend.py:\d+.*"
+            r"secrets belong in environment-backed tools"
+        ),
+    ):
+
+        @flow
+        def bad_secret(source: dict[str, Any]) -> dict[str, Any]:
+            scaled = p6fix_scale(source, api_key="sk-test")
+            return scaled
 
 
 def test_linear_authored_flow_dry_run_matches_combinator_flow() -> None:

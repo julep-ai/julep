@@ -43,6 +43,10 @@ from the enclosing graph. Secret-shaped config is banned from captures and
 static args; credentials belong in environment-backed tools or run principals,
 never in the frozen flow artifact.
 
+JSON constant kwargs on registered pures become `arr` static args and run as
+`fn(value, **kwargs)`; JSON constant kwargs on tools and brains lower to
+`std.bind` const-merges into the flowing record before the call.
+
 Branch arms receive the branch subject by name. The remaining item parameter
 of a `cond` or `switch` arm must match the subject handle label; other
 enclosing values must be supplied as keyword captures. `each` bodies differ:

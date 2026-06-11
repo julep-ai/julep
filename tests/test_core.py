@@ -405,6 +405,59 @@ def test_validate_allows_in_range_ann_retry_fields() -> None:
     assert not diags
 
 
+@pytest.mark.parametrize(
+    ("ann_json", "field", "expected_type"),
+    [
+        ({"maxAttempts": "3"}, "max_attempts", "an integer"),
+        ({"maxAttempts": True}, "max_attempts", "an integer"),
+        ({"maxAttempts": 2.5}, "max_attempts", "an integer"),
+        ({"retryIntervalS": "fast"}, "retry_interval_s", "a finite number"),
+        ({"retryIntervalS": False}, "retry_interval_s", "a finite number"),
+        ({"backoffRate": "2x"}, "backoff_rate", "a finite number"),
+        ({"backoffRate": [2]}, "backoff_rate", "a finite number"),
+    ],
+)
+def test_validate_blocks_wrong_typed_ann_retry_fields_from_wire_json(
+    ann_json: dict[str, object],
+    field: str,
+    expected_type: str,
+) -> None:
+    # Ann.from_json copies wire values verbatim; validate() must diagnose bad
+    # types instead of raising (CLI validate + LLM-plan admission both feed
+    # untrusted JSON through this path).
+    flow_json = call("retryable").to_json()
+    flow_json["ann"] = ann_json
+
+    diags = blocking(validate(Node.from_json(flow_json)))
+
+    assert len(diags) == 1
+    diag = diags[0]
+    assert diag.code == "RETRY_FIELD_TYPE"
+    assert diag.severity == "error"
+    assert field in diag.message
+    assert expected_type in diag.message
+
+
+def test_validate_with_manifest_does_not_crash_on_wrong_typed_max_attempts() -> None:
+    destructive = McpAnnotations(destructive_hint=True, idempotent_hint=False)
+    snapshot = McpSnapshot(
+        servers={
+            "srv": McpServerSnapshot(
+                server="srv",
+                version="1",
+                tools={"wipe": McpToolSpec(input_schema={}, annotations=destructive)},
+            )
+        }
+    )
+    fr = freeze(call(mcp("srv", "wipe"), ann=Ann(max_attempts=2)), snapshot)
+    flow_json = fr.flow.to_json()
+    flow_json["ann"]["maxAttempts"] = "2"  # simulate a malformed artifact
+
+    diags = blocking(validate(Node.from_json(flow_json), fr.manifest))
+
+    assert {diag.code for diag in diags} == {"RETRY_FIELD_TYPE"}
+
+
 def test_admit_plan_rejects_staged_plan_shape():
     parent = CapabilityManifest.from_dict({"tools": [], "budget": {"cost": 1000}})
     # A plan may not itself stage (closed shape > Feedback).
