@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 import linecache
 import textwrap
 from dataclasses import dataclass, field
@@ -141,6 +142,15 @@ def _merge_name(left: str, right: str) -> str:
     return f"spike.merge_{left}_{right}"
 
 
+def _pack_name(flow_name: str, bound_names: Sequence[str], item_name: str) -> str:
+    bound_part = "_".join(bound_names)
+    return f"spike.pack_{flow_name}_{bound_part}_{item_name}"
+
+
+def _unpack_name(flow_name: str) -> str:
+    return f"spike.unpack_{flow_name}_args"
+
+
 def _sanitize_label(value: str) -> str:
     return value.replace(".", "_").replace("-", "_")
 
@@ -202,8 +212,16 @@ class Graph:
     params: list["Handle"] = field(default_factory=list)
     steps: list[Step] = field(default_factory=list)
     output: Optional["Handle"] = None
+    labels: set[str] = field(default_factory=set)
 
     def new_handle(self, label: str) -> "Handle":
+        if label in self.labels:
+            raise ValueError(
+                f"label {label!r} is already bound in flow {self.name!r}; "
+                "spike flow handles are single-assignment, so choose a new "
+                "Python variable name for the derived value"
+            )
+        self.labels.add(label)
         return Handle(label=label, graph=self)
 
     def append(
@@ -252,6 +270,12 @@ def _current_graph() -> Graph:
 
 def _ensure_handle(value: Any) -> "Handle":
     if not isinstance(value, Handle):
+        if isinstance(value, BoundFlow):
+            raise TypeError(
+                "unsaturated @flow application is a closure-converted body, "
+                "not runtime data; pass it to each(...) or supply Handles for "
+                "all flow parameters"
+            )
         raise TypeError("spike flow operations currently require Handle inputs")
     return value
 
@@ -292,6 +316,9 @@ class ToolRef:
     def __call__(self, value: Handle) -> Handle:
         return apply(self, value)
 
+    def to_ir(self) -> Node:
+        return self.tool.to_ir()
+
 
 class FlowDef(FlowLike[Any, Any]):
     def __init__(self, fn: Callable[..., Any]) -> None:
@@ -299,6 +326,7 @@ class FlowDef(FlowLike[Any, Any]):
         self.name = fn.__name__
         self.graph = Graph(fn.__name__)
         sig = inspect.signature(fn)
+        self.param_names = list(sig.parameters)
         self.graph.params = [self.graph.new_handle(name) for name in sig.parameters]
         for param in self.graph.params:
             _require_label_glue(param.label)
@@ -307,22 +335,95 @@ class FlowDef(FlowLike[Any, Any]):
             result = fn(*self.graph.params)
         finally:
             _GRAPH_STACK.pop()
+        if isinstance(result, BoundFlow):
+            raise TypeError(
+                "unsaturated @flow application cannot be returned or stored as "
+                "runtime data; pass it directly to each(...) as a "
+                "closure-converted body"
+            )
         if not isinstance(result, Handle):
             raise TypeError("@flow functions must return a Handle in the spike frontend")
         self.graph.output = result
 
-    def __call__(self, *args: Handle) -> Handle:
-        handles = [_ensure_handle(arg) for arg in args]
+    def __call__(self, *args: Any, **kwargs: Any) -> "Handle | BoundFlow":
+        supplied: dict[str, Any] = {}
+        for index, arg in enumerate(args):
+            if index >= len(self.param_names):
+                raise TypeError(
+                    f"flow {self.name!r} expected at most {len(self.param_names)} "
+                    f"arguments, got {len(args)}"
+                )
+            supplied[self.param_names[index]] = arg
+        for key, value in kwargs.items():
+            if key not in self.param_names:
+                raise TypeError(f"flow {self.name!r} has no parameter {key!r}")
+            if key in supplied:
+                raise TypeError(f"flow {self.name!r} got multiple values for {key!r}")
+            supplied[key] = value
+
+        if len(supplied) < len(self.param_names):
+            return BoundFlow.from_supplied(self, supplied)
+
+        handles = [_ensure_handle(supplied[name]) for name in self.param_names]
         graph = _current_graph()
+        if len(handles) != 1:
+            raise TypeError(
+                "multi-argument subflow calls are not lowered by this spike; "
+                "leave one argument unbound and use the partial flow as an "
+                "each(...) body"
+            )
         return graph.append("subflow", self.name, handles, target=self)
 
     def to_ir(self) -> Node:
         return compile_graph(self.graph)
 
 
+@dataclass(frozen=True)
+class BoundFlow(FlowLike[Any, Any]):
+    flow: FlowDef
+    bound_args: dict[str, Any]
+
+    @classmethod
+    def from_supplied(cls, flow_def: FlowDef, supplied: dict[str, Any]) -> "BoundFlow":
+        for name, value in supplied.items():
+            if isinstance(value, Handle):
+                continue
+            try:
+                json.dumps(value, sort_keys=True)
+            except TypeError as exc:
+                raise TypeError(
+                    f"bound argument {name!r} for flow {flow_def.name!r} must be "
+                    "JSON-serializable in this spike"
+                ) from exc
+        ordered = {
+            name: supplied[name] for name in flow_def.param_names if name in supplied
+        }
+        return cls(flow=flow_def, bound_args=ordered)
+
+    @property
+    def remaining_param_names(self) -> list[str]:
+        return [
+            name for name in self.flow.param_names if name not in self.bound_args
+        ]
+
+    def _pack_pure_name(self) -> str:
+        remaining = self.remaining_param_names
+        if len(remaining) != 1:
+            raise ValueError(
+                f"closure-converted each body {self.flow.name!r} must leave "
+                f"exactly one unbound item parameter; remaining={remaining!r}"
+            )
+        return _pack_name(self.flow.name, list(self.bound_args), remaining[0])
+
+    def to_ir(self) -> Node:
+        pack_name = self._pack_pure_name()
+        _require_registered_pure(pack_name, f"partial flow {self.flow.name!r}")
+        return dsl.seq(dsl.arr(pack_name), self.flow.to_ir())
+
+
 @dataclass
 class EachDef(FlowLike[Any, Any]):
-    body: FlowDef
+    body: FlowDef | BoundFlow
     max_parallel: Optional[int] = None
     reducer: Optional[str] = None
 
@@ -400,12 +501,23 @@ def switch(
 
 
 def each(
-    body: FlowDef,
+    body: FlowDef | BoundFlow,
     *,
     max_parallel: Optional[int] = None,
     reducer: str | Pure | None = None,
 ) -> EachDef:
-    return EachDef(body=body, max_parallel=max_parallel, reducer=None if reducer is None else _pure_name(reducer))
+    if isinstance(body, FlowDef) and len(body.param_names) != 1:
+        raise ValueError(
+            f"each body {body.name!r} must take one item parameter or be a "
+            "partially-applied @flow with exactly one unbound item parameter"
+        )
+    if isinstance(body, BoundFlow):
+        body._pack_pure_name()
+    return EachDef(
+        body=body,
+        max_parallel=max_parallel,
+        reducer=None if reducer is None else _pure_name(reducer),
+    )
 
 
 def _step_flow(step: Step) -> Node:
@@ -437,7 +549,12 @@ def compile_graph(graph: Graph) -> Node:
     if graph.output is None:
         raise ValueError("spike flow has no output")
 
-    nodes: list[Node] = [dsl.arr(_assign_name(graph.params[0].label))]
+    if len(graph.params) == 1:
+        nodes: list[Node] = [dsl.arr(_assign_name(graph.params[0].label))]
+    else:
+        unpack_name = _unpack_name(graph.name)
+        _require_registered_pure(unpack_name, f"flow {graph.name!r}")
+        nodes = [dsl.arr(unpack_name)]
     current_kind = "env"
     current_label = graph.params[0].label
 
