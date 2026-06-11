@@ -662,7 +662,7 @@ def test_dbos_agent_segment_carries_summary_in_envelope(monkeypatch) -> None:
 
     monkeypatch.setattr(dbos_backend, "invokeBrainStep", fake_brain)
     monkeypatch.setattr(dbos_backend, "callHandIdempotent", fake_hand)
-    monkeypatch.setattr(dbos_backend, "callHandWrite", fake_hand)
+    monkeypatch.setattr(dbos_backend, "callHandNoRetry", fake_hand)
 
     agent_body = inspect.unwrap(dbos_backend.agent_workflow)
     out = asyncio.run(agent_body({

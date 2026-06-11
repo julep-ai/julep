@@ -11,7 +11,7 @@ from composable_agents import (
     HAVE_TEMPORAL,
 )
 from composable_agents.errors import CapabilityDenied
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
+from composable_agents.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
 if HAVE_TEMPORAL:
     from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
 from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
@@ -71,6 +71,12 @@ def test_retryable_call_retries_to_success_with_backoff_sleeps():
     assert out.value == {"ok": "x", "attempts": 3}
     assert attempts == 3
     assert sleeps == [0.5, 1.0]
+
+
+def test_interpreter_retry_backoff_clamps_ann_to_legal_floor():
+    node = call(mcp("srv", "inc"), ann=Ann(backoff_rate=0.5))
+
+    assert _retry_backoff_for_call(node) == 1.0
 
 
 def test_non_retryable_contract_ignores_ann_retry_policy():

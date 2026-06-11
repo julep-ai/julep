@@ -15,6 +15,8 @@ if HAVE_DBOS:
     from composable_agents.errors import CapabilityDenied, UnsupportedShapeError
     from composable_agents.execution.dbos_backend import (
         assert_dbos_executable,
+        callHandIdempotent,
+        callHandNoRetry,
         decode_policy_error,
         encode_policy_error,
     )
@@ -34,6 +36,15 @@ def test_scan_rejects_race():
 def test_scan_accepts_app():
     flow = app("triage_controller")
     assert_dbos_executable(flow)  # no raise: app runs via the ca_agent chain
+
+
+def test_call_hand_step_names_are_durable_identities():
+    """DBOS persists step names per function_id; recovery raises
+    DBOSUnexpectedStepError on mismatch. These names are wire-frozen: changing
+    either breaks replay of in-flight workflows. ``callHandNoRetry`` keeps its
+    pre-retry-algebra persisted name ``callHandWrite`` on purpose."""
+    assert callHandNoRetry.dbos_function_name == "callHandWrite"
+    assert callHandIdempotent.dbos_function_name == "callHandIdempotent"
 
 
 def test_policy_error_envelope_roundtrip():

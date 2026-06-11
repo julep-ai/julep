@@ -110,7 +110,7 @@ def _retry_interval_for_call(node: Node) -> float:
 def _retry_backoff_for_call(node: Node) -> float:
     if node.ann is None or node.ann.backoff_rate is None:
         return 1.0
-    return max(0.0, float(node.ann.backoff_rate))
+    return max(1.0, float(node.ann.backoff_rate))
 
 
 class Env(Protocol):

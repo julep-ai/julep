@@ -123,7 +123,7 @@ def _retry_policy_for(
         if ann is not None and ann.retry_interval_s is not None
         else policy.initial_retry_s
     ))
-    backoff = max(0.0, float(
+    backoff = max(1.0, float(
         ann.backoff_rate
         if ann is not None and ann.backoff_rate is not None
         else policy.retry_backoff

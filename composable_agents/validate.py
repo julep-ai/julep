@@ -18,6 +18,8 @@ Rules implemented:
 * named-``Pure``: ``arr``/``alt`` must carry a registered ``pure`` (no inline closures)
 * ``arr.args``: static args are canonical JSON objects with identifier keys and
   no secret-shaped keys at any nesting level
+* ``Ann`` retry fields: ``max_attempts >= 1``, finite ``retry_interval_s >= 0``,
+  and finite ``backoff_rate >= 1`` are blocking well-formedness requirements
 * post-freeze: every ``call`` resolves to a manifest entry
 """
 
@@ -322,6 +324,35 @@ def _check_json_value(
     return False
 
 
+def _check_ann_retry_fields(n: Node, out: list[Diagnostic]) -> None:
+    ann = n.ann
+    if ann is None:
+        return
+
+    def err(field: str, value: object, legal_range: str) -> None:
+        out.append(
+            Diagnostic(
+                "RETRY_FIELD_RANGE",
+                n.id,
+                f"Ann retry field {field}={value!r} is out of range; "
+                f"legal range is {legal_range}",
+            )
+        )
+
+    if ann.max_attempts is not None and ann.max_attempts < 1:
+        err("max_attempts", ann.max_attempts, "integer >= 1")
+
+    if ann.retry_interval_s is not None:
+        value = float(ann.retry_interval_s)
+        if not math.isfinite(value) or value < 0:
+            err("retry_interval_s", ann.retry_interval_s, "seconds >= 0")
+
+    if ann.backoff_rate is not None:
+        value = float(ann.backoff_rate)
+        if not math.isfinite(value) or value < 1:
+            err("backoff_rate", ann.backoff_rate, "multiplier >= 1")
+
+
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:
     step = n.step
     if isinstance(step, CallStep) and manifest is not None:
@@ -395,6 +426,7 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
 
     for n in flow.walk():
         _check_structure(n, out)
+        _check_ann_retry_fields(n, out)
         _check_call_and_ctx(n, manifest, out)
 
         # seq edge schema subtyping

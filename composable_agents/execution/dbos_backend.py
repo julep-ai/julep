@@ -138,7 +138,15 @@ async def callHandIdempotent(inp: dict) -> Any:
         return encode_policy_error(exc)
 
 
-@DBOS.step(retries_allowed=False)
+# The persisted name stays "callHandWrite" — the step's name before the retry
+# algebra landed. DBOS records step names per function_id and recovery raises
+# DBOSUnexpectedStepError on mismatch, so renaming the durable identity would
+# break replay of in-flight workflows that recorded the old name. The Python
+# name describes today's semantics; the wire name is frozen. (Known residue:
+# a retryable *write* recorded as callHandWrite now routes to
+# callHandIdempotent — a deliberate identity change of the retry algebra;
+# drain in-flight workflows across that upgrade.)
+@DBOS.step(retries_allowed=False, name="callHandWrite")
 async def callHandNoRetry(inp: dict) -> Any:
     try:
         return await effects.callHand(_call_hand_input(inp))

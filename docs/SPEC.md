@@ -86,9 +86,12 @@ A flow is an immutable tree of `Node`s. Each node carries an id, a `step`, an
 optional annotation (`Ann`: cost, timeout, cache hints, retry policy), and
 children. `Ann` fields are absent when unset; adding an optional annotation
 field MUST NOT change existing artifact JSON. Retry policy fields are
-`max_attempts` (integer), `retry_interval_s` (initial interval in seconds), and
-`backoff_rate` (multiplier). Their wire keys follow the IR camelCase convention:
-`maxAttempts`, `retryIntervalS`, and `backoffRate`.
+`max_attempts` (integer >= 1), `retry_interval_s` (initial interval in seconds,
+>= 0), and `backoff_rate` (multiplier >= 1). Their wire keys follow the IR
+camelCase convention: `maxAttempts`, `retryIntervalS`, and `backoffRate`.
+Out-of-range retry values MUST be rejected by submit-time validation with a
+blocking diagnostic. Engines MUST also clamp defensively when mapping to native
+retry config; Temporal rejects `backoff_coefficient < 1` outright.
 
 ### 4.1 Shape lattice
 
@@ -354,11 +357,14 @@ slow-success* and *cancellation of losers*.
 
 ### 8.4 Retry shaping
 
-Retry policy is derived **per tool contract**: liberal attempts for reads /
-native-idempotent tools; cautious attempts for writes. This MUST apply uniformly
-to flow calls **and** agent calls — the agent path resolves the same contract
-surface and uses the same policy. Unbound/unknown calls default to the
-conservative `write/none` contract.
+Retry policy is derived **per tool contract** under the §8.8 retry algebra:
+a call whose frozen contract is read-only or carries `idempotency`
+`native`/`required` is retryable and defaults to liberal attempts; every other
+call gets exactly **one** attempt — the engine never retries a non-idempotent
+write. This MUST apply uniformly to flow calls **and** agent calls — the agent
+path resolves the same contract surface and uses the same policy.
+Unbound/unknown calls default to the conservative `write/none` contract and are
+therefore single-attempt.
 
 ### 8.5 Idempotency keys
 
@@ -391,8 +397,9 @@ Tool contracts gate whether a call may retry at all. A call is retryable only
 when its frozen contract is read-only or has `idempotency` `native`/`required`.
 `Ann` sets the retry policy within that permission: `max_attempts`,
 `retry_interval_s`, and `backoff_rate` (wire keys `maxAttempts`,
-`retryIntervalS`, and `backoffRate`). Explicit `max_attempts > 1` on a
-non-idempotent `dangerous` tool is a blocking validation diagnostic.
+`retryIntervalS`, and `backoffRate`; legal ranges are defined in §4). Explicit
+`max_attempts > 1` on a non-idempotent `dangerous` tool is a blocking validation
+diagnostic.
 
 Backends map those fields to native retry config where the backend exposes a
 per-step seam. The in-memory interpreter retries directly and waits through its

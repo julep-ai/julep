@@ -365,6 +365,46 @@ def test_validate_blocks_explicit_retries_on_non_idempotent_dangerous_tool():
     assert {diag.code for diag in diags} == {"RETRY_NON_IDEMPOTENT_DANGEROUS"}
 
 
+@pytest.mark.parametrize(
+    ("ann", "field", "value", "legal_range"),
+    [
+        (Ann(max_attempts=0), "max_attempts", "0", ">= 1"),
+        (Ann(retry_interval_s=-0.1), "retry_interval_s", "-0.1", ">= 0"),
+        (Ann(retry_interval_s=float("inf")), "retry_interval_s", "inf", ">= 0"),
+        (Ann(backoff_rate=0.5), "backoff_rate", "0.5", ">= 1"),
+        (Ann(backoff_rate=float("nan")), "backoff_rate", "nan", ">= 1"),
+    ],
+)
+def test_validate_blocks_out_of_range_ann_retry_fields(
+    ann: Ann,
+    field: str,
+    value: str,
+    legal_range: str,
+) -> None:
+    diags = blocking(validate(call("retryable", ann=ann)))
+
+    assert len(diags) == 1
+    diag = diags[0]
+    assert diag.code == "RETRY_FIELD_RANGE"
+    assert diag.severity == "error"
+    assert field in diag.message
+    assert value in diag.message
+    assert legal_range in diag.message
+
+
+def test_validate_allows_in_range_ann_retry_fields() -> None:
+    diags = blocking(
+        validate(
+            call(
+                "retryable",
+                ann=Ann(max_attempts=3, retry_interval_s=0.0, backoff_rate=1.0),
+            )
+        )
+    )
+
+    assert not diags
+
+
 def test_admit_plan_rejects_staged_plan_shape():
     parent = CapabilityManifest.from_dict({"tools": [], "budget": {"cost": 1000}})
     # A plan may not itself stage (closed shape > Feedback).

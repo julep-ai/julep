@@ -441,7 +441,7 @@ def _patch_dbos_steps(monkeypatch, payloads, *, brain_reply=None, plan_reply=Non
         return plan_reply if plan_reply is not None else ident().to_json()
 
     monkeypatch.setattr(dbos_backend, "callHandIdempotent", fake_hand)
-    monkeypatch.setattr(dbos_backend, "callHandWrite", fake_hand)
+    monkeypatch.setattr(dbos_backend, "callHandNoRetry", fake_hand)
     monkeypatch.setattr(dbos_backend, "invokeBrainStep", fake_brain)
     monkeypatch.setattr(dbos_backend, "compilePlanStep", fake_plan)
 
