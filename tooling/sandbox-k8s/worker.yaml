@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-worker
+spec:
+  replicas: 0                      # KEDA owns the count
+  selector:
+    matchLabels: {app: ca-worker}
+  template:
+    metadata:
+      labels: {app: ca-worker}
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+        - name: worker
+          image: ca-worker:demo
+          imagePullPolicy: Never   # image lives in the host dockerd
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: 10.42.0.1:7233
+            - name: TEMPORAL_TASK_QUEUE
+              value: composable-agents
+            - name: WORKER_GRACEFUL_SHUTDOWN_S
+              value: "10"
+            - name: WORKER_MAX_CONCURRENT_ACTIVITIES
+              value: "4"
+          ports:
+            - containerPort: 8080
+              name: health
+          livenessProbe:
+            httpGet: {path: /healthz, port: health}
+            periodSeconds: 5
+          readinessProbe:
+            httpGet: {path: /readyz, port: health}
+            periodSeconds: 2
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ca-worker
+spec:
+  scaleTargetRef:
+    name: ca-worker
+  minReplicaCount: 0
+  maxReplicaCount: 4
+  pollingInterval: 5
+  cooldownPeriod: 30
+  triggers:
+    - type: temporal
+      metadata:
+        endpoint: 10.42.0.1:7233
+        namespace: default
+        taskQueue: composable-agents
+        queueTypes: "workflow,activity"
+        targetQueueSize: "2"
+        activationTargetQueueSize: "0"

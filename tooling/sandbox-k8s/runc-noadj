@@ -1,0 +1,26 @@
+#!/bin/sh
+# runc wrapper for sandboxed kernels that forbid lowering oom_score_adj:
+# clamp negative process.oomScoreAdj in the OCI bundle to 0, then exec runc.
+bundle=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "--bundle" ] || [ "$prev" = "-b" ]; then
+    bundle="$arg"
+  fi
+  prev="$arg"
+done
+if [ -n "$bundle" ] && [ -f "$bundle/config.json" ]; then
+  python3 - "$bundle/config.json" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as fh:
+    cfg = json.load(fh)
+proc = cfg.get("process") or {}
+if isinstance(proc.get("oomScoreAdj"), int) and proc["oomScoreAdj"] < 0:
+    proc["oomScoreAdj"] = 0
+    cfg["process"] = proc
+    with open(path, "w") as fh:
+        json.dump(cfg, fh)
+PYEOF
+fi
+exec /usr/bin/runc "$@"
