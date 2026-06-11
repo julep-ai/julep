@@ -213,6 +213,15 @@ named JSON objects only.
   already exists in the flowing input, execution MUST raise a deterministic
   error. The Python implementation's stable message is
   `std.bind key collision: key1, key2` with collided keys sorted.
+- `std.each_pack`: `args: {"items": "clusters", "item": "cluster",
+  "fields": {"store_context": "store_context"}, "consts": {...}}`. Builds the
+  pre-`each` closure-conversion list for dynamic fan-out with runtime handle
+  captures. `value` is an env record; `items` names the list-valued env field,
+  `item` names the per-item field in each packed record, `fields` maps packed
+  output names to env fields copied into every record, and `consts` embeds
+  static JSON values. This pure is additive because `std.pack` builds one
+  record but cannot map a list-valued env field into per-item records while
+  copying captured runtime handles exactly once before fan-out.
 
 ---
 

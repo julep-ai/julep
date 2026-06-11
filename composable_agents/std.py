@@ -132,6 +132,33 @@ def std_bind(value: Any, *, consts: dict[str, Any]) -> dict[str, Any]:
     return merged
 
 
+def std_each_pack(
+    value: Any,
+    *,
+    items: str,
+    item: str,
+    fields: dict[str, str],
+    consts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Wire-format-stable std.each_pack; body frozen once artifacts reference it.
+
+    Builds closure-conversion records for a dynamic fan-out before the each node.
+    ``items`` names the list-valued env field, ``item`` names each per-item
+    field in the packed record, ``fields`` maps packed names to copied env
+    fields, and ``consts`` embeds static JSON values. Deliberate behavior
+    changes require registering a new std name.
+    """
+    packed_items: list[dict[str, Any]] = []
+    for element in value[items]:
+        packed = {item: element}
+        for name, source in fields.items():
+            packed[name] = value[source]
+        for name in sorted(consts):
+            packed[name] = consts[name]
+        packed_items.append(packed)
+    return packed_items
+
+
 DEFAULT_REGISTRY.register_pure("std.merge", std_merge)
 DEFAULT_REGISTRY.register_pure("std.pluck", std_pluck)
 DEFAULT_REGISTRY.register_pure("std.init", std_init)
@@ -140,3 +167,4 @@ DEFAULT_REGISTRY.register_pure("std.collect", std_collect)
 DEFAULT_REGISTRY.register_pure("std.pack", std_pack)
 DEFAULT_REGISTRY.register_pure("std.unpack", std_unpack)
 DEFAULT_REGISTRY.register_pure("std.bind", std_bind)
+DEFAULT_REGISTRY.register_pure("std.each_pack", std_each_pack)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import pytest
@@ -7,7 +8,7 @@ import pytest
 from composable_agents import dsl, pure
 from composable_agents.contracts import ToolContract
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.ir import Node, canonical_json
+from composable_agents.ir import Node, SourceSpan, canonical_json
 from composable_agents.kinds import Effect, Idempotency, Op
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
 from composable_agents.transforms import normalize_ids
@@ -89,6 +90,32 @@ def dag_decorate_decision(decision: dict[str, Any]) -> dict[str, Any]:
     return decorated
 
 
+@pure("dag.make_cluster_label")
+def dag_make_cluster_label(value: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "store_id": value["store_id"],
+        "cluster_id": value["cluster_id"],
+        "label": f"{value['prefix']}:{value['cluster_id']}",
+        "expected_revision": value["revision"],
+    }
+
+
+@pure("dag.attach_const_model")
+def dag_attach_const_model(value: dict[str, Any]) -> dict[str, Any]:
+    return dict(value)
+
+
+@pure("dag.tally_cluster_statuses")
+def dag_tally_cluster_statuses(statuses: list[dict[str, Any]]) -> dict[str, int]:
+    tally = {"success": 0, "stale": 0}
+    for status in statuses:
+        if status["status"] == "success":
+            tally["success"] += 1
+        elif status["status"] == "stale_source":
+            tally["stale"] += 1
+    return tally
+
+
 def test_linear_chain_compiles_without_env_record_shims() -> None:
     from composable_agents.dag import Graph, StepKind, compile
 
@@ -136,6 +163,48 @@ def test_diamond_fan_in_compiles_to_minimal_parallel_env_flow() -> None:
     )
 
     _assert_no_assign_then_same_key_pluck(compiled)
+    assert _canonical_ir(compiled) == _canonical_ir(expected)
+
+
+def test_authored_std_merge_multi_input_collapses_to_env_projection_only() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "produce_a", output="a", contract=READ_CONTRACT)
+    graph.add_step(StepKind.TOOL, "produce_b", output="b", contract=READ_CONTRACT)
+    graph.add_step(StepKind.PURE, "std.merge", inputs=["a", "b"], output="merged")
+    graph.add_step(
+        StepKind.TOOL,
+        "consume_merged",
+        inputs=["merged"],
+        output="status",
+        contract=WRITE_CONTRACT,
+    )
+
+    compiled = compile(graph)
+    expected = dsl.seq(
+        dsl.arr("std.init", {"key": "__input__"}),
+        dsl.par(
+            dsl.ident(),
+            dsl.seq(dsl.arr("std.pluck", {"key": "__input__"}), dsl.call("produce_a")),
+            dsl.seq(dsl.arr("std.pluck", {"key": "__input__"}), dsl.call("produce_b")),
+        ),
+        dsl.arr("std.collect", {"fields": ["a", "b"]}),
+        dsl.arr("std.pack", {"fields": {"a": {"field": "a"}, "b": {"field": "b"}}}),
+        dsl.par(
+            dsl.ident(),
+            dsl.arr("std.merge", {"fields": ["a", "b"]}),
+        ),
+        dsl.arr("std.assign", {"key": "merged"}),
+        dsl.arr("std.pack", {"fields": {"merged": {"field": "merged"}}}),
+        dsl.arr("std.pluck", {"key": "merged"}),
+        dsl.call("consume_merged"),
+    )
+
+    merge_nodes = [
+        node for node in compiled.walk() if node.op is Op.ARR and node.pure == "std.merge"
+    ]
+    assert [node.args for node in merge_nodes] == [{"fields": ["a", "b"]}]
     assert _canonical_ir(compiled) == _canonical_ir(expected)
 
 
@@ -609,3 +678,313 @@ def test_branch_arm_liveness_prunes_fields_per_arm() -> None:
     assert {"fields": {"source": {"field": "source"}, "status": {"field": "status"}}} in pack_args
     assert {"fields": {"status": {"field": "status"}}} in pack_args
     assert {"fields": {"source": {"field": "source"}}} in pack_args
+
+
+def test_each_with_handle_capture_compiles_to_pre_each_env_projection() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="cluster", output_name="label")
+    body.add_step(
+        StepKind.PURE,
+        "dag.make_cluster_label",
+        inputs=["store_context", "cluster"],
+        output="label",
+    )
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_store_context", output="store_context", contract=READ_CONTRACT)
+    graph.add_step(
+        StepKind.TOOL,
+        "read_clusters",
+        inputs=["store_context"],
+        output="clusters",
+        contract=READ_CONTRACT,
+    )
+    graph.add_each(
+        body,
+        items="clusters",
+        output="labels",
+        max_parallel=3,
+    )
+
+    compiled = compile(graph)
+    expected = dsl.seq(
+        dsl.call("read_store_context"),
+        dsl.arr("std.init", {"key": "store_context"}),
+        dsl.par(
+            dsl.ident(),
+            dsl.seq(dsl.arr("std.pluck", {"key": "store_context"}), dsl.call("read_clusters")),
+        ),
+        dsl.arr("std.assign", {"key": "clusters"}),
+        dsl.arr(
+            "std.each_pack",
+            {
+                "items": "clusters",
+                "item": "cluster",
+                "fields": {"store_context": "store_context"},
+                "consts": {},
+            },
+        ),
+        dsl.each(
+            dsl.seq(
+                dsl.arr(
+                    "std.unpack",
+                    {"fields": {"cluster": "cluster", "store_context": "store_context"}},
+                ),
+                dsl.arr("std.merge", {"fields": ["store_context", "cluster"]}),
+                dsl.arr("dag.make_cluster_label"),
+            ),
+            max_parallel=3,
+        ),
+    )
+
+    each_pack_nodes = [
+        node for node in compiled.walk() if node.op is Op.ARR and node.pure == "std.each_pack"
+    ]
+    assert len(each_pack_nodes) == 1
+    assert _canonical_ir(compiled) == _canonical_ir(expected)
+
+
+def test_each_with_const_captures_only_pins_consts_in_body_pack() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="cluster", output_name="labeled")
+    body.add_step(
+        StepKind.PURE,
+        "dag.attach_const_model",
+        inputs=["cluster", "model_config"],
+        output="labeled",
+    )
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_clusters", output="clusters", contract=READ_CONTRACT)
+    graph.add_each(
+        body,
+        items="clusters",
+        output="labels",
+        const_captures={"model_config": {"model": "mini"}},
+    )
+
+    expected = dsl.seq(
+        dsl.call("read_clusters"),
+        dsl.each(
+            dsl.seq(
+                dsl.arr(
+                    "std.pack",
+                    {
+                        "fields": {
+                            "cluster": {"input": True},
+                            "model_config": {"const": {"model": "mini"}},
+                        }
+                    },
+                ),
+                dsl.arr(
+                    "std.unpack",
+                    {"fields": {"cluster": "cluster", "model_config": "model_config"}},
+                ),
+                dsl.arr("std.merge", {"fields": ["cluster", "model_config"]}),
+                dsl.arr("dag.attach_const_model"),
+            )
+        ),
+    )
+
+    assert _canonical_ir(compile(graph)) == _canonical_ir(expected)
+
+
+def test_each_with_reducer_lowers_to_dsl_each_reducer() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="cluster", output_name="labeled")
+    body.add_step(
+        StepKind.PURE,
+        "dag.attach_const_model",
+        inputs=["cluster", "model_config"],
+        output="labeled",
+    )
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_clusters", output="clusters", contract=READ_CONTRACT)
+    graph.add_each(
+        body,
+        items="clusters",
+        output="labels",
+        const_captures={"model_config": {"model": "mini"}},
+        reducer="dag.tally_cluster_statuses",
+        max_parallel=2,
+    )
+
+    compiled = compile(graph)
+    each_nodes = [node for node in compiled.walk() if node.op is Op.EACH]
+    assert len(each_nodes) == 1
+    assert each_nodes[0].pure == "dag.tally_cluster_statuses"
+    assert each_nodes[0].bound == 2
+
+
+@pytest.mark.parametrize(
+    ("stale", "expected"),
+    [
+        (False, {"success": 2, "stale": 0}),
+        (True, {"success": 1, "stale": 1}),
+    ],
+)
+def test_cluster_labeling_skeleton_each_runs_success_and_stale(
+    stale: bool,
+    expected: dict[str, int],
+) -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    body = Graph(input_name="cluster", output_name="write_status")
+    body.add_step(
+        StepKind.PURE,
+        "dag.make_cluster_label",
+        inputs=["store_context", "cluster"],
+        output="label",
+    )
+    body.add_step(
+        StepKind.TOOL,
+        "write_cluster_label",
+        inputs=["label"],
+        output="write_status",
+        contract=WRITE_CONTRACT,
+    )
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_store_context", output="store_context", contract=READ_CONTRACT)
+    graph.add_step(
+        StepKind.TOOL,
+        "read_clusters",
+        inputs=["store_context"],
+        output="clusters",
+        contract=READ_CONTRACT,
+    )
+    graph.add_each(
+        body,
+        items="clusters",
+        output="statuses",
+        max_parallel=2,
+        reducer="dag.tally_cluster_statuses",
+    )
+
+    def read_store_context(value: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "store_id": value["store_id"],
+            "prefix": "topic",
+            "revision": 7,
+        }
+
+    def read_clusters(value: dict[str, Any]) -> list[dict[str, Any]]:
+        return [
+            {"store_id": value["store_id"], "cluster_id": "c1"},
+            {"store_id": value["store_id"], "cluster_id": "c2"},
+        ]
+
+    def write_cluster_label(value: dict[str, Any]) -> dict[str, Any]:
+        if stale and value["cluster_id"] == "c2":
+            return {"status": "stale_source", "cluster_id": value["cluster_id"]}
+        return {"status": "success", "cluster_id": value["cluster_id"]}
+
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        hands={
+            "read_store_context": read_store_context,
+            "read_clusters": read_clusters,
+            "write_cluster_label": write_cluster_label,
+        },
+    )
+
+    result = run(interpret(compile(graph), {"store_id": "s1"}, env))
+
+    assert result.value == expected
+
+
+def test_each_capture_policy_rejects_foreign_body_handles_and_non_json_consts() -> None:
+    from composable_agents.dag import Graph, GraphDefinitionError, StepKind
+
+    body = Graph(input_name="cluster")
+    body.add_step(StepKind.PURE, "std.merge", inputs=["cluster", "missing_context"], output="label")
+
+    graph = Graph()
+    graph.add_step(StepKind.TOOL, "read_clusters", output="clusters", contract=READ_CONTRACT)
+    with pytest.raises(GraphDefinitionError, match="foreign-scope handle capture: missing_context"):
+        graph.add_each(body, items="clusters", output="labels")
+
+    with pytest.raises(GraphDefinitionError, match="const capture .* JSON"):
+        graph.add_each(body, items="clusters", output="labels", const_captures={"missing_context": object()})
+
+
+def test_each_const_capture_warns_only_when_canonical_json_exceeds_threshold() -> None:
+    from composable_agents.dag import CAPTURE_SIZE_WARNING_BYTES, Graph, StepKind
+
+    def build_graph_with_capture(capture: dict[str, Any]) -> None:
+        body = Graph(input_name="cluster", output_name="labeled")
+        body.add_step(
+            StepKind.PURE,
+            "dag.attach_const_model",
+            inputs=["cluster", "model_config"],
+            output="labeled",
+        )
+        graph = Graph()
+        graph.add_step(StepKind.TOOL, "read_clusters", output="clusters", contract=READ_CONTRACT)
+        graph.add_each(
+            body,
+            items="clusters",
+            output="labels",
+            const_captures={"model_config": capture},
+        )
+
+    oversized_capture = {"payload": "x" * CAPTURE_SIZE_WARNING_BYTES}
+    warning_match = rf"const capture 'model_config'.*{CAPTURE_SIZE_WARNING_BYTES} bytes"
+    with pytest.warns(UserWarning, match=warning_match):
+        build_graph_with_capture(oversized_capture)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        build_graph_with_capture({"payload": "small"})
+
+    assert caught == []
+
+
+def test_source_spans_propagate_to_each_and_shims_without_wire_bytes() -> None:
+    from composable_agents.dag import Graph, StepKind, compile
+
+    parent_span = SourceSpan("flow.py", 10, "build", "labels = each(...)")
+    body_span = SourceSpan("flow.py", 6, "label_one", "label = make(...)")
+
+    body = Graph(input_name="cluster", output_name="label")
+    body.add_step(
+        StepKind.PURE,
+        "dag.attach_const_model",
+        inputs=["cluster", "model_config"],
+        output="label",
+        source=body_span,
+    )
+
+    graph = Graph()
+    graph.add_step(
+        StepKind.TOOL,
+        "read_clusters",
+        output="clusters",
+        contract=READ_CONTRACT,
+        source=parent_span,
+    )
+    graph.add_each(
+        body,
+        items="clusters",
+        output="labels",
+        const_captures={"model_config": {"model": "mini"}},
+        source=parent_span,
+    )
+
+    compiled = compile(graph)
+
+    assert all(node.source is not None for node in compiled.walk())
+    assert any(
+        node.op is Op.ARR and node.pure == "std.pack" and node.source == parent_span
+        for node in compiled.walk()
+    )
+    assert any(
+        node.op is Op.ARR and node.pure == "dag.attach_const_model" and node.source == body_span
+        for node in compiled.walk()
+    )
+    assert "source" not in canonical_json(compiled.to_json())

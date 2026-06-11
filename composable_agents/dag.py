@@ -6,6 +6,8 @@ plain data so tests and other frontends can construct it directly.
 
 from __future__ import annotations
 
+import math
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
@@ -13,12 +15,16 @@ from typing import Any, Iterable, Optional, Sequence
 
 from . import dsl
 from .contracts import CONSERVATIVE_DEFAULT, ToolContract
-from .ir import Ann, Node, SourceSpan
+from .ir import Ann, Node, SourceSpan, canonical_json
 from .kinds import Effect, Op
 
 
 class GraphDefinitionError(ValueError):
     """Define-time graph construction or compilation error."""
+
+
+CAPTURE_SIZE_WARNING_BYTES = 4096
+"""Warn when one static closure capture exceeds this canonical JSON byte size."""
 
 
 class StepKind(str, Enum):
@@ -28,6 +34,7 @@ class StepKind(str, Enum):
     PASSTHROUGH = "passthrough"
     COND = "cond"
     SWITCH = "switch"
+    EACH = "each"
 
 
 @dataclass(frozen=True)
@@ -54,6 +61,10 @@ class StepNode:
     if_false: Optional["Graph"] = None
     cases: Optional[dict[str, "Graph"]] = None
     default: Optional["Graph"] = None
+    body: Optional["Graph"] = None
+    max_parallel: Optional[int] = None
+    reducer: Optional[str] = None
+    const_captures: Optional[dict[str, Any]] = None
 
 
 InputSpec = str | InputEdge | tuple[str, str]
@@ -158,6 +169,62 @@ class Graph:
             source=source,
         )
 
+    def add_each(
+        self,
+        body: "Graph",
+        *,
+        items: InputSpec,
+        output: str,
+        max_parallel: Optional[int] = None,
+        reducer: Optional[str] = None,
+        const_captures: Optional[dict[str, Any]] = None,
+        source: Optional[SourceSpan] = None,
+    ) -> StepNode:
+        """Add a dynamic fan-out step over a list-valued input edge.
+
+        ``body`` is compiled once and applied to each item. Plain JSON captures
+        are supplied through ``const_captures`` and pinned into arr static args.
+        Body references to names produced by this graph are runtime handle
+        captures and lower to a pre-each env projection.
+        """
+        if output in self._outputs:
+            raise GraphDefinitionError(f"output name collision: {output}")
+        if max_parallel is not None and max_parallel < 1:
+            raise GraphDefinitionError("each max_parallel must be >= 1")
+
+        consts = dict(const_captures or {})
+        for name, value in consts.items():
+            _validate_const_capture(name, value)
+            _warn_if_oversized_capture(name, value)
+
+        available = set(self._outputs)
+        available.add(self.input_name)
+        body_externals = _external_sources(body)
+        for capture in body_externals:
+            if capture in consts:
+                continue
+            if capture not in available:
+                raise GraphDefinitionError(f"foreign-scope handle capture: {capture}")
+
+        item_edge = _coerce_input(items)
+        node = StepNode(
+            kind=StepKind.EACH,
+            ref="each",
+            inputs=(InputEdge(name="items", source=item_edge.source),),
+            output=output,
+            source=source,
+            order=len(self.steps),
+            body=body,
+            max_parallel=max_parallel,
+            reducer=reducer,
+            const_captures=consts,
+        )
+        self.steps.append(node)
+        self._outputs[output] = node
+        if not self._explicit_output_name:
+            self.output_name = output
+        return node
+
     def _add_branch(
         self,
         kind: StepKind,
@@ -200,7 +267,7 @@ def compile(graph: Graph) -> Node:
 
     final_output = graph.output_name or ordered[-1].output
     if _is_linear_chain(ordered, final_output):
-        return _seq([_leaf(step) for step in ordered])
+        return _stamp_missing_sources(_seq([_leaf(step) for step in ordered]))
 
     layers = _effect_fenced_layers(ordered, (graph.input_name,))
     pieces: list[Node] = []
@@ -213,7 +280,7 @@ def compile(graph: Graph) -> Node:
                 pieces.append(_leaf(layer[0]))
             else:
                 pieces.extend(_seq_items(_step_from_env(layer[0], graph.input_name)))
-            return _seq(pieces)
+            return _stamp_missing_sources(_seq(pieces))
 
         if not env_started and len(layer) == 1 and not layer[0].inputs:
             first = layer[0]
@@ -240,7 +307,40 @@ def compile(graph: Graph) -> Node:
             current_fields = live
 
     pieces.append(_arr("std.pluck", {"key": final_output}, _source_for_output(ordered, final_output)))
-    return _seq(pieces)
+    return _stamp_missing_sources(_seq(pieces))
+
+
+def _validate_const_capture(name: str, value: Any) -> None:
+    if not _json_capture_ok(value):
+        raise GraphDefinitionError(f"const capture {name!r} must be canonical JSON")
+    try:
+        canonical_json(value)
+    except TypeError as exc:
+        raise GraphDefinitionError(f"const capture {name!r} must be canonical JSON") from exc
+
+
+def _json_capture_ok(value: Any) -> bool:
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _json_capture_ok(child) for key, child in value.items())
+    if isinstance(value, list):
+        return all(_json_capture_ok(item) for item in value)
+    if value is None or isinstance(value, (str, bool, int)):
+        return True
+    if isinstance(value, float):
+        return math.isfinite(value)
+    return False
+
+
+def _warn_if_oversized_capture(name: str, value: Any) -> None:
+    size = len(canonical_json(value).encode("utf-8"))
+    if size > CAPTURE_SIZE_WARNING_BYTES:
+        warnings.warn(
+            (
+                f"const capture {name!r} is {size} bytes; values larger than "
+                f"{CAPTURE_SIZE_WARNING_BYTES} bytes are duplicated into the frozen artifact"
+            ),
+            stacklevel=3,
+        )
 
 
 def _coerce_input(value: InputSpec) -> InputEdge:
@@ -352,6 +452,10 @@ def _deps_done(step: StepNode, done: set[str]) -> bool:
 def _is_barrier(step: StepNode) -> bool:
     if step.kind in {StepKind.COND, StepKind.SWITCH}:
         return _branch_has_barrier(step)
+    if step.kind is StepKind.EACH:
+        if step.body is None:
+            raise GraphDefinitionError(f"each step {step.output!r} needs a body")
+        return _graph_has_barrier(step.body)
     if step.kind is not StepKind.TOOL:
         return False
     contract = step.contract or CONSERVATIVE_DEFAULT
@@ -363,11 +467,11 @@ def _compile_env_layer(layer: Sequence[StepNode], input_name: str) -> list[Node]
     if len(branches) == 1:
         step = layer[0]
         return [
-            dsl.par(dsl.ident(), branches[0]),
+            _par([_with_source(dsl.ident(), step.source), branches[0]], step.source),
             _arr("std.assign", {"key": step.output}, step.source),
         ]
     return [
-        dsl.par([dsl.ident(), *branches]),
+        _par([_with_source(dsl.ident(), layer[0].source), *branches], layer[0].source),
         _arr("std.collect", {"fields": [step.output for step in layer]}, layer[0].source),
     ]
 
@@ -375,6 +479,10 @@ def _compile_env_layer(layer: Sequence[StepNode], input_name: str) -> list[Node]
 def _step_from_env(step: StepNode, input_name: str) -> Node:
     if step.kind in {StepKind.COND, StepKind.SWITCH}:
         return _branch_from_env(step)
+    if step.kind is StepKind.EACH:
+        return _each_from_env(step)
+    if step.kind is StepKind.PURE and step.ref == "std.merge" and len(step.inputs) > 1:
+        return _input_projection(step, input_name)
     return _seq([_input_projection(step, input_name), _leaf(step)])
 
 
@@ -398,7 +506,99 @@ def _leaf(step: StepNode) -> Node:
         return _with_source(dsl.ident(), step.source)
     if step.kind in {StepKind.COND, StepKind.SWITCH}:
         return _branch_from_env(step)
+    if step.kind is StepKind.EACH:
+        return _each_from_flowing_input(step)
     raise AssertionError(f"unhandled step kind: {step.kind}")
+
+
+def _each_from_env(step: StepNode) -> Node:
+    if step.body is None:
+        raise GraphDefinitionError(f"each step {step.output!r} needs a body")
+    item_source = _each_item_source(step)
+    handle_captures = _handle_captures(step)
+    consts = dict(step.const_captures or {})
+    body = _compile_each_body(step, packed_input=bool(handle_captures), consts=consts)
+    each_node = _with_source(
+        dsl.each(body, max_parallel=step.max_parallel, reducer=step.reducer),
+        step.source,
+    )
+    if handle_captures:
+        return _seq(
+            [
+                _arr(
+                    "std.each_pack",
+                    {
+                        "items": item_source,
+                        "item": step.body.input_name,
+                        "fields": {name: name for name in handle_captures},
+                        "consts": consts,
+                    },
+                    step.source,
+                ),
+                each_node,
+            ]
+        )
+    return _seq([_arr("std.pluck", {"key": item_source}, step.source), each_node])
+
+
+def _each_from_flowing_input(step: StepNode) -> Node:
+    if step.body is None:
+        raise GraphDefinitionError(f"each step {step.output!r} needs a body")
+    handle_captures = _handle_captures(step)
+    if handle_captures:
+        raise GraphDefinitionError(
+            f"each step {step.output!r} with handle captures requires env compilation"
+        )
+    body = _compile_each_body(step, packed_input=False, consts=dict(step.const_captures or {}))
+    return _with_source(
+        dsl.each(body, max_parallel=step.max_parallel, reducer=step.reducer),
+        step.source,
+    )
+
+
+def _compile_each_body(
+    step: StepNode,
+    *,
+    packed_input: bool,
+    consts: dict[str, Any],
+) -> Node:
+    if step.body is None:
+        raise GraphDefinitionError(f"each step {step.output!r} needs a body")
+    handle_captures = _handle_captures(step)
+    initial_fields = [step.body.input_name, *handle_captures, *sorted(consts)]
+
+    if not packed_input and not consts:
+        return _stamp_missing_sources(_compile_raw_item_body(step.body))
+
+    pieces: list[Node] = []
+    if packed_input:
+        unpack_fields = {field: field for field in initial_fields}
+    else:
+        pack_fields = {step.body.input_name: {"input": True}}
+        for name in sorted(consts):
+            pack_fields[name] = {"const": consts[name]}
+        pieces.append(_arr("std.pack", {"fields": pack_fields}, step.source))
+        unpack_fields = {field: field for field in initial_fields}
+    pieces.append(_arr("std.unpack", {"fields": unpack_fields}, step.source))
+    pieces.extend(_seq_items(_compile_env_graph(step.body, initial_fields)))
+    return _stamp_missing_sources(_seq(pieces))
+
+
+def _compile_raw_item_body(graph: Graph) -> Node:
+    return compile(graph)
+
+
+def _each_item_source(step: StepNode) -> str:
+    if len(step.inputs) != 1:
+        raise GraphDefinitionError(f"each step {step.output!r} needs one list input")
+    return step.inputs[0].source
+
+
+def _handle_captures(step: StepNode) -> list[str]:
+    if step.kind is not StepKind.EACH or step.body is None:
+        return []
+    consts = set(step.const_captures or {})
+    return [source for source in _external_sources(step.body) if source not in consts]
 
 
 def _arr(name: str, args: dict[str, Any], source: Optional[SourceSpan]) -> Node:
@@ -411,7 +611,11 @@ def _with_source(node: Node, source: Optional[SourceSpan]) -> Node:
 
 
 def _seq(nodes: Iterable[Node]) -> Node:
-    return dsl.seq(list(nodes))
+    return _stamp_missing_sources(dsl.seq(list(nodes)))
+
+
+def _par(nodes: Sequence[Node], source: Optional[SourceSpan]) -> Node:
+    return _with_source(_stamp_missing_sources(dsl.par(list(nodes))), source)
 
 
 def _seq_items(node: Node) -> list[Node]:
@@ -436,6 +640,8 @@ def _input_sources(step: StepNode) -> list[str]:
     sources = [edge.source for edge in step.inputs]
     if step.kind in {StepKind.COND, StepKind.SWITCH}:
         sources = _append_unique(sources, _branch_external_sources(step))
+    if step.kind is StepKind.EACH:
+        sources = _append_unique(sources, _handle_captures(step))
     return sources
 
 
@@ -532,7 +738,7 @@ def _compile_env_graph(graph: Graph, initial_fields: Sequence[str]) -> Node:
     ordered = _toposort(graph, initial_fields)
     final_output = graph.output_name or (ordered[-1].output if ordered else None)
     if final_output is None:
-        return dsl.ident()
+        return _stamp_missing_sources(dsl.ident())
     if not ordered:
         if final_output not in initial_fields:
             raise GraphDefinitionError(f"unknown output name: {final_output}")
@@ -545,7 +751,7 @@ def _compile_env_graph(graph: Graph, initial_fields: Sequence[str]) -> Node:
     for index, layer in enumerate(layers):
         if index == len(layers) - 1 and len(layer) == 1 and layer[0].output == final_output:
             pieces.extend(_seq_items(_step_from_env(layer[0], graph.input_name)))
-            return _seq(pieces)
+            return _stamp_missing_sources(_seq(pieces))
 
         pieces.extend(_compile_env_layer(layer, graph.input_name))
         current_fields = _append_unique(current_fields, [step.output for step in layer])
@@ -557,7 +763,7 @@ def _compile_env_graph(graph: Graph, initial_fields: Sequence[str]) -> Node:
     if final_output not in current_fields:
         raise GraphDefinitionError(f"unknown output name: {final_output}")
     pieces.append(_arr("std.pluck", {"key": final_output}, _source_for_output(ordered, final_output)))
-    return _seq(pieces)
+    return _stamp_missing_sources(_seq(pieces))
 
 
 def _live_fields_after_layer(
@@ -593,3 +799,14 @@ def _append_unique(values: Sequence[str], additions: Iterable[str]) -> list[str]
 
 def _dedupe(values: Iterable[str]) -> list[str]:
     return _append_unique([], values)
+
+
+def _stamp_missing_sources(node: Node) -> Node:
+    for child in node.children():
+        _stamp_missing_sources(child)
+    if node.source is None:
+        for child in node.children():
+            if child.source is not None:
+                node.source = child.source
+                break
+    return node

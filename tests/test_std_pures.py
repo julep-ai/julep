@@ -20,6 +20,7 @@ STD_PURES = (
     "std.pack",
     "std.unpack",
     "std.bind",
+    "std.each_pack",
 )
 
 
@@ -35,6 +36,7 @@ EXPECTED_STD_SOURCE_HASHES = {
     "std.pack": "pure:9a0d3873bbef3f97",
     "std.unpack": "pure:82b536c49d7cee7e",
     "std.bind": "pure:9936960359bdf9a3",
+    "std.each_pack": "pure:d40a26dcb92b73a8",
 }
 
 
@@ -170,3 +172,19 @@ def test_std_bind_merges_consts_and_rejects_collisions_deterministically() -> No
             {"limit": 5, "store_id": "s1"},
             {"consts": {"store_id": "s2", "limit": 10}},
         )
+
+
+def test_std_each_pack_maps_items_with_handle_fields_and_consts() -> None:
+    assert _run_std(
+        "std.each_pack",
+        {"clusters": [{"id": "c1"}, {"id": "c2"}], "store_context": {"store_id": "s1"}},
+        {
+            "items": "clusters",
+            "item": "cluster",
+            "fields": {"store_context": "store_context"},
+            "consts": {"model": "small"},
+        },
+    ) == [
+        {"cluster": {"id": "c1"}, "store_context": {"store_id": "s1"}, "model": "small"},
+        {"cluster": {"id": "c2"}, "store_context": {"store_id": "s1"}, "model": "small"},
+    ]
