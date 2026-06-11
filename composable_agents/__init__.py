@@ -160,6 +160,7 @@ from .purity import (
     register_pure as register_pure,
 )
 from .registry import DEFAULT_REGISTRY as DEFAULT_REGISTRY, Registry as Registry
+from . import std as _std
 
 # --- agent loop + plan extraction (P4) ------------------------------------- #
 from .agent_loop import (

@@ -168,6 +168,42 @@ Call-node bound args are intentionally not part of this wire format. Tool
 configuration binding, if needed by a frontend, is represented by a preceding
 pure data-shaping step rather than by adding bound arguments to `call`.
 
+### 4.5 Standard pure family
+
+Implementations MUST register the closed `std.*` pure family at package import.
+These names are wire-format-stable glue emitted by frontends. Each body is
+source-hash-pinned like any registered pure; once an artifact references a std
+name, changing that body is replay drift. Deliberate behavior changes MUST use a
+new registered name instead of editing the old body.
+
+Every parameterized std pure uses the `arr.args` rules in §4.4. Static args are
+named JSON objects only.
+
+- `std.merge`: `fn(value, fields=None)`. With no `args`, `value` is the binary
+  pair-input layout used by `|`: `[left, right]`. The result is dictionary
+  union with right-hand keys winning. With `args: {"fields": ["a", "b"]}`,
+  `value` is an env record; implementations merge `value["a"]`, then
+  `value["b"]`, and so on, with later fields winning.
+- `std.pluck`: `args: {"key": "name"}`. Projects `value["name"]`.
+- `std.init`: `args: {"key": "name"}`. Starts an env record:
+  `{"name": value}`.
+- `std.assign`: `args: {"key": "name"}`. Extends an existing env record from
+  the fixed pair-input layout `[env, item]`, returning a fresh record with
+  `name` set to `item`. `std.init` and `std.assign` are distinct pures; std
+  bodies MUST NOT sniff the flowing value to choose between env-entry and
+  env-extend behavior.
+- `std.pack`: `args: {"fields": {...}}`. Builds a named closure-conversion
+  record. Each output field maps to one selector:
+  `{"field": "source"}` copies `value["source"]`, `{"input": true}` copies the
+  whole flowing input, and `{"const": json}` embeds a static JSON value.
+- `std.unpack`: `args: {"fields": {"envName": "packedName"}}`. Builds an env
+  record by copying each named field out of the packed record.
+- `std.bind`: `args: {"consts": {...}}`. Adds static JSON constants to the
+  flowing input before a downstream step such as a tool call. If any const key
+  already exists in the flowing input, execution MUST raise a deterministic
+  error. The Python implementation's stable message is
+  `std.bind key collision: key1, key2` with collided keys sorted.
+
 ---
 
 ## 5. Compile pipeline
