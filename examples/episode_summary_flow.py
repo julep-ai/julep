@@ -1,4 +1,4 @@
-"""Episode summary pipeline — a mem-mcp workflow as a composable-agents Flow.
+"""Episode summary pipeline — a mem-mcp workflow as a ``@flow`` definition.
 
 A faithful port of mem-mcp's ``workflows/summary.py::process_summary`` (plus its
 batch-dispatch shape): for each episode, read the source text, generate a
@@ -9,9 +9,12 @@ parallelism, mirroring the product's queue concurrency.
 
 Structure notes:
 
-* Deterministic context (episode id, content hash) is never round-tripped
-  through the model. Each LLM step is ``par(ident(), think(brain))`` followed by
-  a pure merge, so ids/hashes flow through the workflow, not the prompt.
+* The flow uses define-by-construction authoring: ``@flow`` runs once at import
+  time with data handles, so ordinary Python assignments name graph nodes while
+  tools, brains, pures, ``cond``, and ``each`` append steps.
+* Independent read/pure/brain work can be inferred as parallel by the DAG
+  compiler when effect-safe; write and external-effect steps remain ordered
+  barriers, so the CAS read -> model work -> guarded write shape stays intact.
 * The "database" is an in-process store behind two native hands
   (``read_episode`` / ``write_summary_surfaces``); episode ``ep-1003`` simulates
   a concurrent edit between read and write, exercising the ``stale_source``
@@ -19,6 +22,8 @@ Structure notes:
 * ``run_demo()`` is the keyless dry run on ``InMemoryEnv`` (no API key, network,
   or Temporal). On Temporal, ``build().run(client, ...)`` drives the same frozen
   artifact with real model calls (see tooling/k3d-flow-demo/).
+* The lower-level combinator kernel remains available for escape hatches; see
+  the "Authoring DSL" section of the repo ``README.md``.
 """
 
 from __future__ import annotations
@@ -30,22 +35,13 @@ from typing import Any
 
 from composable_agents import (
     Brain,
-    CapabilityManifest,
     Deployment,
-    InMemoryEnv,
-    InMemoryProjection,
-    ProjectionEmitter,
-    alt,
-    arr,
+    cond,
     deploy,
     each,
-    ident,
-    interpret,
-    par,
+    flow,
     pure,
     register_brain,
-    seq,
-    snapshot_from_tools,
     think,
     tool,
 )
@@ -201,23 +197,11 @@ register_brain(
 
 
 # --------------------------------------------------------------------------- #
-# Pures (branching, merges, and the batch rollup) — pinned by source hash.
+# Pures (branching/status and the batch rollup) — pinned by source hash.
 # --------------------------------------------------------------------------- #
 @pure("episode_found")
 def episode_found(source: dict[str, Any]) -> bool:
     return bool(source.get("found"))
-
-
-@pure("attach_summary")
-def attach_summary(parts: list[dict[str, Any]]) -> dict[str, Any]:
-    source, reply = parts
-    return {**source, "summary": str(reply["summary"]).strip()}
-
-
-@pure("attach_one_liner")
-def attach_one_liner(parts: list[dict[str, Any]]) -> dict[str, Any]:
-    merged, reply = parts
-    return {**merged, "oneLiner": str(reply["oneLiner"]).strip()}
 
 
 @pure("not_found_status")
@@ -236,33 +220,38 @@ def tally_summary_statuses(results: list[dict[str, Any]]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # The flow.
 # --------------------------------------------------------------------------- #
-def build() -> Deployment:
-    summarize_one = seq(
-        read_episode.to_ir(),
-        alt(
-            "episode_found",
-            if_true=seq(
-                par(ident(), think(SUMMARIZER)),
-                arr("attach_summary"),
-                par(ident(), think(ONE_LINER)),
-                arr("attach_one_liner"),
-                write_summary_surfaces.to_ir(),
-            ),
-            if_false=arr("not_found_status"),
-        ),
-    )
-    batch = each(summarize_one, max_parallel=2, reducer="tally_summary_statuses")
+@flow
+def happy_path(source: dict[str, Any]) -> dict[str, Any]:
+    summary = think(SUMMARIZER, source)
+    merged = source | summary
+    liner = think(ONE_LINER, merged)
+    return write_summary_surfaces(merged | liner)
 
-    capabilities = CapabilityManifest.from_dict(
-        {
-            "tools": [
-                {"name": read_episode.name, "effect": "read", "idempotency": "native"},
-                {"name": write_summary_surfaces.name, "effect": "write", "idempotency": "native"},
-            ],
-            "brains": [SUMMARIZER, ONE_LINER],
-        }
+
+@flow
+def not_found(source: dict[str, Any]) -> dict[str, Any]:
+    status = not_found_status(source)
+    return status
+
+
+@flow
+def summarize_one(episode_id: str) -> dict[str, Any]:
+    source = read_episode(episode_id)
+    return cond(episode_found, source, then=happy_path, orelse=not_found)
+
+
+@flow
+def batch(episode_ids: list[str]) -> dict[str, Any]:
+    return each(
+        summarize_one,
+        episode_ids,
+        max_parallel=2,
+        reducer=tally_summary_statuses,
     )
-    return deploy(batch, snapshot_from_tools(TOOLS), capabilities=capabilities)
+
+
+def build() -> Deployment:
+    return deploy(batch, tools=TOOLS, brains=[SUMMARIZER, ONE_LINER])
 
 
 # --------------------------------------------------------------------------- #
@@ -279,14 +268,10 @@ def _fake_one_liner(value: dict[str, Any]) -> dict[str, Any]:
 async def run_demo(batch: list[str] | None = None) -> Any:
     reset_store()
     deployment = build()
-    env = InMemoryEnv(
-        deployment.manifest,
-        ProjectionEmitter(InMemoryProjection()),
-        hands={native_tool.name: native_tool.bound_hand for native_tool in TOOLS},
+    return await deployment.adry_run(
+        batch or EPISODE_BATCH,
         brains={SUMMARIZER: _fake_summarizer, ONE_LINER: _fake_one_liner},
-        max_calls=deployment.capabilities.max_call_limits() if deployment.capabilities else {},
     )
-    return await interpret(deployment.flow, batch or EPISODE_BATCH, env)
 
 
 def main() -> None:

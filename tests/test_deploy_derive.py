@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import pytest
 
@@ -12,11 +13,24 @@ from composable_agents import (
     each,
     ident,
     par,
+    pure,
     seq,
     snapshot_from_tools,
     think,
 )
 from examples import episode_summary_flow as episode
+
+
+@pure("attach_summary")
+def attach_summary(parts: list[dict[str, Any]]) -> dict[str, Any]:
+    source, reply = parts
+    return {**source, "summary": str(reply["summary"]).strip()}
+
+
+@pure("attach_one_liner")
+def attach_one_liner(parts: list[dict[str, Any]]) -> dict[str, Any]:
+    merged, reply = parts
+    return {**merged, "oneLiner": str(reply["oneLiner"]).strip()}
 
 
 def _episode_batch():
