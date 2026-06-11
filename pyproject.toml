@@ -59,6 +59,7 @@ dev = [
     "jinja2>=3.1",
     "opentelemetry-api>=1.20",
     "opentelemetry-sdk>=1.20",
+    "pydantic>=2",
     "types-PyYAML>=6.0",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]

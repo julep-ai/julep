@@ -22,13 +22,95 @@ declared on the leaf, never ambient.
 from __future__ import annotations
 
 import os
+import types
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any, Literal, Optional, Sequence, Union, cast, get_args, get_origin
+from typing import get_type_hints, is_typeddict
 
 from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
 from .kinds import ContextScope, Shape, SummaryPolicy
 from .registry import DEFAULT_REGISTRY
+
+_REPLY_UNSET = object()
+_SUPPORTED_REPLY_FORMS = "pydantic v2 model with model_json_schema() or TypedDict"
+
+
+def _unsupported_reply_type(value: object) -> TypeError:
+    return TypeError(
+        f"unsupported reply= value {value!r}; supported forms: {_SUPPORTED_REPLY_FORMS}"
+    )
+
+
+def _annotation_to_schema(annotation: Any) -> dict[str, Any]:
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+
+    if getattr(origin, "__name__", None) in ("Required", "NotRequired"):
+        return _annotation_to_schema(args[0])
+
+    if annotation is Any:
+        return {}
+    if annotation is str:
+        return {"type": "string"}
+    if annotation is int:
+        return {"type": "integer"}
+    if annotation is float:
+        return {"type": "number"}
+    if annotation is bool:
+        return {"type": "boolean"}
+    if annotation is type(None):
+        return {"type": "null"}
+    if origin is Literal:
+        return {"enum": list(args)}
+    if origin in (Union, types.UnionType):
+        return {"anyOf": [_annotation_to_schema(arg) for arg in args]}
+    if origin is list:
+        item_schema = _annotation_to_schema(args[0]) if args else {}
+        return {"type": "array", "items": item_schema}
+    if origin is dict:
+        if len(args) == 2 and args[0] is str:
+            return {"type": "object", "additionalProperties": _annotation_to_schema(args[1])}
+        raise TypeError(f"unsupported dict annotation {annotation!r}; use dict[str, T]")
+    if is_typeddict(annotation):
+        return _typeddict_to_schema(annotation)
+
+    raise TypeError(
+        f"unsupported reply TypedDict field annotation {annotation!r}; "
+        f"supported forms: {_SUPPORTED_REPLY_FORMS}"
+    )
+
+
+def _typeddict_to_schema(reply: Any) -> dict[str, Any]:
+    try:
+        annotations = get_type_hints(reply, include_extras=True)
+    except Exception as exc:
+        raise _unsupported_reply_type(reply) from exc
+
+    required_keys = set(getattr(reply, "__required_keys__", frozenset()))
+    properties = {
+        key: _annotation_to_schema(annotation)
+        for key, annotation in annotations.items()
+    }
+    schema: dict[str, Any] = {"type": "object", "properties": properties}
+    required = [key for key in annotations if key in required_keys]
+    if required:
+        schema["required"] = required
+    return schema
+
+
+def _reply_to_schema(reply: Any) -> dict[str, Any]:
+    model_json_schema = getattr(reply, "model_json_schema", None)
+    if callable(model_json_schema):
+        schema = model_json_schema()
+        if not isinstance(schema, dict):
+            raise TypeError("reply.model_json_schema() must return a dict")
+        return cast(dict[str, Any], schema)
+
+    if is_typeddict(reply):
+        return _typeddict_to_schema(reply)
+
+    raise _unsupported_reply_type(reply)
 
 
 @dataclass(frozen=True, init=False)
@@ -64,7 +146,14 @@ class Brain:
         system_render: Optional[str] = None,
         user_render: Optional[str] = None,
         max_tokens: Optional[int] = None,
+        *,
+        reply: Any = _REPLY_UNSET,
     ) -> None:
+        if reply is not _REPLY_UNSET:
+            if reply_schema is not None:
+                raise ValueError("reply= and reply_schema= are mutually exclusive")
+            reply_schema = _reply_to_schema(reply)
+
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "model", model)
         object.__setattr__(self, "system", system)
