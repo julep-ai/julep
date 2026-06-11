@@ -225,6 +225,11 @@ class Tool(FlowLike[In, Out]):
     param_names: tuple[str, ...] = ()
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        from .define import apply_if_authoring
+
+        authored = apply_if_authoring(self, args, kwargs)
+        if authored is not NotImplemented:
+            return authored
         return self.fn(*args, **kwargs)
 
     def to_ir(self) -> Node:

@@ -5,7 +5,7 @@ import inspect
 
 from composable_agents import Pure
 from composable_agents import dsl
-from composable_agents import flow as typed_flow
+from composable_agents.flow import alt, as_flow, each, par
 from composable_agents.ir import Node, canonical_json
 from composable_agents.purity import get_pure, pure, source_hash_of
 from composable_agents.transforms import normalize_ids
@@ -73,17 +73,17 @@ def test_source_hash_uses_original_function_not_pure_wrapper() -> None:
 
 
 def test_typed_flow_helpers_accept_pure_objects_and_strings_match() -> None:
-    true_branch = typed_flow.flow(p1_bare_increment)
-    false_branch = typed_flow.flow(p1_named_double)
+    true_branch = as_flow(p1_bare_increment)
+    false_branch = as_flow(p1_named_double)
 
-    pure_alt = typed_flow.alt(p1_route_is_positive, true_branch, false_branch)
-    string_alt = typed_flow.alt("p1.route.is_positive", true_branch, false_branch)
+    pure_alt = alt(p1_route_is_positive, true_branch, false_branch)
+    string_alt = alt("p1.route.is_positive", true_branch, false_branch)
     assert _canonical_ir(pure_alt.to_ir()) == _canonical_ir(string_alt.to_ir())
 
-    pure_each = typed_flow.each(p1_named_double, reducer=p1_reduce_sum)
-    string_each = typed_flow.each(p1_named_double, reducer="p1.reduce.sum")
+    pure_each = each(p1_named_double, reducer=p1_reduce_sum)
+    string_each = each(p1_named_double, reducer="p1.reduce.sum")
     assert _canonical_ir(pure_each.to_ir()) == _canonical_ir(string_each.to_ir())
 
-    pure_par = typed_flow.par([p1_bare_increment, p1_named_double], join=p1_reduce_sum)
-    string_par = typed_flow.par([p1_bare_increment, p1_named_double], join="p1.reduce.sum")
+    pure_par = par([p1_bare_increment, p1_named_double], join=p1_reduce_sum)
+    string_par = par([p1_bare_increment, p1_named_double], join="p1.reduce.sum")
     assert _canonical_ir(pure_par.to_ir()) == _canonical_ir(string_par.to_ir())

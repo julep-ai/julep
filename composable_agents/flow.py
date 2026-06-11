@@ -126,14 +126,14 @@ def _pure_name(pure: str | Pure) -> str:
 
 
 @overload
-def flow(x: FlowLike[In, Out]) -> Flow[In, Out]: ...
+def as_flow(x: FlowLike[In, Out]) -> Flow[In, Out]: ...
 
 
 @overload
-def flow(x: Node) -> Flow[Any, Any]: ...
+def as_flow(x: Node) -> Flow[Any, Any]: ...
 
 
-def flow(x: FlowLike[Any, Any] | Node) -> Flow[Any, Any]:
+def as_flow(x: FlowLike[Any, Any] | Node) -> Flow[Any, Any]:
     """Lift an IR `Node` or lowerable typed value into a `Flow`."""
     if isinstance(x, FlowLike):
         return Flow(x.to_ir())

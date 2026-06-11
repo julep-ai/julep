@@ -61,6 +61,7 @@ class StepNode:
     contract: Optional[ToolContract] = None
     ann: Optional[Ann] = None
     source: Optional[SourceSpan] = None
+    args: Optional[dict[str, Any]] = None
     order: int = 0
     if_true: Optional["Graph"] = None
     if_false: Optional["Graph"] = None
@@ -98,6 +99,7 @@ class Graph:
         contract: Optional[ToolContract] = None,
         ann: Optional[Ann] = None,
         source: Optional[SourceSpan] = None,
+        args: Optional[dict[str, Any]] = None,
         tool: Any = None,
     ) -> StepNode:
         """Add a step, rejecting output-name collisions immediately."""
@@ -123,6 +125,7 @@ class Graph:
             contract=resolved_contract,
             ann=ann,
             source=source,
+            args=args,
             order=len(self.steps),
         )
         self.steps.append(node)
@@ -336,6 +339,16 @@ def compile(graph: Graph) -> Node:
 
     pieces.append(_arr("std.pluck", {"key": final_output}, _source_for_output(ordered, final_output)))
     return _stamp_missing_sources(_seq(pieces))
+
+
+def compile_env(graph: Graph, initial_fields: Sequence[str]) -> Node:
+    """Compile ``graph`` from an existing env record with ``initial_fields``.
+
+    This is an additive frontend seam for partially-bound ``@flow`` values: the
+    public input is first packed into an env record, then the normal env compiler
+    runs with the same liveness and effect-fencing semantics as branch/each arms.
+    """
+    return _compile_env_graph(graph, initial_fields)
 
 
 def _validate_const_capture(name: str, value: Any) -> None:
@@ -584,7 +597,7 @@ def _leaf(step: StepNode) -> Node:
     if step.kind is StepKind.THINK:
         return _with_source(dsl.think(step.ref, ann=step.ann), step.source)
     if step.kind is StepKind.PURE:
-        return _with_source(dsl.arr(step.ref), step.source)
+        return _with_source(dsl.arr(step.ref, step.args), step.source)
     if step.kind is StepKind.PASSTHROUGH:
         return _with_source(dsl.ident(), step.source)
     if step.kind in {StepKind.COND, StepKind.SWITCH}:

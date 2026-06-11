@@ -68,7 +68,6 @@ from .dsl import (
     source_capture_enabled as source_capture_enabled,
     stage as stage,
     sub as sub,
-    think as think,
 )
 from .derived import (
     check_race_admission as check_race_admission,
@@ -138,6 +137,7 @@ from .dag import (
     StepKind as StepKind,
     StepNode as StepNode,
     compile as compile_dag,
+    compile_env as compile_env_dag,
 )
 from .agent import (
     AGENT_REPLY_SCHEMA as AGENT_REPLY_SCHEMA,
@@ -169,6 +169,15 @@ from .purity import (
 )
 from .registry import DEFAULT_REGISTRY as DEFAULT_REGISTRY, Registry as Registry
 from . import std as _std
+from .define import (
+    BoundFlow as BoundFlow,
+    DefineError as DefineError,
+    FlowDef as FlowDef,
+    Handle as Handle,
+    flow as flow,
+    think as think,
+)
+from .flow import as_flow as as_flow
 
 # --- agent loop + plan extraction (P4) ------------------------------------- #
 from .agent_loop import (

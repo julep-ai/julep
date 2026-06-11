@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from composable_agents import Agent, ValidationError, call, native, tool
-from composable_agents.flow import Flow, flow, seq
+from composable_agents.flow import Flow, as_flow, seq
 from composable_agents.ir import Op
 
 
@@ -24,7 +24,7 @@ def test_agent_is_a_flow_to_ir_is_app_node() -> None:
 def test_agent_composes_in_seq() -> None:
     agent = Agent("m", tools=[read_tool], name="agent_as_flow_seq")
 
-    composed = seq(flow(call(native("fetch"))), agent)
+    composed = seq(as_flow(call(native("fetch"))), agent)
     node = composed.to_ir()
 
     assert isinstance(composed, Flow)
@@ -36,7 +36,7 @@ def test_agent_rshift_composes_as_left_side() -> None:
     agent = Agent("m", tools=[read_tool], name="agent_as_flow_rshift")
     next_leaf = call(native("next"))
 
-    node = (agent >> flow(next_leaf)).to_ir()
+    node = (agent >> as_flow(next_leaf)).to_ir()
 
     assert node.op is Op.SEQ
     assert node.left.op is Op.APP

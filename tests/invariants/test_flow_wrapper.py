@@ -3,7 +3,7 @@ from typing import Any
 
 from composable_agents import dsl
 from composable_agents.dsl import call, mcp, native
-from composable_agents.flow import Flow, flow, seq
+from composable_agents.flow import Flow, as_flow, seq
 from composable_agents.ir import Node
 from composable_agents.transforms import normalize_ids
 
@@ -35,7 +35,7 @@ def test_seq_two_matches_dsl_seq() -> None:
     a = call(native("x"))
     b = call(mcp("s", "t"))
 
-    assert_same_ir(seq(flow(a), flow(b)), dsl.seq(a, b))
+    assert_same_ir(seq(as_flow(a), as_flow(b)), dsl.seq(a, b))
 
 
 def test_rshift_chain_matches_dsl_seq() -> None:
@@ -43,13 +43,13 @@ def test_rshift_chain_matches_dsl_seq() -> None:
     b = call(mcp("s", "t"))
     c = call(native("z"))
 
-    assert_same_ir(flow(a) >> flow(b) >> flow(c), dsl.seq(a, b, c))
+    assert_same_ir(as_flow(a) >> as_flow(b) >> as_flow(c), dsl.seq(a, b, c))
 
 
 def test_single_element_seq() -> None:
     a = call(native("x"))
 
-    assert_same_ir(seq(flow(a)), a)
+    assert_same_ir(seq(as_flow(a)), a)
 
 
 def test_nested_composition() -> None:
@@ -58,7 +58,7 @@ def test_nested_composition() -> None:
     c = call(native("c"))
     d = call(mcp("s", "d"))
 
-    composed = seq(flow(a), flow(b)) >> seq(flow(c), flow(d))
+    composed = seq(as_flow(a), as_flow(b)) >> seq(as_flow(c), as_flow(d))
 
     assert_same_ir(composed, dsl.seq(dsl.seq(a, b), dsl.seq(c, d)))
 
@@ -66,7 +66,7 @@ def test_nested_composition() -> None:
 def test_flow_absent_from_emitted_json() -> None:
     a = call(native("x"))
     b = call(mcp("s", "t"))
-    node = seq(flow(a), flow(b)).to_ir()
+    node = seq(as_flow(a), as_flow(b)).to_ir()
 
     j = node.to_json()
     encoded = json.dumps(j)

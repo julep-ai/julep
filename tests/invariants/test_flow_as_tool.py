@@ -6,7 +6,7 @@ import pytest
 
 from composable_agents import Agent, ValidationError, call, ident, native, tool
 from composable_agents.derived import race
-from composable_agents.flow import flow, seq
+from composable_agents.flow import as_flow, seq
 from composable_agents.flow_registry import get_flow
 
 
@@ -24,7 +24,7 @@ def test_tool_only_agent_has_no_subflows_key() -> None:
 
 
 def test_flow_cap_becomes_app_subflow_and_is_registered() -> None:
-    named = flow(ident()).named("tf6.svc.v1")
+    named = as_flow(ident()).named("tf6.svc.v1")
 
     parent = Agent("m", tools=[named], name="tf6_flowcap")
 
@@ -34,7 +34,7 @@ def test_flow_cap_becomes_app_subflow_and_is_registered() -> None:
 
 def test_plain_flow_sub_threads_result() -> None:
     ref = "tf6.ident.v1"
-    named = flow(ident()).named(ref)
+    named = as_flow(ident()).named(ref)
     replies = [
         {"sub": ref, "input": "hello"},
         {"output": "done"},
@@ -124,7 +124,7 @@ def test_tool_subflow_name_collision_is_rejected_at_agent_construction() -> None
     def duplicate(value: str) -> str:
         return value
 
-    named = flow(call(native("tf6_dup_native"))).named("tf6_dup")
+    named = as_flow(call(native("tf6_dup_native"))).named("tf6_dup")
 
     with pytest.raises(ValidationError, match="CAP_APP_TOOL_COLLISION"):
         Agent("m", tools=[duplicate, named], name="tf6_dup_agent")
@@ -132,13 +132,13 @@ def test_tool_subflow_name_collision_is_rejected_at_agent_construction() -> None
 
 def test_unnamed_flow_cap_raises() -> None:
     with pytest.raises(ValidationError, match=".named"):
-        Agent("m", tools=[flow(call(native("tf6_unnamed_native")))], name="tf6_unnamed")
+        Agent("m", tools=[as_flow(call(native("tf6_unnamed_native")))], name="tf6_unnamed")
 
 
 def test_app_json_subflows_are_omitted_for_tools_and_present_for_flow_caps() -> None:
     tool_only = Agent("m", tools=[read_tool], name="tf6_json_toolonly")
     ref = "tf6.json.v1"
-    flow_cap = flow(ident()).named(ref)
+    flow_cap = as_flow(ident()).named(ref)
     with_flow = Agent("m", tools=[flow_cap], name="tf6_json_flowcap")
 
     assert "subflows" not in tool_only.to_ir().to_json()
@@ -150,7 +150,7 @@ def test_plain_flow_cap_with_ungranted_tool_is_rejected_cleanly() -> None:
     def secret(value: str) -> str:
         return value
 
-    fc = flow(secret).named("c2.svc")
+    fc = as_flow(secret).named("c2.svc")
 
     with pytest.raises(ValidationError, match="CAP_APP_FLOW_UNGRANTED_TOOL"):
         Agent("m", tools=[fc], name="c2_bad")
@@ -164,7 +164,7 @@ def test_plain_flow_cap_with_granted_tool_runs_through_parent_grant() -> None:
         calls.append(value)
         return f"t:{value}"
 
-    fc = flow(t).named("c2.ok")
+    fc = as_flow(t).named("c2.ok")
     replies = [
         {"sub": "c2.ok", "input": "hi"},
         {"output": "done"},
@@ -187,7 +187,7 @@ def test_unsafe_plain_flow_cap_rejected_by_race_admission_strict() -> None:
     def w(value: str) -> str:
         return f"w:{value}"
 
-    cap = flow(race(w.to_ir(), w.to_ir())).named("tf6.bad.race.strict")
+    cap = as_flow(race(w.to_ir(), w.to_ir())).named("tf6.bad.race.strict")
     parent = Agent("m", tools=[w, cap], name="tf6_bad_race_parent_strict")
 
     diagnostics = parent.check()
@@ -205,7 +205,7 @@ def test_unsafe_plain_flow_cap_surfaces_prod_gap_in_dev() -> None:
     def w(value: str) -> str:
         return f"w:{value}"
 
-    cap = flow(race(w.to_ir(), w.to_ir())).named("tf6.bad.race.dev")
+    cap = as_flow(race(w.to_ir(), w.to_ir())).named("tf6.bad.race.dev")
     parent = Agent(
         "m",
         tools=[w, cap],
@@ -267,7 +267,7 @@ def test_sub_caps_expose_deployments_and_deploy_fails_loud() -> None:
     def r(value: str) -> str:
         return value
 
-    plain = flow(r).named("seam.plain.v1")          # parent's own granted tool
+    plain = as_flow(r).named("seam.plain.v1")          # parent's own granted tool
     sub_agent = Agent("m", tools=[r], name="seam.subagent.v1")
     parent = Agent("m", tools=[r, plain, sub_agent], name="seam.parent")
 

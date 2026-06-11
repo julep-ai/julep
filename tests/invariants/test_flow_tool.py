@@ -7,7 +7,7 @@ from composable_agents import dsl
 from composable_agents.agent import Tool, tool
 from composable_agents.derived import map_n
 from composable_agents.dsl import call, native
-from composable_agents.flow import Flow, alt, flow, par, seq
+from composable_agents.flow import Flow, alt, as_flow, par, seq
 from composable_agents.ir import Node
 from composable_agents.transforms import normalize_ids
 
@@ -38,7 +38,7 @@ def test_tool_leaf_matches_native_call() -> None:
     def upper(value: str) -> str:
         return value.upper()
 
-    assert_same_ir(flow(upper), call(native(upper.name)))
+    assert_same_ir(as_flow(upper), call(native(upper.name)))
 
 
 def test_seq_accepts_tools_and_matches_dsl_seq() -> None:
@@ -72,22 +72,22 @@ def test_mixed_flow_and_tool_seq_matches_dsl_seq() -> None:
 
     a = call(native("a"))
 
-    assert_same_ir(seq(flow(a), second), dsl.seq(a, call(native(second.name))))
+    assert_same_ir(seq(as_flow(a), second), dsl.seq(a, call(native(second.name))))
 
 
 def test_par_matches_dsl_par_and_reducer_map_n() -> None:
     a = call(native("a"))
     b = call(native("b"))
 
-    assert_same_ir(par([flow(a), flow(b)]), dsl.par(a, b))
-    assert_same_ir(par([flow(a), flow(b)], join="agg"), map_n(a, b, reducer="agg"))
+    assert_same_ir(par([as_flow(a), as_flow(b)]), dsl.par(a, b))
+    assert_same_ir(par([as_flow(a), as_flow(b)], join="agg"), map_n(a, b, reducer="agg"))
 
 
 def test_alt_matches_dsl_alt() -> None:
     a = call(native("a"))
     b = call(native("b"))
 
-    assert_same_ir(alt("pred", flow(a), flow(b)), dsl.alt("pred", a, b))
+    assert_same_ir(alt("pred", as_flow(a), as_flow(b)), dsl.alt("pred", a, b))
 
 
 def test_flow_and_tool_absent_from_emitted_json() -> None:

@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from composable_agents import Agent, call, native, tool
-from composable_agents.flow import flow
+from composable_agents.flow import as_flow
 from composable_agents.ir import Node
 from composable_agents.transforms import normalize_ids
 
@@ -16,7 +16,7 @@ def _normalized_json(agent: Agent) -> dict[str, Any]:
 
 def test_as_sub_requires_durable_ref() -> None:
     with pytest.raises(ValueError, match="durable ref"):
-        flow(call(native("c3_x"))).as_sub()
+        as_flow(call(native("c3_x"))).as_sub()
 
 
 def test_named_agent_split_cap_exposes_child_deployment_metadata() -> None:
