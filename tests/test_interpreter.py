@@ -15,7 +15,7 @@ from composable_agents.execution.interpreter import InMemoryEnv, interpret
 if HAVE_TEMPORAL:
     from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
 from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
-from conftest import read_snapshot, run
+from conftest import mixed_snapshot, read_snapshot, run
 
 
 def _env_and_store(flow, **kw):
@@ -44,6 +44,83 @@ def test_pipeline_threads_value():
     fr, env = _env(flow, hands=HANDS)
     out = run(interpret(fr.flow, 5, env))
     assert out.value == 12  # (5+1)*2
+
+
+def test_retryable_call_retries_to_success_with_backoff_sleeps():
+    attempts = 0
+    sleeps = []
+
+    def flaky(value):
+        nonlocal attempts
+        attempts += 1
+        if attempts < 3:
+            raise RuntimeError(f"transient {attempts}")
+        return {"ok": value, "attempts": attempts}
+
+    async def sleeper(seconds):
+        sleeps.append(seconds)
+
+    flow = call(
+        mcp("srv", "inc"),
+        ann=Ann(max_attempts=3, retry_interval_s=0.5, backoff_rate=2.0),
+    )
+    fr, env = _env(flow, hands={"srv/inc": flaky}, sleeper=sleeper)
+
+    out = run(interpret(fr.flow, "x", env))
+
+    assert out.value == {"ok": "x", "attempts": 3}
+    assert attempts == 3
+    assert sleeps == [0.5, 1.0]
+
+
+def test_non_retryable_contract_ignores_ann_retry_policy():
+    attempts = 0
+
+    def always_fails(value):
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError(f"no retry for {value}")
+
+    flow = call(
+        mcp("srv", "writer"),
+        ann=Ann(max_attempts=3, retry_interval_s=0.01, backoff_rate=2.0),
+    )
+    fr = freeze(flow, mixed_snapshot())
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        hands={"srv/writer": always_fails},
+    )
+
+    with pytest.raises(RuntimeError, match="no retry"):
+        run(interpret(fr.flow, "x", env))
+
+    assert attempts == 1
+
+
+def test_policy_error_does_not_consume_retry_attempts_or_sleep():
+    attempts = 0
+    sleeps = []
+
+    def denied(value):
+        nonlocal attempts
+        attempts += 1
+        raise CapabilityDenied(f"denied {value}")
+
+    async def sleeper(seconds):
+        sleeps.append(seconds)
+
+    flow = call(
+        mcp("srv", "inc"),
+        ann=Ann(max_attempts=3, retry_interval_s=0.01, backoff_rate=2.0),
+    )
+    fr, env = _env(flow, hands={"srv/inc": denied}, sleeper=sleeper)
+
+    with pytest.raises(CapabilityDenied, match="denied"):
+        run(interpret(fr.flow, "x", env))
+
+    assert attempts == 1
+    assert sleeps == []
 
 
 def test_parallel_collects_branches():

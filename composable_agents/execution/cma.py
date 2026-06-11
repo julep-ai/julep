@@ -268,6 +268,7 @@ class CMAAgentEnv:
         self._inner = inner
         self.manifest = inner.manifest
         self.emitter = inner.emitter
+        self.native_call_retries = getattr(inner, "native_call_retries", False)
         self.principal = getattr(inner, "principal", None)
         self._client = client
         self._environment = environment
@@ -346,7 +347,7 @@ class CMAAgentEnv:
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return await self._inner.human_gate(value, cid, timeout_s)
 
-    async def sleep(self, seconds: int, cid: str) -> None:
+    async def sleep(self, seconds: float, cid: str) -> None:
         await self._inner.sleep(seconds, cid)
 
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:

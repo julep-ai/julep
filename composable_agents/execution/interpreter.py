@@ -28,9 +28,9 @@ import inspect
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
 
-from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest
+from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest, contract_allows_retry
 from ..derived import flatten_race_group
-from ..errors import CapabilityDenied, ComposableAgentsError, RaceAllFailed
+from ..errors import POLICY_ERRORS, CapabilityDenied, ComposableAgentsError, RaceAllFailed
 from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SLEEP_TOOL, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import EnforcementMode, Op
@@ -93,6 +93,26 @@ def call_contract(node: Node, manifest: ToolManifest):
     return CONSERVATIVE_DEFAULT
 
 
+def _retry_attempts_for_call(node: Node, manifest: ToolManifest) -> int:
+    if node.ann is None or node.ann.max_attempts is None:
+        return 1
+    if not contract_allows_retry(call_contract(node, manifest)):
+        return 1
+    return max(1, node.ann.max_attempts)
+
+
+def _retry_interval_for_call(node: Node) -> float:
+    if node.ann is None or node.ann.retry_interval_s is None:
+        return 0.0
+    return max(0.0, float(node.ann.retry_interval_s))
+
+
+def _retry_backoff_for_call(node: Node) -> float:
+    if node.ann is None or node.ann.backoff_rate is None:
+        return 1.0
+    return max(0.0, float(node.ann.backoff_rate))
+
+
 class Env(Protocol):
     """Everything the interpreter needs from the outside world."""
 
@@ -101,6 +121,7 @@ class Env(Protocol):
     # The run's principal (opaque tenant/credential reference, never a secret).
     # The interpreter never reads it; engine envs stamp it into effect payloads.
     principal: Optional[dict[str, Any]]
+    native_call_retries: bool
 
     def next_cid(self, node_id: str) -> str: ...
     def get_pure(self, name: str) -> Callable[..., Any]: ...
@@ -124,7 +145,7 @@ class Env(Protocol):
     ) -> Any: ...
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node: ...
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any: ...
-    async def sleep(self, seconds: int, cid: str) -> None: ...
+    async def sleep(self, seconds: float, cid: str) -> None: ...
 
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]: ...
     async def race_first(
@@ -260,7 +281,23 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
             seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
             await env.sleep(seconds, cid)
             return Result(value)
-        return Result(await env.call_hand(node, value, cid))
+        if getattr(env, "native_call_retries", False):
+            return Result(await env.call_hand(node, value, cid))
+        attempts = _retry_attempts_for_call(node, env.manifest)
+        interval = _retry_interval_for_call(node)
+        backoff = _retry_backoff_for_call(node)
+        for attempt in range(1, attempts + 1):
+            try:
+                return Result(await env.call_hand(node, value, cid))
+            except POLICY_ERRORS:
+                raise
+            except Exception:
+                if attempt >= attempts:
+                    raise
+                if interval > 0:
+                    await env.sleep(interval, cid)
+                    interval *= backoff
+        raise AssertionError("unreachable retry loop exit")
     if isinstance(step, ThinkStep):
         timeout_s = node.ann.timeout if node.ann else None
         out = await env.invoke_brain(step.brain, value, cid, timeout_s)
@@ -602,6 +639,7 @@ class InMemoryEnv:
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
+        self.native_call_retries = False
         self.principal = principal
         self._hands = hands or {}
         self._brains = brains or {}
@@ -616,7 +654,7 @@ class InMemoryEnv:
         self.dev_warnings: list[dict[str, Any]] = []
         self._registry = registry
         self.call_counts: dict[str, int] = {}
-        self.sleeps: list[int] = []
+        self.sleeps: list[float] = []
         self._cid = 0
 
     # --- identity / pures --- #
@@ -691,7 +729,7 @@ class InMemoryEnv:
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return self._gate(value)
 
-    async def sleep(self, seconds: int, cid: str) -> None:
+    async def sleep(self, seconds: float, cid: str) -> None:
         self.sleeps.append(seconds)
         if self._sleeper is not None:
             await self._sleeper(seconds)

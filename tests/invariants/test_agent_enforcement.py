@@ -53,7 +53,7 @@ def test_approval_required_tools_are_denied_even_when_granted() -> None:
     assert approval_grant.reason == "approval-required tool 'srv/archive'; agent must ESCALATE"
 
 
-def test_contract_retry_attempts_use_cautious_or_liberal_policy() -> None:
+def test_contract_retry_attempts_gate_on_idempotency() -> None:
     write_none = ToolContract(Effect.WRITE, Idempotency.NONE)
     read_native = ToolContract(Effect.READ, Idempotency.NATIVE)
 
@@ -61,7 +61,7 @@ def test_contract_retry_attempts_use_cautious_or_liberal_policy() -> None:
         write_none,
         idempotent_max_attempts=9,
         write_max_attempts=2,
-    ) == 2
+    ) == 1
     assert retry_max_attempts_for_contract(
         read_native,
         idempotent_max_attempts=9,

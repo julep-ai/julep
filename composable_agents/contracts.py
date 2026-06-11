@@ -40,6 +40,14 @@ class ToolContract:
 CONSERVATIVE_DEFAULT = ToolContract(effect=Effect.WRITE, idempotency=Idempotency.NONE)
 
 
+def contract_allows_retry(contract: ToolContract) -> bool:
+    """Whether a tool contract permits retrying the same logical call."""
+    return (
+        contract.effect == Effect.READ
+        or contract.idempotency in (Idempotency.NATIVE, Idempotency.REQUIRED)
+    )
+
+
 @dataclass(frozen=True)
 class McpAnnotations:
     """The four MCP behavior hints we know how to read. All optional."""

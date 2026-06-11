@@ -74,6 +74,30 @@ def test_interpreter_forwards_call_timeout_and_cache_to_temporal_activity(
     assert captured["arg"].cache == {"key": "search:{q}", "ttlS": 60}
 
 
+def test_interpreter_forwards_call_retry_ann_to_temporal_activity(monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+
+    async def fake_execute_activity(activity, arg, **kwargs):
+        captured["retry_policy"] = kwargs["retry_policy"]
+        return {"ok": True}
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    flow = call(
+        mcp("srv", "search"),
+        ann=Ann(max_attempts=4, retry_interval_s=0.25, backoff_rate=1.5),
+    )
+    fr = freeze(flow, read_snapshot("search"))
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy())
+
+    out = run(interpret(fr.flow, {"q": "x"}, env))
+
+    retry_policy = captured["retry_policy"]
+    assert out.value == {"ok": True}
+    assert retry_policy.maximum_attempts == 4
+    assert retry_policy.initial_interval == timedelta(seconds=0.25)
+    assert retry_policy.backoff_coefficient == 1.5
+
+
 def test_interpreter_forwards_think_timeout_to_temporal_activity(monkeypatch) -> None:
     captured: dict[str, Any] = {}
 

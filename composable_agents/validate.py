@@ -28,7 +28,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Optional, cast
 
-from .contracts import ToolManifest
+from .contracts import ToolManifest, contract_allows_retry
 from .ir import (
     CallStep,
     ContextPolicy,
@@ -39,7 +39,7 @@ from .ir import (
     canonical_json,
     pure_display,
 )
-from .kinds import ContextScope, Op, Shape, shape_leq
+from .kinds import ContextScope, Effect, Op, Shape, shape_leq
 from .purity import is_registered
 from .shapes import surface_shape
 from .transforms import collect_duplicate_ids, detect_cycles
@@ -335,6 +335,23 @@ def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Dia
                     f"call bound to {step.frozen_hash} absent from manifest",
                 )
             )
+        else:
+            tool = manifest[step.frozen_hash]
+            if (
+                n.ann is not None
+                and n.ann.max_attempts is not None
+                and n.ann.max_attempts > 1
+                and tool.contract.effect == Effect.DANGEROUS
+                and not contract_allows_retry(tool.contract)
+            ):
+                out.append(
+                    Diagnostic(
+                        "RETRY_NON_IDEMPOTENT_DANGEROUS",
+                        n.id,
+                        "explicit max_attempts > 1 on a non-idempotent dangerous tool "
+                        "is not allowed",
+                    )
+                )
 
 
 def _ctx_of(n: Node) -> Optional[ContextPolicy]:

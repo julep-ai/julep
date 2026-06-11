@@ -77,6 +77,17 @@ class PrincipalRequired(ComposableAgentsError):
     """
 
 
+POLICY_ERRORS: tuple[type[ComposableAgentsError], ...] = (
+    CapabilityDenied,
+    PlanRejected,
+    ValidationError,
+    FreezeError,
+    PureDriftError,
+    PrincipalRequired,
+)
+"""Settled policy decisions that execution backends must never retry."""
+
+
 class ResilienceExhausted(ComposableAgentsError):
     """Every candidate model in a resilience fallback chain failed or was skipped.
 

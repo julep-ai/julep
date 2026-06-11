@@ -143,13 +143,16 @@ class CacheHint:
 
 @dataclass(init=False)
 class Ann:
-    """Optional per-node annotations: cost/risk hints, cache, effect, timeout."""
+    """Optional per-node annotations: cost/risk hints, cache, timeout, retry."""
 
     cost: Optional[float] = None
     risk: Optional[str] = None
     cache: Optional[CacheHint] = None
     effect: Optional[Effect] = None
     timeout: Optional[int] = None  # seconds
+    max_attempts: Optional[int] = None
+    retry_interval_s: Optional[float] = None
+    backoff_rate: Optional[float] = None
 
     def __init__(
         self,
@@ -159,12 +162,18 @@ class Ann:
         cache: Optional[CacheHint] = None,
         effect: Optional[Effect] = None,
         timeout_s: Optional[int] = None,
+        max_attempts: Optional[int] = None,
+        retry_interval_s: Optional[float] = None,
+        backoff_rate: Optional[float] = None,
     ) -> None:
         self.cost = cost
         self.risk = risk
         self.cache = cache
         self.effect = effect
         self.timeout = timeout_s
+        self.max_attempts = max_attempts
+        self.retry_interval_s = retry_interval_s
+        self.backoff_rate = backoff_rate
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -178,6 +187,12 @@ class Ann:
             out["effect"] = self.effect.value
         if self.timeout is not None:
             out["timeout"] = self.timeout
+        if self.max_attempts is not None:
+            out["maxAttempts"] = self.max_attempts
+        if self.retry_interval_s is not None:
+            out["retryIntervalS"] = self.retry_interval_s
+        if self.backoff_rate is not None:
+            out["backoffRate"] = self.backoff_rate
         return out
 
     @staticmethod
@@ -188,6 +203,9 @@ class Ann:
             cache=CacheHint.from_json(d["cache"]) if d.get("cache") else None,
             effect=Effect(d["effect"]) if d.get("effect") else None,
             timeout_s=d.get("timeout"),
+            max_attempts=d.get("maxAttempts"),
+            retry_interval_s=d.get("retryIntervalS"),
+            backoff_rate=d.get("backoffRate"),
         )
 
 

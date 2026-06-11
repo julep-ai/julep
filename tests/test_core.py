@@ -12,6 +12,7 @@ from composable_agents import (
     sub, race, hedge, quorum, human_gate, HUMAN_GATE_TOOL,
     freeze, validate, blocking, register_pure,
     CapabilityManifest, ToolContract, manifest_to_json, manifest_from_json,
+    McpServerSnapshot, McpSnapshot, McpToolSpec,
     estimate_cost, admit_plan, check_race_admission,
 )
 from composable_agents.contracts import FrozenTool, McpAnnotations, definition_hash, execution_hash
@@ -330,6 +331,38 @@ def test_estimate_cost_folds_structure():
     alt_flow = alt("p", call("a"), seq(call("b"), call("c")))
     assert estimate_cost(alt_flow) == max(estimate_cost(call("a")),
                                           estimate_cost(seq(call("b"), call("c"))))
+
+
+def test_ann_retry_fields_serialize_only_when_set():
+    assert Ann().to_json() == {}
+    assert Ann(timeout_s=2).to_json() == {"timeout": 2}
+
+    ann = Ann(max_attempts=3, retry_interval_s=0.25, backoff_rate=1.5)
+
+    assert ann.to_json() == {
+        "maxAttempts": 3,
+        "retryIntervalS": 0.25,
+        "backoffRate": 1.5,
+    }
+    assert Ann.from_json(ann.to_json()).to_json() == ann.to_json()
+
+
+def test_validate_blocks_explicit_retries_on_non_idempotent_dangerous_tool():
+    destructive = McpAnnotations(destructive_hint=True, idempotent_hint=False)
+    snapshot = McpSnapshot(
+        servers={
+            "srv": McpServerSnapshot(
+                server="srv",
+                version="1",
+                tools={"wipe": McpToolSpec(input_schema={}, annotations=destructive)},
+            )
+        }
+    )
+    fr = freeze(call(mcp("srv", "wipe"), ann=Ann(max_attempts=2)), snapshot)
+
+    diags = blocking(validate(fr.flow, fr.manifest))
+
+    assert {diag.code for diag in diags} == {"RETRY_NON_IDEMPOTENT_DANGEROUS"}
 
 
 def test_admit_plan_rejects_staged_plan_shape():

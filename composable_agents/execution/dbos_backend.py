@@ -19,8 +19,9 @@ Backend-specific contracts (the deltas vs Temporal -- see docs/deploy-dbos.md):
   session-store (``use_session_store``/``state_cursor``) path is Temporal-only.
 * **Brain steps never retry.** LLM resilience belongs to the injected
   ``LlmCaller`` (the consumer's retry/fallback stack), not to a second,
-  blind retry layer here. Hands keep contract-derived retries, quantized to
-  two variants (idempotent: 5 attempts, write: 3) because DBOS fixes retry
+  blind retry layer here. Hands are routed by the retry algebra: contracts gate
+  retry eligibility, non-retryable calls use a no-retry step, and retryable
+  calls use the predeclared idempotent DBOS step because DBOS fixes retry
   config at decoration time.
 * **Policy errors are never retried.** A settled decision (CapabilityDenied,
   PlanRejected, ValidationError, FreezeError, PureDriftError) is returned from
@@ -44,16 +45,12 @@ from dbos import DBOS, Queue, SetWorkflowID  # noqa: F401 (Queue re-exported for
 
 from .. import agent_loop as al
 from ..continuation import CONTINUATION_KEY, continuation_value, is_continuation
-from ..contracts import manifest_from_json
+from ..contracts import contract_allows_retry, manifest_from_json
 from ..errors import (
     CapabilityDenied,
     ComposableAgentsError,
-    FreezeError,
-    PlanRejected,
-    PrincipalRequired,
-    PureDriftError,
+    POLICY_ERRORS,
     UnsupportedShapeError,
-    ValidationError,
 )
 from ..ir import Node
 from ..kinds import Op
@@ -81,16 +78,8 @@ from .policy import ExecutionPolicy
 # still letting an abandoned workflow drain. Override per node via ann.timeout.
 _GATE_DEFAULT_TIMEOUT_S = 7 * 24 * 3600
 
-_POLICY_ERRORS = (
-    CapabilityDenied,
-    PlanRejected,
-    ValidationError,
-    FreezeError,
-    PureDriftError,
-    PrincipalRequired,
-)
 _POLICY_ERROR_KEY = "__ca_policy_error__"
-_POLICY_ERROR_TYPES = {e.__name__: e for e in _POLICY_ERRORS}
+_POLICY_ERROR_TYPES = {e.__name__: e for e in POLICY_ERRORS}
 
 
 # --------------------------------------------------------------------------- #
@@ -145,15 +134,15 @@ def set_projection_sink(sink: Optional[ProjectionSink]) -> None:
 async def callHandIdempotent(inp: dict) -> Any:
     try:
         return await effects.callHand(_call_hand_input(inp))
-    except _POLICY_ERRORS as exc:
+    except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
-@DBOS.step(retries_allowed=True, max_attempts=3)
-async def callHandWrite(inp: dict) -> Any:
+@DBOS.step(retries_allowed=False)
+async def callHandNoRetry(inp: dict) -> Any:
     try:
         return await effects.callHand(_call_hand_input(inp))
-    except _POLICY_ERRORS as exc:
+    except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
@@ -170,7 +159,7 @@ async def invokeBrainStep(inp: dict) -> Any:
                 summary=inp.get("summary"),
             )
         )
-    except _POLICY_ERRORS as exc:
+    except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
@@ -183,7 +172,7 @@ async def compilePlanStep(inp: dict) -> Any:
                 manifest=inp.get("manifest"), principal=inp.get("principal"),
             )
         )
-    except _POLICY_ERRORS as exc:
+    except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
@@ -192,7 +181,7 @@ async def verifyPuresStep(pinned: dict) -> Any:
     try:
         await effects.verifyPures(pinned)
         return None
-    except _POLICY_ERRORS as exc:
+    except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
@@ -285,6 +274,7 @@ class DbosEnv:
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
+        self.native_call_retries = True
         self.principal = principal
         self._session = session_id
         self._manifest_json = manifest_json
@@ -321,12 +311,17 @@ class DbosEnv:
     async def call_hand(self, node: Node, value: Any, cid: str) -> Any:
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
-        attempts = al.retry_max_attempts_for_contract(
-            contract,
-            idempotent_max_attempts=self._policy.idempotent_max_attempts,
-            write_max_attempts=self._policy.write_max_attempts,
-        )
-        step = callHandIdempotent if attempts >= self._policy.idempotent_max_attempts else callHandWrite
+        if contract_allows_retry(contract):
+            attempts = node.ann.max_attempts if node.ann and node.ann.max_attempts is not None else (
+                al.retry_max_attempts_for_contract(
+                    contract,
+                    idempotent_max_attempts=self._policy.idempotent_max_attempts,
+                    write_max_attempts=self._policy.write_max_attempts,
+                )
+            )
+        else:
+            attempts = 1
+        step = callHandIdempotent if max(1, attempts) > 1 else callHandNoRetry
         cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
         out = await step({
             "tool_ref": toolref_json_from_key(ref_key),
@@ -437,7 +432,7 @@ class DbosEnv:
             return {"approved": False, "reason": "timeout", "input": value}
         return payload
 
-    async def sleep(self, seconds: int, cid: str) -> None:
+    async def sleep(self, seconds: float, cid: str) -> None:
         await DBOS.sleep_async(float(seconds))
 
     # --- concurrency --- #
@@ -614,14 +609,16 @@ async def agent_workflow(inp: dict) -> Any:
 
     async def _call(tool: str, value: Any) -> Any:
         contract = al.contract_for_tool(tool, contracts)
-        attempts = al.retry_max_attempts_for_contract(
-            contract,
-            idempotent_max_attempts=policy.idempotent_max_attempts,
-            write_max_attempts=policy.write_max_attempts,
+        attempts = (
+            al.retry_max_attempts_for_contract(
+                contract,
+                idempotent_max_attempts=policy.idempotent_max_attempts,
+                write_max_attempts=policy.write_max_attempts,
+            )
+            if contract_allows_retry(contract)
+            else 1
         )
-        step = (
-            callHandIdempotent if attempts >= policy.idempotent_max_attempts else callHandWrite
-        )
+        step = callHandIdempotent if max(1, attempts) > 1 else callHandNoRetry
         out = await step({
             "tool_ref": toolref_json_from_key(tool), "value": value,
             "cid": f"{session}-call-{state.round}", "cache": None,

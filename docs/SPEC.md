@@ -83,7 +83,12 @@ server.
 ## 4. The IR
 
 A flow is an immutable tree of `Node`s. Each node carries an id, a `step`, an
-optional annotation (`Ann`: cost, timeout, cache hints), and children.
+optional annotation (`Ann`: cost, timeout, cache hints, retry policy), and
+children. `Ann` fields are absent when unset; adding an optional annotation
+field MUST NOT change existing artifact JSON. Retry policy fields are
+`max_attempts` (integer), `retry_interval_s` (initial interval in seconds), and
+`backoff_rate` (multiplier). Their wire keys follow the IR camelCase convention:
+`maxAttempts`, `retryIntervalS`, and `backoffRate`.
 
 ### 4.1 Shape lattice
 
@@ -340,10 +345,35 @@ A human gate is a durable wait (signal + condition) with an optional timeout.
 ### 8.7 Non-retryable policy errors
 
 Settled policy decisions (`CapabilityDenied`, `PlanRejected`, `ValidationError`,
-`FreezeError`) MUST be raised as explicitly non-retryable application errors —
-not matched by class-name string — so the contract survives refactors.
+`FreezeError`, `PureDriftError`) MUST be raised as explicitly non-retryable
+application errors — not matched by class-name string — so the contract survives
+refactors.
 
-### 8.8 Reserved hand: `__sleep__`
+### 8.8 Retry algebra
+
+Tool contracts gate whether a call may retry at all. A call is retryable only
+when its frozen contract is read-only or has `idempotency` `native`/`required`.
+`Ann` sets the retry policy within that permission: `max_attempts`,
+`retry_interval_s`, and `backoff_rate` (wire keys `maxAttempts`,
+`retryIntervalS`, and `backoffRate`). Explicit `max_attempts > 1` on a
+non-idempotent `dangerous` tool is a blocking validation diagnostic.
+
+Backends map those fields to native retry config where the backend exposes a
+per-step seam. The in-memory interpreter retries directly and waits through its
+mockable `Env.sleep` hook. Temporal maps them onto activity `RetryPolicy`
+(`maximum_attempts`, `initial_interval`, `backoff_coefficient`) for `callHand`.
+DBOS's Python decorator API in this backend fixes step retry config at
+definition time (`retries_allowed`, `max_attempts`, and, where supported by the
+installed DBOS version, interval/backoff fields), so the DBOS backend enforces
+the permission gate with retry/no-retry call steps and uses its predeclared
+idempotent retry step for retryable calls. On DBOS, the per-node `max_attempts`
+count is therefore quantized to that predeclared idempotent step's attempts;
+only the retry/no-retry gate is honored per node. Arbitrary per-node
+`retry_interval_s`/`backoff_rate` cannot be represented on DBOS without
+predeclaring additional step variants, which this spec forbids as backend
+machinery rather than wire-format semantics.
+
+### 8.9 Reserved hand: `__sleep__`
 
 A `call` to the reserved native hand `__sleep__` is a durable timer, not an
 HTTP call. The duration in seconds rides on the node's `ann.timeout`. Freeze
@@ -352,7 +382,7 @@ read/naturally-idempotent contract, so it is race-safe. Capability semantics
 match `__human_gate__`: under a `tools:` allow-list it must be granted
 explicitly.
 
-### 8.9 Continuation (chaining) convention
+### 8.10 Continuation (chaining) convention
 
 A flow whose final value is `{"__continue__": <next input>}` requests
 re-dispatch with that input as a fresh segment. Backends MUST run the next

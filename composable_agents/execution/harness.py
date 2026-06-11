@@ -53,9 +53,9 @@ from temporalio.exceptions import ApplicationError
 with workflow.unsafe.imports_passed_through():
     from .. import agent_loop as al
     from ..continuation import continuation_value, is_continuation
-    from ..contracts import ToolContract, manifest_from_json
+    from ..contracts import ToolContract, contract_allows_retry, manifest_from_json
     from ..errors import ComposableAgentsError
-    from ..ir import Node
+    from ..ir import Ann, Node
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import get_pure as _get_pure_from_registry
     from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
@@ -102,16 +102,35 @@ _NON_RETRYABLE = [
 ]
 
 
-def _retry_policy_for(contract: ToolContract, policy: ExecutionPolicy) -> RetryPolicy:
+def _retry_policy_for(
+    contract: ToolContract,
+    policy: ExecutionPolicy,
+    ann: Optional[Ann] = None,
+) -> RetryPolicy:
     """Per-tool retry policy: liberal for idempotent reads, cautious otherwise."""
-    attempts = al.retry_max_attempts_for_contract(
-        contract,
-        idempotent_max_attempts=policy.idempotent_max_attempts,
-        write_max_attempts=policy.write_max_attempts,
-    )
+    attempts = 1
+    if contract_allows_retry(contract):
+        attempts = ann.max_attempts if ann is not None and ann.max_attempts is not None else (
+            al.retry_max_attempts_for_contract(
+                contract,
+                idempotent_max_attempts=policy.idempotent_max_attempts,
+                write_max_attempts=policy.write_max_attempts,
+            )
+        )
+        attempts = max(1, attempts)
+    initial_interval_s = max(0.0, float(
+        ann.retry_interval_s
+        if ann is not None and ann.retry_interval_s is not None
+        else policy.initial_retry_s
+    ))
+    backoff = max(0.0, float(
+        ann.backoff_rate
+        if ann is not None and ann.backoff_rate is not None
+        else policy.retry_backoff
+    ))
     return RetryPolicy(
-        initial_interval=timedelta(seconds=policy.initial_retry_s),
-        backoff_coefficient=policy.retry_backoff,
+        initial_interval=timedelta(seconds=initial_interval_s),
+        backoff_coefficient=backoff,
         maximum_interval=timedelta(seconds=policy.max_retry_interval_s),
         maximum_attempts=attempts,
         non_retryable_error_types=_NON_RETRYABLE,
@@ -194,6 +213,7 @@ class _TemporalEnv:
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
+        self.native_call_retries = True
         self.principal = principal
         self._session = session_id
         self._manifest_json = manifest_json
@@ -254,7 +274,7 @@ class _TemporalEnv:
                 principal=self.principal,
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.hand_timeout_s),
-            retry_policy=_retry_policy_for(contract, self._policy),
+            retry_policy=_retry_policy_for(contract, self._policy, node.ann),
         )
 
     async def invoke_brain(
@@ -373,7 +393,7 @@ class _TemporalEnv:
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return await self._gate_waiter(value, cid, timeout_s)
 
-    async def sleep(self, seconds: int, cid: str) -> None:
+    async def sleep(self, seconds: float, cid: str) -> None:
         # asyncio.sleep inside a Temporal workflow is a durable timer.
         await asyncio.sleep(seconds)
 

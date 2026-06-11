@@ -36,7 +36,12 @@ from enum import Enum
 from typing import Any, Optional
 
 from .capabilities import Budget, CapabilityManifest
-from .contracts import CONSERVATIVE_DEFAULT, ToolContract, ToolManifest
+from .contracts import (
+    CONSERVATIVE_DEFAULT,
+    ToolContract,
+    ToolManifest,
+    contract_allows_retry,
+)
 from .dsl import Contract, call, ident, seq, sub
 from .errors import PlanRejected
 from .ir import ContextPolicy, Node, toolref_key
@@ -456,12 +461,15 @@ def retry_max_attempts_for_contract(
     idempotent_max_attempts: int,
     write_max_attempts: int,
 ) -> int:
-    """Choose liberal vs cautious retry attempts from a pure tool contract."""
-    idempotent = (
-        contract.effect == Effect.READ
-        or contract.idempotency in (Idempotency.NATIVE, Idempotency.REQUIRED)
-    )
-    return idempotent_max_attempts if idempotent else write_max_attempts
+    """Choose retry attempts from a pure tool contract.
+
+    Idempotency gates whether a call may retry at all. ``write_max_attempts`` is
+    retained for policy JSON compatibility, but non-idempotent writes collapse
+    to one attempt.
+    """
+    if contract_allows_retry(contract):
+        return idempotent_max_attempts
+    return 1
 
 
 def manifest_contracts_for_agent(
