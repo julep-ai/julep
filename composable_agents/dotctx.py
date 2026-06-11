@@ -24,8 +24,19 @@ from __future__ import annotations
 import os
 import types
 from dataclasses import dataclass
-from typing import Any, Literal, Optional, Sequence, Union, cast, get_args, get_origin
-from typing import get_type_hints, is_typeddict
+from typing import (
+    Any,
+    Literal,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    is_typeddict,
+)
+from typing import NotRequired, Required  # type: ignore[attr-defined]
 
 from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
@@ -93,7 +104,15 @@ def _typeddict_to_schema(reply: Any) -> dict[str, Any]:
         for key, annotation in annotations.items()
     }
     schema: dict[str, Any] = {"type": "object", "properties": properties}
-    required = [key for key in annotations if key in required_keys]
+    required: list[str] = []
+    for key, annotation in annotations.items():
+        origin = get_origin(annotation)
+        if origin is Required:
+            required.append(key)
+        elif origin is NotRequired:
+            continue
+        elif key in required_keys:
+            required.append(key)
     if required:
         schema["required"] = required
     return schema

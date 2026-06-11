@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import NotRequired, Required, TypedDict
 
 import pytest
 
@@ -23,6 +23,25 @@ class TypedReply(TypedDict):
     answer: str
     confidence: float
     tags: list[str]
+
+
+class PartlyOptionalReply(TypedDict):
+    answer: str
+    debug: NotRequired[str]
+
+
+class PartlyRequiredReply(TypedDict, total=False):
+    answer: str
+    route: Required[str]
+
+
+class NestedDetails(TypedDict):
+    title: str
+    note: NotRequired[str]
+
+
+class NestedReply(TypedDict):
+    details: NestedDetails
 
 
 def _registered_identity(brain: Brain) -> dict[str, object]:
@@ -84,6 +103,63 @@ def test_reply_typeddict_materializes_to_json_schema() -> None:
             "tags": {"type": "array", "items": {"type": "string"}},
         },
         "required": ["answer", "confidence", "tags"],
+    }
+
+
+def test_reply_typeddict_notrequired_field_is_not_required_under_future_annotations() -> None:
+    brain = Brain(
+        name="reply.typed_dict.not_required",
+        model="openai:gpt-4o",
+        reply=PartlyOptionalReply,
+    )
+
+    assert brain.reply_schema == {
+        "type": "object",
+        "properties": {
+            "answer": {"type": "string"},
+            "debug": {"type": "string"},
+        },
+        "required": ["answer"],
+    }
+
+
+def test_reply_typeddict_required_field_is_required_under_future_annotations() -> None:
+    brain = Brain(
+        name="reply.typed_dict.required",
+        model="openai:gpt-4o",
+        reply=PartlyRequiredReply,
+    )
+
+    assert brain.reply_schema == {
+        "type": "object",
+        "properties": {
+            "answer": {"type": "string"},
+            "route": {"type": "string"},
+        },
+        "required": ["route"],
+    }
+
+
+def test_reply_typeddict_nested_notrequired_field_resolves_under_future_annotations() -> None:
+    brain = Brain(
+        name="reply.typed_dict.nested_not_required",
+        model="openai:gpt-4o",
+        reply=NestedReply,
+    )
+
+    assert brain.reply_schema == {
+        "type": "object",
+        "properties": {
+            "details": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "note": {"type": "string"},
+                },
+                "required": ["title"],
+            },
+        },
+        "required": ["details"],
     }
 
 
