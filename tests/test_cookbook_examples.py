@@ -7,6 +7,7 @@ from composable_agents.errors import ValidationError
 from conftest import run
 
 from examples import (
+    cluster_labeling_flow,
     cma_managed_agent,
     email_approval,
     episode_summary_flow,
@@ -128,6 +129,39 @@ def test_episode_summary_flow_cas_guard_blocks_stale_write() -> None:
     # ep-1003 was edited between read and write, so the CAS write must not land.
     assert store["ep-1003"]["summary"] is None
     assert store["ep-1003"]["oneLiner"] is None
+
+
+def test_cluster_labeling_flow_deploys_clean_and_rolls_up_statuses_in_order() -> None:
+    deployment = cluster_labeling_flow.build()
+
+    assert not blocking(deployment.diagnostics)
+
+    result = run(cluster_labeling_flow.run_demo())
+
+    assert result.value["counts"] == {
+        "success": 1,
+        "stale_snapshot": 1,
+        "not_found": 1,
+    }
+    assert [(r["storeId"], r["status"]) for r in result.value["results"]] == [
+        ("store-clean", "success"),
+        ("store-stale", "stale_snapshot"),
+        ("store-missing", "not_found"),
+    ]
+
+
+def test_cluster_labeling_flow_cas_guard_writes_one_snapshot_or_none() -> None:
+    run(cluster_labeling_flow.run_demo())
+
+    store = cluster_labeling_flow._store
+    clean_labels = store["store-clean"]["labels"]
+    assert sorted(clean_labels) == ["macro-10", "macro-20"]
+    assert all(label["label"] for label in clean_labels.values())
+    assert all(label["keywords"] for label in clean_labels.values())
+
+    # store-stale was edited after the global snapshot read, so the single
+    # CAS-guarded snapshot write must leave the label snapshot untouched.
+    assert store["store-stale"]["labels"] == {}
 
 
 def test_email_approval_strict_deploy_rejects_ungated_send() -> None:
