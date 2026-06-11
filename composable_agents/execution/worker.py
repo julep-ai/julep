@@ -49,6 +49,7 @@ from .blobstore import BlobStore
 from .codec import ClaimCheckCodec
 from .debounce import DebounceCollector
 from .harness import AgentWorkflow, FlowWorkflow
+from .serve import DEFAULT_TASK_QUEUE
 from .session_store import SessionStore
 
 # Every activity the two workflows can dispatch.
@@ -65,8 +66,6 @@ ACTIVITIES = [
     resolveRuntimeCapabilities,
 ]
 WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector]
-
-DEFAULT_TASK_QUEUE = "composable-agents"
 
 
 def claim_check_converter(

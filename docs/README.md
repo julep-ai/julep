@@ -14,6 +14,7 @@ New here? Read [getting-started.md](getting-started.md), then [concepts.md](conc
 - [Dispatch boundary](dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer.
 - [Provider resilience](provider-resilience.md) — deterministic model fallback chains, error taxonomy, and per-provider circuit breakers at the `LlmCaller` seam.
 - [Deploy to Temporal](deploy-temporal.md) — durable execution, workers, activities, guarded Temporal imports, and deployment artifacts.
+- [Deploy on Kubernetes](deploy-kubernetes.md) — containerized workers via `composable-agents worker`, SIGTERM drain, health probes, and KEDA autoscaling on task-queue backlog.
 - [Deploy on DBOS](deploy-dbos.md) — durable flows and agent loops on Postgres via dbos-transact.
 
 ## Reference
