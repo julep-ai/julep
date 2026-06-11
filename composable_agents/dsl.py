@@ -133,9 +133,9 @@ def ident() -> Node:
     return _node(op=Op.IDENT, id=_nid("ident"))
 
 
-def arr(pure_name: str) -> Node:
+def arr(pure_name: str, args: Optional[dict[str, Any]] = None) -> Node:
     """Lift a registered pure function into a flow leaf."""
-    return _node(op=Op.ARR, id=_nid("arr"), pure=pure_name)
+    return _node(op=Op.ARR, id=_nid("arr"), pure=pure_name, args=args)
 
 
 def sub(

@@ -18,7 +18,7 @@ from .diagnostics import explain
 from .errors import ComposableAgentsError
 from .execution.interpreter import InMemoryEnv, interpret
 from .freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, NativeToolSpec
-from .ir import CallStep, Node, SubStep, toolref_key
+from .ir import CallStep, Node, SubStep, pure_display, toolref_key
 from .kinds import EnforcementMode, Op
 from .projection import EventType, InMemoryProjection, ProjectionEmitter
 from .shapes import closed_shape, surface_shape
@@ -230,6 +230,8 @@ def graph_dot(flow: Node) -> str:
             return
         seen.add(node.id)
         label = f"{node.id}\\n{node.op.value}\\n{surface_shape(node).value}"
+        if node.op == Op.ARR and node.pure is not None:
+            label += f"\\n{pure_display(node.pure, node.args)}"
         lines.append(f"  {_dot_id(node.id)} [label={json.dumps(label)}];")
 
         children = _graph_children(node)
@@ -286,9 +288,13 @@ def _node_summary(flow: Node) -> list[str]:
 
     def rec(node: Node, depth: int) -> None:
         indent = "  " * depth
+        detail = ""
+        if node.op == Op.ARR and node.pure is not None:
+            detail = f" pure={pure_display(node.pure, node.args)}"
         lines.append(
             f"{indent}- {node.id}: op={node.op.value} "
             f"surface={surface_shape(node).value} closed={closed_shape(node).value}"
+            f"{detail}"
         )
         for _label, child in _graph_children(node):
             rec(child, depth + 1)

@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Callable, Optional
 if TYPE_CHECKING:
     from .dotctx import Brain
 
-PureFn = Callable[[Any], Any]
+PureFn = Callable[..., Any]
 
 
 @dataclass(frozen=True)

@@ -103,7 +103,7 @@ class Env(Protocol):
     principal: Optional[dict[str, Any]]
 
     def next_cid(self, node_id: str) -> str: ...
-    def get_pure(self, name: str) -> Callable[[Any], Any]: ...
+    def get_pure(self, name: str) -> Callable[..., Any]: ...
     def charge_call(self, tool_key: str) -> None: ...
 
     async def call_hand(self, node: Node, value: Any, cid: str) -> Any: ...
@@ -182,6 +182,8 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
     if op == Op.ARR:
         assert node.pure is not None
         fn = env.get_pure(node.pure)
+        if node.args is not None:
+            return Result(fn(value, **node.args))
         return Result(fn(value))
 
     if op == Op.PRIM:
@@ -622,7 +624,7 @@ class InMemoryEnv:
         self._cid += 1
         return f"{node_id}@{self._cid}"
 
-    def get_pure(self, name: str) -> Callable[[Any], Any]:
+    def get_pure(self, name: str) -> Callable[..., Any]:
         registry = self._registry or DEFAULT_REGISTRY
         return registry.get_pure(name)
 

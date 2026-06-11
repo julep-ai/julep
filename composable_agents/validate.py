@@ -16,13 +16,17 @@ Rules implemented:
 * ``ContextPolicy`` legality: a ``WHOLE_SESSION`` branch under ``par`` is flagged
   for sequential degrade
 * named-``Pure``: ``arr``/``alt`` must carry a registered ``pure`` (no inline closures)
+* ``arr.args``: static args are canonical JSON objects with identifier keys and
+  no secret-shaped keys at any nesting level
 * post-freeze: every ``call`` resolves to a manifest entry
 """
 
 from __future__ import annotations
 
+import math
+import re
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from .contracts import ToolManifest
 from .ir import (
@@ -32,11 +36,20 @@ from .ir import (
     Node,
     SourceSpan,
     ThinkStep,
+    canonical_json,
+    pure_display,
 )
 from .kinds import ContextScope, Op, Shape, shape_leq
 from .purity import is_registered
 from .shapes import surface_shape
 from .transforms import collect_duplicate_ids, detect_cycles
+
+
+_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_SECRET_KEY_RE = re.compile(
+    r"token|secret|password|api_?key|credential|private_?key",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -131,6 +144,9 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
     if op != Op.ALT and (n.select is not None or n.cases is not None or n.default is not None):
         err("ALT_FIELDS_ON_NONALT", f"{op.value} node must not carry alt switch fields")
 
+    if op != Op.ARR and n.args is not None:
+        err("ARR_ARGS_ON_NONARR", f"{op.value} node must not carry arr static args")
+
     if op in (Op.SEQ, Op.PAR):
         if not has_lr:
             err("MISSING_BRANCH", f"{op.value} requires both left and right")
@@ -168,7 +184,11 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
         if n.pure is None:
             err("ARR_NO_PURE", "arr requires a named pure function (no inline closures)")
         elif not is_registered(n.pure):
-            err("UNKNOWN_PURE", f"arr function not registered: {n.pure!r}")
+            err(
+                "UNKNOWN_PURE",
+                f"arr function not registered: {pure_display(n.pure, n.args)!r}",
+            )
+        _check_arr_args(n, out)
         if (
             n.left is not None
             or n.right is not None
@@ -229,6 +249,77 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
                     "app with summary context requires a named summarizer brain "
                     "(summarizer=...); there is no implicit default model",
                 )
+
+
+def _check_arr_args(n: Node, out: list[Diagnostic]) -> None:
+    args = n.args
+    if args is None:
+        return
+
+    def err(code: str, msg: str) -> None:
+        out.append(Diagnostic(code, n.id, msg))
+
+    if not isinstance(args, dict):
+        err("ARR_ARGS_NOT_OBJECT", "arr static args must be a JSON object")
+        return
+
+    if _check_json_value(args, "args", out, n.id):
+        try:
+            canonical_json(args)
+        except TypeError as exc:
+            err("ARR_ARGS_NOT_JSON", f"arr static args are not canonical JSON: {exc}")
+
+
+def _check_json_value(
+    value: Any,
+    path: str,
+    out: list[Diagnostic],
+    node_id: str,
+) -> bool:
+    ok = True
+
+    def err(code: str, msg: str) -> None:
+        out.append(Diagnostic(code, node_id, msg))
+
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if not isinstance(key, str) or not _IDENTIFIER_RE.match(key):
+                err(
+                    "ARR_ARGS_BAD_KEY",
+                    f"arr static arg key {path}.{key!r} must be a valid Python identifier",
+                )
+                ok = False
+            elif _SECRET_KEY_RE.search(key):
+                err(
+                    "ARR_ARGS_SECRET",
+                    f"arr static arg key {path}.{key} looks secret-shaped; use env/hands instead",
+                )
+                ok = False
+            child_path = f"{path}.{key}" if isinstance(key, str) else f"{path}.<key>"
+            if not _check_json_value(child, child_path, out, node_id):
+                ok = False
+        return ok
+
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            if not _check_json_value(item, f"{path}[{index}]", out, node_id):
+                ok = False
+        return ok
+
+    if value is None or isinstance(value, (str, bool, int)):
+        return True
+
+    if isinstance(value, float):
+        if math.isfinite(value):
+            return True
+        err("ARR_ARGS_NOT_JSON", f"arr static arg {path} must be a finite JSON number")
+        return False
+
+    err(
+        "ARR_ARGS_NOT_JSON",
+        f"arr static arg {path} has non-JSON value type {type(value).__name__}",
+    )
+    return False
 
 
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:

@@ -6,7 +6,7 @@ import pytest
 
 from composable_agents import (
     Ann, ContextScope,
-    call, mcp, think, seq, par, alt, iter_up_to, stage, app,
+    arr, call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
     HAVE_TEMPORAL,
 )
@@ -146,6 +146,41 @@ def test_alt_routes_by_pure_predicate():
     assert run(interpret(fr.flow, 8, env)).value == 4   # even -> half
     fr2, env2 = _env(flow, hands=HANDS)
     assert run(interpret(fr2.flow, 7, env2)).value == 8  # odd -> inc
+
+
+def test_arr_static_args_call_pure_with_kwargs():
+    register_pure(
+        "static_args.interpret.kwargs",
+        lambda value, *, scale, offset: value * scale + offset,
+    )
+    flow = arr("static_args.interpret.kwargs", args={"scale": 2, "offset": 3})
+    store = InMemoryProjection()
+    env = InMemoryEnv({}, ProjectionEmitter(store))
+
+    out = run(interpret(flow, 10, env))
+
+    assert out.value == 23
+
+
+def test_arr_without_static_args_calls_pure_without_kwargs():
+    register_pure("static_args.interpret.absent", lambda value: value + 1)
+    flow = arr("static_args.interpret.absent")
+    store = InMemoryProjection()
+    env = InMemoryEnv({}, ProjectionEmitter(store))
+
+    out = run(interpret(flow, 10, env))
+
+    assert out.value == 11
+
+
+def test_arr_static_args_kwarg_mismatch_surfaces_type_error():
+    register_pure("static_args.interpret.mismatch", lambda value: value)
+    flow = arr("static_args.interpret.mismatch", args={"unexpected": True})
+    store = InMemoryProjection()
+    env = InMemoryEnv({}, ProjectionEmitter(store))
+
+    with pytest.raises(TypeError, match="unexpected"):
+        run(interpret(flow, 10, env))
 
 
 def test_iter_up_to_runs_bound_times_and_converges():

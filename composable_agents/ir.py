@@ -375,6 +375,8 @@ class Node:
     controller: Optional[str] = None
     # arr / alt predicate (named, content-addressed):
     pure: Optional[str] = None
+    # arr static args: a named JSON object, serialized only when present.
+    args: Optional[dict[str, Any]] = None
     # par join semantics (all/race/hedge/quorum). None == "all".
     merge: Optional[Merge] = None
     # DSL-only metadata held for later phases. APP inline config is serialized
@@ -456,6 +458,8 @@ class Node:
                 out["summarizer"] = self.summarizer
         if self.pure is not None:
             out["pure"] = self.pure
+        if self.op == Op.ARR and self.args is not None:
+            out["args"] = self.args
         if self.merge is not None:
             out["merge"] = self.merge.to_json()
         return out
@@ -481,6 +485,7 @@ class Node:
             plan=Node.from_json(d["plan"]) if d.get("plan") else None,
             controller=d.get("controller"),
             pure=d.get("pure"),
+            args=d.get("args"),
             merge=Merge.from_json(d["merge"]) if d.get("merge") else None,
             tools=d.get("tools"),
             subflows=d.get("subflows"),
@@ -502,3 +507,14 @@ class SourceSpan:
 def canonical_json(value: Any) -> str:
     """Stable JSON used for content hashing: sorted keys, no whitespace."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def pure_display(name: str, args: Any = None) -> str:
+    """Human-facing pure label including static args when present."""
+    if args is None:
+        return name
+    try:
+        encoded = canonical_json(args)
+    except TypeError:
+        encoded = repr(args)
+    return f"{name} args={encoded}"

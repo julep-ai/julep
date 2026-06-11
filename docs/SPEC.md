@@ -7,7 +7,7 @@
 > [§12 Conformance](#12-conformance).
 
 **Status:** reference implementation, hardening toward canonical.
-**Spec version:** 0.1 · **Last updated:** 2026-06-03
+**Spec version:** 0.1 · **Last updated:** 2026-06-11
 
 Normative keywords (MUST / MUST NOT / SHOULD / MAY) follow RFC 2119.
 
@@ -126,6 +126,42 @@ A tool contract is `(effect, idempotency)`:
 `required` means *the caller guarantees an idempotency key is honored*. An
 implementation that cannot supply that key for a given transport MUST NOT treat
 the tool as `required` (see [§8.5](#85-idempotency-keys)).
+
+### 4.4 `arr` static args
+
+An `arr` node MAY carry static args for a parameterized registered pure:
+
+```json
+{"op":"arr","id":"$","pure":"std.pluck","args":{"key":"summary"}}
+```
+
+The wire field is `args`. It MUST be absent when no static args are present;
+existing `arr` nodes without args remain byte-identical after serialization.
+When present, `args` MUST be a JSON object whose keys are valid Python
+identifiers and whose values are canonical JSON values. Nested JSON object keys
+inside `args` follow the same identifier rule. Validators MUST reject
+non-canonical or host-language values such as objects, tuples, non-string keys,
+or non-finite numbers.
+
+Static args are part of `flowJson`, so they are part of the content-hashed
+program identity. Two `arr` nodes with the same `pure` and different `args`
+MUST hash differently after normal id normalization.
+
+Static args MUST NOT contain secrets or secret-shaped config. Validators MUST
+emit a blocking diagnostic when any nested key matches token, secret, password,
+api_key/apikey, credential, or private_key case-insensitively. Credentials
+belong in environment-backed hands or run principals, never in the frozen flow.
+
+At execution time, an `arr` with no `args` calls `fn(value)`. An `arr` with
+`args` calls `fn(value, **args)`. Keyword mismatches surface as ordinary pure
+function call errors.
+
+Trace, graph, and diagnostic renderers SHOULD display the registered pure name
+together with its static args so parameterized pures remain self-describing.
+
+Call-node bound args are intentionally not part of this wire format. Tool
+configuration binding, if needed by a frontend, is represented by a preceding
+pure data-shaping step rather than by adding bound arguments to `call`.
 
 ---
 

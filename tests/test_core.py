@@ -7,15 +7,18 @@ import pytest
 from composable_agents import (
     Shape, Effect, Idempotency, Contract,
     Ann,
+    arr,
     call, mcp, seq, par, alt, iter_up_to, stage, app,
     sub, race, hedge, quorum, human_gate, HUMAN_GATE_TOOL,
-    freeze, validate, blocking,
+    freeze, validate, blocking, register_pure,
     CapabilityManifest, ToolContract, manifest_to_json, manifest_from_json,
     estimate_cost, admit_plan, check_race_admission,
 )
 from composable_agents.contracts import FrozenTool, McpAnnotations, definition_hash, execution_hash
 from composable_agents.errors import FreezeError, PlanRejected
-from composable_agents.ir import canonical_json
+from composable_agents.ir import Node, canonical_json
+from composable_agents.kinds import Op
+from composable_agents.transforms import normalize_ids
 from composable_agents.shapes import surface_shape, closed_shape
 from conftest import read_snapshot, mixed_snapshot
 
@@ -73,6 +76,37 @@ def test_existing_fixture_json_stays_structurally_serializable():
 
     assert encoded
     assert flow.to_json() == before
+
+
+def test_arr_args_absent_from_json_when_not_present():
+    node = arr("static_args.absent")
+
+    encoded = node.to_json()
+
+    assert encoded == {"op": "arr", "id": node.id, "pure": "static_args.absent"}
+
+
+def test_arr_args_round_trip_when_present():
+    node = arr(
+        "static_args.present",
+        args={"field": "title", "nested": {"limit": 3, "enabled": True}},
+    )
+
+    encoded = node.to_json()
+    back = Node.from_json(encoded)
+    normalized = normalize_ids(back)
+
+    assert encoded["args"] == {"field": "title", "nested": {"limit": 3, "enabled": True}}
+    assert back.to_json() == encoded
+    assert normalized.to_json()["args"] == encoded["args"]
+    assert canonical_json(encoded)
+
+
+def test_arr_args_change_flow_content_hash():
+    first = normalize_ids(Node.from_json(arr("static_args.hash", args={"key": "a"}).to_json()))
+    second = normalize_ids(Node.from_json(arr("static_args.hash", args={"key": "b"}).to_json()))
+
+    assert canonical_json(first.to_json()) != canonical_json(second.to_json())
 
 
 def test_manifest_json_round_trip():
@@ -185,6 +219,58 @@ def test_freeze_rejects_unresolved_tool():
 def test_validate_clean_flow_has_no_blocking():
     fr = freeze(seq(call(mcp("srv", "a")), call(mcp("srv", "b"))), read_snapshot("a", "b"))
     assert not blocking(validate(fr.flow, fr.manifest))
+
+
+def test_validate_accepts_arr_static_args_json_object():
+    register_pure("static_args.validate.ok", lambda value, **kwargs: (value, kwargs))
+    flow = arr(
+        "static_args.validate.ok",
+        args={"field": "title", "nested": {"limit": 3, "enabled": True, "items": [1, None]}},
+    )
+
+    assert not blocking(validate(flow))
+
+
+def test_validate_rejects_arr_static_args_bad_keys_and_non_json_values():
+    register_pure("static_args.validate.bad", lambda value, **kwargs: (value, kwargs))
+    bad_key = Node(
+        op=Op.ARR,
+        id="bad-key",
+        pure="static_args.validate.bad",
+        args={"not-valid": 1},
+    )
+    bad_value = Node(
+        op=Op.ARR,
+        id="bad-value",
+        pure="static_args.validate.bad",
+        args={"value": object()},
+    )
+
+    bad_key_codes = {diag.code for diag in blocking(validate(bad_key))}
+    bad_value_codes = {diag.code for diag in blocking(validate(bad_value))}
+
+    assert "ARR_ARGS_BAD_KEY" in bad_key_codes
+    assert "ARR_ARGS_NOT_JSON" in bad_value_codes
+
+
+def test_validate_rejects_arr_static_args_on_non_arr_nodes():
+    flow = Node(op=Op.IDENT, id="ident-with-args", args={"field": "title"})
+
+    codes = {diag.code for diag in blocking(validate(flow))}
+
+    assert "ARR_ARGS_ON_NONARR" in codes
+
+
+def test_validate_blocks_secret_shaped_arr_static_args_at_any_depth():
+    register_pure("static_args.validate.secret", lambda value, **kwargs: (value, kwargs))
+    flow = arr(
+        "static_args.validate.secret",
+        args={"layout": [{"safe": 1}, {"Private_Key": "inline-secret"}]},
+    )
+
+    diags = blocking(validate(flow))
+
+    assert any(diag.code == "ARR_ARGS_SECRET" for diag in diags)
 
 
 def test_parallel_validates_without_blocking():
