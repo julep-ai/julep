@@ -1,0 +1,8 @@
+.cas/
+.venv/
+__pycache__/
+*.pyc
+*.wasm
+*.cwasm
+*.cache
+runner-output.json
