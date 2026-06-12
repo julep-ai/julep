@@ -1,0 +1,6 @@
+package spike:executor;
+
+world executor {
+  export run: func(request: string) -> string;
+}
+

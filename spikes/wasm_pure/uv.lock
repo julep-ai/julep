@@ -1,0 +1,50 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[[package]]
+name = "componentize-py"
+version = "0.23.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/d6/862d195136a671671ed06363ffcb45dc38682b3b5bb4a8eaa9500464de84/componentize_py-0.23.0.tar.gz", hash = "sha256:8d5ea3dbdf6642aca4a9329be30861189c1066e1651d2ab73bb3b0f1d9871407", size = 203590, upload-time = "2026-04-15T17:25:48.104Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e2/a9/f5a3975d05cec7f3a95a6e931d73204aa3592280113effd7a0ac1f741864/componentize_py-0.23.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:bcd956598441713d1920396af9896ab19753bcb568299ff2db85f43bb65286ed", size = 16108001, upload-time = "2026-04-15T17:25:14.424Z" },
+    { url = "https://files.pythonhosted.org/packages/75/9f/e4b08061e9f0c0abe61806b28f99ac094e2a19bdf312108c9b38be499d74/componentize_py-0.23.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:d4b9b52e548f962c9ba36f15ce9793689bd29beb18a52b3480d317fc773e4506", size = 15269777, upload-time = "2026-04-15T17:25:21.826Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/df/b8161bcc0b4158a7cc75d558bd9b16b67bbd27ae7511ef2d06db4bea88c3/componentize_py-0.23.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:939acedff58eba1f4864ebe9327c742e5cf52bf6e08eddfb699e82761c5ede9f", size = 16237698, upload-time = "2026-04-15T17:25:29.46Z" },
+    { url = "https://files.pythonhosted.org/packages/77/8d/426f07b84efed1b98076b4193f8d29e1a5e76a2f63fbc8770b2a6f3b589a/componentize_py-0.23.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:99eaa2cc8b5d737d2b23237618332a21838f892eec7f0359b44c464659a15ecc", size = 16808229, upload-time = "2026-04-15T17:25:37.562Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/9c/1c725d88d33fdc99c008fde287098b037f71c18197d54477e4ed0db101b2/componentize_py-0.23.0-cp39-abi3-win_amd64.whl", hash = "sha256:1d65d73c97ea751d2dc958fba085c501e68a7c68cf4611df910b99e18fb2057e", size = 14884887, upload-time = "2026-04-15T17:25:44.983Z" },
+]
+
+[[package]]
+name = "wasm-pure-spike"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "componentize-py" },
+    { name = "wasmtime" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "componentize-py", specifier = "==0.23.0" },
+    { name = "wasmtime", specifier = "==45.0.0" },
+]
+
+[[package]]
+name = "wasmtime"
+version = "45.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/ff/db9cfc61d988bc15303134bb174176a29839976876dfd18c3a12548ad291/wasmtime-45.0.0.tar.gz", hash = "sha256:2ad4bf7ca286ceea35c1e420d10b368d7f83faf9a5ffde87b4ee334a9b7f55f3", size = 128297, upload-time = "2026-05-26T17:57:39.131Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/75/56/7d941adba273210dcf4198266a47f472a5eeca20172005b443af71a9a3e7/wasmtime-45.0.0-py3-none-android_26_arm64_v8a.whl", hash = "sha256:4e843795b53e66c71313f2254731467372e5e1549227cf14accb9e2d57701c10", size = 8659052, upload-time = "2026-05-26T17:57:12.338Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/81/c4d81ebf3db8aa28f789a9569640f30790d5234c509a0234cd502aa2638b/wasmtime-45.0.0-py3-none-android_26_x86_64.whl", hash = "sha256:35e713f907264e470f3bc9b592b81b8ed0f8f5651725d9f07a5d52beb0642e38", size = 9619373, upload-time = "2026-05-26T17:57:14.979Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/c7/7594da7fa8a3bc5e765733ad57aac9b7b27262c4afa47521bd500e4a4574/wasmtime-45.0.0-py3-none-any.whl", hash = "sha256:6251ee5074a8b8bfaa98e6e99cb5d49d6d0f2320b3265d5aa6c2ee5df5fb4519", size = 8019034, upload-time = "2026-05-26T17:57:20.138Z" },
+    { url = "https://files.pythonhosted.org/packages/75/76/7d0e440ca03a717a97889dbb7b68f952c20ed4ffd3f59addf9553579e1d5/wasmtime-45.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:3579b0ec6d001750d66ec7089aaeee2c048f88328c82743e15f099af01b0cf84", size = 9401625, upload-time = "2026-05-26T17:57:22.149Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/0b/a81b5daf5adea482ecb68d9615f6a348486ab4d8e980a915d4420e57ee4d/wasmtime-45.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:31d10f25c330cebcfb364e9a357123deeec96c41725ff2bba91b705587f38a93", size = 8255954, upload-time = "2026-05-26T17:57:24.769Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/8c/e9019a28e908214031310aefd78e4755221d02303190b54b2c85cb69573e/wasmtime-45.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:5d1416ec6da8cd87c29e2e9eb074358c91839c2fff971fe428c8921eaae68e73", size = 9681185, upload-time = "2026-05-26T17:57:26.641Z" },
+    { url = "https://files.pythonhosted.org/packages/42/56/ed5f492bd553a31c8e28d621f8256f2c7b1a133b28f73525d96ca355891a/wasmtime-45.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:a499f6ab0eebb70dca83d6a4904b743cd122f322af3abe86af08ad753533d946", size = 8582001, upload-time = "2026-05-26T17:57:28.883Z" },
+    { url = "https://files.pythonhosted.org/packages/62/12/9b41740da83f51014b88181c9086de0ed75d736a5329baff7323c4fb6eff/wasmtime-45.0.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:bef65282b7de744106a91da43e4d06ba19d2d587bc54abb83b3e757f0c4fc030", size = 8633462, upload-time = "2026-05-26T17:57:31.423Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/63/49d8317706a108d9ed1d4166d0fc710796da1b20e591a98a96575dec367a/wasmtime-45.0.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:a0b6ca14b4628a5d1ffa91ccf2c0f2c58fa171f126ec085d564b09d5795395dd", size = 9712524, upload-time = "2026-05-26T17:57:33.839Z" },
+    { url = "https://files.pythonhosted.org/packages/20/71/8e31ea472ceb934e7261ac59a786e82cd82b4d4dcb7c870d498aa9c3c21e/wasmtime-45.0.0-py3-none-win_amd64.whl", hash = "sha256:1736a70a48f713aaf1a878514d29cc6f554213b5431e04447813a3b9b4320381", size = 8019039, upload-time = "2026-05-26T17:57:36.04Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/d1/ac536e92ac95a02e137be5b6829f15b87d5eef93ace32e5ee8035155b839/wasmtime-45.0.0-py3-none-win_arm64.whl", hash = "sha256:ae9726590e6d90c6305b8b507c93468b145204d4390aa9a2e29e26babcae110e", size = 6845659, upload-time = "2026-05-26T17:57:37.696Z" },
+]

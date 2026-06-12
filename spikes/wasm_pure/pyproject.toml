@@ -1,0 +1,13 @@
+[project]
+name = "wasm-pure-spike"
+version = "0.1.0"
+description = "Standalone P1(a) CPython-on-wasm pure executor spike."
+requires-python = ">=3.12"
+dependencies = [
+    "componentize-py==0.23.0",
+    "wasmtime==45.0.0",
+]
+
+[tool.uv]
+package = false
+
