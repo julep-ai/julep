@@ -297,6 +297,39 @@ hashes MUST be compared against the artifact; a mismatch MUST fail before any
 execution. Pures SHOULD be versioned semantically (`route.is_urgent.v1`) and
 MUST NOT be mutated in place — add `.v2`.
 
+### 6.5 pureRuntimeRefs — published runtime identity
+
+`pureRuntimeRefs` is a map of pure name to runtime reference:
+
+```json
+{
+  "pure.name.v1": {
+    "sourceHash": "pure:0123456789abcdef",
+    "abi": "python-source/json-v1",
+    "bundleHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "executorTier": "native"
+  }
+}
+```
+
+- `sourceHash` is the registry pin (`pure:` plus 16 hex chars).
+- `abi` is the call ABI used to load and execute the pure.
+- `bundleHash` is the full sha256 CAS digest of the bundle manifest.
+- `executorTier` is the tier that executes the pure (`native` until the wasm
+  tier ships).
+- `envHash` is the dependency environment identity. It is absent until
+  deps-as-data lands and MUST be serialized only when set.
+
+The `pureRuntimeRefs` key MUST enter the artifact envelope only when the map is
+non-empty. Absent and empty refs are indistinguishable; every pre-existing
+artifact, including the golden corpus, MUST hash byte-identically.
+
+The refs-absent `artifact_hash` is the identity of the intended program and is
+what the bundle manifest pins as `artifactHash`. The manifest's CAS digest is
+`bundleHash`; `bundleHash` enters each pure's runtime ref; the refs-present hash
+is the published identity. Two deployments differing only in `executorTier` or
+`envHash` MUST hash differently.
+
 ---
 
 ## 7. Capabilities (deny-by-default)

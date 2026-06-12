@@ -183,6 +183,12 @@ def _framework_version() -> str:
     return getattr(package, "__version__", __version__)
 
 
+def _hash_artifact_components(components: dict[str, Any]) -> str:
+    payload = canonical_json(components)
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return f"sha256:{digest}"
+
+
 def _capabilities_from_tools(
     tools: Sequence[Tool[Any, Any]],
     brains: Optional[Sequence[str]],
@@ -250,9 +256,34 @@ class Deployment:
 
     @cached_property
     def artifact_hash(self) -> str:
-        payload = canonical_json(self.artifact_components)
-        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        return f"sha256:{digest}"
+        return _hash_artifact_components(self.artifact_components)
+
+    def artifact_components_with_refs(
+        self, pure_runtime_refs: Optional[dict[str, dict[str, str]]]
+    ) -> dict[str, Any]:
+        """Return the published envelope when runtime refs are present.
+
+        The cached base envelope is what a bundle manifest pins as
+        ``artifactHash``. Runtime refs are joined only for the published
+        identity and are absent when unset.
+        """
+        if not pure_runtime_refs:
+            return self.artifact_components
+        components = dict(self.artifact_components)
+        components["pureRuntimeRefs"] = pure_runtime_refs
+        return components
+
+    def artifact_hash_with_refs(
+        self, pure_runtime_refs: Optional[dict[str, dict[str, str]]]
+    ) -> str:
+        """Hash the published envelope derived from runtime refs.
+
+        The base ``artifact_hash`` remains the refs-absent program identity; this
+        hash is the refs-present identity after a bundle manifest exists.
+        """
+        return _hash_artifact_components(
+            self.artifact_components_with_refs(pure_runtime_refs)
+        )
 
     @property
     def warnings(self) -> list[Diagnostic]:
