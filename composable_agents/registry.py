@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import linecache
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 if TYPE_CHECKING:
@@ -91,6 +93,59 @@ class Registry:
         entry = PureEntry(name=name, fn=fn, source_hash=_source_hash(fn))
         self.pures[name] = entry
         return entry
+
+    def register_pure_from_source(self, name: str, source: str) -> PureEntry:
+        expected_hash = _text_hash(source)
+        existing = self.pures.get(name)
+        if existing is not None:
+            if existing.source_hash == expected_hash:
+                return existing
+            raise ValueError(
+                f"bundled source for pure {name!r} disagrees with baked registration: "
+                f"{existing.source_hash} != {expected_hash}"
+            )
+
+        filename = f"<cas-pure:{name}:{expected_hash}>"
+        source_for_compile = source if source.endswith("\n") else f"{source}\n"
+        linecache.cache[filename] = (
+            len(source_for_compile),
+            None,
+            source_for_compile.splitlines(keepends=True),
+            filename,
+        )
+
+        def pure(pure_name: str | PureFn, /) -> PureFn | Callable[[PureFn], PureFn]:
+            if not isinstance(pure_name, str):
+                self.register_pure(pure_name.__name__, pure_name)
+                return pure_name
+
+            def deco(fn: PureFn) -> PureFn:
+                self.register_pure(pure_name, fn)
+                return fn
+
+            return deco
+
+        module = ModuleType(f"_composable_agents_cas_pure_{name.replace('.', '_')}")
+        module.__dict__["__file__"] = filename
+        module.__dict__["pure"] = pure
+        code = compile(source_for_compile, filename, "exec")
+        before = dict(self.pures)
+        try:
+            exec(code, module.__dict__)
+
+            entry = self.pures.get(name)
+            if entry is None:
+                raise ValueError(f"source did not register requested pure {name!r}")
+            if entry.source_hash != expected_hash:
+                raise ValueError(
+                    f"source hash mismatch for pure {name!r}: "
+                    f"{entry.source_hash} != {expected_hash}"
+                )
+            return entry
+        except Exception:
+            self.pures.clear()
+            self.pures.update(before)
+            raise
 
     def get_pure(self, name: str) -> PureFn:
         try:

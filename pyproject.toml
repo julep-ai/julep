@@ -45,6 +45,8 @@ dotctx = ["jinja2>=3.1"]
 providers = ["any-llm-sdk>=1.17; python_version >= '3.11'"]
 # OpenTelemetry span export of the projection.
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
+# Artifact distribution stores and bundle signing primitives (ed25519 lands in P2.3).
+store = ["boto3>=1.34", "cryptography>=42"]
 # Everything needed to run the full test suite (including the Temporal E2E test)
 # and to drive real providers from the examples. The unit tests inject a fake
 # acompletion and never import any-llm, so the SDK + its provider plugins live
@@ -123,4 +125,8 @@ disable_error_code = ["attr-defined"]
 
 [[tool.mypy.overrides]]
 module = ["temporalio.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*"]
 ignore_missing_imports = true

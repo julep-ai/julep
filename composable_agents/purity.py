@@ -88,6 +88,10 @@ def register_pure(name: str, fn: PureFn) -> PureEntry:
     return DEFAULT_REGISTRY.register_pure(name, fn)
 
 
+def register_pure_from_source(name: str, source: str) -> PureEntry:
+    return DEFAULT_REGISTRY.register_pure_from_source(name, source)
+
+
 def is_registered(name: str) -> bool:
     return DEFAULT_REGISTRY.is_registered(name)
 
