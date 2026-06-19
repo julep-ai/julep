@@ -42,6 +42,16 @@ Point `publish.py` at another deployment, re-run publish, patch `CA_BUNDLES` +
 `CA_BUNDLE_ALLOWED_SIGNERS` on the Deployment, and the same image runs the new
 flow. The image never changes.
 
+## Autoscaling (optional, KEDA)
+
+`worker-keda.yaml` hands replica control to KEDA's temporal scaler so the generic
+worker scales to zero when idle and back up on backlog — each cold start
+re-resolves the signed bundle, so autoscaled replicas stay code-as-data. On k3d
+the ScaledObject reaches Temporal (Ready) and scale-to-zero works; scale-from-zero
+needs a Temporal frontend new enough to expose backlog stats (~1.24+), which the
+local dev server (1.22.x) does not — see the header of `worker-keda.yaml`. The
+core demo runs on the plain `replicas: 1` Deployment regardless.
+
 ## Security model
 
 - Bundles are content-addressed and signed; workers verify every hash (manifest

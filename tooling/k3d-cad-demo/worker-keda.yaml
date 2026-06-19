@@ -1,0 +1,35 @@
+# Optional autoscaling layer. Apply AFTER worker.yaml to hand replica control to
+# KEDA's temporal scaler: the generic worker scales 0 -> N on task-queue backlog
+# and back to 0 when idle. Each cold start re-resolves the signed bundle, so
+# autoscaled replicas are still code-as-data — no image rebuild.
+#
+#   helm repo add kedacore https://kedacore.github.io/charts && helm repo update
+#   helm install keda kedacore/keda -n keda --create-namespace --wait
+#   kubectl apply -f tooling/k3d-cad-demo/worker-keda.yaml
+#
+# Verified on k3d: the ScaledObject reaches Temporal (Ready=True) and scale-to-
+# zero works (idle 1 -> 0). Scale-FROM-zero needs a Temporal frontend new enough
+# to report task-queue backlog stats (ApproximateBacklogCount, ~Temporal 1.24+);
+# the local `temporal server start-dev` (1.22.x) leaves the HPA metric <unknown>,
+# so the worker stays at 0. Use a real in-cluster Temporal frontend for the full
+# 0 -> N -> 0 loop; for the demo itself, worker.yaml (replicas:1) is enough.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ca-cad-worker
+spec:
+  scaleTargetRef:
+    name: ca-cad-worker
+  minReplicaCount: 0
+  maxReplicaCount: 4
+  pollingInterval: 5
+  cooldownPeriod: 30
+  triggers:
+    - type: temporal
+      metadata:
+        endpoint: host.k3d.internal:7233
+        namespace: default
+        taskQueue: ca-cad-demo
+        queueTypes: "workflow,activity"
+        targetQueueSize: "1"
+        activationTargetQueueSize: "0"
