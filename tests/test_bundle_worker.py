@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+from composable_agents import arr, deploy, pure, seq
+from composable_agents.cas import LocalDirCAS
+from composable_agents.execution.bundle_worker import make_context
+from composable_agents.execution.effects import WorkerContext
+from composable_agents.registry import Registry
+from conftest import read_snapshot
+
+SEED = "33" * 32
+
+
+@pure("bundle.genericworker.tag.v1")
+def _generic_worker_tag(value: dict[str, Any]) -> dict[str, Any]:
+    return {"tag": value["name"].upper()}
+
+
+def _public_key(seed: str) -> str:
+    return (
+        Ed25519PrivateKey.from_private_bytes(bytes.fromhex(seed))
+        .public_key()
+        .public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+        .hex()
+    )
+
+
+def test_make_context_resolves_bundle_pures_and_returns_worker_context(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A generic worker resolves CA_BUNDLES at startup, registering bundle pures."""
+    store = LocalDirCAS(tmp_path)
+    deployment = deploy(seq(arr("bundle.genericworker.tag.v1")), read_snapshot())
+    rec = deployment.publish(store, signing_key=SEED)
+
+    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("CA_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
+    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
+    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
+
+    fresh = Registry()
+    context = make_context(registry=fresh)
+
+    assert isinstance(context, WorkerContext)
+    expected = deployment.artifact_components["pureSourceHashes"]
+    assert (
+        fresh.source_hash_of("bundle.genericworker.tag.v1")
+        == expected["bundle.genericworker.tag.v1"]
+    )
+
+
+def test_make_context_with_no_bundles_is_a_clean_noop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No CA_BUNDLES means a generic worker still starts with an empty context."""
+    monkeypatch.delenv("CA_BUNDLES", raising=False)
+
+    context = make_context(registry=Registry())
+
+    assert isinstance(context, WorkerContext)
