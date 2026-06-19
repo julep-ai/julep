@@ -65,6 +65,7 @@ from .validate import Diagnostic, blocking, validate
 
 if TYPE_CHECKING:
     from .agent import Tool
+    from .cas import CASStore
     from .execution.interpreter import Result as InterpreterResult
     from .typed import FlowLike
 
@@ -284,6 +285,19 @@ class Deployment:
         return _hash_artifact_components(
             self.artifact_components_with_refs(pure_runtime_refs)
         )
+
+    def publish(
+        self,
+        store_or_url: "CASStore | str",
+        *,
+        signing_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Publish this deployment's CAS bundle and detached signature."""
+        from .bundle import publish_bundle
+        from .cas import cas_from_url
+
+        store = cas_from_url(store_or_url) if isinstance(store_or_url, str) else store_or_url
+        return publish_bundle(self, store, signing_key=signing_key)
 
     @property
     def warnings(self) -> list[Diagnostic]:

@@ -330,6 +330,54 @@ what the bundle manifest pins as `artifactHash`. The manifest's CAS digest is
 is the published identity. Two deployments differing only in `executorTier` or
 `envHash` MUST hash differently.
 
+### 6.6 Bundle manifest & detached signature
+
+The bundle manifest MUST be canonical JSON with this wire shape:
+
+```json
+{
+  "artifactHash": "sha256:<64hex>",
+  "artifactComponents": "<64hex CAS digest>",
+  "flow": "<64hex CAS digest>",
+  "pures": [
+    {
+      "abi": "python-source/json-v1",
+      "name": "<pure name>",
+      "source": "<64hex CAS digest>",
+      "sourceHash": "pure:<16hex>"
+    }
+  ],
+  "signature": null
+}
+```
+
+- `artifactHash` is the refs-absent artifact hash.
+- `artifactComponents` is the CAS digest of the canonical artifact envelope and
+  MUST equal the hex part of `artifactHash`.
+- `flow` is the CAS digest of canonical `flowJson`.
+- `pures` is the bundled pure source list and MUST be sorted by `name`.
+- `abi` is the source call ABI.
+- `name` is the pure registry name.
+- `source` is the CAS digest of the source blob.
+- `sourceHash` is the registry pin over the exact source text.
+- `std.*` pures MUST NOT appear in `pures`; they stay baked in the worker image.
+
+The stored manifest's `signature` field MUST be `null`. Signatures are
+DETACHED: `bundleHash` is sha256 over the unsigned canonical manifest bytes, so
+bundle identity MUST NOT depend on who signed. The detached signature object is
+content-addressed alongside the manifest:
+
+```json
+{"algo": "ed25519", "bundleHash": "<64hex>", "publicKey": "<64hex>", "sig": "<128hex>"}
+```
+
+Workers MUST verify the detached signature against a key allowlist. Unsigned
+bundles and unknown signers MUST fail closed. Workers MUST verify every content
+hash: the manifest CAS address, source blob CAS addresses, and each per-pure
+`sourceHash` over the source text. If a pure name is both baked and bundled, the
+hashes MUST agree; disagreement is an error, not precedence. Bundle resolution
+MUST happen at worker startup, before any workflow task is accepted.
+
 ---
 
 ## 7. Capabilities (deny-by-default)
