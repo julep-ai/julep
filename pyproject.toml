@@ -80,7 +80,11 @@ composable-agents = "composable_agents.cli:main"
 include = ["composable_agents*"]
 
 [tool.setuptools.package-data]
-composable_agents = ["py.typed"]
+# The vendored wasm executor component ships in the wheel so a pip-installed
+# generic worker can run bundle-sourced pures in the wasm tier without the
+# build-time componentize-py toolchain. The .cwasm cache and componentize-py
+# generated bindings are NOT shipped (regenerated at build / first run).
+composable_agents = ["py.typed", "execution/_wasm/*.wasm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
