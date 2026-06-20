@@ -8,7 +8,6 @@ starts.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 from typing import Any
 
@@ -19,52 +18,16 @@ from temporalio.worker._workflow_instance import WorkflowInstanceDetails
 
 from ..cas import CASStore
 from ..registry import DEFAULT_REGISTRY, Registry
-from ..worker_store import BundleResolutionError, resolve_entries
+from ..worker_store import bundle_ref_entries, resolve_entries
 from .harness import FlowInput
-
-_SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
-
-
-def _bundle_entries(raw: Any) -> list[tuple[str, str]]:
-    # No bundle is a valid, common case (flows without custom pures). But a
-    # PRESENT-but-malformed bundle must FAIL CLOSED: silently skipping a bad ref
-    # would let a flow that should run signed pures fall back to ambient/stale
-    # registry state, defeating the code-as-data signing guarantee. A malformed
-    # ref here propagates out of activate() the same way a signature-verification
-    # failure in resolve_entries already does.
-    if raw is None:
-        return []
-    if not isinstance(raw, list):
-        raise BundleResolutionError(
-            f"malformed bundle: expected a list of refs, got {type(raw).__name__}"
-        )
-
-    entries: list[tuple[str, str]] = []
-    for item in raw:
-        if not isinstance(item, dict):
-            raise BundleResolutionError(
-                f"malformed bundle ref: expected an object, got {type(item).__name__}"
-            )
-        bundle_hash = item.get("bundleHash")
-        signature_digest = item.get("signatureDigest")
-        if not isinstance(bundle_hash, str) or not isinstance(signature_digest, str):
-            raise BundleResolutionError(
-                "malformed bundle ref: bundleHash and signatureDigest must be strings"
-            )
-        if _SHA256_HEX.fullmatch(bundle_hash) is None or _SHA256_HEX.fullmatch(signature_digest) is None:
-            raise BundleResolutionError(
-                "malformed bundle ref; expected bundleHash/signatureDigest as 64 hex chars"
-            )
-        entries.append((bundle_hash.lower(), signature_digest.lower()))
-    return entries
 
 
 def _flow_bundle_entries(value: Any) -> list[tuple[str, str]]:
     if isinstance(value, FlowInput):
-        return _bundle_entries(value.bundle)
+        return bundle_ref_entries(value.bundle)
     if isinstance(value, dict):
-        return _bundle_entries(value.get("bundle"))
-    return _bundle_entries(getattr(value, "bundle", None))
+        return bundle_ref_entries(value.get("bundle"))
+    return bundle_ref_entries(getattr(value, "bundle", None))
 
 
 class BundleResolvingWorkflowRunner(WorkflowRunner):

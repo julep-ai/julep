@@ -64,6 +64,7 @@ from .effects import (
     InvokeBrainInput,
     PutBlobInput,
     RunSubInput,
+    VerifyPuresInput,
     toolref_json_from_key,
 )
 from .interpreter import (
@@ -220,9 +221,9 @@ async def compilePlanStep(inp: dict) -> Any:
 
 
 @DBOS.step(retries_allowed=False)
-async def verifyPuresStep(pinned: dict) -> Any:
+async def verifyPuresStep(inp: Any) -> Any:
     try:
-        await effects.verifyPures(pinned)
+        await effects.verifyPures(inp)
         return None
     except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
@@ -261,7 +262,6 @@ async def finishTrajectoryStep(inp: dict) -> None:
     run_id = inp.get("runId")
     root_run_id = inp.get("rootRunId") or run_id
     status = inp.get("status", "completed")
-    _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
     await _effects.record_marker_step(
         kind="final",
         run_id=run_id,
@@ -271,6 +271,7 @@ async def finishTrajectoryStep(inp: dict) -> None:
         cid=f"{run_id}:final",
         value_kind="output",
     )
+    _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
 
 
 @DBOS.step(retries_allowed=False)
@@ -367,8 +368,13 @@ async def _run_subflow_inline(
         node_ops.update({n.id: n.op.value for n in child.walk()})
     assert_dbos_executable(child)
     pinned = resolved.get("pinnedPures")
-    if pinned:
-        decode_policy_error(await verifyPuresStep(pinned))
+    bundle = resolved.get("bundle")
+    if pinned is not None or bundle is not None:
+        decode_policy_error(
+            await verifyPuresStep(
+                VerifyPuresInput(pinned=pinned or {}, bundle=bundle, flow_json=resolved["flowJson"])
+            )
+        )
     child_env = DbosEnv(
         manifest=manifest_from_json(resolved.get("manifestJson") or {}),
         emitter=emitter,
@@ -643,6 +649,7 @@ async def flow_workflow(inp: dict) -> Any:
     policy = ExecutionPolicy.from_json(inp.get("policy"))
     flow_json = inp.get("flowJson")
     manifest_json = inp.get("manifestJson") or {}
+    bundle = inp.get("bundle")
 
     if flow_json is None:
         if not inp.get("ref"):
@@ -654,10 +661,16 @@ async def flow_workflow(inp: dict) -> Any:
             inp = {**inp, "pinnedPures": resolved.get("pinnedPures")}
         if inp.get("maxCallLimits") is None:
             inp = {**inp, "maxCallLimits": resolved.get("maxCalls")}
+        if bundle is None:
+            bundle = resolved.get("bundle")
 
     pinned = inp.get("pinnedPures")
-    if pinned is not None:
-        decode_policy_error(await verifyPuresStep(pinned))
+    if pinned is not None or bundle is not None:
+        decode_policy_error(
+            await verifyPuresStep(
+                VerifyPuresInput(pinned=pinned or {}, bundle=bundle, flow_json=flow_json)
+            )
+        )
 
     max_call_limits = inp.get("maxCallLimits")
     if max_call_limits is None:
@@ -698,6 +711,7 @@ async def flow_workflow(inp: dict) -> Any:
         return {
             CONTINUATION_KEY: continuation_value(result.value),
             "callCounts": env.call_counts_snapshot(),
+            "bundle": bundle,
         }
     return result.value
 
@@ -921,6 +935,7 @@ async def run_flow_dbos(
     max_segments: int = 1000,
     principal: Optional[dict[str, Any]] = None,
     root_run_id: Optional[str] = None,
+    bundle: Optional[list[dict[str, str]]] = None,
 ) -> Any:
     """Run a frozen flow to settlement, following continuation segments.
 
@@ -967,6 +982,7 @@ async def run_flow_dbos(
             "principal": principal,
             "rootRunId": effective_root_run_id,
             "segmentSeq": seg,
+            "bundle": bundle,
         }
         with SetWorkflowID(wfid):
             if queue is not None:
@@ -992,6 +1008,8 @@ async def run_flow_dbos(
                 _traj._best_effort(_reraise)
             return out
         call_counts = out.get("callCounts") if isinstance(out, dict) else None
+        if isinstance(out, dict) and "bundle" in out:
+            bundle = out.get("bundle")
         seg_input = continuation_value(out)
     raise ComposableAgentsError(
         f"flow {session_id!r} did not settle within {max_segments} segments"

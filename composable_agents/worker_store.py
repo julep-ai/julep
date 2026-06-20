@@ -143,8 +143,11 @@ def resolve_and_register(
         raise BundleResolutionError("bundle manifest signature field must be null")
     artifact_components = manifest.get("artifactComponents")
     artifact_hash = manifest.get("artifactHash")
+    flow_digest = manifest.get("flow")
     if not isinstance(artifact_components, str) or not isinstance(artifact_hash, str):
         raise BundleResolutionError("bundle manifest has malformed artifact fields")
+    if not isinstance(flow_digest, str) or _SHA256_HEX.fullmatch(flow_digest) is None:
+        raise BundleResolutionError("bundle manifest has malformed flow digest")
     if artifact_hash != f"sha256:{artifact_components}":
         raise BundleResolutionError(
             "bundle manifest artifactHash must equal sha256:artifactComponents"
@@ -195,6 +198,8 @@ def resolve_and_register(
     return {
         "bundleHash": bundle_hash,
         "artifactHash": artifact_hash,
+        "artifactComponents": artifact_components,
+        "flow": flow_digest,
         "registered": registered,
     }
 
@@ -242,6 +247,40 @@ def _bundle_entries(raw: str) -> list[tuple[str, str]]:
                 "<bundleHash>:<signatureDigest> with 64 hex chars on each side"
             )
         entries.append((parts[0].lower(), parts[1].lower()))
+    return entries
+
+
+def bundle_ref_entries(raw: Any) -> list[tuple[str, str]]:
+    """Parse workflow-input bundle refs into resolver entries.
+
+    ``None`` means "no bundle" and is a no-op. A present-but-malformed value
+    fails closed so signed code cannot silently fall back to stale ambient
+    registry state.
+    """
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise BundleResolutionError(
+            f"malformed bundle: expected a list of refs, got {type(raw).__name__}"
+        )
+
+    entries: list[tuple[str, str]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            raise BundleResolutionError(
+                f"malformed bundle ref: expected an object, got {type(item).__name__}"
+            )
+        bundle_hash = item.get("bundleHash")
+        signature_digest = item.get("signatureDigest")
+        if not isinstance(bundle_hash, str) or not isinstance(signature_digest, str):
+            raise BundleResolutionError(
+                "malformed bundle ref: bundleHash and signatureDigest must be strings"
+            )
+        if _SHA256_HEX.fullmatch(bundle_hash) is None or _SHA256_HEX.fullmatch(signature_digest) is None:
+            raise BundleResolutionError(
+                "malformed bundle ref; expected bundleHash/signatureDigest as 64 hex chars"
+            )
+        entries.append((bundle_hash.lower(), signature_digest.lower()))
     return entries
 
 

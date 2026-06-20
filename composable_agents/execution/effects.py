@@ -12,6 +12,8 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+import os
+import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional
 
@@ -20,7 +22,7 @@ from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain
 from ..errors import CapabilityDenied, PureDriftError
-from ..ir import ContextPolicy, Node, toolref_from_json, toolref_key
+from ..ir import ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
 from ..kinds import ContextScope, Effect, Idempotency
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..prompt import rendered_brain_for
@@ -40,6 +42,8 @@ from ..transcript import (
     split_to_budget,
     summary_turn,
 )
+from ..cas import cas_from_url
+from ..worker_store import bundle_ref_entries, resolve_entries
 from .blobstore import BlobStore, parse_ref
 from .session_store import SessionStore
 
@@ -100,6 +104,14 @@ class WorkerContext:
     agents: dict[str, dict[str, Any]] = field(default_factory=dict)
     trajectory_sink: Optional[TrajectorySink] = None
     trajectory_blob_store: Optional[BlobStore] = None
+
+
+@dataclass
+class VerifyPuresInput:
+    pinned: dict[str, str]
+    bundle: Optional[list[dict[str, str]]] = None
+    flow_json: Optional[dict[str, Any]] = None
+    artifact_hash: Optional[str] = None
 
 
 _CTX = WorkerContext()
@@ -727,10 +739,77 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     return plan.to_json()
 
 
-async def verifyPures(pinned: dict[str, str]) -> None:
+def _verify_pures_input(raw: Any) -> tuple[dict[str, str], Any, Any, Optional[str]]:
+    if isinstance(raw, VerifyPuresInput):
+        return raw.pinned, raw.bundle, raw.flow_json, raw.artifact_hash
+    if (
+        isinstance(raw, dict)
+        and set(raw).issubset({"pinned", "bundle", "flow_json", "flowJson", "artifact_hash", "artifactHash"})
+        and isinstance(raw.get("pinned"), dict)
+    ):
+        return (
+            raw["pinned"],
+            raw.get("bundle"),
+            raw.get("flow_json", raw.get("flowJson")),
+            raw.get("artifact_hash", raw.get("artifactHash")),
+        )
+    if isinstance(raw, dict):
+        return raw, None, None, None
+    raise PureDriftError(f"verifyPures input must be pinned dict or VerifyPuresInput, got {type(raw).__name__}")
+
+
+def _canonical_digest(value: Any) -> str:
+    return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def _verify_bundle_binding(
+    records: list[dict[str, Any]],
+    *,
+    flow_json: Any,
+    artifact_hash: Optional[str],
+) -> None:
+    if not records:
+        return
+    if flow_json is None and artifact_hash is None:
+        raise PureDriftError("bundle verification requires flow_json or artifact_hash")
+
+    flow_digest: Optional[str] = None
+    if flow_json is not None:
+        if not isinstance(flow_json, dict):
+            raise PureDriftError(
+                f"bundle verification flow_json must be an object, got {type(flow_json).__name__}"
+            )
+        flow_digest = _canonical_digest(flow_json)
+
+    for record in records:
+        bundle_hash = record.get("bundleHash", "<unknown>")
+        if flow_digest is not None and record.get("flow") != flow_digest:
+            raise PureDriftError(
+                "bundle flow mismatch: "
+                f"bundle={bundle_hash} signed={record.get('flow')} actual={flow_digest}"
+            )
+        if artifact_hash is not None and record.get("artifactHash") != artifact_hash:
+            raise PureDriftError(
+                "bundle artifact mismatch: "
+                f"bundle={bundle_hash} signed={record.get('artifactHash')} actual={artifact_hash}"
+            )
+
+
+async def verifyPures(inp: Any) -> None:
     """Verify deploy-pinned pure source hashes against this worker's registry."""
+    pinned, bundle, flow_json, artifact_hash = _verify_pures_input(inp)
     registered: dict[str, str] = {}
     registry = _registry()
+    entries = bundle_ref_entries(bundle)
+    if entries:
+        store_url = os.environ.get("STORE_URL", "").strip()
+        if not store_url:
+            raise PureDriftError("bundle resolution before pure verification requires STORE_URL")
+        try:
+            records = resolve_entries(cas_from_url(store_url), entries, registry=registry)
+        except Exception as exc:
+            raise PureDriftError(f"bundle resolution before pure verification failed: {exc}") from exc
+        _verify_bundle_binding(records, flow_json=flow_json, artifact_hash=artifact_hash)
     for name in pinned:
         try:
             registered[name] = registry.source_hash_of(name)

@@ -87,6 +87,7 @@ with workflow.unsafe.imports_passed_through():
         LoadStateInput,
         PutBlobInput,
         RunSubInput,
+        VerifyPuresInput,
         callHand,
         commitState,
         compilePlan,
@@ -124,7 +125,6 @@ async def finishTrajectory(inp: dict[str, Any]) -> None:
     run_id = inp.get("runId")
     root_run_id = inp.get("rootRunId") or run_id
     status = inp.get("status", "completed")
-    _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
     await _effects.record_marker_step(
         kind="final",
         run_id=run_id,
@@ -134,6 +134,7 @@ async def finishTrajectory(inp: dict[str, Any]) -> None:
         cid=f"{run_id}:final",
         value_kind="output",
     )
+    _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
 
 
 @activity.defn(name="startTrajectory")
@@ -220,6 +221,20 @@ def _bundle_ref_child_input_enabled() -> bool:
         return workflow.patched("bundle-ref-child-input-v1")
     except Exception:
         # Unit tests sometimes exercise Env methods outside a workflow runtime.
+        return False
+
+
+def _bundle_aware_verify_pures_enabled() -> bool:
+    try:
+        return workflow.patched("bundle-aware-verify-pures-v1")
+    except Exception:
+        return False
+
+
+def _bundle_bound_verify_pures_enabled() -> bool:
+    try:
+        return workflow.patched("bundle-bound-verify-pures-v1")
+    except Exception:
         return False
 
 
@@ -799,10 +814,20 @@ class FlowWorkflow:
         # activity. Each FlowWorkflow verifies the pins supplied with that flow;
         # ref children verify their own pins when the subflow registry carries
         # pureSourceHashes/pinnedPures, without inheriting parent registry state.
-        if pinned_pures is not None:
+        bundle_bound_verify = bundle is not None and _bundle_bound_verify_pures_enabled()
+        if pinned_pures is not None or bundle_bound_verify:
+            verify_pures_input: Any = pinned_pures or {}
+            if bundle_bound_verify:
+                verify_pures_input = VerifyPuresInput(
+                    pinned=pinned_pures or {},
+                    bundle=bundle,
+                    flow_json=flow_json,
+                )
+            elif bundle is not None and _bundle_aware_verify_pures_enabled():
+                verify_pures_input = VerifyPuresInput(pinned=pinned_pures or {}, bundle=bundle)
             await workflow.execute_activity(
                 verifyPures,
-                pinned_pures,
+                verify_pures_input,
                 start_to_close_timeout=timedelta(seconds=10),
                 retry_policy=RetryPolicy(
                     maximum_attempts=1,

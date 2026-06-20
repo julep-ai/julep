@@ -22,6 +22,7 @@ from composable_agents.execution.effects import (
     CallHandInput,
     CompilePlanInput,
     InvokeBrainInput,
+    VerifyPuresInput,
     WorkerContext,
     callHand,
     compilePlan,
@@ -385,6 +386,63 @@ register_pure("principal.always_continue", _always_continue)
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_flow_workflow_verify_pures_receives_bundle(monkeypatch):
+    payloads = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        payloads.append((fn.__name__, payload))
+        return None
+
+    monkeypatch.setattr(harness, "_bundle_bound_verify_pures_enabled", lambda: True)
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+
+    inp = FlowInput(
+        session_id="sess",
+        input=5,
+        flow_json=ident().to_json(),
+        manifest_json={},
+        pinned_pures={"bundle.worker.normalize.v1": "pure:abc"},
+        max_call_limits={},
+        bundle=BUNDLE_REF,
+    )
+    out = asyncio.run(FlowWorkflow().run(inp))
+
+    verify_payloads = [payload for name, payload in payloads if name == "verifyPures"]
+    assert out == 5
+    assert verify_payloads == [
+        VerifyPuresInput(pinned=inp.pinned_pures, bundle=BUNDLE_REF, flow_json=inp.flow_json)
+    ]
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_flow_workflow_bundle_without_pins_still_verifies_binding(monkeypatch):
+    payloads = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        payloads.append((fn.__name__, payload))
+        return None
+
+    monkeypatch.setattr(harness, "_bundle_bound_verify_pures_enabled", lambda: True)
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+
+    inp = FlowInput(
+        session_id="sess",
+        input=5,
+        flow_json=ident().to_json(),
+        manifest_json={},
+        max_call_limits={},
+        bundle=BUNDLE_REF,
+    )
+    out = asyncio.run(FlowWorkflow().run(inp))
+
+    verify_payloads = [payload for name, payload in payloads if name == "verifyPures"]
+    assert out == 5
+    assert verify_payloads == [
+        VerifyPuresInput(pinned={}, bundle=BUNDLE_REF, flow_json=inp.flow_json)
+    ]
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_flow_workflow_continue_as_new_carries_principal(monkeypatch):
     captured = []
 
@@ -573,6 +631,45 @@ def test_dbos_inline_subflow_inherits_principal(monkeypatch):
 
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
+def test_dbos_inline_subflow_verifies_with_bundle(monkeypatch):
+    verify_payloads = []
+    flow_json = ident().to_json()
+
+    async def fake_resolve(ref: str) -> dict:
+        return {
+            "flowJson": flow_json,
+            "manifestJson": {},
+            "pinnedPures": {"bundle.worker.normalize.v1": "pure:abc"},
+            "bundle": BUNDLE_REF,
+        }
+
+    async def fake_verify(inp):
+        verify_payloads.append(inp)
+        return None
+
+    monkeypatch.setattr(dbos_backend, "resolveSubflowStep", fake_resolve)
+    monkeypatch.setattr(dbos_backend, "verifyPuresStep", fake_verify)
+
+    env = DbosEnv(
+        manifest={},
+        emitter=_emitter(),
+        session_id="sess",
+        manifest_json={},
+        policy=_Policy(),
+    )
+    out = asyncio.run(env.run_sub("child", None, 5, "cid-1"))
+
+    assert out == 5
+    assert verify_payloads == [
+        VerifyPuresInput(
+            pinned={"bundle.worker.normalize.v1": "pure:abc"},
+            bundle=BUNDLE_REF,
+            flow_json=flow_json,
+        )
+    ]
+
+
+@pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_agent_segment_envelope_carries_principal(monkeypatch):
     payloads: list[dict] = []
     _patch_dbos_steps(monkeypatch, payloads, brain_reply={"tool": "t", "input": 1})
@@ -614,6 +711,77 @@ def test_dbos_flow_segment_threads_principal(monkeypatch):
 
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
+def test_dbos_flow_segment_verifies_with_bundle(monkeypatch):
+    verify_payloads = []
+    flow_json = ident().to_json()
+
+    async def fake_verify(inp):
+        verify_payloads.append(inp)
+        return None
+
+    monkeypatch.setattr(dbos_backend, "verifyPuresStep", fake_verify)
+
+    flow_body = inspect.unwrap(dbos_backend.flow_workflow)
+    out = asyncio.run(flow_body({
+        "sessionId": "sess",
+        "input": 5,
+        "flowJson": flow_json,
+        "manifestJson": {},
+        "pinnedPures": {"bundle.worker.normalize.v1": "pure:abc"},
+        "maxCallLimits": {},
+        "bundle": BUNDLE_REF,
+    }))
+
+    assert out == 5
+    assert verify_payloads == [
+        VerifyPuresInput(
+            pinned={"bundle.worker.normalize.v1": "pure:abc"},
+            bundle=BUNDLE_REF,
+            flow_json=flow_json,
+        )
+    ]
+
+
+@pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
+def test_dbos_ref_flow_adopts_bundle_for_verify(monkeypatch):
+    verify_payloads = []
+    flow_json = ident().to_json()
+
+    async def fake_resolve(ref: str) -> dict:
+        assert ref == "child"
+        return {
+            "flowJson": flow_json,
+            "manifestJson": {},
+            "pinnedPures": {"bundle.worker.normalize.v1": "pure:abc"},
+            "bundle": BUNDLE_REF,
+        }
+
+    async def fake_verify(inp):
+        verify_payloads.append(inp)
+        return None
+
+    monkeypatch.setattr(dbos_backend, "resolveSubflowStep", fake_resolve)
+    monkeypatch.setattr(dbos_backend, "verifyPuresStep", fake_verify)
+
+    flow_body = inspect.unwrap(dbos_backend.flow_workflow)
+    out = asyncio.run(flow_body({
+        "sessionId": "sess",
+        "input": 5,
+        "ref": "child",
+        "maxCallLimits": {},
+    }))
+
+    assert out == 5
+    assert verify_payloads == [
+        VerifyPuresInput(
+            pinned={"bundle.worker.normalize.v1": "pure:abc"},
+            bundle=BUNDLE_REF,
+            flow_json=flow_json,
+        )
+    ]
+
+
+@pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_chain_runner_carries_principal_to_every_segment(monkeypatch):
     submitted: list[dict] = []
     results = iter([
@@ -650,11 +818,13 @@ def test_dbos_chain_runner_carries_principal_to_every_segment(monkeypatch):
         session_id="sess",
         input={"n": 0},
         principal=PRINCIPAL,
+        bundle=BUNDLE_REF,
     ))
     assert out == {"done": 1}
     assert len(submitted) == 2
     # Both segments — including the one restarted from a continuation — carry it.
     assert all(p["principal"] == PRINCIPAL for p in submitted)
+    assert all(p["bundle"] == BUNDLE_REF for p in submitted)
 
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")

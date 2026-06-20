@@ -22,6 +22,7 @@ from typing import Any, Optional
 
 import pytest
 
+from composable_agents import HAVE_TEMPORAL
 from composable_agents.dotctx import Brain, register_brain
 from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref
 from composable_agents.execution.effects import (
@@ -280,6 +281,32 @@ def test_record_marker_step_root_and_final():
         if v.step_id in {root_step.step_id, final_step.step_id}
     }
     assert values == {"input": root_step.input_ref, "output": final_step.output_ref}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_finish_trajectory_creates_run_before_finishing_child_without_effects():
+    from composable_agents.execution.harness import finishTrajectory
+
+    sink = InMemoryTrajectoryStore()
+    blobs = InMemoryBlobStore()
+    _install(sink=sink, blob_store=blobs)
+
+    asyncio.run(
+        finishTrajectory(
+            {
+                "runId": "child-run",
+                "rootRunId": ROOT,
+                "status": "completed",
+                "segmentSeq": 0,
+                "result": SUB_OUTPUT,
+            }
+        )
+    )
+
+    run = sink.get_trajectory_run("child-run")
+    assert run is not None
+    assert run.status == "completed"
+    assert run.parent_run_id == ROOT
 
 
 # --------------------------------------------------------------------------- #

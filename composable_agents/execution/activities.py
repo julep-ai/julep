@@ -23,6 +23,7 @@ from .effects import (
     PutBlobInput as PutBlobInput,
     RunPrincipal as RunPrincipal,
     RunSubInput as RunSubInput,
+    VerifyPuresInput as VerifyPuresInput,
     WorkerContext as WorkerContext,
     configure as configure,
     set_trajectory_sink as set_trajectory_sink,
@@ -67,8 +68,8 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
 
 
 @activity.defn(name="verifyPures")
-async def verifyPures(pinned: dict[str, str]) -> None:
-    return await effects.verifyPures(pinned)
+async def verifyPures(inp: Any) -> None:
+    return await effects.verifyPures(inp)
 
 
 @activity.defn(name="resolveSubflow")

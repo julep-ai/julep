@@ -12,11 +12,19 @@ from composable_agents import HAVE_TEMPORAL, arr, deploy, pure, seq
 from composable_agents.bundle import ABI_PYTHON_SOURCE_JSON_V1
 from composable_agents.cas import CASIntegrityError, LocalDirCAS
 from composable_agents.contracts import manifest_from_json
+from composable_agents.errors import PureDriftError
+from composable_agents.execution import effects
+from composable_agents.execution.effects import VerifyPuresInput, WorkerContext, configure, verifyPures
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.ir import Node, canonical_json
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
 from composable_agents.registry import PureEntry, Registry, _text_hash
-from composable_agents.worker_store import BundleResolutionError, load_bundles_from_env, resolve_and_register
+from composable_agents.worker_store import (
+    BundleResolutionError,
+    bundle_ref_entries,
+    load_bundles_from_env,
+    resolve_and_register,
+)
 from conftest import read_snapshot, run
 
 if HAVE_TEMPORAL:
@@ -30,7 +38,6 @@ if HAVE_TEMPORAL:
     from composable_agents.execution.bundle_runner import (
         BundleResolvingWorkflowRunner,
         _BundleResolvingInstance,
-        _bundle_entries,
     )
     from composable_agents.execution.harness import FlowInput
 
@@ -131,6 +138,8 @@ def test_publish_resolve_round_trip_and_interpret_with_fresh_registry(
     assert resolved == {
         "bundleHash": rec["bundleHash"],
         "artifactHash": deployment.artifact_hash,
+        "artifactComponents": deployment.artifact_hash.removeprefix("sha256:"),
+        "flow": _json_from_store(store, rec["bundleHash"])["flow"],
         "registered": expected_pins,
     }
     assert fresh.source_hash_of("bundle.worker.normalize.v1") == expected_pins[
@@ -521,6 +530,114 @@ def test_load_bundles_from_env_noop_and_errors(
         load_bundles_from_env(registry=fresh)
 
 
+def test_verify_pures_resolves_bundle_on_fresh_activity_registry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _store, deployment, rec = _published(tmp_path)
+    fresh = Registry()
+    configure(WorkerContext(registry=fresh))
+    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
+    resolved_entries = []
+    manifest = _json_from_store(_store, rec["bundleHash"])
+
+    def fake_resolve_entries(store, entries, *, registry):
+        resolved_entries.extend(entries)
+        for name, source_hash in deployment.artifact_components["pureSourceHashes"].items():
+            registry.pures[name] = PureEntry(
+                name=name,
+                fn=lambda value: value,
+                source_hash=source_hash,
+                executor="wasm",
+            )
+        return [
+            {
+                "bundleHash": rec["bundleHash"],
+                "artifactHash": deployment.artifact_hash,
+                "flow": manifest["flow"],
+                "registered": deployment.artifact_components["pureSourceHashes"],
+            }
+        ]
+
+    monkeypatch.setattr(effects, "resolve_entries", fake_resolve_entries)
+
+    run(
+        verifyPures(
+            VerifyPuresInput(
+                pinned=deployment.artifact_components["pureSourceHashes"],
+                bundle=bundle,
+                flow_json=deployment.flow_json,
+            )
+        )
+    )
+
+    assert resolved_entries == [(rec["bundleHash"], rec["signatureDigest"])]
+    assert set(fresh.pures) == set(deployment.artifact_components["pureSourceHashes"])
+    assert all(entry.executor == "wasm" for entry in fresh.pures.values())
+
+
+def test_verify_pures_rejects_bundle_bound_to_different_flow(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _store, deployment, rec = _published(tmp_path)
+    configure(WorkerContext(registry=Registry()))
+    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
+
+    def fake_resolve_entries(store, entries, *, registry):
+        for name, source_hash in deployment.artifact_components["pureSourceHashes"].items():
+            registry.pures[name] = PureEntry(
+                name=name,
+                fn=lambda value: value,
+                source_hash=source_hash,
+                executor="wasm",
+            )
+        return [
+            {
+                "bundleHash": rec["bundleHash"],
+                "artifactHash": deployment.artifact_hash,
+                "flow": _json_from_store(_store, rec["bundleHash"])["flow"],
+                "registered": deployment.artifact_components["pureSourceHashes"],
+            }
+        ]
+
+    monkeypatch.setattr(effects, "resolve_entries", fake_resolve_entries)
+
+    with pytest.raises(PureDriftError, match="bundle flow mismatch"):
+        run(
+            verifyPures(
+                VerifyPuresInput(
+                    pinned=deployment.artifact_components["pureSourceHashes"],
+                    bundle=bundle,
+                    flow_json=arr("bundle.worker.normalize.v1").to_json(),
+                )
+            )
+        )
+
+
+def test_verify_pures_bundle_resolution_failure_is_pure_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _store, deployment, rec = _published(tmp_path)
+    configure(WorkerContext(registry=Registry()))
+    monkeypatch.delenv("STORE_URL", raising=False)
+    bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
+
+    with pytest.raises(PureDriftError, match="STORE_URL"):
+        run(
+            verifyPures(
+                VerifyPuresInput(
+                    pinned=deployment.artifact_components["pureSourceHashes"],
+                    bundle=bundle,
+                    flow_json=deployment.flow_json,
+                )
+            )
+        )
+
+
 if HAVE_TEMPORAL:
 
     class _DummyInstance(WorkflowInstance):
@@ -638,22 +755,21 @@ def test_bundle_runner_forwards_current_workflow_instance_abstract_methods() -> 
     assert _BundleResolvingInstance.__abstractmethods__ == frozenset()
 
 
-@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_bundle_entries_fail_closed_on_malformed() -> None:
     # A present-but-malformed bundle ref must FAIL CLOSED (raise), never be
     # silently skipped -- otherwise a flow meant to run signed pures falls back
     # to ambient/stale registry state, defeating the code-as-data signing
     # guarantee. A genuinely absent bundle stays a valid no-op.
     good = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
-    assert _bundle_entries(None) == []
-    assert _bundle_entries([]) == []
-    assert _bundle_entries(good) == [("a" * 64, "b" * 64)]
+    assert bundle_ref_entries(None) == []
+    assert bundle_ref_entries([]) == []
+    assert bundle_ref_entries(good) == [("a" * 64, "b" * 64)]
 
     with pytest.raises(BundleResolutionError):
-        _bundle_entries({"bundleHash": "a" * 64, "signatureDigest": "b" * 64})  # not a list
+        bundle_ref_entries({"bundleHash": "a" * 64, "signatureDigest": "b" * 64})  # not a list
     with pytest.raises(BundleResolutionError):
-        _bundle_entries([42])  # entry not an object
+        bundle_ref_entries([42])  # entry not an object
     with pytest.raises(BundleResolutionError):
-        _bundle_entries([{"bundleHash": "a" * 64}])  # missing signatureDigest
+        bundle_ref_entries([{"bundleHash": "a" * 64}])  # missing signatureDigest
     with pytest.raises(BundleResolutionError):
-        _bundle_entries([{"bundleHash": "nothex", "signatureDigest": "b" * 64}])  # bad hex
+        bundle_ref_entries([{"bundleHash": "nothex", "signatureDigest": "b" * 64}])  # bad hex
