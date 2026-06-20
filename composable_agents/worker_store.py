@@ -108,15 +108,15 @@ def resolve_and_register(
     *,
     signature_digest: str | None = None,
     allowed_signers: Sequence[str] | None = None,
-    require_native_grant: bool = True,
     registry: Registry = DEFAULT_REGISTRY,
 ) -> dict[str, Any]:
-    if require_native_grant and os.environ.get("CA_BUNDLE_NATIVE_EXEC") != "1":
-        raise BundleResolutionError(
-            "bundle-sourced pures execute natively in-process in P2; this is a dev-only "
-            "mode enabled by setting CA_BUNDLE_NATIVE_EXEC=1. The production path is "
-            "the plan's P3 wasm executor tier."
-        )
+    """Resolve a signed CAS bundle and register its pures as the wasm tier.
+
+    Verified pure source is registered via register_pure_from_source, which
+    records tier="wasm": the pure executes in the wasmtime sandbox, not natively
+    in-process. Resolution is therefore ungated (the former P2 dev-only
+    CA_BUNDLE_NATIVE_EXEC native-exec gate is gone).
+    """
 
     signers = _allowed_signers(allowed_signers)
     if signature_digest is None:
@@ -178,6 +178,15 @@ def resolve_and_register(
             )
         verified.append((pure_record["name"], bundled_hash, source))
 
+    # Every verified pure resolves to the wasm tier. Probe the wasm runtime NOW —
+    # at resolution (worker init / fresh-activation), before any pure lookup —
+    # and eagerly build the process-global executor. Otherwise a worker missing
+    # the `wasm` extra registers the pures fine and then fails LATE with a raw
+    # ModuleNotFoundError at the first lookup inside workflow code (a
+    # WorkflowTaskFailed mid-run). Fail fast at resolution with install guidance.
+    if verified:
+        _ensure_wasm_runtime()
+
     registered: dict[str, str] = {}
     for name, source_hash, source in verified:
         registry.register_pure_from_source(name, source)
@@ -188,6 +197,36 @@ def resolve_and_register(
         "artifactHash": artifact_hash,
         "registered": registered,
     }
+
+
+def _ensure_wasm_runtime() -> None:
+    """Fail fast if the wasm tier cannot run, and eagerly init the executor.
+
+    Bundle-sourced pures run in the wasmtime sandbox, which requires the optional
+    `wasm` extra (``wasmtime``) and the vendored ``executor.wasm`` component. This
+    probe runs at resolution time so a misconfigured image fails BEFORE accepting
+    work, rather than with a raw ``ModuleNotFoundError`` at the first pure lookup
+    deep inside workflow code. Eagerly constructing the process-global executor
+    here also moves the one-time component load / ``.cwasm`` cache IO (and any
+    epoch thread) out of the Temporal workflow sandbox.
+    """
+    try:
+        from .execution.wasm_executor import get_wasm_executor
+    except ModuleNotFoundError as e:
+        raise BundleResolutionError(
+            "bundle-sourced pures run in the wasm sandbox, which requires the "
+            "'wasm' extra (wasmtime). Install it: pip install "
+            "'composable-agents[wasm]'."
+        ) from e
+
+    try:
+        get_wasm_executor()
+    except FileNotFoundError as e:
+        raise BundleResolutionError(
+            "the vendored wasm executor component is missing from this image; "
+            "rebuild the worker image with composable-agents[wasm] so "
+            "composable_agents/execution/_wasm/executor.wasm is present."
+        ) from e
 
 
 def _bundle_entries(raw: str) -> list[tuple[str, str]]:

@@ -90,7 +90,9 @@ def test_publish_record_shape_and_stored_manifest(tmp_path: Path) -> None:
             "sourceHash": pure_record["sourceHash"],
             "abi": ABI_PYTHON_SOURCE_JSON_V1,
             "bundleHash": rec["bundleHash"],
-            "executorTier": "native",
+            # Bundle pures resolve to the wasm tier on a worker; the published
+            # runtime identity records that real tier (not 'native').
+            "executorTier": "wasm",
         }
 
     signature = _json_from_store(store, rec["signatureDigest"])

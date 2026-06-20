@@ -24,6 +24,16 @@ spec:
               value: "10"
             - name: WORKER_MAX_CONCURRENT_ACTIVITIES
               value: "4"
+            # Code-as-data (P3 wasm tier): to run bundle-sourced pures, point the
+            # worker at the CAS store and pin the signed bundle + allowed signers.
+            # Bundle pures execute in the wasmtime sandbox (image needs the `wasm`
+            # extra); resolution is ungated (no CA_BUNDLE_NATIVE_EXEC in P3).
+            # - name: STORE_URL
+            #   value: s3://my-ca-bundles            # or file:///cas for a hostPath
+            # - name: CA_BUNDLES
+            #   value: "<bundleHash>:<signatureDigest>"
+            # - name: CA_BUNDLE_ALLOWED_SIGNERS
+            #   value: "<ed25519-public-key-hex>"
           ports:
             - containerPort: 8080
               name: health

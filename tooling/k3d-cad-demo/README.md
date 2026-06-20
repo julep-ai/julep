@@ -57,10 +57,15 @@ core demo runs on the plain `replicas: 1` Deployment regardless.
 - Bundles are content-addressed and signed; workers verify every hash (manifest
   CAS address, source blobs, per-pure `sourceHash`) and the detached signature,
   and fail closed on unsigned/unknown-signer/tampered bundles.
-- `CA_BUNDLE_NATIVE_EXEC=1` is required: P2 executes bundle-sourced pures
-  natively in-process, which is **dev-gated**. The production path is the P3 wasm
-  executor tier. The fixed `DEMO_SEED` in `publish.py` is a throwaway demo key,
-  not a secret.
+- Bundle-sourced pures run in the **P3 wasmtime sandbox** (no clock, filesystem,
+  or network; fresh instance per call), not natively in-process. Resolution is
+  therefore ungated — the old P2 dev-only `CA_BUNDLE_NATIVE_EXEC=1` flag is gone.
+  The fixed `DEMO_SEED` in `publish.py` is a throwaway demo key, not a secret.
+- The wasm executor needs the `wasm` extra (`wasmtime`) installed in the worker
+  image; without it, resolving a bundle pure fails fast at lookup time.
+
+See `docs/ops/wasm-tier-runbook.md` for the signing/trust tiers and CAS retention
+runbook.
 
 ## Clean up
 

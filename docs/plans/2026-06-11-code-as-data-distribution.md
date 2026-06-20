@@ -136,6 +136,43 @@ Each phase lands independently green (`python -m pytest` AND `uv run python -m p
   house style; cross-call module-state mutation has no observable effect. **EKS acceptance demo
   lands here**: publish + run on EKS, zero docker, cold start within the P1 budget.
 
+#### P3 status — what landed (branch `code-as-data`)
+
+Landed and locally gated (`pytest` + `mypy --strict composable_agents` + `ruff`, golden corpus
+unregenerated/byte-identical):
+
+- **Wasm executor host + vendored component.** Process-global, lazily-initialized `WasmExecutor`
+  runs each bundle-sourced pure in a fresh wasmtime CPython component instance per call (one
+  Engine `wasm_component_model`+`consume_fuel`, one Component deserialized once with a lazily-built
+  `.cwasm` cache, bare Linker, fresh Store+fuel per call, optional epoch deadline). The vendored
+  `executor.wasm` is committed; the `.cwasm` cache and componentize-py bindings are gitignored.
+- **Registry-shim/by-name ABI.** The component replicates the `@pure(...)` registry shim so the
+  SAME bundle source runs identically native and in wasm.
+- **Single-seam selection.** `Registry.get_pure` returns a wasm-bound callable for `executor ==
+  "wasm"` (bundle-sourced) and the native fn for `native` (baked + all `std.*`). All three backends
+  (Temporal harness, DBOS, CMA) inherit the tier through the registry; the Temporal worker passes
+  `wasmtime` through the workflow sandbox; bundle resolution is ungated (the P2 `CA_BUNDLE_NATIVE_EXEC`
+  dev gate is gone) and lands on the wasm tier end to end.
+- **Gates met locally.** wasm-vs-native parity on the grade-scores demo flow's dry_run
+  (`tests/test_wasm_parity.py`); adversarial probes (clock/fs/net/entropy) fail closed as a
+  structured `PureExecutionError` with `error_type` ∈ {`WasmSandboxTrap`,`WasmFuelExhausted`,
+  `WasmDeadlineExceeded`} naming the offending pure and pointing at the runbook — not a bare
+  `WasmtimeError` (`tests/test_wasm_sandbox.py`); cross-call module-state mutation has no observable
+  effect; executor-selection policy (bundle→wasm, baked `std.*`→native, and a bundle may not ship a
+  `std.*` pure) (`tests/test_executor_selection_policy.py`); plus per-backend routing and a full e2e
+  Temporal flow whose only pure is bundle-sourced (`tests/test_bundle_wasm_backends.py`).
+- **Infra/docs.** k3d demo worker Deployment carries `STORE_URL`/`CA_BUNDLES`/`CA_BUNDLE_ALLOWED_SIGNERS`;
+  the EKS-target `tooling/sandbox-k8s/worker.yaml` carries them as a documented P3 wasm-tier block.
+  `docs/ops/wasm-tier-runbook.md` covers signing tiers, executor tiers, the failure taxonomy, and CAS
+  retention. `pyproject` ships the build-only `wasm` extra (`wasmtime>=45,<46`).
+
+**Deferred to manual ops (cluster/S3/creds not available in this environment):** the **live EKS
+zero-docker acceptance run** — real cluster, S3-backed CAS (`STORE_URL=s3://…`), KEDA
+scale-from-zero, worker image built with the `wasm` extra, cold start within the P1 budget. This has
+NOT been run here. The step-by-step is documented under "Live EKS acceptance (manual)" in
+`docs/ops/wasm-tier-runbook.md`. The local gates exercise the full bundle→wasm path against a
+Temporal time-skipping server, the DBOS env, the CMA env, and a real signed bundle.
+
 ### P4 — deps as data
 
 - PEP 723 parsing at deploy; `envHash` (lockfile + python version + base-component version) joins

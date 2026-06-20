@@ -33,6 +33,25 @@ class PureDriftError(ComposableAgentsError):
     """Raised when a pinned pure source hash no longer matches the worker registry."""
 
 
+class PureExecutionError(ComposableAgentsError):
+    """A bundle-sourced pure raised inside the wasm sandbox.
+
+    Carries the in-sandbox error_type and message plus a short traceback tail
+    so flow error semantics match a native pure raising the same exception.
+    """
+
+    def __init__(
+        self,
+        error_type: str,
+        message: str,
+        traceback_tail: list[str] | None = None,
+    ) -> None:
+        self.error_type = error_type
+        self.message = message
+        self.traceback_tail = list(traceback_tail or [])
+        super().__init__(f"{error_type}: {message}")
+
+
 class AdmissionError(ComposableAgentsError):
     """A branch is illegal in a race/hedge/quorum position (§5 guarantee)."""
 

@@ -28,8 +28,8 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents import arr, call, each, ident, mcp, native, seq, sub
-from composable_agents.continuation import CONTINUATION_KEY, continue_with
+from composable_agents import arr, call, each, mcp, native, seq, sub
+from composable_agents.continuation import continue_with
 from composable_agents.dotctx import Brain, register_brain
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref

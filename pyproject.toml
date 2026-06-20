@@ -47,6 +47,8 @@ providers = ["any-llm-sdk>=1.17; python_version >= '3.11'"]
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
 # Artifact distribution stores and bundle signing primitives (ed25519 lands in P2.3).
 store = ["boto3>=1.34", "cryptography>=42"]
+# Sandboxed wasm execution of bundle-sourced pures (wasmtime host; componentize-py is build-only/dev).
+wasm = ["wasmtime>=45,<46"]
 # Everything needed to run the full test suite (including the Temporal E2E test)
 # and to drive real providers from the examples. The unit tests inject a fake
 # acompletion and never import any-llm, so the SDK + its provider plugins live
@@ -63,6 +65,7 @@ dev = [
     "opentelemetry-sdk>=1.20",
     "pydantic>=2",
     "types-PyYAML>=6.0",
+    "wasmtime>=45,<46",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]
 
@@ -112,6 +115,12 @@ strict = true
 show_error_codes = true
 warn_unused_ignores = true
 warn_return_any = true
+# composable_agents/execution/_wasm holds the wasm guest component plus the
+# componentize-py-generated bindings (wit_world, poll_loop, async support). That
+# code targets the wasi CPython guest (3.14, py3.12+ syntax), imports the
+# build-only `wit_world` module, and is never imported by the host package, so it
+# is out of scope for host strict typing.
+exclude = '(^|/)composable_agents/execution/_wasm/'
 
 [[tool.mypy.overrides]]
 module = ["composable_agents.execution.*"]

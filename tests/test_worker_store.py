@@ -15,7 +15,7 @@ from composable_agents.contracts import manifest_from_json
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.ir import Node, canonical_json
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.registry import Registry, _text_hash
+from composable_agents.registry import PureEntry, Registry, _text_hash
 from composable_agents.worker_store import BundleResolutionError, load_bundles_from_env, resolve_and_register
 from conftest import read_snapshot, run
 
@@ -109,7 +109,6 @@ def _resolve(
     registry: Registry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> dict[str, Any]:
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
     return resolve_and_register(
         store,
         rec["bundleHash"],
@@ -140,6 +139,10 @@ def test_publish_resolve_round_trip_and_interpret_with_fresh_registry(
     assert fresh.source_hash_of("bundle.worker.summarize.v1") == expected_pins[
         "bundle.worker.summarize.v1"
     ]
+    # Bundle resolution registers pures as the wasm tier end to end: they execute
+    # in the wasmtime sandbox, never natively in-process.
+    assert fresh.pures["bundle.worker.normalize.v1"].executor == "wasm"
+    assert fresh.pures["bundle.worker.summarize.v1"].executor == "wasm"
 
     manifest = _json_from_store(store, rec["bundleHash"])
     flow_json = _json_from_store(store, manifest["flow"])
@@ -158,7 +161,7 @@ def test_publish_resolve_round_trip_and_interpret_with_fresh_registry(
         rec["pureRuntimeRefs"]
     )
     assert rec["publishedArtifactHash"] != deployment.artifact_hash
-    assert all(ref["executorTier"] == "native" for ref in rec["pureRuntimeRefs"].values())
+    assert all(ref["executorTier"] == "wasm" for ref in rec["pureRuntimeRefs"].values())
     assert {
         name: (ref["sourceHash"], ref["abi"], ref["bundleHash"])
         for name, ref in rec["pureRuntimeRefs"].items()
@@ -204,7 +207,6 @@ def test_unknown_signer_and_unsigned_fail_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     store, _deployment, rec = _published(tmp_path)
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
 
     with pytest.raises(BundleResolutionError) as unknown:
         resolve_and_register(
@@ -240,7 +242,103 @@ def test_equal_hash_baked_collision_is_noop(
     _resolve(store, rec, fresh, monkeypatch)
 
     assert fresh.pures[first_pure["name"]] is existing
-    assert fresh.get_pure(first_pure["name"]) is existing.fn
+    assert existing.executor == "wasm"
+    # The equal-hash re-resolve is a no-op: the stored entry is unchanged and
+    # still wasm-tier. get_pure returns a wasm-bound callable (never a host fn:
+    # bundle source is not exec'd on the host) that produces the value computed
+    # inside the wasm sandbox, equal to the native reference for the same source.
+    sample = {"name": "  ada  ", "score": "7"}
+    resolved = fresh.get_pure(first_pure["name"])
+    assert resolved is not existing.fn
+    # The native reference is the baked pure of the same name (a trusted host fn).
+    baked_by_name = {
+        "bundle.worker.normalize.v1": _bundle_worker_normalize.fn,
+        "bundle.worker.summarize.v1": _bundle_worker_summarize.fn,
+    }
+    native_reg = Registry()
+    native_reg.register_pure(first_pure["name"], baked_by_name[first_pure["name"]])
+    assert resolved(sample) == native_reg.get_pure(first_pure["name"])(sample)
+
+
+def test_equal_hash_baked_pure_is_promoted_to_wasm_on_resolve(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A pure baked NATIVELY into the worker with the same source the bundle ships
+    (equal hash) must be PROMOTED to the wasm tier on resolution — it must not
+    silently stay native, or a bundle-sourced pure would escape the sandbox.
+    """
+    store, _deployment, rec = _published(tmp_path)
+    manifest = _json_from_store(store, rec["bundleHash"])
+    first_pure = manifest["pures"][0]
+    source = store.get(first_pure["source"]).decode("utf-8")
+
+    fresh = Registry()
+    # Bake the same-source pure natively, pinned to the bundle's exact sourceHash.
+    baked_by_name = {
+        "bundle.worker.normalize.v1": _bundle_worker_normalize.fn,
+        "bundle.worker.summarize.v1": _bundle_worker_summarize.fn,
+    }
+    baked = fresh.register_pure(first_pure["name"], baked_by_name[first_pure["name"]])
+    fresh.pures[first_pure["name"]] = PureEntry(
+        name=baked.name,
+        fn=baked.fn,
+        source_hash=_text_hash(source),
+        executor="native",
+    )
+    assert fresh.pures[first_pure["name"]].executor == "native"
+
+    _resolve(store, rec, fresh, monkeypatch)
+
+    promoted = fresh.pures[first_pure["name"]]
+    assert promoted.executor == "wasm", "equal-hash baked pure must be promoted to wasm"
+    assert promoted.source == source
+    # get_pure now returns a wasm-bound callable, not the baked native fn.
+    assert fresh.get_pure(first_pure["name"]) is not baked.fn
+
+
+def test_missing_wasm_extra_fails_fast_at_resolution_not_at_lookup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A worker missing the `wasm` extra must FAIL FAST at resolution with a
+    BundleResolutionError carrying install guidance — not register the wasm pures
+    and then blow up with a raw ModuleNotFoundError at the first lookup inside
+    workflow code (a WorkflowTaskFailed mid-run).
+    """
+    import builtins
+
+    store, _deployment, rec = _published(tmp_path)
+    fresh = Registry()
+
+    # Simulate the absence of the `wasm` extra: importing the wasm executor (which
+    # imports wasmtime at module top) raises ModuleNotFoundError.
+    import composable_agents.execution.wasm_executor as wasm_mod
+
+    monkeypatch.delitem(
+        __import__("sys").modules,
+        "composable_agents.execution.wasm_executor",
+        raising=False,
+    )
+    real_import = builtins.__import__
+
+    def _fake_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "composable_agents.execution.wasm_executor" or name == "wasmtime":
+            raise ModuleNotFoundError("No module named 'wasmtime'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _fake_import)
+
+    with pytest.raises(BundleResolutionError) as excinfo:
+        _resolve(store, rec, fresh, monkeypatch)
+
+    message = str(excinfo.value)
+    assert "wasm" in message
+    assert "composable-agents[wasm]" in message
+    # The wasm pures must NOT have been registered before the fast failure.
+    assert not fresh.pures
+    # Sanity: the real module is still importable after the test (monkeypatch undo).
+    assert wasm_mod is not None
 
 
 def test_different_hash_collision_errors_with_operator_guidance(
@@ -268,37 +366,27 @@ def test_different_hash_collision_errors_with_operator_guidance(
     assert "stale bundle" in message
 
 
-def test_dev_gate_blocks_without_env_and_explicit_grant_skips_gate(
+def test_resolution_is_ungated_and_registers_wasm_tier(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # P3: the former P2 dev-only CA_BUNDLE_NATIVE_EXEC native-exec gate is gone.
+    # Bundle pures run in the wasm sandbox (not natively in-process), so
+    # resolution succeeds by default and registers pures as the wasm tier.
     store, _deployment, rec = _published(tmp_path)
     monkeypatch.delenv("CA_BUNDLE_NATIVE_EXEC", raising=False)
     fresh = Registry()
-
-    with pytest.raises(BundleResolutionError) as excinfo:
-        resolve_and_register(
-            store,
-            rec["bundleHash"],
-            signature_digest=rec["signatureDigest"],
-            allowed_signers=[_public_key(SEED_A)],
-            registry=fresh,
-        )
-
-    message = str(excinfo.value)
-    assert "CA_BUNDLE_NATIVE_EXEC" in message
-    assert "wasm" in message
-    assert fresh.pures == {}
 
     resolved = resolve_and_register(
         store,
         rec["bundleHash"],
         signature_digest=rec["signatureDigest"],
         allowed_signers=[_public_key(SEED_A)],
-        require_native_grant=False,
         registry=fresh,
     )
+
     assert resolved["registered"]
+    assert all(entry.executor == "wasm" for entry in fresh.pures.values())
 
 
 def test_hand_built_manifest_rejects_std_pure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -330,7 +418,6 @@ def test_hand_built_manifest_rejects_std_pure(tmp_path: Path, monkeypatch: pytes
     }
     bundle_hash = store.put(canonical_json(manifest).encode("utf-8"))
     signature_digest = _put_signature(store, bundle_hash, SEED_A)
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
 
     with pytest.raises(BundleResolutionError, match="std.bad"):
         resolve_and_register(
@@ -382,7 +469,6 @@ def test_source_hash_mismatch_in_manifest_fails_before_registration(
         ).encode("utf-8")
     )
     signature_digest = _put_signature(store, bundle_hash, SEED_A)
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
     fresh = Registry()
 
     with pytest.raises(BundleResolutionError) as excinfo:
@@ -408,7 +494,6 @@ def test_load_bundles_from_env_registers_idempotently(
     monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
     monkeypatch.setenv("CA_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
     monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", f" {_public_key(SEED_A)} ")
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
 
     first = load_bundles_from_env(registry=fresh)
     second = load_bundles_from_env(registry=fresh)
@@ -506,7 +591,6 @@ def test_bundle_runner_resolves_flow_input_bundle_before_activation(
     store, deployment, rec = _published(tmp_path)
     fresh = Registry()
     monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
     dummy = _DummyInstance()
     runner = BundleResolvingWorkflowRunner(
         inner=_DummyRunner(dummy),

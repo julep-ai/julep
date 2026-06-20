@@ -22,11 +22,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "examples"))
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives import serialization  # noqa: E402
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey  # noqa: E402
 
-import grade_scores_flow
-from composable_agents.cas import LocalDirCAS
+import grade_scores_flow  # noqa: E402
+from composable_agents.cas import LocalDirCAS  # noqa: E402
 
 # DEMO KEY — a fixed ed25519 seed so the demo is reproducible. This is NOT a
 # secret; a real deployment generates a seed and keeps it out of the repo.

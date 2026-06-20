@@ -30,7 +30,13 @@ from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
 
 from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest, contract_allows_retry
 from ..derived import flatten_race_group
-from ..errors import POLICY_ERRORS, CapabilityDenied, ComposableAgentsError, RaceAllFailed
+from ..errors import (
+    POLICY_ERRORS,
+    CapabilityDenied,
+    ComposableAgentsError,
+    PureExecutionError,
+    RaceAllFailed,
+)
 from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SLEEP_TOOL, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import EnforcementMode, Op
@@ -192,6 +198,17 @@ async def interpret(
 
     try:
         out = await _eval(node, value, env, cid, planned)
+    except PureExecutionError as err:
+        # A wasm-tier pure trapped/raised inside the sandbox. Surface its
+        # structured, operator-actionable diagnostic on the projection FAILED
+        # event (and thus the span) — not the bare literal "framework-error" the
+        # generic ComposableAgentsError branch would record. This is the
+        # span-bearing-diagnostics contract: a sandbox trap must be at least as
+        # informative in the span as an ordinary native-pure error.
+        env.emitter.fail(
+            node.id, cid, f"{err.error_type}: {err.message}", causes=(planned,)
+        )
+        raise
     except ComposableAgentsError:
         env.emitter.fail(node.id, cid, "framework-error", causes=(planned,))
         raise

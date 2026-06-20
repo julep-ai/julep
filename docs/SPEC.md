@@ -307,7 +307,7 @@ MUST NOT be mutated in place — add `.v2`.
     "sourceHash": "pure:0123456789abcdef",
     "abi": "python-source/json-v1",
     "bundleHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-    "executorTier": "native"
+    "executorTier": "wasm"
   }
 }
 ```
@@ -315,8 +315,10 @@ MUST NOT be mutated in place — add `.v2`.
 - `sourceHash` is the registry pin (`pure:` plus 16 hex chars).
 - `abi` is the call ABI used to load and execute the pure.
 - `bundleHash` is the full sha256 CAS digest of the bundle manifest.
-- `executorTier` is the tier that executes the pure (`native` until the wasm
-  tier ships).
+- `executorTier` is the tier that executes the pure. Bundle-sourced pures
+  (`register_pure_from_source`) resolve to `wasm` (the wasmtime sandbox); baked
+  `register_pure`/`std.*` pures stay `native`. The published `pureRuntimeRefs`
+  for a bundle therefore record `wasm`.
 - `envHash` is the dependency environment identity. It is absent until
   deps-as-data lands and MUST be serialized only when set.
 

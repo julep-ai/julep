@@ -35,8 +35,9 @@ spec:
               value: "__CA_BUNDLES__"
             - name: CA_BUNDLE_ALLOWED_SIGNERS
               value: "__SIGNER__"
-            - name: CA_BUNDLE_NATIVE_EXEC   # P2 native in-process exec is dev-gated
-              value: "1"
+            # P3: bundle-sourced pures run in the wasmtime sandbox (not natively
+            # in-process), so resolution is ungated -- the old P2 dev-only
+            # CA_BUNDLE_NATIVE_EXEC=1 flag is gone.
           volumeMounts:
             - name: cas
               mountPath: /cas

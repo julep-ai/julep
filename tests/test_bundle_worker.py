@@ -46,7 +46,6 @@ def test_make_context_resolves_bundle_pures_and_returns_worker_context(
     monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
     monkeypatch.setenv("CA_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
     monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
-    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
 
     fresh = Registry()
     context = make_context(registry=fresh)
@@ -57,6 +56,8 @@ def test_make_context_resolves_bundle_pures_and_returns_worker_context(
         fresh.source_hash_of("bundle.genericworker.tag.v1")
         == expected["bundle.genericworker.tag.v1"]
     )
+    # Startup resolution registers the bundle pure as the wasm tier end to end.
+    assert fresh.pures["bundle.genericworker.tag.v1"].executor == "wasm"
 
 
 def test_make_context_with_no_bundles_is_a_clean_noop(

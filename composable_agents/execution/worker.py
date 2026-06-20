@@ -117,7 +117,13 @@ def build_worker(
     workflow-side registry lookups (pures, brains) see the worker process's real
     registries; without it, sandbox re-imports yield empty registries and flows
     with ``arr``/registry-dependent leaves hang in a WorkflowTaskFailed retry
-    loop. Pass your own ``workflow_runner`` to override.
+    loop. It also passes ``wasmtime`` through so bundle-sourced
+    (``tier="wasm"``) pures invoked synchronously inside workflow code share the
+    worker process-global wasmtime ``Engine`` and compiled ``Component``; the
+    wasm executor is process-global and lazily initialized. Without it, the
+    sandbox would re-import ``wasmtime`` and the workflow-side wasm pure call
+    would not share that process-global engine/component. Pass your own
+    ``workflow_runner`` to override.
     """
     configure(context)
     if "workflow_runner" not in worker_kwargs:
@@ -126,7 +132,8 @@ def build_worker(
         worker_kwargs["workflow_runner"] = BundleResolvingWorkflowRunner(
             inner=SandboxedWorkflowRunner(
                 restrictions=SandboxRestrictions.default.with_passthrough_modules(
-                    "composable_agents"
+                    "composable_agents",
+                    "wasmtime",
                 )
             ),
             store=store,

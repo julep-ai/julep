@@ -117,13 +117,18 @@ def _custom_pure_sources(
                 f"deploy-time pin {pinned}, registry has {current_hash}"
             )
 
-        try:
-            source = inspect.getsource(entry.fn)
-        except (OSError, TypeError) as e:
-            raise BundlePureSourceError(
-                f"pure {name!r} source is not inspectable, so it cannot be shipped; "
-                "register it from an importable source file before publish"
-            ) from e
+        if entry.source is not None:
+            # A wasm-tier (bundle-sourced) entry already carries its canonical
+            # shipped text; never re-inspect a fn (there is no host fn object).
+            source = entry.source
+        else:
+            try:
+                source = inspect.getsource(entry.fn)
+            except (OSError, TypeError) as e:
+                raise BundlePureSourceError(
+                    f"pure {name!r} source is not inspectable, so it cannot be shipped; "
+                    "register it from an importable source file before publish"
+                ) from e
 
         actual_hash = _text_hash(source)
         if actual_hash != entry.source_hash:
@@ -179,12 +184,15 @@ def publish_bundle(
     signature_digest = store.put(
         _canonical_bytes(_signature_blob(manifest_bytes, bundle_hash, signing_key))
     )
+    # Bundle (register_pure_from_source) pures resolve to the WASM tier on a
+    # worker; the published runtime identity must reflect that real executor tier,
+    # not 'native'. std.* pures never appear in manifest_pures (they stay baked).
     pure_runtime_refs = {
         pure_record["name"]: {
             "sourceHash": pure_record["sourceHash"],
             "abi": pure_record["abi"],
             "bundleHash": bundle_hash,
-            "executorTier": "native",
+            "executorTier": "wasm",
         }
         for pure_record in manifest_pures
     }

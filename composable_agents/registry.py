@@ -8,12 +8,11 @@ ergonomics for the default process-global path.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import inspect
-import linecache
 from collections.abc import Mapping
 from dataclasses import dataclass
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 if TYPE_CHECKING:
@@ -22,11 +21,56 @@ if TYPE_CHECKING:
 PureFn = Callable[..., Any]
 
 
+def _wasm_source_only(*_args: object, **_kwargs: object) -> object:
+    """The ``fn`` placeholder for a wasm-tier (bundle-sourced) pure.
+
+    Bundle source is NEVER exec'd on the host: a wasm-tier pure executes only
+    inside the wasmtime sandbox (via :meth:`Registry.get_pure`). This sentinel
+    keeps ``PureEntry.fn`` populated without ever running bundle code on the host;
+    calling it is a programming error, never a real execution path.
+    """
+    raise RuntimeError(
+        "wasm-tier pure has no host-callable fn; it executes only inside the "
+        "wasm sandbox via get_pure"
+    )
+
+
+def _pure_decorator_name(source: str, name: str) -> bool:
+    """Validate the ``@pure(<name-literal>)`` contract by static analysis.
+
+    Parses ``source`` with :mod:`ast` (no execution) and returns ``True`` iff a
+    top-level ``def`` carries a ``@pure("<name>")`` decorator whose string-literal
+    argument equals ``name``. This is how bundle source is admitted without ever
+    exec'ing its module-level code on the host.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False
+    for node in tree.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for decorator in node.decorator_list:
+            if not isinstance(decorator, ast.Call):
+                continue
+            target = decorator.func
+            if not (isinstance(target, ast.Name) and target.id == "pure"):
+                continue
+            if len(decorator.args) != 1 or decorator.keywords:
+                continue
+            arg = decorator.args[0]
+            if isinstance(arg, ast.Constant) and arg.value == name:
+                return True
+    return False
+
+
 @dataclass(frozen=True)
 class PureEntry:
     name: str
     fn: PureFn
     source_hash: str
+    executor: str = "native"
+    source: str | None = None
 
 
 @dataclass(frozen=True)
@@ -90,70 +134,90 @@ class Registry:
     def register_pure(self, name: str, fn: PureFn) -> PureEntry:
         if name in self.pures and self.pures[name].fn is not fn:
             raise ValueError(f"pure name already registered to a different fn: {name!r}")
-        entry = PureEntry(name=name, fn=fn, source_hash=_source_hash(fn))
+        entry = PureEntry(
+            name=name,
+            fn=fn,
+            source_hash=_source_hash(fn),
+            executor="native",
+            source=None,
+        )
         self.pures[name] = entry
         return entry
 
     def register_pure_from_source(self, name: str, source: str) -> PureEntry:
+        """Register a bundle-sourced pure as the wasm tier WITHOUT host execution.
+
+        The bundle's shipped source is the body of an untrusted (if signed) pure:
+        it must run fail-closed inside the wasm sandbox, never on the host. So we
+        do not ``exec`` it here. We validate the ``@pure(name)`` contract by static
+        analysis (:func:`_pure_decorator_name`), pin the source text on a
+        wasm-tier :class:`PureEntry`, and leave the actual execution to
+        :meth:`get_pure` -> the wasmtime component. ``PureEntry.fn`` is set to the
+        :func:`_wasm_source_only` sentinel: no host fn object is ever created or
+        called for a bundle pure.
+        """
         expected_hash = _text_hash(source)
         existing = self.pures.get(name)
         if existing is not None:
-            if existing.source_hash == expected_hash:
+            if existing.source_hash != expected_hash:
+                raise ValueError(
+                    f"bundled source for pure {name!r} disagrees with baked registration: "
+                    f"{existing.source_hash} != {expected_hash}"
+                )
+            # Same hash. Only a TRUE no-op when the entry is already wasm-tier: an
+            # equal-hash baked (native) entry must still be PROMOTED to wasm so a
+            # bundle-sourced pure never escapes the sandbox just because the same
+            # source happens to be baked into the worker. (std.* is forbidden at
+            # the resolution boundary, so it never reaches here; never overwrite.)
+            if existing.executor == "wasm":
                 return existing
+            if name.startswith("std."):
+                raise ValueError(
+                    f"refusing to register std pure {name!r} from bundle source; "
+                    "std pures stay baked/native"
+                )
+            # Fall through: replace the equal-hash native entry with a wasm entry.
+
+        # Preserve the historical local invariant that the shipped text ends in a
+        # newline (the published sourceHash is computed over that canonical text);
+        # surface it as a hash mismatch so the wording matches existing callers.
+        if not source.endswith("\n"):
             raise ValueError(
-                f"bundled source for pure {name!r} disagrees with baked registration: "
-                f"{existing.source_hash} != {expected_hash}"
+                f"source hash mismatch for pure {name!r}: shipped source must end "
+                "with a trailing newline to match its pinned sourceHash"
             )
 
-        filename = f"<cas-pure:{name}:{expected_hash}>"
-        source_for_compile = source if source.endswith("\n") else f"{source}\n"
-        linecache.cache[filename] = (
-            len(source_for_compile),
-            None,
-            source_for_compile.splitlines(keepends=True),
-            filename,
+        if not _pure_decorator_name(source, name):
+            raise ValueError(f"source did not register requested pure {name!r}")
+
+        wasm_entry = PureEntry(
+            name=name,
+            fn=_wasm_source_only,
+            source_hash=expected_hash,
+            executor="wasm",
+            source=source,
         )
-
-        def pure(pure_name: str | PureFn, /) -> PureFn | Callable[[PureFn], PureFn]:
-            if not isinstance(pure_name, str):
-                self.register_pure(pure_name.__name__, pure_name)
-                return pure_name
-
-            def deco(fn: PureFn) -> PureFn:
-                self.register_pure(pure_name, fn)
-                return fn
-
-            return deco
-
-        module = ModuleType(f"_composable_agents_cas_pure_{name.replace('.', '_')}")
-        module.__dict__["__file__"] = filename
-        module.__dict__["pure"] = pure
-        code = compile(source_for_compile, filename, "exec")
-        before = dict(self.pures)
-        try:
-            exec(code, module.__dict__)
-
-            entry = self.pures.get(name)
-            if entry is None:
-                raise ValueError(f"source did not register requested pure {name!r}")
-            if entry.source_hash != expected_hash:
-                raise ValueError(
-                    f"source hash mismatch for pure {name!r}: "
-                    f"{entry.source_hash} != {expected_hash}"
-                )
-            return entry
-        except Exception:
-            self.pures.clear()
-            self.pures.update(before)
-            raise
+        self.pures[name] = wasm_entry
+        return wasm_entry
 
     def get_pure(self, name: str) -> PureFn:
         try:
-            return self.pures[name].fn
+            entry = self.pures[name]
         except KeyError as e:
             raise KeyError(
                 f"unknown pure {name!r}; register it with @pure({name!r}) on a worker"
             ) from e
+        if entry.executor == "wasm":
+            source = entry.source
+            if source is None:
+                return entry.fn
+            from .execution.wasm_executor import get_wasm_executor
+
+            def wasm_bound(value: Any, **kwargs: Any) -> Any:
+                return get_wasm_executor().run(name, source, value, kwargs)
+
+            return wasm_bound
+        return entry.fn
 
     def is_registered(self, name: str) -> bool:
         return name in self.pures

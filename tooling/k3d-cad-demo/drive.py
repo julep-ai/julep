@@ -21,9 +21,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from temporalio.client import Client
+from temporalio.client import Client  # noqa: E402
 
-from examples.grade_scores_flow import SCORES, build
+from examples.grade_scores_flow import SCORES, build  # noqa: E402
 
 
 async def main() -> None:
