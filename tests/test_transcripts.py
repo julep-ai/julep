@@ -575,8 +575,9 @@ def test_agent_workflow_threads_transcript_plan_into_invoke_brain(monkeypatch) -
     )
     out = asyncio.run(AgentWorkflow().run(inp))
     assert out["status"] == "done"
-    (brain_payload,) = payloads
-    assert isinstance(brain_payload, harness.InvokeBrainInput)
+    brain_payloads = [p for p in payloads if isinstance(p, harness.InvokeBrainInput)]
+    assert len(brain_payloads) == 1
+    brain_payload = brain_payloads[0]
     assert brain_payload.transcript == [{"role": "user", "content": {"task": "go"}}]
     assert brain_payload.ctx == {"scope": "whole_session", "maxTokens": 500}
     assert brain_payload.summary is None
@@ -597,7 +598,9 @@ def test_agent_workflow_local_scope_sends_no_transcript(monkeypatch) -> None:
         resolve_spec=False,
     )
     asyncio.run(AgentWorkflow().run(inp))
-    (brain_payload,) = payloads
+    brain_payloads = [p for p in payloads if isinstance(p, harness.InvokeBrainInput)]
+    assert len(brain_payloads) == 1
+    brain_payload = brain_payloads[0]
     assert brain_payload.transcript is None and brain_payload.ctx is None
 
 
@@ -607,7 +610,8 @@ def test_summary_survives_temporal_continue_as_new(monkeypatch) -> None:
     payloads: list[Any] = []
 
     async def fake_execute_activity(fn, payload, **kwargs):
-        payloads.append(payload)
+        if fn.__name__ not in {"startTrajectory", "finishTrajectory"}:
+            payloads.append(payload)
         if fn.__name__ == "invokeBrain":
             # The activity ran the summarizer: envelope with the new summary.
             return {SUMMARY_KEY: "carried summary", "reply": {"tool": "t", "input": 1}}

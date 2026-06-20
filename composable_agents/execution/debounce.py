@@ -61,6 +61,8 @@ class DebounceInput:
     # whole batch runs as one principal — a multi-tenant stream is one
     # collector per tenant key, by construction of `key`.
     principal: Optional[dict[str, Any]] = None
+    # Signed CAS bundle pointers for custom pures referenced by flow_json.
+    bundle: Optional[list[dict[str, str]]] = None
     # Continue-as-new carriage: batch ordinal, items left over from the
     # previous segment (capped surplus + arrivals during execution), and the
     # carried batch clocks (ISO timestamps from workflow.now()).
@@ -155,6 +157,7 @@ class DebounceCollector:
                 max_call_limits=inp.max_call_limits,
                 policy=inp.policy,
                 principal=inp.principal,
+                bundle=inp.bundle,
             ),
             id=child_id,
         )
@@ -189,6 +192,7 @@ async def submit_debounced(
     pinned_pures: Optional[dict[str, str]] = None,
     max_call_limits: Optional[dict[str, int]] = None,
     principal: Optional[dict[str, Any]] = None,
+    bundle: Optional[list[dict[str, str]]] = None,
 ):
     """Submit one item to the debounced batch for ``key`` (signal-with-start).
 
@@ -217,6 +221,7 @@ async def submit_debounced(
             pinned_pures=pinned_pures,
             max_call_limits=max_call_limits,
             principal=principal,
+            bundle=bundle,
         ),
         id=f"debounce:{key}",
         task_queue=task_queue,

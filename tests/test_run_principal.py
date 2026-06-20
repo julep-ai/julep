@@ -27,11 +27,13 @@ from composable_agents.execution.effects import (
     compilePlan,
     configure,
     invokeBrain,
+    resolveSubflow,
 )
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
 
 PRINCIPAL = {"storeId": 413, "tokenRef": "cred_abc"}
+BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
 
 
 def _emitter() -> ProjectionEmitter:
@@ -261,6 +263,16 @@ def test_interpret_keyword_installs_principal():
     assert seen["principal"] == PRINCIPAL
 
 
+def test_resolve_subflow_returns_bundle_metadata():
+    flow_json = ident().to_json()
+    configure(WorkerContext(subflows={"child": {"flowJson": flow_json, "bundle": BUNDLE_REF}}))
+
+    out = asyncio.run(resolveSubflow("child"))
+
+    assert out["flowJson"] == flow_json
+    assert out["bundle"] == BUNDLE_REF
+
+
 # --------------------------------------------------------------------------- #
 # Temporal env: the principal is stamped into every effect payload, inherited
 # by children, and carried across continue-as-new in both workflows.
@@ -338,6 +350,33 @@ def test_temporal_children_inherit_principal(monkeypatch):
     assert isinstance(agent_input, AgentInput) and agent_input.principal == PRINCIPAL
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_temporal_ref_child_starts_with_child_bundle(monkeypatch):
+    children = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        assert fn.__name__ == "resolveSubflow"
+        assert payload == "child"
+        return {"bundle": BUNDLE_REF}
+
+    async def fake_execute_child_workflow(fn, child_input, **kwargs):
+        children.append(child_input)
+        return "child-result"
+
+    monkeypatch.setattr(harness, "_bundle_ref_child_input_enabled", lambda: True)
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(harness.workflow, "execute_child_workflow", fake_execute_child_workflow)
+    env = _temporal_env(PRINCIPAL)
+
+    asyncio.run(env.run_sub("child", None, 5, "cid-1"))
+
+    (sub_input,) = children
+    assert isinstance(sub_input, FlowInput)
+    assert sub_input.ref == "child"
+    assert sub_input.bundle == BUNDLE_REF
+    assert sub_input.principal == PRINCIPAL
+
+
 def _always_continue(value):
     return continue_with({"n": value.get("n", 0) + 1})
 
@@ -364,6 +403,7 @@ def test_flow_workflow_continue_as_new_carries_principal(monkeypatch):
         manifest_json={},
         max_call_limits={},
         principal=PRINCIPAL,
+        bundle=BUNDLE_REF,
     )
     with pytest.raises(_Stop):
         asyncio.run(FlowWorkflow().run(inp))
@@ -372,7 +412,47 @@ def test_flow_workflow_continue_as_new_carries_principal(monkeypatch):
     assert isinstance(next_input, FlowInput)
     # A segment restarting with principal=None when the run had one is a bug.
     assert next_input.principal == PRINCIPAL
+    assert next_input.bundle == BUNDLE_REF
     assert next_input.input == {"n": 1}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_sub_child_starts_with_child_bundle(monkeypatch):
+    children = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        if fn.__name__ == "invokeBrain":
+            return {"sub": "child", "input": 1}
+        if fn.__name__ == "resolveSubflow":
+            assert payload == "child"
+            return {"bundle": BUNDLE_REF}
+        raise AssertionError(f"unexpected activity {fn.__name__}")
+
+    async def fake_execute_child_workflow(fn, child_input, **kwargs):
+        children.append(child_input)
+        return "child-result"
+
+    monkeypatch.setattr(harness, "_bundle_ref_child_input_enabled", lambda: True)
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(harness.workflow, "execute_child_workflow", fake_execute_child_workflow)
+
+    inp = AgentInput(
+        controller="ctrl",
+        session_id="sess",
+        input=5,
+        config={"maxRounds": 1, "budget": {"cost": 1000}},
+        granted_subflows=["child"],
+        resolve_spec=False,
+        principal=PRINCIPAL,
+    )
+    out = asyncio.run(AgentWorkflow().run(inp))
+
+    assert out["status"] == "max_rounds"
+    (sub_input,) = children
+    assert isinstance(sub_input, FlowInput)
+    assert sub_input.ref == "child"
+    assert sub_input.bundle == BUNDLE_REF
+    assert sub_input.principal == PRINCIPAL
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -381,7 +461,8 @@ def test_agent_workflow_continue_as_new_carries_principal(monkeypatch):
     payloads = []
 
     async def fake_execute_activity(fn, payload, **kwargs):
-        payloads.append(payload)
+        if fn.__name__ not in {"startTrajectory", "finishTrajectory"}:
+            payloads.append(payload)
         if fn.__name__ == "invokeBrain":
             return {"tool": "t", "input": 1}
         return {"hand": "out"}

@@ -206,6 +206,25 @@ def _bundle_entries(raw: str) -> list[tuple[str, str]]:
     return entries
 
 
+def resolve_entries(
+    store: CASStore,
+    entries: Sequence[tuple[str, str]],
+    *,
+    registry: Registry = DEFAULT_REGISTRY,
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for bundle_hash, signature_digest in entries:
+        records.append(
+            resolve_and_register(
+                store,
+                bundle_hash.lower(),
+                signature_digest=signature_digest.lower(),
+                registry=registry,
+            )
+        )
+    return records
+
+
 def load_bundles_from_env(*, registry: Registry = DEFAULT_REGISTRY) -> list[dict[str, Any]]:
     raw = os.environ.get("CA_BUNDLES", "")
     if raw.strip() == "":
@@ -216,14 +235,4 @@ def load_bundles_from_env(*, registry: Registry = DEFAULT_REGISTRY) -> list[dict
         raise BundleResolutionError("STORE_URL is required when CA_BUNDLES is set")
 
     store = cas_from_url(store_url)
-    records: list[dict[str, Any]] = []
-    for bundle_hash, signature_digest in _bundle_entries(raw):
-        records.append(
-            resolve_and_register(
-                store,
-                bundle_hash,
-                signature_digest=signature_digest,
-                registry=registry,
-            )
-        )
-    return records
+    return resolve_entries(store, _bundle_entries(raw), registry=registry)

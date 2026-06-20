@@ -8,7 +8,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import arr, deploy, pure, seq
+from composable_agents import HAVE_TEMPORAL, arr, deploy, pure, seq
 from composable_agents.bundle import ABI_PYTHON_SOURCE_JSON_V1
 from composable_agents.cas import CASIntegrityError, LocalDirCAS
 from composable_agents.contracts import manifest_from_json
@@ -18,6 +18,21 @@ from composable_agents.projection import InMemoryProjection, ProjectionEmitter
 from composable_agents.registry import Registry, _text_hash
 from composable_agents.worker_store import BundleResolutionError, load_bundles_from_env, resolve_and_register
 from conftest import read_snapshot, run
+
+if HAVE_TEMPORAL:
+    from temporalio.api.common.v1 import Payloads
+    from temporalio.bridge.proto.workflow_activation import WorkflowActivation
+    from temporalio.bridge.proto.workflow_completion import WorkflowActivationCompletion
+    from temporalio.converter import DefaultFailureConverter, DefaultPayloadConverter
+    from temporalio.worker import WorkflowInstance, WorkflowRunner
+    from temporalio.worker._workflow_instance import WorkflowInstanceDetails
+
+    from composable_agents.execution.bundle_runner import (
+        BundleResolvingWorkflowRunner,
+        _BundleResolvingInstance,
+        _bundle_entries,
+    )
+    from composable_agents.execution.harness import FlowInput
 
 
 SEED_A = "11" * 32
@@ -419,3 +434,142 @@ def test_load_bundles_from_env_noop_and_errors(
     monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
     with pytest.raises(BundleResolutionError, match="<bundleHash>:<signatureDigest>"):
         load_bundles_from_env(registry=fresh)
+
+
+if HAVE_TEMPORAL:
+
+    class _DummyInstance(WorkflowInstance):
+        def __init__(self) -> None:
+            self.activated = 0
+
+        def activate(self, act: WorkflowActivation) -> WorkflowActivationCompletion:
+            self.activated += 1
+            return WorkflowActivationCompletion()
+
+        def get_serialization_context(self, command_info):
+            return None
+
+        def get_external_store_context(self, command_info):
+            return None
+
+        def get_info(self):
+            return None
+
+    class _DummyRunner(WorkflowRunner):
+        def __init__(self, instance: _DummyInstance) -> None:
+            self.instance = instance
+            self.prepared = []
+            self.failure_types = []
+
+        def prepare_workflow(self, defn) -> None:
+            self.prepared.append(defn)
+
+        def create_instance(self, det: WorkflowInstanceDetails) -> WorkflowInstance:
+            return self.instance
+
+        def set_worker_level_failure_exception_types(self, types) -> None:
+            self.failure_types = list(types)
+
+
+def _workflow_details() -> "WorkflowInstanceDetails":
+    return WorkflowInstanceDetails(
+        payload_converter_class=DefaultPayloadConverter,
+        failure_converter_class=DefaultFailureConverter,
+        interceptor_classes=[],
+        defn=None,
+        info=None,
+        randomness_seed=1,
+        extern_functions={},
+        disable_eager_activity_execution=False,
+        worker_level_failure_exception_types=[],
+        last_completion_result=Payloads(),
+        last_failure=None,
+    )
+
+
+def _flow_activation(bundle: list[dict[str, str]]) -> "WorkflowActivation":
+    converter = DefaultPayloadConverter()
+    act = WorkflowActivation()
+    job = act.jobs.add()
+    job.initialize_workflow.workflow_type = "FlowWorkflow"
+    job.initialize_workflow.arguments.extend(
+        converter.to_payloads([FlowInput(session_id="sess", flow_json={}, manifest_json={}, bundle=bundle)])
+    )
+    return act
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_bundle_runner_resolves_flow_input_bundle_before_activation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store, deployment, rec = _published(tmp_path)
+    fresh = Registry()
+    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
+    monkeypatch.setenv("CA_BUNDLE_NATIVE_EXEC", "1")
+    dummy = _DummyInstance()
+    runner = BundleResolvingWorkflowRunner(
+        inner=_DummyRunner(dummy),
+        store=store,
+        registry=fresh,
+    )
+    bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
+
+    instance = runner.create_instance(_workflow_details())
+    instance.activate(_flow_activation(bundle))
+    instance.activate(_flow_activation(bundle))
+
+    assert dummy.activated == 2
+    assert fresh.source_hash_of("bundle.worker.normalize.v1") == deployment.artifact_components[
+        "pureSourceHashes"
+    ]["bundle.worker.normalize.v1"]
+    assert fresh.source_hash_of("bundle.worker.summarize.v1") == deployment.artifact_components[
+        "pureSourceHashes"
+    ]["bundle.worker.summarize.v1"]
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_bundle_runner_is_inert_without_store(tmp_path: Path) -> None:
+    _store, _deployment, rec = _published(tmp_path)
+    fresh = Registry()
+    dummy = _DummyInstance()
+    runner = BundleResolvingWorkflowRunner(
+        inner=_DummyRunner(dummy),
+        store=None,
+        registry=fresh,
+    )
+    bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
+
+    runner.create_instance(_workflow_details()).activate(_flow_activation(bundle))
+
+    assert dummy.activated == 1
+    assert fresh.pures == {}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_bundle_runner_forwards_current_workflow_instance_abstract_methods() -> None:
+    assert WorkflowInstance.__abstractmethods__ == frozenset(
+        {"activate", "get_serialization_context", "get_external_store_context", "get_info"}
+    )
+    assert _BundleResolvingInstance.__abstractmethods__ == frozenset()
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_bundle_entries_fail_closed_on_malformed() -> None:
+    # A present-but-malformed bundle ref must FAIL CLOSED (raise), never be
+    # silently skipped -- otherwise a flow meant to run signed pures falls back
+    # to ambient/stale registry state, defeating the code-as-data signing
+    # guarantee. A genuinely absent bundle stays a valid no-op.
+    good = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
+    assert _bundle_entries(None) == []
+    assert _bundle_entries([]) == []
+    assert _bundle_entries(good) == [("a" * 64, "b" * 64)]
+
+    with pytest.raises(BundleResolutionError):
+        _bundle_entries({"bundleHash": "a" * 64, "signatureDigest": "b" * 64})  # not a list
+    with pytest.raises(BundleResolutionError):
+        _bundle_entries([42])  # entry not an object
+    with pytest.raises(BundleResolutionError):
+        _bundle_entries([{"bundleHash": "a" * 64}])  # missing signatureDigest
+    with pytest.raises(BundleResolutionError):
+        _bundle_entries([{"bundleHash": "nothex", "signatureDigest": "b" * 64}])  # bad hex

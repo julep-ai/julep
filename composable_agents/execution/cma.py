@@ -270,6 +270,10 @@ class CMAAgentEnv:
         self.emitter = inner.emitter
         self.native_call_retries = getattr(inner, "native_call_retries", False)
         self.principal = getattr(inner, "principal", None)
+        # Run identity for the trajectory plane mirrors the inner env exactly,
+        # like ``principal``: the interpreter never reads it; engine envs stamp it.
+        self.root_run_id = getattr(inner, "root_run_id", None)
+        self.segment_seq = getattr(inner, "segment_seq", 0)
         self._client = client
         self._environment = environment
         self._hands = hands
@@ -299,8 +303,15 @@ class CMAAgentEnv:
     ) -> Any:
         return await self._inner.invoke_brain(brain, value, cid, timeout_s)
 
-    async def run_sub(self, ref: str, contract: SubContract, value: Any, cid: str) -> Any:
-        return await self._inner.run_sub(ref, contract, value, cid)
+    async def run_sub(
+        self,
+        ref: str,
+        contract: SubContract,
+        value: Any,
+        cid: str,
+        node_id: Optional[str] = None,
+    ) -> Any:
+        return await self._inner.run_sub(ref, contract, value, cid, node_id)
 
     async def run_agent(
         self,

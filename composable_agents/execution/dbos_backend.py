@@ -55,6 +55,7 @@ from ..errors import (
 from ..ir import Node
 from ..kinds import Op
 from ..projection import InMemoryProjection, ProjectionEmitter, ProjectionSink, TeeStore
+from ..trajectory import ProjectionTrajectorySink
 from ..turn import Halt, controller_turn, make_finalize, pre_round
 from . import effects
 from .effects import (
@@ -62,6 +63,7 @@ from .effects import (
     CompilePlanInput,
     InvokeBrainInput,
     PutBlobInput,
+    RunSubInput,
     toolref_json_from_key,
 )
 from .interpreter import (
@@ -127,6 +129,32 @@ def set_projection_sink(sink: Optional[ProjectionSink]) -> None:
     _PROJECTION_SINK = sink
 
 
+def _make_projection_emitter(
+    node_ops: dict[str, str],
+    *,
+    run_id: str,
+    root_run_id: str,
+    segment_seq: int,
+) -> ProjectionEmitter:
+    store = InMemoryProjection()
+    sinks: list[ProjectionSink] = []
+    if _PROJECTION_SINK is not None:
+        sinks.append(_PROJECTION_SINK)
+    if effects._TRAJECTORY_SINK is not None:
+        # Temporal sources structural trajectory steps through a history
+        # interceptor, not an in-workflow projection sink.
+        sinks.append(
+            ProjectionTrajectorySink(
+                effects._TRAJECTORY_SINK,
+                run_id=run_id,
+                root_run_id=root_run_id,
+                segment_seq=segment_seq,
+                node_ops=node_ops,
+            )
+        )
+    return ProjectionEmitter(TeeStore(store, *sinks) if sinks else store)
+
+
 # --------------------------------------------------------------------------- #
 # Effect steps. Names are stable identifiers in DBOS's workflow_status table.
 # --------------------------------------------------------------------------- #
@@ -165,6 +193,13 @@ async def invokeBrainStep(inp: dict) -> Any:
                 ctx=inp.get("ctx"),
                 summarizer=inp.get("summarizer"),
                 summary=inp.get("summary"),
+                run_id=inp.get("run_id"),
+                root_run_id=inp.get("root_run_id"),
+                segment_seq=inp.get("segment_seq"),
+                node_id=inp.get("node_id"),
+                op=inp.get("op"),
+                kind=inp.get("kind"),
+                causes=tuple(inp.get("causes") or ()),
             )
         )
     except POLICY_ERRORS as exc:
@@ -213,10 +248,92 @@ async def putBlobStep(inp: dict) -> str:
     return await effects.putBlob(PutBlobInput(tenant=inp["tenant"], value=inp["value"]))
 
 
+@DBOS.step(retries_allowed=False)
+async def finishTrajectoryStep(inp: dict) -> None:
+    import time
+
+    from .. import trajectory as _traj
+    from . import effects as _effects
+
+    sink = _effects._TRAJECTORY_SINK
+    if sink is None:
+        return
+    run_id = inp.get("runId")
+    root_run_id = inp.get("rootRunId") or run_id
+    status = inp.get("status", "completed")
+    _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
+    await _effects.record_marker_step(
+        kind="final",
+        run_id=run_id,
+        root_run_id=root_run_id,
+        segment_seq=inp.get("segmentSeq"),
+        value=inp.get("finalValue"),
+        cid=f"{run_id}:final",
+        value_kind="output",
+    )
+
+
+@DBOS.step(retries_allowed=False)
+async def startTrajectoryStep(inp: dict) -> None:
+    from .. import trajectory as _traj
+    from . import effects as _effects
+
+    try:
+        await _effects.record_marker_step(
+            kind="root",
+            run_id=inp.get("runId"),
+            root_run_id=inp.get("rootRunId"),
+            segment_seq=inp.get("segmentSeq"),
+            value=inp.get("input"),
+            cid=inp["cid"],
+            value_kind="input",
+        )
+    except Exception as exc:
+        def _reraise(e: BaseException = exc) -> None:
+            raise e
+
+        _traj._best_effort(_reraise)
+
+
+@DBOS.step(retries_allowed=False)
+async def runSubCaptureStep(inp: dict) -> None:
+    from .. import trajectory as _traj
+
+    try:
+        await effects.runSub(
+            RunSubInput(
+                ref=inp["ref"],
+                value=inp["value"],
+                cid=inp["cid"],
+                principal=inp.get("principal"),
+                run_id=inp.get("run_id"),
+                root_run_id=inp.get("root_run_id"),
+                segment_seq=inp.get("segment_seq"),
+                node_id=inp.get("node_id"),
+                op=inp.get("op"),
+                kind=inp.get("kind"),
+                causes=tuple(inp.get("causes") or ()),
+            ),
+            inp.get("output"),
+        )
+    except Exception as exc:
+        def _reraise(e: BaseException = exc) -> None:
+            raise e
+
+        _traj._best_effort(_reraise)
+
+
 def _call_hand_input(inp: dict) -> CallHandInput:
     return CallHandInput(
         tool_ref=inp["tool_ref"], value=inp["value"], cid=inp["cid"],
         cache=inp.get("cache"), principal=inp.get("principal"),
+        run_id=inp.get("run_id"),
+        root_run_id=inp.get("root_run_id"),
+        segment_seq=inp.get("segment_seq"),
+        node_id=inp.get("node_id"),
+        op=inp.get("op"),
+        kind=inp.get("kind"),
+        causes=tuple(inp.get("causes") or ()),
     )
 
 
@@ -233,6 +350,9 @@ async def _run_subflow_inline(
     max_call_limits: dict[str, int],
     call_counts: dict[str, int],
     principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
+    segment_seq: int = 0,
+    node_ops: Optional[dict[str, str]] = None,
 ) -> Any:
     """Resolve ``ref`` and interpret the frozen child flow inline.
 
@@ -243,6 +363,8 @@ async def _run_subflow_inline(
     """
     resolved = await resolveSubflowStep(ref)
     child = Node.from_json(resolved["flowJson"])
+    if node_ops is not None:
+        node_ops.update({n.id: n.op.value for n in child.walk()})
     assert_dbos_executable(child)
     pinned = resolved.get("pinnedPures")
     if pinned:
@@ -256,6 +378,9 @@ async def _run_subflow_inline(
         max_call_limits=max_call_limits,
         call_counts=call_counts,
         principal=principal,
+        root_run_id=root_run_id,
+        segment_seq=segment_seq,
+        node_ops=node_ops,
     )
     r: Result = await interpret(child, value, child_env)
     return r.value
@@ -279,11 +404,17 @@ class DbosEnv:
         max_call_limits: Optional[dict[str, int]] = None,
         call_counts: Optional[dict[str, int]] = None,
         principal: Optional[dict[str, Any]] = None,
+        root_run_id: Optional[str] = None,
+        segment_seq: int = 0,
+        node_ops: Optional[dict[str, str]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
         self.native_call_retries = True
         self.principal = principal
+        self.root_run_id = root_run_id
+        self.segment_seq = segment_seq
+        self._node_ops = node_ops
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -335,6 +466,12 @@ class DbosEnv:
             "tool_ref": toolref_json_from_key(ref_key),
             "value": value, "cid": cid, "cache": cache,
             "principal": self.principal,
+            "run_id": self._session,
+            "root_run_id": self.root_run_id,
+            "segment_seq": self.segment_seq,
+            "node_id": node.id,
+            "op": "call",
+            "kind": "hand",
         })
         return decode_policy_error(out)
 
@@ -344,6 +481,11 @@ class DbosEnv:
         out = await invokeBrainStep({
             "brain": brain, "value": value, "cid": cid,
             "principal": self.principal,
+            "run_id": self._session,
+            "root_run_id": self.root_run_id,
+            "segment_seq": self.segment_seq,
+            "op": "think",
+            "kind": "brain",
         })
         return decode_policy_error(out)
 
@@ -357,8 +499,16 @@ class DbosEnv:
         assert_dbos_executable(plan)  # a compiled plan must obey backend limits too
         return plan
 
-    async def run_sub(self, ref: str, contract, value: Any, cid: str) -> Any:
-        return await _run_subflow_inline(
+    async def run_sub(
+        self,
+        ref: str,
+        contract,
+        value: Any,
+        cid: str,
+        node_id: Optional[str] = None,
+    ) -> Any:
+        # DBOS inline sub-flows do not emit a per-child final marker (deferred); only the top-level chain driver finishes the run.
+        result = await _run_subflow_inline(
             ref,
             value,
             session_id=f"{self._session}-sub-{cid}",
@@ -367,7 +517,33 @@ class DbosEnv:
             max_call_limits=self._max_call_limits,
             call_counts=dict(self._call_counts),
             principal=self.principal,
+            root_run_id=self.root_run_id,
+            segment_seq=self.segment_seq,
+            node_ops=self._node_ops,
         )
+        try:
+            await runSubCaptureStep({
+                "ref": ref,
+                "value": value,
+                "cid": cid,
+                "principal": self.principal,
+                "run_id": self._session,
+                "root_run_id": self.root_run_id,
+                "segment_seq": self.segment_seq,
+                "node_id": node_id,
+                "op": "sub",
+                "kind": "flow",
+                "causes": (),
+                "output": result,
+            })
+        except Exception as exc:
+            from .. import trajectory as _traj
+
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _traj._best_effort(_reraise)
+        return result
 
     async def run_agent(
         self, controller: str, value: Any, cid: str,
@@ -428,6 +604,8 @@ class DbosEnv:
             "policy": self._policy.to_json(),
             "resolveSpec": True,
             "principal": self.principal,
+            "rootRunId": self.root_run_id,
+            "segmentSeq": 0,
         }
         return await _run_agent_chain(payload, base_id=base_id)
 
@@ -489,19 +667,29 @@ async def flow_workflow(inp: dict) -> Any:
     flow = Node.from_json(flow_json)
     assert_dbos_executable(flow)
 
-    store = InMemoryProjection()
-    sink = _PROJECTION_SINK
-    emitter = ProjectionEmitter(TeeStore(store, sink) if sink is not None else store)
+    node_ops = {n.id: n.op.value for n in flow.walk()}
+    run_id = inp["sessionId"]
+    root_run_id = inp.get("rootRunId") or run_id
+    segment_seq = int(inp.get("segmentSeq") or 0)
+    emitter = _make_projection_emitter(
+        node_ops,
+        run_id=run_id,
+        root_run_id=root_run_id,
+        segment_seq=segment_seq,
+    )
 
     env = DbosEnv(
         manifest=manifest_from_json(manifest_json),
         emitter=emitter,
-        session_id=inp["sessionId"],
+        session_id=run_id,
         manifest_json=manifest_json,
         policy=policy,
         max_call_limits=max_call_limits,
         call_counts=inp.get("callCounts"),
         principal=inp.get("principal"),
+        root_run_id=root_run_id,
+        segment_seq=segment_seq,
+        node_ops=node_ops,
     )
     result: Result = await interpret(flow, inp.get("input"), env)
 
@@ -589,12 +777,17 @@ async def agent_workflow(inp: dict) -> Any:
     # Emitter only serves inline sub-flow interpretation; the agent loop itself
     # emits no per-round projection events (parity with Temporal's AgentWorkflow,
     # where the parent flow's Op.APP node carries the Planned/Did pair).
-    store = InMemoryProjection()
-    sink = _PROJECTION_SINK
-    emitter = ProjectionEmitter(TeeStore(store, sink) if sink is not None else store)
-
     session = inp["sessionId"]
     principal = inp.get("principal")
+    root_run_id = inp.get("rootRunId") or session
+    segment_seq = int(inp.get("segmentSeq") or 0)
+    node_ops: dict[str, str] = {}
+    emitter = _make_projection_emitter(
+        node_ops,
+        run_id=session,
+        root_run_id=root_run_id,
+        segment_seq=segment_seq,
+    )
 
     # controller_turn mutates `state` in place and returns the same object, so
     # these cid closures read state.round live: one deterministic cid per round.
@@ -612,6 +805,11 @@ async def agent_workflow(inp: dict) -> Any:
             "ctx": payload.get("ctx"),
             "summarizer": payload.get("summarizer"),
             "summary": payload.get("summary"),
+            "run_id": session,
+            "root_run_id": root_run_id,
+            "segment_seq": segment_seq,
+            "op": "think",
+            "kind": "brain",
         })
         return decode_policy_error(out)
 
@@ -631,6 +829,11 @@ async def agent_workflow(inp: dict) -> Any:
             "tool_ref": toolref_json_from_key(tool), "value": value,
             "cid": f"{session}-call-{state.round}", "cache": None,
             "principal": principal,
+            "run_id": session,
+            "root_run_id": root_run_id,
+            "segment_seq": segment_seq,
+            "op": "call",
+            "kind": "hand",
         })
         return decode_policy_error(out)
 
@@ -644,6 +847,9 @@ async def agent_workflow(inp: dict) -> Any:
             max_call_limits=al.max_call_limits_from_contracts(contracts) or {},
             call_counts=dict(state.call_counts),
             principal=principal,
+            root_run_id=root_run_id,
+            segment_seq=segment_seq,
+            node_ops=node_ops,
         )
 
     prod_gap: list[str] = []
@@ -694,6 +900,8 @@ async def agent_workflow(inp: dict) -> Any:
                 "policy": policy.to_json(),
                 "resolveSpec": False,
                 "principal": principal,
+                "rootRunId": root_run_id,
+                "segmentSeq": segment_seq + 1,
             }}
 
 
@@ -712,6 +920,7 @@ async def run_flow_dbos(
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
     principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
 ) -> Any:
     """Run a frozen flow to settlement, following continuation segments.
 
@@ -726,6 +935,23 @@ async def run_flow_dbos(
     assert_dbos_executable(Node.from_json(flow_json))
     seg_input = input
     call_counts: Optional[dict[str, int]] = None
+    effective_root_run_id = root_run_id or session_id
+    if effective_root_run_id == session_id:
+        try:
+            await startTrajectoryStep({
+                "runId": session_id,
+                "rootRunId": effective_root_run_id,
+                "segmentSeq": 0,
+                "input": input,
+                "cid": f"{effective_root_run_id}:root",
+            })
+        except Exception as exc:
+            from .. import trajectory as _traj
+
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _traj._best_effort(_reraise)
     for seg in range(max_segments):
         wfid = session_id if seg == 0 else f"{session_id}-seg{seg}"
         seg_payload = {
@@ -739,6 +965,8 @@ async def run_flow_dbos(
             "policy": (policy or ExecutionPolicy()).to_json(),
             # Every segment of the chain keeps the run's tenant identity.
             "principal": principal,
+            "rootRunId": effective_root_run_id,
+            "segmentSeq": seg,
         }
         with SetWorkflowID(wfid):
             if queue is not None:
@@ -747,6 +975,21 @@ async def run_flow_dbos(
                 handle = await DBOS.start_workflow_async(flow_workflow, seg_payload)
         out = await handle.get_result()
         if not is_continuation(out):
+            try:
+                await finishTrajectoryStep({
+                    "runId": effective_root_run_id,
+                    "rootRunId": effective_root_run_id,
+                    "status": "completed",
+                    "finalValue": out,
+                    "segmentSeq": seg,
+                })
+            except Exception as exc:
+                from .. import trajectory as _traj
+
+                def _reraise(e: BaseException = exc) -> None:
+                    raise e
+
+                _traj._best_effort(_reraise)
             return out
         call_counts = out.get("callCounts") if isinstance(out, dict) else None
         seg_input = continuation_value(out)
@@ -768,6 +1011,23 @@ async def _run_agent_chain(
     Segment ``i`` runs as workflow id ``base_id`` (i=0) / ``f"{base_id}-seg{i}"``;
     the next segment's full payload rides in the continuation envelope.
     """
+    root_run_id = payload.get("rootRunId") or base_id
+    if int(payload.get("segmentSeq") or 0) == 0 and root_run_id == base_id:
+        try:
+            await startTrajectoryStep({
+                "runId": base_id,
+                "rootRunId": root_run_id,
+                "segmentSeq": 0,
+                "input": payload.get("input"),
+                "cid": f"{root_run_id}:root",
+            })
+        except Exception as exc:
+            from .. import trajectory as _traj
+
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _traj._best_effort(_reraise)
     for seg in range(max_segments):
         wfid = base_id if seg == 0 else f"{base_id}-seg{seg}"
         with SetWorkflowID(wfid):
@@ -777,6 +1037,25 @@ async def _run_agent_chain(
                 handle = await DBOS.start_workflow_async(agent_workflow, payload)
         out = await handle.get_result()
         if not is_continuation(out):
+            try:
+                # F1: an agent chain finishes ITS OWN run (base_id), stitched to
+                # the root via rootRunId -- never the root run. A child Op.APP
+                # agent inherits rootRunId from its parent, so targeting the root
+                # here would overwrite the root's final with the child's result.
+                await finishTrajectoryStep({
+                    "runId": base_id,
+                    "rootRunId": payload.get("rootRunId") or base_id,
+                    "status": "completed",
+                    "finalValue": out,
+                    "segmentSeq": int(payload.get("segmentSeq") or seg),
+                })
+            except Exception as exc:
+                from .. import trajectory as _traj
+
+                def _reraise(e: BaseException = exc) -> None:
+                    raise e
+
+                _traj._best_effort(_reraise)
             return out
         payload = continuation_value(out)
     raise ComposableAgentsError(
@@ -799,6 +1078,7 @@ async def run_agent_dbos(
     max_segments: int = 1000,
     resolve_spec: bool = True,
     principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
 ) -> dict[str, Any]:
     """Run an agent loop to settlement, following continuation segments.
 
@@ -822,6 +1102,8 @@ async def run_agent_dbos(
         "policy": (policy or ExecutionPolicy()).to_json(),
         "resolveSpec": resolve_spec,
         "principal": principal,
+        "rootRunId": root_run_id or session_id,
+        "segmentSeq": 0,
     }
     return await _run_agent_chain(
         payload, base_id=session_id, queue=queue, max_segments=max_segments

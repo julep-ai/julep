@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import inspect
 import json
 import re
@@ -10,7 +11,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import arr, deploy, pure, seq
+from composable_agents import HAVE_TEMPORAL, arr, deploy, pure, seq
 from composable_agents.bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, publish_bundle
 from composable_agents.cas import LocalDirCAS
 from composable_agents.ir import canonical_json
@@ -68,6 +69,9 @@ def test_publish_record_shape_and_stored_manifest(tmp_path: Path) -> None:
         rec["pureRuntimeRefs"]
     )
     assert rec["publishedArtifactHash"] != deployment.artifact_hash
+    assert deployment.bundle_ref == [
+        {"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}
+    ]
 
     manifest = _json_from_store(store, rec["bundleHash"])
     assert manifest["artifactHash"] == deployment.artifact_hash
@@ -111,9 +115,29 @@ def test_empty_custom_set_publishes_with_empty_refs(tmp_path: Path) -> None:
 
     assert rec["pureRuntimeRefs"] == {}
     assert rec["publishedArtifactHash"] == deployment.artifact_hash
+    assert deployment.bundle_ref is None
 
     manifest = _json_from_store(LocalDirCAS(tmp_path), rec["bundleHash"])
     assert manifest["pures"] == []
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_deployment_run_forwards_bundle_ref(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, Any] = {}
+    deployment = _simple_deployment()
+    deployment.bundle_ref = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
+
+    async def fake_run_flow(client, flow_json, manifest_json, **kwargs):
+        captured.update(kwargs)
+        return {"ok": True}
+
+    from composable_agents.execution import harness
+
+    monkeypatch.setattr(harness, "run_flow", fake_run_flow)
+    out = asyncio.run(deployment.run(object(), session_id="sess", input={"x": 1}))
+
+    assert out == {"ok": True}
+    assert captured["bundle"] == deployment.bundle_ref
 
 
 def test_std_pures_are_excluded_when_custom_pures_are_bundled(tmp_path: Path) -> None:

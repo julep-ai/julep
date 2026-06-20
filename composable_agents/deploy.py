@@ -224,6 +224,7 @@ class Deployment:
     _snapshot_source: Optional[Callable[[], McpSnapshot]] = None
     _overrides: CapabilityOverrides = field(default_factory=CapabilityOverrides)
     _tools: Optional[Sequence[Tool[Any, Any]]] = None
+    bundle_ref: Optional[list[dict[str, str]]] = None
 
     @property
     def flow_json(self) -> dict[str, Any]:
@@ -297,7 +298,13 @@ class Deployment:
         from .cas import cas_from_url
 
         store = cas_from_url(store_or_url) if isinstance(store_or_url, str) else store_or_url
-        return publish_bundle(self, store, signing_key=signing_key)
+        rec = publish_bundle(self, store, signing_key=signing_key)
+        self.bundle_ref = (
+            [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
+            if rec.get("pureRuntimeRefs")
+            else None
+        )
+        return rec
 
     @property
     def warnings(self) -> list[Diagnostic]:
@@ -379,17 +386,22 @@ class Deployment:
 
         from .execution.harness import run_flow  # lazy: keeps deploy import-light
 
-        return await run_flow(
-            client, self.flow_json, self.manifest_json,
-            session_id=session_id, input=input, task_queue=task_queue, policy=policy,
-            pinned_pures=self.artifact_components["pureSourceHashes"],
-            max_call_limits=(
+        run_kwargs = {
+            "session_id": session_id,
+            "input": input,
+            "task_queue": task_queue,
+            "policy": policy,
+            "pinned_pures": self.artifact_components["pureSourceHashes"],
+            "max_call_limits": (
                 self.capabilities.max_call_limits()
                 if self.capabilities is not None
                 else None
             ),
-            principal=principal,
-        )
+            "principal": principal,
+        }
+        if self.bundle_ref is not None:
+            run_kwargs["bundle"] = self.bundle_ref
+        return await run_flow(client, self.flow_json, self.manifest_json, **run_kwargs)
 
     async def adry_run(
         self,

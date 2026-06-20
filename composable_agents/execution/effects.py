@@ -10,6 +10,7 @@ worker process), exactly as before.
 from __future__ import annotations
 
 import inspect
+import json
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional
@@ -24,6 +25,13 @@ from ..kinds import ContextScope, Effect, Idempotency
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..prompt import rendered_brain_for
 from ..staged import admit_plan
+from ..trajectory import (
+    TrajectoryRun,
+    TrajectorySink,
+    TrajectoryStep,
+    TrajectoryValue,
+    _best_effort,
+)
 from ..transcript import (
     SUMMARY_KEY,
     Transcript,
@@ -86,13 +94,31 @@ class WorkerContext:
     # Deploy-time registries. A sub-flow is a separately frozen flow addressable
     # by ref; an agent spec is the controller's loop policy. Both are fixed at
     # worker startup, so the resolve* activities below read them deterministically.
-    # ref -> {flowJson, manifestJson, pureSourceHashes?}
+    # ref -> {flowJson, manifestJson, pureSourceHashes?, bundle?}
     subflows: dict[str, dict[str, Any]] = field(default_factory=dict)
     # controller -> {config, grantedTools, grantedContracts, grantedSubflows}
     agents: dict[str, dict[str, Any]] = field(default_factory=dict)
+    trajectory_sink: Optional[TrajectorySink] = None
+    trajectory_blob_store: Optional[BlobStore] = None
 
 
 _CTX = WorkerContext()
+_TRAJECTORY_SINK: Optional[TrajectorySink] = None
+_TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
+
+
+def set_trajectory_sink(
+    sink: Optional[TrajectorySink],
+    blob_store: Optional[BlobStore] = None,
+) -> None:
+    """Install a process-wide trajectory sink (+ optional blob store for value refs).
+
+    Best-effort capture only: a missing sink disables capture entirely. Mirrors
+    composable_agents.execution.dbos_backend.set_projection_sink.
+    """
+    global _TRAJECTORY_SINK, _TRAJECTORY_BLOB_STORE
+    _TRAJECTORY_SINK = sink
+    _TRAJECTORY_BLOB_STORE = blob_store
 
 
 def _accepts_positional(fn: Callable[..., Any], arity: int) -> bool:
@@ -180,6 +206,7 @@ def configure(ctx: WorkerContext) -> None:
     if ctx.llm is not None:
         ctx.llm = _adapt_llm_caller(ctx.llm)
     _CTX = ctx
+    set_trajectory_sink(ctx.trajectory_sink, ctx.trajectory_blob_store or ctx.blob_store)
 
 
 def _registry() -> Registry:
@@ -204,6 +231,13 @@ class CallHandInput:
     # does not provide a cache backend or change replay behavior from this hint.
     cache: Optional[dict[str, Any]] = None
     principal: Optional[RunPrincipal] = None  # run principal (opaque, never a secret)
+    run_id: Optional[str] = None
+    root_run_id: Optional[str] = None
+    segment_seq: Optional[int] = None
+    node_id: Optional[str] = None
+    op: Optional[str] = None
+    kind: Optional[str] = None
+    causes: tuple[str, ...] = ()
 
 
 @dataclass
@@ -220,6 +254,13 @@ class InvokeBrainInput:
     ctx: Optional[dict[str, Any]] = None         # ContextPolicy JSON (scope + maxTokens)
     summarizer: Optional[str] = None             # named summarizer brain (SUMMARY scope)
     summary: Optional[str] = None                # running summary from AgentState
+    run_id: Optional[str] = None
+    root_run_id: Optional[str] = None
+    segment_seq: Optional[int] = None
+    node_id: Optional[str] = None
+    op: Optional[str] = None
+    kind: Optional[str] = None
+    causes: tuple[str, ...] = ()
 
 
 @dataclass
@@ -229,6 +270,21 @@ class CompilePlanInput:
     cid: str
     manifest: Optional[dict[str, Any]] = None  # parent frozen manifest (for schema checks)
     principal: Optional[RunPrincipal] = None
+
+
+@dataclass
+class RunSubInput:
+    ref: str
+    value: Any
+    cid: str
+    principal: Optional[RunPrincipal] = None
+    run_id: Optional[str] = None
+    root_run_id: Optional[str] = None
+    segment_seq: Optional[int] = None
+    node_id: Optional[str] = None
+    op: Optional[str] = None
+    kind: Optional[str] = None
+    causes: tuple[str, ...] = ()
 
 
 @dataclass
@@ -285,6 +341,185 @@ async def putBlob(inp: PutBlobInput) -> str:
     )
 
 
+async def _capture_effect(
+    *,
+    op: str,
+    kind: str,
+    node_id: Optional[str],
+    cid: str,
+    run_id: Optional[str],
+    root_run_id: Optional[str],
+    segment_seq: Optional[int],
+    causes: tuple[str, ...],
+    input_value: Any,
+    output_value: Any,
+) -> None:
+    """Best-effort trajectory capture for one effect activation.
+
+    Lives only in the effect layer, so both the Temporal and DBOS backends
+    (which both call effects.callHand / effects.invokeBrain) get capture for
+    free. NEVER raises into the run: every sink/blob op is wrapped in the
+    shared trajectory._best_effort helper, so a failing sink or blob leaves the
+    effect result byte-identical.
+    """
+    sink = _TRAJECTORY_SINK
+    if sink is None or root_run_id is None:
+        return
+
+    blob_store = _TRAJECTORY_BLOB_STORE
+    effective_run_id = run_id or root_run_id
+    seg = segment_seq if segment_seq is not None else 0
+    step_id = f"{effective_run_id}:s{seg}:{cid}"
+
+    # Lazy run-start: upsert the TrajectoryRun on the first step we see for this
+    # run id, so the run tree (parent_run_id) exists for
+    # list_trajectory_steps(include_children=True). A child run (run_id !=
+    # root_run_id) links to the root so descendants resolve from the root run.
+    # Best-effort like every other sink op: a failing start_run never breaks the
+    # run, and a re-seen run id is left untouched (no payload buffering).
+    if _best_effort(lambda: sink.get_trajectory_run(effective_run_id)) is None:
+        _parent = root_run_id if effective_run_id != root_run_id else None
+        _best_effort(
+            lambda: sink.start_run(
+                TrajectoryRun(
+                    run_id=effective_run_id,
+                    root_run_id=root_run_id,
+                    parent_run_id=_parent,
+                    session_id=effective_run_id,
+                )
+            )
+        )
+
+    async def _put_best_effort(value: Any) -> Optional[str]:
+        if blob_store is None:
+            return None
+        try:
+            return await blob_store.put(
+                root_run_id, json.dumps(value, sort_keys=True).encode()
+            )
+        except Exception as exc:
+            # Mirror trajectory._best_effort: swallow + count + log.
+            from ..trajectory import _best_effort as _be
+
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _be(_reraise)
+            return None
+
+    input_ref = await _put_best_effort(input_value)
+    output_ref = await _put_best_effort(output_value)
+
+    step = TrajectoryStep(
+        step_id=step_id,
+        run_id=effective_run_id,
+        root_run_id=root_run_id,
+        cid=cid,
+        node_id=node_id or cid,
+        op=op,
+        kind=kind,
+        causes=tuple(causes),
+        status="did",
+        input_ref=input_ref,
+        output_ref=output_ref,
+    )
+    _best_effort(lambda: sink.append_steps([step]))
+
+    values: list[TrajectoryValue] = []
+    if input_ref is not None:
+        values.append(
+            TrajectoryValue(
+                ref=input_ref, root_run_id=root_run_id, step_id=step_id, kind="input"
+            )
+        )
+    if output_ref is not None:
+        values.append(
+            TrajectoryValue(
+                ref=output_ref, root_run_id=root_run_id, step_id=step_id, kind="output"
+            )
+        )
+    if values:
+        _best_effort(lambda: sink.record_values(values))
+
+
+async def record_marker_step(
+    *,
+    kind: str,
+    run_id: Optional[str],
+    root_run_id: Optional[str],
+    segment_seq: Optional[int],
+    value: Any,
+    cid: str,
+    value_kind: str,
+) -> None:
+    """Best-effort synthetic trajectory marker for root input / final output.
+
+    This lives beside effect capture because it uses the same sink/blob plane,
+    but callers invoke it only from activity/step bodies so workflow replay is
+    not coupled to IO or sink state.
+    """
+    sink = _TRAJECTORY_SINK
+    if sink is None or root_run_id is None:
+        return
+
+    blob_store = _TRAJECTORY_BLOB_STORE
+    effective_run_id = run_id or root_run_id
+    seg = segment_seq if segment_seq is not None else 0
+    step_id = f"{effective_run_id}:s{seg}:{cid}"
+
+    if _best_effort(lambda: sink.get_trajectory_run(effective_run_id)) is None:
+        _parent = root_run_id if effective_run_id != root_run_id else None
+        _best_effort(
+            lambda: sink.start_run(
+                TrajectoryRun(
+                    run_id=effective_run_id,
+                    root_run_id=root_run_id,
+                    parent_run_id=_parent,
+                    session_id=effective_run_id,
+                )
+            )
+        )
+
+    ref: Optional[str] = None
+    if blob_store is not None:
+        try:
+            ref = await blob_store.put(
+                root_run_id, json.dumps(value, sort_keys=True).encode()
+            )
+        except Exception as exc:
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _best_effort(_reraise)
+
+    step = TrajectoryStep(
+        step_id=step_id,
+        run_id=effective_run_id,
+        root_run_id=root_run_id,
+        cid=cid,
+        node_id=cid,
+        op=kind,
+        kind=kind,
+        status="did",
+        input_ref=ref if kind == "root" else None,
+        output_ref=ref if kind == "final" else None,
+    )
+    _best_effort(lambda: sink.append_steps([step]))
+    if ref is not None:
+        _best_effort(
+            lambda: sink.record_values(
+                [
+                    TrajectoryValue(
+                        ref=ref,
+                        root_run_id=root_run_id,
+                        step_id=step_id,
+                        kind=value_kind,
+                    )
+                ]
+            )
+        )
+
+
 async def callHand(inp: CallHandInput) -> Any:
     ref = toolref_from_json(inp.tool_ref)
     key = toolref_key(ref)
@@ -294,32 +529,68 @@ async def callHand(inp: CallHandInput) -> Any:
             raise RuntimeError("worker has no MCP caller configured")
         server = inp.tool_ref["server"]
         tool = inp.tool_ref["tool"]
-        return await _CTX.mcp_call(server, tool, inp.value, inp.cid, inp.principal)
+        result = await _CTX.mcp_call(server, tool, inp.value, inp.cid, inp.principal)
+    else:
+        # Native hand: HTTP POST with an idempotency key derived from the cid.
+        url = _CTX.hand_urls.get(key)
+        if url is None:
+            raise RuntimeError(f"no URL registered for native hand {key!r}")
+        if _CTX.capabilities is not None and not _CTX.capabilities.network_allows(_domain_of(url)):
+            raise CapabilityDenied(f"network egress to {_domain_of(url)!r} is not granted")
 
-    # Native hand: HTTP POST with an idempotency key derived from the cid.
-    url = _CTX.hand_urls.get(key)
-    if url is None:
-        raise RuntimeError(f"no URL registered for native hand {key!r}")
-    if _CTX.capabilities is not None and not _CTX.capabilities.network_allows(_domain_of(url)):
-        raise CapabilityDenied(f"network egress to {_domain_of(url)!r} is not granted")
+        import httpx  # imported in-activity so the module loads without httpx
 
-    import httpx  # imported in-activity so the module loads without httpx
+        logger.debug("callHand %s -> %s", key, url)
+        headers = {"Idempotency-Key": inp.cid}
+        if inp.principal is not None and _CTX.principal_headers is not None:
+            headers.update(_CTX.principal_headers(inp.principal))
+        async with httpx.AsyncClient(timeout=_CTX.http_timeout_s) as client:
+            body = {"input": inp.value}
+            if inp.cache is not None:
+                body["cache"] = inp.cache
+            resp = await client.post(
+                url,
+                json=body,
+                headers=headers,
+            )
+            resp.raise_for_status()
+            result = resp.json()
 
-    logger.debug("callHand %s -> %s", key, url)
-    headers = {"Idempotency-Key": inp.cid}
-    if inp.principal is not None and _CTX.principal_headers is not None:
-        headers.update(_CTX.principal_headers(inp.principal))
-    async with httpx.AsyncClient(timeout=_CTX.http_timeout_s) as client:
-        body = {"input": inp.value}
-        if inp.cache is not None:
-            body["cache"] = inp.cache
-        resp = await client.post(
-            url,
-            json=body,
-            headers=headers,
-        )
-        resp.raise_for_status()
-        return resp.json()
+    await _capture_effect(
+        op="call",
+        kind="hand",
+        node_id=inp.node_id,
+        cid=inp.cid,
+        run_id=inp.run_id,
+        root_run_id=inp.root_run_id,
+        segment_seq=inp.segment_seq,
+        causes=inp.causes,
+        input_value=inp.value,
+        output_value=result,
+    )
+    return result
+
+
+async def runSub(inp: RunSubInput, output: Any) -> Any:
+    """Capture a sub-flow activation (input + output) at the effect boundary.
+
+    The actual child-flow execution lives in the backend Env (Temporal child
+    workflow / DBOS inline); this records the run-identity step + value refs so
+    both backends share one capture path. Returns ``output`` unchanged.
+    """
+    await _capture_effect(
+        op="sub",
+        kind="flow",
+        node_id=inp.node_id,
+        cid=inp.cid,
+        run_id=inp.run_id,
+        root_run_id=inp.root_run_id,
+        segment_seq=inp.segment_seq,
+        causes=inp.causes,
+        input_value=inp.value,
+        output_value=output,
+    )
+    return output
 
 
 async def _hydrate_turn(turn: dict[str, Any]) -> dict[str, Any]:
@@ -414,8 +685,22 @@ async def invokeBrain(inp: InvokeBrainInput) -> Any:
     if new_summary is not None:
         # Envelope so the workflow can persist the running summary in
         # AgentState.summary; split_summary_reply unwraps it deterministically.
-        return {SUMMARY_KEY: new_summary, "reply": reply}
-    return reply
+        result = {SUMMARY_KEY: new_summary, "reply": reply}
+    else:
+        result = reply
+    await _capture_effect(
+        op="think",
+        kind="brain",
+        node_id=inp.node_id,
+        cid=inp.cid,
+        run_id=inp.run_id,
+        root_run_id=inp.root_run_id,
+        segment_seq=inp.segment_seq,
+        causes=inp.causes,
+        input_value=inp.value,
+        output_value=result,
+    )
+    return result
 
 
 async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
@@ -478,6 +763,7 @@ async def resolveSubflow(ref: str) -> dict[str, Any]:
         "flowJson": spec["flowJson"],
         "manifestJson": spec.get("manifestJson", {}),
         "pinnedPures": spec.get("pinnedPures", spec.get("pureSourceHashes")),
+        "bundle": spec.get("bundle"),
     }
 
 

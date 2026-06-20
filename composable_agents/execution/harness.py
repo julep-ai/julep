@@ -40,13 +40,21 @@ behind the activity boundary.
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Awaitable, Callable, Optional, Sequence
 
-from temporalio import workflow
+from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
+
+# Best-effort swallow paths log via stdlib logging: it never raises, works
+# outside a live workflow runtime (so the helpers stay unit-testable by direct
+# call), and does not mutate the trajectory best-effort counter on replay, unlike
+# workflow.logger (which requires a workflow context) or trajectory._best_effort
+# (which would inflate the counter every time workflow code re-executes).
+_LOG = logging.getLogger(__name__)
 
 # Import the pure pieces through the sandbox-safe import pass so Temporal's
 # workflow sandbox does not trip over disallowed modules at definition time.
@@ -78,6 +86,7 @@ with workflow.unsafe.imports_passed_through():
         InvokeBrainInput,
         LoadStateInput,
         PutBlobInput,
+        RunSubInput,
         callHand,
         commitState,
         compilePlan,
@@ -100,6 +109,118 @@ _NON_RETRYABLE = [
     "PureDriftError",
     "PrincipalRequired",
 ]
+
+
+@activity.defn(name="finishTrajectory")
+async def finishTrajectory(inp: dict[str, Any]) -> None:
+    import time
+
+    from .. import trajectory as _traj
+    from . import effects as _effects
+
+    sink = _effects._TRAJECTORY_SINK
+    if sink is None:
+        return
+    run_id = inp.get("runId")
+    root_run_id = inp.get("rootRunId") or run_id
+    status = inp.get("status", "completed")
+    _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
+    await _effects.record_marker_step(
+        kind="final",
+        run_id=run_id,
+        root_run_id=root_run_id,
+        segment_seq=inp.get("segmentSeq"),
+        value=inp.get("result"),
+        cid=f"{run_id}:final",
+        value_kind="output",
+    )
+
+
+@activity.defn(name="startTrajectory")
+async def startTrajectory(inp: dict[str, Any]) -> None:
+    from .. import trajectory as _traj
+    from . import effects as _effects
+
+    try:
+        await _effects.record_marker_step(
+            kind="root",
+            run_id=inp.get("runId"),
+            root_run_id=inp.get("rootRunId"),
+            segment_seq=inp.get("segmentSeq"),
+            value=inp.get("input"),
+            cid=inp["cid"],
+            value_kind="input",
+        )
+    except Exception as exc:
+        def _reraise(e: BaseException = exc) -> None:
+            raise e
+
+        _traj._best_effort(_reraise)
+
+
+@activity.defn(name="flushStructural")
+async def flushStructural(inp: dict[str, Any]) -> None:
+    from .. import trajectory as _traj
+    from ..projection import ProjectionEvent
+    from . import effects as _effects
+
+    sink = _effects._TRAJECTORY_SINK
+    if sink is None:
+        return
+    run_id = inp.get("runId")
+    root_run_id = inp.get("rootRunId") or run_id
+    segment_seq = int(inp.get("segmentSeq") or 0)
+    node_ops = dict(inp.get("nodeOps") or {})
+    events = inp.get("events") or []
+    structural = _traj.ProjectionTrajectorySink(
+        sink,
+        run_id=run_id,
+        root_run_id=root_run_id,
+        segment_seq=segment_seq,
+        node_ops=node_ops,
+    )
+    for raw in events:
+        def _feed(raw: dict[str, Any] = raw) -> None:
+            structural.append(ProjectionEvent.from_json(raw))
+
+        _traj._best_effort(_feed)
+
+
+@activity.defn(name="runSubCapture")
+async def runSubCapture(inp: dict[str, Any], output: Any) -> None:
+    from .. import trajectory as _traj
+    from . import effects as _effects
+
+    try:
+        await _effects.runSub(
+            RunSubInput(
+                ref=inp["ref"],
+                value=inp["value"],
+                cid=inp["cid"],
+                principal=inp.get("principal"),
+                run_id=inp.get("run_id"),
+                root_run_id=inp.get("root_run_id"),
+                segment_seq=inp.get("segment_seq"),
+                node_id=inp.get("node_id"),
+                op=inp.get("op"),
+                kind=inp.get("kind"),
+                causes=tuple(inp.get("causes") or ()),
+            ),
+            output,
+        )
+    except Exception as exc:
+        def _reraise(e: BaseException = exc) -> None:
+            raise e
+
+        _traj._best_effort(_reraise)
+
+
+def _bundle_ref_child_input_enabled() -> bool:
+    try:
+        return workflow.patched("bundle-ref-child-input-v1")
+    except Exception:
+        # Unit tests sometimes exercise Env methods outside a workflow runtime.
+        return False
 
 
 def _retry_policy_for(
@@ -172,6 +293,12 @@ class FlowInput:
     # Run principal: opaque tenant/credential reference (never a secret),
     # workflow input so it is replay-stable and absent from the frozen artifact.
     principal: Optional[dict[str, Any]] = None
+    # Signed CAS bundle pointers for custom pures referenced by this flow.
+    # Worker-side STORE_URL and CA_BUNDLE_ALLOWED_SIGNERS remain authoritative.
+    bundle: Optional[list[dict[str, str]]] = None
+    # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
+    root_run_id: Optional[str] = None
+    segment_seq: int = 0
 
 
 @dataclass
@@ -190,6 +317,9 @@ class AgentInput:
     policy: Optional[dict[str, Any]] = None
     resolve_spec: bool = True
     principal: Optional[dict[str, Any]] = None  # run principal (see FlowInput.principal)
+    # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
+    root_run_id: Optional[str] = None
+    segment_seq: int = 0
 
 
 # --------------------------------------------------------------------------- #
@@ -210,11 +340,15 @@ class _TemporalEnv:
         max_call_limits: Optional[dict[str, int]] = None,
         call_counts: Optional[dict[str, int]] = None,
         principal: Optional[dict[str, Any]] = None,
+        root_run_id: Optional[str] = None,
+        segment_seq: int = 0,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
         self.native_call_retries = True
         self.principal = principal
+        self.root_run_id = root_run_id
+        self.segment_seq = segment_seq
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -272,6 +406,12 @@ class _TemporalEnv:
                 cid=cid,
                 cache=cache,
                 principal=self.principal,
+                run_id=self._session,
+                root_run_id=self.root_run_id,
+                segment_seq=self.segment_seq,
+                node_id=node.id,
+                op="call",
+                kind="hand",
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.hand_timeout_s),
             retry_policy=_retry_policy_for(contract, self._policy, node.ann),
@@ -286,7 +426,17 @@ class _TemporalEnv:
     ) -> Any:
         return await workflow.execute_activity(
             invokeBrain,
-            InvokeBrainInput(brain=brain, value=value, cid=cid, principal=self.principal),
+            InvokeBrainInput(
+                brain=brain,
+                value=value,
+                cid=cid,
+                principal=self.principal,
+                run_id=self._session,
+                root_run_id=self.root_run_id,
+                segment_seq=self.segment_seq,
+                op="think",
+                kind="brain",
+            ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
             retry_policy=_brain_retry(self._policy),
         )
@@ -306,12 +456,20 @@ class _TemporalEnv:
         )
         return Node.from_json(plan_json)
 
-    async def run_sub(self, ref: str, contract, value: Any, cid: str) -> Any:
+    async def run_sub(
+        self,
+        ref: str,
+        contract,
+        value: Any,
+        cid: str,
+        node_id: Optional[str] = None,
+    ) -> Any:
         # A Sub is a child flow; the firewall is structural (surface shape is
         # already opaque), so the child's value crosses unchanged. The child
         # inherits the parent's principal unchanged (no substitution API).
         child_id = self._child_id("sub", cid)
-        return await workflow.execute_child_workflow(
+        bundle = await self._bundle_for_ref_child(ref)
+        result = await workflow.execute_child_workflow(
             FlowWorkflow.run,
             FlowInput(
                 session_id=child_id,
@@ -321,10 +479,57 @@ class _TemporalEnv:
                 max_call_limits=self._max_call_limits,
                 call_counts=dict(self._call_counts),
                 principal=self.principal,
+                root_run_id=self.root_run_id,
+                bundle=bundle,
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.sub_task_timeout_s),
         )
+        from .. import trajectory as _traj
+
+        try:
+            await workflow.execute_activity(
+                runSubCapture,
+                args=[
+                    {
+                        "ref": ref,
+                        "value": value,
+                        "cid": cid,
+                        "principal": self.principal,
+                        "run_id": self._session,
+                        "root_run_id": self.root_run_id,
+                        "segment_seq": self.segment_seq,
+                        "node_id": node_id,
+                        "op": "sub",
+                        "kind": "flow",
+                        "causes": (),
+                    },
+                    result,
+                ],
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+        except Exception as exc:
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _traj._best_effort(_reraise)
+        return result
+
+    async def _bundle_for_ref_child(self, ref: str) -> Optional[list[dict[str, str]]]:
+        if not _bundle_ref_child_input_enabled():
+            return None
+        resolved = await workflow.execute_activity(
+            resolveSubflow,
+            ref,
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE),
+        )
+        bundle = resolved.get("bundle")
+        return bundle if isinstance(bundle, list) else None
 
     async def run_agent(
         self,
@@ -385,6 +590,7 @@ class _TemporalEnv:
                 state=state_json,
                 policy=self._policy.to_json(),
                 principal=self.principal,
+                root_run_id=self.root_run_id,
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.agent_task_timeout_s),
@@ -479,6 +685,85 @@ class FlowWorkflow:
             "pending": self._store.pending(),
         }
 
+    async def _start_trajectory(self, inp: FlowInput) -> None:
+        from .. import trajectory as _traj
+
+        root_run_id = inp.root_run_id or inp.session_id
+        if inp.segment_seq != 0 or root_run_id != inp.session_id:
+            return
+        try:
+            await workflow.execute_activity(
+                startTrajectory,
+                {
+                    "runId": inp.session_id,
+                    "rootRunId": root_run_id,
+                    "segmentSeq": inp.segment_seq,
+                    "input": inp.input,
+                    "cid": f"{root_run_id}:root",
+                },
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+        except Exception as exc:
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _traj._best_effort(_reraise)
+
+    async def _finish_trajectory(
+        self,
+        run_id: str,
+        result: Any = None,
+        *,
+        root_run_id: Optional[str] = None,
+        status: str = "completed",
+        segment_seq: int = 0,
+    ) -> None:
+        try:
+            await workflow.execute_activity(
+                finishTrajectory,
+                {
+                    "runId": run_id,
+                    "rootRunId": root_run_id,
+                    "status": status,
+                    "result": result,
+                    "segmentSeq": segment_seq,
+                },
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+        except Exception as exc:
+            _LOG.warning("trajectory dispatch failed (best-effort, swallowed): %s", exc)
+
+    async def _flush_structural(self, inp: FlowInput, node_ops: dict[str, str]) -> None:
+        if self._store is None:
+            return
+        payload = {
+            "runId": inp.session_id,
+            "rootRunId": (inp.root_run_id or inp.session_id),
+            "segmentSeq": inp.segment_seq,
+            "nodeOps": node_ops,
+            "events": [e.to_json() for e in self._store.events()],
+        }
+        try:
+            await workflow.execute_activity(
+                flushStructural,
+                payload,
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+        except Exception as exc:
+            _LOG.warning("trajectory dispatch failed (best-effort, swallowed): %s", exc)
+
     # ----- entrypoint ------------------------------------------------------- #
     @workflow.run
     async def run(self, inp: FlowInput) -> Any:
@@ -488,6 +773,7 @@ class FlowWorkflow:
         pinned_pures = inp.pinned_pures
         max_call_limits = inp.max_call_limits
         call_counts = inp.call_counts
+        bundle = inp.bundle
 
         # A ref-only input resolves to its frozen flow + manifest via activity
         # (kept outside the deterministic sandbox).
@@ -506,6 +792,8 @@ class FlowWorkflow:
                 pinned_pures = resolved.get("pinnedPures")
             if max_call_limits is None:
                 max_call_limits = resolved.get("maxCalls")
+            if bundle is None:
+                bundle = resolved.get("bundle")
 
         # Pure source lookup reads the worker registry, so it stays in an
         # activity. Each FlowWorkflow verifies the pins supplied with that flow;
@@ -534,6 +822,7 @@ class FlowWorkflow:
             max_call_limits = runtime_caps.get("maxCalls", {})
 
         flow = Node.from_json(flow_json)
+        node_ops = {n.id: n.op.value for n in flow.walk()}
         manifest = manifest_from_json(manifest_json or {})
 
         store, emitter = _make_emitter()
@@ -548,7 +837,10 @@ class FlowWorkflow:
             max_call_limits=max_call_limits,
             call_counts=call_counts,
             principal=inp.principal,
+            root_run_id=(inp.root_run_id or inp.session_id),
+            segment_seq=inp.segment_seq,
         )
+        await self._start_trajectory(inp)
 
         try:
             result: Result = await interpret(flow, inp.input, env)
@@ -559,6 +851,7 @@ class FlowWorkflow:
                 non_retryable=True,
             ) from exc
         if is_continuation(result.value):
+            await self._flush_structural(inp, node_ops)
             # Chain: same frozen flow, new input, cumulative call counts so
             # maxCalls budgets span the whole chain, truncated history. The
             # principal is carried so the run keeps its tenant identity.
@@ -573,8 +866,18 @@ class FlowWorkflow:
                     call_counts=env.call_counts_snapshot(),
                     policy=inp.policy,
                     principal=inp.principal,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq + 1,
+                    bundle=bundle,
                 )
             )
+        await self._flush_structural(inp, node_ops)
+        await self._finish_trajectory(
+            inp.session_id,
+            result.value,
+            root_run_id=(inp.root_run_id or inp.session_id),
+            segment_seq=inp.segment_seq,
+        )
         return result.value
 
 
@@ -589,6 +892,62 @@ class AgentWorkflow:
     @workflow.signal(name="submitHuman")
     def submit_human(self, payload: dict[str, Any]) -> None:
         self._human_inbox[payload["cid"]] = payload.get("value")
+
+    async def _start_trajectory(self, inp: AgentInput) -> None:
+        from .. import trajectory as _traj
+
+        root_run_id = inp.root_run_id or inp.session_id
+        if inp.segment_seq != 0 or root_run_id != inp.session_id:
+            return
+        try:
+            await workflow.execute_activity(
+                startTrajectory,
+                {
+                    "runId": inp.session_id,
+                    "rootRunId": root_run_id,
+                    "segmentSeq": inp.segment_seq,
+                    "input": inp.input,
+                    "cid": f"{root_run_id}:root",
+                },
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+        except Exception as exc:
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _traj._best_effort(_reraise)
+
+    async def _finish_trajectory(
+        self,
+        run_id: str,
+        result: Any = None,
+        *,
+        root_run_id: Optional[str] = None,
+        status: str = "completed",
+        segment_seq: int = 0,
+    ) -> None:
+        try:
+            await workflow.execute_activity(
+                finishTrajectory,
+                {
+                    "runId": run_id,
+                    "rootRunId": root_run_id,
+                    "status": status,
+                    "result": result,
+                    "segmentSeq": segment_seq,
+                },
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+        except Exception as exc:
+            _LOG.warning("trajectory dispatch failed (best-effort, swallowed): %s", exc)
 
     @workflow.run
     async def run(self, inp: AgentInput) -> dict[str, Any]:
@@ -668,14 +1027,29 @@ class AgentWorkflow:
         # segment's entry round, not from zero.
         baseline_round = state.round
 
+        await self._start_trajectory(inp)
+
         while True:
             if state.round >= cfg.max_rounds:
-                return al.terminal_result("max_rounds", state)
+                terminal = al.terminal_result("max_rounds", state)
+                await self._finish_trajectory(
+                    inp.session_id,
+                    terminal,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                )
+                return terminal
 
             # 1) Check the controller's own cost before spending on it, then ask
             # the controller what to do and charge the per-round think cost.
             controller_precheck = al.precheck_controller(state, cfg)
             if controller_precheck is not None:
+                await self._finish_trajectory(
+                    inp.session_id,
+                    controller_precheck,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                )
                 return controller_precheck
 
             # Transcript plan (agent-transcripts): deterministic, ref-bearing,
@@ -700,6 +1074,11 @@ class AgentWorkflow:
                     ),
                     summarizer=cfg.summarizer if transcript_plan is not None else None,
                     summary=state.summary if transcript_plan is not None else None,
+                    run_id=inp.session_id,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                    op="think",
+                    kind="brain",
                 ),
                 start_to_close_timeout=timedelta(seconds=policy.brain_timeout_s),
                 retry_policy=_brain_retry(policy),
@@ -712,16 +1091,46 @@ class AgentWorkflow:
 
             # 2) Terminal decisions end the loop.
             if action.decision is al.Decision.FINISH:
-                return al.terminal_result("done", state, output=action.payload)
+                terminal = al.terminal_result("done", state, output=action.payload)
+                await self._finish_trajectory(
+                    inp.session_id,
+                    terminal,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                )
+                return terminal
             if action.decision is al.Decision.ESCALATE:
-                return al.terminal_result("escalated", state, reason=str(action.payload))
+                terminal = al.terminal_result("escalated", state, reason=str(action.payload))
+                await self._finish_trajectory(
+                    inp.session_id,
+                    terminal,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                )
+                return terminal
             if action.decision is al.Decision.CONTROLLER_ERROR:
-                return al.terminal_result("controller_error", state, reason=str(action.payload))
+                terminal = al.terminal_result(
+                    "controller_error", state, reason=str(action.payload)
+                )
+                await self._finish_trajectory(
+                    inp.session_id,
+                    terminal,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                )
+                return terminal
 
             # 3) Budget guard before doing any work this round.
             cost = al.action_cost(action)
             if al.would_exceed_budget(state, cost, cfg.budget):
-                return al.terminal_result("over_budget", state)
+                terminal = al.terminal_result("over_budget", state)
+                await self._finish_trajectory(
+                    inp.session_id,
+                    terminal,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    segment_seq=inp.segment_seq,
+                )
+                return terminal
 
             # 4) Bounded action: one granted tool call, or one sub-flow. When the
             # controller omits an explicit input, the action operates on the
@@ -735,10 +1144,24 @@ class AgentWorkflow:
                     contracts=contracts,
                 )
                 if denial is not None:
-                    return al.terminal_result("denied", state, reason=denial.reason)
+                    terminal = al.terminal_result("denied", state, reason=denial.reason)
+                    await self._finish_trajectory(
+                        inp.session_id,
+                        terminal,
+                        root_run_id=(inp.root_run_id or inp.session_id),
+                        segment_seq=inp.segment_seq,
+                    )
+                    return terminal
                 denial = al.charge_tool_call(state, tool, contracts)
                 if denial is not None:
-                    return al.terminal_result("denied", state, reason=denial.reason)
+                    terminal = al.terminal_result("denied", state, reason=denial.reason)
+                    await self._finish_trajectory(
+                        inp.session_id,
+                        terminal,
+                        root_run_id=(inp.root_run_id or inp.session_id),
+                        segment_seq=inp.segment_seq,
+                    )
+                    return terminal
                 call_input = action.payload.get("input")
                 if call_input is None:
                     call_input = state.last
@@ -750,6 +1173,11 @@ class AgentWorkflow:
                         value=call_input,
                         cid=f"{inp.session_id}-call-{state.round}",
                         principal=inp.principal,
+                        run_id=inp.session_id,
+                        root_run_id=(inp.root_run_id or inp.session_id),
+                        segment_seq=inp.segment_seq,
+                        op="call",
+                        kind="hand",
                     ),
                     start_to_close_timeout=timedelta(seconds=policy.hand_timeout_s),
                     retry_policy=_retry_policy_for(contract, policy),
@@ -779,11 +1207,32 @@ class AgentWorkflow:
                     ),
                 )
                 if denial is not None:
-                    return al.terminal_result("denied", state, reason=denial.reason)
+                    terminal = al.terminal_result("denied", state, reason=denial.reason)
+                    await self._finish_trajectory(
+                        inp.session_id,
+                        terminal,
+                        root_run_id=(inp.root_run_id or inp.session_id),
+                        segment_seq=inp.segment_seq,
+                    )
+                    return terminal
                 sub_input = action.payload.get("input")
                 if sub_input is None:
                     sub_input = state.last
                 child_id = f"{inp.session_id}-sub-{state.round}"
+                child_bundle: Optional[list[dict[str, str]]] = None
+                if _bundle_ref_child_input_enabled():
+                    resolved = await workflow.execute_activity(
+                        resolveSubflow,
+                        ref,
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=3,
+                            non_retryable_error_types=_NON_RETRYABLE,
+                        ),
+                    )
+                    bundle = resolved.get("bundle")
+                    if isinstance(bundle, list):
+                        child_bundle = bundle
                 out = await workflow.execute_child_workflow(
                     FlowWorkflow.run,
                     FlowInput(
@@ -794,10 +1243,47 @@ class AgentWorkflow:
                         max_call_limits=al.max_call_limits_from_contracts(contracts),
                         call_counts=dict(state.call_counts),
                         principal=inp.principal,
+                        root_run_id=(inp.root_run_id or inp.session_id),
+                        bundle=child_bundle,
                     ),
                     id=child_id,
                     task_timeout=timedelta(seconds=policy.sub_task_timeout_s),
                 )
+                # Trajectory: capture the agent's sub action as a sub/flow step
+                # (parity with FlowWorkflow's SubStep and the DBOS backend).
+                # Best-effort: never raises into the agent loop.
+                from .. import trajectory as _traj
+
+                try:
+                    await workflow.execute_activity(
+                        runSubCapture,
+                        args=[
+                            {
+                                "ref": ref,
+                                "value": sub_input,
+                                "cid": child_id,
+                                "principal": inp.principal,
+                                "run_id": inp.session_id,
+                                "root_run_id": (inp.root_run_id or inp.session_id),
+                                "segment_seq": inp.segment_seq,
+                                "node_id": None,
+                                "op": "sub",
+                                "kind": "flow",
+                                "causes": (),
+                            },
+                            out,
+                        ],
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=1,
+                            non_retryable_error_types=_NON_RETRYABLE,
+                        ),
+                    )
+                except Exception as exc:
+                    def _reraise(e: BaseException = exc) -> None:
+                        raise e
+
+                    _traj._best_effort(_reraise)
                 state.charge(cost)
                 state.last = out
                 output_ref: Optional[str] = None
@@ -855,6 +1341,8 @@ class AgentWorkflow:
                             policy=policy.to_json(),
                             resolve_spec=False,
                             principal=inp.principal,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            segment_seq=inp.segment_seq + 1,
                         )
                     )
                 else:
@@ -872,6 +1360,8 @@ class AgentWorkflow:
                             policy=policy.to_json(),
                             resolve_spec=False,
                             principal=inp.principal,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            segment_seq=inp.segment_seq + 1,
                         )
                     )
 
@@ -891,6 +1381,8 @@ async def run_flow(
     pinned_pures: Optional[dict[str, str]] = None,
     max_call_limits: Optional[dict[str, int]] = None,
     principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
+    bundle: Optional[list[dict[str, str]]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
@@ -912,6 +1404,8 @@ async def run_flow(
             max_call_limits=max_call_limits,
             policy=(policy or ExecutionPolicy()).to_json(),
             principal=principal,
+            root_run_id=root_run_id,
+            bundle=bundle,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -930,6 +1424,8 @@ async def start_flow(
     pinned_pures: Optional[dict[str, str]] = None,
     max_call_limits: Optional[dict[str, int]] = None,
     principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
+    bundle: Optional[list[dict[str, str]]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
@@ -947,6 +1443,8 @@ async def start_flow(
             max_call_limits=max_call_limits,
             policy=(policy or ExecutionPolicy()).to_json(),
             principal=principal,
+            root_run_id=root_run_id,
+            bundle=bundle,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -959,6 +1457,10 @@ __all__ = [
     "AgentWorkflow",
     "FlowInput",
     "AgentInput",
+    "finishTrajectory",
+    "startTrajectory",
+    "flushStructural",
+    "runSubCapture",
     "run_flow",
     "start_flow",
 ]

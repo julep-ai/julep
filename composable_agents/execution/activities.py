@@ -22,8 +22,10 @@ from .effects import (
     McpCaller as McpCaller,
     PutBlobInput as PutBlobInput,
     RunPrincipal as RunPrincipal,
+    RunSubInput as RunSubInput,
     WorkerContext as WorkerContext,
     configure as configure,
+    set_trajectory_sink as set_trajectory_sink,
 )
 from . import effects
 

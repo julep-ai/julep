@@ -77,6 +77,22 @@ class ProjectionEvent:
             out["attrs"] = self.attrs
         return out
 
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "ProjectionEvent":
+        return ProjectionEvent(
+            event_id=d["eventId"],
+            type=EventType(d["type"]),
+            node=d["node"],
+            cid=d["cid"],
+            ts=d["ts"],
+            causes=tuple(d.get("causes", [])),
+            value_ref=d.get("valueRef"),
+            shape=d.get("shape"),
+            cost=d.get("cost"),
+            error=d.get("error"),
+            attrs=dict(d.get("attrs", {})),
+        )
+
 
 # --------------------------------------------------------------------------- #
 # Content-addressed value store.

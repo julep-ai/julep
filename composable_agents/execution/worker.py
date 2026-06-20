@@ -18,6 +18,7 @@ themselves stay free of it so replay is deterministic.
 
 from __future__ import annotations
 
+import os
 from typing import Any, Optional
 
 from temporalio.client import Client
@@ -46,11 +47,13 @@ from .activities import (
     verifyPures,
 )
 from .blobstore import BlobStore
+from .bundle_runner import BundleResolvingWorkflowRunner
 from .codec import ClaimCheckCodec
 from .debounce import DebounceCollector
-from .harness import AgentWorkflow, FlowWorkflow
+from .harness import AgentWorkflow, FlowWorkflow, finishTrajectory, runSubCapture
 from .serve import DEFAULT_TASK_QUEUE
 from .session_store import SessionStore
+from ..cas import cas_from_url
 
 # Every activity the two workflows can dispatch.
 ACTIVITIES = [
@@ -64,6 +67,8 @@ ACTIVITIES = [
     resolveSubflow,
     resolveAgentSpec,
     resolveRuntimeCapabilities,
+    finishTrajectory,
+    runSubCapture,
 ]
 WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector]
 
@@ -115,14 +120,17 @@ def build_worker(
     loop. Pass your own ``workflow_runner`` to override.
     """
     configure(context)
-    worker_kwargs.setdefault(
-        "workflow_runner",
-        SandboxedWorkflowRunner(
-            restrictions=SandboxRestrictions.default.with_passthrough_modules(
-                "composable_agents"
-            )
-        ),
-    )
+    if "workflow_runner" not in worker_kwargs:
+        store_url = os.environ.get("STORE_URL", "").strip()
+        store = cas_from_url(store_url) if store_url else None
+        worker_kwargs["workflow_runner"] = BundleResolvingWorkflowRunner(
+            inner=SandboxedWorkflowRunner(
+                restrictions=SandboxRestrictions.default.with_passthrough_modules(
+                    "composable_agents"
+                )
+            ),
+            store=store,
+        )
     return Worker(
         client,
         task_queue=task_queue,
@@ -145,6 +153,8 @@ async def run_worker(
     agents: Optional[dict[str, dict]] = None,
     blob_store: Optional[BlobStore] = None,
     session_store: Optional[SessionStore] = None,
+    trajectory_sink: Optional[Any] = None,
+    trajectory_blob_store: Optional[BlobStore] = None,
     http_timeout_s: float = 30.0,
     **worker_kwargs: Any,
 ) -> None:
@@ -169,6 +179,8 @@ async def run_worker(
         agents=agents or {},
         blob_store=blob_store,
         session_store=session_store,
+        trajectory_sink=trajectory_sink,
+        trajectory_blob_store=trajectory_blob_store,
     )
     worker = build_worker(client, context, task_queue=task_queue, **worker_kwargs)
     await worker.run()

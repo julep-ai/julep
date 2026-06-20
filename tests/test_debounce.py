@@ -28,6 +28,9 @@ if HAVE_TEMPORAL:
     from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
 
+BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
+
+
 def _snapshot():
     ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
     return McpSnapshot(servers={"srv": McpServerSnapshot(server="srv", version="1", tools={
@@ -52,6 +55,32 @@ def _frozen_each(tool="inc"):
 def _worker(env, *, task_queue):
     ctx = WorkerContext(mcp_call=_mcp, llm=None)
     return build_worker(env.client, ctx, task_queue=task_queue)
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_submit_debounced_forwards_bundle_to_start_input():
+    captured = {}
+
+    class FakeClient:
+        async def start_workflow(self, fn, inp, **kwargs):
+            captured["input"] = inp
+            captured["kwargs"] = kwargs
+            return "handle"
+
+    out = asyncio.run(
+        submit_debounced(
+            FakeClient(),
+            {"op": "id"},
+            {},
+            key="k",
+            item=1,
+            quiet_s=1,
+            bundle=BUNDLE_REF,
+        )
+    )
+
+    assert out == "handle"
+    assert captured["input"].bundle == BUNDLE_REF
 
 
 async def _quiet_window_collates_a_burst(env):

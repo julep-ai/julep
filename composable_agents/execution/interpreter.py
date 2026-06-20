@@ -121,6 +121,10 @@ class Env(Protocol):
     # The run's principal (opaque tenant/credential reference, never a secret).
     # The interpreter never reads it; engine envs stamp it into effect payloads.
     principal: Optional[dict[str, Any]]
+    # Run identity for the trajectory plane. The interpreter never reads it;
+    # engine envs stamp it into effect inputs like principal.
+    root_run_id: Optional[str]
+    segment_seq: int
     native_call_retries: bool
 
     def next_cid(self, node_id: str) -> str: ...
@@ -135,7 +139,14 @@ class Env(Protocol):
         cid: str,
         timeout_s: Optional[int],
     ) -> Any: ...
-    async def run_sub(self, ref: str, contract: SubContract, value: Any, cid: str) -> Any: ...
+    async def run_sub(
+        self,
+        ref: str,
+        contract: SubContract,
+        value: Any,
+        cid: str,
+        node_id: Optional[str] = None,
+    ) -> Any: ...
     async def run_agent(
         self,
         controller: str,
@@ -160,6 +171,8 @@ async def interpret(
     causes: tuple[str, ...] = (),
     *,
     principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
+    segment_seq: Optional[int] = None,
 ) -> Result:
     """Evaluate ``node`` on ``value``; return its result and recording event id.
 
@@ -169,6 +182,10 @@ async def interpret(
     """
     if principal is not None:
         env.principal = principal
+    if root_run_id is not None:
+        env.root_run_id = root_run_id
+    if segment_seq is not None:
+        env.segment_seq = segment_seq
     cid = env.next_cid(node.id)
     shape = surface_shape(node).value
     planned = env.emitter.plan(node.id, cid, causes=causes, shape=shape)
@@ -303,7 +320,7 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         out = await env.invoke_brain(step.brain, value, cid, timeout_s)
         return Result(out, reported_cost=_reported_brain_cost(out))
     if isinstance(step, SubStep):
-        return Result(await env.run_sub(step.ref, step.contract, value, cid))
+        return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
     raise ComposableAgentsError(f"interpreter: prim with no usable step at {node.id!r}")
 
 
@@ -636,11 +653,15 @@ class InMemoryEnv:
         mode: EnforcementMode | str = EnforcementMode.STRICT,
         registry: Optional[Registry] = None,
         principal: Optional[dict[str, Any]] = None,
+        root_run_id: Optional[str] = None,
+        segment_seq: int = 0,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
         self.native_call_retries = False
         self.principal = principal
+        self.root_run_id = root_run_id
+        self.segment_seq = segment_seq
         self._hands = hands or {}
         self._brains = brains or {}
         self._subs = subs or {}
@@ -704,7 +725,14 @@ class InMemoryEnv:
             raise KeyError(f"no in-memory brain for {brain!r}")
         return self._brains[brain](value)
 
-    async def run_sub(self, ref: str, contract: SubContract, value: Any, cid: str) -> Any:
+    async def run_sub(
+        self,
+        ref: str,
+        contract: SubContract,
+        value: Any,
+        cid: str,
+        node_id: Optional[str] = None,
+    ) -> Any:
         if ref not in self._subs:
             raise KeyError(f"no in-memory sub for {ref!r}")
         return self._subs[ref](value)
