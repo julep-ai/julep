@@ -11,6 +11,7 @@ from composable_agents import arr, deploy, pure, seq
 from composable_agents.bundle import publish_bundle
 from composable_agents.cas import LocalDirCAS
 from composable_agents.deps import base_component_hash, env_hash, parse_pep723
+from composable_agents.execution import env_builder
 from composable_agents.ir import canonical_json
 from composable_agents.registry import DEFAULT_REGISTRY, Registry
 from conftest import read_snapshot
@@ -55,6 +56,23 @@ def _pure_source(name: str, dep: str | None, *, empty_deps: bool = False) -> str
         "def identity(value):\n"
         "    return value\n"
     )
+
+
+def _patch_synth_env_builder(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def fake_build_env_component(
+        dep_list: tuple[str, ...],
+        requires_python: str | None,
+        *,
+        out_dir: str | Path | None = None,
+    ) -> Path:
+        component_hash = env_hash(dep_list, requires_python, base_component_hash())
+        root = Path(out_dir) if out_dir is not None else tmp_path / "env-components"
+        root.mkdir(parents=True, exist_ok=True)
+        path = root / f"env_{component_hash}.wasm"
+        path.write_bytes(env_builder.synthesize_env_component(dep_list, requires_python))
+        return path
+
+    monkeypatch.setattr(env_builder, "build_env_component", fake_build_env_component)
 
 
 def test_parse_pep723_no_block() -> None:
@@ -154,7 +172,11 @@ def test_no_dep_publish_keeps_existing_bytes_without_env_hash(tmp_path: Path) ->
     assert std_rec["publishedArtifactHash"] == std_deployment.artifact_hash
 
 
-def test_dep_pin_changes_env_hash_and_published_artifact_hash(tmp_path: Path) -> None:
+def test_dep_pin_changes_env_hash_and_published_artifact_hash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_synth_env_builder(monkeypatch, tmp_path)
     isolated_a = Registry()
     isolated_b = Registry()
     name = "deps.test.pin.v1"

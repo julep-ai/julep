@@ -367,6 +367,13 @@ The bundle manifest MUST be canonical JSON with this wire shape:
 - `flow` is the CAS digest of canonical `flowJson`.
 - `pures` is the bundled pure source list and MUST be sorted by `name`.
 - `abi` is the source call ABI.
+- `envHash` is the dependency environment identity from §6.5. It is optional
+  and MUST be serialized only when the pure declares PEP 723 dependencies. For
+  no-dep pures it is ABSENT (key omitted, never `null`).
+- `envComponent` is the CAS digest of the pre-initialized wasm component for
+  `envHash`. It is optional and MUST be present exactly when `envHash` is
+  present. For no-dep pures it is ABSENT, so no-dep bundle manifests remain
+  byte-identical to manifests published before deps-as-data env components.
 - `name` is the pure registry name.
 - `source` is the CAS digest of the source blob.
 - `sourceHash` is the registry pin over the exact source text.

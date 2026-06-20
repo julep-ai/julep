@@ -60,6 +60,8 @@ class WasmExecutor:
         self._epoch_thread: threading.Thread | None = None
         self._engine = self._make_engine()
         self._component = self._load_component()
+        self._env_components: dict[str, Component] = {}
+        self._env_component_digests: dict[str, str] = {}
         self._linker = Linker(self._engine)
         if self._epoch_ms is not None:
             self._start_epoch_ticker()
@@ -85,7 +87,29 @@ class WasmExecutor:
         if thread is not None and thread.is_alive():
             thread.join(timeout=1.0)
 
-    def run(self, name: str, source: str, value: Any, kwargs: dict[str, Any]) -> Any:
+    def register_env_component(self, env_hash: str, component_bytes: bytes) -> None:
+        digest = hashlib.sha256(component_bytes).hexdigest()
+        with self._lock:
+            existing = self._env_component_digests.get(env_hash)
+            if existing is not None:
+                if existing == digest:
+                    return
+                raise ValueError(
+                    f"conflicting wasm env component bytes for envHash {env_hash}: "
+                    f"{existing} != {digest}"
+                )
+            self._env_components[env_hash] = Component(self._engine, component_bytes)
+            self._env_component_digests[env_hash] = digest
+
+    def run(
+        self,
+        name: str,
+        source: str,
+        value: Any,
+        kwargs: dict[str, Any],
+        *,
+        env_hash: str | None = None,
+    ) -> Any:
         request = {
             "kwargs": kwargs or {},
             "name": name,
@@ -94,6 +118,7 @@ class WasmExecutor:
         }
 
         try:
+            component = self._select_component(name, env_hash)
             raw_request = json.dumps(request, sort_keys=True, separators=(",", ":"))
             # Keep batch 1 conservative: fresh store/instance per call, with a
             # process-local lock around wasmtime component instantiation/calls.
@@ -102,7 +127,7 @@ class WasmExecutor:
                 store.set_fuel(self._fuel)
                 if self._epoch_ms is not None:
                     store.set_epoch_deadline(1)
-                instance = self._linker.instantiate(store, self._component)
+                instance = self._linker.instantiate(store, component)
                 run = instance.get_func(store, "run")
                 if run is None:
                     raise RuntimeError("component export 'run' not found")
@@ -127,6 +152,19 @@ class WasmExecutor:
             message = self._host_error_message(error_type, name, raw_message)
             traceback_tail = self._host_traceback_tail(error_type, name, raw_message)
             raise PureExecutionError(error_type, message, traceback_tail) from exc
+
+    def _select_component(self, pure_name: str, env_hash: str | None) -> Component:
+        if env_hash is None:
+            return self._component
+        try:
+            return self._env_components[env_hash]
+        except KeyError as e:
+            raise PureExecutionError(
+                "WasmEnvUnavailable",
+                f"bundle pure {pure_name!r} requested envHash {env_hash}, "
+                "but no env component is registered on this worker",
+                [f"WasmEnvUnavailable: {pure_name}", env_hash],
+            ) from e
 
     def _make_engine(self) -> Engine:
         config = Config()

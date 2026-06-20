@@ -12,7 +12,7 @@ import ast
 import hashlib
 import inspect
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from .deps import parse_pep723
@@ -75,6 +75,7 @@ class PureEntry:
     source: str | None = None
     deps: tuple[str, ...] = ()
     requires_python: str | None = None
+    env_hash: str | None = None
 
 
 @dataclass(frozen=True)
@@ -231,10 +232,25 @@ class Registry:
             from .execution.wasm_executor import get_wasm_executor
 
             def wasm_bound(value: Any, **kwargs: Any) -> Any:
-                return get_wasm_executor().run(name, source, value, kwargs)
+                return get_wasm_executor().run(
+                    name,
+                    source,
+                    value,
+                    kwargs,
+                    env_hash=entry.env_hash,
+                )
 
             return wasm_bound
         return entry.fn
+
+    def set_pure_env_hash(self, name: str, env_hash: str) -> None:
+        try:
+            entry = self.pures[name]
+        except KeyError as e:
+            raise KeyError(f"unknown pure {name!r}; cannot set envHash") from e
+        if entry.executor != "wasm":
+            raise ValueError(f"pure {name!r} is not wasm-tier; cannot set envHash")
+        self.pures[name] = replace(entry, env_hash=env_hash)
 
     def is_registered(self, name: str) -> bool:
         return name in self.pures

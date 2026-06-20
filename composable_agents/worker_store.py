@@ -11,12 +11,14 @@ from __future__ import annotations
 import json
 import os
 import re
+from dataclasses import dataclass
 from collections.abc import Sequence
 from typing import Any
 
+from . import deps
 from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
-from .cas import CASStore, cas_from_url
-from .registry import DEFAULT_REGISTRY, Registry, _text_hash
+from .cas import CASError, CASStore, cas_from_url
+from .registry import DEFAULT_REGISTRY, PureEntry, Registry, _text_hash
 
 _SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
 _HEX = re.compile(r"^[0-9a-fA-F]+$")
@@ -24,6 +26,25 @@ _HEX = re.compile(r"^[0-9a-fA-F]+$")
 
 class BundleResolutionError(BundleError):
     pass
+
+
+@dataclass(frozen=True)
+class _ManifestPure:
+    name: str
+    abi: str
+    source: str
+    source_hash: str
+    env_hash: str | None = None
+    env_component: str | None = None
+
+
+@dataclass(frozen=True)
+class _VerifiedPure:
+    name: str
+    source_hash: str
+    source: str
+    env_hash: str | None = None
+    env_component: str | None = None
 
 
 def _json_object(data: bytes, label: str) -> dict[str, Any]:
@@ -73,12 +94,12 @@ def _verify_signature(public_key_hex: str, signature_hex: str, data: bytes) -> N
         raise BundleResolutionError("bundle signature object contains invalid hex") from e
 
 
-def _manifest_pures(manifest: dict[str, Any]) -> list[dict[str, str]]:
+def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
     pures = manifest.get("pures")
     if not isinstance(pures, list):
         raise BundleResolutionError("bundle manifest pures must be a list")
 
-    out: list[dict[str, str]] = []
+    out: list[_ManifestPure] = []
     for raw in pures:
         if not isinstance(raw, dict):
             raise BundleResolutionError("bundle manifest pure records must be objects")
@@ -92,13 +113,39 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[dict[str, str]]:
         assert isinstance(abi, str)
         assert isinstance(source, str)
         assert isinstance(source_hash, str)
+        env_hash = raw.get("envHash")
+        env_component = raw.get("envComponent")
+        if (env_hash is None) != (env_component is None):
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} must carry envHash and envComponent together"
+            )
+        if env_hash is not None:
+            if not isinstance(env_hash, str) or _SHA256_HEX.fullmatch(env_hash) is None:
+                raise BundleResolutionError(
+                    f"bundle manifest pure {name!r} has malformed envHash"
+                )
+            if not isinstance(env_component, str) or _SHA256_HEX.fullmatch(env_component) is None:
+                raise BundleResolutionError(
+                    f"bundle manifest pure {name!r} has malformed envComponent"
+                )
+            env_hash = env_hash.lower()
+            env_component = env_component.lower()
         if name.startswith("std."):
             raise BundleResolutionError(
                 f"bundle manifest must not include std.* pure {name!r}; std pures stay baked"
             )
         if abi != ABI_PYTHON_SOURCE_JSON_V1:
             raise BundleResolutionError(f"unsupported pure ABI for {name!r}: {abi!r}")
-        out.append({"name": name, "abi": abi, "source": source, "sourceHash": source_hash})
+        out.append(
+            _ManifestPure(
+                name=name,
+                abi=abi,
+                source=source,
+                source_hash=source_hash,
+                env_hash=env_hash,
+                env_component=env_component,
+            )
+        )
     return out
 
 
@@ -153,33 +200,41 @@ def resolve_and_register(
             "bundle manifest artifactHash must equal sha256:artifactComponents"
         )
 
-    verified: list[tuple[str, str, str]] = []
+    verified: list[_VerifiedPure] = []
     for pure_record in _manifest_pures(manifest):
-        source_bytes = store.get(pure_record["source"])
+        source_bytes = store.get(pure_record.source)
         try:
             source = source_bytes.decode("utf-8")
         except UnicodeDecodeError as e:
             raise BundleResolutionError(
-                f"source blob for pure {pure_record['name']!r} is not UTF-8"
+                f"source blob for pure {pure_record.name!r} is not UTF-8"
             ) from e
         actual_hash = _text_hash(source)
-        bundled_hash = pure_record["sourceHash"]
+        bundled_hash = pure_record.source_hash
         if actual_hash != bundled_hash:
             raise BundleResolutionError(
-                f"sourceHash mismatch for pure {pure_record['name']!r}: "
+                f"sourceHash mismatch for pure {pure_record.name!r}: "
                 f"source text hashes to {actual_hash}, manifest has {bundled_hash}"
             )
 
-        existing = registry.pures.get(pure_record["name"])
+        existing = registry.pures.get(pure_record.name)
         if existing is not None and existing.source_hash != bundled_hash:
             raise BundleResolutionError(
-                f"pure {pure_record['name']!r} is already baked with hash "
+                f"pure {pure_record.name!r} is already baked with hash "
                 f"{existing.source_hash}, but bundle {bundle_hash} provides {bundled_hash}. "
                 "Likely cause: a stale worker image (baked code is behind the bundle) or "
                 "a stale bundle (published before the pure changed). Rebuild/redeploy the "
                 "image, or republish."
             )
-        verified.append((pure_record["name"], bundled_hash, source))
+        verified.append(
+            _VerifiedPure(
+                name=pure_record.name,
+                source_hash=bundled_hash,
+                source=source,
+                env_hash=pure_record.env_hash,
+                env_component=pure_record.env_component,
+            )
+        )
 
     # Every verified pure resolves to the wasm tier. Probe the wasm runtime NOW —
     # at resolution (worker init / fresh-activation), before any pure lookup —
@@ -189,11 +244,24 @@ def resolve_and_register(
     # WorkflowTaskFailed mid-run). Fail fast at resolution with install guidance.
     if verified:
         _ensure_wasm_runtime()
+        _validate_sources_without_registering(verified)
+        _register_env_components(store, verified)
 
     registered: dict[str, str] = {}
-    for name, source_hash, source in verified:
-        registry.register_pure_from_source(name, source)
-        registered[name] = source_hash
+    base_component_hash: str | None = None
+    for verified_pure in verified:
+        entry = registry.register_pure_from_source(verified_pure.name, verified_pure.source)
+        if verified_pure.env_hash is not None:
+            if base_component_hash is None:
+                base_component_hash = deps.base_component_hash()
+            expected_env_hash = _entry_env_hash(entry, base_component_hash)
+            if expected_env_hash != verified_pure.env_hash:
+                raise BundleResolutionError(
+                    f"envHash mismatch for pure {verified_pure.name!r}: manifest has "
+                    f"{verified_pure.env_hash}, worker re-derived {expected_env_hash}"
+                )
+            registry.set_pure_env_hash(verified_pure.name, verified_pure.env_hash)
+        registered[verified_pure.name] = verified_pure.source_hash
 
     return {
         "bundleHash": bundle_hash,
@@ -202,6 +270,69 @@ def resolve_and_register(
         "flow": flow_digest,
         "registered": registered,
     }
+
+
+def _validate_sources_without_registering(verified: Sequence[_VerifiedPure]) -> None:
+    scratch = Registry()
+    for pure_record in verified:
+        try:
+            scratch.register_pure_from_source(pure_record.name, pure_record.source)
+        except ValueError as e:
+            raise BundleResolutionError(str(e)) from e
+
+
+def _entry_env_hash(entry: PureEntry, base_component_hash: str) -> str:
+    if not entry.deps:
+        raise BundleResolutionError(
+            f"pure {entry.name!r} carries envHash but declares no dependencies"
+        )
+    return deps.env_hash(entry.deps, entry.requires_python, base_component_hash)
+
+
+def _register_env_components(store: CASStore, verified: Sequence[_VerifiedPure]) -> None:
+    from .execution.wasm_executor import get_wasm_executor
+
+    executor = get_wasm_executor()
+    base_component_hash: str | None = None
+    for pure_record in verified:
+        if pure_record.env_hash is None:
+            continue
+        if pure_record.env_component is None:
+            raise BundleResolutionError(
+                f"pure {pure_record.name!r} carries envHash without envComponent"
+            )
+        try:
+            parsed_deps, requires_python = deps.parse_pep723(pure_record.source)
+        except ValueError as e:
+            raise BundleResolutionError(
+                f"pure {pure_record.name!r} has malformed dependency metadata"
+            ) from e
+        if not parsed_deps:
+            raise BundleResolutionError(
+                f"pure {pure_record.name!r} carries envHash but declares no dependencies"
+            )
+        if base_component_hash is None:
+            base_component_hash = deps.base_component_hash()
+        expected_env_hash = deps.env_hash(parsed_deps, requires_python, base_component_hash)
+        if expected_env_hash != pure_record.env_hash:
+            raise BundleResolutionError(
+                f"envHash mismatch for pure {pure_record.name!r}: manifest has "
+                f"{pure_record.env_hash}, worker re-derived {expected_env_hash}"
+            )
+        try:
+            component_bytes = store.get(pure_record.env_component)
+        except CASError as e:
+            raise BundleResolutionError(
+                f"env component {pure_record.env_component} for pure {pure_record.name!r} "
+                "is missing or failed CAS verification"
+            ) from e
+        try:
+            executor.register_env_component(pure_record.env_hash, component_bytes)
+        except Exception as e:
+            raise BundleResolutionError(
+                f"failed to load env component {pure_record.env_component} for pure "
+                f"{pure_record.name!r} envHash {pure_record.env_hash}: {e}"
+            ) from e
 
 
 def _ensure_wasm_runtime() -> None:

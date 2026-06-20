@@ -152,16 +152,53 @@ def publish_bundle(
     pure_sources = _custom_pure_sources(deployment, registry)
 
     manifest_pures: list[dict[str, str]] = []
+    base_component_hash: str | None = None
+    env_components: dict[str, str] = {}
     for pure_record in pure_sources:
         source_digest = store.put(pure_record["source"].encode("utf-8"))
-        manifest_pures.append(
-            {
-                "abi": ABI_PYTHON_SOURCE_JSON_V1,
-                "name": pure_record["name"],
-                "source": source_digest,
-                "sourceHash": pure_record["sourceHash"],
-            }
-        )
+        name = pure_record["name"]
+        manifest_pure = {
+            "abi": ABI_PYTHON_SOURCE_JSON_V1,
+            "name": name,
+            "source": source_digest,
+            "sourceHash": pure_record["sourceHash"],
+        }
+        entry = registry.pures[name]
+        if entry.deps:
+            from .execution import env_builder
+
+            if not env_builder.supported_deps(entry.deps):
+                raise BundleError(
+                    f"pure {name!r} declares dependency metadata that cannot be built "
+                    "for the wasm tier: one or more dependencies are off the curated "
+                    f"WASI wheel list ({', '.join(sorted(env_builder.SUPPORTED_WASI_WHEELS))}). "
+                    "This slice has no native-tier capability grant API yet; use a supported "
+                    "wasi-wheel dependency or remove the dependency metadata."
+                )
+            if base_component_hash is None:
+                base_component_hash = deps.base_component_hash()
+            env_hash = deps.env_hash(entry.deps, entry.requires_python, base_component_hash)
+            env_component = env_components.get(env_hash)
+            if env_component is None:
+                try:
+                    built_env_hash, env_component = env_builder.publish_env_component(
+                        entry.deps,
+                        entry.requires_python,
+                        store,
+                    )
+                except env_builder.EnvBuildError as e:
+                    raise BundleError(
+                        f"failed to build dependency env component for pure {name!r}: {e}"
+                    ) from e
+                if built_env_hash != env_hash:
+                    raise BundleError(
+                        f"env builder returned envHash {built_env_hash} for pure {name!r}, "
+                        f"expected {env_hash}"
+                    )
+                env_components[env_hash] = env_component
+            manifest_pure["envHash"] = env_hash
+            manifest_pure["envComponent"] = env_component
+        manifest_pures.append(manifest_pure)
 
     flow_digest = store.put(_canonical_bytes(deployment.flow_json))
     artifact_components_digest = store.put(_canonical_bytes(deployment.artifact_components))
@@ -188,7 +225,6 @@ def publish_bundle(
     # Bundle (register_pure_from_source) pures resolve to the WASM tier on a
     # worker; the published runtime identity must reflect that real executor tier,
     # not 'native'. std.* pures never appear in manifest_pures (they stay baked).
-    base_component_hash: str | None = None
     pure_runtime_refs: dict[str, dict[str, str]] = {}
     for pure_record in manifest_pures:
         name = pure_record["name"]
@@ -199,14 +235,8 @@ def publish_bundle(
             "bundleHash": bundle_hash,
             "executorTier": "wasm",
         }
-        if entry.deps:
-            if base_component_hash is None:
-                base_component_hash = deps.base_component_hash()
-            ref["envHash"] = deps.env_hash(
-                entry.deps,
-                entry.requires_python,
-                base_component_hash,
-            )
+        if "envHash" in pure_record:
+            ref["envHash"] = pure_record["envHash"]
         pure_runtime_refs[name] = ref
     return {
         "bundleHash": bundle_hash,
