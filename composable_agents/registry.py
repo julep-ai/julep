@@ -15,6 +15,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
+from .deps import parse_pep723
+
 if TYPE_CHECKING:
     from .dotctx import Brain
 
@@ -71,6 +73,8 @@ class PureEntry:
     source_hash: str
     executor: str = "native"
     source: str | None = None
+    deps: tuple[str, ...] = ()
+    requires_python: str | None = None
 
 
 @dataclass(frozen=True)
@@ -134,12 +138,22 @@ class Registry:
     def register_pure(self, name: str, fn: PureFn) -> PureEntry:
         if name in self.pures and self.pures[name].fn is not fn:
             raise ValueError(f"pure name already registered to a different fn: {name!r}")
+        deps: tuple[str, ...] = ()
+        requires_python: str | None = None
+        try:
+            source = inspect.getsource(fn)
+        except (OSError, TypeError):
+            pass
+        else:
+            deps, requires_python = parse_pep723(source)
         entry = PureEntry(
             name=name,
             fn=fn,
             source_hash=_source_hash(fn),
             executor="native",
             source=None,
+            deps=deps,
+            requires_python=requires_python,
         )
         self.pures[name] = entry
         return entry
@@ -190,12 +204,15 @@ class Registry:
         if not _pure_decorator_name(source, name):
             raise ValueError(f"source did not register requested pure {name!r}")
 
+        deps, requires_python = parse_pep723(source)
         wasm_entry = PureEntry(
             name=name,
             fn=_wasm_source_only,
             source_hash=expected_hash,
             executor="wasm",
             source=source,
+            deps=deps,
+            requires_python=requires_python,
         )
         self.pures[name] = wasm_entry
         return wasm_entry

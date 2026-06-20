@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from . import deps
 from .cas import CASStore
 from .ir import canonical_json
 from .registry import DEFAULT_REGISTRY, Registry, _text_hash
@@ -187,15 +188,26 @@ def publish_bundle(
     # Bundle (register_pure_from_source) pures resolve to the WASM tier on a
     # worker; the published runtime identity must reflect that real executor tier,
     # not 'native'. std.* pures never appear in manifest_pures (they stay baked).
-    pure_runtime_refs = {
-        pure_record["name"]: {
+    base_component_hash: str | None = None
+    pure_runtime_refs: dict[str, dict[str, str]] = {}
+    for pure_record in manifest_pures:
+        name = pure_record["name"]
+        entry = registry.pures[name]
+        ref = {
             "sourceHash": pure_record["sourceHash"],
             "abi": pure_record["abi"],
             "bundleHash": bundle_hash,
             "executorTier": "wasm",
         }
-        for pure_record in manifest_pures
-    }
+        if entry.deps:
+            if base_component_hash is None:
+                base_component_hash = deps.base_component_hash()
+            ref["envHash"] = deps.env_hash(
+                entry.deps,
+                entry.requires_python,
+                base_component_hash,
+            )
+        pure_runtime_refs[name] = ref
     return {
         "bundleHash": bundle_hash,
         "signatureDigest": signature_digest,

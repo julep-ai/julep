@@ -319,8 +319,16 @@ MUST NOT be mutated in place — add `.v2`.
   (`register_pure_from_source`) resolve to `wasm` (the wasmtime sandbox); baked
   `register_pure`/`std.*` pures stay `native`. The published `pureRuntimeRefs`
   for a bundle therefore record `wasm`.
-- `envHash` is the dependency environment identity. It is absent until
-  deps-as-data lands and MUST be serialized only when set.
+- `envHash` is the dependency environment identity: a 64-hex sha256 over
+  canonical JSON of the pure's sorted/de-duplicated PEP 508 dependency
+  requirement strings, the pinned Python major.minor from `requires-python` (or
+  the deploy interpreter's major.minor when omitted), and the sha256 of the
+  vendored base wasm component
+  (`composable_agents/execution/_wasm/executor.wasm`). It is emitted into a
+  pure's runtime ref only when that pure declares PEP 723 inline-script-metadata
+  dependencies; for a pure with no declared deps, `envHash` is ABSENT (key
+  omitted) and the no-dep deployment remains byte-identical to before
+  deps-as-data. `envHash` MUST be serialized only when set.
 
 The `pureRuntimeRefs` key MUST enter the artifact envelope only when the map is
 non-empty. Absent and empty refs are indistinguishable; every pre-existing
