@@ -88,8 +88,13 @@ def register_pure(name: str, fn: PureFn) -> PureEntry:
     return DEFAULT_REGISTRY.register_pure(name, fn)
 
 
-def register_pure_from_source(name: str, source: str) -> PureEntry:
-    return DEFAULT_REGISTRY.register_pure_from_source(name, source)
+def register_pure_from_source(
+    name: str,
+    source: str,
+    *,
+    tier: str = "wasm",
+) -> PureEntry:
+    return DEFAULT_REGISTRY.register_pure_from_source(name, source, tier=tier)
 
 
 def is_registered(name: str) -> bool:

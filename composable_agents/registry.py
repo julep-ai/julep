@@ -24,16 +24,16 @@ PureFn = Callable[..., Any]
 
 
 def _wasm_source_only(*_args: object, **_kwargs: object) -> object:
-    """The ``fn`` placeholder for a wasm-tier (bundle-sourced) pure.
+    """The ``fn`` placeholder for a source-only (bundle-sourced) pure.
 
-    Bundle source is NEVER exec'd on the host: a wasm-tier pure executes only
-    inside the wasmtime sandbox (via :meth:`Registry.get_pure`). This sentinel
-    keeps ``PureEntry.fn`` populated without ever running bundle code on the host;
-    calling it is a programming error, never a real execution path.
+    Bundle source is NEVER exec'd on the host at registration: source-only pures
+    execute through their selected runtime tier (via :meth:`Registry.get_pure`).
+    This sentinel keeps ``PureEntry.fn`` populated without creating a host fn
+    object; calling it is a programming error, never a real execution path.
     """
     raise RuntimeError(
-        "wasm-tier pure has no host-callable fn; it executes only inside the "
-        "wasm sandbox via get_pure"
+        "source-only pure has no host-callable fn; it executes only through "
+        "its selected runtime tier via get_pure"
     )
 
 
@@ -159,18 +159,25 @@ class Registry:
         self.pures[name] = entry
         return entry
 
-    def register_pure_from_source(self, name: str, source: str) -> PureEntry:
+    def register_pure_from_source(
+        self,
+        name: str,
+        source: str,
+        *,
+        tier: str = "wasm",
+    ) -> PureEntry:
         """Register a bundle-sourced pure as the wasm tier WITHOUT host execution.
 
         The bundle's shipped source is the body of an untrusted (if signed) pure:
-        it must run fail-closed inside the wasm sandbox, never on the host. So we
-        do not ``exec`` it here. We validate the ``@pure(name)`` contract by static
-        analysis (:func:`_pure_decorator_name`), pin the source text on a
-        wasm-tier :class:`PureEntry`, and leave the actual execution to
-        :meth:`get_pure` -> the wasmtime component. ``PureEntry.fn`` is set to the
-        :func:`_wasm_source_only` sentinel: no host fn object is ever created or
-        called for a bundle pure.
+        it must run fail-closed through its selected tier, never directly in the
+        host process. So we do not ``exec`` it here. We validate the
+        ``@pure(name)`` contract by static analysis (:func:`_pure_decorator_name`),
+        pin the source text on a source-only :class:`PureEntry`, and leave actual
+        execution to :meth:`get_pure`. ``PureEntry.fn`` is set to the
+        :func:`_wasm_source_only` sentinel: no host fn object is ever created.
         """
+        if tier not in {"wasm", "native_venv"}:
+            raise ValueError(f"unsupported pure source tier: {tier!r}")
         expected_hash = _text_hash(source)
         existing = self.pures.get(name)
         if existing is not None:
@@ -179,19 +186,20 @@ class Registry:
                     f"bundled source for pure {name!r} disagrees with baked registration: "
                     f"{existing.source_hash} != {expected_hash}"
                 )
-            # Same hash. Only a TRUE no-op when the entry is already wasm-tier: an
-            # equal-hash baked (native) entry must still be PROMOTED to wasm so a
-            # bundle-sourced pure never escapes the sandbox just because the same
-            # source happens to be baked into the worker. (std.* is forbidden at
-            # the resolution boundary, so it never reaches here; never overwrite.)
-            if existing.executor == "wasm":
+            # Same hash. Only a TRUE no-op when the entry is already in the
+            # requested source tier: an equal-hash baked (native) entry must still
+            # be PROMOTED to the bundle-requested tier so a bundle-sourced pure
+            # never escapes policy just because the same source is baked into the
+            # worker. (std.* is forbidden at the resolution boundary, so it never
+            # reaches here; never overwrite.)
+            if existing.executor == tier:
                 return existing
             if name.startswith("std."):
                 raise ValueError(
                     f"refusing to register std pure {name!r} from bundle source; "
                     "std pures stay baked/native"
                 )
-            # Fall through: replace the equal-hash native entry with a wasm entry.
+            # Fall through: replace the equal-hash entry with the requested tier.
 
         # Preserve the historical local invariant that the shipped text ends in a
         # newline (the published sourceHash is computed over that canonical text);
@@ -206,17 +214,17 @@ class Registry:
             raise ValueError(f"source did not register requested pure {name!r}")
 
         deps, requires_python = parse_pep723(source)
-        wasm_entry = PureEntry(
+        entry = PureEntry(
             name=name,
             fn=_wasm_source_only,
             source_hash=expected_hash,
-            executor="wasm",
+            executor=tier,
             source=source,
             deps=deps,
             requires_python=requires_python,
         )
-        self.pures[name] = wasm_entry
-        return wasm_entry
+        self.pures[name] = entry
+        return entry
 
     def get_pure(self, name: str) -> PureFn:
         try:
@@ -229,18 +237,37 @@ class Registry:
             source = entry.source
             if source is None:
                 return entry.fn
+            source_text = source
             from .execution.wasm_executor import get_wasm_executor
 
             def wasm_bound(value: Any, **kwargs: Any) -> Any:
                 return get_wasm_executor().run(
                     name,
-                    source,
+                    source_text,
                     value,
                     kwargs,
                     env_hash=entry.env_hash,
                 )
 
             return wasm_bound
+        if entry.executor == "native_venv":
+            source = entry.source
+            if source is None:
+                return entry.fn
+            source_text = source
+            from .execution.native_venv_executor import get_native_venv_executor
+
+            def native_venv_bound(value: Any, **kwargs: Any) -> Any:
+                return get_native_venv_executor().run(
+                    name,
+                    source_text,
+                    value,
+                    kwargs,
+                    deps=entry.deps,
+                    requires_python=entry.requires_python,
+                )
+
+            return native_venv_bound
         return entry.fn
 
     def set_pure_env_hash(self, name: str, env_hash: str) -> None:

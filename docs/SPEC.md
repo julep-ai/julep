@@ -318,7 +318,15 @@ MUST NOT be mutated in place — add `.v2`.
 - `executorTier` is the tier that executes the pure. Bundle-sourced pures
   (`register_pure_from_source`) resolve to `wasm` (the wasmtime sandbox); baked
   `register_pure`/`std.*` pures stay `native`. The published `pureRuntimeRefs`
-  for a bundle therefore record `wasm`.
+  for a bundle therefore record `wasm`. A bundle-sourced pure whose declared
+  dependencies are off the curated WASI-wheel set MAY instead resolve to the
+  `native` tier (an in-venv subprocess), but ONLY under an explicit per-pure
+  capability grant (the `CA_PURE_NATIVE_DEPS` allowlist) present at BOTH deploy
+  and worker resolution. Without the grant, a deploy/publish of such a pure MUST
+  fail closed naming the pure and the offending dependency; a worker MUST refuse
+  to register a `native`-tier manifest pure it has not granted. A `native`-tier
+  runtime ref carries no `envHash` (the venv is built from the pure's declared
+  deps at the worker, not from a pre-initialized wasm component).
 - `envHash` is the dependency environment identity: a 64-hex sha256 over
   canonical JSON of the pure's sorted/de-duplicated PEP 508 dependency
   requirement strings, the pinned Python major.minor from `requires-python` (or
@@ -377,6 +385,14 @@ The bundle manifest MUST be canonical JSON with this wire shape:
 - `name` is the pure registry name.
 - `source` is the CAS digest of the source blob.
 - `sourceHash` is the registry pin over the exact source text.
+- `executorTier`, `deps`, and `requiresPython` are OPTIONAL and present together
+  exactly when the pure is published to the `native` capability-granted tier
+  (§6.5). `executorTier` is then `"native"`, `deps` is the sorted PEP 508
+  requirement list, and `requiresPython` is the raw `requires-python` (or
+  `null`). A `native`-tier pure MUST NOT carry `envHash`/`envComponent`. For
+  wasm-tier and no-dep pures these keys are ABSENT (omitted), so existing
+  manifests remain byte-identical. The worker MUST re-derive `deps`/`requiresPython`
+  from the source's PEP 723 metadata and reject any mismatch.
 - `std.*` pures MUST NOT appear in `pures`; they stay baked in the worker image.
 
 The stored manifest's `signature` field MUST be `null`. Signatures are

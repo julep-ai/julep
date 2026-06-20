@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from .ir import canonical_json
@@ -23,6 +24,19 @@ _PYTHON_MAJOR_MINOR = re.compile(
 
 def _normalized_deps(deps: Sequence[str]) -> tuple[str, ...]:
     return tuple(sorted(set(deps)))
+
+
+def native_dep_grants(explicit: Iterable[str] | str | None = None) -> frozenset[str]:
+    """Return pure names granted permission to use the native dependency tier."""
+    raw = explicit
+    if raw is None:
+        raw = os.environ.get("CA_PURE_NATIVE_DEPS", "")
+    items: Iterable[str]
+    if isinstance(raw, str):
+        items = raw.split(",")
+    else:
+        items = raw
+    return frozenset(item.strip() for item in items if item.strip())
 
 
 def parse_pep723(source: str) -> tuple[tuple[str, ...], str | None]:

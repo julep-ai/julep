@@ -52,6 +52,15 @@ def supported_deps(deps: Sequence[str]) -> bool:
     return all(_normalized_project_name(dep) in SUPPORTED_WASI_WHEELS for dep in deps)
 
 
+def unsupported_deps(deps: Sequence[str]) -> tuple[str, ...]:
+    """Return dependency requirements outside the curated WASI wheel list."""
+    return tuple(
+        dep
+        for dep in deps
+        if _normalized_project_name(dep) not in SUPPORTED_WASI_WHEELS
+    )
+
+
 def _leb128_u32(value: int) -> bytes:
     out = bytearray()
     while True:

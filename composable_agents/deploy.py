@@ -536,6 +536,9 @@ def deploy(
         _overrides=overrides,
         _tools=retained_tools,
     )
+    from .bundle import validate_pure_deps
+
+    validate_pure_deps(deployment, registry=DEFAULT_REGISTRY)
     _ = deployment.artifact_hash
     return deployment
 

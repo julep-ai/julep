@@ -11,9 +11,9 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import dataclass
 from collections.abc import Sequence
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, cast
 
 from . import deps
 from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
@@ -34,8 +34,11 @@ class _ManifestPure:
     abi: str
     source: str
     source_hash: str
+    executor_tier: str = "wasm"
     env_hash: str | None = None
     env_component: str | None = None
+    dep_list: tuple[str, ...] = ()
+    requires_python: str | None = None
 
 
 @dataclass(frozen=True)
@@ -43,8 +46,11 @@ class _VerifiedPure:
     name: str
     source_hash: str
     source: str
+    executor_tier: str = "wasm"
     env_hash: str | None = None
     env_component: str | None = None
+    dep_list: tuple[str, ...] = ()
+    requires_python: str | None = None
 
 
 def _json_object(data: bytes, label: str) -> dict[str, Any]:
@@ -115,6 +121,24 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
         assert isinstance(source_hash, str)
         env_hash = raw.get("envHash")
         env_component = raw.get("envComponent")
+        executor_tier_raw = raw.get("executorTier")
+        if executor_tier_raw is None:
+            executor_tier = "wasm"
+        elif executor_tier_raw in {"wasm", "native"}:
+            assert isinstance(executor_tier_raw, str)
+            executor_tier = executor_tier_raw
+        else:
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} has unsupported executorTier "
+                f"{executor_tier_raw!r}"
+            )
+        dep_list_raw = raw.get("deps")
+        requires_python_raw = raw.get("requiresPython")
+        if requires_python_raw is not None and not isinstance(requires_python_raw, str):
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} has malformed requiresPython"
+            )
+        requires_python = requires_python_raw
         if (env_hash is None) != (env_component is None):
             raise BundleResolutionError(
                 f"bundle manifest pure {name!r} must carry envHash and envComponent together"
@@ -130,6 +154,28 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
                 )
             env_hash = env_hash.lower()
             env_component = env_component.lower()
+        dep_list: tuple[str, ...] = ()
+        if executor_tier == "native":
+            if env_hash is not None or env_component is not None:
+                raise BundleResolutionError(
+                    f"bundle manifest pure {name!r} native tier must not carry "
+                    "envHash/envComponent"
+                )
+            if (
+                not isinstance(dep_list_raw, list)
+                or not dep_list_raw
+                or not all(isinstance(dep, str) for dep in dep_list_raw)
+            ):
+                raise BundleResolutionError(
+                    f"bundle manifest pure {name!r} native tier requires non-empty "
+                    "deps list"
+                )
+            dep_list = tuple(sorted(set(cast(list[str], dep_list_raw))))
+        elif dep_list_raw is not None or "requiresPython" in raw:
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} must not carry deps/requiresPython "
+                "outside the native tier"
+            )
         if name.startswith("std."):
             raise BundleResolutionError(
                 f"bundle manifest must not include std.* pure {name!r}; std pures stay baked"
@@ -142,8 +188,11 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
                 abi=abi,
                 source=source,
                 source_hash=source_hash,
+                executor_tier=executor_tier,
                 env_hash=env_hash,
                 env_component=env_component,
+                dep_list=dep_list,
+                requires_python=requires_python,
             )
         )
     return out
@@ -155,17 +204,18 @@ def resolve_and_register(
     *,
     signature_digest: str | None = None,
     allowed_signers: Sequence[str] | None = None,
+    native_grant: Sequence[str] | str | None = None,
     registry: Registry = DEFAULT_REGISTRY,
 ) -> dict[str, Any]:
-    """Resolve a signed CAS bundle and register its pures as the wasm tier.
+    """Resolve a signed CAS bundle and register its pures by manifest tier.
 
-    Verified pure source is registered via register_pure_from_source, which
-    records tier="wasm": the pure executes in the wasmtime sandbox, not natively
-    in-process. Resolution is therefore ungated (the former P2 dev-only
-    CA_BUNDLE_NATIVE_EXEC native-exec gate is gone).
+    Wasm pures execute in the wasmtime sandbox. Native dependency pures require
+    an explicit CA_PURE_NATIVE_DEPS grant on this worker and are registered as
+    native_venv source-only pures.
     """
 
     signers = _allowed_signers(allowed_signers)
+    native_grants = deps.native_dep_grants(native_grant)
     if signature_digest is None:
         raise BundleResolutionError("bundle is unsigned: no signature reference provided")
 
@@ -231,26 +281,48 @@ def resolve_and_register(
                 name=pure_record.name,
                 source_hash=bundled_hash,
                 source=source,
+                executor_tier=pure_record.executor_tier,
                 env_hash=pure_record.env_hash,
                 env_component=pure_record.env_component,
+                dep_list=pure_record.dep_list,
+                requires_python=pure_record.requires_python,
             )
         )
 
-    # Every verified pure resolves to the wasm tier. Probe the wasm runtime NOW —
-    # at resolution (worker init / fresh-activation), before any pure lookup —
-    # and eagerly build the process-global executor. Otherwise a worker missing
-    # the `wasm` extra registers the pures fine and then fails LATE with a raw
-    # ModuleNotFoundError at the first lookup inside workflow code (a
-    # WorkflowTaskFailed mid-run). Fail fast at resolution with install guidance.
+    for verified_pure in verified:
+        if verified_pure.executor_tier == "native" and verified_pure.name not in native_grants:
+            raise BundleResolutionError(
+                f"bundle pure {verified_pure.name!r} requests native dependency tier, "
+                "but this worker has not granted it via CA_PURE_NATIVE_DEPS"
+            )
+
     if verified:
-        _ensure_wasm_runtime()
         _validate_sources_without_registering(verified)
-        _register_env_components(store, verified)
+        _validate_native_metadata(verified)
+
+    wasm_verified = [pure for pure in verified if pure.executor_tier == "wasm"]
+    # Wasm verified pures probe the wasm runtime NOW — at resolution (worker init
+    # / fresh-activation), before any pure lookup — and eagerly build the
+    # process-global executor. Otherwise a worker missing the `wasm` extra
+    # registers the pures fine and then fails LATE with a raw ModuleNotFoundError
+    # at the first lookup inside workflow code (a WorkflowTaskFailed mid-run).
+    # Fail fast at resolution with install guidance.
+    if wasm_verified:
+        _ensure_wasm_runtime()
+        _register_env_components(store, wasm_verified)
 
     registered: dict[str, str] = {}
     base_component_hash: str | None = None
     for verified_pure in verified:
-        entry = registry.register_pure_from_source(verified_pure.name, verified_pure.source)
+        tier = "native_venv" if verified_pure.executor_tier == "native" else "wasm"
+        entry = registry.register_pure_from_source(
+            verified_pure.name,
+            verified_pure.source,
+            tier=tier,
+        )
+        if verified_pure.executor_tier == "native":
+            assert entry.deps == verified_pure.dep_list
+            assert entry.requires_python == verified_pure.requires_python
         if verified_pure.env_hash is not None:
             if base_component_hash is None:
                 base_component_hash = deps.base_component_hash()
@@ -279,6 +351,30 @@ def _validate_sources_without_registering(verified: Sequence[_VerifiedPure]) -> 
             scratch.register_pure_from_source(pure_record.name, pure_record.source)
         except ValueError as e:
             raise BundleResolutionError(str(e)) from e
+
+
+def _validate_native_metadata(verified: Sequence[_VerifiedPure]) -> None:
+    for pure_record in verified:
+        if pure_record.executor_tier != "native":
+            continue
+        try:
+            parsed_deps, requires_python = deps.parse_pep723(pure_record.source)
+        except ValueError as e:
+            raise BundleResolutionError(
+                f"native pure {pure_record.name!r} has malformed dependency metadata"
+            ) from e
+        if parsed_deps != pure_record.dep_list:
+            raise BundleResolutionError(
+                f"dependency metadata mismatch for native pure {pure_record.name!r}: "
+                f"manifest has {list(pure_record.dep_list)!r}, source declares "
+                f"{list(parsed_deps)!r}"
+            )
+        if requires_python != pure_record.requires_python:
+            raise BundleResolutionError(
+                f"requiresPython mismatch for native pure {pure_record.name!r}: "
+                f"manifest has {pure_record.requires_python!r}, source declares "
+                f"{requires_python!r}"
+            )
 
 
 def _entry_env_hash(entry: PureEntry, base_component_hash: str) -> str:
