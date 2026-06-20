@@ -1,0 +1,83 @@
+# Generic code-as-data worker on EKS, zero docker in the per-flow loop.
+#
+# The image (__IMAGE__) is the framework runtime image built once — it holds NO
+# flow code. The grade-scores flow + its three custom pures arrive as a signed
+# CAS bundle read from S3 (STORE_URL) at startup; the worker verifies the bundle
+# against CA_BUNDLE_ALLOWED_SIGNERS, then runs the pures in the P3 wasm sandbox.
+#
+# up.sh substitutes __IMAGE__ / __STORE_URL__ / __CA_BUNDLES__ / __SIGNER__.
+# The pod reads S3 with creds from the `aws-cas-creds` secret (the EKS node role
+# has no S3 access). KEDA's temporal scaler drives 0 -> N -> 0 on queue backlog.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-cad-worker
+  namespace: julep-demo
+  labels: {app: ca-cad-worker}
+spec:
+  replicas: 0          # KEDA owns the replica count (scale-from-zero)
+  selector:
+    matchLabels: {app: ca-cad-worker}
+  template:
+    metadata:
+      labels: {app: ca-cad-worker}
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+        - name: worker
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: temporal-frontend.temporal.svc.cluster.local:7233
+            - name: TEMPORAL_TASK_QUEUE
+              value: ca-cad-demo
+            - name: WORKER_GRACEFUL_SHUTDOWN_S
+              value: "20"
+            - name: STORE_URL
+              value: __STORE_URL__
+            - name: CA_BUNDLES
+              value: "__CA_BUNDLES__"
+            - name: CA_BUNDLE_ALLOWED_SIGNERS
+              value: "__SIGNER__"
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef: {name: aws-cas-creds, key: AWS_ACCESS_KEY_ID}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef: {name: aws-cas-creds, key: AWS_SECRET_ACCESS_KEY}
+          ports:
+            - {containerPort: 8080, name: health}
+          livenessProbe:
+            httpGet: {path: /healthz, port: health}
+            periodSeconds: 5
+          readinessProbe:
+            httpGet: {path: /readyz, port: health}
+            periodSeconds: 2
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {memory: 1Gi}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ca-cad-worker
+  namespace: julep-demo
+spec:
+  scaleTargetRef:
+    name: ca-cad-worker
+  minReplicaCount: 0
+  maxReplicaCount: 4
+  pollingInterval: 5
+  cooldownPeriod: 30
+  triggers:
+    - type: temporal
+      metadata:
+        endpoint: temporal-frontend.temporal.svc.cluster.local:7233
+        namespace: default
+        taskQueue: ca-cad-demo
+        queueTypes: "workflow,activity"
+        targetQueueSize: "1"
+        activationTargetQueueSize: "0"

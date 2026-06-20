@@ -50,7 +50,14 @@ from .blobstore import BlobStore
 from .bundle_runner import BundleResolvingWorkflowRunner
 from .codec import ClaimCheckCodec
 from .debounce import DebounceCollector
-from .harness import AgentWorkflow, FlowWorkflow, finishTrajectory, runSubCapture
+from .harness import (
+    AgentWorkflow,
+    FlowWorkflow,
+    finishTrajectory,
+    flushStructural,
+    runSubCapture,
+    startTrajectory,
+)
 from .serve import DEFAULT_TASK_QUEUE
 from .session_store import SessionStore
 from ..cas import cas_from_url
@@ -67,7 +74,9 @@ ACTIVITIES = [
     resolveSubflow,
     resolveAgentSpec,
     resolveRuntimeCapabilities,
+    startTrajectory,
     finishTrajectory,
+    flushStructural,
     runSubCapture,
 ]
 WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector]
