@@ -166,12 +166,19 @@ unregenerated/byte-identical):
   `docs/ops/wasm-tier-runbook.md` covers signing tiers, executor tiers, the failure taxonomy, and CAS
   retention. `pyproject` ships the build-only `wasm` extra (`wasmtime>=45,<46`).
 
-**Deferred to manual ops (cluster/S3/creds not available in this environment):** the **live EKS
-zero-docker acceptance run** — real cluster, S3-backed CAS (`STORE_URL=s3://…`), KEDA
-scale-from-zero, worker image built with the `wasm` extra, cold start within the P1 budget. This has
-NOT been run here. The step-by-step is documented under "Live EKS acceptance (manual)" in
-`docs/ops/wasm-tier-runbook.md`. The local gates exercise the full bundle→wasm path against a
-Temporal time-skipping server, the DBOS env, the CMA env, and a real signed bundle.
+**Live EKS zero-docker acceptance run — DONE (2026-06-20).** Ran on the live EKS cluster
+`julep-v2-temporal-demo` (us-east-1), KEDA + in-cluster Temporal (RDS). The grade-scores flow was
+published as a signed bundle to an S3 CAS (`s3://julep-v2-cad-cas-569360421603/cad`) and run by the
+**generic** worker image (`…worker:cad-wasm-v2`, `composable_agents[temporal,store,wasm]`, built
+once — no per-flow image): the three `cad.demo.*` pures arrived only as the S3 bundle and executed
+in the wasm sandbox on the pod. KEDA scaled the worker **0 → 1 → 0** on queue backlog; result
+correct (`passRate 0.8`, tally A1/B2/C1/F1) across three runs. **Cold start: ~15s warm-image**
+(KEDA + S3 bundle fetch + wasm), at the P1 budget; ~20–23s including a first-time image pull.
+Tooling: `tooling/eks-cad-demo/{publish.py,worker.yaml}`. The run surfaced and fixed a real
+pre-existing bug — `startTrajectory`/`flushStructural` were missing from `worker.ACTIVITIES`, so
+trajectory capture silently no-op'd under the best-effort swallow (now registered + guarded by
+`tests/test_worker_activity_registration.py`). The local gates also exercise the full bundle→wasm
+path against a Temporal time-skipping server, the DBOS env, the CMA env, and a real signed bundle.
 
 ### P4 — deps as data
 
