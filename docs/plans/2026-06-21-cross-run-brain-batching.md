@@ -35,11 +35,16 @@ calls inside already-running flows are dispatched*.
 Two new concepts, deliberately on opposite sides of the dispatch boundary.
 
 - **`batchable` — IR capability (frozen).** A correctness fact about the call
-  site: is this `think` an independent one-shot completion, or a step whose
-  reply the next step depends on (an agent loop, a multi-round conversation)?
-  Only the author knows, and it travels with the flow. Lives on `Ann`
-  (`ir.py`), serialized exactly like `cache`. `think(..., batchable=True)`; a
-  `Brain` may declare a default that the call site overrides. It is a
+  site: may this single brain call be durably deferred and resumed later without
+  changing user-visible semantics? It is still a one-shot provider request; it is
+  not an online agent/controller loop or a multi-round conversation. A downstream
+  `seq` step may absolutely depend on the reply — the point is that the workflow
+  may suspend at this leaf until the reply arrives. Lives on `Ann` (`ir.py`),
+  serialized exactly like `cache`: `think("b", ann=Ann(batchable=True))`.
+  Omitted means `False`.
+  The `@flow` frontend may expose sugar such as
+  `think("b", value, batchable=True)`, but that sugar must fold into `Ann`.
+  Brain-level defaults are deferred for v1; the call site is explicit. It is a
   *capability*, never a policy — it sets the **floor** of how low on the QoS
   ladder a call may go.
 
@@ -86,6 +91,28 @@ resolved **once at the brain step's first execution and recorded** (side-effect
 / short activity); replay reads the tier from history and takes the same branch.
 Sync-tier dialing (PRIORITY/STANDARD/FLEX) stays live inside the activity since
 it never changes control flow.
+
+Keep the request shape small:
+
+```
+@dataclass(frozen=True)
+class BrainDispatch:
+    qos: QoSTier = QoSTier.STANDARD
+    batch_id: str | None = None
+```
+
+Widen the canonical `LlmCaller` one time to accept this as a final optional
+argument:
+
+```
+(brain, value, principal, transcript, dispatch) -> reply
+```
+
+`configure(...)` adapts legacy 2/3/4-argument callers to `BrainDispatch()` so
+existing users keep working. Sync rungs pass `dispatch.qos` down to
+`complete_brain(...)`, where provider-specific request fields are set. The BATCH
+rung does **not** reach `complete_brain` through this path; it enters the
+collector/poller machinery below.
 
 ## Topology: a collector workflow, not in-process
 
@@ -140,6 +167,15 @@ The inbox is keyed by `custom_id`, and the signal handler **ignores a result
 for a `custom_id` the step has already resolved** (e.g. after a reactive
 promote) — and the child tolerates signal-delivery failure to a closed run — so
 a late batch completion can neither clobber an advanced step nor fail the poll.
+
+Implementation boundary: make this a Temporal-only activity such as
+`submitBrainBatch`, not a backend-neutral effect in `effects.py`. It receives a
+serializable `SubmitBrainBatchInput` and uses a small worker-installed
+`BatchDispatchContext` containing only the Temporal client, task queue, and
+collector defaults (`quiet_s`, `max_items`, `max_wait_s`). `build_worker(...)`
+already receives the client, so it is the right place to install this context.
+DBOS does not register this activity in v1; DBOS clamps BATCH to STANDARD until
+it has its own durable suspend/collector equivalent.
 
 ### Result routing — signal-back
 
@@ -201,11 +237,21 @@ signals every `reply_to` an error. Dedup on `custom_id`.
 Two sinks, and the projection is the subtle one. The in-workflow **derived
 projection** is driven by the interpreter's `Result` envelope from
 `env.invoke_brain` — *not* by the worker-side `AttemptRecord`. So to make a
-successful batched `think` explainable, `batch_id` + `tier` must ride back in
-the **result envelope** the interpreter records into the `Did` event; extending
-`AttemptRecord` alone only feeds the worker/OTel sink and leaves the projection
-blind. Carry batch attribution through both — the envelope (for the projection)
-and `AttemptRecord` (for OTel) — to preserve the explain-every-step guarantee.
+successful batched `think` explainable, `batch_id` + `tier` must ride back in a
+framework envelope, then be unwrapped immediately by the interpreter:
+
+```
+{"__ca_meta__": {"tier": "BATCH", "batch_id": "..."}, "reply": actual_reply}
+```
+
+Only `actual_reply` flows downstream and is stored as the `Did.value`; the
+metadata becomes `Result.attrs` on that `Did` event. This keeps structured brain
+replies untouched. The unwrapping helper must handle both framework envelopes:
+preserve today's summary unwrap, then strip `__ca_meta__` into attrs before the
+reply enters user flow data. Extending `AttemptRecord` alone only feeds the
+worker/OTel sink and leaves the projection blind. Carry batch attribution through
+both — `Result.attrs` (for the projection) and `AttemptRecord` (for OTel) — to
+preserve the explain-every-step guarantee.
 
 ## Engine support
 
@@ -213,8 +259,10 @@ and `AttemptRecord` (for OTel) — to preserve the explain-every-step guarantee.
 |---|---|---|
 | `Ann.batchable` (IR) | ✅ M0 | ✅ (IR is engine-neutral) |
 | `resolve_qos` seam + recorded tier | ✅ M0 | trails |
+| `LlmCaller` `BrainDispatch` argument | ✅ M1 | trails |
 | Sync rungs (priority/standard/flex via request field) | ✅ M1 | trails |
 | Sync coalescer (Path A, gather) | ✅ M1 | trails |
+| `submitBrainBatch` Temporal activity + client context | ✅ M2 | trails |
 | `BatchCollector` + rendezvous (BATCH rung) | ✅ M2 | trails — needs DBOS equivalent of signal-with-start collector + durable suspend (cf. `dbos.Debouncer`) |
 | Promote / errors / expiry | ✅ M3 | trails |
 | OpenAI `BatchProvider` | ✅ M4 | trails |
@@ -228,9 +276,11 @@ brain-step suspend.
 
 - **M0** — `Ann.batchable` + `resolve_qos` seam + recorded QoS step; BATCH
   no-ops to STANDARD. Proves the branch + recording with no new infra.
-- **M1** — shared renderer + `BatchProvider` interface + sync coalescer. Ships
-  Path A (in-process micro-batching) as a real deliverable, no durability risk.
-- **M2** — `BatchCollector` + rendezvous + Anthropic Batch API. The BATCH rung.
+- **M1** — `BrainDispatch` on `LlmCaller`, shared renderer + `BatchProvider`
+  interface + sync coalescer. Ships Path A (in-process micro-batching) as a real
+  deliverable, no durability risk.
+- **M2** — `submitBrainBatch` activity + `BatchCollector` + rendezvous +
+  Anthropic Batch API. The BATCH rung.
 - **M3** — promote (predictive + reactive), per-entry errors, expiry.
 - **M4** — OpenAI `BatchProvider`. *(Later: FLEX/PRIORITY rungs hardening,
   backpressure input.)*
