@@ -129,8 +129,10 @@ def reachable_closure(store: CASStore, lease: Lease) -> set[str]:
         raise GCError(f"leased bundle manifest must be a JSON object: {lease.bundle_hash}")
 
     manifest: dict[object, object] = manifest_raw
-    _add_digest_if_valid(reachable, manifest.get("artifactComponents"))
-    _add_digest_if_valid(reachable, manifest.get("flow"))
+    reachable.add(
+        _require_digest(manifest.get("artifactComponents"), "artifactComponents", lease.bundle_hash)
+    )
+    reachable.add(_require_digest(manifest.get("flow"), "flow", lease.bundle_hash))
 
     pures = manifest.get("pures")
     if not isinstance(pures, list):
@@ -139,13 +141,25 @@ def reachable_closure(store: CASStore, lease: Lease) -> set[str]:
         if not isinstance(raw_pure, dict):
             raise GCError(f"leased bundle manifest pure must be an object: {lease.bundle_hash}")
         pure: dict[object, object] = raw_pure
-        _add_digest_if_valid(reachable, pure.get("source"))
-        _add_digest_if_valid(reachable, pure.get("envComponent"))
+        reachable.add(_require_digest(pure.get("source"), "pure source", lease.bundle_hash))
+        env_hash = pure.get("envHash")
+        env_component = pure.get("envComponent")
+        if env_hash is not None:
+            _require_digest(env_hash, "pure envHash", lease.bundle_hash)
+            reachable.add(_require_digest(env_component, "pure envComponent", lease.bundle_hash))
+        elif env_component is not None:
+            reachable.add(_require_digest(env_component, "pure envComponent", lease.bundle_hash))
 
     return reachable
 
 
-def gc(store: CASStore, lease_store: LeaseStore, *, dry_run: bool = True) -> GCResult:
+def gc(
+    store: CASStore,
+    lease_store: LeaseStore,
+    *,
+    dry_run: bool = True,
+    collect_all_unleased: bool = False,
+) -> GCResult:
     """Mark-sweep CAS objects protected by active leases.
 
     ``dry_run`` defaults to true. If any lease closure or object enumeration
@@ -154,8 +168,16 @@ def gc(store: CASStore, lease_store: LeaseStore, *, dry_run: bool = True) -> GCR
     that can honor pagination and prefixes.
     """
 
+    leases = lease_store.list_leases()
+    if not leases and not collect_all_unleased:
+        raise GCError(
+            "refusing to garbage-collect with zero active leases: this would delete "
+            "the entire CAS. Acquire a lease for every live bundle first, or pass "
+            "collect_all_unleased=True to intentionally collect everything."
+        )
+
     reachable: set[str] = set()
-    for lease in lease_store.list_leases():
+    for lease in leases:
         # Invariant: a single incomputable lease aborts the entire sweep. A
         # partial root set is never used to decide what can be deleted.
         reachable.update(reachable_closure(store, lease))
@@ -198,9 +220,12 @@ def _lease_from_json(raw: object) -> Lease:
     return Lease(bundle_hash=bundle_hash, signature_digest=signature_digest, name=name)
 
 
-def _add_digest_if_valid(out: set[str], value: object) -> None:
-    if _is_digest(value):
-        out.add(value)
+def _require_digest(value: object, label: str, bundle_hash: str) -> str:
+    if not _is_digest(value):
+        raise GCError(
+            f"leased bundle manifest {label} must be a 64-hex digest: {bundle_hash}"
+        )
+    return value.lower()
 
 
 def _is_digest(value: object) -> TypeGuard[str]:

@@ -274,6 +274,14 @@ class Registry:
             return native_venv_bound
         return entry.fn
 
+    def executor_of(self, name: str) -> str:
+        try:
+            return self.pures[name].executor
+        except KeyError as e:
+            raise KeyError(
+                f"unknown pure {name!r}; register it with @pure({name!r}) on a worker"
+            ) from e
+
     def set_pure_env_hash(self, name: str, env_hash: str) -> None:
         try:
             entry = self.pures[name]

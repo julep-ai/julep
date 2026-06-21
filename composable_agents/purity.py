@@ -105,6 +105,10 @@ def get_pure(name: str) -> PureFn:
     return DEFAULT_REGISTRY.get_pure(name)
 
 
+def executor_of(name: str) -> str:
+    return DEFAULT_REGISTRY.executor_of(name)
+
+
 def source_hash_of(name: str) -> str:
     return DEFAULT_REGISTRY.source_hash_of(name)
 

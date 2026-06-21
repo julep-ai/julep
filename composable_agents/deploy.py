@@ -295,10 +295,19 @@ class Deployment:
     ) -> dict[str, Any]:
         """Publish this deployment's CAS bundle and detached signature."""
         from .bundle import publish_bundle
-        from .cas import cas_from_url
+        from .cas import LocalDirCAS, cas_from_url
+        from .gc import Lease, LeaseStore
 
         store = cas_from_url(store_or_url) if isinstance(store_or_url, str) else store_or_url
         rec = publish_bundle(self, store, signing_key=signing_key)
+        if isinstance(store, LocalDirCAS):
+            LeaseStore(store.root).acquire(
+                Lease(
+                    bundle_hash=rec["bundleHash"],
+                    signature_digest=rec["signatureDigest"],
+                    name=self.artifact_hash,
+                )
+            )
         self.bundle_ref = (
             [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
             if rec.get("pureRuntimeRefs")

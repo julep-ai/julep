@@ -4,6 +4,8 @@ import hashlib
 
 import pytest
 
+from composable_agents import HAVE_TEMPORAL
+from composable_agents.errors import ComposableAgentsError
 from composable_agents.purity import register_pure_from_source
 from composable_agents.registry import (
     DEFAULT_REGISTRY,
@@ -189,6 +191,75 @@ def test_baked_pure_is_native_tier_and_get_pure_returns_native_fn() -> None:
     assert entry.source is None
     # native tier: get_pure returns the exact native fn object (identity preserved)
     assert reg.get_pure("cas.tier.native") is baked
+
+
+def test_registry_executor_of_reports_source_tiers_and_unknowns() -> None:
+    reg = Registry()
+    wasm_source = """@pure("cas.tier.wasm.source")\ndef wasm_source(value):\n    return value\n"""
+    native_source = (
+        """@pure("cas.tier.native_venv.source")\n"""
+        "def native_source(value):\n"
+        "    return value\n"
+    )
+
+    reg.register_pure_from_source("cas.tier.wasm.source", wasm_source)
+    reg.register_pure_from_source(
+        "cas.tier.native_venv.source",
+        native_source,
+        tier="native_venv",
+    )
+
+    assert reg.executor_of("cas.tier.wasm.source") == "wasm"
+    assert reg.executor_of("cas.tier.native_venv.source") == "native_venv"
+    with pytest.raises(KeyError, match="unknown pure 'cas.tier.missing'"):
+        reg.executor_of("cas.tier.missing")
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_temporal_env_blocks_native_venv_pures_but_allows_wasm_lookup() -> None:
+    from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
+    from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+
+    wasm_name = "cas.temporal.wasm.source"
+    native_name = "cas.temporal.native_venv.source"
+    wasm_source = f"""@pure({wasm_name!r})\ndef wasm_source(value):\n    return value\n"""
+    native_source = (
+        f"""@pure({native_name!r})\n"""
+        "def native_source(value):\n"
+        "    return value\n"
+    )
+    previous_wasm = DEFAULT_REGISTRY.pures.pop(wasm_name, None)
+    previous_native = DEFAULT_REGISTRY.pures.pop(native_name, None)
+
+    async def gate_waiter(value, cid, timeout_s):  # noqa: ANN001
+        return value
+
+    try:
+        DEFAULT_REGISTRY.register_pure_from_source(wasm_name, wasm_source)
+        DEFAULT_REGISTRY.register_pure_from_source(
+            native_name,
+            native_source,
+            tier="native_venv",
+        )
+        env = _TemporalEnv(
+            manifest={},
+            emitter=ProjectionEmitter(InMemoryProjection()),
+            session_id="s",
+            manifest_json={},
+            policy=ExecutionPolicy(),
+            gate_waiter=gate_waiter,
+        )
+
+        assert callable(env.get_pure(wasm_name))
+        with pytest.raises(ComposableAgentsError, match="native-tier"):
+            env.get_pure(native_name)
+    finally:
+        DEFAULT_REGISTRY.pures.pop(wasm_name, None)
+        DEFAULT_REGISTRY.pures.pop(native_name, None)
+        if previous_wasm is not None:
+            DEFAULT_REGISTRY.pures[wasm_name] = previous_wasm
+        if previous_native is not None:
+            DEFAULT_REGISTRY.pures[native_name] = previous_native
 
 
 def test_register_pure_from_source_does_not_exec_module_level_code_on_host() -> None:

@@ -65,6 +65,7 @@ with workflow.unsafe.imports_passed_through():
     from ..errors import ComposableAgentsError
     from ..ir import Ann, Node
     from ..projection import InMemoryProjection, ProjectionEmitter
+    from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
     from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
     from .policy import ExecutionPolicy
@@ -384,6 +385,15 @@ class _TemporalEnv:
         # would create an isolated registry copy and hide worker-registered
         # pures. Registered pures must be deterministic by contract (see
         # purity.py), so the lookup remains replay-safe.
+        executor = _executor_of_from_registry(name)
+        if executor == "native_venv":
+            raise ComposableAgentsError(
+                f"pure {name!r} is native-tier (native_venv): native-dependency pures "
+                "cannot execute inside the durable workflow interpreter, which forbids "
+                "subprocess/IO and requires determinism. Native pures are not supported "
+                "on the Temporal harness in P5; run them on the in-memory/dry-run path "
+                "or keep them off the durable flow."
+            )
         return _get_pure_from_registry(name)
 
     def charge_call(self, tool_key: str) -> None:
