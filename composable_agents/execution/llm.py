@@ -5,23 +5,23 @@ module fills it with a caller that dispatches to any provider any-llm supports.
 Two factories expose the same core under the two seam shapes in the codebase:
 
 * :func:`make_llm_caller` — the activity seam (``activities.py``):
-  ``(Brain, value, principal, transcript, dispatch) -> reply``, the canonical
+  ``(Reasoner, value, principal, transcript, dispatch) -> reply``, the canonical
   ``LlmCaller``. Wire it via ``start_worker(llm=...)``.
-* :func:`make_local_brain` — the facade seam (``agent.py``):
-  ``(brain_name, payload) -> reply``. Wire it via ``Agent(..., llm=...)``; it
-  resolves the registered :class:`~composable_agents.dotctx.Brain` by name to
+* :func:`make_local_reasoner` — the facade seam (``agent.py``):
+  ``(reasoner_name, payload) -> reply``. Wire it via ``Agent(..., llm=...)``; it
+  resolves the registered :class:`~composable_agents.dotctx.Reasoner` by name to
   recover ``system`` + ``reply_schema``.
 
-Provider selection rides on ``Brain.model``: a ``"provider:model"`` prefix picks
+Provider selection rides on ``Reasoner.model``: a ``"provider:model"`` prefix picks
 the provider (``"openai:gpt-4o"``); a bare slug (``"claude-opus-4-8"``) falls back
-to ``default_provider``. The fallback is adapter-only, so existing brains and
+to ``default_provider``. The fallback is adapter-only, so existing reasoners and
 their deploy goldens are byte-for-byte unchanged.
 
 ``reply_schema`` is honored with OpenAI-style ``response_format`` when the provider
 supports it (any-llm converts per provider); for providers any-llm cannot convert
 yet — and as a safety net when a native attempt raises — the schema is injected
 into the system prompt and the JSON reply is parsed tolerantly. The parsed value
-is exactly what ``interpret_brain_reply`` / ``compilePlan`` already consume.
+is exactly what ``interpret_reasoner_reply`` / ``compilePlan`` already consume.
 
 any-llm is imported lazily, so this module loads without it. Install
 ``composable-agents[providers]`` plus your provider extra, e.g.
@@ -36,10 +36,10 @@ import json
 from collections.abc import Awaitable, Callable
 from typing import Any, Optional
 
-from ..dotctx import Brain, get_brain
+from ..dotctx import Reasoner, get_reasoner
 from ..errors import ResilienceExhausted
-from ..prompt import rendered_brain_for, rendered_user_for
-from ..qos import BrainDispatch, QoSTier
+from ..prompt import rendered_reasoner_for, rendered_user_for
+from ..qos import ReasonerDispatch, QoSTier
 from ..resilience import (
     AttemptRecord,
     CircuitBreaker,
@@ -59,7 +59,7 @@ DEFAULT_PROVIDER = "anthropic"
 # them prompt-injected JSON instead of a native structured request.
 # (mozilla-ai/any-llm issues #541 gemini, #542 xai.)
 _PROMPT_FALLBACK_PROVIDERS = frozenset({"gemini", "xai"})
-_DEFAULT_BRAIN_DISPATCH = BrainDispatch()
+_DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
 
 
 # --------------------------------------------------------------------------- #
@@ -74,10 +74,10 @@ def _split_model(model: str, default_provider: str) -> tuple[str, str]:
 
 
 def _qos_request_fields(provider: str, qos: QoSTier) -> dict[str, Any]:
-    """Provider-specific QoS request kwargs for sync brain dispatch."""
+    """Provider-specific QoS request kwargs for sync reasoner dispatch."""
     qos = QoSTier(qos)
     if qos is QoSTier.BATCH:
-        raise ValueError("BATCH must not reach complete_brain")
+        raise ValueError("BATCH must not reach complete_reasoner")
 
     if provider == "openai":
         return {
@@ -202,7 +202,7 @@ def _parse_reply(completion: Any, *, expect_json: bool) -> Any:
     try:
         return json.loads(_strip_code_fence(content))
     except (json.JSONDecodeError, ValueError):
-        # Hand the raw text back; interpret_brain_reply(strict) turns a
+        # Tool the raw text back; interpret_reasoner_reply(strict) turns a
         # non-conforming reply into a clean controller_error.
         return content
 
@@ -210,47 +210,47 @@ def _parse_reply(completion: Any, *, expect_json: bool) -> Any:
 # --------------------------------------------------------------------------- #
 # Core.
 # --------------------------------------------------------------------------- #
-async def complete_brain(
-    brain: Brain,
+async def complete_reasoner(
+    reasoner: Reasoner,
     value: Any,
     *,
     acompletion: AnyCompletion,
     default_provider: str = DEFAULT_PROVIDER,
     transcript: Optional[list[dict[str, Any]]] = None,
-    dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+    dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
 ) -> Any:
-    """One model call for ``brain`` against ``value``, returning its parsed reply.
+    """One model call for ``reasoner`` against ``value``, returning its parsed reply.
 
     ``transcript`` is the materialized neutral turn list for transcript-scoped
     app rounds (agent-transcripts design); it renders as provider messages
     between the system prompt and the user turn."""
     if dispatch.qos == QoSTier.BATCH:
-        raise ValueError("BATCH must not reach complete_brain")
+        raise ValueError("BATCH must not reach complete_reasoner")
 
     # Render named system/user templates here so both seams (activity + facade)
-    # see the same strings; already-rendered brains pass through unchanged.
-    brain = rendered_brain_for(brain, value)
-    user_text = rendered_user_for(brain, value)
-    provider, model = _split_model(brain.model, default_provider)
-    schema = brain.reply_schema
+    # see the same strings; already-rendered reasoners pass through unchanged.
+    reasoner = rendered_reasoner_for(reasoner, value)
+    user_text = rendered_user_for(reasoner, value)
+    provider, model = _split_model(reasoner.model, default_provider)
+    schema = reasoner.reply_schema
 
     async def call(*, native: bool) -> Any:
         if native and schema is not None:
             messages = _messages(
-                brain.system, value,
+                reasoner.system, value,
                 schema_hint=None, user_text=user_text, transcript=transcript,
             )
             kwargs: dict[str, Any] = {"response_format": _response_format(schema)}
         else:
             messages = _messages(
-                brain.system, value,
+                reasoner.system, value,
                 schema_hint=schema, user_text=user_text, transcript=transcript,
             )
             kwargs = {}
-        if brain.temperature is not None:
-            kwargs["temperature"] = brain.temperature
-        if brain.max_tokens is not None:
-            kwargs["max_tokens"] = brain.max_tokens
+        if reasoner.temperature is not None:
+            kwargs["temperature"] = reasoner.temperature
+        if reasoner.max_tokens is not None:
+            kwargs["max_tokens"] = reasoner.max_tokens
         kwargs.update(_qos_request_fields(provider, dispatch.qos))
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
@@ -289,7 +289,7 @@ def make_llm_caller(
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
 ) -> Callable[..., Awaitable[Any]]:
-    """Activity-seam ``LlmCaller``: ``(Brain, value, principal, transcript, dispatch)``.
+    """Activity-seam ``LlmCaller``: ``(Reasoner, value, principal, transcript, dispatch)``.
 
     The canonical 5-argument caller form: the principal is accepted (this
     caller resolves no per-tenant credentials itself) and the transcript is
@@ -298,14 +298,14 @@ def make_llm_caller(
     """
 
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: Any,
         principal: Optional[dict[str, Any]] = None,
         transcript: Optional[list[dict[str, Any]]] = None,
-        dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+        dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
     ) -> Any:
-        return await complete_brain(
-            brain, value,
+        return await complete_reasoner(
+            reasoner, value,
             acompletion=_resolve_acompletion(acompletion),
             default_provider=default_provider,
             transcript=transcript,
@@ -315,20 +315,20 @@ def make_llm_caller(
     return caller
 
 
-def make_local_brain(
+def make_local_reasoner(
     *,
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
 ) -> Callable[[str, Any], Awaitable[Any]]:
-    """Facade-seam llm: ``(brain_name, payload) -> reply``.
+    """Facade-seam llm: ``(reasoner_name, payload) -> reply``.
 
-    Resolves the registered :class:`Brain` by name (the facade passes the brain
+    Resolves the registered :class:`Reasoner` by name (the facade passes the reasoner
     name) to recover ``model`` / ``system`` / ``reply_schema``.
     """
 
-    async def caller(brain_name: str, payload: Any) -> Any:
-        return await complete_brain(
-            get_brain(brain_name),
+    async def caller(reasoner_name: str, payload: Any) -> Any:
+        return await complete_reasoner(
+            get_reasoner(reasoner_name),
             payload,
             acompletion=_resolve_acompletion(acompletion),
             default_provider=default_provider,
@@ -340,11 +340,11 @@ def make_local_brain(
 # --------------------------------------------------------------------------- #
 # Resilient caller: deterministic fallback + circuit breaker around the core.
 # --------------------------------------------------------------------------- #
-def _with_model(brain: Brain, model: str) -> Brain:
-    """A copy of ``brain`` addressed at a different model (not re-registered)."""
-    if model == brain.model:
-        return brain
-    return dataclasses.replace(brain, model=model)
+def _with_model(reasoner: Reasoner, model: str) -> Reasoner:
+    """A copy of ``reasoner`` addressed at a different model (not re-registered)."""
+    if model == reasoner.model:
+        return reasoner
+    return dataclasses.replace(reasoner, model=model)
 
 
 def make_resilient_llm_caller(
@@ -359,7 +359,7 @@ def make_resilient_llm_caller(
 ) -> Callable[..., Awaitable[Any]]:
     """An ``LlmCaller`` that survives provider outages deterministically.
 
-    Walks ``policy.candidates(brain.model)`` strictly in order. Per candidate:
+    Walks ``policy.candidates(reasoner.model)`` strictly in order. Per candidate:
 
     * an open circuit for the candidate's provider skips it (recorded, never
       silent);
@@ -367,7 +367,7 @@ def make_resilient_llm_caller(
       to the policy's per-class budget (with backoff), then advance;
     * a CONFIG failure (bad key, unknown model, malformed request) re-raises
       immediately — a fallback must never mask misconfiguration;
-    * when ``brain.reply_schema`` is set and the reply did not parse into a
+    * when ``reasoner.reply_schema`` is set and the reply did not parse into a
       JSON object, that is MODEL_BEHAVIOR: advance to the next model without
       charging the breaker (the provider answered; the model misbehaved).
 
@@ -379,9 +379,9 @@ def make_resilient_llm_caller(
     exhausted, raises :class:`~composable_agents.errors.ResilienceExhausted`
     carrying the full attempt log.
 
-    On Temporal, pair this with ``ExecutionPolicy(brain_max_attempts=1)`` so the
-    engine's blind ``invokeBrain`` retries do not multiply the ladder; on DBOS
-    brain steps never retry, so this caller is the whole story by design.
+    On Temporal, pair this with ``ExecutionPolicy(reasoner_max_attempts=1)`` so the
+    engine's blind ``invokeReasoner`` retries do not multiply the ladder; on DBOS
+    reasoner steps never retry, so this caller is the whole story by design.
     """
 
     def _notify(record: AttemptRecord) -> None:
@@ -389,17 +389,17 @@ def make_resilient_llm_caller(
             on_attempt(record)
 
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: Any,
         principal: Optional[dict[str, Any]] = None,
         transcript: Optional[list[dict[str, Any]]] = None,
-        dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+        dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
     ) -> Any:
         resolved = _resolve_acompletion(acompletion)
         attempts: list[AttemptRecord] = []
         last_exc: Optional[Exception] = None
 
-        for model in policy.candidates(brain.model):
+        for model in policy.candidates(reasoner.model):
             provider, _ = _split_model(model, default_provider)
             if breaker is not None and not breaker.allow(provider):
                 record = AttemptRecord(
@@ -412,11 +412,11 @@ def make_resilient_llm_caller(
                 _notify(record)
                 continue
 
-            candidate = _with_model(brain, model)
+            candidate = _with_model(reasoner, model)
             attempt = 0
             while True:
                 try:
-                    reply = await complete_brain(
+                    reply = await complete_reasoner(
                         candidate, value,
                         acompletion=resolved, default_provider=default_provider,
                         transcript=transcript,
@@ -447,7 +447,7 @@ def make_resilient_llm_caller(
 
                 if breaker is not None:
                     breaker.record_success(provider)
-                if brain.reply_schema is not None and not isinstance(reply, dict):
+                if reasoner.reply_schema is not None and not isinstance(reply, dict):
                     record = AttemptRecord(
                         model=model, provider=provider,
                         outcome=ErrorClass.MODEL_BEHAVIOR.value,
@@ -469,8 +469,8 @@ def make_resilient_llm_caller(
 __all__ = [
     "AnyCompletion",
     "DEFAULT_PROVIDER",
-    "complete_brain",
+    "complete_reasoner",
     "make_llm_caller",
-    "make_local_brain",
+    "make_local_reasoner",
     "make_resilient_llm_caller",
 ]

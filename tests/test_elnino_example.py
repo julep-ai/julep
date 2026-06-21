@@ -16,7 +16,7 @@ from composable_agents import (
     call,
     check_approval_gates,
     deploy,
-    get_brain,
+    get_reasoner,
     is_registered,
     human_gate,
     interpret,
@@ -43,8 +43,8 @@ def test_elnino_example_deploys_cleanly_and_rejects_ungated_dangerous_path() -> 
     assert surface_shape(deployment.flow) == Shape.AGENT
     assert swarm.ZONE_PLAN_REF in caps.subflows
     assert all(is_registered(name) for name in _referenced_pures())
-    for name in _referenced_brains():
-        assert get_brain(name).name == name
+    for name in _referenced_reasoners():
+        assert get_reasoner(name).name == name
 
     ungated = seq(
         alt(
@@ -68,8 +68,8 @@ def test_elnino_example_runs_under_in_memory_env_with_deterministic_stubs() -> N
     deployment = swarm.build_deployment(snapshot)
     store = InMemoryProjection()
 
-    hands = _hands()
-    brains = _brains()
+    tools = _tools()
+    reasoners = _reasoners()
 
     def planner(value):
         plan = call(swarm.T_SOLVE, ann=Ann(cost=0.05))
@@ -78,10 +78,10 @@ def test_elnino_example_runs_under_in_memory_env_with_deterministic_stubs() -> N
     env = InMemoryEnv(
         deployment.manifest,
         ProjectionEmitter(store),
-        hands=hands,
-        brains=brains,
+        tools=tools,
+        reasoners=reasoners,
         subs={swarm.ZONE_PLAN_REF: _zone_sub},
-        agents={"zone_agent_controller": lambda value: brains["zone_agent_controller"](value)["payload"]},
+        agents={"zone_agent_controller": lambda value: reasoners["zone_agent_controller"](value)["payload"]},
         planners={"allocation_planner": planner},
         gate=lambda value: {"approved": True, "input": value, "reviewed_by": "ops-board"},
         max_calls=caps.max_call_limits(),
@@ -127,7 +127,7 @@ def _referenced_pures() -> set[str]:
     }
 
 
-def _referenced_brains() -> set[str]:
+def _referenced_reasoners() -> set[str]:
     return {
         "allocation_planner",
         "forecast_interp_ecmwf",
@@ -160,7 +160,7 @@ def _zones() -> list[dict]:
     return zones
 
 
-def _brains():
+def _reasoners():
     def synthesizer(value):
         return {
             "zones": _zones(),
@@ -209,23 +209,23 @@ def _zone_demand(zone: dict, *, path: str, water_ml: int) -> dict:
     }
 
 
-def _hands():
-    hands = {}
+def _tools():
+    result = {}
     for server, tools in swarm.MCP_TOOLS_BY_SERVER.items():
         for tool in tools:
             key = f"{server}/{tool}"
-            hands[key] = _echo_hand(key)
+            result[key] = _echo_tool(key)
 
-    hands["capacity/shared_envelope"] = _capacity_envelope
-    hands["optimize_allocation"] = _optimize_allocation
-    hands["water/allocate_contract"] = _water_contract
-    hands["procure/place_order"] = _procure_order
-    hands["logistics/book_transport"] = _book_transport
-    hands["irrigation/push_schedule"] = _push_irrigation
-    return hands
+    result["capacity/shared_envelope"] = _capacity_envelope
+    result["optimize_allocation"] = _optimize_allocation
+    result["water/allocate_contract"] = _water_contract
+    result["procure/place_order"] = _procure_order
+    result["logistics/book_transport"] = _book_transport
+    result["irrigation/push_schedule"] = _push_irrigation
+    return result
 
 
-def _echo_hand(key: str):
+def _echo_tool(key: str):
     return lambda value: {"tool": key, "input": value}
 
 

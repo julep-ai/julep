@@ -208,7 +208,7 @@ Expected: FAIL with `ImportError: cannot import name 'controller_turn'`
 # append to composable_agents/turn.py
 from .agent_loop import (
     CallDenial, TraceEntry, action_cost, authorize_call, authorize_subflow,
-    charge_tool_call, interpret_brain_reply, would_exceed_budget,
+    charge_tool_call, interpret_reasoner_reply, would_exceed_budget,
 )
 from .kinds import EnforcementMode
 
@@ -257,7 +257,7 @@ def controller_turn(
         payload = {"input": state.last, "trace": [t.to_json() for t in state.trace]}
         reply = await invoke_controller(payload)
         state.charge(cfg.think_cost)
-        action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
+        action = interpret_reasoner_reply(reply, strict=not cfg.permissive_controller)
 
         if action.decision.value == "finish":
             return Halt("done", output=action.payload)

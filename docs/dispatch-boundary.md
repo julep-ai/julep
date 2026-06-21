@@ -2,7 +2,7 @@
 
 A frozen flow describes **processing**: what happens to a value once work has
 begun. Everything that decides **when and whether** work begins lives outside
-the IR, in the *dispatch layer* -- the thin code that hands an input to a
+the IR, in the *dispatch layer* -- the thin code that tools an input to a
 backend runner (`run_flow` on Temporal, `run_flow_dbos` on DBOS).
 
 Outside the IR (dispatch-layer concerns):
@@ -42,6 +42,6 @@ DBOS) -- so segment dispatch stays inspectable, deduplicable, and cancelable by
 the same machinery as any other dispatch.
 
 This split is what makes frozen flows engine-portable: a flow re-authored from
-hand-rolled orchestration must move *only its processing* into the IR. If you
+tool-rolled orchestration must move *only its processing* into the IR. If you
 find yourself wanting a cron expression, a debounce window, or a dedup key
 inside a flow, you have found dispatch -- keep it outside.

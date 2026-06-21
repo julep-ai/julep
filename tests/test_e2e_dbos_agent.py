@@ -28,14 +28,14 @@ if HAVE_DBOS and DB_URL:
     from dbos import DBOS, DBOSConfig
 
     from composable_agents import (
-        Brain,
+        Reasoner,
         Budget,
         app,
         call,
         freeze,
         manifest_to_json,
         mcp,
-        register_brain,
+        register_reasoner,
         seq,
     )
     from composable_agents.contracts import McpAnnotations
@@ -77,8 +77,8 @@ if HAVE_DBOS and DB_URL:
             return value
         raise ValueError(tool)
 
-    async def fake_llm(brain: Any, value: Any) -> Any:
-        name = brain.name
+    async def fake_llm(reasoner: Any, value: Any) -> Any:
+        name = reasoner.name
         if name == "dbos_ctrl":
             n = len(value.get("trace", []))
             if n == 0:
@@ -227,7 +227,7 @@ def run_async() -> Iterator[Callable[[Awaitable[T]], T]]:
 @pytest.fixture(scope="module")
 def dbos_runtime(run_async: Callable[[Awaitable[Any]], Any]) -> Iterator[None]:
     for name in _CONTROLLERS:
-        register_brain(Brain(name=name, model="test", system=name))
+        register_reasoner(Reasoner(name=name, model="test", system=name))
     configure(
         WorkerContext(
             mcp_call=fake_mcp,
@@ -258,7 +258,7 @@ def test_agent_done_call_then_sub(
     assert [t["decision"] for t in res["trace"]] == ["call", "sub"], res
 
 
-def test_agent_over_budget_without_brain_call(
+def test_agent_over_budget_without_reasoner_call(
     dbos_runtime: None, run_async: Callable[[Awaitable[dict[str, Any]]], dict[str, Any]]
 ) -> None:
     res = run_async(

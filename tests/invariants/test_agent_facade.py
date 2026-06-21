@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, Shape, ValidationError, deploy, get_brain, snapshot_from_tools, tool
+from composable_agents import Agent, Shape, ValidationError, deploy, get_reasoner, snapshot_from_tools, tool
 from composable_agents.capabilities import Budget, CapabilityManifest, ToolGrant
 from composable_agents.dsl import app
 from composable_agents.freeze import McpSnapshot, NativeToolSpec, freeze
@@ -43,8 +43,8 @@ def test_scripted_think_call_finish() -> None:
     seen: list[tuple[str, dict[str, Any]]] = []
     tool_calls: list[str] = []
 
-    def llm(brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
-        seen.append((brain_name, payload))
+    def llm(reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+        seen.append((reasoner_name, payload))
         return replies.pop(0)
 
     @tool(effect="read", idempotent=True)
@@ -59,7 +59,7 @@ def test_scripted_think_call_finish() -> None:
     assert result["output"] == "final"
     assert result["trace"] == [{"decision": "call", "ref": "web_search", "cost": 1.0}]
     assert tool_calls == ["q"]
-    # The controller receives the brain *name* (the registry key a real llm
+    # The controller receives the reasoner *name* (the registry key a real llm
     # caller resolves), not the model string "m".
     assert [entry[0] for entry in seen] == ["agent_scripted", "agent_scripted"]
     assert seen[1][1]["input"] == ["hit:q"]
@@ -68,7 +68,7 @@ def test_scripted_think_call_finish() -> None:
 def test_deny_ungranted_hallucinated_tool() -> None:
     called = False
 
-    def llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
         return {"tool": "net/evil", "input": "x"}
 
     @tool(effect="read", idempotent=True)
@@ -86,7 +86,7 @@ def test_deny_ungranted_hallucinated_tool() -> None:
 
 
 def test_deny_all_when_tools_empty() -> None:
-    def llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
         return {"tool": "anything", "input": "x"}
 
     agent = Agent("m", tools=[], name="agent_deny_all", llm=llm)
@@ -97,7 +97,7 @@ def test_deny_all_when_tools_empty() -> None:
 
 
 def test_budget_flows_into_agent_config() -> None:
-    def llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
         return {"tool": "budget_tool", "input": "x"}
 
     @tool(effect="read", idempotent=True)
@@ -173,14 +173,14 @@ def test_deployed_agent_contract_derivation_reads_manifest_contracts() -> None:
     }
 
 
-def test_registered_brain_carries_tools() -> None:
+def test_registered_reasoner_carries_tools() -> None:
     @tool(effect="read", idempotent=True)
     def web_search(query: str) -> str:
         return f"hit:{query}"
 
-    Agent("m", tools=[web_search], name="agent_brain_tools")
+    Agent("m", tools=[web_search], name="agent_reasoner_tools")
 
-    assert get_brain("agent_brain_tools").tools == ("web_search",)
+    assert get_reasoner("agent_reasoner_tools").tools == ("web_search",)
 
 
 def test_default_named_agents_with_distinct_tools_coexist() -> None:
@@ -200,7 +200,7 @@ def test_default_named_agents_with_distinct_tools_coexist() -> None:
     assert search_agent.deployment().artifact_hash != email_agent.deployment().artifact_hash
 
 
-def test_identical_default_named_agents_share_name_brain_and_artifact_hash() -> None:
+def test_identical_default_named_agents_share_name_reasoner_and_artifact_hash() -> None:
     @tool(effect="read", idempotent=True)
     def shared_tool(query: str) -> str:
         return f"shared:{query}"
@@ -210,7 +210,7 @@ def test_identical_default_named_agents_share_name_brain_and_artifact_hash() -> 
 
     assert first._name == second._name
     assert first.deployment().artifact_hash == second.deployment().artifact_hash
-    assert get_brain(first._name).tools == ("shared_tool",)
+    assert get_reasoner(first._name).tools == ("shared_tool",)
 
 
 def test_default_agent_name_is_deterministic_for_same_config() -> None:
@@ -235,7 +235,7 @@ def test_deploy_artifact_and_shape_are_deterministic() -> None:
         "m",
         tools=[a_read_tool],
         name="agent_artifact",
-        llm=lambda _brain_name, _payload: {"output": "ok"},
+        llm=lambda _reasoner_name, _payload: {"output": "ok"},
         budget_cost=1.0,
     )
 

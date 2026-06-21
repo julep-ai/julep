@@ -30,8 +30,8 @@ Control       deterministic interpreter walks the IR
                               |
                  schedules activities through Env
                               v
-Brains+Hands  Think activities and stateless tool activities
-              LLM calls, MCP tools, native HTTP hands; all IO lives here
+Model & tool calls  Think activities and stateless tool activities
+              LLM calls, MCP tools, native HTTP tools; all IO lives here
                               |
                   derived from execution history
                               v
@@ -39,8 +39,8 @@ Projection    append-only pomset view: causal events, costs, spans, gates
               derived observability, never durability
 ```
 
-The control plane owns ordering and continuation. Brains are `ThinkStep` leaves
-rendered from named brain definitions. Hands are `CallStep` leaves against
+The control plane owns ordering and continuation. Reasoners are `ThinkStep` leaves
+rendered from named reasoner definitions. Tools are `CallStep` leaves against
 native tools or MCP tools. Projection is a derived pomset view
 ([SPEC §11](SPEC.md#11-projection)): it is useful for value stores, cost by
 shape, OTel spans, replay UI, and open human gates, but correctness and recovery
@@ -112,7 +112,7 @@ Deploy is a fixed sequence of gates ([README](../README.md#the-compile-pipeline-
 [capabilities-and-safety.md](capabilities-and-safety.md).
 
 **Freeze.** `freeze` is pure: the live tool snapshot is an input, and the output
-is a frozen tree plus a manifest. Native hands use declared contracts; MCP tools
+is a frozen tree plus a manifest. Native tools use declared contracts; MCP tools
 are snapshotted with schemas, version, and annotations, but unasserted MCP hints
 are conservative for admission. Every post-freeze `call` carries a `frozenHash`
 into the manifest, and `app` inline tools are also resolved into the same
@@ -126,7 +126,7 @@ will degrade scheduling to sequential evaluation
 ([SPEC §8.2](SPEC.md#82-whole_session-degradation)).
 
 **Capability enforcement.** `CapabilityManifest.enforce_compile` applies the
-deploy-time allow-list. It gates tools, brains, model ids, memory scopes, MCP
+deploy-time allow-list. It gates tools, reasoners, model ids, memory scopes, MCP
 servers and version pins, subflows, approval requirements, `maxCalls`, and app
 inline grants. Absent sections are unconstrained; present-but-empty sections
 deny all ([SPEC §7.1](SPEC.md#71-absent-vs-empty)). A granted tool can also
@@ -134,7 +134,7 @@ assert `(effect, idempotency)`, which is the trusted contract surface used by
 freeze and race admission ([SPEC §7](SPEC.md#7-capabilities-deny-by-default)).
 
 **Race admission.** The race family (`race`, `hedge`, `quorum`) lowers to a
-`par` spine with a merge marker, then `check_race_admission` verifies the flat
+`par` chain with a merge marker, then `check_race_admission` verifies the flat
 branch set. A cancelled loser may already have touched the world, so branches
 must be read-only or asserted `native`/`required` idempotent, and subflows inside
 race branches are rejected because their effects are opaque. Runtime settlement
@@ -153,7 +153,7 @@ the controller call and before each action. Tool calls resolve through the same
 frozen contracts used by ordinary flow calls, so retry and effect checks do not
 fork between "flow mode" and "agent mode" ([SPEC §10](SPEC.md#10-agent-loop)).
 
-`stage(planner=...)` asks a brain to emit a plan. The plan is parsed as IR,
+`stage(planner=...)` asks a reasoner to emit a plan. The plan is parsed as IR,
 bound to the parent frozen manifest, validated, checked for shape and budget,
 and race-admitted before it runs ([SPEC §9](SPEC.md#9-staged-plans)). The
 important distinction is that a staged plan may choose a procedure, but every

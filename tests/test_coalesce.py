@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents.dotctx import Brain
+from composable_agents.dotctx import Reasoner
 from composable_agents.execution.coalesce import SyncCoalescer
-from composable_agents.qos import BrainDispatch, QoSTier
+from composable_agents.qos import ReasonerDispatch, QoSTier
 from conftest import run
 
 
@@ -14,31 +14,31 @@ async def _yield_once(delay: float) -> None:
     await asyncio.sleep(0)
 
 
-def _brain() -> Brain:
-    return Brain(name="b", model="m", system="s", reply_schema=None)
+def _reasoner() -> Reasoner:
+    return Reasoner(name="b", model="m", system="s", reply_schema=None)
 
 
 def test_coalesce_identical_replies_vs_uncoalesced() -> None:
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: Any,
         principal: dict[str, Any] | None,
         transcript: Any,
-        dispatch: BrainDispatch,
+        dispatch: ReasonerDispatch,
     ) -> dict[str, Any]:
-        del brain, principal, transcript
+        del reasoner, principal, transcript
         return {"echo": value, "qos": dispatch.qos.value}
 
     async def scenario() -> None:
-        brain = _brain()
+        reasoner = _reasoner()
         coalescer = SyncCoalescer(caller, sleep=_yield_once)
         values = list(range(5))
 
         results = await asyncio.gather(
-            *(coalescer.call(brain, value) for value in values)
+            *(coalescer.call(reasoner, value) for value in values)
         )
         expected = await asyncio.gather(
-            *(caller(brain, value, None, None, BrainDispatch()) for value in values)
+            *(caller(reasoner, value, None, None, ReasonerDispatch()) for value in values)
         )
 
         assert results == expected
@@ -53,13 +53,13 @@ def test_coalesce_batches_concurrent_calls() -> None:
     seen: list[int] = []
 
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: int,
         principal: dict[str, Any] | None,
         transcript: Any,
-        dispatch: BrainDispatch,
+        dispatch: ReasonerDispatch,
     ) -> int:
-        del brain, principal, transcript, dispatch
+        del reasoner, principal, transcript, dispatch
         seen.append(value)
         return value
 
@@ -67,7 +67,7 @@ def test_coalesce_batches_concurrent_calls() -> None:
         coalescer = SyncCoalescer(caller, window_s=0.01, sleep=_yield_once)
 
         results = await asyncio.gather(
-            *(coalescer.call(_brain(), value) for value in range(4))
+            *(coalescer.call(_reasoner(), value) for value in range(4))
         )
 
         assert results == [0, 1, 2, 3]
@@ -79,13 +79,13 @@ def test_coalesce_batches_concurrent_calls() -> None:
 
 def test_coalesce_per_item_error_isolation() -> None:
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: str,
         principal: dict[str, Any] | None,
         transcript: Any,
-        dispatch: BrainDispatch,
+        dispatch: ReasonerDispatch,
     ) -> str:
-        del brain, principal, transcript, dispatch
+        del reasoner, principal, transcript, dispatch
         if value == "bad":
             raise ValueError("boom")
         return value
@@ -94,9 +94,9 @@ def test_coalesce_per_item_error_isolation() -> None:
         coalescer = SyncCoalescer(caller, sleep=_yield_once)
 
         results = await asyncio.gather(
-            coalescer.call(_brain(), "good1"),
-            coalescer.call(_brain(), "bad"),
-            coalescer.call(_brain(), "good2"),
+            coalescer.call(_reasoner(), "good1"),
+            coalescer.call(_reasoner(), "bad"),
+            coalescer.call(_reasoner(), "good2"),
             return_exceptions=True,
         )
 
@@ -110,20 +110,20 @@ def test_coalesce_per_item_error_isolation() -> None:
 
 def test_coalesce_respects_max_batch() -> None:
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: int,
         principal: dict[str, Any] | None,
         transcript: Any,
-        dispatch: BrainDispatch,
+        dispatch: ReasonerDispatch,
     ) -> int:
-        del brain, principal, transcript, dispatch
+        del reasoner, principal, transcript, dispatch
         return value
 
     async def scenario() -> None:
         coalescer = SyncCoalescer(caller, max_batch=2, sleep=_yield_once)
 
         results = await asyncio.gather(
-            *(coalescer.call(_brain(), value) for value in range(5))
+            *(coalescer.call(_reasoner(), value) for value in range(5))
         )
 
         assert results == [0, 1, 2, 3, 4]
@@ -136,24 +136,24 @@ def test_coalesce_bypasses_batch_dispatch() -> None:
     seen: list[int] = []
 
     async def caller(
-        brain: Brain,
+        reasoner: Reasoner,
         value: int,
         principal: dict[str, Any] | None,
         transcript: Any,
-        dispatch: BrainDispatch,
+        dispatch: ReasonerDispatch,
     ) -> int:
-        del brain, principal, transcript
+        del reasoner, principal, transcript
         assert dispatch.qos is QoSTier.BATCH
         seen.append(value)
         return value
 
     async def scenario() -> None:
         coalescer = SyncCoalescer(caller, sleep=_yield_once)
-        batch_dispatch = BrainDispatch(qos=QoSTier.BATCH)
+        batch_dispatch = ReasonerDispatch(qos=QoSTier.BATCH)
 
         results = await asyncio.gather(
             *(
-                coalescer.call(_brain(), value, dispatch=batch_dispatch)
+                coalescer.call(_reasoner(), value, dispatch=batch_dispatch)
                 for value in range(2)
             )
         )

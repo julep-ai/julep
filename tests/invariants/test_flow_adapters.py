@@ -68,7 +68,7 @@ def test_any_edges_flags_app() -> None:
 
 
 def test_any_edges_flags_think() -> None:
-    edges = any_edges(as_flow(dsl.think("brain")))
+    edges = any_edges(as_flow(dsl.think("reasoner")))
     assert [e.op for e in edges] == ["prim"]
     assert "think" in edges[0].reason
 

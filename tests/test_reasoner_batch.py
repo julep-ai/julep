@@ -1,4 +1,4 @@
-"""Unit tests for cross-run brain batch dispatch helpers."""
+"""Unit tests for cross-run reasoner batch dispatch helpers."""
 
 from __future__ import annotations
 
@@ -19,24 +19,24 @@ if HAVE_TEMPORAL:
     from temporalio.worker import Worker
 
     from composable_agents import Ann, freeze, manifest_to_json, think
-    from composable_agents.dotctx import Brain, register_brain
+    from composable_agents.dotctx import Reasoner, register_reasoner
     from composable_agents.execution.activities import WorkerContext, configure
     from composable_agents.execution.batch_provider import BatchProvider, register_batch_provider
-    import composable_agents.execution.brain_batch as brain_batch
-    from composable_agents.execution.brain_batch import (
+    import composable_agents.execution.reasoner_batch as reasoner_batch
+    from composable_agents.execution.reasoner_batch import (
         BatchCollector,
         BatchDispatchContext,
         BatchPoll,
-        BrainCall,
+        ReasonerCall,
         FetchBatchResultsInput,
         fetchBatchResults,
         install_batch_dispatch_context,
         pollBatch,
         provider_safe_custom_id,
         submitBatch,
-        submit_brain_batch,
-        submitBrainBatch,
-        SubmitBrainBatchInput,
+        submit_reasoner_batch,
+        submitReasonerBatch,
+        SubmitReasonerBatchInput,
         _principal_key,
     )
     from composable_agents.execution.harness import start_flow
@@ -58,13 +58,13 @@ if HAVE_TEMPORAL:
 
 
 if HAVE_TEMPORAL:
-    @workflow.defn(name="BrainBatchReceiver")
+    @workflow.defn(name="ReasonerBatchReceiver")
     class ReceiverWorkflow:
         def __init__(self) -> None:
             self._inbox: list[dict[str, Any]] = []
 
-        @workflow.signal(name="submitBrainResult")
-        def submit_brain_result(self, item: Any) -> None:
+        @workflow.signal(name="submitReasonerResult")
+        def submit_reasoner_result(self, item: Any) -> None:
             self._inbox.append(dict(item))
 
         @workflow.run
@@ -83,13 +83,13 @@ if HAVE_TEMPORAL:
         def build_request(
             self,
             custom_id: str,
-            brain: Any,
+            reasoner: Any,
             value: Any,
             *,
             transcript: Any = None,
             dispatch: Any = None,
         ) -> dict[str, Any]:
-            del brain, transcript, dispatch
+            del reasoner, transcript, dispatch
             type(self).values[custom_id] = value
             return {"custom_id": custom_id}
 
@@ -188,8 +188,8 @@ if HAVE_TEMPORAL:
             for request in type(self).requests_by_batch[batch_id]:
                 yield (str(request["custom_id"]), _FakeBatchEntryError("expired"))
 
-        def parse(self, raw: Any, brain: Any) -> Any:
-            del brain
+        def parse(self, raw: Any, reasoner: Any) -> Any:
+            del reasoner
             if isinstance(raw, _FakeBatchEntryError):
                 raise RuntimeError(f"batch entry {raw.reason}")
             raise RuntimeError("unexpected batch entry")
@@ -213,7 +213,7 @@ def test_provider_safe_custom_id_contract() -> None:
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
+def test_submit_reasoner_batch_signal_with_starts_keyed_collector() -> None:
     captured = {}
 
     class FakeClient:
@@ -224,8 +224,8 @@ def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
             return "handle"
 
     custom_id = _expected_provider_custom_id("r1", 0, "think@1")
-    call = BrainCall(
-        brain="b",
+    call = ReasonerCall(
+        reasoner="b",
         value=1,
         custom_id=custom_id,
         reply_to="r1",
@@ -233,7 +233,7 @@ def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
     )
 
     out = asyncio.run(
-        submit_brain_batch(
+        submit_reasoner_batch(
             FakeClient(),
             provider="anthropic",
             qos="BATCH",
@@ -260,7 +260,7 @@ def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_submit_brain_batch_activity_uses_installed_context(
+def test_submit_reasoner_batch_activity_uses_installed_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     captured = {}
@@ -272,25 +272,25 @@ def test_submit_brain_batch_activity_uses_installed_context(
             captured["kwargs"] = kwargs
             return "handle"
 
-    monkeypatch.setattr(brain_batch, "_BATCH_CTX", None)
+    monkeypatch.setattr(reasoner_batch, "_BATCH_CTX", None)
     install_batch_dispatch_context(
         BatchDispatchContext(
             client=FakeClient(),
             quiet_s=2,
             max_items=8,
             max_wait_s=90,
-            task_queue="brain-batch-test",
+            task_queue="reasoner-batch-test",
         )
     )
 
     out = asyncio.run(
-        submitBrainBatch(
-            SubmitBrainBatchInput(
+        submitReasonerBatch(
+            SubmitReasonerBatchInput(
                 provider="anthropic",
                 qos="BATCH",
                 principal_key=_principal_key({"storeId": 1}),
-                call=BrainCall(
-                    brain="b",
+                call=ReasonerCall(
+                    reasoner="b",
                     value=1,
                     principal={"storeId": 1},
                     custom_id=_expected_provider_custom_id("r1", 0, "think@1"),
@@ -306,7 +306,7 @@ def test_submit_brain_batch_activity_uses_installed_context(
     assert captured["input"].quiet_s == 2
     assert captured["input"].max_items == 8
     assert captured["input"].max_wait_s == 90
-    assert captured["kwargs"]["task_queue"] == "brain-batch-test"
+    assert captured["kwargs"]["task_queue"] == "reasoner-batch-test"
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -322,9 +322,9 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
     FakeBatch.values.clear()
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fake", FakeBatch)
-    register_brain(Brain(name="echo_brain", model="fake:m", system="", reply_schema=None))
+    register_reasoner(Reasoner(name="echo_reasoner", model="fake:m", system="", reply_schema=None))
 
-    tq = f"ca-brain-batch-{uuid.uuid4()}"
+    tq = f"ca-reasoner-batch-{uuid.uuid4()}"
     async with Worker(
         env.client,
         task_queue=tq,
@@ -337,14 +337,14 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
             task_queue=tq,
         )
         custom_id = _expected_provider_custom_id("run-1", 0, "think@1")
-        call = BrainCall(
-            brain="echo_brain",
+        call = ReasonerCall(
+            reasoner="echo_reasoner",
             value=7,
             cid="think@1",
             reply_to="run-1",
             custom_id=custom_id,
         )
-        await submit_brain_batch(
+        await submit_reasoner_batch(
             env.client,
             provider="fake",
             qos="BATCH",
@@ -380,10 +380,10 @@ async def _same_key_fresh_collectors_start_distinct_poll_workflows(
 ) -> None:
     BlockingFakeBatch.reset()
     register_batch_provider("blockingfake", BlockingFakeBatch)
-    brain_name = f"blocking_brain_{uuid.uuid4().hex}"
-    register_brain(Brain(name=brain_name, model="blockingfake:m", system=""))
+    reasoner_name = f"blocking_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(Reasoner(name=reasoner_name, model="blockingfake:m", system=""))
 
-    tq = f"ca-brain-batch-collision-{uuid.uuid4()}"
+    tq = f"ca-reasoner-batch-collision-{uuid.uuid4()}"
     principal = {"tenant": "same"}
     collector_id = f"batch:blockingfake:BATCH:{_principal_key(principal)}"
 
@@ -401,13 +401,13 @@ async def _same_key_fresh_collectors_start_distinct_poll_workflows(
             task_queue=tq,
         )
         custom_id_a = _expected_provider_custom_id(receiver_a_id, 0, "think@1")
-        await submit_brain_batch(
+        await submit_reasoner_batch(
             env.client,
             provider="blockingfake",
             qos="BATCH",
             principal=principal,
-            call=BrainCall(
-                brain=brain_name,
+            call=ReasonerCall(
+                reasoner=reasoner_name,
                 value="alpha",
                 cid="think@1",
                 reply_to=receiver_a_id,
@@ -429,13 +429,13 @@ async def _same_key_fresh_collectors_start_distinct_poll_workflows(
             task_queue=tq,
         )
         custom_id_b = _expected_provider_custom_id(receiver_b_id, 0, "think@1")
-        await submit_brain_batch(
+        await submit_reasoner_batch(
             env.client,
             provider="blockingfake",
             qos="BATCH",
             principal=principal,
-            call=BrainCall(
-                brain=brain_name,
+            call=ReasonerCall(
+                reasoner=reasoner_name,
                 value="beta",
                 cid="think@1",
                 reply_to=receiver_b_id,
@@ -495,9 +495,9 @@ def test_fetch_batch_results_emits_batch_attempt_record() -> None:
     FakeBatch.values.clear()
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fakeattempt", FakeBatch)
-    brain_name = f"batch_attempt_brain_{uuid.uuid4().hex}"
-    register_brain(
-        Brain(name=brain_name, model="fakeattempt:m", system="", reply_schema=None)
+    reasoner_name = f"batch_attempt_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(
+        Reasoner(name=reasoner_name, model="fakeattempt:m", system="", reply_schema=None)
     )
     custom_id = "attempt-cid"
     FakeBatch.values[custom_id] = "hello"
@@ -512,8 +512,8 @@ def test_fetch_batch_results_emits_batch_attempt_record() -> None:
                     provider="fakeattempt",
                     batch_id="bx",
                     calls=[
-                        BrainCall(
-                            brain=brain_name,
+                        ReasonerCall(
+                            reasoner=reasoner_name,
                             value="hello",
                             custom_id=custom_id,
                         )
@@ -536,42 +536,42 @@ def test_fetch_batch_results_emits_batch_attempt_record() -> None:
     ]
 
 
-async def _flow_brain_rendezvous_through_build_worker(
+async def _flow_reasoner_rendezvous_through_build_worker(
     env: WorkflowEnvironment,
 ) -> None:
     FakeBatch.values.clear()
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fake", FakeBatch)
-    brain_name = f"batch_brain_{uuid.uuid4().hex}"
-    register_brain(Brain(name=brain_name, model="fake:m", system="", reply_schema=None))
+    reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(Reasoner(name=reasoner_name, model="fake:m", system="", reply_schema=None))
 
-    flow = think(brain_name, ann=Ann(batchable=True))
+    flow = think(reasoner_name, ann=Ann(batchable=True))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
-        brain: Any,
+        reasoner: Any,
         ann: Any,
         principal: Any,
         load: Any = None,
     ) -> QoSTier:
-        del brain, principal, load
+        del reasoner, principal, load
         if getattr(ann, "batchable", False):
             return QoSTier.BATCH
         return QoSTier.STANDARD
 
     async def llm_should_not_run(
-        brain: Any,
+        reasoner: Any,
         value: Any,
         principal: Any = None,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> Any:
         nonlocal llm_calls
-        del brain, value, principal, transcript, dispatch
+        del reasoner, value, principal, transcript, dispatch
         llm_calls += 1
-        raise AssertionError("BATCH brain call fell through to sync LLM")
+        raise AssertionError("BATCH reasoner call fell through to sync LLM")
 
     ctx = WorkerContext(
         resolve_qos=resolve_qos,
@@ -579,7 +579,7 @@ async def _flow_brain_rendezvous_through_build_worker(
         registry=None,
     )
     async with build_worker(env.client, ctx, task_queue=tq):
-        sid = f"brain-batch-flow-{uuid.uuid4()}"
+        sid = f"reasoner-batch-flow-{uuid.uuid4()}"
         handle = await start_flow(
             env.client,
             frozen.flow.to_json(),
@@ -611,36 +611,36 @@ async def _two_runs_do_not_misroute(env: WorkflowEnvironment) -> None:
     FakeBatch.values.clear()
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fake", FakeBatch)
-    brain_name = f"batch_brain_{uuid.uuid4().hex}"
-    register_brain(Brain(name=brain_name, model="fake:m", system="", reply_schema=None))
+    reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(Reasoner(name=reasoner_name, model="fake:m", system="", reply_schema=None))
 
-    flow = think(brain_name, ann=Ann(batchable=True))
+    flow = think(reasoner_name, ann=Ann(batchable=True))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
-        brain: Any,
+        reasoner: Any,
         ann: Any,
         principal: Any,
         load: Any = None,
     ) -> QoSTier:
-        del brain, principal, load
+        del reasoner, principal, load
         if getattr(ann, "batchable", False):
             return QoSTier.BATCH
         return QoSTier.STANDARD
 
     async def llm_should_not_run(
-        brain: Any,
+        reasoner: Any,
         value: Any,
         principal: Any = None,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> Any:
         nonlocal llm_calls
-        del brain, value, principal, transcript, dispatch
+        del reasoner, value, principal, transcript, dispatch
         llm_calls += 1
-        raise AssertionError("BATCH brain call fell through to sync LLM")
+        raise AssertionError("BATCH reasoner call fell through to sync LLM")
 
     ctx = WorkerContext(
         resolve_qos=resolve_qos,
@@ -648,8 +648,8 @@ async def _two_runs_do_not_misroute(env: WorkflowEnvironment) -> None:
         registry=None,
     )
     async with build_worker(env.client, ctx, task_queue=tq):
-        sid_a = f"brain-batch-flow-a-{uuid.uuid4()}"
-        sid_b = f"brain-batch-flow-b-{uuid.uuid4()}"
+        sid_a = f"reasoner-batch-flow-a-{uuid.uuid4()}"
+        sid_b = f"reasoner-batch-flow-b-{uuid.uuid4()}"
         handle_a, handle_b = await asyncio.gather(
             start_flow(
                 env.client,
@@ -689,16 +689,16 @@ async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
     PendingFakeBatch.values.clear()
     PendingFakeBatch.requests_by_batch.clear()
     register_batch_provider("pending", PendingFakeBatch)
-    brain_name = f"batch_brain_{uuid.uuid4().hex}"
-    register_brain(Brain(name=brain_name, model="pending:m", system="", reply_schema=None))
+    reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(Reasoner(name=reasoner_name, model="pending:m", system="", reply_schema=None))
 
-    flow = think(brain_name, ann=Ann(batchable=True, timeout_s=5))
+    flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
-        brain: Any,
+        reasoner: Any,
         ann: Any,
         principal: Any,
         load: Any = None,
@@ -706,20 +706,20 @@ async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
         timeout_s: float | None = None,
         min_batch_window_s: float | None = None,
     ) -> QoSTier:
-        del brain, principal, load, timeout_s, min_batch_window_s
+        del reasoner, principal, load, timeout_s, min_batch_window_s
         if getattr(ann, "batchable", False):
             return QoSTier.BATCH
         return QoSTier.STANDARD
 
     async def llm_sync_promote(
-        brain: Any,
+        reasoner: Any,
         value: Any,
         principal: Any = None,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> Any:
         nonlocal llm_calls
-        del brain, principal, transcript
+        del reasoner, principal, transcript
         llm_calls += 1
         assert dispatch.qos is QoSTier.STANDARD
         return f"sync:{value}"
@@ -730,7 +730,7 @@ async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
         registry=None,
     )
     async with build_worker(env.client, ctx, task_queue=tq):
-        sid = f"brain-batch-timeout-{uuid.uuid4()}"
+        sid = f"reasoner-batch-timeout-{uuid.uuid4()}"
         handle = await start_flow(
             env.client,
             frozen.flow.to_json(),
@@ -763,16 +763,16 @@ async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
     ErrorFakeBatch.values.clear()
     ErrorFakeBatch.requests_by_batch.clear()
     register_batch_provider("errorfake", ErrorFakeBatch)
-    brain_name = f"batch_brain_{uuid.uuid4().hex}"
-    register_brain(Brain(name=brain_name, model="errorfake:m", system="", reply_schema=None))
+    reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(Reasoner(name=reasoner_name, model="errorfake:m", system="", reply_schema=None))
 
-    flow = think(brain_name, ann=Ann(batchable=True, timeout_s=5))
+    flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
-        brain: Any,
+        reasoner: Any,
         ann: Any,
         principal: Any,
         load: Any = None,
@@ -780,20 +780,20 @@ async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
         timeout_s: float | None = None,
         min_batch_window_s: float | None = None,
     ) -> QoSTier:
-        del brain, principal, load, timeout_s, min_batch_window_s
+        del reasoner, principal, load, timeout_s, min_batch_window_s
         if getattr(ann, "batchable", False):
             return QoSTier.BATCH
         return QoSTier.STANDARD
 
     async def llm_sync_promote(
-        brain: Any,
+        reasoner: Any,
         value: Any,
         principal: Any = None,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> Any:
         nonlocal llm_calls
-        del brain, principal, transcript
+        del reasoner, principal, transcript
         llm_calls += 1
         assert dispatch.qos is QoSTier.STANDARD
         return f"sync:{value}"
@@ -804,7 +804,7 @@ async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
         registry=None,
     )
     async with build_worker(env.client, ctx, task_queue=tq):
-        sid = f"brain-batch-error-{uuid.uuid4()}"
+        sid = f"reasoner-batch-error-{uuid.uuid4()}"
         handle = await start_flow(
             env.client,
             frozen.flow.to_json(),
@@ -837,18 +837,18 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
     FailedFakeBatch.values.clear()
     FailedFakeBatch.requests_by_batch.clear()
     register_batch_provider("failedfake", FailedFakeBatch)
-    brain_name = f"batch_brain_{uuid.uuid4().hex}"
-    register_brain(
-        Brain(name=brain_name, model="failedfake:m", system="", reply_schema=None)
+    reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
+    register_reasoner(
+        Reasoner(name=reasoner_name, model="failedfake:m", system="", reply_schema=None)
     )
 
-    flow = think(brain_name, ann=Ann(batchable=True, timeout_s=5))
+    flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
-        brain: Any,
+        reasoner: Any,
         ann: Any,
         principal: Any,
         load: Any = None,
@@ -856,20 +856,20 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
         timeout_s: float | None = None,
         min_batch_window_s: float | None = None,
     ) -> QoSTier:
-        del brain, principal, load, timeout_s, min_batch_window_s
+        del reasoner, principal, load, timeout_s, min_batch_window_s
         if getattr(ann, "batchable", False):
             return QoSTier.BATCH
         return QoSTier.STANDARD
 
     async def llm_sync_promote(
-        brain: Any,
+        reasoner: Any,
         value: Any,
         principal: Any = None,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> Any:
         nonlocal llm_calls
-        del brain, principal, transcript
+        del reasoner, principal, transcript
         llm_calls += 1
         assert dispatch.qos is QoSTier.STANDARD
         return f"sync:{value}"
@@ -880,7 +880,7 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
         registry=None,
     )
     async with build_worker(env.client, ctx, task_queue=tq):
-        sid = f"brain-batch-failed-{uuid.uuid4()}"
+        sid = f"reasoner-batch-failed-{uuid.uuid4()}"
         handle = await start_flow(
             env.client,
             frozen.flow.to_json(),
@@ -911,7 +911,7 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
 
 async def _run_flow_rendezvous_all() -> None:
     async with await WorkflowEnvironment.start_time_skipping() as env:
-        await _flow_brain_rendezvous_through_build_worker(env)
+        await _flow_reasoner_rendezvous_through_build_worker(env)
 
 
 async def _run_two_runs_do_not_misroute() -> None:
@@ -935,7 +935,7 @@ async def _run_whole_batch_failure_promotes_to_sync() -> None:
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_flow_brain_rendezvous_through_build_worker() -> None:
+def test_flow_reasoner_rendezvous_through_build_worker() -> None:
     asyncio.run(asyncio.wait_for(_run_flow_rendezvous_all(), timeout=120))
 
 

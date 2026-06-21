@@ -15,20 +15,20 @@ Structure notes:
 * ``each(label_one(snapshot=snapshot), clusters, max_parallel=3)`` mirrors the
   product's label concurrency. The body closure-captures the snapshot handle, so
   the item has the same global consistency context without re-reading the store.
-* Inside ``label_one`` the label brain and keyword brain both consume the same
+* Inside ``label_one`` the label reasoner and keyword reasoner both consume the same
   cluster source and neither depends on the other. The arrow sees the split: the
-  DAG compiler may infer effect-fenced parallelism for those two brain steps.
+  DAG compiler may infer effect-fenced parallelism for those two reasoner steps.
   In the real workflow this maps to the label pass plus the one-liner pass; this
   cookbook variant uses label + keywords to make the independent split obvious.
 * ``write_label_snapshot`` is the only write. It re-fetches merge version and
   signature, then either replaces all labels for the snapshot or writes none.
-  The call sets ``retries=`` because the hand is declared idempotent and models
+  The call sets ``retries=`` because the tool is declared idempotent and models
   the product's retryable CAS-write contract.
 * ``switch`` handles the universal status idiom on the new frontend surface:
   success / stale_snapshot / not_found. The production workflow also has
   disabled and empty exits; this mini-port keeps the batch small and maps the
   missing-store case to ``not_found``.
-* ``run_demo()`` is a keyless dry run with deterministic fake brains and an
+* ``run_demo()`` is a keyless dry run with deterministic fake reasoners and an
   in-process store, matching the episode example's import-safe conventions.
 """
 
@@ -40,13 +40,13 @@ import json
 from typing import Any
 
 from composable_agents import (
-    Brain,
+    Reasoner,
     Deployment,
     deploy,
     each,
     flow,
     pure,
-    register_brain,
+    register_reasoner,
     switch,
     think,
     tool,
@@ -163,7 +163,7 @@ reset_store()
 
 
 # --------------------------------------------------------------------------- #
-# Hands (the product's DB steps).
+# Tools (the product's DB steps).
 # --------------------------------------------------------------------------- #
 @tool(effect="read", idempotent=True)
 def read_macrocluster_snapshot(store_id: str) -> dict[str, Any]:
@@ -256,10 +256,10 @@ TOOLS = [read_macrocluster_snapshot, write_label_snapshot]
 
 
 # --------------------------------------------------------------------------- #
-# Brains (the product's cluster labeling passes), addressed by name.
+# Reasoners (the product's cluster labeling passes), addressed by name.
 # --------------------------------------------------------------------------- #
-register_brain(
-    Brain(
+register_reasoner(
+    Reasoner(
         name=LABELER,
         model=MODEL,
         system=(
@@ -280,8 +280,8 @@ register_brain(
     )
 )
 
-register_brain(
-    Brain(
+register_reasoner(
+    Reasoner(
         name=KEYWORDER,
         model=MODEL,
         system=(
@@ -424,11 +424,11 @@ def batch(store_ids: list[str]) -> dict[str, Any]:
 
 
 def build() -> Deployment:
-    return deploy(batch, tools=TOOLS, brains=[LABELER, KEYWORDER])
+    return deploy(batch, tools=TOOLS, reasoners=[LABELER, KEYWORDER])
 
 
 # --------------------------------------------------------------------------- #
-# Keyless dry run: deterministic fake brains on InMemoryEnv.
+# Keyless dry run: deterministic fake reasoners on InMemoryEnv.
 # --------------------------------------------------------------------------- #
 def _fake_labeler(value: dict[str, Any]) -> dict[str, Any]:
     first = value["members"][0]["name"]
@@ -448,7 +448,7 @@ async def run_demo(batch: list[str] | None = None) -> Any:
     deployment = build()
     return await deployment.adry_run(
         batch or STORE_BATCH,
-        brains={LABELER: _fake_labeler, KEYWORDER: _fake_keyworder},
+        reasoners={LABELER: _fake_labeler, KEYWORDER: _fake_keyworder},
     )
 
 

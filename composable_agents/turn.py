@@ -24,7 +24,7 @@ from .agent_loop import (
     authorize_call,
     authorize_subflow,
     charge_tool_call,
-    interpret_brain_reply,
+    interpret_reasoner_reply,
     terminal_result,
     would_exceed_budget,
 )
@@ -135,8 +135,8 @@ def controller_turn(
         }
         if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
             # Transcript plan: deterministic, ref-bearing, computed in workflow
-            # code. Hydration/budget/summarization happen in the invoke_brain
-            # effect; the engine binding moves these keys onto InvokeBrainInput.
+            # code. Hydration/budget/summarization happen in the invoke_reasoner
+            # effect; the engine binding moves these keys onto InvokeReasonerInput.
             payload["transcript"] = transcript_for(state, cfg.ctx, input=run_input)
             payload["ctx"] = cfg.ctx.to_json()
             if cfg.summarizer is not None:
@@ -148,7 +148,7 @@ def controller_turn(
         if new_summary is not None:
             state.summary = new_summary
         state.charge(cfg.think_cost)
-        action = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
+        action = interpret_reasoner_reply(reply, strict=not cfg.permissive_controller)
 
         if action.decision.value == "finish":
             return Halt("done", output=action.payload)

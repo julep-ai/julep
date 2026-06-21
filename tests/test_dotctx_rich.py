@@ -22,12 +22,12 @@ import yaml
 pytest.importorskip("jinja2")
 
 from composable_agents.capabilities import ToolGrant
-from composable_agents.deploy import _brain_identity, _renderer_source_hashes, snapshot_from_listings
+from composable_agents.deploy import _reasoner_identity, _renderer_source_hashes, snapshot_from_listings
 from composable_agents.dotctx import load_dotctx
 from composable_agents.dotctx_rich import RichDotctx, load_rich_dotctx
 from composable_agents.dsl import think
 from composable_agents.errors import FreezeError
-from composable_agents.execution.llm import complete_brain
+from composable_agents.execution.llm import complete_reasoner
 from composable_agents.freeze import freeze
 from composable_agents.prompt import get_renderer
 from composable_agents.registry import DEFAULT_REGISTRY
@@ -68,18 +68,18 @@ def test_minimal_layout_unchanged(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 # Rich load: bundle, schema.pyi, tools.pyi.
 # --------------------------------------------------------------------------- #
-def test_rich_bundle_loads_brain_with_renderers() -> None:
+def test_rich_bundle_loads_reasoner_with_renderers() -> None:
     rich = _rich()
-    b = rich.brain
+    b = rich.reasoner
     assert b.name == "researcher"               # directory name minus .ctx
-    assert b.system == ""                       # templates never live on the Brain
+    assert b.system == ""                       # templates never live on the Reasoner
     assert b.model == "openai/gpt-5.4-mini@low" # @effort suffix passes through untouched
     assert b.temperature == 0.3 and b.max_rounds == 4 and b.max_tokens == 800
     assert b.system_render == rich.renderer_names["system"]
     assert b.user_render == rich.renderer_names["user"]
-    # loading again is a no-op (same brain, same renderers)
+    # loading again is a no-op (same reasoner, same renderers)
     again = _rich()
-    assert again.brain == b and again.renderer_names == rich.renderer_names
+    assert again.reasoner == b and again.renderer_names == rich.renderer_names
 
 
 def test_renderer_names_pin_template_content() -> None:
@@ -107,7 +107,7 @@ def test_missing_context_variable_names_package_and_variable() -> None:
 
 
 def test_schema_pyi_output_becomes_reply_schema() -> None:
-    schema = _rich().brain.reply_schema
+    schema = _rich().reasoner.reply_schema
     assert schema is not None
     assert schema["type"] == "object"
     assert schema["required"] == ["findings", "summary"]
@@ -121,8 +121,8 @@ def test_schema_pyi_output_becomes_reply_schema() -> None:
 
 def test_tools_pyi_grants_keys_and_expectations() -> None:
     rich = _rich()
-    assert rich.brain.tools == ("memory/search_notes", "memory/create_note")
-    assert [g.name for g in rich.tool_grants] == list(rich.brain.tools)
+    assert rich.reasoner.tools == ("memory/search_notes", "memory/create_note")
+    assert [g.name for g in rich.tool_grants] == list(rich.reasoner.tools)
     assert all(isinstance(g, ToolGrant) for g in rich.tool_grants)
 
     search = rich.expected_tool_schemas["memory/search_notes"]
@@ -139,7 +139,7 @@ def test_tools_pyi_grants_keys_and_expectations() -> None:
 
 def test_single_template_package() -> None:
     rich = load_rich_dotctx(str(FIXTURES / "summarizer.ctx"))
-    b = rich.brain
+    b = rich.reasoner
     assert b.name == "summarizer" and b.system == ""
     assert b.system_render is not None and b.user_render is None
     assert b.reply_schema is None and b.tools == () and b.max_tokens == 256
@@ -148,7 +148,7 @@ def test_single_template_package() -> None:
 
 def test_load_dotctx_detects_rich_layout() -> None:
     b = load_dotctx(str(FIXTURES / "researcher.ctx"))
-    assert b == _rich().brain
+    assert b == _rich().reasoner
 
 
 # --------------------------------------------------------------------------- #
@@ -215,7 +215,7 @@ def test_template_edit_moves_renderer_name_and_hash(tmp_path: Path) -> None:
     b = _write_pkg(tmp_path, "drift_b.ctx", "name: drift.b\nmodel: m\n",
                    {"prompt.j2": "version two {{ x }}"})
     ra, rb = load_rich_dotctx(str(a)), load_rich_dotctx(str(b))
-    na, nb = ra.brain.system_render, rb.brain.system_render
+    na, nb = ra.reasoner.system_render, rb.reasoner.system_render
     assert na is not None and nb is not None and na != nb
     assert DEFAULT_REGISTRY.renderer_source_hash_of(na) != DEFAULT_REGISTRY.renderer_source_hash_of(nb)
 
@@ -223,17 +223,17 @@ def test_template_edit_moves_renderer_name_and_hash(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 # Deploy artifact: conditional keys only; renderer hashes cover user_render.
 # --------------------------------------------------------------------------- #
-def test_brain_identity_adds_new_keys_only_when_present() -> None:
+def test_reasoner_identity_adds_new_keys_only_when_present() -> None:
     rich = _rich()
-    ident = _brain_identity("researcher")
-    assert ident["systemRender"] == rich.brain.system_render
-    assert ident["userRender"] == rich.brain.user_render
+    ident = _reasoner_identity("researcher")
+    assert ident["systemRender"] == rich.reasoner.system_render
+    assert ident["userRender"] == rich.reasoner.user_render
     assert ident["maxTokens"] == 800
 
-    from composable_agents.dotctx import Brain, register_brain
+    from composable_agents.dotctx import Reasoner, register_reasoner
 
-    register_brain(Brain(name="plain.norich", model="m", system="s"))
-    plain = _brain_identity("plain.norich")
+    register_reasoner(Reasoner(name="plain.norich", model="m", system="s"))
+    plain = _reasoner_identity("plain.norich")
     assert "userRender" not in plain and "maxTokens" not in plain and "systemRender" not in plain
 
 
@@ -309,12 +309,12 @@ class Recorder:
         return reply
 
 
-def test_complete_brain_uses_rendered_user_turn_and_max_tokens() -> None:
+def test_complete_reasoner_uses_rendered_user_turn_and_max_tokens() -> None:
     rich = _rich()
     reply = {"findings": [], "summary": "s"}
     rec = Recorder(replies=[FakeCompletion([FakeChoice(FakeMessage(content=json.dumps(reply)))])])
-    out = run(complete_brain(
-        rich.brain, {"persona": "skeptic", "question": "why?"}, acompletion=rec,
+    out = run(complete_reasoner(
+        rich.reasoner, {"persona": "skeptic", "question": "why?"}, acompletion=rec,
     ))
     assert out == reply
     call = rec.calls[0]
@@ -326,10 +326,10 @@ def test_complete_brain_uses_rendered_user_turn_and_max_tokens() -> None:
     assert msgs[1]["content"] == "Question: why?"
 
 
-def test_complete_brain_keeps_value_as_user_turn_without_user_render() -> None:
+def test_complete_reasoner_keeps_value_as_user_turn_without_user_render() -> None:
     rich = load_rich_dotctx(str(FIXTURES / "summarizer.ctx"))
     rec = Recorder(replies=[FakeCompletion([FakeChoice(FakeMessage(content="done"))])])
-    out = run(complete_brain(rich.brain, {"audience": "execs", "text": "T"}, acompletion=rec))
+    out = run(complete_reasoner(rich.reasoner, {"audience": "execs", "text": "T"}, acompletion=rec))
     assert out == "done"
     msgs = rec.calls[0]["messages"]
     assert msgs[0]["content"] == "Summarize for execs."

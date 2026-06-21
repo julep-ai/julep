@@ -14,7 +14,7 @@
 
 The agent harness currently carries the **full, monotonically-growing `AgentState`** across
 the Temporal wire: into continue-as-new (`state=state.to_json()`, `harness.py:752`) and
-into the brain activity every round (`{"input": state.last, "trace": [...]}`,
+into the reasoner activity every round (`{"input": state.last, "trace": [...]}`,
 `harness.py:649`). That overflows Temporal's payload/history limits for any non-trivial
 agent.
 
@@ -47,7 +47,7 @@ Temporal limits (current, 2026):
   linear in event count.
 
 Temporal's own guidance: offload large payloads to an object store, pass references (the
-*claim-check* pattern) — built into the SDKs as External Storage, or rolled by hand with a
+*claim-check* pattern) — built into the SDKs as External Storage, or rolled by tool with a
 custom Payload Codec.
 
 ## What actually overflows today
@@ -55,7 +55,7 @@ custom Payload Codec.
 | Site | Carries | Anchor | Bloat axis |
 |---|---|---|---|
 | continue-as-new input | the whole `AgentState` (`trace` + `last` + `call_counts`) | `harness.py:752` | bytes (per-payload) + re-persisted into the new run's first history event |
-| brain activity input, every round | `{"input": state.last, "trace": [...]}` | `harness.py:649` | bytes; trace count grows |
+| reasoner activity input, every round | `{"input": state.last, "trace": [...]}` | `harness.py:649` | bytes; trace count grows |
 | tool-call result → `state.last` | an arbitrary tool output | `harness.py:702` (call path; `:733` is the sub path) | bytes (a single big value blows 2 MB in one round) |
 | terminal result | `output` **+ full `trace`** | `agent_loop.py:295` (`terminal_result`) | bytes at completion — never seen by a CAN-time store |
 | `FlowWorkflow` (sibling path) | activity/child events, **no continue-as-new** | `harness.py:447` | event *count* — codec shrinks bytes, not count |
@@ -67,7 +67,7 @@ Two things to note from this table that the earlier draft got wrong:
   the wire/history representation is a pointer. That's fine — in-memory size is RAM, not the
   Temporal constraint — but it means the codec, not any in-loop cleverness, is what keeps
   the *wire* small.
-- **`SessionStore`-at-continue-as-new does not shrink the per-round brain input**
+- **`SessionStore`-at-continue-as-new does not shrink the per-round reasoner input**
   (`harness.py:649`) or the terminal result (`agent_loop.py:295`). Only the codec (bytes)
   or a cursor/summary-based prompt path touches those. So the codec is load-bearing; the
   store is not a substitute for it.
@@ -87,9 +87,9 @@ What it fixes, with **zero control-loop changes**:
 
 - continue-as-new `state.to_json()` (`harness.py:752`) — offloaded; only the pointer lands
   in the new run's history.
-- `callHand` return (`activities.py:155`) and `invokeBrain` return (`activities.py:163`) — a
+- `callTool` return (`activities.py:155`) and `invokeReasoner` return (`activities.py:163`) — a
   large tool output or model reply never lands in history raw.
-- the brain activity input `{"input": state.last, "trace": [...]}` (`harness.py:649`) and
+- the reasoner activity input `{"input": state.last, "trace": [...]}` (`harness.py:649`) and
   the terminal result (`agent_loop.py:295`) — shrunk on the wire.
 
 What it does **not** fix:
@@ -205,10 +205,10 @@ an `ExecutionPolicy` flag, only if you want the live trace queryable before a CA
 but the loop builds entries without them (`turn.py:162`, `harness.py:703`). The same claim-
 check that offloads a value should populate `output_ref = <ref>`. Then the trace becomes a
 genuine content-addressed log, the divergence from `algebra.hs:149`'s value-carrying
-`Did CallId Name Value Value` becomes principled rather than lossy, and `invokeBrain` can
+`Did CallId Name Value Value` becomes principled rather than lossy, and `invokeReasoner` can
 resolve prior observations via `get_blob` instead of being limited to `state.last`.
 
-Caveat — this changes retry semantics: if an `invokeBrain` activity retries and a referenced
+Caveat — this changes retry semantics: if an `invokeReasoner` activity retries and a referenced
 blob has changed or disappeared, the prompt (and the LLM result) changes. It is safe **only**
 under the full blob-durability contract above (content-addressed, immutable, hash-verified,
 tenant-scoped). Do not wire `get_blob` into the prompt path until that contract is enforced.
@@ -264,7 +264,7 @@ traceability.
   code, so the workflow does not "see a pointer" at `state.last = out`. → fixed; "What
   actually overflows today".
 - **[P0]** A codec also offloads the continue-as-new `state.to_json()` and the whole
-  `InvokeBrainInput`, so it largely subsumes the *size* rationale for `SessionStore`;
+  `InvokeReasonerInput`, so it largely subsumes the *size* rationale for `SessionStore`;
   queryability/cross-runtime survive as architecture reasons only. → fixed; thesis + "Optional".
 - **[P0]** "Replay rebuilds state from history" needs immutable, retained, integrity-checked
   blobs; GC/overwrite breaks replay. → fixed; "blob-durability contract".
@@ -272,11 +272,11 @@ traceability.
   fencing uniqueness. → fixed; invariant 1.
 - **[P1]** Crash-mid-commit idempotency needs a concrete key — `(session_id, base, state_hash)`.
   → fixed; invariant 2.
-- **[P1]** Per-round brain input (`harness.py:649`) is not shrunk by a CAN-time store. → fixed;
+- **[P1]** Per-round reasoner input (`harness.py:649`) is not shrunk by a CAN-time store. → fixed;
   table + "does not fix".
 - **[P1]** Terminal result (`agent_loop.py:295`) returns `output` + full trace; CAN-time store
   never sees it. → fixed; table + codec scope.
-- **[P1]** `get_blob` in `invokeBrain` changes retry semantics. → fixed; "Context fidelity"
+- **[P1]** `get_blob` in `invokeReasoner` changes retry semantics. → fixed; "Context fidelity"
   caveat.
 - **[P1]** Sibling `FlowWorkflow` path has no continue-as-new (event-count). → fixed; table +
   "does not fix" + migration step 2.
@@ -287,5 +287,5 @@ traceability.
 - **[P2]** "Workflow cannot touch the store" → more precisely, ambient I/O in workflow code is
   replay-unsafe. → fixed; "Activities" note.
 - **[P2]** Anchor drift: call-path `state.last=out` is `harness.py:702` (`:733` is sub);
-  `callHand` return is `activities.py:155`; `recall`/`append` are `algebra.hs:207-208`
-  (`:161` is `Hands`). → all corrected throughout.
+  `callTool` return is `activities.py:155`; `recall`/`append` are `algebra.hs:207-208`
+  (`:161` is `Tools`). → all corrected throughout.

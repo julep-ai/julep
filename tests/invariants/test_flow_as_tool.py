@@ -41,7 +41,7 @@ def test_plain_flow_sub_threads_result() -> None:
     ]
     seen: list[dict[str, Any]] = []
 
-    def llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         seen.append(payload)
         return replies.pop(0)
 
@@ -67,7 +67,7 @@ def test_sub_agent_threads_result_without_granting_parent_sub_agent_tools() -> N
         secret_calls.append(value)
         return f"secret:{value}"
 
-    def sub_llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
+    def sub_llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
         return sub_replies.pop(0)
 
     sub = Agent("m", tools=[secret], name="tf6_sub_agent", llm=sub_llm)
@@ -77,7 +77,7 @@ def test_sub_agent_threads_result_without_granting_parent_sub_agent_tools() -> N
     ]
     parent_seen: list[dict[str, Any]] = []
 
-    def parent_llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def parent_llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         parent_seen.append(payload)
         return parent_replies.pop(0)
 
@@ -95,7 +95,7 @@ def test_sub_agent_threads_result_without_granting_parent_sub_agent_tools() -> N
         "m",
         tools=[sub],
         name="tf6_parent_denied_secret",
-        llm=lambda _brain_name, _payload: {"tool": "tf6_secret", "input": "x"},
+        llm=lambda _reasoner_name, _payload: {"tool": "tf6_secret", "input": "x"},
     )
     denied = denied_parent.run("start")
 
@@ -110,7 +110,7 @@ def test_sub_agent_threads_result_without_granting_parent_sub_agent_tools() -> N
         "m",
         tools=[secret],
         name="tf6_sub_agent_direct",
-        llm=lambda _brain_name, _payload: direct_replies.pop(0),
+        llm=lambda _reasoner_name, _payload: direct_replies.pop(0),
     )
     direct = direct_sub.run("start")
 
@@ -173,7 +173,7 @@ def test_plain_flow_cap_with_granted_tool_runs_through_parent_grant() -> None:
         "m",
         tools=[t, fc],
         name="c2_good",
-        llm=lambda _brain_name, _payload: replies.pop(0),
+        llm=lambda _reasoner_name, _payload: replies.pop(0),
     )
 
     result = parent.run("x")
@@ -240,7 +240,7 @@ def test_safe_plain_flow_cap_still_runs_with_compiled_manifest() -> None:
     ]
     seen: list[dict[str, Any]] = []
 
-    def llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         seen.append(payload)
         return replies.pop(0)
 

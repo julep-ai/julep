@@ -67,7 +67,7 @@ async def main() -> None:
     print(f"starting {session_id!r}: {QUESTION}", flush=True)
     result = await AGENT.deploy(client, session_id=session_id, input=QUESTION)
     print()
-    print("=== durable run result (worker: EKS pod, brain: real Anthropic, Temporal: RDS PostgreSQL) ===")
+    print("=== durable run result (worker: EKS pod, reasoner: real Anthropic, Temporal: RDS PostgreSQL) ===")
     print("status:", result["status"], "| cost:", result.get("cost"))
     print("output:", json.dumps(result["output"]))
     print("trace:")

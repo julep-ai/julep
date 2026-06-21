@@ -14,8 +14,8 @@ What Temporal provides, mapped to the blueprint:
   per-tool :class:`RetryPolicy` derived from each frozen contract
   (:func:`_retry_policy_for`): a read or natively-idempotent tool retries
   liberally; a non-idempotent write retries cautiously and only behind the
-  ``Idempotency-Key`` the ``callHand`` activity sends.
-* **Hands / Brains** = activities (``callHand`` / ``invokeBrain``), which run
+  ``Idempotency-Key`` the ``callTool`` activity sends.
+* **Tools / Reasoners** = activities (``callTool`` / ``invokeReasoner``), which run
   outside the sandbox and hold all IO and non-determinism.
 * **Sub** (``run_sub``) = a child :class:`FlowWorkflow`. The Joined firewall is
   structural — :func:`~composable_agents.shapes.surface_shape` already makes a
@@ -106,19 +106,19 @@ with workflow.unsafe.imports_passed_through():
         race_first_from_thunks,
     )
     from .activities import (
-        CallHandInput,
+        CallToolInput,
         CommitStateInput,
         CompilePlanInput,
-        InvokeBrainInput,
+        InvokeReasonerInput,
         LoadStateInput,
         PutBlobInput,
         ResolveQoSInput,
         RunSubInput,
         VerifyPuresInput,
-        callHand,
+        callTool,
         commitState,
         compilePlan,
-        invokeBrain,
+        invokeReasoner,
         loadState,
         putBlob,
         resolveAgentSpec,
@@ -301,18 +301,18 @@ def _retry_policy_for(
     )
 
 
-def _brain_retry(policy: ExecutionPolicy) -> RetryPolicy:
-    """Engine retries for brain/plan activities (``brain_max_attempts``).
+def _reasoner_retry(policy: ExecutionPolicy) -> RetryPolicy:
+    """Engine retries for reasoner/plan activities (``reasoner_max_attempts``).
 
     Workers whose ``LlmCaller`` owns resilience (fallback chains, breakers —
-    ``make_resilient_llm_caller``) should run with ``brain_max_attempts=1`` so
+    ``make_resilient_llm_caller``) should run with ``reasoner_max_attempts=1`` so
     these blind retries don't multiply the caller's ladder.
     """
     return RetryPolicy(
         initial_interval=timedelta(seconds=1),
         backoff_coefficient=2.0,
         maximum_interval=timedelta(seconds=60),
-        maximum_attempts=policy.brain_max_attempts,
+        maximum_attempts=policy.reasoner_max_attempts,
         non_retryable_error_types=_NON_RETRYABLE,
     )
 
@@ -449,7 +449,7 @@ class _TemporalEnv:
         return f"{self._session}-{kind}-{self._child}-{cid}"
 
     # --- effect handlers --- #
-    async def call_hand(self, node: Node, value: Any, cid: str) -> Any:
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         # Frozen calls resolve through the manifest; a staged plan's calls are
         # admitted but unfrozen, so late-bind by tool ref (and use a conservative
         # contract for retry shaping).
@@ -458,8 +458,8 @@ class _TemporalEnv:
         timeout_s = node.ann.timeout if node.ann else None
         cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
         return await workflow.execute_activity(
-            callHand,
-            CallHandInput(
+            callTool,
+            CallToolInput(
                 tool_ref=_toolref_json_from_key(ref_key),
                 value=value,
                 cid=cid,
@@ -470,15 +470,15 @@ class _TemporalEnv:
                 segment_seq=self.segment_seq,
                 node_id=node.id,
                 op="call",
-                kind="hand",
+                kind="tool",
             ),
-            start_to_close_timeout=activity_timeout(timeout_s, self._policy.hand_timeout_s),
+            start_to_close_timeout=activity_timeout(timeout_s, self._policy.tool_timeout_s),
             retry_policy=_retry_policy_for(contract, self._policy, node.ann),
         )
 
-    async def invoke_brain(
+    async def invoke_reasoner(
         self,
-        brain: str,
+        reasoner: str,
         value: Any,
         cid: str,
         timeout_s: Optional[int],
@@ -491,7 +491,7 @@ class _TemporalEnv:
         resolved = await workflow.execute_activity(
             resolveQoS,
             ResolveQoSInput(
-                brain=brain,
+                reasoner=reasoner,
                 node_batchable=batchable,
                 principal=self.principal,
                 cid=cid,
@@ -511,26 +511,26 @@ class _TemporalEnv:
         except (TypeError, ValueError):
             tier = QoSTier.STANDARD
         if tier is QoSTier.BATCH and self._batch_waiter is not None:
-            from .brain_batch import (
-                BrainCall as _BrainCall,
+            from .reasoner_batch import (
+                ReasonerCall as _ReasonerCall,
                 provider_safe_custom_id as _provider_safe_custom_id,
-                SubmitBrainBatchInput as _SubmitBrainBatchInput,
+                SubmitReasonerBatchInput as _SubmitReasonerBatchInput,
             )
 
             custom_id = _provider_safe_custom_id(
                 f"{self._session}:{self.segment_seq}:{cid}"
             )
             provider, _ = _split_model(
-                _DEFAULT_REGISTRY.get_brain(brain).model, "anthropic"
+                _DEFAULT_REGISTRY.get_reasoner(reasoner).model, "anthropic"
             )
             await workflow.execute_activity(
-                "submitBrainBatch",
-                _SubmitBrainBatchInput(
+                "submitReasonerBatch",
+                _SubmitReasonerBatchInput(
                     provider=provider,
                     qos=tier.value,
                     principal_key="",
-                    call=_BrainCall(
-                        brain=brain,
+                    call=_ReasonerCall(
+                        reasoner=reasoner,
                         value=value,
                         principal=self.principal,
                         transcript=None,
@@ -548,8 +548,8 @@ class _TemporalEnv:
             try:
                 result = await self._batch_waiter(custom_id, timeout_s)
             except asyncio.TimeoutError:
-                reply = await self._invoke_brain_sync(
-                    brain, value, cid, timeout_s, QoSTier.STANDARD
+                reply = await self._invoke_reasoner_sync(
+                    reasoner, value, cid, timeout_s, QoSTier.STANDARD
                 )
                 return {
                     "__ca_meta__": {
@@ -561,8 +561,8 @@ class _TemporalEnv:
                 }
             err_reason = _batch_error_reason(result)
             if err_reason is not None:
-                reply = await self._invoke_brain_sync(
-                    brain, value, cid, timeout_s, QoSTier.STANDARD
+                reply = await self._invoke_reasoner_sync(
+                    reasoner, value, cid, timeout_s, QoSTier.STANDARD
                 )
                 return {
                     "__ca_meta__": {
@@ -574,20 +574,20 @@ class _TemporalEnv:
                 }
             return result
 
-        return await self._invoke_brain_sync(brain, value, cid, timeout_s, tier)
+        return await self._invoke_reasoner_sync(reasoner, value, cid, timeout_s, tier)
 
-    async def _invoke_brain_sync(
+    async def _invoke_reasoner_sync(
         self,
-        brain: str,
+        reasoner: str,
         value: Any,
         cid: str,
         timeout_s: Optional[int],
         tier: QoSTier,
     ) -> Any:
         return await workflow.execute_activity(
-            invokeBrain,
-            InvokeBrainInput(
-                brain=brain,
+            invokeReasoner,
+            InvokeReasonerInput(
+                reasoner=reasoner,
                 value=value,
                 cid=cid,
                 principal=self.principal,
@@ -595,11 +595,11 @@ class _TemporalEnv:
                 root_run_id=self.root_run_id,
                 segment_seq=self.segment_seq,
                 op="think",
-                kind="brain",
+                kind="reasoner",
                 qos=tier.value,
             ),
-            start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
-            retry_policy=_brain_retry(self._policy),
+            start_to_close_timeout=activity_timeout(timeout_s, self._policy.reasoner_timeout_s),
+            retry_policy=_reasoner_retry(self._policy),
         )
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
@@ -613,7 +613,7 @@ class _TemporalEnv:
                 principal=self.principal,
             ),
             start_to_close_timeout=timedelta(seconds=self._policy.plan_timeout_s),
-            retry_policy=_brain_retry(self._policy),
+            retry_policy=_reasoner_retry(self._policy),
         )
         return Node.from_json(plan_json)
 
@@ -803,8 +803,8 @@ def _make_emitter() -> tuple[InMemoryProjection, ProjectionEmitter]:
 class FlowWorkflow:
     def __init__(self) -> None:
         self._human_inbox: dict[str, Any] = {}
-        self._brain_inbox: dict[str, Any] = {}
-        self._resolved_brains: set[str] = set()
+        self._reasoner_inbox: dict[str, Any] = {}
+        self._resolved_reasoners: set[str] = set()
         self._open_gates: set[str] = set()
         self._store: Optional[InMemoryProjection] = None
 
@@ -814,18 +814,18 @@ class FlowWorkflow:
         """Deliver a human decision keyed by activation id (``cid``)."""
         self._human_inbox[payload["cid"]] = payload.get("value")
 
-    @workflow.signal(name="submitBrainResult")
-    def submit_brain_result(self, payload: dict[str, Any]) -> None:
+    @workflow.signal(name="submitReasonerResult")
+    def submit_reasoner_result(self, payload: dict[str, Any]) -> None:
         custom_id = payload["custom_id"]
-        if custom_id in self._resolved_brains:
+        if custom_id in self._resolved_reasoners:
             return
         if payload.get("error"):
-            self._brain_inbox[custom_id] = {
+            self._reasoner_inbox[custom_id] = {
                 "__batch_error__": True,
                 "reason": _batch_signal_error_reason(payload.get("reason")),
             }
             return
-        self._brain_inbox[custom_id] = payload.get("reply")
+        self._reasoner_inbox[custom_id] = payload.get("reply")
 
     async def _await_human(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         timeout = timedelta(seconds=timeout_s) if timeout_s else None
@@ -838,17 +838,17 @@ class FlowWorkflow:
             self._open_gates.discard(cid)
         return self._human_inbox.pop(cid)
 
-    async def _await_brain_result(self, custom_id: str, timeout_s: Optional[int]) -> Any:
+    async def _await_reasoner_result(self, custom_id: str, timeout_s: Optional[int]) -> Any:
         timeout = timedelta(seconds=timeout_s) if timeout_s else None
         try:
             await workflow.wait_condition(
-                lambda: custom_id in self._brain_inbox, timeout=timeout
+                lambda: custom_id in self._reasoner_inbox, timeout=timeout
             )
         except asyncio.TimeoutError:
-            self._resolved_brains.add(custom_id)
+            self._resolved_reasoners.add(custom_id)
             raise
-        self._resolved_brains.add(custom_id)
-        return self._brain_inbox.pop(custom_id)
+        self._resolved_reasoners.add(custom_id)
+        return self._reasoner_inbox.pop(custom_id)
 
     @workflow.query(name="openGates")
     def open_gates(self) -> list[str]:
@@ -1032,7 +1032,7 @@ class FlowWorkflow:
             manifest_json=manifest_json,
             policy=policy,
             gate_waiter=self._await_human,
-            batch_waiter=self._await_brain_result,
+            batch_waiter=self._await_reasoner_result,
             workflow_id=inp.session_id,
             max_call_limits=max_call_limits,
             call_counts=call_counts,
@@ -1254,15 +1254,15 @@ class AgentWorkflow:
 
             # Transcript plan (agent-transcripts): deterministic, ref-bearing,
             # computed here in workflow code; hydration, the token budget, and
-            # summarization are activity work inside invokeBrain.
+            # summarization are activity work inside invokeReasoner.
             transcript_plan = None
             if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
                 transcript_plan = transcript_for(state, cfg.ctx, input=inp.input)
 
             reply = await workflow.execute_activity(
-                invokeBrain,
-                InvokeBrainInput(
-                    brain=inp.controller,
+                invokeReasoner,
+                InvokeReasonerInput(
+                    reasoner=inp.controller,
                     value={"input": state.last, "trace": [t.to_json() for t in state.trace]},
                     cid=f"{inp.session_id}-round-{state.round}",
                     principal=inp.principal,
@@ -1278,16 +1278,16 @@ class AgentWorkflow:
                     root_run_id=(inp.root_run_id or inp.session_id),
                     segment_seq=inp.segment_seq,
                     op="think",
-                    kind="brain",
+                    kind="reasoner",
                 ),
-                start_to_close_timeout=timedelta(seconds=policy.brain_timeout_s),
-                retry_policy=_brain_retry(policy),
+                start_to_close_timeout=timedelta(seconds=policy.reasoner_timeout_s),
+                retry_policy=_reasoner_retry(policy),
             )
             new_summary, reply = split_summary_reply(reply)
             if new_summary is not None:
                 state.summary = new_summary
             state.charge(cfg.think_cost)
-            action = al.interpret_brain_reply(reply, strict=not cfg.permissive_controller)
+            action = al.interpret_reasoner_reply(reply, strict=not cfg.permissive_controller)
 
             # 2) Terminal decisions end the loop.
             if action.decision is al.Decision.FINISH:
@@ -1367,8 +1367,8 @@ class AgentWorkflow:
                     call_input = state.last
                 contract = al.contract_for_tool(tool, contracts)
                 out = await workflow.execute_activity(
-                    callHand,
-                    CallHandInput(
+                    callTool,
+                    CallToolInput(
                         tool_ref=_toolref_json_from_key(tool),
                         value=call_input,
                         cid=f"{inp.session_id}-call-{state.round}",
@@ -1377,9 +1377,9 @@ class AgentWorkflow:
                         root_run_id=(inp.root_run_id or inp.session_id),
                         segment_seq=inp.segment_seq,
                         op="call",
-                        kind="hand",
+                        kind="tool",
                     ),
-                    start_to_close_timeout=timedelta(seconds=policy.hand_timeout_s),
+                    start_to_close_timeout=timedelta(seconds=policy.tool_timeout_s),
                     retry_policy=_retry_policy_for(contract, policy),
                 )
                 state.charge(cost)

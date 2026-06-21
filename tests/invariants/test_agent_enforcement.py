@@ -8,7 +8,7 @@ from composable_agents.agent_loop import (
     authorize_subflow,
     authorize_call,
     charge_tool_call,
-    interpret_brain_reply,
+    interpret_reasoner_reply,
     precheck_controller,
     retry_max_attempts_for_contract,
 )
@@ -106,14 +106,14 @@ def test_agent_max_calls_absent_limit_is_unconstrained() -> None:
 
 
 def test_malformed_controller_reply_is_controller_error_by_default() -> None:
-    action = interpret_brain_reply("plain prose")
+    action = interpret_reasoner_reply("plain prose")
 
     assert action.decision is Decision.CONTROLLER_ERROR
     assert "malformed controller reply" in str(action.payload)
 
 
 def test_unknown_controller_dict_is_controller_error_by_default() -> None:
-    action = interpret_brain_reply({"unexpected": "shape"})
+    action = interpret_reasoner_reply({"unexpected": "shape"})
 
     assert action.decision is Decision.CONTROLLER_ERROR
     assert "malformed controller reply" in str(action.payload)
@@ -121,7 +121,7 @@ def test_unknown_controller_dict_is_controller_error_by_default() -> None:
 
 def test_permissive_controller_mode_keeps_legacy_finish_behavior() -> None:
     cfg = AgentConfig.from_json({"permissiveController": True})
-    action = interpret_brain_reply("plain prose", strict=not cfg.permissive_controller)
+    action = interpret_reasoner_reply("plain prose", strict=not cfg.permissive_controller)
 
     assert cfg.permissive_controller is True
     assert action.decision is Decision.FINISH

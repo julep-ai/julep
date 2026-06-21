@@ -14,7 +14,7 @@ backend, which this refactor should stay compatible with).
 
 `drive_agent_loop` (`agent_loop.py:441–518`) is a `while True:` whose body does
 one round: build `payload = {"input": state.last, "trace": [...]}`,
-`invoke_controller`, `interpret_brain_reply`, dispatch one bounded `CALL`/`SUB`,
+`invoke_controller`, `interpret_reasoner_reply`, dispatch one bounded `CALL`/`SUB`,
 charge, record a `TraceEntry`, `round += 1`. The body is not a value, so it can't
 be named, wrapped, or unit-tested in isolation. Everything we'd want to do to a
 round — retry it, guard it, trace it, test it without a controller server — is
@@ -75,7 +75,7 @@ def controller_turn(*, cfg, invoke_controller, call_tool, run_subflow, grants) -
         payload = {"input": s.last, "trace": [t.to_json() for t in s.trace]}
         reply   = await invoke_controller(payload)
         s.charge(cfg.think_cost)                       # charged BEFORE the terminal check, as today (agent_loop.py:453)
-        action  = interpret_brain_reply(reply, strict=not cfg.permissive_controller)
+        action  = interpret_reasoner_reply(reply, strict=not cfg.permissive_controller)
         if action.decision is Decision.FINISH:           return Halt("done", output=action.payload)
         if action.decision is Decision.ESCALATE:         return Halt("escalated", reason=str(action.payload))
         if action.decision is Decision.CONTROLLER_ERROR: return Halt("controller_error", reason=str(action.payload))

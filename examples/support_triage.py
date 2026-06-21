@@ -1,6 +1,6 @@
 """Support ticket triage — Rung 0-1.
 
-Shows the ``Agent`` facade as a useful keyless local loop: a scripted brain uses
+Shows the ``Agent`` facade as a useful keyless local loop: a scripted reasoner uses
 read-only tools to search a tiny knowledge base, classify priority, and finish
 with a triage decision. No API key, Temporal server, network, clock, or RNG is
 needed.
@@ -35,7 +35,7 @@ def classify_priority(kb_hit: dict[str, str]) -> dict[str, str]:
     }
 
 
-def scripted_llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+def scripted_llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
     trace_len = len(payload["trace"])
     if trace_len == 0:
         return {"tool": "search_kb", "input": payload["input"]}
@@ -65,7 +65,7 @@ def run_demo(ticket: str = TICKET) -> dict[str, Any]:
 
 
 def run_ungranted_tool_demo() -> dict[str, Any]:
-    def bad_llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, str]:
+    def bad_llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, str]:
         return {"tool": "refund_card", "input": "customer-123"}
 
     agent = Agent(

@@ -10,7 +10,7 @@
 
 ## Thesis
 
-The agent loop hands its controller `{input, trace, last}` — the previous
+The agent loop tools its controller `{input, trace, last}` — the previous
 round's result plus a trace of *references*. For plan-then-act controllers
 that is enough. For tool-heavy multi-round agents it is not: the model needs
 to see its own working history — which tools it called with what arguments
@@ -18,7 +18,7 @@ and what came back — or it re-issues calls, contradicts earlier results, and
 loses chain-of-thought continuity across rounds. mem-mcp's RECORD-execute
 agent (16 tools, up to 12 rounds) is the concrete forcing case; every
 adopter of `app` with more than a couple of tools will hit the same wall and
-hand-roll the same transcript assembly inside their `LlmCaller`.
+tool-roll the same transcript assembly inside their `LlmCaller`.
 
 Transcript construction belongs in the framework because every piece of it
 already does: the trace is framework state, the values behind it live behind
@@ -35,7 +35,7 @@ looks like*. This design makes them mean something concrete for `app`.
 
 No new state. A transcript is a pure projection of `AgentState.trace` (plus
 the run input), materialized at the one place values can be hydrated — the
-`invoke_brain` effect in the worker (`execution/effects.py`), where blob refs
+`invoke_reasoner` effect in the worker (`execution/effects.py`), where blob refs
 resolve outside workflow history. Workflow payloads keep carrying refs; the
 claim-check limits work stays intact.
 
@@ -66,13 +66,13 @@ design).
   exactly the tool-heavy agents this targets is the failure mode, not a
   fallback.
 - **`SUMMARY`**: hydrated recent turns within budget plus a running summary
-  of elided turns. The summary is produced by a **named summarizer brain
+  of elided turns. The summary is produced by a **named summarizer reasoner
   declared in `AgentConfig`** (`summarizer: Optional[str]`); declaring
   `SUMMARY` scope without a summarizer is a deploy-time blocking diagnostic.
   No implicit default model, no silent downgrade to truncation.
 
 Carriage: dotctx-authored agents derive the policy from
-`Brain.context_scope` as today. Directly-authored `app(...)` flows have
+`Reasoner.context_scope` as today. Directly-authored `app(...)` flows have
 nowhere to put it — `ContextPolicy` lives on `CallStep`/`ThinkStep` and the
 serialized APP node emits only tools/subflows/budget/maxRounds — so `app()`
 gains an optional `ctx: ContextPolicy`, serialized on the APP node with
@@ -81,21 +81,21 @@ ambient either way.
 
 ### Where it executes
 
-`InvokeBrainInput` grows `transcript: Optional[list[Turn]]` (the ref-bearing
+`InvokeReasonerInput` grows `transcript: Optional[list[Turn]]` (the ref-bearing
 plan, produced in the workflow from `AgentState` — deterministic, cheap).
-The `invoke_brain` effect hydrates refs via the blob store, enforces
+The `invoke_reasoner` effect hydrates refs via the blob store, enforces
 `max_tokens` (tokenizer supplied by the worker via `WorkerContext`, a
 char-heuristic default with the real count left to the `LlmCaller`), runs
-the summarizer brain if the policy demands one, and passes the materialized
+the summarizer reasoner if the policy demands one, and passes the materialized
 transcript to the `LlmCaller`:
 
 ```python
-LlmCaller = Callable[[Brain, Any, Optional[RunPrincipal], Optional[Transcript]], Awaitable[Any]]
+LlmCaller = Callable[[Reasoner, Any, Optional[RunPrincipal], Optional[Transcript]], Awaitable[Any]]
 ```
 
 (Fourth argument. The `configure`-time arity shim must wrap **both** legacy
 2-arg callers and principal-aware 3-arg callers — adopters who already moved
-to `(brain, value, principal)` keep working when transcripts land. The 4-arg
+to `(reasoner, value, principal)` keep working when transcripts land. The 4-arg
 form is canonical; both designs land on the same seam and sequence principal
 first.)
 
@@ -112,7 +112,7 @@ payload bounded as before.
 The transcript *plan* is computed in workflow code from workflow state —
 deterministic and replay-safe. Hydration and summarization are activity work
 with normal retry semantics; the summarizer call is recorded like any
-`invokeBrain`, so a retry re-reads the same trace refs and produces a
+`invokeReasoner`, so a retry re-reads the same trace refs and produces a
 recorded result. Replays never re-summarize.
 
 ## The C2 stopgap (shipping path before this lands)
@@ -143,8 +143,8 @@ argument for C1, not against the stopgap.
 | `composable_agents/transcript.py` | create: `Turn`, `transcript_for` (pure, strict) |
 | `composable_agents/agent_loop.py` | `AgentState.summary`; transcript plan in the turn body (via `turn.py` step) |
 | `composable_agents/ir.py` / `dsl.py` | optional `ctx: ContextPolicy` on `app()` and the APP node codec (conditional-key, hash-stable) |
-| `composable_agents/execution/effects.py` | `InvokeBrainInput.transcript`; hydration + budget + summarizer in `invoke_brain`; `LlmCaller` widening |
-| `composable_agents/execution/harness.py` / `dbos_backend.py` | thread the plan into `InvokeBrainInput` for `app` rounds |
+| `composable_agents/execution/effects.py` | `InvokeReasonerInput.transcript`; hydration + budget + summarizer in `invoke_reasoner`; `LlmCaller` widening |
+| `composable_agents/execution/harness.py` / `dbos_backend.py` | thread the plan into `InvokeReasonerInput` for `app` rounds |
 | `validate.py` / deploy pipeline | blocking diagnostics: `SUMMARY` without `summarizer`; `WHOLE_SESSION`/`SUMMARY` on an `app` without `max_tokens` |
 | `docs/SPEC.md` | transcript semantics per scope; elision marker; summarizer requirement |
 | tests | `transcript_for` determinism + budget edge cases; elision marker; summary persistence across `continue_as_new`; deploy diagnostic; golden corpus unmoved |

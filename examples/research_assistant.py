@@ -1,6 +1,6 @@
 """Research assistant — Rung 1-2.
 
-Shows the ``Agent`` facade with a budget and a multi-round scripted brain. The
+Shows the ``Agent`` facade with a budget and a multi-round scripted reasoner. The
 ``web_search`` tool is a fixed in-memory corpus, so the run is keyless and fully
 deterministic with no network, Temporal, clock, or RNG.
 """
@@ -34,7 +34,7 @@ def web_search(query: str) -> list[dict[str, str]]:
     return corpus[query]
 
 
-def scripted_llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+def scripted_llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
     trace_len = len(payload["trace"])
     if trace_len == 0:
         return {"tool": "web_search", "input": "postgres advisory locks"}
@@ -64,7 +64,7 @@ def run_demo(question: str = QUESTION) -> dict[str, Any]:
 
 
 def run_ungranted_tool_demo() -> dict[str, Any]:
-    def bad_llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, str]:
+    def bad_llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, str]:
         return {"tool": "open_browser", "input": "https://example.com"}
 
     agent = Agent(

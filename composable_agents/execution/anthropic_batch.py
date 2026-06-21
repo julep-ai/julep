@@ -1,4 +1,4 @@
-"""Anthropic Message Batches adapter for cross-run brain batching."""
+"""Anthropic Message Batches adapter for cross-run reasoner batching."""
 
 from __future__ import annotations
 
@@ -43,18 +43,18 @@ class AnthropicBatchProvider(BatchProvider):
     def build_request(
         self,
         custom_id: str,
-        brain: Any,
+        reasoner: Any,
         value: Any,
         *,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> dict[str, Any]:
         del dispatch
-        _, model = _split_model(brain.model, "anthropic")
-        schema = brain.reply_schema
-        user_text = rendered_user_for(brain, value)
+        _, model = _split_model(reasoner.model, "anthropic")
+        schema = reasoner.reply_schema
+        user_text = rendered_user_for(reasoner, value)
         messages = _messages(
-            brain.system,
+            reasoner.system,
             value,
             schema_hint=schema,
             user_text=user_text,
@@ -71,12 +71,12 @@ class AnthropicBatchProvider(BatchProvider):
 
         params: dict[str, Any] = {
             "model": model,
-            "max_tokens": brain.max_tokens or 1024,
+            "max_tokens": reasoner.max_tokens or 1024,
             "system": system_text,
             "messages": provider_messages,
         }
-        if brain.temperature is not None:
-            params["temperature"] = brain.temperature
+        if reasoner.temperature is not None:
+            params["temperature"] = reasoner.temperature
         return {"custom_id": custom_id, "params": params}
 
     async def submit(self, requests: list[dict[str, Any]]) -> str:
@@ -122,7 +122,7 @@ class AnthropicBatchProvider(BatchProvider):
             else:
                 yield (str(result.custom_id), _BatchEntryError(str(result_type)))
 
-    def parse(self, raw: Any, brain: Any) -> Any:
+    def parse(self, raw: Any, reasoner: Any) -> Any:
         if isinstance(raw, _BatchEntryError):
             raise RuntimeError(f"batch entry {raw.type}")
 
@@ -136,7 +136,7 @@ class AnthropicBatchProvider(BatchProvider):
             text,
             parsed=getattr(raw, "parsed", None),
         )
-        return super().parse(completion, brain)
+        return super().parse(completion, reasoner)
 
 
 register_batch_provider("anthropic", AnthropicBatchProvider)

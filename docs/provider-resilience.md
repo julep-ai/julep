@@ -32,7 +32,7 @@ llm = make_resilient_llm_caller(
 # Temporal: run_worker(..., llm=llm); DBOS: configure(WorkerContext(llm=llm)).
 ```
 
-Chains use the same `"provider:model"` addressing as `Brain.model`. A model
+Chains use the same `"provider:model"` addressing as `Reasoner.model`. A model
 without a chain entry simply has no fallbacks.
 
 ## The decision table
@@ -65,12 +65,12 @@ workflow code.
 
 The resilient caller should be the **only** retry layer for model calls:
 
-- **Temporal** retries `invokeBrain`/`compilePlan` blindly
-  (`ExecutionPolicy.brain_max_attempts`, default 4 — the historical behavior).
-  When the worker's `LlmCaller` owns resilience, set `brain_max_attempts=1` so
+- **Temporal** retries `invokeReasoner`/`compilePlan` blindly
+  (`ExecutionPolicy.reasoner_max_attempts`, default 4 — the historical behavior).
+  When the worker's `LlmCaller` owns resilience, set `reasoner_max_attempts=1` so
   a `ResilienceExhausted` fails the activity instead of re-running the whole
   ladder three more times.
-- **DBOS** brain steps never retry by design, so the caller is already the
+- **DBOS** reasoner steps never retry by design, so the caller is already the
   whole story there.
 
 ## Determinism, precisely

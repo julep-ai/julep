@@ -6,9 +6,9 @@ from enum import Enum
 
 import pytest
 
-from composable_agents.dotctx import Brain
-from composable_agents.execution import brain_batch, effects
-from composable_agents.execution.brain_batch import (
+from composable_agents.dotctx import Reasoner
+from composable_agents.execution import reasoner_batch, effects
+from composable_agents.execution.reasoner_batch import (
     BatchDispatchContext,
     install_batch_dispatch_context,
 )
@@ -44,7 +44,7 @@ def test_default_resolve_qos_signature_accepts_load() -> None:
     sig = inspect.signature(default_resolve_qos)
 
     assert list(sig.parameters) == [
-        "brain",
+        "reasoner",
         "node_ann",
         "principal",
         "load",
@@ -132,10 +132,10 @@ def test_resolve_qos_activity_predictively_clamps_installed_batch_window(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     registry = Registry()
-    registry.register_brain(Brain(name="qos.activity", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="qos.activity", model="test", system="s"))
     prev_ctx = effects._CTX
 
-    monkeypatch.setattr(brain_batch, "_BATCH_CTX", None)
+    monkeypatch.setattr(reasoner_batch, "_BATCH_CTX", None)
     install_batch_dispatch_context(
         BatchDispatchContext(
             client=object(),
@@ -148,7 +148,7 @@ def test_resolve_qos_activity_predictively_clamps_installed_batch_window(
         resolved = asyncio.run(
             resolveQoS(
                 ResolveQoSInput(
-                    brain="qos.activity",
+                    reasoner="qos.activity",
                     node_batchable=True,
                     node_id="n1",
                     timeout_s=5.0,
@@ -166,22 +166,22 @@ def test_resolve_qos_activity_enforces_non_batchable_floor_after_custom_resolver
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     registry = Registry()
-    registry.register_brain(Brain(name="qos.floor", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="qos.floor", model="test", system="s"))
     prev_ctx = effects._CTX
     seen_batchable: list[bool] = []
 
-    def resolver(brain: object, ann: object, principal: object) -> QoSTier:
-        del brain, principal
+    def resolver(reasoner: object, ann: object, principal: object) -> QoSTier:
+        del reasoner, principal
         seen_batchable.append(bool(getattr(ann, "batchable", False)))
         return QoSTier.BATCH
 
-    monkeypatch.setattr(brain_batch, "_BATCH_CTX", None)
+    monkeypatch.setattr(reasoner_batch, "_BATCH_CTX", None)
     configure(WorkerContext(registry=registry, resolve_qos=resolver))
     try:
         non_batchable = asyncio.run(
             resolveQoS(
                 ResolveQoSInput(
-                    brain="qos.floor",
+                    reasoner="qos.floor",
                     node_batchable=False,
                     principal={"qos": "BATCH"},
                 )
@@ -190,7 +190,7 @@ def test_resolve_qos_activity_enforces_non_batchable_floor_after_custom_resolver
         batchable = asyncio.run(
             resolveQoS(
                 ResolveQoSInput(
-                    brain="qos.floor",
+                    reasoner="qos.floor",
                     node_batchable=True,
                     principal={"qos": "BATCH"},
                 )
@@ -210,15 +210,15 @@ def test_resolve_qos_activity_tolerates_resolver_with_partial_kwargs(
     # A custom resolver that accepts only ``timeout_s`` (not ``min_batch_window_s``)
     # must not raise: the activity passes only the kwargs the resolver declares.
     registry = Registry()
-    registry.register_brain(Brain(name="qos.partial", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="qos.partial", model="test", system="s"))
     prev_ctx = effects._CTX
     seen: dict[str, object] = {}
 
-    def resolver(brain: object, ann: object, principal: object, *, timeout_s: object = None) -> QoSTier:
+    def resolver(reasoner: object, ann: object, principal: object, *, timeout_s: object = None) -> QoSTier:
         seen["timeout_s"] = timeout_s
         return QoSTier.BATCH
 
-    monkeypatch.setattr(brain_batch, "_BATCH_CTX", None)
+    monkeypatch.setattr(reasoner_batch, "_BATCH_CTX", None)
     install_batch_dispatch_context(
         BatchDispatchContext(client=object(), min_batch_window_s=10.0)
     )
@@ -227,7 +227,7 @@ def test_resolve_qos_activity_tolerates_resolver_with_partial_kwargs(
         resolved = asyncio.run(
             resolveQoS(
                 ResolveQoSInput(
-                    brain="qos.partial",
+                    reasoner="qos.partial",
                     node_batchable=True,
                     timeout_s=1.0,
                     principal={"qos": "BATCH"},
@@ -246,13 +246,13 @@ def test_resolve_qos_activity_tolerates_legacy_resolver(
 ) -> None:
     # A legacy 3-positional resolver (no predictive kwargs) must still work.
     registry = Registry()
-    registry.register_brain(Brain(name="qos.legacy", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="qos.legacy", model="test", system="s"))
     prev_ctx = effects._CTX
 
-    def legacy(brain: object, ann: object, principal: object) -> QoSTier:
+    def legacy(reasoner: object, ann: object, principal: object) -> QoSTier:
         return QoSTier.STANDARD
 
-    monkeypatch.setattr(brain_batch, "_BATCH_CTX", None)
+    monkeypatch.setattr(reasoner_batch, "_BATCH_CTX", None)
     install_batch_dispatch_context(
         BatchDispatchContext(client=object(), min_batch_window_s=10.0)
     )
@@ -261,7 +261,7 @@ def test_resolve_qos_activity_tolerates_legacy_resolver(
         resolved = asyncio.run(
             resolveQoS(
                 ResolveQoSInput(
-                    brain="qos.legacy",
+                    reasoner="qos.legacy",
                     node_batchable=True,
                     timeout_s=1.0,
                     principal={"qos": "BATCH"},

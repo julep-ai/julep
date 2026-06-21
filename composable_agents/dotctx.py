@@ -1,20 +1,20 @@
-"""dotctx adapter (blueprint §3.2, the leaf that turns a prompt dir into a brain).
+"""dotctx adapter (blueprint §3.2, the leaf that turns a prompt dir into a reasoner).
 
 A *dotctx* is a directory describing one model call: a ``settings.yaml`` (model,
 temperature, round bound, granted tools), a system prompt, and an optional reply
-schema. This module reads that layout into a :class:`Brain` (registered by name,
+schema. This module reads that layout into a :class:`Reasoner` (registered by name,
 the same way pure functions are registered) and lowers it to IR. The lowering is
 where the round bound becomes *shape*, faithfully to the blueprint:
 
 * a **bounded** ``max_rounds`` (>= 1) -> ``iter_up_to`` (Feedback): the model gets
   that many passes and no more;
-* an **open-ended** brain (``agent: true``, no finite bound) -> ``app``
+* an **open-ended** reasoner (``agent: true``, no finite bound) -> ``app``
   (Agent): the costly, continuation-owning shape, used deliberately;
 * a dotctx marked as a child (``sub:``) -> ``sub`` (a Temporal child
   workflow behind the Joined firewall, the ``to_dbos_agent`` mapping);
 * otherwise a single ``think`` leaf (Pipeline).
 
-Reply schema and granted tools ride on the :class:`Brain`; ``invokeBrain`` in
+Reply schema and granted tools ride on the :class:`Reasoner`; ``invokeReasoner`` in
 :mod:`composable_agents.execution.activities` reads them at run time. Context is
 declared on the leaf, never ambient.
 """
@@ -133,14 +133,14 @@ def _reply_to_schema(reply: Any) -> dict[str, Any]:
 
 
 @dataclass(frozen=True, init=False)
-class Brain:
+class Reasoner:
     """A resolved model-call configuration, addressed by ``name``."""
 
     name: str
     model: str
     system: str = ""
     reply_schema: Optional[dict[str, Any]] = None
-    tools: tuple[str, ...] = ()           # toolref keys this brain may call
+    tools: tuple[str, ...] = ()           # toolref keys this reasoner may call
     temperature: Optional[float] = None
     max_rounds: Optional[int] = None      # >=1 bounded; None/0 open-ended
     is_agent: bool = False                # explicit open-ended app
@@ -188,27 +188,27 @@ class Brain:
         object.__setattr__(self, "max_tokens", max_tokens)
 
 
-_BRAINS: dict[str, Brain] = DEFAULT_REGISTRY.brains
+_REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
 
 
-def register_brain(brain: Brain) -> Brain:
-    return DEFAULT_REGISTRY.register_brain(brain)
+def register_reasoner(reasoner: Reasoner) -> Reasoner:
+    return DEFAULT_REGISTRY.register_reasoner(reasoner)
 
 
-def get_brain(name: str) -> Brain:
-    return DEFAULT_REGISTRY.get_brain(name)
+def get_reasoner(name: str) -> Reasoner:
+    return DEFAULT_REGISTRY.get_reasoner(name)
 
 
-def list_brains() -> list[str]:
-    return DEFAULT_REGISTRY.list_brains()
+def list_reasoners() -> list[str]:
+    return DEFAULT_REGISTRY.list_reasoners()
 
 
-def registered_brains() -> list[str]:
-    return DEFAULT_REGISTRY.list_brains()
+def registered_reasoners() -> list[str]:
+    return DEFAULT_REGISTRY.list_reasoners()
 
 
 # --------------------------------------------------------------------------- #
-# Parsing a dotctx directory / dict into a Brain.
+# Parsing a dotctx directory / dict into a Reasoner.
 # --------------------------------------------------------------------------- #
 def _sub_from(d: Optional[dict[str, Any]]) -> Optional[SubContract]:
     if not d:
@@ -220,9 +220,9 @@ def _sub_from(d: Optional[dict[str, Any]]) -> Optional[SubContract]:
     return SubContract(shape=shape, summary_policy=sp)
 
 
-def brain_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
-                        base_dir: Optional[str] = None) -> Brain:
-    """Build (and register) a :class:`Brain` from a settings mapping.
+def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
+                        base_dir: Optional[str] = None) -> Reasoner:
+    """Build (and register) a :class:`Reasoner` from a settings mapping.
 
     ``base_dir`` lets ``system_file`` / ``schema_file`` resolve relative paths;
     omit it to use only inline ``system`` / ``reply_schema`` values.
@@ -248,7 +248,7 @@ def brain_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
 
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
 
-    brain = Brain(
+    reasoner = Reasoner(
         name=nm,
         model=settings.get("model", "claude-sonnet-4"),
         system=system,
@@ -263,7 +263,7 @@ def brain_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
         user_render=settings.get("user_render") or settings.get("userRender"),
         max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
     )
-    return register_brain(brain)
+    return register_reasoner(reasoner)
 
 
 # Rich-layout markers: any of these turns the package over to dotctx_rich
@@ -276,18 +276,18 @@ def is_rich_dotctx(path: str) -> bool:
     return any(os.path.exists(os.path.join(path, m)) for m in _RICH_MARKERS)
 
 
-def load_dotctx(path: str) -> Brain:
-    """Read ``<path>/settings.yaml`` (or ``settings.yml``) into a Brain.
+def load_dotctx(path: str) -> Reasoner:
+    """Read ``<path>/settings.yaml`` (or ``settings.yml``) into a Reasoner.
 
-    The brain's name defaults to the directory name when ``settings.yaml`` omits
-    one, so a dotctx at ``brains/planner/`` registers as ``planner``. Packages
+    The reasoner's name defaults to the directory name when ``settings.yaml`` omits
+    one, so a dotctx at ``reasoners/planner/`` registers as ``planner``. Packages
     carrying rich-layout files (``prompt.j2``, ``messages/``, ``schema.pyi``,
     ``tools.pyi``) are loaded by :mod:`composable_agents.dotctx_rich`.
     """
     if is_rich_dotctx(path):
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 
-        return dotctx_rich.load_rich_dotctx(path).brain
+        return dotctx_rich.load_rich_dotctx(path).reasoner
 
     try:
         import yaml
@@ -306,45 +306,45 @@ def load_dotctx(path: str) -> Brain:
     with open(settings_path, "r", encoding="utf-8") as fh:
         settings = yaml.safe_load(fh) or {}
     default_name = os.path.basename(os.path.normpath(path))
-    return brain_from_settings(settings, name=settings.get("name", default_name),
+    return reasoner_from_settings(settings, name=settings.get("name", default_name),
                                base_dir=path)
 
 
 # --------------------------------------------------------------------------- #
-# Lowering a Brain to IR (the shape-bearing step).
+# Lowering a Reasoner to IR (the shape-bearing step).
 # --------------------------------------------------------------------------- #
-def brain_to_flow(brain: Brain, *, ctx: Optional[ContextPolicy] = None) -> Node:
-    """Lower a registered brain to the IR node its round policy implies.
+def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None) -> Node:
+    """Lower a registered reasoner to the IR node its round policy implies.
 
     Sub before agent before bounded loop before single call, so an explicitly
     declared child contract always wins.
     """
-    policy = ctx or ContextPolicy(scope=brain.context_scope)
+    policy = ctx or ContextPolicy(scope=reasoner.context_scope)
 
-    if brain.sub_contract is not None:
-        return sub(brain.name, brain.sub_contract,
-                   summary_policy=brain.sub_contract.summary_policy)
+    if reasoner.sub_contract is not None:
+        return sub(reasoner.name, reasoner.sub_contract,
+                   summary_policy=reasoner.sub_contract.summary_policy)
 
-    if brain.is_agent or (brain.max_rounds is not None and brain.max_rounds <= 0):
-        # Open-ended controller loop. The brain name is the controller ref.
+    if reasoner.is_agent or (reasoner.max_rounds is not None and reasoner.max_rounds <= 0):
+        # Open-ended controller loop. The reasoner name is the controller ref.
         # Transcript policy: an explicit ctx wins; else derive it from the
-        # brain's declared context scope. LOCAL adds no ctx key (hash-stable).
+        # reasoner's declared context scope. LOCAL adds no ctx key (hash-stable).
         app_ctx = ctx
-        if app_ctx is None and brain.context_scope in (
+        if app_ctx is None and reasoner.context_scope in (
             ContextScope.SUMMARY,
             ContextScope.WHOLE_SESSION,
         ):
-            app_ctx = ContextPolicy(scope=brain.context_scope)
-        return app(brain.name, ctx=app_ctx)
+            app_ctx = ContextPolicy(scope=reasoner.context_scope)
+        return app(reasoner.name, ctx=app_ctx)
 
-    if brain.max_rounds is not None and brain.max_rounds >= 1:
+    if reasoner.max_rounds is not None and reasoner.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.
-        return iter_up_to(brain.max_rounds, think(brain.name, ctx=policy))
+        return iter_up_to(reasoner.max_rounds, think(reasoner.name, ctx=policy))
 
     # Default: a single model call -> Pipeline.
-    return think(brain.name, ctx=policy)
+    return think(reasoner.name, ctx=policy)
 
 
 def dotctx_flow(path: str, *, ctx: Optional[ContextPolicy] = None) -> Node:
-    """Convenience: :func:`load_dotctx` then :func:`brain_to_flow`."""
-    return brain_to_flow(load_dotctx(path), ctx=ctx)
+    """Convenience: :func:`load_dotctx` then :func:`reasoner_to_flow`."""
+    return reasoner_to_flow(load_dotctx(path), ctx=ctx)

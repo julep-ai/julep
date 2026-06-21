@@ -69,7 +69,7 @@ not conformant.
 | Plane | What it is | Where it runs |
 |---|---|---|
 | **Control** | The durable interpreter walking a frozen IR tree | Temporal workflow (deterministic sandbox) |
-| **Brains + Hands** | Model calls and tool calls — all IO and non-determinism | Temporal activities (outside the sandbox) |
+| **Model & tool calls** | Model calls and tool calls — all IO and non-determinism | Temporal activities (outside the sandbox) |
 | **Projection** | A derived pomset view (causal events, cost, scheduling decisions) | In-workflow logical clock for live query; durable sink fed out-of-band from history |
 
 The interpreter is **host-agnostic**: the same `interpret()` runs under
@@ -158,7 +158,7 @@ MUST hash differently after normal id normalization.
 Static args MUST NOT contain secrets or secret-shaped config. Validators MUST
 emit a blocking diagnostic when any nested key matches token, secret, password,
 api_key/apikey, credential, or private_key case-insensitively. Credentials
-belong in environment-backed hands or run principals, never in the frozen flow.
+belong in environment-backed tools or run principals, never in the frozen flow.
 
 At execution time, an `arr` with no `args` calls `fn(value)`. An `arr` with
 `args` calls `fn(value, **args)`. Keyword mismatches surface as ordinary pure
@@ -247,7 +247,7 @@ the deploy.
    hash-keyed manifest.
 2. **validate** — structural + schema checks: every post-freeze `call` resolves
    to a manifest entry; adjacent schemas are compatible; shapes are decidable.
-3. **capability** — `enforce_compile`: deny-by-default checks for tools, brains,
+3. **capability** — `enforce_compile`: deny-by-default checks for tools, reasoners,
    memory scopes, MCP servers, and (new) approval requirements.
 4. **race-admission** — every branch in a `race`/`hedge`/`quorum` MUST be
    race-safe: read-only, or asserted native/required idempotent. Untrusted MCP
@@ -278,7 +278,7 @@ fold `output_schema`, `contract`, and `asserted` into the existing hash.)
 
 The Deployment MUST expose a single `artifact_hash` over: frozen `flow_json`,
 frozen `manifest_json`, the source hashes of every referenced pure, referenced
-brain definitions, the execution policy, the capability manifest, and the
+reasoner definitions, the execution policy, the capability manifest, and the
 framework version. This is the clean identity of *the intended program* — the
 answer to "what exactly did we run?"
 
@@ -433,11 +433,11 @@ grant ambient access.
 | Section | Gates | Notes |
 |---|---|---|
 | `tools` | tool refs (by key) | each grant MAY assert `effect`/`idempotency` (makes it race-eligible) and `maxCalls` |
-| `brains` | named brain configs | rename from `models`; gates the brain name |
-| `models` | model IDs | optional; resolve `Brain.model` and check the actual model id |
+| `reasoners` | named reasoner configs | rename from `models`; gates the reasoner name |
+| `models` | model IDs | optional; resolve `Reasoner.model` and check the actual model id |
 | `memory` | context scopes | |
 | `mcp_servers` | server → optional version pin | version pin MUST be enforced against the frozen tool's `server_version` |
-| `network` | egress domains | enforced for native hands at call time |
+| `network` | egress domains | enforced for native tools at call time |
 | `subflows` | invokable sub-flow refs | distinct from tool grants; a sub may encapsulate powerful effects |
 | `budget` | cost / tokens / wall-seconds | inherited by agents unless overridden |
 | `approval` | tools requiring a human gate | see §7.3 |
@@ -546,7 +546,7 @@ diagnostic.
 Backends map those fields to native retry config where the backend exposes a
 per-step seam. The in-memory interpreter retries directly and waits through its
 mockable `Env.sleep` hook. Temporal maps them onto activity `RetryPolicy`
-(`maximum_attempts`, `initial_interval`, `backoff_coefficient`) for `callHand`.
+(`maximum_attempts`, `initial_interval`, `backoff_coefficient`) for `callTool`.
 DBOS's Python decorator API in this backend fixes step retry config at
 definition time (`retries_allowed`, `max_attempts`, and, where supported by the
 installed DBOS version, interval/backoff fields), so the DBOS backend enforces
@@ -558,9 +558,9 @@ only the retry/no-retry gate is honored per node. Arbitrary per-node
 predeclaring additional step variants, which this spec forbids as backend
 machinery rather than wire-format semantics.
 
-### 8.9 Reserved hand: `__sleep__`
+### 8.9 Reserved tool: `__sleep__`
 
-A `call` to the reserved native hand `__sleep__` is a durable timer, not an
+A `call` to the reserved native tool `__sleep__` is a durable timer, not an
 HTTP call. The duration in seconds rides on the node's `ann.timeout`. Freeze
 resolves it synthetically (no snapshot entry) with an asserted
 read/naturally-idempotent contract, so it is race-safe. Capability semantics
@@ -594,9 +594,9 @@ the run executes.
   identical across activity retries. It MUST NOT enter the frozen artifact:
   freeze hashes and the golden corpus do not move when a principal is supplied.
 - **Opaque.** The framework MUST NOT interpret the principal. It is threaded
-  into every effect payload (`callHand`, `invokeBrain`, `compilePlan`) and
+  into every effect payload (`callTool`, `invokeReasoner`, `compilePlan`) and
   handed to the worker's callers as one extra argument
-  (`McpCaller`/`LlmCaller`); native hands MAY resolve it into transport headers
+  (`McpCaller`/`LlmCaller`); native tools MAY resolve it into transport headers
   via a worker-supplied `principal_headers`.
 - **Never a secret.** The principal names a credential reference (e.g.
   `{"storeId": 413, "tokenRef": "cred_abc"}`); the worker resolves the actual
@@ -696,9 +696,9 @@ A transcript is **derived, not stored**: a deterministic projection of the
 agent's trace (plus the run input) into a neutral, provider-agnostic `Turn`
 list. The *plan* (turns carrying blob refs) is computed in workflow code;
 hydration of refs, the token budget, and summarization happen in the
-`invokeBrain` effect, where blob refs resolve outside workflow history.
+`invokeReasoner` effect, where blob refs resolve outside workflow history.
 Provider message formats are the `LlmCaller`'s business — the canonical caller
-signature is `(brain, value, principal, transcript)`; `configure` MUST wrap
+signature is `(reasoner, value, principal, transcript)`; `configure` MUST wrap
 narrower legacy callers.
 
 `ContextPolicy` scope on an `app` selects the shape:
@@ -711,7 +711,7 @@ narrower legacy callers.
   `{"role": "system", "content": "<n> earlier turns elided"}` marker — the
   model is told, never silently lied to.
 - **`summary`** — hydrated recent turns within budget plus a running summary of
-  elided turns, produced by the **named summarizer brain** on the APP node
+  elided turns, produced by the **named summarizer reasoner** on the APP node
   (`summarizer`). The summary persists in agent state across
   `continue_as_new`; replays MUST NOT re-summarize.
 
@@ -731,7 +731,7 @@ gets transcripts.
 The projection is a derived pomset, not a durable record (Invariant 6).
 
 - **Cost:** events MUST charge cost — `Ann.cost` when present, a default leaf
-  estimate otherwise, and actual model token/cost metadata from `invokeBrain`.
+  estimate otherwise, and actual model token/cost metadata from `invokeReasoner`.
   `costByShape` MUST be populated in real runs, not just in tests.
 - **Scheduling decisions:** `par`, `race`, `hedge`, `quorum`, context
   degradation, and cancellation MUST emit explicit attrs
@@ -771,7 +771,7 @@ explicit Registry · CLI + `explain` · golden corpus · py.typed + mypy-strict 
 Production projection durable sink (Postgres/OTel are interface + data; fed
 out-of-band from history) · plan-extraction quality (honest *macro-recording*,
 not yet procedure discovery, §10.1) · per-run freeze · `Ann.cache` (forwarded to
-the hand as advisory; no framework cache backend).
+the tool as advisory; no framework cache backend).
 
 ### 12.3 Closed gaps (all conformant — invariant holds in code with a test)
 
@@ -791,8 +791,8 @@ the hand as advisory; no framework cache backend).
 - [x] **Strict `canonical_json`** (no `default=str`; raises on non-JSON). → §6.3 · `e766411`
 - [x] **Pure-function drift verified** at workflow start (non-retryable). → §6.4 · `01dd702`
 - [x] **Definition + execution hash** (folds output_schema/contract/asserted). → §6.1 · `e766411`
-- [x] **`artifact_hash`** over flow+manifest+pures+brains+caps+version. → §6.2 · `e766411`
-- [x] **`models` gates model ids**; `brains` gates brain names. → §7.2 · `1eae744`
+- [x] **`artifact_hash`** over flow+manifest+pures+reasoners+caps+version. → §6.2 · `e766411`
+- [x] **`models` gates model ids**; `reasoners` gates reasoner names. → §7.2 · `1eae744`
 - [x] **`maxCalls` enforced** (deterministic counter; inherited across SUB). → §7.4 · `1eae744`, `e33d4af`
 - [x] **MCP server version pins enforced.** → §7.2 · `1eae744`
 - [x] **Subflow grant boundary** (compile + agent SUB). → §7.2 · `7bc0e93`, `1eae744`
@@ -850,7 +850,7 @@ render it never degrades to a plain-string prompt.
 ```
 <name>.ctx/
 ├── settings.yaml      # name, model, temperature, max_rounds, max_tokens, agent, sub, context, tools
-├── schema.pyi         # `Output` stub -> JSON Schema -> Brain.reply_schema
+├── schema.pyi         # `Output` stub -> JSON Schema -> Reasoner.reply_schema
 ├── tools.pyi          # tool stubs (+ module-level __server__) -> grants + expected schemas
 ├── prompt.j2          # single system template, OR
 └── messages/          # 00_system.yml + 01_user.yml (role + Jinja2 content)
@@ -859,26 +859,26 @@ eval.py / eval.yaml    # consumer-side; ignored, never an error
 
 ### 14.1 Templates become registered renderers
 
-A template never lives on the `Brain` and never enters the artifact. Loading
+A template never lives on the `Reasoner` and never enters the artifact. Loading
 compiles each template and registers one renderer per template, named
 `dotctx/<package>/<role>@v<sha256(content)[:12]>` and source-hashed by template
-content, so §6.4 drift detection covers prompt edits. The Brain carries only
+content, so §6.4 drift detection covers prompt edits. The Reasoner carries only
 the renderer names (`system_render`, and `user_render` for bundles);
-`Brain.system` stays `""`. Rendering is strict (`StrictUndefined`, no
+`Reasoner.system` stays `""`. Rendering is strict (`StrictUndefined`, no
 filesystem loader at render time): renderers read only the projected `Context`,
 and a template referencing a variable the Context does not carry fails at first
 render with the package name and variable. Bundles are one system message plus
 at most one user message; anything else is rejected at load with the file name.
-The rendered user string is the user turn in `complete_brain`; without
+The rendered user string is the user turn in `complete_reasoner`; without
 `user_render` the value-as-JSON behavior is unchanged.
 
 ### 14.2 Settings
 
 Settings keys are an allow-list; unknown keys are a load-time error listing the
-offending keys. `max_tokens` rides on the `Brain` and is forwarded to the
+offending keys. `max_tokens` rides on the `Reasoner` and is forwarded to the
 provider call. Model strings keep `@low/@medium/@high/@none` reasoning-effort
 suffixes untouched (an LlmCaller convention, not a framework concern).
-`user_render` / `max_tokens` enter the brain identity (`userRender` /
+`user_render` / `max_tokens` enter the reasoner identity (`userRender` /
 `maxTokens`) only when set, so existing artifacts hash byte-identically.
 
 ### 14.3 tools.pyi asserts, never creates
@@ -886,11 +886,11 @@ suffixes untouched (an LlmCaller convention, not a framework concern).
 `.pyi` compilation is dependency-free (stdlib `ast` -> JSON Schema: scalars,
 lists/dicts/sets/tuples, `Optional`/unions, `Literal`, TypedDict with
 `Required`/`NotRequired`, nested classes, docstrings as descriptions, constant
-defaults — no pydantic). Stubs set `Brain.tools` to toolref keys
+defaults — no pydantic). Stubs set `Reasoner.tools` to toolref keys
 (`server/tool` when `__server__` names the MCP server), emit a `ToolGrant`
 manifest fragment the caller merges into the deployment's capability manifest,
 and record each tool's expected input schema. At freeze, when the snapshot
-resolves an expected tool (call leaf, app inline grant, or a referenced brain's
+resolves an expected tool (call leaf, app inline grant, or a referenced reasoner's
 granted tool), the served schema is compared by canonical hash; a mismatch
 raises the blocking **`TOOL_SCHEMA_DRIFT`** diagnostic naming the `.ctx` path
 and server.

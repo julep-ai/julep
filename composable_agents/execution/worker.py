@@ -6,7 +6,7 @@ executes the activities. There is exactly one workflow type per role
 :class:`~composable_agents.execution.harness.AgentWorkflow`) and six activities
 (startup pure verification, three effect activities, and two deploy-time
 resolvers). All
-environment-specific configuration — hand URLs, the MCP caller, the LLM client,
+environment-specific configuration — tool URLs, the MCP caller, the LLM client,
 the active capability manifest, and the sub-flow / agent registries — is injected
 once into the process-global :class:`~composable_agents.execution.activities.WorkerContext`
 via :func:`~composable_agents.execution.activities.configure`; the workflows
@@ -37,11 +37,11 @@ from .activities import (
     LlmCaller,
     McpCaller,
     WorkerContext,
-    callHand,
+    callTool,
     commitState,
     compilePlan,
     configure,
-    invokeBrain,
+    invokeReasoner,
     loadState,
     putBlob,
     resolveAgentSpec,
@@ -51,7 +51,7 @@ from .activities import (
     verifyPures,
 )
 from .blobstore import BlobStore
-from .brain_batch import (
+from .reasoner_batch import (
     BatchCollector,
     BatchDispatchContext,
     BatchPoll,
@@ -59,7 +59,7 @@ from .brain_batch import (
     install_batch_dispatch_context,
     pollBatch,
     submitBatch,
-    submitBrainBatch,
+    submitReasonerBatch,
 )
 from .bundle_runner import BundleResolvingWorkflowRunner
 from .codec import ClaimCheckCodec
@@ -78,9 +78,9 @@ from ..cas import cas_from_url
 
 # Every activity the two workflows can dispatch.
 ACTIVITIES = [
-    callHand,
+    callTool,
     commitState,
-    invokeBrain,
+    invokeReasoner,
     loadState,
     compilePlan,
     putBlob,
@@ -93,7 +93,7 @@ ACTIVITIES = [
     finishTrajectory,
     flushStructural,
     runSubCapture,
-    submitBrainBatch,
+    submitReasonerBatch,
     submitBatch,
     pollBatch,
     fetchBatchResults,
@@ -143,7 +143,7 @@ def build_worker(
     4-argument callers are wrapped by ``configure`` and keep working.
 
     The default workflow sandbox passes ``composable_agents`` through so
-    workflow-side registry lookups (pures, brains) see the worker process's real
+    workflow-side registry lookups (pures, reasoners) see the worker process's real
     registries; without it, sandbox re-imports yield empty registries and flows
     with ``arr``/registry-dependent leaves hang in a WorkflowTaskFailed retry
     loop. It also passes ``wasmtime`` through so bundle-sourced
@@ -188,7 +188,7 @@ async def run_worker(
     target_host: str = "localhost:7233",
     namespace: str = "default",
     task_queue: str = DEFAULT_TASK_QUEUE,
-    hand_urls: Optional[dict[str, str]] = None,
+    tool_urls: Optional[dict[str, str]] = None,
     mcp_call: Optional[McpCaller] = None,
     llm: Optional[LlmCaller] = None,
     capabilities: Optional[CapabilityManifest] = None,
@@ -214,7 +214,7 @@ async def run_worker(
     """
     client = await Client.connect(target_host, namespace=namespace)
     context = WorkerContext(
-        hand_urls=hand_urls or {},
+        tool_urls=tool_urls or {},
         mcp_call=mcp_call,
         llm=llm,
         capabilities=capabilities,

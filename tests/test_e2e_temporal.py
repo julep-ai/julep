@@ -5,7 +5,7 @@ run inside a single :class:`WorkflowEnvironment` (one server start, amortized)
 driven by a synchronous wrapper, so the module needs no pytest-asyncio config.
 
 Effect handlers are injected in-process callables (an MCP caller and an LLM), so
-no HTTP hand server is required; native hands would need one.
+no HTTP tool server is required; native tools would need one.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ if HAVE_TEMPORAL:
     from composable_agents import (
         call, mcp, seq, think, freeze, manifest_to_json,
         arr,
-        register_brain, Brain,
+        register_reasoner, Reasoner,
         app,
         Budget,
         CapabilityManifest,
@@ -57,7 +57,7 @@ if HAVE_TEMPORAL:
 
 
 # --------------------------------------------------------------------------- #
-# In-process tool + brain fakes.
+# In-process tool + reasoner fakes.
 # --------------------------------------------------------------------------- #
 def _snapshot():
     ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
@@ -87,10 +87,10 @@ def _drift_pure(value):
     return value
 
 
-async def _llm(brain, value):
-    if brain.name == "adder":
+async def _llm(reasoner, value):
+    if reasoner.name == "adder":
         return value + 10
-    if brain.name == "ctrl":
+    if reasoner.name == "ctrl":
         n = len(value.get("trace", []))
         if n == 0:
             return {"tool": "srv/double", "input": value["input"]}
@@ -105,11 +105,11 @@ def _child_registry():
     return {"child": {"flowJson": fr.flow.to_json(), "manifestJson": manifest_to_json(fr.manifest)}}
 
 
-def _worker(env, *, task_queue, agents=None, llm=None, extra_brains=(), mcp_call=None):
-    register_brain(Brain(name="adder", model="test", system="add 10"))
-    register_brain(Brain(name="ctrl", model="test", system="decide"))
-    for brain in extra_brains:
-        register_brain(brain)
+def _worker(env, *, task_queue, agents=None, llm=None, extra_reasoners=(), mcp_call=None):
+    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
+    for reasoner in extra_reasoners:
+        register_reasoner(reasoner)
     ctx = WorkerContext(
         mcp_call=mcp_call or _mcp,
         llm=llm or _llm,
@@ -122,12 +122,12 @@ def _worker(env, *, task_queue, agents=None, llm=None, extra_brains=(), mcp_call
 # --------------------------------------------------------------------------- #
 # Scenarios (each returns nothing; raises on failure).
 # --------------------------------------------------------------------------- #
-async def _pipeline_and_brain(env):
+async def _pipeline_and_reasoner(env):
     fr = freeze(seq(call(mcp("srv", "double")), think("adder")), _snapshot())
     async with _worker(env, task_queue="ca-pipe"):
         out = await run_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
                              session_id=f"pipe-{uuid.uuid4()}", input=5, task_queue="ca-pipe")
-    assert out == 20, f"pipeline+brain expected 20, got {out}"
+    assert out == 20, f"pipeline+reasoner expected 20, got {out}"
 
 
 async def _principal_threading(env):
@@ -209,10 +209,10 @@ async def _agent(env):
     assert [t["decision"] for t in res["trace"]] == ["call", "sub"], res
 
     # Budget guard: a budget below the per-round think cost trips over_budget.
-    budget_brain_calls = {"count": 0}
+    budget_reasoner_calls = {"count": 0}
 
-    async def fail_if_budget_brain_invoked(brain, value):  # noqa: ANN001
-        budget_brain_calls["count"] += 1
+    async def fail_if_budget_reasoner_invoked(reasoner, value):  # noqa: ANN001
+        budget_reasoner_calls["count"] += 1
         raise RuntimeError("budget controller should not be invoked")
 
     agents_b = {
@@ -225,8 +225,8 @@ async def _agent(env):
         env,
         task_queue="ca-agent-b",
         agents=agents_b,
-        llm=fail_if_budget_brain_invoked,
-        extra_brains=(Brain(name="budget_ctrl", model="test", system="budget"),),
+        llm=fail_if_budget_reasoner_invoked,
+        extra_reasoners=(Reasoner(name="budget_ctrl", model="test", system="budget"),),
     ):
         sid = f"agentb-{uuid.uuid4()}"
         res2 = await env.client.execute_workflow(
@@ -242,7 +242,7 @@ async def _agent(env):
     assert res2["status"] == "over_budget", res2
     assert res2["cost"] == 0, res2
     assert res2["trace"] == [], res2
-    assert budget_brain_calls["count"] == 0
+    assert budget_reasoner_calls["count"] == 0
 
     # Capability deny: the requested tool is not granted.
     agents_d = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["only/other"]}}
@@ -287,10 +287,10 @@ async def _agent(env):
         max_call_effects["count"] += 1
         return await _mcp(server, tool, value, idempotency_key)
 
-    async def max_calls_llm(brain, value):  # noqa: ANN001
-        if brain.name == "max_ctrl":
+    async def max_calls_llm(reasoner, value):  # noqa: ANN001
+        if reasoner.name == "max_ctrl":
             return {"tool": "srv/double", "input": value["input"]}
-        return await _llm(brain, value)
+        return await _llm(reasoner, value)
 
     agents_m = {
         "max_ctrl": {
@@ -315,7 +315,7 @@ async def _agent(env):
         agents=agents_m,
         llm=max_calls_llm,
         mcp_call=counted_mcp,
-        extra_brains=(Brain(name="max_ctrl", model="test", system="max calls"),),
+        extra_reasoners=(Reasoner(name="max_ctrl", model="test", system="max calls"),),
     ):
         sid = f"agentm-{uuid.uuid4()}"
         res5 = await env.client.execute_workflow(
@@ -331,12 +331,12 @@ async def _agent(env):
 
     # Subflow grants: None is unconstrained, [] denies all, and a listed child
     # is allowed through the agent SUB path.
-    async def subflow_llm(brain, value):  # noqa: ANN001
-        if brain.name.startswith("sub_ctrl_"):
+    async def subflow_llm(reasoner, value):  # noqa: ANN001
+        if reasoner.name.startswith("sub_ctrl_"):
             if not value.get("trace"):
                 return {"sub": "child", "input": value["input"]}
             return {"done": True, "output": value["input"]}
-        return await _llm(brain, value)
+        return await _llm(reasoner, value)
 
     sub_agents = {
         "sub_ctrl_denied": {
@@ -357,10 +357,10 @@ async def _agent(env):
         task_queue="ca-agent-sub",
         agents=sub_agents,
         llm=subflow_llm,
-        extra_brains=(
-            Brain(name="sub_ctrl_denied", model="test", system="sub denied"),
-            Brain(name="sub_ctrl_empty", model="test", system="sub empty"),
-            Brain(name="sub_ctrl_allowed", model="test", system="sub allowed"),
+        extra_reasoners=(
+            Reasoner(name="sub_ctrl_denied", model="test", system="sub denied"),
+            Reasoner(name="sub_ctrl_empty", model="test", system="sub empty"),
+            Reasoner(name="sub_ctrl_allowed", model="test", system="sub allowed"),
         ),
     ):
         denied = await env.client.execute_workflow(
@@ -407,16 +407,16 @@ async def _agent(env):
 
 
 async def _app_inline_grant_attenuation(env):
-    async def app_llm(brain, value):  # noqa: ANN001
-        if brain.name == "inline_missing_ctrl":
+    async def app_llm(reasoner, value):  # noqa: ANN001
+        if reasoner.name == "inline_missing_ctrl":
             if not value.get("trace"):
                 return {"tool": "srv/echo", "input": value["input"]}
             return {"done": True, "output": value["input"]}
-        if brain.name == "inline_allowed_ctrl":
+        if reasoner.name == "inline_allowed_ctrl":
             if not value.get("trace"):
                 return {"tool": "srv/double", "input": value["input"]}
             return {"done": True, "output": value["input"]}
-        return await _llm(brain, value)
+        return await _llm(reasoner, value)
 
     agents = {
         "inline_missing_ctrl": {
@@ -450,9 +450,9 @@ async def _app_inline_grant_attenuation(env):
         task_queue="ca-app-inline",
         agents=agents,
         llm=app_llm,
-        extra_brains=(
-            Brain(name="inline_missing_ctrl", model="test", system="inline missing"),
-            Brain(name="inline_allowed_ctrl", model="test", system="inline allowed"),
+        extra_reasoners=(
+            Reasoner(name="inline_missing_ctrl", model="test", system="inline missing"),
+            Reasoner(name="inline_allowed_ctrl", model="test", system="inline allowed"),
         ),
     ):
         denied = await missing_tools.run(
@@ -480,10 +480,10 @@ async def _app_max_calls_inherits_parent_counts(env):
     """An inline app cannot reset an already-consumed maxCalls budget: the
     parent env's call counts seed the child agent's state (parity with Sub)."""
 
-    async def seed_llm(brain, value):  # noqa: ANN001
-        if brain.name == "seeded_app_ctrl":
+    async def seed_llm(reasoner, value):  # noqa: ANN001
+        if reasoner.name == "seeded_app_ctrl":
             return {"tool": "srv/double", "input": value["input"]}
-        return await _llm(brain, value)
+        return await _llm(reasoner, value)
 
     agents = {
         "seeded_app_ctrl": {
@@ -504,7 +504,7 @@ async def _app_max_calls_inherits_parent_counts(env):
         task_queue="ca-app-seeded",
         agents=agents,
         llm=seed_llm,
-        extra_brains=(Brain(name="seeded_app_ctrl", model="test", system="seeded app"),),
+        extra_reasoners=(Reasoner(name="seeded_app_ctrl", model="test", system="seeded app"),),
     ):
         res = await run_flow(
             env.client,
@@ -522,10 +522,10 @@ async def _app_max_calls_inherits_parent_counts(env):
 
 
 async def _strict_controller_contract(env):
-    async def malformed_llm(brain, value):  # noqa: ANN001
-        if brain.name in {"strict_malformed_ctrl", "permissive_malformed_ctrl"}:
+    async def malformed_llm(reasoner, value):  # noqa: ANN001
+        if reasoner.name in {"strict_malformed_ctrl", "permissive_malformed_ctrl"}:
             return "plain prose"
-        return await _llm(brain, value)
+        return await _llm(reasoner, value)
 
     agents = {
         "strict_malformed_ctrl": {
@@ -544,9 +544,9 @@ async def _strict_controller_contract(env):
         task_queue="ca-strict-controller",
         agents=agents,
         llm=malformed_llm,
-        extra_brains=(
-            Brain(name="strict_malformed_ctrl", model="test", system="strict"),
-            Brain(name="permissive_malformed_ctrl", model="test", system="permissive"),
+        extra_reasoners=(
+            Reasoner(name="strict_malformed_ctrl", model="test", system="strict"),
+            Reasoner(name="permissive_malformed_ctrl", model="test", system="permissive"),
         ),
     ):
         strict = await env.client.execute_workflow(
@@ -652,8 +652,8 @@ async def _agent_session_store(env):
     }
     store = InMemorySessionStore()
 
-    register_brain(Brain(name="adder", model="test", system="add 10"))
-    register_brain(Brain(name="ctrl", model="test", system="decide"))
+    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(
         mcp_call=_mcp,
         llm=_llm,
@@ -697,7 +697,7 @@ async def _agent_session_store_fencing(env):
     """Design invariant 1: when use_session_store=True the session_id must equal
     the Temporal workflow id (Temporal's one-running-execution-per-workflow-id is
     the store's only mutual-exclusion mechanism). A mismatched workflow id fails
-    fast with a non-retryable ValidationError, before any LLM/brain effect."""
+    fast with a non-retryable ValidationError, before any LLM/reasoner effect."""
     agents = {
         "ctrl": {
             "config": {
@@ -711,12 +711,12 @@ async def _agent_session_store_fencing(env):
     store = InMemorySessionStore()
     llm_calls = {"count": 0}
 
-    async def counting_llm(brain, value):  # noqa: ANN001
+    async def counting_llm(reasoner, value):  # noqa: ANN001
         llm_calls["count"] += 1
-        return await _llm(brain, value)
+        return await _llm(reasoner, value)
 
-    register_brain(Brain(name="adder", model="test", system="add 10"))
-    register_brain(Brain(name="ctrl", model="test", system="decide"))
+    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(
         mcp_call=_mcp,
         llm=counting_llm,
@@ -756,7 +756,7 @@ async def _agent_session_store_fencing(env):
     assert isinstance(cause, ApplicationError)
     assert cause.type == "ValidationError"
     assert "fencing" in str(cause)
-    # The fence fires before any effect: the brain/LLM was never invoked.
+    # The fence fires before any effect: the reasoner/LLM was never invoked.
     assert llm_calls["count"] == 0, f"expected 0 LLM calls, got {llm_calls['count']}"
 
 
@@ -774,8 +774,8 @@ async def _agent_trace_fidelity(env):
     }
     blob_store = InMemoryBlobStore()
 
-    register_brain(Brain(name="adder", model="test", system="add 10"))
-    register_brain(Brain(name="ctrl", model="test", system="decide"))
+    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(
         mcp_call=_mcp,
         llm=_llm,
@@ -881,7 +881,7 @@ async def _pure_drift_fails_before_effect(env):
 
 async def _run_all():
     async with await WorkflowEnvironment.start_time_skipping() as env:
-        await _pipeline_and_brain(env)
+        await _pipeline_and_reasoner(env)
         await _principal_threading(env)
         await _race(env)
         await _human_gate(env)

@@ -1,8 +1,8 @@
 """Composable prompts via registered renderers (design: docs/design/prompt-fragments.md).
 
 A renderer is a pure ``Context -> str`` registered by name (like a pure). A
-Brain names one via ``system_render``; ``rendered_brain_for`` projects a Context
-from the invoke value and returns a derived Brain whose ``system`` is the
+Reasoner names one via ``system_render``; ``rendered_reasoner_for`` projects a Context
+from the invoke value and returns a derived Reasoner whose ``system`` is the
 rendered string. ``Context`` is the v1 projection: the invoke value if it is a
 mapping (the agent-loop payload ``{"input":..., "trace":...}`` already is one),
 else ``{"value": value}``. Richer ContextScope/session projection is deferred.
@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, Protocol
 
-from .dotctx import Brain
+from .dotctx import Reasoner
 from .registry import DEFAULT_REGISTRY, RendererEntry
 
 Context = Mapping[str, Any]
@@ -50,45 +50,45 @@ def project_context(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, Mapping) else {"value": value}
 
 
-def render_system(brain: Brain, ctx: Context) -> str:
-    if brain.system_render is not None:
-        return DEFAULT_REGISTRY.get_renderer(brain.system_render)(ctx)
-    return brain.system
+def render_system(reasoner: Reasoner, ctx: Context) -> str:
+    if reasoner.system_render is not None:
+        return DEFAULT_REGISTRY.get_renderer(reasoner.system_render)(ctx)
+    return reasoner.system
 
 
-def render_user(brain: Brain, ctx: Context) -> Optional[str]:
-    """The rendered user turn, or ``None`` when the brain names no user renderer
+def render_user(reasoner: Reasoner, ctx: Context) -> Optional[str]:
+    """The rendered user turn, or ``None`` when the reasoner names no user renderer
     (callers fall back to the value-as-JSON user turn)."""
-    if brain.user_render is None:
+    if reasoner.user_render is None:
         return None
-    return DEFAULT_REGISTRY.get_renderer(brain.user_render)(ctx)
+    return DEFAULT_REGISTRY.get_renderer(reasoner.user_render)(ctx)
 
 
-def rendered_user_for(brain: Brain, value: Any) -> Optional[str]:
-    if brain.user_render is None:
+def rendered_user_for(reasoner: Reasoner, value: Any) -> Optional[str]:
+    if reasoner.user_render is None:
         return None
-    return render_user(brain, project_context(value))
+    return render_user(reasoner, project_context(value))
 
 
-def _with_rendered_system(brain: Brain, system: str) -> Brain:
-    return Brain(
-        name=brain.name, model=brain.model, system=system,
-        reply_schema=brain.reply_schema, tools=brain.tools,
-        temperature=brain.temperature, max_rounds=brain.max_rounds,
-        is_agent=brain.is_agent, sub_contract=brain.sub_contract,
-        context_scope=brain.context_scope, system_render=None,
-        user_render=brain.user_render, max_tokens=brain.max_tokens,
+def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
+    return Reasoner(
+        name=reasoner.name, model=reasoner.model, system=system,
+        reply_schema=reasoner.reply_schema, tools=reasoner.tools,
+        temperature=reasoner.temperature, max_rounds=reasoner.max_rounds,
+        is_agent=reasoner.is_agent, sub_contract=reasoner.sub_contract,
+        context_scope=reasoner.context_scope, system_render=None,
+        user_render=reasoner.user_render, max_tokens=reasoner.max_tokens,
     )
 
 
-def rendered_brain_for(brain: Brain, value: Any) -> Brain:
-    """The invoke seam: a no-renderer brain passes through identically; a
-    renderer-bearing brain becomes a derived brain with the rendered system.
+def rendered_reasoner_for(reasoner: Reasoner, value: Any) -> Reasoner:
+    """The invoke seam: a no-renderer reasoner passes through identically; a
+    renderer-bearing reasoner becomes a derived reasoner with the rendered system.
     ``user_render`` rides along — the LLM caller renders the user turn via
     :func:`rendered_user_for` against the same value."""
-    if brain.system_render is None:
-        return brain
-    return _with_rendered_system(brain, render_system(brain, project_context(value)))
+    if reasoner.system_render is None:
+        return reasoner
+    return _with_rendered_system(reasoner, render_system(reasoner, project_context(value)))
 
 
 @dataclass(frozen=True)
@@ -133,7 +133,7 @@ def fragments(*parts: Any) -> Concat:
 
 __all__ = [
     "Context", "Fragment", "register_renderer", "get_renderer", "renderer",
-    "project_context", "render_system", "rendered_brain_for",
+    "project_context", "render_system", "rendered_reasoner_for",
     "render_user", "rendered_user_for",
     "Lift", "Ask", "Concat", "Under", "Map", "fragments",
 ]

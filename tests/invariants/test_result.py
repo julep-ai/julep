@@ -55,7 +55,7 @@ def test_agent_run_returns_result_and_remains_dict_compatible() -> None:
     def a_read_tool(value: str) -> str:
         return f"read:{value}"
 
-    def llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         return {"output": {"echo": payload["input"]}}
 
     result = Agent("m", tools=[a_read_tool], name="tf8_agent", llm=llm).run("hi")

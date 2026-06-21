@@ -22,7 +22,7 @@ def _env(flow, **kw):
 
 def test_race_ignores_fast_failure_and_returns_slow_success():
     flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": fast_fail(RuntimeError("fast boom")),
         "srv/b": slow_ok(0.01, "slow-ok"),
     })
@@ -34,7 +34,7 @@ def test_race_ignores_fast_failure_and_returns_slow_success():
 
 def test_race_all_failures_raise_aggregate():
     flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": fast_fail(RuntimeError("boom-a")),
         "srv/b": fast_fail(ValueError("boom-b")),
     })
@@ -56,7 +56,7 @@ def test_race_cancels_losing_branches_after_success():
 
     async def scenario():
         flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
-        fr, env = _env(flow, hands={
+        fr, env = _env(flow, tools={
             "srv/a": slow_ok(0.01, "winner"),
             "srv/b": records_after_delay,
         })
@@ -78,7 +78,7 @@ def test_quorum_returns_successes_in_branch_order_and_ignores_failure():
         call(mcp("srv", "c")),
         k=2,
     )
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": slow_ok(0.02, "a-ok"),
         "srv/b": fast_fail(RuntimeError("boom-b")),
         "srv/c": slow_ok(0.01, "c-ok"),
@@ -96,7 +96,7 @@ def test_quorum_raises_when_k_successes_are_unreachable():
         call(mcp("srv", "c")),
         k=2,
     )
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": fast_fail(RuntimeError("boom-a")),
         "srv/b": fast_fail(ValueError("boom-b")),
         "srv/c": slow_ok(0.05, "too-late"),
@@ -116,7 +116,7 @@ def test_hedge_does_not_invoke_later_thunks_when_primary_wins_before_delay():
         return "b-ok"
 
     flow = hedge(call(mcp("srv", "a")), call(mcp("srv", "b")), hedge_ms=50)
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": slow_ok(0.01, "a-ok"),
         "srv/b": branch_b,
     })
@@ -173,7 +173,7 @@ def test_hedge_starts_next_branch_after_delay_and_fallback_can_win():
         return "b-ok"
 
     flow = hedge(call(mcp("srv", "a")), call(mcp("srv", "b")), hedge_ms=10)
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": slow_ok(0.05, "a-ok"),
         "srv/b": branch_b,
     })
@@ -186,7 +186,7 @@ def test_hedge_starts_next_branch_after_delay_and_fallback_can_win():
 
 def test_race_over_instant_successes_picks_branch_zero():
     flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
-    fr, env = _env(flow, hands={
+    fr, env = _env(flow, tools={
         "srv/a": lambda _value: "a-ok",
         "srv/b": lambda _value: "b-ok",
     })

@@ -6,9 +6,9 @@ import pytest
 
 import composable_agents
 from composable_agents import (
-    AgentConfig, AgentState, Decision, interpret_brain_reply,
+    AgentConfig, AgentState, Decision, interpret_reasoner_reply,
     generalize_trace_to_plan, extract_plan, promote_plan,
-    CapabilityManifest, Budget, Brain,
+    CapabilityManifest, Budget, Reasoner,
     deploy, snapshot_from_listings,
     alt, app, arr, call, iter_up_to, mcp, par, seq, stage, think,
 )
@@ -25,7 +25,7 @@ from conftest import read_snapshot, mixed_snapshot
 
 
 # --------------------------------------------------------------------------- #
-# Brain reply interpretation (the closed action vocabulary).
+# Reasoner reply interpretation (the closed action vocabulary).
 # --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("reply,decision", [
     ({"done": True, "output": 42}, Decision.FINISH),
@@ -34,13 +34,13 @@ from conftest import read_snapshot, mixed_snapshot
     ({"sub": "child", "input": 1}, Decision.SUB),
     ({"escalate": "stuck"}, Decision.ESCALATE),
 ])
-def test_interpret_brain_reply_maps_vocabulary(reply, decision):
-    assert interpret_brain_reply(reply).decision is decision
+def test_interpret_reasoner_reply_maps_vocabulary(reply, decision):
+    assert interpret_reasoner_reply(reply).decision is decision
 
 
 @pytest.mark.parametrize("reply", ["just prose", {"unknown": "shape"}])
-def test_interpret_brain_reply_permissive_mode_finishes_malformed_reply(reply):
-    assert interpret_brain_reply(reply, strict=False).decision is Decision.FINISH
+def test_interpret_reasoner_reply_permissive_mode_finishes_malformed_reply(reply):
+    assert interpret_reasoner_reply(reply, strict=False).decision is Decision.FINISH
 
 
 def test_terminal_actions_flagged():
@@ -234,16 +234,16 @@ def test_deploy_per_run_refresh_seam():
 # --------------------------------------------------------------------------- #
 # Replay/freeze artifact hash (§6.2).
 # --------------------------------------------------------------------------- #
-def test_brain_tools_accepts_list_and_stores_tuple():
-    assert Brain(name="list.tools.brain", model="test", tools=["a", "b"]).tools == ("a", "b")
+def test_reasoner_tools_accepts_list_and_stores_tuple():
+    assert Reasoner(name="list.tools.reasoner", model="test", tools=["a", "b"]).tools == ("a", "b")
 
 
 def _pure_artifact_fn(value):
     return value
 
 
-def _artifact_brain(name: str = "artifact.brain", *, system: str = "original") -> Brain:
-    return Brain(
+def _artifact_reasoner(name: str = "artifact.reasoner", *, system: str = "original") -> Reasoner:
+    return Reasoner(
         name=name,
         model="test-model",
         system=system,
@@ -258,9 +258,9 @@ def test_deployment_artifact_hash_is_stable_for_same_inputs(monkeypatch):
         "artifact.identity",
         PureEntry("artifact.identity", _pure_artifact_fn, "pure:stable"),
     )
-    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain())
+    monkeypatch.setitem(dotctx._REASONERS, "artifact.reasoner", _artifact_reasoner())
     snap = read_snapshot("a")
-    flow = seq(arr("artifact.identity"), think("artifact.brain"), call(mcp("srv", "a")))
+    flow = seq(arr("artifact.identity"), think("artifact.reasoner"), call(mcp("srv", "a")))
 
     first = deploy(flow, snap)
     second = deploy(flow, snap)
@@ -268,7 +268,7 @@ def test_deployment_artifact_hash_is_stable_for_same_inputs(monkeypatch):
     assert first.artifact_components == second.artifact_components
     assert first.artifact_hash == second.artifact_hash
     assert first.artifact_components["pureSourceHashes"] == {"artifact.identity": "pure:stable"}
-    assert first.artifact_components["brains"]["artifact.brain"]["system"] == "original"
+    assert first.artifact_components["reasoners"]["artifact.reasoner"]["system"] == "original"
     assert first.artifact_components["executionPolicy"] is None
 
 
@@ -305,12 +305,12 @@ def test_deployment_artifact_hash_changes_with_referenced_pure_source(monkeypatc
     assert first.artifact_hash != second.artifact_hash
 
 
-def test_deployment_artifact_hash_changes_with_referenced_brain(monkeypatch):
+def test_deployment_artifact_hash_changes_with_referenced_reasoner(monkeypatch):
     snap = read_snapshot()
-    flow = think("artifact.brain")
-    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain(system="before"))
+    flow = think("artifact.reasoner")
+    monkeypatch.setitem(dotctx._REASONERS, "artifact.reasoner", _artifact_reasoner(system="before"))
     first = deploy(flow, snap)
-    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain(system="after"))
+    monkeypatch.setitem(dotctx._REASONERS, "artifact.reasoner", _artifact_reasoner(system="after"))
     second = deploy(flow, snap)
 
     assert first.artifact_hash != second.artifact_hash
@@ -340,7 +340,7 @@ def test_deployment_artifact_hash_changes_with_framework_version(monkeypatch):
     assert first.artifact_hash != second.artifact_hash
 
 
-def test_deployment_artifact_components_collect_referenced_brains_and_pures(monkeypatch):
+def test_deployment_artifact_components_collect_referenced_reasoners_and_pures(monkeypatch):
     monkeypatch.setitem(
         purity._REGISTRY,
         "artifact.arr",
@@ -366,22 +366,22 @@ def test_deployment_artifact_components_collect_referenced_brains_and_pures(monk
         "artifact.reducer",
         PureEntry("artifact.reducer", _pure_artifact_fn, "pure:reducer"),
     )
-    monkeypatch.setitem(dotctx._BRAINS, "artifact.brain", _artifact_brain())
+    monkeypatch.setitem(dotctx._REASONERS, "artifact.reasoner", _artifact_reasoner())
     monkeypatch.setitem(
-        dotctx._BRAINS,
+        dotctx._REASONERS,
         "artifact.controller",
-        _artifact_brain("artifact.controller", system="controller"),
+        _artifact_reasoner("artifact.controller", system="controller"),
     )
     monkeypatch.setitem(
-        dotctx._BRAINS,
+        dotctx._REASONERS,
         "artifact.planner",
-        _artifact_brain("artifact.planner", system="planner"),
+        _artifact_reasoner("artifact.planner", system="planner"),
     )
     fan = par(arr("artifact.arr"), arr("artifact.arr"))
     fan.merge = Merge(kind="all", reducer="artifact.reducer")
     flow = seq(
         arr("artifact.arr"),
-        alt("artifact.alt", think("artifact.brain"), app("artifact.controller")),
+        alt("artifact.alt", think("artifact.reasoner"), app("artifact.controller")),
         alt(
             select="artifact.switch",
             cases={"x": arr("artifact.arr")},
@@ -400,8 +400,8 @@ def test_deployment_artifact_components_collect_referenced_brains_and_pures(monk
         "artifact.switch": "pure:switch",
         "artifact.until": "pure:until",
     }
-    assert sorted(d.artifact_components["brains"]) == [
-        "artifact.brain",
+    assert sorted(d.artifact_components["reasoners"]) == [
         "artifact.controller",
         "artifact.planner",
+        "artifact.reasoner",
     ]

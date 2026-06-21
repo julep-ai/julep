@@ -1,4 +1,4 @@
-"""Explicit registries for named brains and pure functions.
+"""Explicit registries for named reasoners and pure functions.
 
 The module-level :data:`DEFAULT_REGISTRY` backs the historical global shims in
 ``dotctx`` and ``purity``. Tests and local harnesses can instantiate
@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, Callable, Optional
 from .deps import parse_pep723
 
 if TYPE_CHECKING:
-    from .dotctx import Brain
+    from .dotctx import Reasoner
 
 PureFn = Callable[..., Any]
 
@@ -113,28 +113,28 @@ def _source_hash(fn: PureFn) -> str:
 
 
 class Registry:
-    """An explicit registry for named brains and deterministic pure functions."""
+    """An explicit registry for named reasoners and deterministic pure functions."""
 
     def __init__(self) -> None:
-        self.brains: dict[str, Brain] = {}
+        self.reasoners: dict[str, Reasoner] = {}
         self.pures: dict[str, PureEntry] = {}
         self.renderers: dict[str, RendererEntry] = {}
         self.tool_expectations: dict[str, ToolSchemaExpectation] = {}
 
-    def register_brain(self, brain: Brain) -> Brain:
-        if brain.name in self.brains and self.brains[brain.name] != brain:
-            raise ValueError(f"brain {brain.name!r} already registered with a different config")
-        self.brains[brain.name] = brain
-        return brain
+    def register_reasoner(self, reasoner: Reasoner) -> Reasoner:
+        if reasoner.name in self.reasoners and self.reasoners[reasoner.name] != reasoner:
+            raise ValueError(f"reasoner {reasoner.name!r} already registered with a different config")
+        self.reasoners[reasoner.name] = reasoner
+        return reasoner
 
-    def get_brain(self, name: str) -> Brain:
+    def get_reasoner(self, name: str) -> Reasoner:
         try:
-            return self.brains[name]
+            return self.reasoners[name]
         except KeyError as e:
-            raise KeyError(f"unknown brain {name!r}; load its dotctx with load_dotctx()") from e
+            raise KeyError(f"unknown reasoner {name!r}; load its dotctx with load_dotctx()") from e
 
-    def list_brains(self) -> list[str]:
-        return sorted(self.brains)
+    def list_reasoners(self) -> list[str]:
+        return sorted(self.reasoners)
 
     # FIXME(P4-2/P4-6): inspect.getsource(fn) drops a module-top `# /// script` block
     # (the idiomatic PEP 723 placement) => a dep-declaring baked pure registers as no-dep

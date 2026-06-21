@@ -5,7 +5,7 @@
 --   workflow         : the continuation lives in the static control graph
 --   dynamic workflow : the continuation is synthesized ONCE into a reified Plan, then the runtime owns it
 --   agent            : the continuation stays under online model control
--- Managed Agents supply the deployment boundary (brains / hands / sessions / events / isolated
+-- Managed Agents supply the deployment boundary (reasoners / tools / sessions / events / isolated
 -- subagents); this calculus exposes exactly those boundaries and no more.
 --
 -- WHAT CHANGED FROM v1 (and why):
@@ -16,7 +16,7 @@
 --   * Think carries its context dependency explicitly (no hidden global session read), so :*** is
 --     honestly parallel and the Session can be a partial order.
 --   * Bounded loops are schedulable, not success-total (IterUpTo returns Either).
---   * Tools are typed up top, erased to the universal hand interface at the boundary.
+--   * Tools are typed up top, erased to the universal tool interface at the boundary.
 
 module AlgebraicAgents where
 
@@ -48,7 +48,7 @@ data Shape
 -- profunctor; the free arrow over Step supplies the compositional structure.
 -- ============================================================
 data Tool  i o = Tool  { toolName :: Name, inSchema :: Schema i, outSchema :: Schema o }
-data Brain x y = Brain { brainName :: Name, promptSchema :: Schema x
+data Reasoner x y = Reasoner { reasonerName :: Name, promptSchema :: Schema x
                        , replySchema :: Schema y, ctxPolicy :: ContextPolicy }
 
 -- The model's dependency on prior context is DECLARED, not smuggled in from global state.
@@ -59,8 +59,8 @@ data    AgentRef x y  = AgentRef Name
 newtype AgentContract = AgentContract { contractShape :: Shape }   -- what a sub promises, opaquely
 
 data Step x y where
-  Call  :: Tool  i o -> Step i o                       -- run a hand; the Output is the hole
-  Think :: Brain x y -> Step x y                       -- model fills a typed hole from x + declared ctx
+  Call  :: Tool  i o -> Step i o                       -- run a tool; the Output is the hole
+  Think :: Reasoner x y -> Step x y                       -- model fills a typed hole from x + declared ctx
   Sub   :: AgentRef x y -> AgentContract -> Step x y   -- contract-bound delegation (closure)
 
 
@@ -154,13 +154,13 @@ data EventKind
 
 
 -- ============================================================
--- Harness — interpreter. Threads Hands (DI) and the trace.
+-- Harness — interpreter. Threads Tools (DI) and the trace.
 -- Effectful calls are idempotent under replay via stable call ids + intent logging.
 -- ============================================================
--- Hands take a CallId so replay can dedupe real-world side effects.
-type Hands m = CallId -> Name -> Value -> m Value
+-- Tools take a CallId so replay can dedupe real-world side effects.
+type Tools m = CallId -> Name -> Value -> m Value
 
-run :: Monad m => Hands m -> Session -> Flow x y -> x -> m (y, Session)
+run :: Monad m => Tools m -> Session -> Flow x y -> x -> m (y, Session)
 run hs s flow x = case flow of
 
   Prim n _ (Call tool) -> do                 -- intent-log, then execute, unless already in the trace
@@ -172,10 +172,10 @@ run hs s flow x = case flow of
         v <- hs cid (toolName tool) (box x)
         pure (out v, append s1 (Did cid (toolName tool) (box x) v))
 
-  Prim _ _ (Think brain) -> do               -- context is the DECLARED projection, not a global read
-    let ctx = project (ctxPolicy brain) s x
-        s1  = append s (Asked (ctxPolicy brain))
-    y <- decide brain x ctx
+  Prim _ _ (Think reasoner) -> do               -- context is the DECLARED projection, not a global read
+    let ctx = project (ctxPolicy reasoner) s x
+        s1  = append s (Asked (ctxPolicy reasoner))
+    y <- decide reasoner x ctx
     pure (y, append s1 (Said (box y)))
 
   Prim n _ (Sub ref c) -> do                 -- child runs in its OWN session; parent sees a summary
@@ -196,7 +196,7 @@ run hs s flow x = case flow of
   App          -> let (g,      a) = x in run hs s g a   -- online: the next Flow arrived AS DATA
 
 -- Reboot a crashed harness: same `run`; the replay cursor lives in `recall`, recovery is a fold.
-wake :: Monad m => Hands m -> Flow x y -> Session -> x -> m (y, Session)
+wake :: Monad m => Tools m -> Flow x y -> Session -> x -> m (y, Session)
 wake hs flow s x = run hs s flow x
 
 -- LAW: a branch declaring WholeSessionCtx forfeits free parallelism; the analysis degrades that
@@ -207,12 +207,12 @@ stableCallId :: NodeId -> x -> CallId;                                       sta
 recall    :: CallId -> Session -> Maybe Value;                               recall    = undefined
 append    :: Session -> EventKind -> Session;                                append    = undefined
 project   :: ContextPolicy -> Session -> x -> Value;                         project   = undefined
-decide    :: Monad m => Brain x y -> x -> Value -> m y;                       decide    = undefined
+decide    :: Monad m => Reasoner x y -> x -> Value -> m y;                       decide    = undefined
 runSub    :: Monad m => AgentRef x y -> AgentContract -> x -> m (y, Session); runSub    = undefined
 summarize :: Session -> Value;                                               summarize = undefined
 fork      :: ThreadId -> Session -> Session;                                 fork      = undefined
 merge     :: Session -> Session -> Session -> Session;                       merge     = undefined
-iterUpTo  :: Monad m => Hands m -> Session -> Word
+iterUpTo  :: Monad m => Tools m -> Session -> Word
           -> Flow (a, s) (Either s b) -> (a, s) -> m (Either s b, Session);  iterUpTo  = undefined
 box :: x -> Value;  box = undefined
 out :: Value -> o;  out = undefined

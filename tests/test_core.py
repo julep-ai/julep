@@ -282,7 +282,7 @@ def test_parallel_validates_without_blocking():
 
 
 # --------------------------------------------------------------------------- #
-# Derived combinators lower to a uniform race spine.
+# Derived combinators lower to a uniform race chain.
 # --------------------------------------------------------------------------- #
 def test_race_lowers_to_par_with_merge_on_every_node():
     f = race(call("a"), call("b"), call("c"))
@@ -485,13 +485,13 @@ def test_capability_overrides_assert_contract():
             "approval": True,
             "maxCalls": 1,
         },
-    ], "brains": ["summarizer"], "subflows": ["child"]})
+    ], "reasoners": ["summarizer"], "subflows": ["child"]})
     ov = caps.overrides()
     c = ov.get("srv/writer")
     assert c is not None and c.effect == Effect.READ and c.idempotency == Idempotency.REQUIRED
     assert caps.tools["srv/writer"].approval is True
     assert caps.tools["srv/writer"].max_calls == 1
-    assert caps.brains == {"summarizer"} and caps._has_brains
+    assert caps.reasoners == {"summarizer"} and caps._has_reasoners
     assert caps.subflows == {"child"} and caps._has_subflows
 
 

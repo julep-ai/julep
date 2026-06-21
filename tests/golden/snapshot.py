@@ -71,8 +71,8 @@ def _capability_json(capabilities: CapabilityManifest | None) -> dict[str, Any] 
             for server in sorted(capabilities.mcp_servers)
         },
     }
-    if capabilities._has_brains:
-        out["brains"] = sorted(capabilities.brains)
+    if capabilities._has_reasoners:
+        out["reasoners"] = sorted(capabilities.reasoners)
     if capabilities._has_models:
         out["models"] = sorted(capabilities.models)
     if capabilities._has_subflows:

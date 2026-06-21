@@ -61,7 +61,7 @@ def test_refs_absent_artifact_hash_regression_pin(monkeypatch):
 
     # Guards refs-absent identity across the pureRuntimeRefs join change.
     assert deployment.artifact_hash == (
-        "sha256:b04dfee9716de441d49a88fe1f991a1fa33dfce99c249897a3bd458420f7820f"
+        "sha256:b839e5435427c034e57d4bdf5d331af89aa46fafa8e8e0d30d821ffe2e2dd4c8"
     )
 
 

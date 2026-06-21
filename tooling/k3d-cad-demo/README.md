@@ -12,7 +12,7 @@ The generic runtime image is defined once at `tooling/runtime-image/Dockerfile`;
 
 - `examples/grade_scores_flow.py` is a deterministic batch flow whose entire
   logic is three custom pures (`normalize_record`, `grade_one`, `tally_grades`)
-  plus `each` — no brains, no tools, no API keys.
+  plus `each` — no reasoners, no tools, no API keys.
 - `publish.py` builds the deployment and publishes a **signed** CAS bundle
   (manifest + `flowJson` + pure source + detached ed25519 signature) into a CAS
   dir the k3d node bind-mounts at `/cas`.

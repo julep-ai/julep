@@ -32,7 +32,7 @@ temporal = ["temporalio>=1.7"]
 # dbos requires Python >=3.11; the marker keeps the extra resolvable on 3.10,
 # where importing the backend raises a clear ImportError instead.
 dbos = ["dbos>=2.18; python_version >= '3.11'"]
-# Native hand (HTTP tool) calls from the callHand activity.
+# Native tool (HTTP tool) calls from the callTool activity.
 http = ["httpx>=0.24"]
 # Experimental Claude Managed Agents (CMA) backend (HTTP, beta-pinned).
 cma = ["httpx>=0.24"]

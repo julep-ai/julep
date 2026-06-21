@@ -33,7 +33,7 @@ from composable_agents.staged import validate_plan
 from composable_agents.transforms import normalize_ids
 from conftest import read_snapshot, run
 
-HANDS = {
+TOOLS = {
     "srv/inc": lambda v: v + 1,
     "srv/double": lambda v: v * 2,
 }
@@ -113,27 +113,27 @@ def test_each_round_trips_through_json_and_normalizes_body_path():
 # Interpreter semantics.
 # --------------------------------------------------------------------------- #
 def test_each_maps_body_over_list_in_order():
-    fr, env, store = _env_and_store(each(call(mcp("srv", "inc"))), hands=HANDS)
+    fr, env, store = _env_and_store(each(call(mcp("srv", "inc"))), tools=TOOLS)
     out = run(interpret(fr.flow, [1, 2, 3], env))
     assert out.value == [2, 3, 4]
     assert _did_attrs(store, fr.flow.id) == {"items": 3}
 
 
 def test_each_empty_list_yields_empty_list():
-    fr, env = _env(each(call(mcp("srv", "inc"))), hands=HANDS)
+    fr, env = _env(each(call(mcp("srv", "inc"))), tools=TOOLS)
     out = run(interpret(fr.flow, [], env))
     assert out.value == []
 
 
 def test_each_applies_reducer():
     register_pure("each.sum_all", lambda xs: sum(xs))
-    fr, env = _env(each(call(mcp("srv", "inc")), reducer="each.sum_all"), hands=HANDS)
+    fr, env = _env(each(call(mcp("srv", "inc")), reducer="each.sum_all"), tools=TOOLS)
     out = run(interpret(fr.flow, [1, 2, 3], env))
     assert out.value == 9  # (1+1)+(2+1)+(3+1)
 
 
 def test_each_rejects_non_list_input():
-    fr, env = _env(each(call(mcp("srv", "inc"))), hands=HANDS)
+    fr, env = _env(each(call(mcp("srv", "inc"))), tools=TOOLS)
     with pytest.raises(ComposableAgentsError, match="must be a list"):
         run(interpret(fr.flow, {"not": "a list"}, env))
 
@@ -149,7 +149,7 @@ def test_each_bound_processes_in_waves():
             return await super().gather(coros)
 
     fr = freeze(each(call(mcp("srv", "inc")), max_parallel=2), read_snapshot("inc"))
-    env = CountingEnv(fr.manifest, ProjectionEmitter(InMemoryProjection()), hands=HANDS)
+    env = CountingEnv(fr.manifest, ProjectionEmitter(InMemoryProjection()), tools=TOOLS)
     out = run(interpret(fr.flow, [1, 2, 3, 4, 5], env))
     assert out.value == [2, 3, 4, 5, 6]
     assert env.wave_sizes == [2, 2, 1]
@@ -165,15 +165,15 @@ def test_each_whole_session_body_runs_sequentially():
             self.gathered = True
             return await super().gather(coros)
 
-        async def invoke_brain(self, brain, value, cid, timeout_s, batchable=False):
-            return ("brain", value)
+        async def invoke_reasoner(self, reasoner, value, cid, timeout_s, batchable=False):
+            return ("reasoner", value)
 
     flow = each(think("reader", ctx=ContextScope.WHOLE_SESSION))
     fr = freeze(flow, read_snapshot())
     store = InMemoryProjection()
     env = GatherSpy(fr.manifest, ProjectionEmitter(store))
     out = run(interpret(fr.flow, ["a", "b"], env))
-    assert out.value == [("brain", "a"), ("brain", "b")]
+    assert out.value == [("reasoner", "a"), ("reasoner", "b")]
     assert env.gathered is False
     assert _did_attrs(store, fr.flow.id) == {
         "items": 2, "merge": "degraded", "reason": "whole_session",
@@ -185,7 +185,7 @@ def test_each_composes_in_seq():
     flow = seq(each(call(mcp("srv", "inc"))), Node.from_json(
         {"op": "arr", "id": "len", "pure": "each.flatten_len"}
     ))
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     out = run(interpret(fr.flow, [10, 20], env))
     assert out.value == 2
 

@@ -1,6 +1,6 @@
 # A dotctx: a directory that describes ONE model call. `load_dotctx(<dir>)` reads
-# this file into a Brain (registered under `name`), and the framework lowers the
-# brain's round policy to an execution shape:
+# this file into a Reasoner (registered under `name`), and the framework lowers the
+# reasoner's round policy to an execution shape:
 #   - no max_rounds / not an agent  -> single `think`      (Pipeline)
 #   - max_rounds: N (>= 1)          -> bounded `iter_up_to` (Feedback)
 #   - agent: true                   -> open-ended `app`     (Agent)

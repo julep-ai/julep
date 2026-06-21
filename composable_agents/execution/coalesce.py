@@ -1,4 +1,4 @@
-"""In-process coalescing for synchronous brain calls.
+"""In-process coalescing for synchronous reasoner calls.
 
 ``SyncCoalescer`` is a small drop-in ``LlmCaller`` wrapper for the synchronous
 QoS rungs only. It batches calls that arrive in the same event-loop tick, or
@@ -17,8 +17,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from ..dotctx import Brain
-from ..qos import BrainDispatch, QoSTier
+from ..dotctx import Reasoner
+from ..qos import ReasonerDispatch, QoSTier
 from ..transcript import Transcript
 from .effects import LlmCaller, RunPrincipal
 
@@ -28,16 +28,16 @@ _Sleep = Callable[[float], Awaitable[None]]
 
 @dataclass
 class _Pending:
-    brain: Brain
+    reasoner: Reasoner
     value: Any
     principal: RunPrincipal | None
     transcript: Transcript | None
-    dispatch: BrainDispatch
+    dispatch: ReasonerDispatch
     future: asyncio.Future[Any]
 
 
 class SyncCoalescer:
-    """Collect concurrent sync brain calls and dispatch them together.
+    """Collect concurrent sync reasoner calls and dispatch them together.
 
     The default ``window_s=0`` still schedules a flush task and awaits
     ``sleep(0)``, so calls queued in the same event-loop turn are gathered into
@@ -71,23 +71,23 @@ class SyncCoalescer:
 
     async def call(
         self,
-        brain: Brain,
+        reasoner: Reasoner,
         value: Any,
         principal: RunPrincipal | None = None,
         transcript: Transcript | None = None,
-        dispatch: BrainDispatch | None = None,
+        dispatch: ReasonerDispatch | None = None,
     ) -> Any:
         """Call the wrapped sync-tier ``LlmCaller`` through the coalescer."""
 
         if dispatch is None:
-            dispatch = BrainDispatch()
+            dispatch = ReasonerDispatch()
 
         if dispatch.qos == QoSTier.BATCH:
-            return await self._caller(brain, value, principal, transcript, dispatch)
+            return await self._caller(reasoner, value, principal, transcript, dispatch)
 
         loop = asyncio.get_running_loop()
         future: asyncio.Future[Any] = loop.create_future()
-        item = _Pending(brain, value, principal, transcript, dispatch, future)
+        item = _Pending(reasoner, value, principal, transcript, dispatch, future)
 
         async with self._lock:
             self._pending.append(item)
@@ -173,7 +173,7 @@ class SyncCoalescer:
             results = await asyncio.gather(
                 *(
                     self._caller(
-                        item.brain,
+                        item.reasoner,
                         item.value,
                         item.principal,
                         item.transcript,

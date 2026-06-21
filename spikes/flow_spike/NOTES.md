@@ -28,7 +28,7 @@
   no-assignment `return write_summary_surfaces(merged | liner)` shape, the spike
   emits generic temporary labels `return_arg` and `return_value`.
 - Current IR primitive calls only return the primitive output. To keep the env
-  around a tool or brain call, the spike emits an administrative
+  around a tool or reasoner call, the spike emits an administrative
   `par(ident(), seq(pluck_*, primitive))` inside an otherwise sequential layer,
   followed by an `assign_*` pure. This is not inferred user parallelism; it is
   the env-preservation shim needed until static args / first-class std pures

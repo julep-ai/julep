@@ -1,4 +1,4 @@
-"""The resilient LlmCaller: deterministic fallback walking around complete_brain.
+"""The resilient LlmCaller: deterministic fallback walking around complete_reasoner.
 
 No network, no any-llm: a scripted ``acompletion`` raises or replies on cue, a
 recording ``sleep`` replaces real backoff, and a fake clock drives the breaker.
@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Brain
+from composable_agents.dotctx import Reasoner
 from composable_agents.errors import ResilienceExhausted
 from composable_agents.execution.llm import make_resilient_llm_caller
 from composable_agents.resilience import AttemptRecord, CircuitBreaker, ResiliencePolicy
@@ -74,8 +74,8 @@ def _caller(script: Script, policy: ResiliencePolicy, **kwargs: Any):
 _CHAIN = {"openai:gpt-a": ("anthropic:claude-b",)}
 
 
-def _brain(**kwargs: Any) -> Brain:
-    return Brain(name="t", model="openai:gpt-a", system="sys", **kwargs)
+def _reasoner(**kwargs: Any) -> Reasoner:
+    return Reasoner(name="t", model="openai:gpt-a", system="sys", **kwargs)
 
 
 # --------------------------------------------------------------------------- #
@@ -85,7 +85,7 @@ def test_primary_success_walks_nothing() -> None:
     script = Script([_reply("fine")])
     caller, attempts, sleeps = _caller(script, ResiliencePolicy(fallbacks=_CHAIN))
 
-    assert run(caller(_brain(), "hi")) == "fine"
+    assert run(caller(_reasoner(), "hi")) == "fine"
     assert [a.outcome for a in attempts] == ["ok"]
     assert attempts[0].model == "openai:gpt-a"
     assert sleeps == []
@@ -101,7 +101,7 @@ def test_transient_retries_then_falls_back() -> None:
     policy = ResiliencePolicy(fallbacks=_CHAIN, transient_attempts=2, initial_backoff_s=0.25)
     caller, attempts, sleeps = _caller(script, policy)
 
-    assert run(caller(_brain(), "hi")) == "rescued"
+    assert run(caller(_reasoner(), "hi")) == "rescued"
     assert [(a.model, a.outcome) for a in attempts] == [
         ("openai:gpt-a", "transient"),
         ("openai:gpt-a", "transient"),
@@ -115,7 +115,7 @@ def test_timeout_advances_after_single_attempt() -> None:
     policy = ResiliencePolicy(fallbacks=_CHAIN, timeout_attempts=1)
     caller, attempts, sleeps = _caller(script, policy)
 
-    assert run(caller(_brain(), "hi")) == "rescued"
+    assert run(caller(_reasoner(), "hi")) == "rescued"
     assert [a.outcome for a in attempts] == ["timeout", "ok"]
     assert sleeps == []
 
@@ -125,7 +125,7 @@ def test_config_error_fails_fast_never_falls_back() -> None:
     caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN))
 
     with pytest.raises(HttpError, match="invalid api key"):
-        run(caller(_brain(), "hi"))
+        run(caller(_reasoner(), "hi"))
     assert [a.outcome for a in attempts] == ["config"]
     assert len(script.calls) == 1  # the fallback model was never consulted
 
@@ -136,7 +136,7 @@ def test_exhausted_chain_raises_with_full_attempt_log() -> None:
     caller, attempts, _ = _caller(script, policy)
 
     with pytest.raises(ResilienceExhausted) as excinfo:
-        run(caller(_brain(), "hi"))
+        run(caller(_reasoner(), "hi"))
     assert [a.model for a in excinfo.value.attempts] == ["openai:gpt-a", "anthropic:claude-b"]
     assert isinstance(excinfo.value.__cause__, HttpError)
     assert attempts == excinfo.value.attempts
@@ -150,7 +150,7 @@ def test_open_circuit_skips_provider_deterministically() -> None:
     policy = ResiliencePolicy(fallbacks=_CHAIN, transient_attempts=1)
     caller, attempts, _ = _caller(script, policy, breaker=breaker)
 
-    assert run(caller(_brain(), "hi")) == "rescued"
+    assert run(caller(_reasoner(), "hi")) == "rescued"
     assert [(a.provider, a.outcome) for a in attempts] == [
         ("openai", "skipped_open_circuit"),
         ("anthropic", "ok"),
@@ -167,7 +167,7 @@ def test_circuit_opened_mid_candidate_stops_same_model_retries() -> None:
     policy = ResiliencePolicy(fallbacks=_CHAIN, transient_attempts=3)
     caller, attempts, sleeps = _caller(script, policy, breaker=breaker)
 
-    assert run(caller(_brain(), "hi")) == "rescued"
+    assert run(caller(_reasoner(), "hi")) == "rescued"
     assert [(a.model, a.outcome) for a in attempts] == [
         ("openai:gpt-a", "transient"),
         ("anthropic:claude-b", "ok"),
@@ -182,13 +182,13 @@ def test_failures_charge_the_breaker() -> None:
     policy = ResiliencePolicy(fallbacks=_CHAIN, transient_attempts=2)
     caller, _, _ = _caller(script, policy, breaker=breaker)
 
-    assert run(caller(_brain(), "hi")) == "rescued"
+    assert run(caller(_reasoner(), "hi")) == "rescued"
     assert breaker.state("openai") == "open"      # two transient failures
     assert breaker.state("anthropic") == "closed"
 
 
 def test_auth_error_chained_under_transient_still_fails_fast() -> None:
-    # complete_brain reissues a failed native structured call with the schema
+    # complete_reasoner reissues a failed native structured call with the schema
     # prompt-injected; the reissue's (transient) failure implicitly chains the
     # original auth error as __context__. The bad key must still win.
     schema = {"type": "object"}
@@ -196,7 +196,7 @@ def test_auth_error_chained_under_transient_still_fails_fast() -> None:
     caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN))
 
     with pytest.raises(HttpError, match="overloaded"):
-        run(caller(_brain(reply_schema=schema), "hi"))
+        run(caller(_reasoner(reply_schema=schema), "hi"))
     assert [a.outcome for a in attempts] == ["config"]
     assert len(script.calls) == 2  # native + injected; no fallback model consulted
 
@@ -210,7 +210,7 @@ def test_custom_classifier_overrides_default() -> None:
         script, policy, classifier=lambda exc: ErrorClass.TIMEOUT
     )
 
-    assert run(caller(_brain(), "hi")) == "rescued"
+    assert run(caller(_reasoner(), "hi")) == "rescued"
     assert [a.outcome for a in attempts] == ["timeout", "ok"]
     assert sleeps == []
 
@@ -224,6 +224,6 @@ def test_model_behavior_advances_without_charging_breaker() -> None:
     ])
     caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN), breaker=breaker)
 
-    assert run(caller(_brain(reply_schema=schema), "hi")) == {"queue": "billing"}
+    assert run(caller(_reasoner(reply_schema=schema), "hi")) == {"queue": "billing"}
     assert [a.outcome for a in attempts] == ["model_behavior", "ok"]
     assert breaker.state("openai") == "closed"      # answered: not an outage

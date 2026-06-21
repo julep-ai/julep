@@ -72,12 +72,12 @@ def test_interpreter_forwards_call_timeout_and_cache_to_temporal_activity(
         ann=Ann(timeout_s=5, cache=CacheHint(key="search:{q}", ttl_s=60)),
     )
     fr = freeze(flow, read_snapshot("search"))
-    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(hand_timeout_s=30))
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(tool_timeout_s=30))
 
     out = run(interpret(fr.flow, {"q": "x"}, env))
 
     assert out.value == {"ok": True}
-    assert captured["activity"] is harness.callHand
+    assert captured["activity"] is harness.callTool
     assert captured["timeout"] == timedelta(seconds=5)
     assert captured["arg"].cache == {"key": "search:{q}", "ttlS": 60}
 
@@ -119,17 +119,17 @@ def test_interpreter_forwards_think_timeout_to_temporal_activity(monkeypatch) ->
 
     monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     fr = freeze(think("summarizer", ann=Ann(timeout_s=13)), read_snapshot())
-    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(brain_timeout_s=120))
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(reasoner_timeout_s=120))
 
     out = run(interpret(fr.flow, {"doc": "x"}, env))
 
     assert out.value == {"summary": {"doc": "x"}}
-    assert captured["activity"] is harness.invokeBrain
-    assert captured["arg"].brain == "summarizer"
+    assert captured["activity"] is harness.invokeReasoner
+    assert captured["arg"].reasoner == "summarizer"
     assert captured["timeout"] == timedelta(seconds=13)
 
 
-def test_temporal_env_records_batch_qos_before_brain_dispatch(monkeypatch) -> None:
+def test_temporal_env_records_batch_qos_before_reasoner_dispatch(monkeypatch) -> None:
     calls: list[tuple[Any, Any]] = []
 
     async def fake_execute_activity(activity, arg, **kwargs):
@@ -140,23 +140,23 @@ def test_temporal_env_records_batch_qos_before_brain_dispatch(monkeypatch) -> No
 
     monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     fr = freeze(think("summarizer", ann=Ann(batchable=True)), read_snapshot())
-    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(brain_timeout_s=120))
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(reasoner_timeout_s=120))
 
     out = run(interpret(fr.flow, {"doc": "x"}, env))
 
     resolve_calls = [(activity, arg) for activity, arg in calls if activity is harness.resolveQoS]
-    invoke_calls = [(activity, arg) for activity, arg in calls if activity is harness.invokeBrain]
+    invoke_calls = [(activity, arg) for activity, arg in calls if activity is harness.invokeReasoner]
 
     assert out.value == {"summary": {"doc": "x"}}
-    assert [activity for activity, _ in calls] == [harness.resolveQoS, harness.invokeBrain]
+    assert [activity for activity, _ in calls] == [harness.resolveQoS, harness.invokeReasoner]
     assert len(resolve_calls) == 1
     assert resolve_calls[0][1].node_batchable is True
-    assert resolve_calls[0][1].brain == "summarizer"
+    assert resolve_calls[0][1].reasoner == "summarizer"
     assert len(invoke_calls) == 1
     assert invoke_calls[0][1].qos == "BATCH"
 
 
-def test_temporal_env_records_non_batchable_qos_before_brain_dispatch(monkeypatch) -> None:
+def test_temporal_env_records_non_batchable_qos_before_reasoner_dispatch(monkeypatch) -> None:
     calls: list[tuple[Any, Any]] = []
 
     async def fake_execute_activity(activity, arg, **kwargs):
@@ -167,17 +167,17 @@ def test_temporal_env_records_non_batchable_qos_before_brain_dispatch(monkeypatc
 
     monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     fr = freeze(think("summarizer", ann=Ann()), read_snapshot())
-    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(brain_timeout_s=120))
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(reasoner_timeout_s=120))
 
     out = run(interpret(fr.flow, {"doc": "x"}, env))
 
     resolve_calls = [(activity, arg) for activity, arg in calls if activity is harness.resolveQoS]
-    invoke_calls = [(activity, arg) for activity, arg in calls if activity is harness.invokeBrain]
+    invoke_calls = [(activity, arg) for activity, arg in calls if activity is harness.invokeReasoner]
 
     assert out.value == {"summary": {"doc": "x"}}
-    assert [activity for activity, _ in calls] == [harness.resolveQoS, harness.invokeBrain]
+    assert [activity for activity, _ in calls] == [harness.resolveQoS, harness.invokeReasoner]
     assert len(resolve_calls) == 1
     assert resolve_calls[0][1].node_batchable is False
-    assert resolve_calls[0][1].brain == "summarizer"
+    assert resolve_calls[0][1].reasoner == "summarizer"
     assert len(invoke_calls) == 1
     assert invoke_calls[0][1].qos == "STANDARD"

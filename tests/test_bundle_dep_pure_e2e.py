@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import shutil
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -367,6 +368,10 @@ def test_wasm_dep_pure_without_env_hash_fails_closed_at_resolution(
     assert "envHash" in message
 
 
+@pytest.mark.skipif(
+    shutil.which("componentize-py") is None,
+    reason="real env-component build requires the componentize-py toolchain on PATH",
+)
 def test_real_regex_wheel_env_component_imports_and_runs(tmp_path: Path) -> None:
     dep_list = ("regex==2024.11.6",)
     component_path = env_builder.build_env_component(dep_list, ">=3.11", out_dir=tmp_path)

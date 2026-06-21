@@ -418,7 +418,7 @@ def test_cma_agent_env_runs_app_node_end_to_end() -> None:
         inner,
         client=client,
         environment={"kind": "fake"},
-        hands={"search": lambda value: {"searched": value}},
+        tools={"search": lambda value: {"searched": value}},
         cfg=AgentConfig(),
         granted={"search"},
     )
@@ -436,7 +436,7 @@ def test_cma_agent_env_runs_app_node_end_to_end() -> None:
     assert client.session_cid is not None
 
 
-def test_cma_agent_env_unconstrained_projects_all_hands_and_grants_project_subset() -> None:
+def test_cma_agent_env_unconstrained_projects_all_tools_and_grants_project_subset() -> None:
     inner = InMemoryEnv({}, ProjectionEmitter(InMemoryProjection()))
 
     unconstrained_session = FakeCMASession([CMAEvent("terminal", output="done")])
@@ -444,7 +444,7 @@ def test_cma_agent_env_unconstrained_projects_all_hands_and_grants_project_subse
     unconstrained_env = CMAAgentEnv(
         inner,
         client=unconstrained_client,
-        hands={"a": lambda value: value, "b": lambda value: value},
+        tools={"a": lambda value: value, "b": lambda value: value},
         cfg=AgentConfig(),
         granted=None,
         custom_tools=None,
@@ -461,7 +461,7 @@ def test_cma_agent_env_unconstrained_projects_all_hands_and_grants_project_subse
     constrained_env = CMAAgentEnv(
         inner,
         client=constrained_client,
-        hands={"a": lambda value: value, "b": lambda value: value},
+        tools={"a": lambda value: value, "b": lambda value: value},
         cfg=AgentConfig(),
         granted={"a"},
         custom_tools=None,

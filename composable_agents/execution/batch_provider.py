@@ -16,7 +16,7 @@ class BatchProvider(ABC):
     def build_request(
         self,
         custom_id: str,
-        brain: Any,
+        reasoner: Any,
         value: Any,
         *,
         transcript: Any = None,
@@ -43,15 +43,15 @@ class BatchProvider(ABC):
         Concrete providers yield ``(custom_id, raw)`` pairs.
         """
 
-    def parse(self, raw: Any, brain: Any) -> Any:
-        """Parse one any-llm-shaped completion into complete_brain's reply shape.
+    def parse(self, raw: Any, reasoner: Any) -> Any:
+        """Parse one any-llm-shaped completion into complete_reasoner's reply shape.
 
         The default assumes ``raw`` looks like an any-llm completion with
         ``choices[0].message`` and shared ``content`` / ``parsed`` semantics.
         """
         from .llm import _parse_reply
 
-        return _parse_reply(raw, expect_json=brain.reply_schema is not None)
+        return _parse_reply(raw, expect_json=reasoner.reply_schema is not None)
 
 
 _PROVIDERS: dict[str, type[BatchProvider]] = {}

@@ -2,7 +2,7 @@
 
 `@flow` is the primary authoring surface for composable-agents. The decorator
 runs the function once at definition time with `Handle` values. Registered
-tools, registered pures, brains, and control helpers append graph steps instead
+tools, registered pures, reasoners, and control helpers append graph steps instead
 of doing runtime work; lowering goes through `composable_agents.dag` and the
 compiler, then freezes to the same wire-format IR as the combinator kernel.
 
@@ -24,7 +24,7 @@ compiler, then freezes to the same wire-format IR as the combinator kernel.
 5. **Reschedule.** `reschedule(state, after_s=..., mark=...)` owns a terminal
    continuation: optional dirty-mark tool, reserved `__sleep__`, then
    `std.continue_with`.
-6. **Per-step policy.** Tool, pure, and brain steps can carry retry and timeout
+6. **Per-step policy.** Tool, pure, and reasoner steps can carry retry and timeout
    options. The frozen graph owns those options, so interpreter and durable
    backends see the same policy.
 
@@ -35,8 +35,8 @@ with `@tool` or `@pure`. Do not register wrappers, closures, or lambdas: pure
 pins are source hashes of the raw function.
 
 Application is define-time only. Calling a registered object on a `Handle`
-builds graph structure; ordinary runtime work belongs in tool hands, pure
-functions, or brain handlers.
+builds graph structure; ordinary runtime work belongs in tool tools, pure
+functions, or reasoner handlers.
 
 Captured constants must be canonical JSON. Runtime handle captures must come
 from the enclosing graph. Secret-shaped config is banned from captures and
@@ -44,7 +44,7 @@ static args; credentials belong in environment-backed tools or run principals,
 never in the frozen flow artifact.
 
 JSON constant kwargs on registered pures become `arr` static args and run as
-`fn(value, **kwargs)`; JSON constant kwargs on tools and brains lower to
+`fn(value, **kwargs)`; JSON constant kwargs on tools and reasoners lower to
 `std.bind` const-merges into the flowing record before the call.
 
 Branch arms receive the branch subject by name. The remaining item parameter

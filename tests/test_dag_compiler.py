@@ -313,7 +313,7 @@ def test_nested_binary_merge_chain_compiles_as_declared_and_runs() -> None:
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"produce_a": produce_a, "produce_b": produce_b, "produce_c": produce_c},
+        tools={"produce_a": produce_a, "produce_b": produce_b, "produce_c": produce_c},
     )
 
     result = run(interpret(compiled, {"seed": "s1"}, env))
@@ -388,8 +388,8 @@ def test_compiled_diamond_runs_end_to_end() -> None:
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_episode": read_episode, "write_summary": write_summary},
-        brains={"summarizer": summarizer, "embedder": embedder},
+        tools={"read_episode": read_episode, "write_summary": write_summary},
+        reasoners={"summarizer": summarizer, "embedder": embedder},
     )
 
     result = run(interpret(compile(graph), {"episode_id": "ep-1"}, env))
@@ -583,7 +583,7 @@ def test_singleton_first_layer_preserves_raw_input_for_later_declared_consumer()
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_episode": read_episode, "write_status": write_status},
+        tools={"read_episode": read_episode, "write_status": write_status},
     )
 
     result = run(interpret(compiled, {"episode_id": "ep-1"}, env))
@@ -621,7 +621,7 @@ def test_singleton_first_layer_preserves_raw_input_for_later_implicit_consumer()
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={
+        tools={
             "read_episode": read_episode,
             "write_status": write_status,
             "verify_read": verify_read,
@@ -672,7 +672,7 @@ def test_raw_input_survives_write_fence_and_fence_free_mid_graph_combine() -> No
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_episode": read_episode, "write_status": write_status},
+        tools={"read_episode": read_episode, "write_status": write_status},
     )
 
     assert run(interpret(compile(fenced), {"episode_id": "ep-1"}, env)).value == {
@@ -718,7 +718,7 @@ def test_liveness_keeps_raw_input_for_implicit_consumer_after_write() -> None:
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={
+        tools={
             "read_a": read_a,
             "read_b": read_b,
             "write_status": write_status,
@@ -771,7 +771,7 @@ def test_cond_arm_with_no_declared_inputs_receives_raw_input(
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_episode": read_episode},
+        tools={"read_episode": read_episode},
     )
 
     assert run(interpret(compile(graph), {"episode_id": "ep-1"}, env)).value == expected
@@ -868,7 +868,7 @@ def test_each_body_no_input_step_does_not_become_handle_capture() -> None:
             InMemoryEnv(
                 {},
                 ProjectionEmitter(InMemoryProjection()),
-                hands={"read_items": read_items},
+                tools={"read_items": read_items},
             ),
         )
     )
@@ -900,7 +900,7 @@ def test_raw_input_is_pruned_after_last_consumer() -> None:
     assert {"fields": {"__input__": {"field": "__input__"}, "processed": {"field": "processed"}}} not in pack_args
 
 
-def test_cond_branch_compiles_to_hand_written_alt_with_pruned_arm_envs() -> None:
+def test_cond_branch_compiles_to_manual_alt_with_pruned_arm_envs() -> None:
     from composable_agents.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="write_result")
@@ -1118,8 +1118,8 @@ def test_return_any_handle_projects_that_value_not_whole_env() -> None:
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_episode": read_episode, "write_summary": write_summary},
-        brains={"summarizer": summarizer},
+        tools={"read_episode": read_episode, "write_summary": write_summary},
+        reasoners={"summarizer": summarizer},
     )
 
     result = run(interpret(compile(graph), {"episode_id": "ep-1"}, env))
@@ -1167,7 +1167,7 @@ def test_compiled_cond_runs_every_arm(found: bool, expected: dict[str, Any]) -> 
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_episode": read_episode, "write_episode": write_episode},
+        tools={"read_episode": read_episode, "write_episode": write_episode},
     )
 
     result = run(interpret(compile(graph), {"episode_id": "ep-1"}, env))
@@ -1212,7 +1212,7 @@ def test_compiled_switch_runs_every_case_and_default(status: str, expected: str)
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_status": read_status},
+        tools={"read_status": read_status},
     )
 
     result = run(interpret(compile(graph), {"episode_id": "ep-1"}, env))
@@ -1356,7 +1356,7 @@ def test_each_that_captures_its_items_source_uses_env_path() -> None:
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={"read_clusters": read_clusters},
+        tools={"read_clusters": read_clusters},
     )
 
     result = run(interpret(compiled, {"first": "c1"}, env))
@@ -1508,7 +1508,7 @@ def test_cluster_labeling_skeleton_each_runs_success_and_stale(
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
-        hands={
+        tools={
             "read_store_context": read_store_context,
             "read_clusters": read_clusters,
             "write_cluster_label": write_cluster_label,

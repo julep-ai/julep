@@ -107,7 +107,7 @@ async def _mcp_call(
     return {"ok": True, "value": value}
 
 
-async def _llm(brain: Any, value: Any, principal: Any, transcript: Any) -> Any:
+async def _llm(reasoner: Any, value: Any, principal: Any, transcript: Any) -> Any:
     return {"ok": True, "value": value}
 
 
@@ -144,7 +144,7 @@ def _install_temporal_activity_stub(monkeypatch: pytest.MonkeyPatch, captured: l
             return await flush_impl(payload)
         if name in {"startTrajectory", "finishTrajectory"}:
             return None
-        if name in {"callHand", "invokeBrain"}:
+        if name in {"callTool", "invokeReasoner"}:
             return {"ok": True}
         return None
 

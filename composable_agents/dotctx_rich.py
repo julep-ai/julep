@@ -3,15 +3,15 @@
 A rich ``.ctx`` package grows the minimal layout with Jinja2 templates
 (``prompt.j2`` or a ``messages/`` bundle of one system + one user message),
 ``schema.pyi`` (an ``Output`` stub compiled to JSON Schema ->
-``Brain.reply_schema``) and ``tools.pyi`` (tool stubs -> granted toolref keys +
+``Reasoner.reply_schema``) and ``tools.pyi`` (tool stubs -> granted toolref keys +
 expected input schemas, verified at freeze as ``TOOL_SCHEMA_DRIFT``).
 
-Templates are never stored on the :class:`~composable_agents.dotctx.Brain` and
+Templates are never stored on the :class:`~composable_agents.dotctx.Reasoner` and
 never enter the deploy artifact. Loading compiles each template and registers
 one renderer per template — ``dotctx/<package>/<role>@v<content-hash-prefix>``
 — hashed by template content like any registered pure, so §6.4 drift detection
-covers prompt edits. The Brain carries only the renderer *names*
-(``system_render`` / ``user_render``); ``Brain.system`` stays ``""``.
+covers prompt edits. The Reasoner carries only the renderer *names*
+(``system_render`` / ``user_render``); ``Reasoner.system`` stays ``""``.
 
 ``eval.py`` / ``eval.yaml`` are a consumer-side contract and are ignored here.
 Requires the ``composable-agents[dotctx]`` extra; importing this module without
@@ -37,7 +37,7 @@ except ImportError as e:  # pragma: no cover - exercised via sys.modules patchin
     ) from e
 
 from .capabilities import ToolGrant
-from .dotctx import Brain, _sub_from
+from .dotctx import Reasoner, _sub_from
 from .kinds import ContextScope
 from .registry import DEFAULT_REGISTRY, Registry, ToolSchemaExpectation
 
@@ -74,7 +74,7 @@ class ToolStub:
 
 @dataclass(frozen=True)
 class RichDotctx:
-    """A loaded rich package: the Brain plus what the caller merges/verifies.
+    """A loaded rich package: the Reasoner plus what the caller merges/verifies.
 
     ``tool_grants`` is the manifest fragment for the deployment's
     CapabilityManifest — the package declares what it needs; the deployment
@@ -83,7 +83,7 @@ class RichDotctx:
     ``TOOL_SCHEMA_DRIFT`` check.
     """
 
-    brain: Brain
+    reasoner: Reasoner
     path: str
     package: str
     renderer_names: Mapping[str, str]  # role -> registered renderer name
@@ -612,7 +612,7 @@ def _default_name(path: str) -> str:
 
 
 def load_rich_dotctx(path: str, *, registry: Registry = DEFAULT_REGISTRY) -> RichDotctx:
-    """Load a rich ``.ctx`` package: register renderers, brain, expectations."""
+    """Load a rich ``.ctx`` package: register renderers, reasoner, expectations."""
     settings = _read_settings(path)
     unknown = sorted(set(settings) - _ALLOWED_SETTINGS)
     if unknown:
@@ -659,7 +659,7 @@ def load_rich_dotctx(path: str, *, registry: Registry = DEFAULT_REGISTRY) -> Ric
     tools = tuple(dict.fromkeys([*(str(t) for t in settings_tools), *tool_keys]))
 
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
-    brain = Brain(
+    reasoner = Reasoner(
         name=package,
         model=settings.get("model", "claude-sonnet-4"),  # @effort suffixes pass through untouched
         system="",
@@ -674,10 +674,10 @@ def load_rich_dotctx(path: str, *, registry: Registry = DEFAULT_REGISTRY) -> Ric
         user_render=user_render,
         max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
     )
-    brain = registry.register_brain(brain)
+    reasoner = registry.register_reasoner(reasoner)
 
     return RichDotctx(
-        brain=brain,
+        reasoner=reasoner,
         path=path,
         package=package,
         renderer_names=renderer_names,

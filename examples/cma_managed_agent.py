@@ -1,7 +1,7 @@
 """Run a facade ``Agent``'s loop on Anthropic's hosted Claude Managed Agents.
 
 This is the one example that talks to a live service. Unlike the keyless cookbook
-examples (which drive the loop with an in-process scripted brain), here the
+examples (which drive the loop with an in-process scripted reasoner), here the
 *hosted CMA model* drives the think -> call -> observe loop while the framework
 stays the capability and budget authority: it projects the granted ``@tool``
 surface as CMA custom tools, dispatches each requested call locally, and charges

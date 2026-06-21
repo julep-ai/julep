@@ -5,7 +5,7 @@
 > bridge package in mem-mcp keeping two formats alive, and a shared third
 > package extracted up front). Builds directly on
 > `docs/plans/2026-06-07-prompt-renderers.md` (registered renderers,
-> `Brain.system_render`, the projected `Context`) and
+> `Reasoner.system_render`, the projected `Context`) and
 > `docs/design/prompt-fragments.md`. The consumer driving this is
 > mem-mcp's 25 production `.ctx` prompt packages
 > (`apps/memory-api/prompts/**/*.ctx`).
@@ -14,7 +14,7 @@
 
 This repo's dotctx adapter (`composable_agents/dotctx.py`) reads a minimal
 layout — `settings.yaml`, inline/`system_file` prompt, optional
-`schema_file` — into a `Brain`, and its `max_rounds` lowering to IR shape is
+`schema_file` — into a `Reasoner`, and its `max_rounds` lowering to IR shape is
 the part worth keeping exactly as is. mem-mcp's production dotctx is the same
 idea grown rich: Jinja2 templates, multi-message bundles
 (`messages/00_system.yml`, `01_user.yml`), input/output schemas and tool
@@ -58,14 +58,14 @@ plain-string fallback).
 
 ### Templates become registered renderers
 
-A `prompt.j2` or `messages/*.yml` body is **never** stored on the `Brain` and
+A `prompt.j2` or `messages/*.yml` body is **never** stored on the `Reasoner` and
 never enters the artifact. Loading compiles each template and registers **one
 renderer per template**, named by role:
 `dotctx/<package-name>/system@v<content-hash-prefix>` for the system body and
 `dotctx/<package-name>/user@v<content-hash-prefix>` for a bundle's user body —
 each hashed like any registered pure so §6.4 drift detection covers prompt
-edits to either. The `Brain` gets `system_render` and (for bundles)
-`user_render` set to the matching names; `Brain.system` stays `""`.
+edits to either. The `Reasoner` gets `system_render` and (for bundles)
+`user_render` set to the matching names; `Reasoner.system` stays `""`.
 
 Renderer input is the projected `Context` from the prompt-renderers plan. The
 Jinja2 environment is strict (`StrictUndefined`), with no filesystem loader at
@@ -78,11 +78,11 @@ render with the package name and variable in the error.
 The current invoke path is system + value-as-user
 (`execution/llm.py:137-169`). Bundles need the user turn templated too:
 
-- `Brain` gains `user_render: Optional[str]` exactly symmetric to
+- `Reasoner` gains `user_render: Optional[str]` exactly symmetric to
   `system_render` (string name, conditional-key inclusion in the codec so
   existing hashes are stable).
-- `rendered_brain_for(brain, value)` extends to produce the rendered user
-  string; `complete_brain` uses it as the user turn when present, else the
+- `rendered_reasoner_for(reasoner, value)` extends to produce the rendered user
+  string; `complete_reasoner` uses it as the user turn when present, else the
   current value-as-JSON behavior.
 - Bundles with roles beyond one system + one user (e.g. few-shot assistant
   turns) are **out of v1**; the loader rejects them loudly with the file
@@ -92,20 +92,20 @@ The current invoke path is system + value-as-user
 ### `schema.pyi` → `reply_schema`
 
 The loader compiles the output model in `schema.pyi` to plain JSON Schema at
-load time and sets `Brain.reply_schema`. mem-mcp's dotctx already has this
+load time and sets `Reasoner.reply_schema`. mem-mcp's dotctx already has this
 compiler (`packages/python/dotctx/src/dotctx/tools_parser.py` and the schema
 parser beside it); the port brings the *compiler* in under the extra, not
 pydantic — the artifact carries JSON Schema, the runtime validates JSON, and
-`reply_schema` flows through `complete_brain`'s existing structured-output
+`reply_schema` flows through `complete_reasoner`'s existing structured-output
 path (native `response_format` where the provider has it, prompt-injected
 schema where it doesn't).
 
 ### `tools.pyi` → grants + freeze-time verification
 
-`tools.pyi` stubs name the tools the brain may call, with their schemas. The
+`tools.pyi` stubs name the tools the reasoner may call, with their schemas. The
 loader does two things:
 
-1. Sets `Brain.tools` to the toolref keys (`server/tool` for MCP tools), and
+1. Sets `Reasoner.tools` to the toolref keys (`server/tool` for MCP tools), and
    emits a **manifest fragment** (a `ToolGrant` list) the caller merges into
    the deployment's `CapabilityManifest` — packages declare what they need;
    the deployment still decides what is granted.
@@ -123,7 +123,7 @@ prompt-side contract assertion.
 ### Settings normalization
 
 Accepted keys grow to cover mem-mcp's settings: `max_tokens` (stored on
-`Brain`, forwarded by the LLM caller), `model` with the `@low/@medium/@high`
+`Reasoner`, forwarded by the LLM caller), `model` with the `@low/@medium/@high`
 reasoning-effort suffix **passed through untouched** — effort is an
 `LlmCaller` convention (mem-mcp's caller maps it to provider payloads), not a
 framework concern. Unknown keys are a load-time error listing the offending
@@ -132,7 +132,7 @@ keys, not a warning.
 ## Migration (mem-mcp's side, summarized here for shape)
 
 Of the 25 packages: the single-`think` majority (summaries, labels, rollups,
-rewrites) load as bounded brains with no edits beyond settings-key renames;
+rewrites) load as bounded reasoners with no edits beyond settings-key renames;
 the tool-using packages (`record/execute`, brief pipeline) additionally rely
 on `tools.pyi` grants + freeze verification; provider-transform logic in
 mem-mcp's dotctx package is **deleted**, superseded by the `LlmCaller`.
@@ -152,12 +152,12 @@ Details live in mem-mcp `specs/042-composable-agents-temporal/`.
 
 | File | Change |
 |---|---|
-| `composable_agents/dotctx.py` | `user_render`, `max_tokens` on `Brain`; rich-layout detection delegating to `dotctx_rich` |
+| `composable_agents/dotctx.py` | `user_render`, `max_tokens` on `Reasoner`; rich-layout detection delegating to `dotctx_rich` |
 | `composable_agents/dotctx_rich.py` | create: Jinja2 compile + renderer registration, message-bundle parse, `.pyi` schema/tool compilers, manifest-fragment emission |
-| `composable_agents/prompt.py` | `rendered_brain_for` covers `user_render` |
+| `composable_agents/prompt.py` | `rendered_reasoner_for` covers `user_render` |
 | `composable_agents/execution/llm.py` | user turn from rendered user string; forward `max_tokens` |
 | `composable_agents/freeze.py` | `TOOL_SCHEMA_DRIFT` check against recorded expected schemas |
-| `composable_agents/ir.py` / codec | conditional-key inclusion for new Brain fields (hash-stable) |
+| `composable_agents/ir.py` / codec | conditional-key inclusion for new Reasoner fields (hash-stable) |
 | `pyproject.toml` | `dotctx` extra |
 | `docs/SPEC.md` | rich layout, renderer naming/hashing, drift diagnostic |
 | tests | minimal-layout regression; rich load of a fixture `.ctx`; renderer drift; bundle rejection cases; schema-drift diagnostic; golden corpus unmoved |

@@ -11,7 +11,7 @@ target. This module runs its ``dry_run`` twice over the same frozen artifact:
   source text — exactly how a signed CAS bundle materialises them on a worker.
 
 Both runs drive the identical ``deployment.flow`` IR through ``interpret``; only
-the executor tier of the leaf pures differs. The flow is brain-free and tool-free,
+the executor tier of the leaf pures differs. The flow is reasoner-free and tool-free,
 so the only non-determinism the test could expose is a wasm-vs-native divergence
 in a pure's output — which the value assertion forbids. This is the spec parity
 gate: bundle-sourced (wasm) MUST equal baked (native), byte-for-byte in value.

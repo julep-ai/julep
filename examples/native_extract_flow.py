@@ -1,6 +1,6 @@
 """Native dependency extraction batch — a deterministic code-as-data demo flow.
 
-No brains, no tools: the application is custom pures plus the ``each``
+No reasoners, no tools: the application is custom pures plus the ``each``
 combinator, so the published CAS bundle (``flowJson`` + pure source) *is* the
 entire app. The extraction pure declares an off-list third-party dependency
 (``numpy``) with a PEP 723 ``# /// script`` block, so the bundle records the pure

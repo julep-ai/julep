@@ -1,6 +1,6 @@
 """Drive the local agent loop against *any* provider via any-llm.
 
-Unlike the keyless cookbook examples (which script the brain in-process) and the
+Unlike the keyless cookbook examples (which script the reasoner in-process) and the
 Anthropic-only CMA example (which runs the loop on Anthropic's hosted service),
 here a real provider model drives the local think -> call -> observe loop through
 the any-llm-backed ``LlmCaller`` (``composable_agents.execution.llm``), while the
@@ -34,7 +34,7 @@ import re
 from typing import Any
 
 from composable_agents import Agent, tool
-from composable_agents.execution.llm import make_local_brain
+from composable_agents.execution.llm import make_local_reasoner
 
 QUESTION = "What is the weather in Tokyo right now, in Fahrenheit?"
 
@@ -53,7 +53,7 @@ MODELS: list[tuple[str, str]] = [
 def _arg(payload: Any, key: str) -> Any:
     """Recover a single tool argument from the model's raw ``input``.
 
-    The local loop hands a tool exactly the ``input`` value the model produced,
+    The local loop tools a tool exactly the ``input`` value the model produced,
     and providers differ in habit: some send the bare argument (``"Tokyo"``),
     others wrap it in a named object (``{"city": "Tokyo"}``). Accept either, and
     fall back to the sole value of a one-key object whose key we didn't predict.
@@ -109,7 +109,7 @@ def build(model: str) -> Agent:
             "  3. trace has to_fahrenheit -> 'input' is the Fahrenheit number; "
             "reply with {\"output\": \"...\"}."
         ),
-        llm=make_local_brain(),
+        llm=make_local_reasoner(),
         budget_cost=30.0,
     )
 

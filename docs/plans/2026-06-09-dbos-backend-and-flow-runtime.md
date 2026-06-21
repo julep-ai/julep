@@ -56,7 +56,7 @@
 
 ### Task 1: Extract the backend-neutral effects layer
 
-The DBOS backend must reuse the effect implementations (`callHand`, `invokeBrain`, `compilePlan`, `verifyPures`, `resolveSubflow`, `resolveRuntimeCapabilities`, `resolveAgentSpec`, `loadState`, `commitState`, `putBlob`) and `WorkerContext`/`configure` without importing `temporalio`. Also move `ExecutionPolicy` (pure dataclass) out of harness.py, and move `_toolref_json_from_key` to effects.py as `toolref_json_from_key`.
+The DBOS backend must reuse the effect implementations (`callTool`, `invokeReasoner`, `compilePlan`, `verifyPures`, `resolveSubflow`, `resolveRuntimeCapabilities`, `resolveAgentSpec`, `loadState`, `commitState`, `putBlob`) and `WorkerContext`/`configure` without importing `temporalio`. Also move `ExecutionPolicy` (pure dataclass) out of harness.py, and move `_toolref_json_from_key` to effects.py as `toolref_json_from_key`.
 
 **Files:**
 - Create: `composable_agents/execution/effects.py`
@@ -95,9 +95,9 @@ def test_effects_importable_without_temporalio():
     assert "ok" in out.stdout
 
 
-def test_call_hand_effect_routes_mcp():
+def test_run_call_effect_routes_mcp():
     from composable_agents.execution.effects import (
-        CallHandInput, WorkerContext, callHand, configure,
+        CallToolInput, WorkerContext, callTool, configure,
     )
 
     seen = {}
@@ -107,11 +107,11 @@ def test_call_hand_effect_routes_mcp():
         return {"hits": 3}
 
     configure(WorkerContext(mcp_call=fake_mcp))
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
         value={"q": "x"}, cid="cid-1",
     )
-    result = asyncio.run(callHand(inp))
+    result = asyncio.run(callTool(inp))
     assert result == {"hits": 3}
     assert seen == {"server": "kb", "tool": "search", "value": {"q": "x"}, "key": "cid-1"}
 
@@ -168,7 +168,7 @@ Move from `composable_agents/execution/activities.py` into `effects.py`, **verba
 
 ```python
 # composable_agents/execution/effects.py
-"""Backend-neutral effect implementations (the Hands + Brains boundary).
+"""Backend-neutral effect implementations (the Tools + Reasoners boundary).
 
 These are the bodies of the Temporal activities, factored out so any durable
 backend (Temporal, DBOS) can wrap them in its own retry/checkpoint unit.
@@ -186,12 +186,12 @@ from typing import Any, Awaitable, Callable, Optional
 from .. import agent_loop as al
 from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
-from ..dotctx import Brain
+from ..dotctx import Reasoner
 from ..errors import CapabilityDenied, PureDriftError
 from ..ir import Node, toolref_from_json, toolref_key
 from ..kinds import Effect, Idempotency
 from ..registry import DEFAULT_REGISTRY, Registry
-from ..prompt import rendered_brain_for
+from ..prompt import rendered_reasoner_for
 from ..staged import admit_plan
 from .blobstore import BlobStore
 from .session_store import SessionStore
@@ -199,7 +199,7 @@ from .session_store import SessionStore
 logger = logging.getLogger("composable_agents.execution.effects")
 ```
 
-2. In `callHand`, replace `activity.logger.debug("callHand %s -> %s", key, url)` with `logger.debug("callHand %s -> %s", key, url)`.
+2. In `callTool`, replace `activity.logger.debug("callTool %s -> %s", key, url)` with `logger.debug("callTool %s -> %s", key, url)`.
 
 3. Append the relocated key-to-ref helper (moved from `harness.py:175-186`, made public):
 
@@ -207,7 +207,7 @@ logger = logging.getLogger("composable_agents.execution.effects")
 def toolref_json_from_key(key: str) -> dict[str, Any]:
     """Reverse of :func:`~composable_agents.ir.toolref_key`.
 
-    ``"server/tool"`` is an MCP tool; a bare name is a native hand.
+    ``"server/tool"`` is an MCP tool; a bare name is a native tool.
     """
     if "/" in key:
         server, tool = key.split("/", 1)
@@ -236,10 +236,10 @@ from temporalio import activity
 
 # Re-exports: every public name that previously lived here.
 from .effects import (
-    CallHandInput as CallHandInput,
+    CallToolInput as CallToolInput,
     CommitStateInput as CommitStateInput,
     CompilePlanInput as CompilePlanInput,
-    InvokeBrainInput as InvokeBrainInput,
+    InvokeReasonerInput as InvokeReasonerInput,
     LlmCaller as LlmCaller,
     LoadStateInput as LoadStateInput,
     McpCaller as McpCaller,
@@ -265,14 +265,14 @@ async def putBlob(inp: PutBlobInput) -> str:
     return await effects.putBlob(inp)
 
 
-@activity.defn(name="callHand")
-async def callHand(inp: CallHandInput) -> Any:
-    return await effects.callHand(inp)
+@activity.defn(name="callTool")
+async def callTool(inp: CallToolInput) -> Any:
+    return await effects.callTool(inp)
 
 
-@activity.defn(name="invokeBrain")
-async def invokeBrain(inp: InvokeBrainInput) -> Any:
-    return await effects.invokeBrain(inp)
+@activity.defn(name="invokeReasoner")
+async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
+    return await effects.invokeReasoner(inp)
 
 
 @activity.defn(name="compilePlan")
@@ -409,7 +409,7 @@ Expected: FAIL — `ImportError: cannot import name 'SLEEP_TOOL'`
 Directly below `HUMAN_GATE_TOOL = "__human_gate__"` (line 28):
 
 ```python
-# Reserved native hand: the harness turns a call to this into a durable timer
+# Reserved native tool: the harness turns a call to this into a durable timer
 # (Temporal: workflow timer; DBOS: DBOS.sleep) rather than an HTTP request.
 # The duration in seconds rides on the node's Ann.timeout.
 SLEEP_TOOL = "__sleep__"
@@ -421,14 +421,14 @@ SLEEP_TOOL = "__sleep__"
 2. Below `_HUMAN_GATE_CONTRACT` (line 45):
 
 ```python
-# The reserved sleep hand is side-effect-free and replay-safe by construction.
+# The reserved sleep tool is side-effect-free and replay-safe by construction.
 _SLEEP_CONTRACT = ToolContract(effect=Effect.READ, idempotency=Idempotency.IDEMPOTENT)
 ```
 
 3. In `_resolve` (line 105), immediately after the human-gate special case (lines 112-120), add the parallel case:
 
 ```python
-    # Reserved sleep hand: synthetic, no snapshot lookup.
+    # Reserved sleep tool: synthetic, no snapshot lookup.
     if isinstance(ref, NativeTool) and ref.name == SLEEP_TOOL:
         return FrozenTool.create(
             ref=ref,
@@ -448,7 +448,7 @@ _SLEEP_CONTRACT = ToolContract(effect=Effect.READ, idempotency=Idempotency.IDEMP
 def delay(*, seconds: int) -> Node:
     """A leaf that durably pauses the flow, passing its input through unchanged.
 
-    Emits a ``call`` to the reserved hand ``__sleep__``; each harness turns it
+    Emits a ``call`` to the reserved tool ``__sleep__``; each harness turns it
     into its engine's durable timer (Temporal timer / ``DBOS.sleep``) instead of
     an HTTP call. The duration rides on the annotation's timeout.
     """
@@ -472,7 +472,7 @@ def delay(*, seconds: int) -> Node:
 3. In `_eval_prim` (line 226), after the human-gate special case (lines 232-234):
 
 ```python
-        # Reserved sleep hand becomes a durable timer, not an HTTP call.
+        # Reserved sleep tool becomes a durable timer, not an HTTP call.
         if step.tool.kind == "native" and getattr(step.tool, "name", None) == SLEEP_TOOL:
             seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
             await env.sleep(seconds, cid)
@@ -513,7 +513,7 @@ Expected: all PASS. The golden corpus must be untouched (no existing flow uses `
 git add composable_agents/ir.py composable_agents/freeze.py composable_agents/derived.py \
         composable_agents/execution/interpreter.py composable_agents/execution/harness.py \
         composable_agents/__init__.py tests/test_delay.py
-git commit -m "feat(core): delay() durable timer leaf via reserved __sleep__ hand"
+git commit -m "feat(core): delay() durable timer leaf via reserved __sleep__ tool"
 ```
 
 ---
@@ -1156,7 +1156,7 @@ git commit -m "test(dbos): API conformance spike + dbos extra"
 
 ---### Task 7: DBOS backend — steps, `DbosEnv`, `flow_workflow`
 
-The core backend module. Design points: (a) effect steps are module-level `@DBOS.step`s delegating to `effects.py`; (b) DBOS retries any raised exception when `retries_allowed=True`, so settled policy decisions (`CapabilityDenied` etc.) are smuggled out as a return envelope and re-raised by the env — never retried; (c) retry shaping is quantized to two step variants (idempotent=5 attempts, write=3) because DBOS fixes retry config at decoration time; (d) brain steps never retry — on this backend, LLM resilience belongs to the injected `LlmCaller` (mem-mcp's `retry_policy.py`); (e) race/hedge/quorum and `app` nodes are rejected by a pre-dispatch IR scan.
+The core backend module. Design points: (a) effect steps are module-level `@DBOS.step`s delegating to `effects.py`; (b) DBOS retries any raised exception when `retries_allowed=True`, so settled policy decisions (`CapabilityDenied` etc.) are smuggled out as a return envelope and re-raised by the env — never retried; (c) retry shaping is quantized to two step variants (idempotent=5 attempts, write=3) because DBOS fixes retry config at decoration time; (d) reasoner steps never retry — on this backend, LLM resilience belongs to the injected `LlmCaller` (mem-mcp's `retry_policy.py`); (e) race/hedge/quorum and `app` nodes are rejected by a pre-dispatch IR scan.
 
 **Files:**
 - Modify: `composable_agents/errors.py` (`UnsupportedShapeError`)
@@ -1254,9 +1254,9 @@ Backend-specific contracts (the deltas vs Temporal — see docs/deploy-dbos.md):
 * **No race/hedge/quorum, no app nodes** (v1). DBOS cannot cancel an in-flight
   step, so racing semantics would lie. :func:`assert_dbos_executable` rejects
   these at dispatch; the compiled output of an ``eval_plan`` is re-scanned too.
-* **Brain steps never retry.** LLM resilience belongs to the injected
+* **Reasoner steps never retry.** LLM resilience belongs to the injected
   ``LlmCaller`` (the consumer's retry/fallback stack), not to a second,
-  blind retry layer here. Hands keep contract-derived retries, quantized to
+  blind retry layer here. Tools keep contract-derived retries, quantized to
   two variants (idempotent: 5 attempts, write: 3) because DBOS fixes retry
   config at decoration time.
 * **Policy errors are never retried.** A settled decision (CapabilityDenied,
@@ -1297,9 +1297,9 @@ from ..kinds import Op
 from ..projection import InMemoryProjection, ProjectionEmitter, ProjectionSink, TeeStore
 from . import effects
 from .effects import (
-    CallHandInput,
+    CallToolInput,
     CompilePlanInput,
-    InvokeBrainInput,
+    InvokeReasonerInput,
     toolref_json_from_key,
 )
 from .interpreter import (
@@ -1372,26 +1372,26 @@ def set_projection_sink(sink: Optional[ProjectionSink]) -> None:
 # Effect steps. Names are stable identifiers in DBOS's workflow_status table.
 # --------------------------------------------------------------------------- #
 @DBOS.step(retries_allowed=True, max_attempts=5)
-async def callHandIdempotent(inp: dict) -> Any:
+async def callToolIdempotent(inp: dict) -> Any:
     try:
-        return await effects.callHand(_call_hand_input(inp))
+        return await effects.callTool(_call_tool_input(inp))
     except _POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
 @DBOS.step(retries_allowed=True, max_attempts=3)
-async def callHandWrite(inp: dict) -> Any:
+async def callToolWrite(inp: dict) -> Any:
     try:
-        return await effects.callHand(_call_hand_input(inp))
+        return await effects.callTool(_call_tool_input(inp))
     except _POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
 @DBOS.step(retries_allowed=False)
-async def invokeBrainStep(inp: dict) -> Any:
+async def invokeReasonerStep(inp: dict) -> Any:
     try:
-        return await effects.invokeBrain(
-            InvokeBrainInput(brain=inp["brain"], value=inp["value"], cid=inp["cid"])
+        return await effects.invokeReasoner(
+            InvokeReasonerInput(reasoner=inp["reasoner"], value=inp["value"], cid=inp["cid"])
         )
     except _POLICY_ERRORS as exc:
         return encode_policy_error(exc)
@@ -1429,8 +1429,8 @@ async def resolveRuntimeCapabilitiesStep() -> dict:
     return await effects.resolveRuntimeCapabilities()
 
 
-def _call_hand_input(inp: dict) -> CallHandInput:
-    return CallHandInput(
+def _call_tool_input(inp: dict) -> CallToolInput:
+    return CallToolInput(
         tool_ref=inp["tool_ref"], value=inp["value"], cid=inp["cid"],
         cache=inp.get("cache"),
     )
@@ -1488,7 +1488,7 @@ class DbosEnv:
         return dict(self._call_counts)
 
     # --- effect handlers --- #
-    async def call_hand(self, node: Node, value: Any, cid: str) -> Any:
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
         attempts = al.retry_max_attempts_for_contract(
@@ -1496,7 +1496,7 @@ class DbosEnv:
             idempotent_max_attempts=self._policy.idempotent_max_attempts,
             write_max_attempts=self._policy.write_max_attempts,
         )
-        step = callHandIdempotent if attempts >= self._policy.idempotent_max_attempts else callHandWrite
+        step = callToolIdempotent if attempts >= self._policy.idempotent_max_attempts else callToolWrite
         cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
         out = await step({
             "tool_ref": toolref_json_from_key(ref_key),
@@ -1504,10 +1504,10 @@ class DbosEnv:
         })
         return decode_policy_error(out)
 
-    async def invoke_brain(
-        self, brain: str, value: Any, cid: str, timeout_s: Optional[int],
+    async def invoke_reasoner(
+        self, reasoner: str, value: Any, cid: str, timeout_s: Optional[int],
     ) -> Any:
-        out = await invokeBrainStep({"brain": brain, "value": value, "cid": cid})
+        out = await invokeReasonerStep({"reasoner": reasoner, "value": value, "cid": cid})
         return decode_policy_error(out)
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
@@ -1947,7 +1947,7 @@ def test_bounded_par(dbos_runtime):
 Construction notes for the implementer (verify against existing code before running):
 - `arr("e2edbos.bump")` must be a *frozen-flow-legal* leaf: check how `tests/` freeze flows containing `arr` (pinned pures). If `freeze` pins pure hashes, pass the resulting `pinnedPures` through `run_flow_dbos(pinned_pures=...)` exactly as `run_flow` does in the Temporal e2e.
 - `McpSnapshot`/`McpServerSnapshot`/`McpToolSpec` constructor kwargs: copy the working construction from `tests/test_e2e_temporal.py` (lines ~38-44 import them; the instantiation is further down that file).
-- `par(...)` arity: if `dsl.par` is binary, nest it (`par(a, par(b, c))`) — `_all_branches` flattens the spine, so the test's "3 branches" assertion holds either way.
+- `par(...)` arity: if `dsl.par` is binary, nest it (`par(a, par(b, c))`) — `_all_branches` flattens the chain, so the test's "3 branches" assertion holds either way.
 
 - [ ] **Step 2: Run the e2e suite**
 
@@ -1978,7 +1978,7 @@ git commit -m "test(dbos): end-to-end flows — pipeline, timer, gates, chaining
 
 A frozen flow describes **processing**: what happens to a value once work has
 begun. Everything that decides **when and whether** work begins lives outside
-the IR, in the *dispatch layer* — the thin code that hands an input to a
+the IR, in the *dispatch layer* — the thin code that tools an input to a
 backend runner (`run_flow` on Temporal, `run_flow_dbos` on DBOS).
 
 Outside the IR (dispatch-layer concerns):
@@ -2004,7 +2004,7 @@ DBOS) — so segment dispatch stays inspectable, deduplicable, and cancelable by
 the same machinery as any other dispatch.
 
 This split is what makes frozen flows engine-portable: a flow re-authored from
-hand-rolled orchestration must move *only its processing* into the IR. If you
+tool-rolled orchestration must move *only its processing* into the IR. If you
 find yourself wanting a cron expression, a debounce window, or a dedup key
 inside a flow, you have found dispatch — keep it outside.
 ```
@@ -2064,8 +2064,8 @@ the chain. Human gates park on `DBOS.recv`; release with
 |---|---|---|
 | race / hedge / quorum | supported | **rejected at dispatch** (no step cancellation) |
 | `app` (agent loop) nodes | child `AgentWorkflow` | **rejected at dispatch** (v1) |
-| Brain retries | engine retry (4 attempts) | **none — your `LlmCaller` owns resilience** |
-| Hand retries | per-contract `RetryPolicy` | quantized: idempotent 5 / write 3 attempts |
+| Reasoner retries | engine retry (4 attempts) | **none — your `LlmCaller` owns resilience** |
+| Tool retries | per-contract `RetryPolicy` | quantized: idempotent 5 / write 3 attempts |
 | Sub-flows | child workflow | inline in the parent workflow |
 | Chaining | `continue_as_new` | one workflow per segment |
 | Projection | interceptor over history | in-env emit + `set_projection_sink` |
@@ -2079,9 +2079,9 @@ to fail before dispatch.
 In `docs/SPEC.md`, append a short normative section (place it with the other reserved-tool / wire-format text; find the section that specifies `__human_gate__` and add alongside):
 
 ```markdown
-### Reserved hand: `__sleep__`
+### Reserved tool: `__sleep__`
 
-A `call` to the reserved native hand `__sleep__` is a durable timer, not an
+A `call` to the reserved native tool `__sleep__` is a durable timer, not an
 HTTP call. The duration in seconds rides on the node's `ann.timeout`. Freeze
 resolves it synthetically (no snapshot entry) with an asserted
 `read`/`idempotent` contract, so it is race-safe. Capability semantics match

@@ -4,7 +4,7 @@ Import-safe without ``temporalio``: the deterministic IR interpreter in
 :mod:`composable_agents.execution.interpreter` is pure (it takes an injected
 :class:`~composable_agents.execution.interpreter.Env` of effect handlers) and has
 no Temporal dependency at all, so it is unit-tested in-process. The Temporal
-pieces — the ``run`` workflow, the ``callHand`` / ``invokeBrain`` / ``compilePlan``
+pieces — the ``run`` workflow, the ``callTool`` / ``invokeReasoner`` / ``compilePlan``
 activities, the worker, and the OTel exporter — live in sibling modules whose
 ``temporalio`` import is guarded; importing this package never requires Temporal
 to be installed. ``HAVE_TEMPORAL`` says whether it is. The container host shell
@@ -42,13 +42,13 @@ _TEMPORAL_EXPORTS = [
     "FlowWorkflow",
     "run_flow",
     "start_flow",
-    "CallHandInput",
+    "CallToolInput",
     "CompilePlanInput",
-    "InvokeBrainInput",
+    "InvokeReasonerInput",
     "ResolveQoSInput",
-    "callHand",
+    "callTool",
     "compilePlan",
-    "invokeBrain",
+    "invokeReasoner",
     "resolveAgentSpec",
     "resolveQoS",
     "resolveRuntimeCapabilities",
@@ -73,13 +73,13 @@ _TEMPORAL_ATTR_MODULES = {
     "FlowWorkflow": ".harness",
     "run_flow": ".harness",
     "start_flow": ".harness",
-    "CallHandInput": ".activities",
+    "CallToolInput": ".activities",
     "CompilePlanInput": ".activities",
-    "InvokeBrainInput": ".activities",
+    "InvokeReasonerInput": ".activities",
     "ResolveQoSInput": ".activities",
-    "callHand": ".activities",
+    "callTool": ".activities",
     "compilePlan": ".activities",
-    "invokeBrain": ".activities",
+    "invokeReasoner": ".activities",
     "resolveAgentSpec": ".activities",
     "resolveQoS": ".activities",
     "resolveRuntimeCapabilities": ".activities",

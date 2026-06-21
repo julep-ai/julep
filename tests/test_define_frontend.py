@@ -181,7 +181,7 @@ def p5fix_report_a(a: dict[str, Any]) -> dict[str, Any]:
 
 
 def test_think_string_form_still_emits_dsl_think_directly() -> None:
-    assert _canonical_ir(think("p51.brain")) == _canonical_ir(dsl.think("p51.brain"))
+    assert _canonical_ir(think("p51.reasoner")) == _canonical_ir(dsl.think("p51.reasoner"))
 
 
 def test_flow_decorator_calls_body_once_and_builds_graph() -> None:
@@ -230,7 +230,7 @@ def test_two_think_steps_from_same_handle_compile_into_one_par_layer() -> None:
     par_layers = [node for node in summarize_and_embed.to_ir().walk() if node.op is Op.PAR]
     assert any(
         {
-            child.step.brain
+            child.step.reasoner
             for child in layer.walk()
             if isinstance(child.step, ThinkStep)
         }
@@ -651,7 +651,7 @@ def test_unregistered_plain_function_message_points_to_registration_alternatives
         DefineError,
         match=(
             r"unregistered callable 'plain' at .*test_define_frontend.py:\d+.*"
-            r"decorate it with @pure or @tool, or call think\(\.\.\.\) for a brain step"
+            r"decorate it with @pure or @tool, or call think\(\.\.\.\) for a reasoner step"
         ),
     ):
 
@@ -986,7 +986,7 @@ def test_genuinely_unregistered_qualified_callable_still_gets_existing_diagnosti
         DefineError,
         match=(
             r"unregistered callable 'helpers.plain' at .*test_define_frontend.py:\d+.*"
-            r"decorate it with @pure or @tool, or call think\(\.\.\.\) for a brain step"
+            r"decorate it with @pure or @tool, or call think\(\.\.\.\) for a reasoner step"
         ),
     ):
 

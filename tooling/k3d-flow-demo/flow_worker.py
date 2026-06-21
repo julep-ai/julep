@@ -3,7 +3,7 @@
 Runs inside the pod (``WORKER_CONTEXT_FACTORY=flow_worker:make_context``).
 Imports the example as a flat module (the Dockerfile copies both
 ``episode_summary_flow.py`` and this file into ``/app``), serves the example's
-native hands as an in-pod HTTP microservice on localhost, and wires the real
+native tools as an in-pod HTTP microservice on localhost, and wires the real
 any-llm caller — same pattern as tooling/k3d-llm-demo/llm_weather_agent.py.
 """
 
@@ -16,15 +16,15 @@ from typing import Any
 
 import episode_summary_flow
 
-HAND_PORT = 8799
+TOOL_PORT = 8799
 
 TOOLS = episode_summary_flow.TOOLS
 
 
 # --------------------------------------------------------------------------- #
-# In-pod hand server: POST {"input": v} -> JSON result (callHand contract).
+# In-pod tool server: POST {"input": v} -> JSON result (callTool contract).
 # --------------------------------------------------------------------------- #
-class _HandHandler(BaseHTTPRequestHandler):
+class _ToolHandler(BaseHTTPRequestHandler):
     tools_by_name: dict[str, Any] = {}
 
     def do_POST(self) -> None:  # noqa: N802
@@ -32,7 +32,7 @@ class _HandHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length) or b"{}")
         tool_obj = self.tools_by_name[name]
-        result = tool_obj.bound_hand(payload["input"])
+        result = tool_obj.bound_tool(payload["input"])
         body = json.dumps(result).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -44,9 +44,9 @@ class _HandHandler(BaseHTTPRequestHandler):
         return
 
 
-def _start_hand_server(port: int) -> ThreadingHTTPServer:
-    _HandHandler.tools_by_name = {t.name: t for t in TOOLS}
-    srv = ThreadingHTTPServer(("127.0.0.1", port), _HandHandler)
+def _start_tool_server(port: int) -> ThreadingHTTPServer:
+    _ToolHandler.tools_by_name = {t.name: t for t in TOOLS}
+    srv = ThreadingHTTPServer(("127.0.0.1", port), _ToolHandler)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
@@ -56,9 +56,9 @@ def make_context() -> Any:
     from composable_agents.execution.effects import WorkerContext
     from composable_agents.execution.llm import make_llm_caller
 
-    _start_hand_server(HAND_PORT)
+    _start_tool_server(TOOL_PORT)
     return WorkerContext(
-        hand_urls={t.name: f"http://127.0.0.1:{HAND_PORT}/{t.name}" for t in TOOLS},
+        tool_urls={t.name: f"http://127.0.0.1:{TOOL_PORT}/{t.name}" for t in TOOLS},
         llm=make_llm_caller(),
         capabilities=episode_summary_flow.build().capabilities,
     )

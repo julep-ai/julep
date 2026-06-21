@@ -4,7 +4,7 @@ El Niño 2026 — Regional Agricultural Capacity-Planning Swarm
 
 A worked example built *on* the ``composable_agents`` framework (the canonical
 Python implementation). It does not implement the framework; it imagines the
-framework, the tools, and the brains all exist and composes them.
+framework, the tools, and the reasoners all exist and composes them.
 
 Scenario
 --------
@@ -34,7 +34,7 @@ task), and the framework's primitives carry the delegation guarantees:
 * High-uncertainty zones are routed to an adaptive ``app`` agent with a bounded
   budget and a closed action vocabulary; low-uncertainty zones to a
   deterministic sub-flow (graduated authority + transaction-cost economics).
-* Reconciliation uses a ``stage`` — a planner brain proposes the procurement
+* Reconciliation uses a ``stage`` — a planner reasoner proposes the procurement
   composition, but ``stage`` binds every call to the frozen manifest, so the
   model may choose *structure* but never a new *effect* (contract-first).
 * Capital commitments (irreversible spend) sit behind a ``human_gate`` and the
@@ -55,7 +55,7 @@ from __future__ import annotations
 # DSL + lifecycle surface, per the composable_agents public API.
 from composable_agents import (
     Ann,
-    Brain,
+    Reasoner,
     Budget,
     CapabilityManifest,
     ContextScope,
@@ -81,7 +81,7 @@ from composable_agents import (
     par,
     pure,
     quorum,
-    register_brain,
+    register_reasoner,
     seq,
     stage,
     sub,
@@ -121,7 +121,7 @@ def zone_uncertainty_high(zone_ctx: dict) -> str:
     """Route key: which limb of the swarm plans this zone.
 
     Low model agreement OR a regime flip vs the historical baseline means the
-    deterministic playbook is untrustworthy here — hand it to an adaptive agent.
+    deterministic playbook is untrustworthy here — tool it to an adaptive agent.
     Everything else takes the cheaper deterministic sub-flow.
     """
     consensus = zone_ctx["forecast"]
@@ -234,11 +234,11 @@ ZONE_SELECTORS = tuple(f"zone_at_{i:02d}.v1" for i in range(ZONE_FANOUT))
 
 
 # --------------------------------------------------------------------------- #
-# 2. Brains — note the *deliberate model heterogeneity* in the forecast layer.
+# 2. Reasoners — note the *deliberate model heterogeneity* in the forecast layer.
 #    Three interpreters on three different models so a single model's blind spot
 #    cannot dominate the quorum (resilience pillar 5).
 # --------------------------------------------------------------------------- #
-register_brain(Brain(
+register_reasoner(Reasoner(
     name="forecast_interp_gfs",
     model="claude-opus-4-8",
     system="You read GFS-family ensemble output and classify the seasonal regime "
@@ -247,14 +247,14 @@ register_brain(Brain(
     reply_schema={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
     tools=["weather/ensemble_gfs"],
 ))
-register_brain(Brain(
+register_reasoner(Reasoner(
     name="forecast_interp_ecmwf",
     model="claude-sonnet-4-6",          # different model — diversity, not monoculture
     system="Same task as the GFS interpreter, but over ECMWF-family output.",
     reply_schema={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
     tools=["weather/ensemble_ecmwf"],
 ))
-register_brain(Brain(
+register_reasoner(Reasoner(
     name="forecast_interp_regional",
     model="claude-haiku-4-5-20251001",  # third, cheaper, regionally-tuned source
     system="Same task, over the downscaled regional model for this basin.",
@@ -262,7 +262,7 @@ register_brain(Brain(
     tools=["weather/regional_downscaled"],
 ))
 
-register_brain(Brain(
+register_reasoner(Reasoner(
     name="forecast_synthesizer",
     model="claude-opus-4-8",
     system="Given the consensus forecast and the basin's zone registry, produce "
@@ -272,7 +272,7 @@ register_brain(Brain(
     tools=["soil/moisture_grid", "registry/zones"],
 ))
 
-register_brain(Brain(
+register_reasoner(Reasoner(
     name="zone_agent_controller",
     model="claude-opus-4-8",
     system="You are the adaptive planner for ONE high-uncertainty zone. Each turn, "
@@ -283,7 +283,7 @@ register_brain(Brain(
     tools=["soil/moisture_grid", "market/commodity_prices", "water/rights_registry"],
 ))
 
-register_brain(Brain(
+register_reasoner(Reasoner(
     name="allocation_planner",
     model="claude-opus-4-8",
     system="Given aggregate zone demand and the shared-capacity envelope, propose "
@@ -296,7 +296,7 @@ register_brain(Brain(
 
 
 # --------------------------------------------------------------------------- #
-# 3. Tool references (frozen at deploy against the MCP snapshot / native hands).
+# 3. Tool references (frozen at deploy against the MCP snapshot / native tools).
 #    Effect + idempotency + approval are declared in the capability manifest; the
 #    refs here just name them.
 # --------------------------------------------------------------------------- #
@@ -311,7 +311,7 @@ T_PRICES          = mcp("market", "commodity_prices")
 T_WATER_RIGHTS    = mcp("water", "rights_registry")
 T_CAPACITY        = mcp("capacity", "shared_envelope")   # water/storage/labour ceilings
 
-# Native compute hand (scale-to-zero solver). Idempotent: same demand+capacity
+# Native compute tool (scale-to-zero solver). Idempotent: same demand+capacity
 # in → same allocation out, so it is safe to retry liberally.
 T_SOLVE           = native("optimize_allocation")
 
@@ -563,7 +563,7 @@ tools:
     effect: write
     idempotency: native
 
-brains:
+reasoners:
   - forecast_interp_gfs
   - forecast_interp_ecmwf
   - forecast_interp_regional
@@ -704,7 +704,7 @@ def build_deployment(snapshot: McpSnapshot | None = None, *, verbose: bool = Fal
 # --------------------------------------------------------------------------- #
 # 11. Run it — start the workflow, service the human gate, watch the projection.
 #     The operator wires the Temporal client + worker (the worker holds the real
-#     MCP caller, the LLM caller, and the native-hand URLs); that wiring is the
+#     MCP caller, the LLM caller, and the native-tool URLs); that wiring is the
 #     deployment's responsibility and is elided here.
 # --------------------------------------------------------------------------- #
 async def run_season(client, snapshot, *, basin: str):

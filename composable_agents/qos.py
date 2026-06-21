@@ -1,4 +1,4 @@
-"""QoS dispatch ladder for brain calls.
+"""QoS dispatch ladder for reasoner calls.
 
 The ladder is:
 
@@ -24,7 +24,7 @@ from typing import Any
 
 
 class QoSTier(str, Enum):
-    """Brain dispatch quality-of-service tier."""
+    """Reasoner dispatch quality-of-service tier."""
 
     PRIORITY = "PRIORITY"
     STANDARD = "STANDARD"
@@ -33,7 +33,7 @@ class QoSTier(str, Enum):
 
 
 @dataclass(frozen=True)
-class BrainDispatch:
+class ReasonerDispatch:
     qos: QoSTier = QoSTier.STANDARD
     batch_id: str | None = None
 
@@ -49,7 +49,7 @@ def _requested_qos_from_principal(principal: Any) -> QoSTier:
 
 
 def default_resolve_qos(
-    brain: Any,
+    reasoner: Any,
     node_ann: Any,
     principal: Any,
     load: Any | None = None,
@@ -59,12 +59,12 @@ def default_resolve_qos(
 ) -> QoSTier:
     """Resolve the day-one QoS tier from principal hints and node annotations.
 
-    ``brain`` and ``load`` are part of the stable resolver seam, but the default
+    ``reasoner`` and ``load`` are part of the stable resolver seam, but the default
     policy intentionally ignores them until deploy/runtime policy is wired in.
     ``timeout_s`` is ``None`` for unbounded waits and does not clamp BATCH.
     """
 
-    del brain, load
+    del reasoner, load
 
     requested = _requested_qos_from_principal(principal)
     if requested is not QoSTier.BATCH:

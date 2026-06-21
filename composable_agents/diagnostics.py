@@ -26,9 +26,9 @@ HINTS: dict[str, str] = {
         "Bump the mcp_servers: version pin to match the frozen server version, or re-pin the snapshot."
     ),
     "CAP_MODEL_DENIED": (
-        "Add the brain to the manifest brains: allow-list, or drop the brains: section to leave brains unconstrained."
+        "Add the reasoner to the manifest reasoners: allow-list, or drop the reasoners: section to leave reasoners unconstrained."
     ),
-    "CAP_MODEL_ID_DENIED": "Add the brain's resolved model to the manifest models: allow-list.",
+    "CAP_MODEL_ID_DENIED": "Add the reasoner's resolved model to the manifest models: allow-list.",
     "CAP_SUBFLOW_DENIED": "Grant the sub-flow in the manifest subflows: list.",
     "CAP_APP_SUBFLOW_DENIED": "Grant the sub-flow in the manifest subflows: list.",
     "CAP_SERVER_DENIED": "Grant the MCP server in the manifest mcp_servers:.",

@@ -26,7 +26,7 @@ def _canonical_ir(node: Node) -> str:
     return canonical_json(normalize_ids(Node.from_json(node.to_json())).to_json())
 
 
-def _hand_written_spike_cluster_ir() -> Node:
+def _manual_spike_cluster_ir() -> Node:
     label_one_body = dsl.seq(
         dsl.arr("spike.unpack_label_one_args"),
         dsl.arr("spike.merge_store_context_cluster"),
@@ -35,7 +35,7 @@ def _hand_written_spike_cluster_ir() -> Node:
             dsl.ident(),
             dsl.seq(
                 dsl.arr("spike.pluck_label_source"),
-                dsl.think(cluster_slice.LABEL_BRAIN),
+                dsl.think(cluster_slice.LABEL_REASONER),
             ),
         ),
         dsl.arr("spike.assign_label"),
@@ -43,7 +43,7 @@ def _hand_written_spike_cluster_ir() -> Node:
             dsl.ident(),
             dsl.seq(
                 dsl.arr("spike.pluck_label_source"),
-                dsl.think(cluster_slice.KEYWORDS_BRAIN),
+                dsl.think(cluster_slice.KEYWORDS_REASONER),
             ),
         ),
         dsl.arr("spike.assign_keywords"),
@@ -70,9 +70,9 @@ def _hand_written_spike_cluster_ir() -> Node:
     )
 
 
-def test_spike_compiled_cluster_ir_matches_hand_written_combinators() -> None:
+def test_spike_compiled_cluster_ir_matches_manual_combinators() -> None:
     assert _canonical_ir(cluster_slice.BATCH.to_ir()) == _canonical_ir(
-        _hand_written_spike_cluster_ir()
+        _manual_spike_cluster_ir()
     )
 
 
@@ -81,14 +81,14 @@ def test_spike_cluster_slice_dry_run_tallies_success_and_stale_snapshot() -> Non
     deployment = deploy(
         cluster_slice.BATCH.to_ir(),
         tools=cluster_slice.TOOLS,
-        brains=[cluster_slice.LABEL_BRAIN, cluster_slice.KEYWORDS_BRAIN],
+        reasoners=[cluster_slice.LABEL_REASONER, cluster_slice.KEYWORDS_REASONER],
     )
 
     result = deployment.dry_run(
         cluster_slice.CLUSTERS,
-        brains={
-            cluster_slice.LABEL_BRAIN: cluster_slice._fake_labeler,
-            cluster_slice.KEYWORDS_BRAIN: cluster_slice._fake_keywords,
+        reasoners={
+            cluster_slice.LABEL_REASONER: cluster_slice._fake_labeler,
+            cluster_slice.KEYWORDS_REASONER: cluster_slice._fake_keywords,
         },
     )
 
@@ -107,7 +107,7 @@ def test_partially_applied_flow_can_only_leave_one_each_item_parameter() -> None
 
         @flow
         def three_arg_body(store_context, label_source, cluster):  # type: ignore[no-untyped-def]
-            return think(cluster_slice.LABEL_BRAIN, label_source)
+            return think(cluster_slice.LABEL_REASONER, label_source)
 
         each(three_arg_body({"storeId": "store-a"}))
 
@@ -125,5 +125,5 @@ def test_rebinding_collision_is_caught_at_define_time() -> None:
 
         @flow
         def rebinds_source(source):  # type: ignore[no-untyped-def]
-            source = think(cluster_slice.LABEL_BRAIN, source)
+            source = think(cluster_slice.LABEL_REASONER, source)
             return source

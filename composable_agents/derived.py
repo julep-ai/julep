@@ -5,8 +5,8 @@ primitive. The interesting cases are the *race family* (``race`` / ``hedge`` /
 ``quorum``): they emit an ordinary ``par`` tree, but every ``par`` node in the
 group carries a :class:`~composable_agents.ir.Merge` marker describing the join
 policy (first-success-wins, first-after-delay, m-of-n). Because the IR ``par`` is
-binary, a single ``race(a, b, c)`` becomes a spine of ``par`` nodes that all
-share the *same* merge kind; :func:`flatten_race_group` walks that spine to
+binary, a single ``race(a, b, c)`` becomes a chain of ``par`` nodes that all
+share the *same* merge kind; :func:`flatten_race_group` walks that chain to
 recover the flat branch list, stopping at any child that isn't a same-kind
 race-par (so a plain ``par`` nested inside a race stays one opaque branch).
 
@@ -64,10 +64,10 @@ __all__ = [
 # Lowering helpers.
 # --------------------------------------------------------------------------- #
 def _par_group(flows: Sequence[Node], merge: Merge, tag: str) -> Node:
-    """Right-leaning ``par`` spine whose every node carries ``merge``.
+    """Right-leaning ``par`` chain whose every node carries ``merge``.
 
     A single branch is returned unwrapped (a race of one is just that one). The
-    uniform merge on every spine node is what makes :func:`flatten_race_group`
+    uniform merge on every chain node is what makes :func:`flatten_race_group`
     able to recover the original branches regardless of fold direction.
     """
     if not flows:
@@ -160,16 +160,16 @@ def map_reduce(mappers: Sequence[Node], reduce: str) -> Node:
     return _par_group(list(mappers), Merge(kind="all", reducer=reduce), "mapreduce")
 
 
-def vote(brains: Sequence[str], agg: str) -> Node:
-    """Ask several brains the same question in parallel; aggregate with pure ``agg``.
+def vote(reasoners: Sequence[str], agg: str) -> Node:
+    """Ask several reasoners the same question in parallel; aggregate with pure ``agg``.
 
-    A cheap ensemble: ``agg`` (e.g. a majority/median pure) folds the per-brain
-    answers. Brains are read-only by construction, so this is race-safe, but the
+    A cheap ensemble: ``agg`` (e.g. a majority/median pure) folds the per-reasoner
+    answers. Reasoners are read-only by construction, so this is race-safe, but the
     ``all`` merge waits for every vote rather than cancelling.
     """
-    if not brains:
-        raise ValueError("vote needs at least one brain")
-    branches = [think(b) for b in brains]
+    if not reasoners:
+        raise ValueError("vote needs at least one reasoner")
+    branches = [think(b) for b in reasoners]
     return _par_group(branches, Merge(kind="all", reducer=agg), "vote")
 
 
@@ -177,7 +177,7 @@ def review(main: Node, reviewer: str, k: int, *, agg: Optional[str] = None) -> N
     """Run ``main``, then fan its output to ``k`` independent ``reviewer`` passes.
 
     Lowers to ``main`` sequenced before a ``k``-way parallel of the reviewer
-    brain. ``agg`` optionally names a pure that folds the reviews (e.g. into a
+    reasoner. ``agg`` optionally names a pure that folds the reviews (e.g. into a
     pass/fail or a merged critique).
     """
     if k < 1:
@@ -190,7 +190,7 @@ def review(main: Node, reviewer: str, k: int, *, agg: Optional[str] = None) -> N
 def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None) -> Node:
     """A leaf that blocks on a human signal, with an optional timeout.
 
-    Emits a ``call`` to the reserved hand ``__human_gate__``; the harness turns
+    Emits a ``call`` to the reserved tool ``__human_gate__``; the harness turns
     it into a Temporal signal-wait instead of an HTTP call. The leaf's input is
     surfaced to the human as the prompt and the signal payload becomes its
     output. ``timeout_s`` (carried on the annotation) bounds the wait.
@@ -203,7 +203,7 @@ def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None)
 def delay(*, seconds: int) -> Node:
     """A leaf that durably pauses the flow, passing its input through unchanged.
 
-    Emits a ``call`` to the reserved hand ``__sleep__``; each harness turns it
+    Emits a ``call`` to the reserved tool ``__sleep__``; each harness turns it
     into its engine's durable timer (Temporal timer / ``DBOS.sleep``) instead of
     an HTTP call. The duration rides on the annotation's timeout.
     """
@@ -301,14 +301,14 @@ def check_race_admission(flow: Node, manifest: ToolManifest) -> list[Diagnostic]
     out: list[Diagnostic] = []
     seen: set[int] = set()
 
-    def scan(n: Node, in_spine_of: Optional[str]) -> None:
+    def scan(n: Node, in_chain_of: Optional[str]) -> None:
         merge = n.merge
         is_race = merge is not None and n.op == Op.PAR and merge.kind in {
             "race", "hedge", "quorum"
         }
-        # Group root = a race-par that is not the spine-continuation of a
+        # Group root = a race-par that is not the chain-continuation of a
         # same-kind race-par directly above it.
-        if is_race and merge is not None and merge.kind != in_spine_of:
+        if is_race and merge is not None and merge.kind != in_chain_of:
             if id(n) not in seen:
                 seen.add(id(n))
                 for branch in flatten_race_group(n):
@@ -316,10 +316,10 @@ def check_race_admission(flow: Node, manifest: ToolManifest) -> list[Diagnostic]
                     # recurse into the branch to catch nested race groups
                     scan(branch, None)
             return
-        # Either not a race node, or we're walking down a same-kind spine.
-        next_spine = merge.kind if is_race and merge is not None else None
+        # Either not a race node, or we're walking down a same-kind chain.
+        next_chain = merge.kind if is_race and merge is not None else None
         for child in n.children():
-            scan(child, next_spine)
+            scan(child, next_chain)
 
     scan(flow, None)
     return out

@@ -28,7 +28,7 @@ def _canonical_ir(node: Node) -> str:
     return canonical_json(normalize_ids(Node.from_json(node.to_json())).to_json())
 
 
-def _hand_written_spike_episode_ir() -> Node:
+def _manual_spike_episode_ir() -> Node:
     happy_path = dsl.seq(
         dsl.arr("spike.assign_source"),
         dsl.par(
@@ -70,9 +70,9 @@ def _hand_written_spike_episode_ir() -> Node:
     return dsl.each(summarize_one, max_parallel=2, reducer="tally_summary_statuses")
 
 
-def test_spike_compiled_episode_ir_matches_hand_written_combinators() -> None:
+def test_spike_compiled_episode_ir_matches_manual_combinators() -> None:
     assert _canonical_ir(episode_slice.BATCH.to_ir()) == _canonical_ir(
-        _hand_written_spike_episode_ir()
+        _manual_spike_episode_ir()
     )
 
 
@@ -81,12 +81,12 @@ def test_spike_episode_slice_dry_run_rolls_up_cas_statuses() -> None:
     deployment = deploy(
         episode_slice.BATCH.to_ir(),
         tools=episode.TOOLS,
-        brains=[episode.SUMMARIZER, episode.ONE_LINER],
+        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
     )
 
     result = deployment.dry_run(
         episode.EPISODE_BATCH,
-        brains={
+        reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,
         },
@@ -113,5 +113,5 @@ def test_missing_label_glue_is_actionable_at_define_time() -> None:
 
         @flow
         def needs_unregistered_label(source):  # type: ignore[no-untyped-def]
-            missing = think("ad_hoc_brain", source)
+            missing = think("ad_hoc_reasoner", source)
             return missing

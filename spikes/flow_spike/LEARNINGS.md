@@ -20,8 +20,8 @@ The cluster slice confirms the same for fan-out, including closure conversion:
 @flow
 def label_one(store_context, cluster):
     label_source = store_context | cluster
-    label = think(LABEL_BRAIN, label_source)
-    keywords = think(KEYWORDS_BRAIN, label_source)
+    label = think(LABEL_REASONER, label_source)
+    keywords = think(KEYWORDS_REASONER, label_source)
     _ = label  # Consumed by spike.merge_label_source_keywords via the env.
     write_payload = label_source | keywords
     return write_cluster_label(write_payload)
@@ -38,8 +38,8 @@ clusters)` as a graph step.
 The second independent step off `label_source` is authored as dataflow:
 
 ```python
-label = think(LABEL_BRAIN, label_source)
-keywords = think(KEYWORDS_BRAIN, label_source)
+label = think(LABEL_REASONER, label_source)
+keywords = think(KEYWORDS_REASONER, label_source)
 ```
 
 The naive compiler emits those sequentially. P3's effect-fenced layering should
@@ -137,7 +137,7 @@ source-derived.
 ## 4. Env threading
 
 The naive compiler still emits the same env-preservation shim for every tool,
-brain, and pure step:
+reasoner, and pure step:
 
 ```python
 if step.kind in {"tool", "think", "pure"}:
@@ -207,7 +207,7 @@ Lowering sketch against existing primitives:
 1. Run the optional `mark_dirty` tool/pure first. For mem-mcp this is the
    existing dirty-row write with `last_error="awaiting ..."`.
 2. Run `delay(seconds=N)` if `after` is provided. This already lowers to the
-   reserved `__sleep__` hand with `Ann.timeout_s`.
+   reserved `__sleep__` tool with `Ann.timeout_s`.
 3. End the segment with `continue_with(state)` when the same flow should retry
    itself, or return `status` when an external dispatcher owns re-enqueue.
 

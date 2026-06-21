@@ -8,7 +8,7 @@
 ## Context
 
 Every flow deployment today requires building a docker image bundling the framework, the flow
-module (pures + tools + brain config), and a worker entrypoint; pushing to a registry; and rolling
+module (pures + tools + reasoner config), and a worker entrypoint; pushing to a registry; and rolling
 the worker deployment (`tooling/k3d-flow-demo/Dockerfile` is the current shape). The failure mode
 is recent and real: a worker image predating the current IR could not deserialize arr static args
 or resolve `std.*` pures, forcing a rebuild+push+rollout just to run a flow. Flows change at
@@ -104,7 +104,7 @@ Each phase lands independently green (`python -m pytest` AND `uv run python -m p
   mutation across calls has no observable effect).
 - (b) **Bundle round-trip**: local-dir CAS → worker resolves, verifies, registers; draft
   `pureRuntimeRefs` envelope shape end-to-end.
-- Exit criteria: latency/size numbers in hand and a go/no-go on fresh-per-call; envelope shape
+- Exit criteria: latency/size numbers in tool and a go/no-go on fresh-per-call; envelope shape
   confirmed against `artifact_components`. External-clock risk surfaces here: WASI 0.2→0.3 and
   componentize-py churn — pin the toolchain, vendor the built base component as an artifact.
 

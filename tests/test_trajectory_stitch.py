@@ -30,13 +30,13 @@ import pytest
 
 from composable_agents import arr, call, each, mcp, native, seq, sub
 from composable_agents.continuation import continue_with
-from composable_agents.dotctx import Brain, register_brain
+from composable_agents.dotctx import Reasoner, register_reasoner
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref
 from composable_agents.execution.effects import (
-    CallHandInput,
+    CallToolInput,
     WorkerContext,
-    callHand,
+    callTool,
     configure,
     set_trajectory_sink,
 )
@@ -104,11 +104,11 @@ def test_capture_step_ids_include_segment_sequence_for_reused_cids():
         "root_run_id": ROOT,
         "node_id": "search-node",
         "op": "call",
-        "kind": "hand",
+        "kind": "tool",
     }
 
-    first = asyncio.run(callHand(CallHandInput(**base, segment_seq=0)))
-    second = asyncio.run(callHand(CallHandInput(**base, segment_seq=1)))
+    first = asyncio.run(callTool(CallToolInput(**base, segment_seq=0)))
+    second = asyncio.run(callTool(CallToolInput(**base, segment_seq=1)))
     set_trajectory_sink(None, None)
 
     assert first == second == {"hits": {"q": "same"}}
@@ -131,7 +131,7 @@ def _run_representative(install_sink: bool) -> tuple[Any, list[dict[str, Any]]]:
     env = InMemoryEnv(
         {},
         emitter,
-        hands={"echo": lambda v: v + 1},
+        tools={"echo": lambda v: v + 1},
         root_run_id=ROOT,
         segment_seq=0,
     )
@@ -163,7 +163,7 @@ def test_determinism_sink_install_does_not_change_result_or_projection():
 def test_interpret_installs_run_identity_onto_env():
     """interpret(root_run_id=..., segment_seq=...) installs onto the env once,
     like principal; the interpreter itself never reads them back."""
-    env = InMemoryEnv({}, _emitter(), hands={"echo": lambda v: v})
+    env = InMemoryEnv({}, _emitter(), tools={"echo": lambda v: v})
     assert env.root_run_id is None
     assert env.segment_seq == 0
     asyncio.run(
@@ -221,19 +221,19 @@ def test_temporal_env_stamps_run_identity_into_effect_payloads(monkeypatch):
     monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     env = _temporal_env(root_run_id=ROOT, segment_seq=2)
 
-    asyncio.run(env.call_hand(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
-    asyncio.run(env.invoke_brain("b", 5, "cid-2", None))
+    asyncio.run(env.run_call(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
+    asyncio.run(env.invoke_reasoner("b", 5, "cid-2", None))
 
-    # invoke_brain now records the resolved QoS tier via a resolveQoS activity
-    # before the sync invokeBrain dispatch, so the brain leg yields two payloads.
-    hand = next(p for p in payloads if getattr(p, "kind", None) == "hand")
-    brain = next(p for p in payloads if getattr(p, "kind", None) == "brain")
+    # invoke_reasoner now records the resolved QoS tier via a resolveQoS activity
+    # before the sync invokeReasoner dispatch, so the reasoner leg yields two payloads.
+    tool = next(p for p in payloads if getattr(p, "kind", None) == "tool")
+    reasoner = next(p for p in payloads if getattr(p, "kind", None) == "reasoner")
     # run_id is this segment's session; root_run_id + segment_seq are the run identity.
-    assert hand.run_id == "seg-sess"
-    assert hand.root_run_id == ROOT and hand.segment_seq == 2
-    assert hand.op == "call" and hand.kind == "hand"
-    assert brain.root_run_id == ROOT and brain.segment_seq == 2
-    assert brain.op == "think" and brain.kind == "brain"
+    assert tool.run_id == "seg-sess"
+    assert tool.root_run_id == ROOT and tool.segment_seq == 2
+    assert tool.op == "call" and tool.kind == "tool"
+    assert reasoner.root_run_id == ROOT and reasoner.segment_seq == 2
+    assert reasoner.op == "think" and reasoner.kind == "reasoner"
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -435,9 +435,9 @@ def test_agent_continue_as_new_keeps_root_and_increments_segment(monkeypatch):
     captured: list[Any] = []
 
     async def fake_execute_activity(fn, payload, **kwargs):
-        if getattr(fn, "__name__", "") == "invokeBrain":
+        if getattr(fn, "__name__", "") == "invokeReasoner":
             return {"tool": "t", "input": 1}
-        return {"hand": "out"}
+        return {"tool": "out"}
 
     def fake_continue_as_new(next_input):
         captured.append(next_input)
@@ -572,10 +572,10 @@ def test_dbos_flow_settlement_finishes_run(monkeypatch):
     steps = sink.list_trajectory_steps(ROOT, include_children=True)
     assert {(s.op, s.kind, s.run_id) for s in steps} == {
         ("root", "root", ROOT),
-        ("call", "hand", ROOT),
+        ("call", "tool", ROOT),
         ("final", "final", ROOT),
     }
-    assert ("call", "hand", ROOT) in {(s.op, s.kind, s.run_id) for s in steps}
+    assert ("call", "tool", ROOT) in {(s.op, s.kind, s.run_id) for s in steps}
     run = sink.get_trajectory_run(ROOT)
     assert run is not None
     assert run.status == "completed"
@@ -584,14 +584,14 @@ def test_dbos_flow_settlement_finishes_run(monkeypatch):
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_agent_captures_turns_and_child_subflow(monkeypatch):
-    register_brain(Brain(name="lcstitch.ctrl", model="test", system="s"))
+    register_reasoner(Reasoner(name="lcstitch.ctrl", model="test", system="s"))
     _install_inline_dbos(monkeypatch, body=dbos_backend.agent_workflow)
 
     sink = InMemoryTrajectoryStore()
     blobs = InMemoryBlobStore()
     replies = iter([{"sub": "child", "input": 1}, {"output": {"ok": 1}}])
 
-    async def llm(brain: Any, value: Any, principal: Any, transcript: Any) -> Any:
+    async def llm(reasoner: Any, value: Any, principal: Any, transcript: Any) -> Any:
         return next(replies)
 
     configure(
@@ -666,7 +666,7 @@ def test_dbos_subflow_capture_records_flow_step(monkeypatch):
     assert any(s.op == "sub" and s.kind == "flow" and s.run_id == ROOT for s in steps)
 
     child_calls = [
-        s for s in steps if s.op == "call" and s.kind == "hand" and s.run_id != ROOT
+        s for s in steps if s.op == "call" and s.kind == "tool" and s.run_id != ROOT
     ]
     assert len(child_calls) == 1
     child_run = sink.get_trajectory_run(child_calls[0].run_id)
@@ -812,14 +812,14 @@ def test_dbos_flow_result_byte_identical_when_finish_step_raises(monkeypatch):
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_agent_result_byte_identical_when_sink_raises(monkeypatch):
-    register_brain(Brain(name="lcstitch.ctrl", model="test", system="s"))
+    register_reasoner(Reasoner(name="lcstitch.ctrl", model="test", system="s"))
     _install_inline_dbos(monkeypatch, body=dbos_backend.agent_workflow)
     blobs = InMemoryBlobStore()
 
     def _agent(sink) -> dict[str, Any]:
         replies = iter([{"output": {"ok": 2}}])
 
-        async def llm(brain: Any, value: Any, principal: Any, transcript: Any) -> Any:
+        async def llm(reasoner: Any, value: Any, principal: Any, transcript: Any) -> Any:
             return next(replies)
 
         configure(
@@ -910,7 +910,7 @@ def test_temporal_agent_sub_action_captured(monkeypatch):
 
     async def fake_execute_activity(fn, *a, **kw):
         name = getattr(fn, "__name__", "")
-        if name == "invokeBrain":
+        if name == "invokeReasoner":
             return {"sub": "child", "input": 7}
         if name == "runSubCapture":
             captured = kw.get("args") or list(a)

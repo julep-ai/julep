@@ -30,14 +30,14 @@ def _canonical_ir(node: Node) -> str:
 class FlowRegistry:
     """Durable named-flow registry (authoring layer).
 
-    One name space shared with brains/tools: a flow ref may not collide with a
-    registered brain name or a tool name carried by a registered brain (design
+    One name space shared with reasoners/tools: a flow ref may not collide with a
+    registered reasoner name or a tool name carried by a registered reasoner (design
     §6 collision policy).
     """
 
-    def __init__(self, brain_registry: Registry = DEFAULT_REGISTRY) -> None:
+    def __init__(self, reasoner_registry: Registry = DEFAULT_REGISTRY) -> None:
         self._flows: dict[str, FlowSpec] = {}
-        self._brain_registry = brain_registry
+        self._reasoner_registry = reasoner_registry
 
     def register_flow(
         self,
@@ -72,11 +72,11 @@ class FlowRegistry:
         return ref in self._flows
 
     def _reject_cross_namespace_collision(self, ref: str) -> None:
-        brains = self._brain_registry.brains
-        if ref in brains:
-            raise FlowRegistryError(f"flow ref {ref!r} collides with a registered brain name")
-        for brain in brains.values():
-            if ref in tuple(getattr(brain, "tools", ()) or ()):
+        reasoners = self._reasoner_registry.reasoners
+        if ref in reasoners:
+            raise FlowRegistryError(f"flow ref {ref!r} collides with a registered reasoner name")
+        for reasoner in reasoners.values():
+            if ref in tuple(getattr(reasoner, "tools", ()) or ()):
                 raise FlowRegistryError(f"flow ref {ref!r} collides with a registered tool name")
 
 

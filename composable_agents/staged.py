@@ -1,6 +1,6 @@
 """Plan validation for the Staged shape (blueprint §8).
 
-``eval_plan`` lets a *brain* emit structure at runtime — a Plan — which is then
+``eval_plan`` lets a *reasoner* emit structure at runtime — a Plan — which is then
 compiled to ordinary IR and run. That is the framework's sharpest edge: model
 output becomes control flow. §8 is the firewall that keeps it bounded. Before a
 compiled plan is admitted it must clear hard rules that the parent's grants pin

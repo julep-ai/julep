@@ -398,14 +398,14 @@ def test_resolution_is_ungated_and_registers_wasm_tier(
     assert all(entry.executor == "wasm" for entry in fresh.pures.values())
 
 
-def test_hand_built_manifest_rejects_std_pure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_manual_built_manifest_rejects_std_pure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     store = LocalDirCAS(tmp_path)
     source_digest = store.put(b"@pure(\"std.bad\")\ndef bad(value):\n    return value\n")
     components = {
         "flowJson": arr("std.bad").to_json(),
         "manifestJson": {},
         "pureSourceHashes": {"std.bad": "pure:0123456789abcdef"},
-        "brains": {},
+        "reasoners": {},
         "capabilities": None,
         "executionPolicy": None,
         "frameworkVersion": "test",
@@ -452,7 +452,7 @@ def test_source_hash_mismatch_in_manifest_fails_before_registration(
                 "flowJson": arr(name).to_json(),
                 "manifestJson": {},
                 "pureSourceHashes": {name: "pure:0000000000000000"},
-                "brains": {},
+                "reasoners": {},
                 "capabilities": None,
                 "executionPolicy": None,
                 "frameworkVersion": "test",

@@ -1,4 +1,4 @@
-"""Run cross-run brain batching through the OpenAI Batch API on Temporal.
+"""Run cross-run reasoner batching through Anthropic Message Batches on Temporal.
 
 Prereqs (one-time, another terminal):
 
@@ -7,7 +7,7 @@ Prereqs (one-time, another terminal):
 Run (source your real keys first):
 
     source .env
-    .venv/bin/python examples/brain_batch_openai.py
+    .venv/bin/python examples/reasoner_batch_anthropic.py
 
 Watch the runs in the UI: http://localhost:8233.
 """
@@ -23,15 +23,15 @@ import uuid
 from temporalio.client import Client
 
 from composable_agents import Ann, freeze, manifest_to_json, think
-from composable_agents.dotctx import Brain, register_brain
+from composable_agents.dotctx import Reasoner, register_reasoner
 from composable_agents.execution.activities import WorkerContext
 from composable_agents.execution.harness import start_flow
-from composable_agents.execution.llm import complete_brain
+from composable_agents.execution.llm import complete_reasoner
 from composable_agents.execution.worker import build_worker
 from composable_agents.freeze import McpSnapshot
 
-API_KEY_ENV = "OPENAI_API_KEY"
-MODEL = "openai:gpt-4o-mini"
+API_KEY_ENV = "ANTHROPIC_API_KEY"
+MODEL = "anthropic:claude-haiku-4-5-20251001"
 TEMPORAL_HOST = "localhost:7233"
 UI = "http://localhost:8233"
 RESULT_TIMEOUT_S = int(os.environ.get("CA_BATCH_RESULT_TIMEOUT_S", "180"))
@@ -57,8 +57,8 @@ def require_api_key() -> None:
     sys.exit(1)
 
 
-async def sync_complete_brain(
-    brain,
+async def sync_complete_reasoner(
+    reasoner,
     value,
     principal=None,
     transcript=None,
@@ -67,14 +67,14 @@ async def sync_complete_brain(
     """Real sync fallback path; the BATCH route uses the provider BatchProvider."""
     del principal
 
-    # complete_brain currently requires any-llm's acompletion as a keyword-only
+    # complete_reasoner currently requires any-llm's acompletion as a keyword-only
     # dependency, so this preserves the worker's canonical five-argument seam.
     from any_llm import acompletion
 
     kwargs = {"acompletion": acompletion, "transcript": transcript}
     if dispatch is not None:
         kwargs["dispatch"] = dispatch
-    return await complete_brain(brain, value, **kwargs)
+    return await complete_reasoner(reasoner, value, **kwargs)
 
 
 def think_did_from(projection):
@@ -89,8 +89,8 @@ async def main() -> None:
     require_api_key()
     assert len(INPUTS) == N
 
-    register_brain(
-        Brain(
+    register_reasoner(
+        Reasoner(
             name="batch_sentiment",
             model=MODEL,
             system="You are a terse classifier. Reply with one short word.",
@@ -103,13 +103,13 @@ async def main() -> None:
     frozen = freeze(flow, McpSnapshot())
 
     client = await Client.connect(TEMPORAL_HOST)
-    tq = f"brain-batch-{uuid.uuid4()}"
-    ctx = WorkerContext(llm=sync_complete_brain, registry=None)
+    tq = f"reasoner-batch-{uuid.uuid4()}"
+    ctx = WorkerContext(llm=sync_complete_reasoner, registry=None)
     worker = build_worker(client, ctx, task_queue=tq)
 
     print(f"Starting Temporal worker on {TEMPORAL_HOST}; watch {UI}")
     async with worker:
-        from composable_agents.execution.brain_batch import (
+        from composable_agents.execution.reasoner_batch import (
             BatchDispatchContext,
             get_batch_dispatch_context,
             install_batch_dispatch_context,
@@ -133,7 +133,7 @@ async def main() -> None:
             f"task_queue={batch_ctx.task_queue}"
         )
 
-        runs = [(f"brain-batch-{uuid.uuid4()}", input_value) for input_value in INPUTS]
+        runs = [(f"reasoner-batch-{uuid.uuid4()}", input_value) for input_value in INPUTS]
         handles = await asyncio.gather(
             *(
                 start_flow(

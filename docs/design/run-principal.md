@@ -1,4 +1,4 @@
-# Run-scoped principal: tenant identity for hands and brains
+# Run-scoped principal: tenant identity for tools and reasoners
 
 > Status: design draft 2026-06-10, decided with mem-mcp (option A1 of the
 > adoption sketch: principal-by-reference threaded through workflow input;
@@ -46,12 +46,12 @@ RunPrincipal = dict[str, Any]   # opaque to the framework; JSON-serializable
 McpCaller = Callable[[str, str, Any, str, Optional[RunPrincipal]], Awaitable[Any]]
 #                     (server, tool, value, idempotency_key, principal) -> result
 
-LlmCaller  = Callable[[Brain, Any, Optional[RunPrincipal]], Awaitable[Any]]
-#                     (brain, value, principal) -> result
+LlmCaller  = Callable[[Reasoner, Any, Optional[RunPrincipal]], Awaitable[Any]]
+#                     (reasoner, value, principal) -> result
 ```
 
-Both callers gain the principal. Hands need it for tenant-scoped tool auth;
-brains need it for per-tenant model routing, per-tenant API keys, and
+Both callers gain the principal. Tools need it for tenant-scoped tool auth;
+reasoners need it for per-tenant model routing, per-tenant API keys, and
 per-tenant spend attribution. Same mechanism, one review.
 
 **Back-compat:** `configure()` inspects the supplied callables' arity and wraps
@@ -74,7 +74,7 @@ agent.deploy(client, session_id=..., input=..., principal={...})
 `principal` defaults to `None`; single-tenant deployments change nothing.
 Every public entry point grows the keyword — `Agent.run` / `Agent.deploy`,
 `Deployment.run()`, and the exported `run_flow` / `start_flow` helpers — so
-raw-flow users never have to construct `FlowInput` by hand to set it.
+raw-flow users never have to construct `FlowInput` by tool to set it.
 
 ### Threading
 
@@ -82,14 +82,14 @@ raw-flow users never have to construct `FlowInput` by hand to set it.
   `principal: Optional[RunPrincipal]`.
 - The `Env` carries it: `_TemporalEnv`, `DbosEnv`, and `InMemoryEnv` each hold
   the run's principal and stamp it into the effect payloads —
-  `CallHandInput`, `InvokeBrainInput`, and `CompilePlanInput` gain a
+  `CallToolInput`, `InvokeReasonerInput`, and `CompilePlanInput` gain a
   `principal` field (`execution/effects.py:86-108`). `interpret()` takes it as
   a keyword argument for the in-memory path.
-- `effects.call_hand` passes it to `mcp_call` (and, for native hands, resolves
+- `effects.run_call` passes it to `mcp_call` (and, for native tools, resolves
   it into transport headers via a worker-supplied
   `principal_headers: Callable[[RunPrincipal], dict[str, str]] | None` on
-  `WorkerContext`; absent means no extra headers — native hands keep working).
-- `effects.invoke_brain` passes it to the `LlmCaller`.
+  `WorkerContext`; absent means no extra headers — native tools keep working).
+- `effects.invoke_reasoner` passes it to the `LlmCaller`.
 - **Every `continue_as_new` path copies it forward.** Both `FlowWorkflow` and
   `AgentWorkflow` segment via `continue_as_new`; the principal is part of the
   next segment's input, so a long-running run keeps its tenant identity across
@@ -132,7 +132,7 @@ non-retryable class list in the retry policy.
 
 | File | Change |
 |---|---|
-| `execution/effects.py` | `RunPrincipal`, widened caller signatures + arity shim in `configure`, `principal` on `CallHandInput`/`InvokeBrainInput`/`CompilePlanInput`, `principal_headers` on `WorkerContext` |
+| `execution/effects.py` | `RunPrincipal`, widened caller signatures + arity shim in `configure`, `principal` on `CallToolInput`/`InvokeReasonerInput`/`CompilePlanInput`, `principal_headers` on `WorkerContext` |
 | `execution/interpreter.py` | `interpret(..., principal=None)`, `InMemoryEnv` carries + stamps it |
 | `execution/harness.py` | `FlowInput`/`AgentInput` field, `_TemporalEnv` stamping, child workflow propagation, `continue_as_new` carry-forward in both workflows |
 | `execution/dbos_backend.py` | same for `DbosEnv` / `flow_workflow` / `ca_agent` |

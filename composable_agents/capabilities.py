@@ -2,7 +2,7 @@
 
 A capability manifest is the human-authored contract that says what a deployed
 flow is *allowed* to touch: which tools (and with what asserted effect /
-idempotency), which brains, which memory scopes, which MCP servers (at which
+idempotency), which reasoners, which memory scopes, which MCP servers (at which
 versions), and the overall budget. It does two jobs:
 
 1. It is the only sanctioned source of *asserted* tool contracts. ``freeze``
@@ -10,13 +10,13 @@ versions), and the overall budget. It does two jobs:
    :func:`CapabilityManifest.overrides`); otherwise the contract is defaulted
    conservatively from untrusted hints and the tool can't race (§5).
 2. It is an allow-list enforced at three seams (§9): *compile* (every referenced
-   tool / brain / server / memory scope must be granted — :func:`enforce_compile`),
+   tool / reasoner / server / memory scope must be granted — :func:`enforce_compile`),
    *schedule* (budget, surfaced to the agent guard and the plan estimator), and
    *run* (network egress + model allow-list, checked inside the activity).
 
 Allow-list semantics are explicit: an **absent** section means "unconstrained";
-a **present** section is a deny-by-default allow-list. So omitting ``brains``
-permits any brain, but listing two brains forbids a third.
+a **present** section is a deny-by-default allow-list. So omitting ``reasoners``
+permits any reasoner, but listing two reasoners forbids a third.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from .contracts import ToolContract, ToolManifest
-from .dotctx import get_brain
+from .dotctx import get_reasoner
 from .errors import CapabilityDenied
 from .freeze import CapabilityOverrides
 from .ir import CallStep, HUMAN_GATE_TOOL, McpTool, Node, SubStep, ThinkStep, toolref_key
@@ -73,7 +73,7 @@ class ToolGrant:
 @dataclass
 class CapabilityManifest:
     tools: dict[str, ToolGrant] = field(default_factory=dict)
-    brains: set[str] = field(default_factory=set)
+    reasoners: set[str] = field(default_factory=set)
     models: set[str] = field(default_factory=set)
     subflows: set[str] = field(default_factory=set)
     memory: set[ContextScope] = field(default_factory=set)
@@ -83,7 +83,7 @@ class CapabilityManifest:
     # Section presence flags, so "absent" (unconstrained) is distinguishable from
     # "present but empty" (deny-all).
     _has_tools: bool = False
-    _has_brains: bool = False
+    _has_reasoners: bool = False
     _has_models: bool = False
     _has_subflows: bool = False
     _has_memory: bool = False
@@ -111,20 +111,20 @@ class CapabilityManifest:
                 max_calls=int(max_calls) if max_calls is not None else None,
             )
 
-        has_brains = "brains" in d
+        has_reasoners = "reasoners" in d
         has_models = "models" in d
         has_subflows = "subflows" in d or "subFlows" in d
         has_memory = "memory" in d
         has_network = "network" in d
         has_servers = "mcp_servers" in d or "mcpServers" in d
-        brains_raw = d.get("brains", []) or []
+        reasoners_raw = d.get("reasoners", []) or []
         models_raw = d.get("models", []) or []
         subflows_raw = d.get("subflows", d.get("subFlows", [])) or []
         servers_raw = d.get("mcp_servers", d.get("mcpServers", {})) or {}
 
         return CapabilityManifest(
             tools=tools,
-            brains=set(brains_raw),
+            reasoners=set(reasoners_raw),
             models=set(models_raw),
             subflows=set(subflows_raw),
             memory={ContextScope(s) for s in (d.get("memory", []) or [])},
@@ -132,7 +132,7 @@ class CapabilityManifest:
             mcp_servers={k: v for k, v in servers_raw.items()},
             budget=Budget.from_dict(d.get("budget")),
             _has_tools=has_tools,
-            _has_brains=has_brains,
+            _has_reasoners=has_reasoners,
             _has_models=has_models,
             _has_subflows=has_subflows,
             _has_memory=has_memory,
@@ -180,8 +180,8 @@ class CapabilityManifest:
                 for server in sorted(self.mcp_servers)
             },
         }
-        if self._has_brains:
-            out["brains"] = sorted(self.brains)
+        if self._has_reasoners:
+            out["reasoners"] = sorted(self.reasoners)
         if self._has_models:
             out["models"] = sorted(self.models)
         if self._has_subflows:
@@ -201,7 +201,7 @@ class CapabilityManifest:
 
     # ----- freeze integration ---------------------------------------------- #
     def overrides(self) -> CapabilityOverrides:
-        """Asserted contracts to hand to :func:`composable_agents.freeze.freeze`."""
+        """Asserted contracts to tool to :func:`composable_agents.freeze.freeze`."""
         contracts = {
             g.name: c
             for g in self.tools.values()
@@ -225,10 +225,10 @@ class CapabilityManifest:
     ) -> list[Diagnostic]:
         """Diagnostics for anything the flow references but the manifest denies.
 
-        Checks tool grants always; checks brains against ``brains``, resolved
+        Checks tool grants always; checks reasoners against ``reasoners``, resolved
         model ids against ``models``, memory scopes against ``memory``, and MCP
         servers/pins against ``mcp_servers`` only when those sections are
-        present (allow-list semantics). If a brain is not registered, model-id
+        present (allow-list semantics). If a reasoner is not registered, model-id
         enforcement skips it because there is no resolved model id to compare.
         """
         out: list[Diagnostic] = []
@@ -260,20 +260,20 @@ class CapabilityManifest:
                 if self._has_memory and ctx is not None and ctx.scope not in self.memory:
                     out.append(Diagnostic("CAP_MEMORY_DENIED", n.id,
                                           f"context scope {ctx.scope.value!r} is not granted"))
-            for brain in _brain_refs(n):
-                if self._has_brains and brain not in self.brains:
+            for reasoner in _reasoner_refs(n):
+                if self._has_reasoners and reasoner not in self.reasoners:
                     out.append(Diagnostic("CAP_MODEL_DENIED", n.id,
-                                          f"brain {brain!r} is not granted by the manifest"))
+                                          f"reasoner {reasoner!r} is not granted by the manifest"))
                 if self._has_models:
                     try:
-                        model = get_brain(brain).model
+                        model = get_reasoner(reasoner).model
                     except KeyError:
                         model = None
                     if model is not None and model not in self.models:
                         out.append(Diagnostic(
                             "CAP_MODEL_ID_DENIED",
                             n.id,
-                            f"brain {brain!r} resolves to model {model!r}, "
+                            f"reasoner {reasoner!r} resolves to model {model!r}, "
                             "which is not granted by the manifest",
                         ))
             if isinstance(step, ThinkStep):
@@ -329,7 +329,7 @@ class CapabilityManifest:
 
     # ----- run-time helpers (§9, seam 3) ------------------------------------ #
     def network_allows(self, domain: str) -> bool:
-        """Whether a native hand may reach ``domain``."""
+        """Whether a native tool may reach ``domain``."""
         if not self._has_network:
             return True
         return domain in self.network
@@ -344,11 +344,11 @@ class CapabilityManifest:
             raise CapabilityDenied(f"budget exceeded: {tokens} > {self.budget.tokens} tokens")
 
 
-def _brain_refs(node: Node) -> list[str]:
+def _reasoner_refs(node: Node) -> list[str]:
     refs: list[str] = []
     step = node.step
     if isinstance(step, ThinkStep):
-        refs.append(step.brain)
+        refs.append(step.reasoner)
     if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
         refs.append(node.controller)
     return refs

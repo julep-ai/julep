@@ -28,7 +28,7 @@ def test_in_memory_env_dev_allows_max_calls_prod_gap() -> None:
     strict_env = InMemoryEnv(
         frozen.manifest,
         ProjectionEmitter(InMemoryProjection()),
-        hands={"srv/inc": inc},
+        tools={"srv/inc": inc},
         max_calls={"srv/inc": 1},
     )
     with pytest.raises(CapabilityDenied):
@@ -39,7 +39,7 @@ def test_in_memory_env_dev_allows_max_calls_prod_gap() -> None:
     dev_env = InMemoryEnv(
         frozen.manifest,
         ProjectionEmitter(InMemoryProjection()),
-        hands={"srv/inc": inc},
+        tools={"srv/inc": inc},
         max_calls={"srv/inc": 1},
         mode=EnforcementMode.DEV,
     )
@@ -177,7 +177,7 @@ def test_agent_facade_dev_allows_over_called_tool() -> None:
     ]
     calls: list[int] = []
 
-    def llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
         return replies.pop(0)
 
     @tool(effect="read", idempotent=True)
@@ -205,7 +205,7 @@ def test_agent_facade_dev_unregistered_tool_returns_placeholder_prod_gap() -> No
     ]
     seen_payloads: list[dict[str, Any]] = []
 
-    def llm(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def llm(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         seen_payloads.append(payload)
         return replies.pop(0)
 
@@ -217,7 +217,7 @@ def test_agent_facade_dev_unregistered_tool_returns_placeholder_prod_gap() -> No
         "m",
         tools=[granted_read_tool],
         name="agent_strict_unregistered_tool",
-        llm=lambda _brain_name, _payload: {"tool": "ungranted_tool", "input": "x"},
+        llm=lambda _reasoner_name, _payload: {"tool": "ungranted_tool", "input": "x"},
     )
     strict = strict_agent.run("start")
     assert strict["status"] == "denied"

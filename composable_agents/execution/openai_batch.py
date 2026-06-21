@@ -1,4 +1,4 @@
-"""OpenAI Batch API adapter for cross-run brain batching."""
+"""OpenAI Batch API adapter for cross-run reasoner batching."""
 
 from __future__ import annotations
 
@@ -44,29 +44,29 @@ class OpenAIBatchProvider(BatchProvider):
     def build_request(
         self,
         custom_id: str,
-        brain: Any,
+        reasoner: Any,
         value: Any,
         *,
         transcript: Any = None,
         dispatch: Any = None,
     ) -> dict[str, Any]:
         del dispatch
-        _, model = _split_model(brain.model, "openai")
-        schema = brain.reply_schema
-        user_text = rendered_user_for(brain, value)
+        _, model = _split_model(reasoner.model, "openai")
+        schema = reasoner.reply_schema
+        user_text = rendered_user_for(reasoner, value)
         body: dict[str, Any] = {
             "model": model,
             "messages": _messages(
-                brain.system,
+                reasoner.system,
                 value,
                 schema_hint=None,
                 user_text=user_text,
                 transcript=transcript,
             ),
-            "max_tokens": brain.max_tokens or 1024,
+            "max_tokens": reasoner.max_tokens or 1024,
         }
-        if brain.temperature is not None:
-            body["temperature"] = brain.temperature
+        if reasoner.temperature is not None:
+            body["temperature"] = reasoner.temperature
         if schema is not None:
             body["response_format"] = _response_format(schema)
         return {
@@ -130,11 +130,11 @@ class OpenAIBatchProvider(BatchProvider):
                 else:
                     yield (custom_id, entry["response"]["body"])
 
-    def parse(self, raw: Any, brain: Any) -> Any:
+    def parse(self, raw: Any, reasoner: Any) -> Any:
         if isinstance(raw, _BatchEntryError):
             raise RuntimeError(f"batch entry {raw.type}")
 
-        return super().parse(_llm_completion_from_openai_body(raw), brain)
+        return super().parse(_llm_completion_from_openai_body(raw), reasoner)
 
 
 def _split_composite_id(batch_id: str) -> list[str]:

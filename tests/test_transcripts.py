@@ -1,9 +1,9 @@
 """Framework-owned transcripts for app agent loops (docs/design/agent-transcripts.md).
 
 The transcript is derived, not stored: transcript_for projects a deterministic,
-ref-bearing plan in workflow code; the invoke_brain effect hydrates blob refs,
+ref-bearing plan in workflow code; the invoke_reasoner effect hydrates blob refs,
 enforces the hard token budget, runs the named summarizer for SUMMARY scope,
-and hands the materialized turns to the LlmCaller as its fourth argument.
+and tools the materialized turns to the LlmCaller as its fourth argument.
 """
 
 from __future__ import annotations
@@ -23,15 +23,15 @@ from composable_agents.agent_loop import (
     drive_agent_loop,
     state_fingerprint,
 )
-from composable_agents.dotctx import Brain, brain_to_flow, register_brain
+from composable_agents.dotctx import Reasoner, reasoner_to_flow, register_reasoner
 from composable_agents.errors import ValidationError
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.blobstore import InMemoryBlobStore
 from composable_agents.execution.effects import (
-    InvokeBrainInput,
+    InvokeReasonerInput,
     WorkerContext,
     configure,
-    invokeBrain,
+    invokeReasoner,
 )
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.freeze import McpSnapshot
@@ -176,13 +176,13 @@ def test_bare_app_wire_format_is_unchanged() -> None:
 
 
 def test_app_ctx_and_summarizer_round_trip() -> None:
-    flow = app("c", ctx=SUMMARY, summarizer="sum.brain", max_rounds=3)
+    flow = app("c", ctx=SUMMARY, summarizer="sum.reasoner", max_rounds=3)
     encoded = flow.to_json()
     assert encoded["ctx"] == {"scope": "summary", "maxTokens": 1000}
-    assert encoded["summarizer"] == "sum.brain"
+    assert encoded["summarizer"] == "sum.reasoner"
     back = Node.from_json(encoded)
     assert back.ctx == SUMMARY
-    assert back.summarizer == "sum.brain"
+    assert back.summarizer == "sum.reasoner"
     assert back.to_json() == encoded
 
 
@@ -206,24 +206,24 @@ def test_app_ctx_reaches_run_agent_app_config() -> None:
             return "ok"
 
     env = CapturingEnv({}, ProjectionEmitter(InMemoryProjection()))
-    flow = app("ctrl", ctx=SUMMARY, summarizer="sum.brain")
+    flow = app("ctrl", ctx=SUMMARY, summarizer="sum.reasoner")
     asyncio.run(interpret(flow, 1, env))
     assert seen["app_config"] == {
         "ctx": {"scope": "summary", "maxTokens": 1000},
-        "summarizer": "sum.brain",
+        "summarizer": "sum.reasoner",
     }
 
 
-def test_dotctx_agent_brain_derives_ctx_from_context_scope() -> None:
-    register_brain(Brain(
+def test_dotctx_agent_reasoner_derives_ctx_from_context_scope() -> None:
+    register_reasoner(Reasoner(
         name="tr.agent.whole", model="m", is_agent=True,
         context_scope=ContextScope.WHOLE_SESSION,
     ))
-    node = brain_to_flow(register_brain(Brain(
+    node = reasoner_to_flow(register_reasoner(Reasoner(
         name="tr.agent.local", model="m", is_agent=True,
     )))
     assert "ctx" not in node.to_json()  # LOCAL agents: hash-stable, no ctx key
-    node = brain_to_flow(Brain(
+    node = reasoner_to_flow(Reasoner(
         name="tr.agent.whole", model="m", is_agent=True,
         context_scope=ContextScope.WHOLE_SESSION,
     ))
@@ -253,7 +253,7 @@ def test_summary_without_summarizer_is_blocking() -> None:
 
 def test_well_declared_transcript_scopes_deploy_clean() -> None:
     assert _codes(app("c", ctx=WHOLE)) == set()
-    assert _codes(app("c", ctx=SUMMARY, summarizer="sum.brain")) == set()
+    assert _codes(app("c", ctx=SUMMARY, summarizer="sum.reasoner")) == set()
     assert _codes(app("c")) == set()
     assert _codes(app("c", ctx=ContextPolicy())) == set()  # LOCAL needs nothing
 
@@ -261,15 +261,15 @@ def test_well_declared_transcript_scopes_deploy_clean() -> None:
 # --------------------------------------------------------------------------- #
 # Arity shim: 4-arg canonical; wrapped 2-/3-arg callers fail fast on transcripts.
 # --------------------------------------------------------------------------- #
-def _invoke(brain: str = "tr.brain", **kwargs: Any) -> Any:
-    return asyncio.run(invokeBrain(InvokeBrainInput(brain=brain, value=1, cid="c", **kwargs)))
+def _invoke(reasoner: str = "tr.reasoner", **kwargs: Any) -> Any:
+    return asyncio.run(invokeReasoner(InvokeReasonerInput(reasoner=reasoner, value=1, cid="c", **kwargs)))
 
 
 def test_legacy_two_arg_caller_still_works_without_transcript() -> None:
-    register_brain(Brain(name="tr.brain", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     seen: dict[str, Any] = {}
 
-    async def legacy(brain, value):
+    async def legacy(reasoner, value):
         seen["value"] = value
         return {"out": 1}
 
@@ -278,10 +278,10 @@ def test_legacy_two_arg_caller_still_works_without_transcript() -> None:
 
 
 def test_three_arg_caller_still_receives_principal() -> None:
-    register_brain(Brain(name="tr.brain", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     seen: dict[str, Any] = {}
 
-    async def principal_aware(brain, value, principal):
+    async def principal_aware(reasoner, value, principal):
         seen["principal"] = principal
         return {"out": 2}
 
@@ -292,12 +292,12 @@ def test_three_arg_caller_still_receives_principal() -> None:
 
 @pytest.mark.parametrize("arity", [2, 3])
 def test_narrow_callers_reject_transcripts_loudly(arity: int) -> None:
-    register_brain(Brain(name="tr.brain", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
 
-    async def two(brain, value):
+    async def two(reasoner, value):
         return "ok"
 
-    async def three(brain, value, principal):
+    async def three(reasoner, value, principal):
         return "ok"
 
     configure(WorkerContext(llm=two if arity == 2 else three))
@@ -309,10 +309,10 @@ def test_narrow_callers_reject_transcripts_loudly(arity: int) -> None:
 
 
 def test_four_arg_caller_is_used_unwrapped() -> None:
-    register_brain(Brain(name="tr.brain", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     seen: dict[str, Any] = {}
 
-    async def canonical(brain, value, principal, transcript):
+    async def canonical(reasoner, value, principal, transcript):
         seen["transcript"] = transcript
         return "ok"
 
@@ -321,7 +321,7 @@ def test_four_arg_caller_is_used_unwrapped() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# invokeBrain: hydration, budget enforcement, summarizer, summary envelope.
+# invokeReasoner: hydration, budget enforcement, summarizer, summary envelope.
 # --------------------------------------------------------------------------- #
 def _blob(store: InMemoryBlobStore, tenant: str, value: Any) -> str:
     # Same canonical-JSON encoding as the putBlob activity.
@@ -331,24 +331,24 @@ def _blob(store: InMemoryBlobStore, tenant: str, value: Any) -> str:
 def _capture_ctx(**kwargs: Any) -> tuple[WorkerContext, dict[str, Any]]:
     seen: dict[str, Any] = {}
 
-    async def llm(brain, value, principal, transcript):
+    async def llm(reasoner, value, principal, transcript):
         seen.setdefault("calls", []).append(
-            {"brain": brain.name, "value": value, "transcript": transcript}
+            {"reasoner": reasoner.name, "value": value, "transcript": transcript}
         )
-        return seen.get("replies", {}).get(brain.name, {"output": "done"})
+        return seen.get("replies", {}).get(reasoner.name, {"output": "done"})
 
     return WorkerContext(llm=llm, **kwargs), seen
 
 
 def test_whole_session_transcript_is_hydrated_from_the_blob_store() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     store = InMemoryBlobStore()
     ref = _blob(store, "sess", {"hits": 3})
     ctx, seen = _capture_ctx(blob_store=store)
     configure(ctx)
 
     out = _invoke(
-        brain="tr.ctrl",
+        reasoner="tr.ctrl",
         transcript=[
             {"role": "user", "content": "go"},
             {"role": "tool", "ref": {"kind": "native", "name": "t"}, "content_ref": ref},
@@ -364,12 +364,12 @@ def test_whole_session_transcript_is_hydrated_from_the_blob_store() -> None:
 
 
 def test_whole_session_budget_uses_worker_tokenizer_and_marks_elision() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, seen = _capture_ctx(count_tokens=lambda text: 1)  # one token per turn
     configure(ctx)
 
     _invoke(
-        brain="tr.ctrl",
+        reasoner="tr.ctrl",
         transcript=[{"role": "user", "content": f"t{i}"} for i in range(5)],
         ctx={"scope": "whole_session", "maxTokens": 2},
     )
@@ -382,50 +382,50 @@ def test_whole_session_budget_uses_worker_tokenizer_and_marks_elision() -> None:
 
 
 def test_transcript_without_budget_fails_fast() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, _ = _capture_ctx()
     configure(ctx)
     with pytest.raises(RuntimeError, match="no implicit default"):
         _invoke(
-            brain="tr.ctrl",
+            reasoner="tr.ctrl",
             transcript=[{"role": "user", "content": "x"}],
             ctx={"scope": "whole_session"},
         )
 
 
 def test_transcript_ref_without_blob_store_fails_fast() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, _ = _capture_ctx()
     configure(ctx)
     with pytest.raises(RuntimeError, match="blob store"):
         _invoke(
-            brain="tr.ctrl",
+            reasoner="tr.ctrl",
             transcript=[{"role": "tool", "content_ref": "t/sha256:" + "b" * 64}],
             ctx={"scope": "whole_session", "maxTokens": 100},
         )
 
 
 def test_summary_scope_without_summarizer_fails_fast() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, _ = _capture_ctx()
     configure(ctx)
     with pytest.raises(RuntimeError, match="summarizer"):
         _invoke(
-            brain="tr.ctrl",
+            reasoner="tr.ctrl",
             transcript=[{"role": "user", "content": "x"}],
             ctx={"scope": "summary", "maxTokens": 100},
         )
 
 
 def test_summary_scope_runs_summarizer_and_returns_envelope() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
-    register_brain(Brain(name="tr.sum", model="m", system="summarize"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
     ctx, seen = _capture_ctx(count_tokens=lambda text: 1)
     seen["replies"] = {"tr.sum": "folded summary", "tr.ctrl": {"output": "done"}}
     configure(ctx)
 
     out = _invoke(
-        brain="tr.ctrl",
+        reasoner="tr.ctrl",
         transcript=[{"role": "user", "content": f"t{i}"} for i in range(4)],
         ctx={"scope": "summary", "maxTokens": 2},
         summarizer="tr.sum",
@@ -434,7 +434,7 @@ def test_summary_scope_runs_summarizer_and_returns_envelope() -> None:
     # Envelope: the workflow persists the new running summary in AgentState.
     assert out == {SUMMARY_KEY: "folded summary", "reply": {"output": "done"}}
     summarizer_call, controller_call = seen["calls"]
-    assert summarizer_call["brain"] == "tr.sum"
+    assert summarizer_call["reasoner"] == "tr.sum"
     assert summarizer_call["value"] == {
         "summary": "prior",
         "turns": [{"role": "user", "content": "t0"}, {"role": "user", "content": "t1"}],
@@ -447,13 +447,13 @@ def test_summary_scope_runs_summarizer_and_returns_envelope() -> None:
 
 
 def test_summary_scope_without_elision_reuses_prior_summary_no_envelope() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
-    register_brain(Brain(name="tr.sum", model="m", system="summarize"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
     ctx, seen = _capture_ctx()
     configure(ctx)
 
     out = _invoke(
-        brain="tr.ctrl",
+        reasoner="tr.ctrl",
         transcript=[{"role": "user", "content": "x"}],
         ctx={"scope": "summary", "maxTokens": 10_000},
         summarizer="tr.sum",
@@ -465,14 +465,14 @@ def test_summary_scope_without_elision_reuses_prior_summary_no_envelope() -> Non
 
 
 def test_summarizer_must_reply_with_text() -> None:
-    register_brain(Brain(name="tr.ctrl", model="m", system="s"))
-    register_brain(Brain(name="tr.sum", model="m", system="summarize"))
+    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
     ctx, seen = _capture_ctx(count_tokens=lambda text: 1)
     seen["replies"] = {"tr.sum": ["not", "text"]}
     configure(ctx)
     with pytest.raises(RuntimeError, match="must reply with text"):
         _invoke(
-            brain="tr.ctrl",
+            reasoner="tr.ctrl",
             transcript=[{"role": "user", "content": f"t{i}"} for i in range(4)],
             ctx={"scope": "summary", "maxTokens": 1},
             summarizer="tr.sum",
@@ -506,7 +506,7 @@ def test_controller_turn_local_payload_is_unchanged() -> None:
 
 def test_controller_turn_attaches_plan_and_persists_summary() -> None:
     payloads: list[dict[str, Any]] = []
-    cfg = AgentConfig(ctx=SUMMARY, summarizer="sum.brain")
+    cfg = AgentConfig(ctx=SUMMARY, summarizer="sum.reasoner")
     step = _turn_step(
         cfg,
         [{SUMMARY_KEY: "s1", "reply": {"tool": "t", "input": 2}}],
@@ -517,7 +517,7 @@ def test_controller_turn_attaches_plan_and_persists_summary() -> None:
     (payload,) = payloads
     assert payload["transcript"] == [{"role": "user", "content": {"task": "go"}}]
     assert payload["ctx"] == {"scope": "summary", "maxTokens": 1000}
-    assert payload["summarizer"] == "sum.brain"
+    assert payload["summarizer"] == "sum.reasoner"
     assert "summary" not in payload  # no running summary yet
     # The envelope's summary lands on state; the inner reply drives the round.
     assert out is state and state.summary == "s1"
@@ -557,7 +557,7 @@ class _Stop(Exception):
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_agent_workflow_threads_transcript_plan_into_invoke_brain(monkeypatch) -> None:
+def test_agent_workflow_threads_transcript_plan_into_invoke_reasoner(monkeypatch) -> None:
     payloads: list[Any] = []
 
     async def fake_execute_activity(fn, payload, **kwargs):
@@ -575,12 +575,12 @@ def test_agent_workflow_threads_transcript_plan_into_invoke_brain(monkeypatch) -
     )
     out = asyncio.run(AgentWorkflow().run(inp))
     assert out["status"] == "done"
-    brain_payloads = [p for p in payloads if isinstance(p, harness.InvokeBrainInput)]
-    assert len(brain_payloads) == 1
-    brain_payload = brain_payloads[0]
-    assert brain_payload.transcript == [{"role": "user", "content": {"task": "go"}}]
-    assert brain_payload.ctx == {"scope": "whole_session", "maxTokens": 500}
-    assert brain_payload.summary is None
+    reasoner_payloads = [p for p in payloads if isinstance(p, harness.InvokeReasonerInput)]
+    assert len(reasoner_payloads) == 1
+    reasoner_payload = reasoner_payloads[0]
+    assert reasoner_payload.transcript == [{"role": "user", "content": {"task": "go"}}]
+    assert reasoner_payload.ctx == {"scope": "whole_session", "maxTokens": 500}
+    assert reasoner_payload.summary is None
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -598,10 +598,10 @@ def test_agent_workflow_local_scope_sends_no_transcript(monkeypatch) -> None:
         resolve_spec=False,
     )
     asyncio.run(AgentWorkflow().run(inp))
-    brain_payloads = [p for p in payloads if isinstance(p, harness.InvokeBrainInput)]
-    assert len(brain_payloads) == 1
-    brain_payload = brain_payloads[0]
-    assert brain_payload.transcript is None and brain_payload.ctx is None
+    reasoner_payloads = [p for p in payloads if isinstance(p, harness.InvokeReasonerInput)]
+    assert len(reasoner_payloads) == 1
+    reasoner_payload = reasoner_payloads[0]
+    assert reasoner_payload.transcript is None and reasoner_payload.ctx is None
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -612,10 +612,10 @@ def test_summary_survives_temporal_continue_as_new(monkeypatch) -> None:
     async def fake_execute_activity(fn, payload, **kwargs):
         if fn.__name__ not in {"startTrajectory", "finishTrajectory"}:
             payloads.append(payload)
-        if fn.__name__ == "invokeBrain":
+        if fn.__name__ == "invokeReasoner":
             # The activity ran the summarizer: envelope with the new summary.
             return {SUMMARY_KEY: "carried summary", "reply": {"tool": "t", "input": 1}}
-        return {"hand": "out"}
+        return {"tool": "out"}
 
     def fake_continue_as_new(next_input):
         captured.append(next_input)
@@ -628,7 +628,7 @@ def test_summary_survives_temporal_continue_as_new(monkeypatch) -> None:
         controller="ctrl", session_id="sess", input=5,
         config={
             "maxRounds": 5, "budget": {"cost": 1000}, "continueAsNewAfter": 1,
-            "ctx": {"scope": "summary", "maxTokens": 100}, "summarizer": "sum.brain",
+            "ctx": {"scope": "summary", "maxTokens": 100}, "summarizer": "sum.reasoner",
         },
         resolve_spec=False,
     )
@@ -639,10 +639,10 @@ def test_summary_survives_temporal_continue_as_new(monkeypatch) -> None:
     assert next_input.state["summary"] == "carried summary"
     # The carried config keeps the transcript policy for the next segment.
     assert next_input.config["ctx"] == {"scope": "summary", "maxTokens": 100}
-    assert next_input.config["summarizer"] == "sum.brain"
-    brain_payload = payloads[0]
-    assert brain_payload.summarizer == "sum.brain"
-    assert brain_payload.summary is None  # first round: nothing carried yet
+    assert next_input.config["summarizer"] == "sum.reasoner"
+    reasoner_payload = payloads[0]
+    assert reasoner_payload.summarizer == "sum.reasoner"
+    assert reasoner_payload.summary is None  # first round: nothing carried yet
 
 
 # --------------------------------------------------------------------------- #
@@ -657,16 +657,16 @@ if HAVE_DBOS:
 def test_dbos_agent_segment_carries_summary_in_envelope(monkeypatch) -> None:
     payloads: list[dict] = []
 
-    async def fake_brain(inp: dict) -> Any:
+    async def fake_reasoner(inp: dict) -> Any:
         payloads.append(inp)
         return {SUMMARY_KEY: "dbos summary", "reply": {"tool": "t", "input": 1}}
 
-    async def fake_hand(inp: dict) -> Any:
-        return {"hand": "out"}
+    async def fake_tool(inp: dict) -> Any:
+        return {"tool": "out"}
 
-    monkeypatch.setattr(dbos_backend, "invokeBrainStep", fake_brain)
-    monkeypatch.setattr(dbos_backend, "callHandIdempotent", fake_hand)
-    monkeypatch.setattr(dbos_backend, "callHandNoRetry", fake_hand)
+    monkeypatch.setattr(dbos_backend, "invokeReasonerStep", fake_reasoner)
+    monkeypatch.setattr(dbos_backend, "callToolIdempotent", fake_tool)
+    monkeypatch.setattr(dbos_backend, "callToolNoRetry", fake_tool)
 
     agent_body = inspect.unwrap(dbos_backend.agent_workflow)
     out = asyncio.run(agent_body({
@@ -675,18 +675,18 @@ def test_dbos_agent_segment_carries_summary_in_envelope(monkeypatch) -> None:
         "input": {"task": "go"},
         "config": {
             "maxRounds": 5, "budget": {"cost": 1000}, "continueAsNewAfter": 1,
-            "ctx": {"scope": "summary", "maxTokens": 100}, "summarizer": "sum.brain",
+            "ctx": {"scope": "summary", "maxTokens": 100}, "summarizer": "sum.reasoner",
         },
         "resolveSpec": False,
     }))
 
     assert CONTINUATION_KEY in out
     assert out[CONTINUATION_KEY]["state"]["summary"] == "dbos summary"
-    assert out[CONTINUATION_KEY]["config"]["summarizer"] == "sum.brain"
+    assert out[CONTINUATION_KEY]["config"]["summarizer"] == "sum.reasoner"
 
     (step_payload,) = payloads
     # The transcript rides beside the controller value, never inside it.
     assert step_payload["value"] == {"input": {"task": "go"}, "trace": []}
     assert step_payload["transcript"] == [{"role": "user", "content": {"task": "go"}}]
     assert step_payload["ctx"] == {"scope": "summary", "maxTokens": 100}
-    assert step_payload["summarizer"] == "sum.brain"
+    assert step_payload["summarizer"] == "sum.reasoner"

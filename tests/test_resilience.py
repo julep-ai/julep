@@ -233,9 +233,9 @@ def test_resilience_exhausted_carries_attempts() -> None:
 # --------------------------------------------------------------------------- #
 # ExecutionPolicy knob
 # --------------------------------------------------------------------------- #
-def test_execution_policy_roundtrips_brain_max_attempts() -> None:
+def test_execution_policy_roundtrips_reasoner_max_attempts() -> None:
     from composable_agents.execution.policy import ExecutionPolicy
 
-    policy = ExecutionPolicy(brain_max_attempts=1)
-    assert ExecutionPolicy.from_json(policy.to_json()).brain_max_attempts == 1
-    assert ExecutionPolicy.from_json({}).brain_max_attempts == 4
+    policy = ExecutionPolicy(reasoner_max_attempts=1)
+    assert ExecutionPolicy.from_json(policy.to_json()).reasoner_max_attempts == 1
+    assert ExecutionPolicy.from_json({}).reasoner_max_attempts == 4

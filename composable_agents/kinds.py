@@ -29,7 +29,7 @@ class Op(str, Enum):
 class Shape(str, Enum):
     """Cost classes of a flow, ordered cheapest -> costliest.
 
-    The order *is* the cost of owning the continuation: a ``Pipeline`` hands its
+    The order *is* the cost of owning the continuation: a ``Pipeline`` tools its
     continuation straight to the next step, an ``Agent`` owns an open-ended loop.
     """
 

@@ -46,10 +46,10 @@ def _default(value):
     return ("default", value["value"])
 
 
-def _env(flow, *, snapshot=None, hands=None):
+def _env(flow, *, snapshot=None, tools=None):
     fr = freeze(flow, snapshot or read_snapshot("inc", "double", "tag"))
     store = InMemoryProjection()
-    return fr, InMemoryEnv(fr.manifest, ProjectionEmitter(store), hands=hands or {})
+    return fr, InMemoryEnv(fr.manifest, ProjectionEmitter(store), tools=tools or {})
 
 
 def _register_alt_switch_pures() -> None:
@@ -115,13 +115,13 @@ def test_nested_alt_switch_freezes_validates_and_runs_calls():
             ),
         },
     )
-    hands = {
+    tools = {
         "srv/inc": lambda v: {**v, "value": v["value"] + 1},
         "srv/double": lambda v: {**v, "value": v["value"] * 2},
         "srv/tag": lambda v: ("tag", v["value"]),
     }
 
-    fr, env = _env(flow, hands=hands)
+    fr, env = _env(flow, tools=tools)
 
     assert blocking(validate(fr.flow, fr.manifest)) == []
     assert run(

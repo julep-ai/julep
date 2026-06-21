@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import Brain, pure, register_brain
+from composable_agents import Reasoner, pure, register_reasoner
 from composable_agents import tool as native_tool
 
 from .core import each, flow, think
 from .core import tool as flow_tool
 
-LABEL_BRAIN = "cluster_labeler"
-KEYWORDS_BRAIN = "cluster_keywords"
+LABEL_REASONER = "cluster_labeler"
+KEYWORDS_REASONER = "cluster_keywords"
 
 STORE_CONTEXT: dict[str, Any] = {
     "storeId": "store-a",
@@ -53,9 +53,9 @@ def store_labels() -> dict[str, Any]:
 
 reset_store()
 
-register_brain(
-    Brain(
-        name=LABEL_BRAIN,
+register_reasoner(
+    Reasoner(
+        name=LABEL_REASONER,
         model="anthropic:claude-haiku-4-5-20251001",
         system=(
             "Label a memory macrocluster from representative member names. "
@@ -72,9 +72,9 @@ register_brain(
     )
 )
 
-register_brain(
-    Brain(
-        name=KEYWORDS_BRAIN,
+register_reasoner(
+    Reasoner(
+        name=KEYWORDS_REASONER,
         model="anthropic:claude-haiku-4-5-20251001",
         system=(
             "Extract short searchable keywords for a memory macrocluster. "
@@ -231,8 +231,8 @@ def _fake_keywords(value: dict[str, Any]) -> dict[str, Any]:
 @flow
 def label_one(store_context, cluster):
     label_source = store_context | cluster
-    label = think(LABEL_BRAIN, label_source)
-    keywords = think(KEYWORDS_BRAIN, label_source)
+    label = think(LABEL_REASONER, label_source)
+    keywords = think(KEYWORDS_REASONER, label_source)
     _ = label  # Consumed by spike.merge_label_source_keywords via the env.
     write_payload = label_source | keywords
     return write_cluster_label(write_payload)

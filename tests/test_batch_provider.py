@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Brain
+from composable_agents.dotctx import Reasoner
 from composable_agents.execution import batch_provider
 from composable_agents.execution.batch_provider import (
     BatchProvider,
@@ -19,7 +19,7 @@ class Fake(BatchProvider):
     def build_request(
         self,
         custom_id: str,
-        brain: Any,
+        reasoner: Any,
         value: Any,
         *,
         transcript: Any = None,
@@ -72,13 +72,13 @@ def test_register_and_select() -> None:
 
 def test_parse_reuses_llm_parse_reply() -> None:
     provider = Fake()
-    brain_json = Brain(
+    reasoner_json = Reasoner(
         name="t",
         model="m",
         system="s",
         reply_schema={"type": "object"},
     )
-    assert provider.parse(_completion(json.dumps({"k": 1})), brain_json) == {"k": 1}
+    assert provider.parse(_completion(json.dumps({"k": 1})), reasoner_json) == {"k": 1}
 
-    brain_text = Brain(name="t2", model="m", system="s", reply_schema=None)
-    assert provider.parse(_completion("hello"), brain_text) == "hello"
+    reasoner_text = Reasoner(name="t2", model="m", system="s", reply_schema=None)
+    assert provider.parse(_completion("hello"), reasoner_text) == "hello"

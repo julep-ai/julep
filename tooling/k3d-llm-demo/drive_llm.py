@@ -21,7 +21,7 @@ async def main() -> None:
     session_id = f"k3d-llm-demo-{int(time.time())}"
     print(f"starting {session_id!r}: {QUESTION}")
     result = await AGENT.deploy(client, session_id=session_id, input=QUESTION)
-    print("\n=== durable run result (worker: k3d pod, brain: real Anthropic) ===")
+    print("\n=== durable run result (worker: k3d pod, reasoner: real Anthropic) ===")
     print("status:", result["status"], "| cost:", result.get("cost"))
     print("output:", json.dumps(result["output"]))
     print("trace:")

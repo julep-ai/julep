@@ -204,7 +204,7 @@ def test_cma_env_runs_bundle_pure_via_wasm() -> None:
     env = CMAAgentEnv(
         inner,
         client=object(),  # never touched: get_pure is pure registry routing
-        hands={},
+        tools={},
         cfg=AgentConfig(),
     )
 

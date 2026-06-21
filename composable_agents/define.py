@@ -59,7 +59,7 @@ from .ir import SLEEP_TOOL, Ann, CallStep, NativeTool, Node, SourceSpan, canonic
 from .validate import SECRET_KEY_RE
 
 if TYPE_CHECKING:
-    from .dotctx import Brain
+    from .dotctx import Reasoner
 
 
 In = TypeVar("In")
@@ -176,7 +176,7 @@ class _SourceMap:
                     raise DefineError(
                         "unregistered callable "
                         f"{name!r}{_source_suffix(self._span(call))}; "
-                        "decorate it with @pure or @tool, or call think(...) for a brain step; "
+                        "decorate it with @pure or @tool, or call think(...) for a reasoner step; "
                         "registered Tool, Pure, and @flow functions are the only direct Handle callables"
                     )
             if isinstance(stmt, ast.Assign):
@@ -561,16 +561,16 @@ def flow(fn: Callable[..., Any]) -> FlowDef:
 
 
 @overload
-def think(brain_or_name: str | Brain, value: None = None, /, **kwargs: Any) -> Node: ...
+def think(reasoner_or_name: str | Reasoner, value: None = None, /, **kwargs: Any) -> Node: ...
 
 
 @overload
-def think(brain_or_name: str | Brain, value: Handle, /, **kwargs: Any) -> Handle: ...
+def think(reasoner_or_name: str | Reasoner, value: Handle, /, **kwargs: Any) -> Handle: ...
 
 
-def think(brain_or_name: str | Brain, value: Optional[Handle] = None, /, **kwargs: Any) -> Node | Handle:
-    """Dispatch to ``dsl.think(name)`` or append a brain step inside ``@flow``."""
-    name = _brain_name(brain_or_name)
+def think(reasoner_or_name: str | Reasoner, value: Optional[Handle] = None, /, **kwargs: Any) -> Node | Handle:
+    """Dispatch to ``dsl.think(name)`` or append a reasoner step inside ``@flow``."""
+    name = _reasoner_name(reasoner_or_name)
     if value is None:
         return dsl.think(name, **kwargs)
     handle = _ensure_handle(value)
@@ -736,7 +736,7 @@ def reschedule(
 ) -> Handle:
     """Terminal owned-continuation primitive for ``@flow`` authoring.
 
-    Lowering reuses the existing reserved ``__sleep__`` delay hand and the
+    Lowering reuses the existing reserved ``__sleep__`` delay tool and the
     continuation sentinel: optional dirty-mark step, sleep, then
     ``std.continue_with``. External-dispatch dirty marking is not a primitive:
     author a normal terminal dirty-mark tool/status flow and let the dispatcher
@@ -1456,7 +1456,7 @@ def _active_source(fallback: Optional[SourceSpan]) -> Optional[SourceSpan]:
     return _CTX_STACK[-1].source_map.current_span(fallback)
 
 
-def _brain_name(value: str | Brain) -> str:
+def _reasoner_name(value: str | Reasoner) -> str:
     return value if isinstance(value, str) else value.name
 
 

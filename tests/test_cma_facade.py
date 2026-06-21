@@ -24,26 +24,26 @@ def test_cma_tool_binding_wraps_scalar_passes_object_and_ignores_zero_arg() -> N
     def nullary() -> str:
         return "ok"
 
-    # scalar single-arg: object schema naming the param; hand unwraps {param: v}
-    scalar_schema, scalar_hand = cma_tool_binding(scalar)
+    # scalar single-arg: object schema naming the param; tool unwraps {param: v}
+    scalar_schema, scalar_tool = cma_tool_binding(scalar)
     assert scalar_schema == {
         "type": "object",
         "properties": {"city": {"type": "string"}},
         "required": ["city"],
         "additionalProperties": False,
     }
-    assert scalar_hand({"city": "Paris"}) == "in Paris"
-    assert scalar_hand("Paris") == "in Paris"  # tolerates a bare value too
+    assert scalar_tool({"city": "Paris"}) == "in Paris"
+    assert scalar_tool("Paris") == "in Paris"  # tolerates a bare value too
 
-    # multi-arg: already an object schema; hand unpacks the emitted object
-    multi_schema, multi_hand = cma_tool_binding(multi)
+    # multi-arg: already an object schema; tool unpacks the emitted object
+    multi_schema, multi_tool = cma_tool_binding(multi)
     assert multi_schema["type"] == "object"
-    assert multi_hand({"a": 2, "b": 3}) == 5
+    assert multi_tool({"a": 2, "b": 3}) == 5
 
     # zero-arg: object schema, input ignored (no TypeError)
-    nullary_schema, nullary_hand = cma_tool_binding(nullary)
+    nullary_schema, nullary_tool = cma_tool_binding(nullary)
     assert nullary_schema["type"] == "object"
-    assert nullary_hand({}) == "ok"
+    assert nullary_tool({}) == "ok"
 
 
 def test_agent_run_on_cma_happy_path_calls_tool_and_returns_result() -> None:

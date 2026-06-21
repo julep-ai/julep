@@ -13,15 +13,15 @@ from typing import Any, Optional
 import pytest
 
 from composable_agents import arr, call, native, seq
-from composable_agents.dotctx import Brain, register_brain
+from composable_agents.dotctx import Reasoner, register_reasoner
 from composable_agents.execution.blobstore import InMemoryBlobStore
 from composable_agents.execution.effects import (
-    CallHandInput,
-    InvokeBrainInput,
+    CallToolInput,
+    InvokeReasonerInput,
     WorkerContext,
-    callHand,
+    callTool,
     configure,
-    invokeBrain,
+    invokeReasoner,
     set_trajectory_sink,
 )
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
@@ -40,12 +40,12 @@ RUN = "detm-run"
 
 CALL_INPUT = {"q": "determinism"}
 CALL_OUTPUT = {"hits": [1, 2, 3], "ok": True}
-BRAIN_INPUT = {"prompt": "summarize deterministically"}
-BRAIN_OUTPUT = {"reply": "fixed", "tokens": 7}
+REASONER_INPUT = {"prompt": "summarize deterministically"}
+REASONER_OUTPUT = {"reply": "fixed", "tokens": 7}
 
 
 register_pure("detm.double", lambda v: v * 2)
-register_brain(Brain(name="detm.brain", model="test", system="s"))
+register_reasoner(Reasoner(name="detm.reasoner", model="test", system="s"))
 _REPRESENTATIVE_FLOW = seq(call(native("echo")), arr("detm.double"))
 
 
@@ -85,13 +85,13 @@ async def _mcp_caller(
 
 
 async def _llm_caller(
-    brain: Any, value: Any, principal: Any, transcript: Any
+    reasoner: Any, value: Any, principal: Any, transcript: Any
 ) -> Any:
-    return BRAIN_OUTPUT
+    return REASONER_OUTPUT
 
 
-def _hand_input() -> CallHandInput:
-    return CallHandInput(
+def _tool_input() -> CallToolInput:
+    return CallToolInput(
         tool_ref={"kind": "mcp", "server": "detm", "tool": "search"},
         value=CALL_INPUT,
         cid="detm-call-cid",
@@ -100,22 +100,22 @@ def _hand_input() -> CallHandInput:
         segment_seq=0,
         node_id="detm-call-node",
         op="call",
-        kind="hand",
+        kind="tool",
         causes=("detm-upstream",),
     )
 
 
-def _brain_input() -> InvokeBrainInput:
-    return InvokeBrainInput(
-        brain="detm.brain",
-        value=BRAIN_INPUT,
-        cid="detm-brain-cid",
+def _reasoner_input() -> InvokeReasonerInput:
+    return InvokeReasonerInput(
+        reasoner="detm.reasoner",
+        value=REASONER_INPUT,
+        cid="detm-reasoner-cid",
         run_id=RUN,
         root_run_id=ROOT,
         segment_seq=0,
-        node_id="detm-brain-node",
+        node_id="detm-reasoner-node",
         op="think",
-        kind="brain",
+        kind="reasoner",
         causes=("detm-upstream",),
     )
 
@@ -126,7 +126,7 @@ def _run_representative(install_sink: bool) -> tuple[Any, list[dict[str, Any]]]:
     env = InMemoryEnv(
         {},
         emitter,
-        hands={"echo": lambda v: v + 1},
+        tools={"echo": lambda v: v + 1},
         root_run_id=ROOT,
         segment_seq=0,
     )
@@ -153,14 +153,14 @@ def test_interpret_capture_on_off_identical_result_and_projection():
 def test_effect_capture_on_off_result_byte_identical():
     cases = [
         (
-            "callHand",
-            lambda: asyncio.run(callHand(_hand_input())),
+            "callTool",
+            lambda: asyncio.run(callTool(_tool_input())),
             CALL_OUTPUT,
         ),
         (
-            "invokeBrain",
-            lambda: asyncio.run(invokeBrain(_brain_input())),
-            BRAIN_OUTPUT,
+            "invokeReasoner",
+            lambda: asyncio.run(invokeReasoner(_reasoner_input())),
+            REASONER_OUTPUT,
         ),
     ]
 
@@ -194,12 +194,12 @@ def test_failing_sink_keeps_effect_result_byte_identical():
     blobs = InMemoryBlobStore()
     good = InMemoryTrajectoryStore()
     _install(sink=good, blob_store=blobs)
-    baseline = asyncio.run(callHand(_hand_input()))
+    baseline = asyncio.run(callTool(_tool_input()))
 
     before = trajectory_best_effort_failures()
     bad = _RaisingSink()
     _install(sink=bad, blob_store=blobs)
-    result = asyncio.run(callHand(_hand_input()))
+    result = asyncio.run(callTool(_tool_input()))
 
     assert result == baseline == CALL_OUTPUT
     assert _canonical_json(result) == _canonical_json(baseline)

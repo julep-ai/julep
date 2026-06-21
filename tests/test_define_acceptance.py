@@ -169,10 +169,10 @@ def test_episode_summary_define_acceptance_matches_combinator_and_rollup() -> No
     result = deploy(
         batch,
         tools=episode.TOOLS,
-        brains=[episode.SUMMARIZER, episode.ONE_LINER],
+        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
     ).dry_run(
         episode.EPISODE_BATCH,
-        brains={
+        reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,
         },

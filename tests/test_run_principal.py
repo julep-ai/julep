@@ -15,20 +15,20 @@ import pytest
 
 from composable_agents import call, ident, mcp, native, register_pure
 from composable_agents.continuation import continue_with
-from composable_agents.dotctx import Brain, register_brain
+from composable_agents.dotctx import Reasoner, register_reasoner
 from composable_agents.errors import PrincipalRequired
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.effects import (
-    CallHandInput,
+    CallToolInput,
     CompilePlanInput,
-    InvokeBrainInput,
+    InvokeReasonerInput,
     ResolveQoSInput,
     VerifyPuresInput,
     WorkerContext,
-    callHand,
+    callTool,
     compilePlan,
     configure,
-    invokeBrain,
+    invokeReasoner,
     resolveSubflow,
 )
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
@@ -54,11 +54,11 @@ def test_legacy_mcp_caller_still_works():
         return {"hits": 1}
 
     configure(WorkerContext(mcp_call=legacy))
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
         value={"q": "x"}, cid="cid-1", principal=PRINCIPAL,
     )
-    assert asyncio.run(callHand(inp)) == {"hits": 1}
+    assert asyncio.run(callTool(inp)) == {"hits": 1}
     assert seen == {"server": "kb", "tool": "search", "value": {"q": "x"}, "key": "cid-1"}
 
 
@@ -70,15 +70,15 @@ def test_new_mcp_caller_receives_principal():
         return {"hits": 2}
 
     configure(WorkerContext(mcp_call=new_style))
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
         value={"q": "x"}, cid="cid-2", principal=PRINCIPAL,
     )
-    assert asyncio.run(callHand(inp)) == {"hits": 2}
+    assert asyncio.run(callTool(inp)) == {"hits": 2}
     assert seen == {"key": "cid-2", "principal": PRINCIPAL}
 
     # No principal supplied -> the caller sees None, not a stale value.
-    asyncio.run(callHand(CallHandInput(
+    asyncio.run(callTool(CallToolInput(
         tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
         value={}, cid="cid-3",
     )))
@@ -86,35 +86,35 @@ def test_new_mcp_caller_receives_principal():
 
 
 def test_legacy_and_new_llm_callers():
-    register_brain(Brain(name="principal-brain", model="test", system="s"))
+    register_reasoner(Reasoner(name="principal-reasoner", model="test", system="s"))
     seen: dict[str, Any] = {}
 
-    async def legacy(brain, value):
+    async def legacy(reasoner, value):
         seen["legacy"] = value
         return {"out": 1}
 
     configure(WorkerContext(llm=legacy))
-    out = asyncio.run(invokeBrain(InvokeBrainInput(
-        brain="principal-brain", value=5, cid="c1", principal=PRINCIPAL,
+    out = asyncio.run(invokeReasoner(InvokeReasonerInput(
+        reasoner="principal-reasoner", value=5, cid="c1", principal=PRINCIPAL,
     )))
     assert out == {"out": 1} and seen["legacy"] == 5
 
-    async def new_style(brain, value, principal):
+    async def new_style(reasoner, value, principal):
         seen["principal"] = principal
         return {"out": 2}
 
     configure(WorkerContext(llm=new_style))
-    out = asyncio.run(invokeBrain(InvokeBrainInput(
-        brain="principal-brain", value=5, cid="c2", principal=PRINCIPAL,
+    out = asyncio.run(invokeReasoner(InvokeReasonerInput(
+        reasoner="principal-reasoner", value=5, cid="c2", principal=PRINCIPAL,
     )))
     assert out == {"out": 2} and seen["principal"] == PRINCIPAL
 
 
 def test_compile_plan_passes_principal_to_llm():
-    register_brain(Brain(name="principal-planner", model="test", system="plan"))
+    register_reasoner(Reasoner(name="principal-planner", model="test", system="plan"))
     seen = {}
 
-    async def planner_llm(brain, value, principal):
+    async def planner_llm(reasoner, value, principal):
         seen["principal"] = principal
         return ident().to_json()
 
@@ -136,11 +136,11 @@ def test_configure_twice_does_not_double_wrap():
     ctx = WorkerContext(mcp_call=legacy)
     configure(ctx)
     configure(ctx)  # second configure must not re-wrap the already-adapted caller
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref={"kind": "mcp", "server": "kb", "tool": "t"},
         value=1, cid="c", principal=PRINCIPAL,
     )
-    assert asyncio.run(callHand(inp)) == "ok"
+    assert asyncio.run(callTool(inp)) == "ok"
     assert calls == [("kb", "t", 1, "c")]
 
 
@@ -152,13 +152,13 @@ def test_caller_can_require_principal():
 
     configure(WorkerContext(mcp_call=strict))
     ref = {"kind": "mcp", "server": "kb", "tool": "t"}
-    assert asyncio.run(callHand(CallHandInput(tool_ref=ref, value=1, cid="c", principal=PRINCIPAL))) == "ok"
+    assert asyncio.run(callTool(CallToolInput(tool_ref=ref, value=1, cid="c", principal=PRINCIPAL))) == "ok"
     with pytest.raises(PrincipalRequired):
-        asyncio.run(callHand(CallHandInput(tool_ref=ref, value=1, cid="c")))
+        asyncio.run(callTool(CallToolInput(tool_ref=ref, value=1, cid="c")))
 
 
 # --------------------------------------------------------------------------- #
-# Native hands: principal resolves to transport headers via principal_headers.
+# Native tools: principal resolves to transport headers via principal_headers.
 # --------------------------------------------------------------------------- #
 class _FakeResponse:
     def raise_for_status(self) -> None:
@@ -185,25 +185,25 @@ class _FakeAsyncClient:
         return _FakeResponse()
 
 
-def _native_hand_post(monkeypatch, ctx: WorkerContext, inp: CallHandInput) -> dict[str, Any]:
+def _native_tool_post(monkeypatch, ctx: WorkerContext, inp: CallToolInput) -> dict[str, Any]:
     httpx = pytest.importorskip("httpx")
 
     _FakeAsyncClient.posted = []
     monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncClient)
     configure(ctx)
-    assert asyncio.run(callHand(inp)) == {"ok": True}
+    assert asyncio.run(callTool(inp)) == {"ok": True}
     (posted,) = _FakeAsyncClient.posted
     return posted
 
 
-def test_native_hand_principal_headers(monkeypatch):
-    posted = _native_hand_post(
+def test_native_tool_principal_headers(monkeypatch):
+    posted = _native_tool_post(
         monkeypatch,
         WorkerContext(
-            hand_urls={"h": "http://hands.local/h"},
+            tool_urls={"h": "http://tools.local/h"},
             principal_headers=lambda p: {"X-Store-Id": str(p["storeId"])},
         ),
-        CallHandInput(
+        CallToolInput(
             tool_ref={"kind": "native", "name": "h"}, value=1, cid="c1",
             principal=PRINCIPAL,
         ),
@@ -211,12 +211,12 @@ def test_native_hand_principal_headers(monkeypatch):
     assert posted["headers"] == {"Idempotency-Key": "c1", "X-Store-Id": "413"}
 
 
-def test_native_hand_without_principal_headers_unchanged(monkeypatch):
-    # No resolver configured: principal adds no headers (native hands keep working).
-    posted = _native_hand_post(
+def test_native_tool_without_principal_headers_unchanged(monkeypatch):
+    # No resolver configured: principal adds no headers (native tools keep working).
+    posted = _native_tool_post(
         monkeypatch,
-        WorkerContext(hand_urls={"h": "http://hands.local/h"}),
-        CallHandInput(
+        WorkerContext(tool_urls={"h": "http://tools.local/h"}),
+        CallToolInput(
             tool_ref={"kind": "native", "name": "h"}, value=1, cid="c2",
             principal=PRINCIPAL,
         ),
@@ -224,13 +224,13 @@ def test_native_hand_without_principal_headers_unchanged(monkeypatch):
     assert posted["headers"] == {"Idempotency-Key": "c2"}
 
     # Resolver configured but no principal on the run: nothing to resolve.
-    posted = _native_hand_post(
+    posted = _native_tool_post(
         monkeypatch,
         WorkerContext(
-            hand_urls={"h": "http://hands.local/h"},
+            tool_urls={"h": "http://tools.local/h"},
             principal_headers=lambda p: {"X-Store-Id": str(p["storeId"])},
         ),
-        CallHandInput(tool_ref={"kind": "native", "name": "h"}, value=1, cid="c3"),
+        CallToolInput(tool_ref={"kind": "native", "name": "h"}, value=1, cid="c3"),
     )
     assert posted["headers"] == {"Idempotency-Key": "c3"}
 
@@ -246,7 +246,7 @@ def test_inmemory_env_carries_principal():
         seen["principal"] = env.principal
         return v
 
-    env = InMemoryEnv({}, _emitter(), hands={"echo": echo}, principal=PRINCIPAL)
+    env = InMemoryEnv({}, _emitter(), tools={"echo": echo}, principal=PRINCIPAL)
     out = asyncio.run(interpret(call(native("echo")), 5, env))
     assert out.value == 5
     assert seen["principal"] == PRINCIPAL
@@ -259,7 +259,7 @@ def test_interpret_keyword_installs_principal():
         seen["principal"] = env.principal
         return v
 
-    env = InMemoryEnv({}, _emitter(), hands={"echo": echo})
+    env = InMemoryEnv({}, _emitter(), tools={"echo": echo})
     assert env.principal is None
     asyncio.run(interpret(call(native("echo")), 5, env, principal=PRINCIPAL))
     assert seen["principal"] == PRINCIPAL
@@ -323,19 +323,19 @@ def test_temporal_env_stamps_principal_into_effect_payloads(monkeypatch):
     monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     env = _temporal_env(PRINCIPAL)
 
-    asyncio.run(env.call_hand(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
-    asyncio.run(env.invoke_brain("b", 5, "cid-2", None))
+    asyncio.run(env.run_call(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
+    asyncio.run(env.invoke_reasoner("b", 5, "cid-2", None))
     asyncio.run(env.compile_plan("planner", 5, "cid-3"))
 
-    # invoke_brain records the resolved QoS tier via a resolveQoS activity
-    # (also principal-stamped) before the sync invokeBrain dispatch.
-    hand = next(p for p in payloads if isinstance(p, CallHandInput))
+    # invoke_reasoner records the resolved QoS tier via a resolveQoS activity
+    # (also principal-stamped) before the sync invokeReasoner dispatch.
+    tool = next(p for p in payloads if isinstance(p, CallToolInput))
     qos = next(p for p in payloads if isinstance(p, ResolveQoSInput))
-    brain = next(p for p in payloads if isinstance(p, InvokeBrainInput))
+    reasoner = next(p for p in payloads if isinstance(p, InvokeReasonerInput))
     plan = next(p for p in payloads if isinstance(p, CompilePlanInput))
-    assert hand.principal == PRINCIPAL
+    assert tool.principal == PRINCIPAL
     assert qos.principal == PRINCIPAL
-    assert brain.principal == PRINCIPAL
+    assert reasoner.principal == PRINCIPAL
     assert plan.principal == PRINCIPAL
 
 
@@ -486,7 +486,7 @@ def test_agent_sub_child_starts_with_child_bundle(monkeypatch):
     children = []
 
     async def fake_execute_activity(fn, payload, **kwargs):
-        if fn.__name__ == "invokeBrain":
+        if fn.__name__ == "invokeReasoner":
             return {"sub": "child", "input": 1}
         if fn.__name__ == "resolveSubflow":
             assert payload == "child"
@@ -528,9 +528,9 @@ def test_agent_workflow_continue_as_new_carries_principal(monkeypatch):
     async def fake_execute_activity(fn, payload, **kwargs):
         if fn.__name__ not in {"startTrajectory", "finishTrajectory"}:
             payloads.append(payload)
-        if fn.__name__ == "invokeBrain":
+        if fn.__name__ == "invokeReasoner":
             return {"tool": "t", "input": 1}
-        return {"hand": "out"}
+        return {"tool": "out"}
 
     def fake_continue_as_new(next_input):
         captured.append(next_input)
@@ -573,22 +573,22 @@ if HAVE_DBOS:
     from composable_agents.execution.policy import ExecutionPolicy as _Policy
 
 
-def _patch_dbos_steps(monkeypatch, payloads, *, brain_reply=None, plan_reply=None):
-    async def fake_hand(inp: dict) -> Any:
+def _patch_dbos_steps(monkeypatch, payloads, *, reasoner_reply=None, plan_reply=None):
+    async def fake_tool(inp: dict) -> Any:
         payloads.append(inp)
-        return {"hand": "out"}
+        return {"tool": "out"}
 
-    async def fake_brain(inp: dict) -> Any:
+    async def fake_reasoner(inp: dict) -> Any:
         payloads.append(inp)
-        return brain_reply if brain_reply is not None else {"brain": "out"}
+        return reasoner_reply if reasoner_reply is not None else {"reasoner": "out"}
 
     async def fake_plan(inp: dict) -> Any:
         payloads.append(inp)
         return plan_reply if plan_reply is not None else ident().to_json()
 
-    monkeypatch.setattr(dbos_backend, "callHandIdempotent", fake_hand)
-    monkeypatch.setattr(dbos_backend, "callHandNoRetry", fake_hand)
-    monkeypatch.setattr(dbos_backend, "invokeBrainStep", fake_brain)
+    monkeypatch.setattr(dbos_backend, "callToolIdempotent", fake_tool)
+    monkeypatch.setattr(dbos_backend, "callToolNoRetry", fake_tool)
+    monkeypatch.setattr(dbos_backend, "invokeReasonerStep", fake_reasoner)
     monkeypatch.setattr(dbos_backend, "compilePlanStep", fake_plan)
 
 
@@ -605,8 +605,8 @@ def test_dbos_env_stamps_principal_into_step_payloads(monkeypatch):
         policy=_Policy(),
         principal=PRINCIPAL,
     )
-    asyncio.run(env.call_hand(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
-    asyncio.run(env.invoke_brain("b", 5, "cid-2", None))
+    asyncio.run(env.run_call(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
+    asyncio.run(env.invoke_reasoner("b", 5, "cid-2", None))
     asyncio.run(env.compile_plan("planner", 5, "cid-3"))
 
     assert len(payloads) == 3
@@ -632,7 +632,7 @@ def test_dbos_inline_subflow_inherits_principal(monkeypatch):
         principal=PRINCIPAL,
     )
     out = asyncio.run(env.run_sub("child", None, 5, "cid-1"))
-    assert out == {"hand": "out"}
+    assert out == {"tool": "out"}
     (child_payload,) = payloads
     assert child_payload["principal"] == PRINCIPAL
 
@@ -679,7 +679,7 @@ def test_dbos_inline_subflow_verifies_with_bundle(monkeypatch):
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_agent_segment_envelope_carries_principal(monkeypatch):
     payloads: list[dict] = []
-    _patch_dbos_steps(monkeypatch, payloads, brain_reply={"tool": "t", "input": 1})
+    _patch_dbos_steps(monkeypatch, payloads, reasoner_reply={"tool": "t", "input": 1})
 
     # The raw (undecorated) workflow body: same code, no DBOS runtime needed.
     agent_body = inspect.unwrap(dbos_backend.agent_workflow)
@@ -712,7 +712,7 @@ def test_dbos_flow_segment_threads_principal(monkeypatch):
         "maxCallLimits": {},
         "principal": PRINCIPAL,
     }))
-    assert out == {"hand": "out"}
+    assert out == {"tool": "out"}
     (payload,) = payloads
     assert payload["principal"] == PRINCIPAL
 

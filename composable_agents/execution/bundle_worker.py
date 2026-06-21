@@ -12,7 +12,7 @@ bundle's custom pures into the process registry, fail-closed against the
 It then returns a minimal :class:`WorkerContext`.
 
 This is the worker for flows whose only runtime-arriving code is custom pures
-plus ``flowJson`` — no baked tools or brains. A flow that calls hands or brains
+plus ``flowJson`` — no baked tools or reasoners. A flow that calls tools or reasoners
 wires its own ``WORKER_CONTEXT_FACTORY`` that injects those live callers and
 calls :func:`load_bundles_from_env` the same way.
 """

@@ -1,4 +1,4 @@
-"""Backend-neutral effect implementations (the Hands + Brains boundary).
+"""Backend-neutral effect implementations (the Tools + Reasoners boundary).
 
 These are the bodies of the Temporal activities, factored out so any durable
 backend (Temporal, DBOS) can wrap them in its own retry/checkpoint unit.
@@ -20,14 +20,14 @@ from typing import Any, Awaitable, Callable, Optional
 from .. import agent_loop as al
 from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
-from ..dotctx import Brain
+from ..dotctx import Reasoner
 from ..errors import CapabilityDenied, PureDriftError
 from ..ir import Ann, ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
 from ..kinds import ContextScope, Effect, Idempotency
-from ..qos import BrainDispatch, QoSTier, default_resolve_qos
+from ..qos import ReasonerDispatch, QoSTier, default_resolve_qos
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..resilience import AttemptRecord, OnAttempt
-from ..prompt import rendered_brain_for
+from ..prompt import rendered_reasoner_for
 from ..staged import admit_plan
 from ..trajectory import (
     TrajectoryRun,
@@ -61,13 +61,13 @@ RunPrincipal = dict[str, Any]
 # Caller signatures the worker supplies.
 # (server, tool, args, key, principal) -> result
 McpCaller = Callable[[str, str, Any, str, Optional[RunPrincipal]], Awaitable[Any]]
-# (brain, value, principal, transcript, dispatch) -> result. ``transcript`` is the
+# (reasoner, value, principal, transcript, dispatch) -> result. ``transcript`` is the
 # hydrated, budget-bounded neutral turn list for transcript-scoped app rounds
 # (None everywhere else); the caller maps it to its provider's wire format.
 # The 5-arg form is canonical; :func:`configure` wraps legacy 2-, 3-, and
 # 4-arg callers once (2-/3-arg callers fail fast if a transcript arrives).
 LlmCaller = Callable[
-    [Brain, Any, Optional[RunPrincipal], Optional[Transcript], BrainDispatch],
+    [Reasoner, Any, Optional[RunPrincipal], Optional[Transcript], ReasonerDispatch],
     Awaitable[Any],
 ]
 
@@ -77,7 +77,7 @@ class WorkerContext:
     """Process-global configuration read by the activities.
 
     ``mcp_call`` receives ``(server, tool, value, idempotency_key, principal)``.
-    The key is the deterministic activation ``cid`` from :class:`CallHandInput`;
+    The key is the deterministic activation ``cid`` from :class:`CallToolInput`;
     Temporal retries re-invoke the activity with the same input, so MCP retry
     keys are stable by construction. MCP now carries the key, so MCP tools that
     require transport-level idempotency are admissible. ``principal`` is the
@@ -85,11 +85,11 @@ class WorkerContext:
     wrapped once by :func:`configure` and keep working unchanged.
     """
 
-    hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
+    tool_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
     mcp_call: Optional[McpCaller] = None
     llm: Optional[LlmCaller] = None
     on_attempt: Optional[OnAttempt] = None
-    # QoS resolver seam for brain dispatch; deployments can override it with
+    # QoS resolver seam for reasoner dispatch; deployments can override it with
     # deploy/runtime policy beyond the default principal + annotation rule.
     resolve_qos: Callable[..., QoSTier] = field(default=default_resolve_qos)
     blob_store: Optional[BlobStore] = None
@@ -97,8 +97,8 @@ class WorkerContext:
     capabilities: Optional[CapabilityManifest] = None
     registry: Optional[Registry] = None
     http_timeout_s: float = 30.0
-    # Resolves the run principal into extra transport headers for native hands.
-    # Absent means no extra headers; native hands keep working unchanged.
+    # Resolves the run principal into extra transport headers for native tools.
+    # Absent means no extra headers; native tools keep working unchanged.
     principal_headers: Optional[Callable[[RunPrincipal], dict[str, str]]] = None
     # Tokenizer hook for transcript budgets (text -> token count). Absent means
     # the char heuristic (transcript.approx_token_count); the real count is the
@@ -126,7 +126,7 @@ class VerifyPuresInput:
 _CTX = WorkerContext()
 _TRAJECTORY_SINK: Optional[TrajectorySink] = None
 _TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
-_DEFAULT_BRAIN_DISPATCH = BrainDispatch()
+_DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
 
 
 def set_trajectory_sink(
@@ -207,7 +207,7 @@ def _reject_transcript(fn: Callable[..., Awaitable[Any]]) -> RuntimeError:
         f"this worker's LlmCaller {getattr(fn, '__name__', fn)!r} does not accept a "
         "transcript, but a transcript-scoped app round produced one; update the "
         "caller to the canonical 5-argument form "
-        "(brain, value, principal, transcript, dispatch)"
+        "(reasoner, value, principal, transcript, dispatch)"
     )
 
 
@@ -218,14 +218,14 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
 
     if _accepts_positional(fn, 4):
         async def transcript_aware(
-            brain: Brain,
+            reasoner: Reasoner,
             value: Any,
             principal: Optional[RunPrincipal],
             transcript: Optional[Transcript],
-            dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+            dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
         ) -> Any:
             del dispatch
-            return await fn(brain, value, principal, transcript)
+            return await fn(reasoner, value, principal, transcript)
 
         return transcript_aware
 
@@ -233,30 +233,30 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
         # Principal-aware caller from the run-principal design. No silent drop:
         # a transcript it cannot receive is a hard error (G-8).
         async def principal_aware(
-            brain: Brain,
+            reasoner: Reasoner,
             value: Any,
             principal: Optional[RunPrincipal],
             transcript: Optional[Transcript],
-            dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+            dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
         ) -> Any:
             del dispatch
             if transcript is not None:
                 raise _reject_transcript(fn)
-            return await fn(brain, value, principal)
+            return await fn(reasoner, value, principal)
 
         return principal_aware
 
     async def legacy(
-        brain: Brain,
+        reasoner: Reasoner,
         value: Any,
         principal: Optional[RunPrincipal],
         transcript: Optional[Transcript],
-        dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+        dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
     ) -> Any:
         del dispatch
         if transcript is not None:
             raise _reject_transcript(fn)
-        return await fn(brain, value)
+        return await fn(reasoner, value)
 
     return legacy
 
@@ -265,11 +265,11 @@ def configure(ctx: WorkerContext) -> None:
     """Install the worker-wide context the activities read.
 
     Legacy callers (``mcp_call`` without the trailing ``principal``; ``llm``
-    taking ``(brain, value)``, ``(brain, value, principal)``, or
-    ``(brain, value, principal, transcript)``) are wrapped here, once, so they
+    taking ``(reasoner, value)``, ``(reasoner, value, principal)``, or
+    ``(reasoner, value, principal, transcript)``) are wrapped here, once, so they
     keep working unchanged. The canonical ``llm`` form is
-    ``(brain, value, principal, transcript, dispatch)``; wrapped narrower callers fail
-    fast if a transcript-scoped app round hands them a transcript.
+    ``(reasoner, value, principal, transcript, dispatch)``; wrapped narrower callers fail
+    fast if a transcript-scoped app round tools them a transcript.
     """
     global _CTX
     if ctx.mcp_call is not None:
@@ -299,11 +299,11 @@ def _domain_of(url: str) -> str:
 # Payloads (Temporal serializes these to/from the data converter).
 # --------------------------------------------------------------------------- #
 @dataclass
-class CallHandInput:
+class CallToolInput:
     tool_ref: dict[str, Any]      # ToolRef JSON (native or mcp)
     value: Any
     cid: str                      # deterministic activation id -> Idempotency-Key
-    # Advisory CacheHint JSON. The hand/transport may honor it; the framework
+    # Advisory CacheHint JSON. The tool/transport may honor it; the framework
     # does not provide a cache backend or change replay behavior from this hint.
     cache: Optional[dict[str, Any]] = None
     principal: Optional[RunPrincipal] = None  # run principal (opaque, never a secret)
@@ -317,18 +317,18 @@ class CallHandInput:
 
 
 @dataclass
-class InvokeBrainInput:
-    brain: str
+class InvokeReasonerInput:
+    reasoner: str
     value: Any
     cid: str
     principal: Optional[RunPrincipal] = None
     # Transcript plan for transcript-scoped app rounds (agent-transcripts
     # design): ref-bearing turns projected deterministically in workflow code.
-    # invokeBrain hydrates the refs, enforces ctx.max_tokens, and (SUMMARY
+    # invokeReasoner hydrates the refs, enforces ctx.max_tokens, and (SUMMARY
     # scope) folds elided turns into the running summary via ``summarizer``.
     transcript: Optional[list[dict[str, Any]]] = None
     ctx: Optional[dict[str, Any]] = None         # ContextPolicy JSON (scope + maxTokens)
-    summarizer: Optional[str] = None             # named summarizer brain (SUMMARY scope)
+    summarizer: Optional[str] = None             # named summarizer reasoner (SUMMARY scope)
     summary: Optional[str] = None                # running summary from AgentState
     run_id: Optional[str] = None
     root_run_id: Optional[str] = None
@@ -338,13 +338,13 @@ class InvokeBrainInput:
     kind: Optional[str] = None
     causes: tuple[str, ...] = ()
     # Recorded QoS tier (M0: advisory; dispatch still sync). Carried so the
-    # brain step input reflects the resolved tier deterministically.
+    # reasoner step input reflects the resolved tier deterministically.
     qos: Optional[str] = None
 
 
 @dataclass
 class ResolveQoSInput:
-    brain: str
+    reasoner: str
     node_batchable: bool = False
     principal: Optional[RunPrincipal] = None
     cid: Optional[str] = None
@@ -449,7 +449,7 @@ async def _capture_effect(
     """Best-effort trajectory capture for one effect activation.
 
     Lives only in the effect layer, so both the Temporal and DBOS backends
-    (which both call effects.callHand / effects.invokeBrain) get capture for
+    (which both call effects.callTool / effects.invokeReasoner) get capture for
     free. NEVER raises into the run: every sink/blob op is wrapped in the
     shared trajectory._best_effort helper, so a failing sink or blob leaves the
     effect result byte-identical.
@@ -612,7 +612,7 @@ async def record_marker_step(
         )
 
 
-async def callHand(inp: CallHandInput) -> Any:
+async def callTool(inp: CallToolInput) -> Any:
     ref = toolref_from_json(inp.tool_ref)
     key = toolref_key(ref)
 
@@ -623,16 +623,16 @@ async def callHand(inp: CallHandInput) -> Any:
         tool = inp.tool_ref["tool"]
         result = await _CTX.mcp_call(server, tool, inp.value, inp.cid, inp.principal)
     else:
-        # Native hand: HTTP POST with an idempotency key derived from the cid.
-        url = _CTX.hand_urls.get(key)
+        # Native tool: HTTP POST with an idempotency key derived from the cid.
+        url = _CTX.tool_urls.get(key)
         if url is None:
-            raise RuntimeError(f"no URL registered for native hand {key!r}")
+            raise RuntimeError(f"no URL registered for native tool {key!r}")
         if _CTX.capabilities is not None and not _CTX.capabilities.network_allows(_domain_of(url)):
             raise CapabilityDenied(f"network egress to {_domain_of(url)!r} is not granted")
 
         import httpx  # imported in-activity so the module loads without httpx
 
-        logger.debug("callHand %s -> %s", key, url)
+        logger.debug("callTool %s -> %s", key, url)
         headers = {"Idempotency-Key": inp.cid}
         if inp.principal is not None and _CTX.principal_headers is not None:
             headers.update(_CTX.principal_headers(inp.principal))
@@ -650,7 +650,7 @@ async def callHand(inp: CallHandInput) -> Any:
 
     await _capture_effect(
         op="call",
-        kind="hand",
+        kind="tool",
         node_id=inp.node_id,
         cid=inp.cid,
         run_id=inp.run_id,
@@ -709,12 +709,12 @@ def _summary_text(reply: Any, summarizer: str) -> str:
     if isinstance(reply, dict) and isinstance(reply.get("summary"), str):
         return reply["summary"]
     raise RuntimeError(
-        f"summarizer brain {summarizer!r} must reply with text or {{'summary': str}}; "
+        f"summarizer reasoner {summarizer!r} must reply with text or {{'summary': str}}; "
         f"got {type(reply).__name__}"
     )
 
 
-async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Optional[str]]:
+async def _materialize_transcript(inp: InvokeReasonerInput) -> tuple[Transcript, Optional[str]]:
     """Hydrate the transcript plan, enforce the hard token budget, and (SUMMARY
     scope) fold elided turns into the running summary via the named summarizer.
 
@@ -726,12 +726,12 @@ async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Op
     policy = ContextPolicy.from_json(inp.ctx or {})
     if policy.scope not in (ContextScope.WHOLE_SESSION, ContextScope.SUMMARY):
         raise RuntimeError(
-            f"invokeBrain received a transcript with scope {policy.scope.value!r}; "
+            f"invokeReasoner received a transcript with scope {policy.scope.value!r}; "
             "only whole_session/summary app rounds carry transcripts"
         )
     if policy.max_tokens is None:
         raise RuntimeError(
-            f"transcript for brain {inp.brain!r} carries no max_tokens budget; "
+            f"transcript for reasoner {inp.reasoner!r} carries no max_tokens budget; "
             "whole_session/summary scopes require an explicit budget (no implicit default)"
         )
     count_tokens = _CTX.count_tokens or approx_token_count
@@ -746,7 +746,7 @@ async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Op
     # SUMMARY: a named summarizer is mandatory — no silent downgrade to truncation.
     if inp.summarizer is None:
         raise RuntimeError(
-            "summary transcript scope requires a named summarizer brain "
+            "summary transcript scope requires a named summarizer reasoner "
             "(AgentConfig.summarizer); none was supplied"
         )
     assert _CTX.llm is not None
@@ -754,11 +754,11 @@ async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Op
     new_summary: Optional[str] = None
     if elided:
         summarizer_payload = {"summary": summary, "turns": elided}
-        summarizer = rendered_brain_for(
-            _registry().get_brain(inp.summarizer), summarizer_payload
+        summarizer = rendered_reasoner_for(
+            _registry().get_reasoner(inp.summarizer), summarizer_payload
         )
         raw = await _CTX.llm(
-            summarizer, summarizer_payload, inp.principal, None, BrainDispatch()
+            summarizer, summarizer_payload, inp.principal, None, ReasonerDispatch()
         )
         new_summary = _summary_text(raw, inp.summarizer)
         summary = new_summary
@@ -768,17 +768,17 @@ async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Op
 
 
 async def resolveQoS(inp: ResolveQoSInput) -> str:
-    """Resolve + record the QoS tier for a brain step.
+    """Resolve + record the QoS tier for a reasoner step.
 
     Resolved once at first execution; durable backend replay reads the recorded
     string verbatim from history instead of re-running dispatch policy.
     """
     try:
-        brain_obj = _registry().get_brain(inp.brain)
+        reasoner_obj = _registry().get_reasoner(inp.reasoner)
     except KeyError:
-        brain_obj = inp.brain
+        reasoner_obj = inp.reasoner
     ann = Ann(batchable=inp.node_batchable)
-    from .brain_batch import get_batch_dispatch_context
+    from .reasoner_batch import get_batch_dispatch_context
 
     try:
         min_window = get_batch_dispatch_context().min_batch_window_s
@@ -789,20 +789,20 @@ async def resolveQoS(inp: ResolveQoSInput) -> str:
     kwargs = _predictive_qos_kwargs(
         resolver, timeout_s=inp.timeout_s, min_batch_window_s=min_window
     )
-    tier = QoSTier(resolver(brain_obj, ann, inp.principal, **kwargs))
+    tier = QoSTier(resolver(reasoner_obj, ann, inp.principal, **kwargs))
     if not ann.batchable and tier is QoSTier.BATCH:
         tier = QoSTier.FLEX
     return tier.value
 
 
-async def invokeBrain(inp: InvokeBrainInput) -> Any:
+async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     transcript: Optional[Transcript] = None
     new_summary: Optional[str] = None
     if inp.transcript is not None:
         transcript, new_summary = await _materialize_transcript(inp)
-    brain = rendered_brain_for(_registry().get_brain(inp.brain), inp.value)
+    reasoner = rendered_reasoner_for(_registry().get_reasoner(inp.reasoner), inp.value)
     tier = QoSTier.STANDARD
     if inp.qos is not None:
         try:
@@ -811,8 +811,8 @@ async def invokeBrain(inp: InvokeBrainInput) -> Any:
             tier = QoSTier.STANDARD
     if tier is QoSTier.BATCH:
         tier = QoSTier.STANDARD
-    dispatch = BrainDispatch(qos=tier)
-    reply = await _CTX.llm(brain, inp.value, inp.principal, transcript, dispatch)
+    dispatch = ReasonerDispatch(qos=tier)
+    reply = await _CTX.llm(reasoner, inp.value, inp.principal, transcript, dispatch)
     if new_summary is not None:
         # Envelope so the workflow can persist the running summary in
         # AgentState.summary; split_summary_reply unwraps it deterministically.
@@ -821,7 +821,7 @@ async def invokeBrain(inp: InvokeBrainInput) -> Any:
         result = reply
     await _capture_effect(
         op="think",
-        kind="brain",
+        kind="reasoner",
         node_id=inp.node_id,
         cid=inp.cid,
         run_id=inp.run_id,
@@ -835,7 +835,7 @@ async def invokeBrain(inp: InvokeBrainInput) -> Any:
 
 
 async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
-    """Run the planner brain, parse its Plan, admit it (§8), return plan JSON.
+    """Run the planner reasoner, parse its Plan, admit it (§8), return plan JSON.
 
     Admission happens here, in an activity, so a rejected plan fails the activity
     (and surfaces as a clean ``PlanRejected``) instead of corrupting the
@@ -843,8 +843,8 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     """
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
-    planner = _registry().get_brain(inp.planner)
-    raw = await _CTX.llm(planner, inp.value, inp.principal, None, BrainDispatch())
+    planner = _registry().get_reasoner(inp.planner)
+    raw = await _CTX.llm(planner, inp.value, inp.principal, None, ReasonerDispatch())
 
     plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
     plan = Node.from_json(plan_json)
@@ -1086,7 +1086,7 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
 def toolref_json_from_key(key: str) -> dict[str, Any]:
     """Reverse of :func:`~composable_agents.ir.toolref_key`.
 
-    ``"server/tool"`` is an MCP tool; a bare name is a native hand.
+    ``"server/tool"`` is an MCP tool; a bare name is a native tool.
     """
     if "/" in key:
         server, tool = key.split("/", 1)

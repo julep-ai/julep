@@ -17,9 +17,9 @@ Backend-specific contracts (the deltas vs Temporal -- see docs/deploy-dbos.md):
   Standalone dispatch goes through :func:`run_agent_dbos`; ``Op.APP`` nodes in
   a flow reach the same chain through :meth:`DbosEnv.run_agent`. The
   session-store (``use_session_store``/``state_cursor``) path is Temporal-only.
-* **Brain steps never retry.** LLM resilience belongs to the injected
+* **Reasoner steps never retry.** LLM resilience belongs to the injected
   ``LlmCaller`` (the consumer's retry/fallback stack), not to a second,
-  blind retry layer here. Hands are routed by the retry algebra: contracts gate
+  blind retry layer here. Tools are routed by the retry algebra: contracts gate
   retry eligibility, non-retryable calls use a no-retry step, and retryable
   calls use the predeclared idempotent DBOS step because DBOS fixes retry
   config at decoration time.
@@ -59,9 +59,9 @@ from ..trajectory import ProjectionTrajectorySink
 from ..turn import Halt, controller_turn, make_finalize, pre_round
 from . import effects
 from .effects import (
-    CallHandInput,
+    CallToolInput,
     CompilePlanInput,
-    InvokeBrainInput,
+    InvokeReasonerInput,
     PutBlobInput,
     RunSubInput,
     VerifyPuresInput,
@@ -160,35 +160,35 @@ def _make_projection_emitter(
 # Effect steps. Names are stable identifiers in DBOS's workflow_status table.
 # --------------------------------------------------------------------------- #
 @DBOS.step(retries_allowed=True, max_attempts=5)
-async def callHandIdempotent(inp: dict) -> Any:
+async def callToolIdempotent(inp: dict) -> Any:
     try:
-        return await effects.callHand(_call_hand_input(inp))
+        return await effects.callTool(_call_tool_input(inp))
     except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
-# The persisted name stays "callHandWrite" — the step's name before the retry
+# The persisted name stays "callToolWrite" — the step's name before the retry
 # algebra landed. DBOS records step names per function_id and recovery raises
 # DBOSUnexpectedStepError on mismatch, so renaming the durable identity would
 # break replay of in-flight workflows that recorded the old name. The Python
 # name describes today's semantics; the wire name is frozen. (Known residue:
-# a retryable *write* recorded as callHandWrite now routes to
-# callHandIdempotent — a deliberate identity change of the retry algebra;
+# a retryable *write* recorded as callToolWrite now routes to
+# callToolIdempotent — a deliberate identity change of the retry algebra;
 # drain in-flight workflows across that upgrade.)
-@DBOS.step(retries_allowed=False, name="callHandWrite")
-async def callHandNoRetry(inp: dict) -> Any:
+@DBOS.step(retries_allowed=False, name="callToolWrite")
+async def callToolNoRetry(inp: dict) -> Any:
     try:
-        return await effects.callHand(_call_hand_input(inp))
+        return await effects.callTool(_call_tool_input(inp))
     except POLICY_ERRORS as exc:
         return encode_policy_error(exc)
 
 
 @DBOS.step(retries_allowed=False)
-async def invokeBrainStep(inp: dict) -> Any:
+async def invokeReasonerStep(inp: dict) -> Any:
     try:
-        return await effects.invokeBrain(
-            InvokeBrainInput(
-                brain=inp["brain"], value=inp["value"], cid=inp["cid"],
+        return await effects.invokeReasoner(
+            InvokeReasonerInput(
+                reasoner=inp["reasoner"], value=inp["value"], cid=inp["cid"],
                 principal=inp.get("principal"),
                 transcript=inp.get("transcript"),
                 ctx=inp.get("ctx"),
@@ -324,8 +324,8 @@ async def runSubCaptureStep(inp: dict) -> None:
         _traj._best_effort(_reraise)
 
 
-def _call_hand_input(inp: dict) -> CallHandInput:
-    return CallHandInput(
+def _call_tool_input(inp: dict) -> CallToolInput:
+    return CallToolInput(
         tool_ref=inp["tool_ref"], value=inp["value"], cid=inp["cid"],
         cache=inp.get("cache"), principal=inp.get("principal"),
         run_id=inp.get("run_id"),
@@ -453,7 +453,7 @@ class DbosEnv:
         return dict(self._call_counts)
 
     # --- effect handlers --- #
-    async def call_hand(self, node: Node, value: Any, cid: str) -> Any:
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
         if contract_allows_retry(contract):
@@ -466,7 +466,7 @@ class DbosEnv:
             )
         else:
             attempts = 1
-        step = callHandIdempotent if max(1, attempts) > 1 else callHandNoRetry
+        step = callToolIdempotent if max(1, attempts) > 1 else callToolNoRetry
         cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
         out = await step({
             "tool_ref": toolref_json_from_key(ref_key),
@@ -477,22 +477,22 @@ class DbosEnv:
             "segment_seq": self.segment_seq,
             "node_id": node.id,
             "op": "call",
-            "kind": "hand",
+            "kind": "tool",
         })
         return decode_policy_error(out)
 
-    async def invoke_brain(
-        self, brain: str, value: Any, cid: str, timeout_s: Optional[int], batchable: bool = False,
+    async def invoke_reasoner(
+        self, reasoner: str, value: Any, cid: str, timeout_s: Optional[int], batchable: bool = False,
     ) -> Any:
         # DBOS clamps BATCH to STANDARD in v1: batchable is accepted but ignored (sync only).
-        out = await invokeBrainStep({
-            "brain": brain, "value": value, "cid": cid,
+        out = await invokeReasonerStep({
+            "reasoner": reasoner, "value": value, "cid": cid,
             "principal": self.principal,
             "run_id": self._session,
             "root_run_id": self.root_run_id,
             "segment_seq": self.segment_seq,
             "op": "think",
-            "kind": "brain",
+            "kind": "reasoner",
         })
         return decode_policy_error(out)
 
@@ -812,8 +812,8 @@ async def agent_workflow(inp: dict) -> Any:
 
     async def _invoke(payload: dict) -> Any:
         value = {k: v for k, v in payload.items() if k not in _transcript_keys}
-        out = await invokeBrainStep({
-            "brain": inp["controller"], "value": value,
+        out = await invokeReasonerStep({
+            "reasoner": inp["controller"], "value": value,
             "cid": f"{session}-round-{state.round}",
             "principal": principal,
             "transcript": payload.get("transcript"),
@@ -824,7 +824,7 @@ async def agent_workflow(inp: dict) -> Any:
             "root_run_id": root_run_id,
             "segment_seq": segment_seq,
             "op": "think",
-            "kind": "brain",
+            "kind": "reasoner",
         })
         return decode_policy_error(out)
 
@@ -839,7 +839,7 @@ async def agent_workflow(inp: dict) -> Any:
             if contract_allows_retry(contract)
             else 1
         )
-        step = callHandIdempotent if max(1, attempts) > 1 else callHandNoRetry
+        step = callToolIdempotent if max(1, attempts) > 1 else callToolNoRetry
         out = await step({
             "tool_ref": toolref_json_from_key(tool), "value": value,
             "cid": f"{session}-call-{state.round}", "cache": None,
@@ -848,7 +848,7 @@ async def agent_workflow(inp: dict) -> Any:
             "root_run_id": root_run_id,
             "segment_seq": segment_seq,
             "op": "call",
-            "kind": "hand",
+            "kind": "tool",
         })
         return decode_policy_error(out)
 

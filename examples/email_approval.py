@@ -1,7 +1,7 @@
 """Email approval — Rung 2-3.
 
 Shows combinators for an approval flow: draft an email, pass through
-``human_gate()``, then call an approval-required ``send_email`` hand. The dry run
+``human_gate()``, then call an approval-required ``send_email`` tool. The dry run
 uses ``InMemoryEnv`` stubs, so it needs no API key, Temporal, network, clock, or
 RNG.
 """
@@ -116,7 +116,7 @@ async def run_demo(
     env = InMemoryEnv(
         deployment.manifest,
         ProjectionEmitter(InMemoryProjection()),
-        hands={
+        tools={
             TOOL_DRAFT_EMAIL: draft_email,
             TOOL_SEND_EMAIL: send_email,
         },

@@ -1,7 +1,7 @@
 """The deterministic IR interpreter (blueprint §2, the heart of the harness).
 
 This walks a frozen flow and produces a value. It is deliberately *pure of
-Temporal*: every effect (calling a hand, invoking a brain, running a child,
+Temporal*: every effect (calling a tool, invoking a reasoner, running a child,
 compiling a plan, waiting on a human) is delegated to an injected :class:`Env`,
 and concurrency goes through ``Env.gather`` / ``Env.race_first`` rather than
 ``asyncio`` directly. That split is what lets the same interpreter run two ways:
@@ -137,10 +137,10 @@ class Env(Protocol):
     def get_pure(self, name: str) -> Callable[..., Any]: ...
     def charge_call(self, tool_key: str) -> None: ...
 
-    async def call_hand(self, node: Node, value: Any, cid: str) -> Any: ...
-    async def invoke_brain(
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any: ...
+    async def invoke_reasoner(
         self,
-        brain: str,
+        reasoner: str,
         value: Any,
         cid: str,
         timeout_s: Optional[int],
@@ -307,23 +307,23 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
     if isinstance(step, CallStep):
         key = call_ref_key(node, env.manifest)
         env.charge_call(key)
-        # Reserved human-gate hand becomes a signal-wait, not an HTTP call.
+        # Reserved human-gate tool becomes a signal-wait, not an HTTP call.
         if step.tool.kind == "native" and getattr(step.tool, "name", None) == HUMAN_GATE_TOOL:
             timeout_s = node.ann.timeout if node.ann else None
             return Result(await env.human_gate(value, cid, timeout_s))
-        # Reserved sleep hand becomes a durable timer, not an HTTP call.
+        # Reserved sleep tool becomes a durable timer, not an HTTP call.
         if step.tool.kind == "native" and getattr(step.tool, "name", None) == SLEEP_TOOL:
             seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
             await env.sleep(seconds, cid)
             return Result(value)
         if getattr(env, "native_call_retries", False):
-            return Result(await env.call_hand(node, value, cid))
+            return Result(await env.run_call(node, value, cid))
         attempts = _retry_attempts_for_call(node, env.manifest)
         interval = _retry_interval_for_call(node)
         backoff = _retry_backoff_for_call(node)
         for attempt in range(1, attempts + 1):
             try:
-                return Result(await env.call_hand(node, value, cid))
+                return Result(await env.run_call(node, value, cid))
             except POLICY_ERRORS:
                 raise
             except Exception:
@@ -336,9 +336,9 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
     if isinstance(step, ThinkStep):
         timeout_s = node.ann.timeout if node.ann else None
         batchable = bool(node.ann.batchable) if node.ann else False
-        out = await env.invoke_brain(step.brain, value, cid, timeout_s, batchable)
+        out = await env.invoke_reasoner(step.reasoner, value, cid, timeout_s, batchable)
         reply, attrs = _unwrap_ca_meta(out)
-        return Result(reply, attrs=attrs, reported_cost=_reported_brain_cost(reply))
+        return Result(reply, attrs=attrs, reported_cost=_reported_reasoner_cost(reply))
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
     raise ComposableAgentsError(f"interpreter: prim with no usable step at {node.id!r}")
@@ -462,7 +462,7 @@ def _unwrap_ca_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
     return value, None
 
 
-def _reported_brain_cost(value: Any) -> Optional[float]:
+def _reported_reasoner_cost(value: Any) -> Optional[float]:
     if not isinstance(value, dict):
         return None
 
@@ -488,7 +488,7 @@ def _numeric_cost(data: dict[str, Any]) -> Optional[float]:
 
 
 def _all_branches(node: Node) -> list[Node]:
-    """Flatten a plain (``all``) ``par`` spine into its leaf branches."""
+    """Flatten a plain (``all``) ``par`` chain into its leaf branches."""
     out: list[Node] = []
 
     def rec(n: Node) -> None:
@@ -660,8 +660,8 @@ async def gather_bounded(
 class InMemoryEnv:
     """A deterministic, dependency-free :class:`Env`.
 
-    Effect handlers are plain callables you supply (``hands``: name -> fn,
-    ``brains``: name -> fn, etc.). Concurrency uses ``asyncio`` but stays
+    Effect handlers are plain callables you supply (``tools``: name -> fn,
+    ``reasoners``: name -> fn, etc.). Concurrency uses ``asyncio`` but stays
     deterministic for the control-flow under test: ``race_first`` resolves
     already-ready coroutines in branch order, so a race over synchronous fakes
     picks the first branch — exactly what a golden test wants to assert.
@@ -672,8 +672,8 @@ class InMemoryEnv:
         manifest: ToolManifest,
         emitter: ProjectionEmitter,
         *,
-        hands: Optional[dict[str, Callable[[Any], Any]]] = None,
-        brains: Optional[dict[str, Callable[[Any], Any]]] = None,
+        tools: Optional[dict[str, Callable[[Any], Any]]] = None,
+        reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
         subs: Optional[dict[str, Callable[[Any], Any]]] = None,
         agents: Optional[dict[str, Callable[[Any], Any]]] = None,
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
@@ -693,8 +693,8 @@ class InMemoryEnv:
         self.principal = principal
         self.root_run_id = root_run_id
         self.segment_seq = segment_seq
-        self._hands = hands or {}
-        self._brains = brains or {}
+        self._tools = tools or {}
+        self._reasoners = reasoners or {}
         self._subs = subs or {}
         self._agents = agents or {}
         self._planners = planners or {}
@@ -738,24 +738,24 @@ class InMemoryEnv:
         self.call_counts[tool_key] = count + 1
 
     # --- effect handlers --- #
-    async def call_hand(self, node: Node, value: Any, cid: str) -> Any:
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         key = call_ref_key(node, self.manifest)
-        fn = self._hands.get(key)
+        fn = self._tools.get(key)
         if fn is None:
-            raise KeyError(f"no in-memory hand for {key!r}")
+            raise KeyError(f"no in-memory tool for {key!r}")
         return fn(value)
 
-    async def invoke_brain(
+    async def invoke_reasoner(
         self,
-        brain: str,
+        reasoner: str,
         value: Any,
         cid: str,
         timeout_s: Optional[int],
         batchable: bool = False,
     ) -> Any:
-        if brain not in self._brains:
-            raise KeyError(f"no in-memory brain for {brain!r}")
-        return self._brains[brain](value)
+        if reasoner not in self._reasoners:
+            raise KeyError(f"no in-memory reasoner for {reasoner!r}")
+        return self._reasoners[reasoner](value)
 
     async def run_sub(
         self,

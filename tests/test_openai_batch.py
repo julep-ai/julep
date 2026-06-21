@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 import composable_agents.execution.openai_batch as openai_batch
-from composable_agents.dotctx import Brain
+from composable_agents.dotctx import Reasoner
 from composable_agents.execution.batch_provider import select_batch_provider
 from composable_agents.execution.llm import _parse_reply
 from conftest import run
@@ -145,9 +145,9 @@ def test_registers_openai_provider() -> None:
 
 def test_build_request_chat_completions_shape() -> None:
     provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
-    brain = Brain(name="b", model="openai:gpt-x", system="s", reply_schema=None)
+    reasoner = Reasoner(name="b", model="openai:gpt-x", system="s", reply_schema=None)
 
-    request = provider.build_request("c1", brain, "hello")
+    request = provider.build_request("c1", reasoner, "hello")
 
     assert request["custom_id"] == "c1"
     assert request["method"] == "POST"
@@ -160,9 +160,9 @@ def test_build_request_chat_completions_shape() -> None:
 def test_build_request_injects_response_format_for_schema() -> None:
     provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
     schema = {"type": "object", "properties": {"x": {"type": "integer"}}}
-    brain = Brain(name="b", model="openai:gpt-x", system="s", reply_schema=schema)
+    reasoner = Reasoner(name="b", model="openai:gpt-x", system="s", reply_schema=schema)
 
-    request = provider.build_request("c1", brain, {"input": "hello"})
+    request = provider.build_request("c1", reasoner, {"input": "hello"})
 
     response_format = request["body"]["response_format"]
     assert response_format["type"] == "json_schema"
@@ -290,8 +290,8 @@ def test_results_and_parse_success_and_error() -> None:
     provider = openai_batch.OpenAIBatchProvider(
         client=FakeOpenAIClient(files=files, batches=batches)
     )
-    text_brain = Brain(name="text", model="openai:gpt-x", system="s")
-    json_brain = Brain(
+    text_reasoner = Reasoner(name="text", model="openai:gpt-x", system="s")
+    json_reasoner = Reasoner(
         name="json",
         model="openai:gpt-x",
         system="s",
@@ -306,15 +306,15 @@ def test_results_and_parse_success_and_error() -> None:
 
     raw_by_id = run(collect())
 
-    assert provider.parse(raw_by_id["text-1"], text_brain) == "hello"
-    assert provider.parse(raw_by_id["json-1"], json_brain) == {"x": 1}
+    assert provider.parse(raw_by_id["text-1"], text_reasoner) == "hello"
+    assert provider.parse(raw_by_id["json-1"], json_reasoner) == {"x": 1}
     with pytest.raises(RuntimeError, match="batch entry"):
-        provider.parse(raw_by_id["bad-1"], text_brain)
+        provider.parse(raw_by_id["bad-1"], text_reasoner)
 
 
 def test_parse_structured_entry_matches_shared_llm_parser() -> None:
     provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
-    brain = Brain(
+    reasoner = Reasoner(
         name="json",
         model="openai:gpt-x",
         system="s",
@@ -335,4 +335,4 @@ def test_parse_structured_entry_matches_shared_llm_parser() -> None:
         choices=[FakeChoice(FakeMessage(content='{"x": 0}', parsed=parsed))]
     )
 
-    assert provider.parse(raw, brain) == _parse_reply(sync_completion, expect_json=True)
+    assert provider.parse(raw, reasoner) == _parse_reply(sync_completion, expect_json=True)

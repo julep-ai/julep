@@ -8,7 +8,7 @@ pytest.importorskip("temporalio")
 pytest.importorskip("httpx")
 
 from composable_agents import mcp
-from composable_agents.execution.activities import CallHandInput, WorkerContext, callHand, configure
+from composable_agents.execution.activities import CallToolInput, WorkerContext, callTool, configure
 from conftest import run
 
 
@@ -19,7 +19,7 @@ def _reset_worker_context():
     configure(WorkerContext())
 
 
-def test_callhand_mcp_passes_cid_as_idempotency_key() -> None:
+def test_calltool_mcp_passes_cid_as_idempotency_key() -> None:
     calls: list[tuple[str, str, Any, str]] = []
 
     async def mcp_call(server: str, tool: str, value: Any, key: str) -> Any:
@@ -27,17 +27,17 @@ def test_callhand_mcp_passes_cid_as_idempotency_key() -> None:
         return {"ok": True}
 
     configure(WorkerContext(mcp_call=mcp_call))
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref=mcp("srv", "search").to_json(),
         value={"q": "temporal"},
         cid="activation-123",
     )
 
-    assert run(callHand(inp)) == {"ok": True}
+    assert run(callTool(inp)) == {"ok": True}
     assert calls == [("srv", "search", {"q": "temporal"}, inp.cid)]
 
 
-def test_callhand_mcp_reuses_same_key_for_same_input_retry() -> None:
+def test_calltool_mcp_reuses_same_key_for_same_input_retry() -> None:
     keys: list[str] = []
 
     async def mcp_call(_server: str, _tool: str, _value: Any, key: str) -> Any:
@@ -45,18 +45,18 @@ def test_callhand_mcp_reuses_same_key_for_same_input_retry() -> None:
         return "ok"
 
     configure(WorkerContext(mcp_call=mcp_call))
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref=mcp("srv", "write").to_json(),
         value={"id": 7},
         cid="activation-retry",
     )
 
-    assert run(callHand(inp)) == "ok"
-    assert run(callHand(inp)) == "ok"
+    assert run(callTool(inp)) == "ok"
+    assert run(callTool(inp)) == "ok"
     assert keys == [inp.cid, inp.cid]
 
 
-def test_callhand_native_sends_cid_as_idempotency_header(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_calltool_native_sends_cid_as_idempotency_header(monkeypatch: pytest.MonkeyPatch) -> None:
     import httpx
 
     calls: list[dict[str, Any]] = []
@@ -91,20 +91,20 @@ def test_callhand_native_sends_cid_as_idempotency_header(monkeypatch: pytest.Mon
     monkeypatch.setattr(httpx, "AsyncClient", FakeAsyncClient)
     configure(
         WorkerContext(
-            hand_urls={"native_tool": "https://hands.example/native"},
+            tool_urls={"native_tool": "https://tools.example/native"},
             http_timeout_s=12.5,
         )
     )
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref={"kind": "native", "name": "native_tool"},
         value={"payload": 1},
         cid="activation-native",
     )
 
-    assert run(callHand(inp)) == {"ok": True}
+    assert run(callTool(inp)) == {"ok": True}
     assert calls == [
         {
-            "url": "https://hands.example/native",
+            "url": "https://tools.example/native",
             "json": {"input": {"payload": 1}},
             "headers": {"Idempotency-Key": inp.cid},
             "timeout": 12.5,

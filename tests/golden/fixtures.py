@@ -147,7 +147,7 @@ def human_gate_fixture() -> GoldenFixture:
 def staged_plan() -> GoldenFixture:
     return GoldenFixture(
         name="staged_plan",
-        flow=stage("planner.brain"),
+        flow=stage("planner.reasoner"),
         snapshot=McpSnapshot(),
     )
 
@@ -187,7 +187,7 @@ def capability_manifest() -> GoldenFixture:
                 {"name": "srv/archive", "effect": "write", "idempotency": "required"},
             ],
             "mcp_servers": {"srv": None},
-            "brains": [],
+            "reasoners": [],
             "memory": [],
             "budget": {"cost": 100.0, "tokens": 10000},
         }

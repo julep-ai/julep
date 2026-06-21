@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents.dotctx import Brain, get_brain, register_brain
+from composable_agents.dotctx import Reasoner, get_reasoner, register_reasoner
 from composable_agents.dsl import alt, arr
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
@@ -30,19 +30,19 @@ def _iso_project(value):
 def test_registry_instances_are_isolated_from_each_other_and_default():
     left = Registry()
     right = Registry()
-    brain = Brain(name="p2_2.iso.brain", model="model-left")
+    reasoner = Reasoner(name="p2_2.iso.reasoner", model="model-left")
 
-    assert left.register_brain(brain) is brain
+    assert left.register_reasoner(reasoner) is reasoner
     entry = left.register_pure("p2_2.iso.map", _iso_map)
 
-    assert left.get_brain("p2_2.iso.brain") == brain
+    assert left.get_reasoner("p2_2.iso.reasoner") == reasoner
     assert left.get_pure("p2_2.iso.map")({"x": 1}) == {"iso": {"x": 1}}
     assert left.source_hash_of("p2_2.iso.map") == entry.source_hash
 
     with pytest.raises(KeyError):
-        right.get_brain("p2_2.iso.brain")
+        right.get_reasoner("p2_2.iso.reasoner")
     with pytest.raises(KeyError):
-        DEFAULT_REGISTRY.get_brain("p2_2.iso.brain")
+        DEFAULT_REGISTRY.get_reasoner("p2_2.iso.reasoner")
     assert not right.is_registered("p2_2.iso.map")
     assert not DEFAULT_REGISTRY.is_registered("p2_2.iso.map")
     with pytest.raises(KeyError):
@@ -52,10 +52,10 @@ def test_registry_instances_are_isolated_from_each_other_and_default():
 
 
 def test_default_registry_shims_preserve_existing_decorator_ergonomics():
-    brain = Brain(name="p2_2.default.brain", model="model-default")
+    reasoner = Reasoner(name="p2_2.default.reasoner", model="model-default")
 
-    assert register_brain(brain) is brain
-    assert get_brain("p2_2.default.brain") == brain
+    assert register_reasoner(reasoner) is reasoner
+    assert get_reasoner("p2_2.default.reasoner") == reasoner
 
     @pure("p2_2.default.map")
     def map_default(value):

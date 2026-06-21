@@ -6,7 +6,7 @@ licence for unbounded, unsafe execution:
 
 * **Bounded actions.** A controller does not emit arbitrary IR to run inline.
   Each round it returns one of a small, closed set of decisions
-  (:func:`interpret_brain_reply`): *finish*, *escalate*, call one *granted tool*,
+  (:func:`interpret_reasoner_reply`): *finish*, *escalate*, call one *granted tool*,
   or invoke one pre-registered *sub-flow*. Anything richer is the planner's job,
   not the agent's. This is what lets the loop run under Temporal without freezing
   and admitting fresh IR mid-flight.
@@ -83,7 +83,7 @@ class RoundAction:
         return self.decision in (Decision.FINISH, Decision.ESCALATE, Decision.CONTROLLER_ERROR)
 
 
-def interpret_brain_reply(reply: Any, *, strict: bool = True) -> RoundAction:
+def interpret_reasoner_reply(reply: Any, *, strict: bool = True) -> RoundAction:
     """Map a controller's structured reply to a :class:`RoundAction`.
 
     Accepts the small, closed action vocabulary the loop supports. In strict
@@ -164,7 +164,7 @@ class AgentConfig:
     # Spec §10: malformed controller output is an error unless explicitly opted out.
     permissive_controller: bool = False
     # Transcript carriage (docs/design/agent-transcripts.md): context policy for
-    # the controller's rounds, and the named summarizer brain for SUMMARY scope.
+    # the controller's rounds, and the named summarizer reasoner for SUMMARY scope.
     ctx: Optional[ContextPolicy] = None
     summarizer: Optional[str] = None
 
@@ -594,7 +594,7 @@ def promote_plan(
 __all__ = [
     "Decision",
     "RoundAction",
-    "interpret_brain_reply",
+    "interpret_reasoner_reply",
     "action_cost",
     "AgentConfig",
     "AgentState",

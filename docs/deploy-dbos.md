@@ -55,7 +55,7 @@ automatically through the env.
 from composable_agents.execution.dbos_backend import run_agent_dbos
 
 result = await run_agent_dbos(
-    "triage_controller",                 # registered agent spec / brain
+    "triage_controller",                 # registered agent spec / reasoner
     session_id="agent-123",
     input={"ticket": "..."},
     config={"continueAsNewAfter": 20},   # optional overrides over the spec
@@ -88,8 +88,8 @@ segments in the continuation payload.
 |---|---|---|
 | race / hedge / quorum | supported | **rejected at dispatch** (no step cancellation) |
 | `app` (agent loop) nodes | child `AgentWorkflow` + continue-as-new | inline `ca_agent` workflow per segment (`run_agent_dbos` / app nodes in flows) |
-| Brain retries | engine retry (4 attempts) | **none -- your `LlmCaller` owns resilience** |
-| Hand retries | per-contract `RetryPolicy` | quantized: idempotent 5 / write 3 attempts |
+| Reasoner retries | engine retry (4 attempts) | **none -- your `LlmCaller` owns resilience** |
+| Tool retries | per-contract `RetryPolicy` | quantized: idempotent 5 / write 3 attempts |
 | Sub-flows | child workflow | inline in the parent workflow |
 | Chaining | `continue_as_new` | one workflow per segment |
 | Agent state across segments | inline or durable session store | continuation payload only (session store is Temporal-only) |

@@ -45,7 +45,7 @@ def test_split_agent_local_run_uses_child_loop() -> None:
         calls.append(value)
         return f"tool:{value}"
 
-    def child_llm(_brain_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
+    def child_llm(_reasoner_name: str, _payload: dict[str, Any]) -> dict[str, Any]:
         return child_replies.pop(0)
 
     child = Agent("m", tools=[child_tool], name="c3_run_child", llm=child_llm)
@@ -58,7 +58,7 @@ def test_split_agent_local_run_uses_child_loop() -> None:
         "m",
         tools=[child.as_sub()],
         name="c3_run_parent",
-        llm=lambda _brain_name, _payload: parent_replies.pop(0),
+        llm=lambda _reasoner_name, _payload: parent_replies.pop(0),
     )
 
     result = parent.run("x")
@@ -78,7 +78,7 @@ def test_split_agent_attenuation_denies_direct_child_tool_call() -> None:
         "m",
         tools=[child.as_sub()],
         name="c3_denied_parent",
-        llm=lambda _brain_name, _payload: {"tool": "c3_denied_tool", "input": "x"},
+        llm=lambda _reasoner_name, _payload: {"tool": "c3_denied_tool", "input": "x"},
     )
 
     result = parent.run("x")

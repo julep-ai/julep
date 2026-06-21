@@ -45,12 +45,12 @@ from .registry import DEFAULT_REGISTRY, ToolSchemaExpectation
 from .transforms import detect_cycles, normalize_ids
 
 
-# The reserved human-gate hand has a fixed contract and never needs a snapshot
+# The reserved human-gate tool has a fixed contract and never needs a snapshot
 # entry: it waits on a human signal (external, non-idempotent, but ours so the
 # contract is asserted). It is intentionally not race-safe.
 _HUMAN_GATE_CONTRACT = ToolContract(effect=Effect.EXTERNAL, idempotency=Idempotency.NONE)
 
-# The reserved sleep hand is side-effect-free and replay-safe by construction.
+# The reserved sleep tool is side-effect-free and replay-safe by construction.
 _SLEEP_CONTRACT = ToolContract(effect=Effect.READ, idempotency=Idempotency.NATIVE)
 
 
@@ -74,13 +74,13 @@ class McpServerSnapshot:
 @dataclass(frozen=True)
 class NativeToolSpec:
     input_schema: JSONSchema
-    contract: ToolContract  # we own native hands, so we declare their contract
+    contract: ToolContract  # we own native tools, so we declare their contract
     output_schema: Optional[JSONSchema] = None
 
 
 @dataclass(frozen=True)
 class McpSnapshot:
-    """A frozen view of every referenced server plus our native hands."""
+    """A frozen view of every referenced server plus our native tools."""
 
     servers: dict[str, McpServerSnapshot] = field(default_factory=dict)
     native: dict[str, NativeToolSpec] = field(default_factory=dict)
@@ -117,7 +117,7 @@ def _resolve(
     key = toolref_key(ref)
     asserted_contract = overrides.get(key)
 
-    # Reserved human-gate hand: synthetic, no snapshot lookup.
+    # Reserved human-gate tool: synthetic, no snapshot lookup.
     if isinstance(ref, NativeTool) and ref.name == HUMAN_GATE_TOOL:
         return FrozenTool.create(
             ref=ref,
@@ -128,7 +128,7 @@ def _resolve(
             asserted=True,
         )
 
-    # Reserved sleep hand: synthetic, no snapshot lookup.
+    # Reserved sleep tool: synthetic, no snapshot lookup.
     if isinstance(ref, NativeTool) and ref.name == SLEEP_TOOL:
         return FrozenTool.create(
             ref=ref,
@@ -209,23 +209,23 @@ def _served_input_schema(key: str, snapshot: McpSnapshot) -> Optional[JSONSchema
 
 def _expected_tool_keys(flow: Node) -> set[str]:
     """Every toolref key the flow can reach: call leaves, app inline grants,
-    and the granted tools of each registered brain the flow references."""
+    and the granted tools of each registered reasoner the flow references."""
     keys: set[str] = set()
-    brains: set[str] = set()
+    reasoners: set[str] = set()
     for node in flow.walk():
         step = node.step
         if isinstance(step, CallStep):
             keys.add(toolref_key(step.tool))
         if isinstance(step, ThinkStep):
-            brains.add(step.brain)
+            reasoners.add(step.reasoner)
         if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
-            brains.add(node.controller)
+            reasoners.add(node.controller)
         if node.op == Op.APP and node.tools:
             keys.update(str(k) for k in node.tools)
-    for name in brains:
-        brain = DEFAULT_REGISTRY.brains.get(name)
-        if brain is not None:
-            keys.update(brain.tools)
+    for name in reasoners:
+        reasoner = DEFAULT_REGISTRY.reasoners.get(name)
+        if reasoner is not None:
+            keys.update(reasoner.tools)
     return keys
 
 

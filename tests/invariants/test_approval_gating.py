@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from composable_agents import (
-    Brain,
+    Reasoner,
     CapabilityManifest,
     Contract,
     Effect,
@@ -16,7 +16,7 @@ from composable_agents import (
     human_gate,
     mcp,
     par,
-    register_brain,
+    register_reasoner,
     register_pure,
     seq,
     stage,
@@ -79,10 +79,10 @@ def test_empty_tools_denies_every_tool_but_absent_tools_allows() -> None:
     assert not blocking(absent.enforce_compile(fr.flow))
 
 
-def test_empty_brains_denies_every_brain_but_absent_brains_allows() -> None:
+def test_empty_reasoners_denies_every_reasoner_but_absent_reasoners_allows() -> None:
     flow = think("summarizer")
 
-    empty = CapabilityManifest.from_dict({"brains": []})
+    empty = CapabilityManifest.from_dict({"reasoners": []})
     absent = CapabilityManifest.from_dict({})
 
     assert "CAP_MODEL_DENIED" in [d.code for d in blocking(empty.enforce_compile(flow))]
@@ -99,32 +99,32 @@ def test_empty_subflows_denies_every_subflow_but_absent_subflows_allows() -> Non
     assert not blocking(absent.enforce_compile(flow))
 
 
-def test_models_gate_resolved_model_ids_independent_of_brain_names() -> None:
-    register_brain(Brain(name="b2b.model.brain", model="model-denied", system=""))
-    flow = think("b2b.model.brain")
+def test_models_gate_resolved_model_ids_independent_of_reasoner_names() -> None:
+    register_reasoner(Reasoner(name="b2b.model.reasoner", model="model-denied", system=""))
+    flow = think("b2b.model.reasoner")
 
     model_only = CapabilityManifest.from_dict({"models": ["model-allowed"]})
-    absent_models = CapabilityManifest.from_dict({"brains": ["b2b.model.brain"]})
-    brain_only = CapabilityManifest.from_dict(
-        {"brains": ["other.brain"], "models": ["model-denied"]}
+    absent_models = CapabilityManifest.from_dict({"reasoners": ["b2b.model.reasoner"]})
+    reasoner_only = CapabilityManifest.from_dict(
+        {"reasoners": ["other.reasoner"], "models": ["model-denied"]}
     )
 
     model_only_codes = [d.code for d in blocking(model_only.enforce_compile(flow))]
-    brain_only_codes = [d.code for d in blocking(brain_only.enforce_compile(flow))]
+    reasoner_only_codes = [d.code for d in blocking(reasoner_only.enforce_compile(flow))]
 
     assert "CAP_MODEL_ID_DENIED" in model_only_codes
     assert "CAP_MODEL_DENIED" not in model_only_codes
     assert not blocking(absent_models.enforce_compile(flow))
-    assert "CAP_MODEL_DENIED" in brain_only_codes
-    assert "CAP_MODEL_ID_DENIED" not in brain_only_codes
+    assert "CAP_MODEL_DENIED" in reasoner_only_codes
+    assert "CAP_MODEL_ID_DENIED" not in reasoner_only_codes
 
 
-def test_models_gate_app_controller_and_planner_brains() -> None:
-    register_brain(Brain(name="b2b.model.controller", model="controller-model", system=""))
-    register_brain(Brain(name="b2b.model.planner", model="planner-model", system=""))
+def test_models_gate_app_controller_and_planner_reasoners() -> None:
+    register_reasoner(Reasoner(name="b2b.model.controller", model="controller-model", system=""))
+    register_reasoner(Reasoner(name="b2b.model.planner", model="planner-model", system=""))
     caps = CapabilityManifest.from_dict(
         {
-            "brains": ["b2b.model.controller", "b2b.model.planner"],
+            "reasoners": ["b2b.model.controller", "b2b.model.planner"],
             "models": ["other-model"],
         }
     )

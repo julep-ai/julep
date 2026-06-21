@@ -33,7 +33,7 @@ async def main() -> None:
         input=EPISODE_BATCH,
         task_queue="ca-flow-demo",
     )
-    print("\n=== durable flow result (worker: pod, brains: real Anthropic) ===")
+    print("\n=== durable flow result (worker: pod, reasoners: real Anthropic) ===")
     print(json.dumps(result, indent=2))
 
 

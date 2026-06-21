@@ -86,7 +86,7 @@ Real envelope JSON from the run:
 ## B1 Confirmation: Artifact Envelope Join
 
 `composable_agents/deploy.py:229-249` builds `Deployment.artifact_components`. It includes
-`flowJson`, `manifestJson`, `pureSourceHashes`, `brains`, `capabilities`, `executionPolicy`, and
+`flowJson`, `manifestJson`, `pureSourceHashes`, `reasoners`, `capabilities`, `executionPolicy`, and
 `frameworkVersion`. `rendererSourceHashes` is the existing absent-when-unset precedent:
 `deploy.py:246-248` computes renderer hashes and only adds the key when the dict is non-empty.
 

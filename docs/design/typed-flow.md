@@ -35,7 +35,7 @@ Two authoring tiers exist today and neither is what we want:
   `seq`/`par`/`sub` an `Agent`, nest it, or have one agent use another. It's a
   "hunky" create-and-run object.
 - **The combinators** (`seq/par/alt/iter_up_to/stage/app/sub`, `race/hedge/
-  quorum/human_gate`) *are* the composable algebra, but they reference brains/
+  quorum/human_gate`) *are* the composable algebra, but they reference reasoners/
   tools/sub-flows by **string name**, losing the two things the OOP style gives:
   import resolution (jump-to-def, find-refs, rename-safety) and static type
   checking.
@@ -54,7 +54,7 @@ next layer *above* it, never a mutation of the IR.
 
 **Hard rule (freeze isolation):** a `Flow` value carries no executable payload
 into the frozen representation. Every Python callable must already be a *named*
-tool / pure / brain / sub before freeze. All naming, hashing, routing, and
+tool / pure / reasoner / sub before freeze. All naming, hashing, routing, and
 type-resolution happen **before** workflow start; workflow code keeps seeing only
 `Node` + manifest + contracts + refs + JSON values.
 
@@ -69,7 +69,7 @@ Everything is a `Flow[In, Out]` value:
 | Building block | Is a | Lowers to |
 |---|---|---|
 | `Tool[In,Out]` (a `@tool`) | typed leaf | `call(ref)` (`CallStep`) |
-| a brain / `think` | leaf | `think(brain)` (`ThinkStep`) |
+| a reasoner / `think` | leaf | `think(reasoner)` (`ThinkStep`) |
 | `Agent(...)` | `Flow[Any,Any]` | `app(controller, tools=, subflows=, ...)` |
 | a composed pipeline | `Flow[In,Out]` | `seq/par/alt/...` nodes |
 | a named/split component | `Flow[In,Out]` | `sub(ref, contract)` |
@@ -112,17 +112,17 @@ output type `R` — consistent with `race`/`quorum`'s existing `reduce`.
 
 - **Tools are multi-arg.** You write `def book(hotel: str, nights: int) -> Conf`;
   the framework derives the object input schema and packs/unpacks the single
-  threaded IR value into kwargs at the hand boundary. `Flow`'s `In` is the packed
+  threaded IR value into kwargs at the tool boundary. `Flow`'s `In` is the packed
   shape; the IR still threads one value (contract unchanged).
-- **Brains are values too.** Reference-by-value extends to brains:
-  `Agent(brain=claude_sonnet)` / `think(claude_sonnet)` take an imported `Brain`
+- **Reasoners are values too.** Reference-by-value extends to reasoners:
+  `Agent(reasoner=claude_sonnet)` / `think(claude_sonnet)` take an imported `Reasoner`
   value (import-resolved, rename-safe), not a string model-id. They still lower to
-  the brain *name* in the IR.
+  the reasoner *name* in the IR.
 - **Identity is derived, opt-in nameable.** Anonymous flows get a content-hash
   *local* name (debug/inline/one-shot artifacts only). `.named("ref.v1")` mints a
   **durable** ref.
   - **`.named()` is affine, not sticky.** Any `with_/replace/without` that changes
-    structure/tools/brain/contracts/budget/instructions **drops the name** by
+    structure/tools/reasoner/contracts/budget/instructions **drops the name** by
     default; `.renamed(...)` (or `.named(..., replace=True)`) reasserts identity
     intentionally. (A durable name surviving a structural mutation would make
     content-addressing dishonest.)
@@ -130,7 +130,7 @@ output type `R` — consistent with `race`/`quorum`'s existing `reduce`.
     named.**
 - **A `FlowRegistry`** backs named flows/sub-flows (today `sub(ref)` is just a
   string). Names live in one space with a **collision policy**: tool-ref vs
-  sub-ref vs brain-name collisions are detected and **fail deploy**.
+  sub-ref vs reasoner-name collisions are detected and **fail deploy**.
 
 ## 7. Capabilities, flow-as-tool, sub-agents
 
@@ -157,7 +157,7 @@ special-case concept.
 be typed unless the user supplies schemas/adapters.
 
 **Hybrid validation.** Construction does no freeze/snapshot work, but runs the
-**cheap checks the in-hand values already make possible** — e.g. a `dangerous`/
+**cheap checks the in-tool values already make possible** — e.g. a `dangerous`/
 approval-required tool in an agent's capability list, duplicate/colliding
 capability names, or an unknown effect are rejected *at construction* (the `Tool`
 values carry their contracts; no snapshot needed). Checks that require the
@@ -167,17 +167,17 @@ registration, approval-gate dominance across the whole tree — run at `.deploy(
 
 ## 9. Decompose & recombine
 
-Components are immutable values. Read parts (`a.tools`, `a.brain`) and derive
+Components are immutable values. Read parts (`a.tools`, `a.reasoner`) and derive
 variants ergonomically:
 
 ```python
-base = Agent(brain=claude, tools=[lookup, classify])
-pro  = base.with_tools(add=[escalate]).replace(brain=opus)   # name dropped (affine)
+base = Agent(reasoner=claude, tools=[lookup, classify])
+pro  = base.with_tools(add=[escalate]).replace(reasoner=opus)   # name dropped (affine)
 lite = base.without(classify)
 parts = base.tools          # plain access; share across agents
 ```
 
-Plain reconstruction always works (`Agent(brain=base.brain, tools=[*base.tools, x])`).
+Plain reconstruction always works (`Agent(reasoner=base.reasoner, tools=[*base.tools, x])`).
 
 ## 10. Scaling: per-component, inline or split
 
@@ -253,7 +253,7 @@ intentionally changed.
 10. Tools: **multi-arg, framework-packed**.
 11. Coexistence: **additive**.
 12. `par`: **reducer → named type**.
-13. Brains are **first-class typed values** (reference-by-value), like tools/flows.
+13. Reasoners are **first-class typed values** (reference-by-value), like tools/flows.
 14. Construction is **lazy/pure with cheap eager checks** (`.check()` forces full
     validation); full freeze-time gates run at `.deploy()/.run()`.
 15. Explicit **`as_type`/`expect` adapters** at `Any` boundaries are kept (not

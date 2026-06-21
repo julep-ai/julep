@@ -23,11 +23,11 @@ from .kinds import ContextScope, Effect, Op, Shape, SummaryPolicy
 
 JSONSchema = dict[str, Any]
 
-# Reserved native hand: the harness turns a call to this into a human signal-wait
+# Reserved native tool: the harness turns a call to this into a human signal-wait
 # rather than an HTTP request (see derived.human_gate / the interpreter).
 HUMAN_GATE_TOOL = "__human_gate__"
 
-# Reserved native hand: the harness turns a call to this into a durable timer
+# Reserved native tool: the harness turns a call to this into a durable timer
 # (Temporal: workflow timer; DBOS: DBOS.sleep) rather than an HTTP request.
 # The duration in seconds rides on the node's Ann.timeout.
 SLEEP_TOOL = "__sleep__"
@@ -51,7 +51,7 @@ def _snake(name: str) -> str:
 # --------------------------------------------------------------------------- #
 @dataclass(frozen=True)
 class NativeTool:
-    """An HTTP hand we own (Cloud Run / Lambda)."""
+    """An HTTP tool we own (Cloud Run / Lambda)."""
 
     name: str
     kind: str = "native"
@@ -237,12 +237,12 @@ class CallStep:
 
 @dataclass
 class ThinkStep:
-    brain: str
+    reasoner: str
     ctx: Optional[ContextPolicy] = None
     kind: str = "think"
 
     def to_json(self) -> dict[str, Any]:
-        out: dict[str, Any] = {"kind": "think", "brain": self.brain}
+        out: dict[str, Any] = {"kind": "think", "reasoner": self.reasoner}
         if self.ctx is not None:
             out["ctx"] = self.ctx.to_json()
         return out
@@ -292,7 +292,7 @@ def step_from_json(d: dict[str, Any]) -> Step:
             tool=toolref_from_json(d["tool"]), ctx=ctx, frozen_hash=d.get("frozenHash")
         )
     if k == "think":
-        return ThinkStep(brain=d["brain"], ctx=ctx)
+        return ThinkStep(reasoner=d["reasoner"], ctx=ctx)
     if k == "sub":
         return SubStep(ref=d["ref"], contract=SubContract.from_json(d["contract"]))
     raise ValueError(f"unknown Step kind: {k!r}")
@@ -412,7 +412,7 @@ class Node:
     max_rounds: Optional[int] = None
     # APP transcript carriage (docs/design/agent-transcripts.md): how much
     # session context the controller sees per round, and the named summarizer
-    # brain for SUMMARY scope. Conditional keys: absent == today's LOCAL.
+    # reasoner for SUMMARY scope. Conditional keys: absent == today's LOCAL.
     ctx: Optional[ContextPolicy] = None
     summarizer: Optional[str] = None
     source: Optional["SourceSpan"] = None

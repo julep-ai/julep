@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import shutil
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -286,6 +287,10 @@ def test_off_list_dep_publish_fails_closed(tmp_path: Path, monkeypatch: pytest.M
             deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED)
 
 
+@pytest.mark.skipif(
+    shutil.which("componentize-py") is None,
+    reason="real env-component build requires the componentize-py toolchain on PATH",
+)
 def test_real_regex_wheel_env_component_imports_and_runs(tmp_path: Path) -> None:
     dep_list = ("regex==2024.11.6",)
     component_path = env_builder.build_env_component(dep_list, ">=3.11", out_dir=tmp_path)

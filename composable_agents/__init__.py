@@ -10,7 +10,7 @@ well-formedness, enforces capabilities (§9), and admits races (§5) before a fl
 can run; :func:`freeze` and :func:`validate` are exposed for finer control.
 
 Execution is durable on Temporal: the control plane walks the frozen IR in a
-workflow, Brains and Hands are activities, Sub is a child workflow behind a
+workflow, Reasoners and Tools are activities, Sub is a child workflow behind a
 Joined firewall, and Agent is a bounded controller loop with a budget guard and
 continue-as-new. That layer is imported lazily and guarded — everything in the
 authoring/compile path here works with no Temporal install — and
@@ -34,7 +34,7 @@ from .kinds import (
     SummaryPolicy as SummaryPolicy,
 )
 
-# --- IR value types (rarely built by hand; useful for typing/introspection) #
+# --- IR value types (rarely built by tool; useful for typing/introspection) #
 from .ir import (
     HUMAN_GATE_TOOL as HUMAN_GATE_TOOL,
     SLEEP_TOOL as SLEEP_TOOL,
@@ -54,7 +54,7 @@ from .dsl import (
     alt as alt,
     app as app,
     arr as arr,
-    brain_from_ctx as brain_from_ctx,
+    reasoner_from_ctx as reasoner_from_ctx,
     call as call,
     fanout as fanout,
     ident as ident,
@@ -146,15 +146,15 @@ from .agent import (
     tool as tool,
 )
 
-# --- brains (dotctx) ------------------------------------------------------- #
+# --- reasoners (dotctx) ------------------------------------------------------- #
 from .dotctx import (
-    Brain as Brain,
-    brain_from_settings as brain_from_settings,
-    brain_to_flow as brain_to_flow,
+    Reasoner as Reasoner,
+    reasoner_from_settings as reasoner_from_settings,
+    reasoner_to_flow as reasoner_to_flow,
     dotctx_flow as dotctx_flow,
-    get_brain as get_brain,
+    get_reasoner as get_reasoner,
     load_dotctx as load_dotctx,
-    register_brain as register_brain,
+    register_reasoner as register_reasoner,
 )
 
 # --- purity registry ------------------------------------------------------- #
@@ -189,7 +189,7 @@ from .agent_loop import (
     Decision as Decision,
     extract_plan as extract_plan,
     generalize_trace_to_plan as generalize_trace_to_plan,
-    interpret_brain_reply as interpret_brain_reply,
+    interpret_reasoner_reply as interpret_reasoner_reply,
     promote_plan as promote_plan,
 )
 from .execution.cma import (
@@ -261,7 +261,7 @@ _BASE_EXPORTS = [
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
     "NativeTool", "McpTool", "HUMAN_GATE_TOOL", "SLEEP_TOOL",
     # dsl
-    "call", "native", "mcp", "think", "brain_from_ctx", "ident", "arr", "sub",
+    "call", "native", "mcp", "think", "reasoner_from_ctx", "ident", "arr", "sub",
     "seq", "par", "fanout", "each", "alt", "cond", "switch", "reschedule",
     "iter_up_to", "stage", "app",
     "Contract",
@@ -283,13 +283,13 @@ _BASE_EXPORTS = [
     "deploy", "Deployment", "snapshot_from_listings",
     "Agent", "AGENT_REPLY_SCHEMA", "Tool", "tool", "snapshot_from_tools",
     # dotctx
-    "Brain", "register_brain", "get_brain", "load_dotctx", "dotctx_flow",
-    "brain_to_flow", "brain_from_settings",
+    "Reasoner", "register_reasoner", "get_reasoner", "load_dotctx", "dotctx_flow",
+    "reasoner_to_flow", "reasoner_from_settings",
     # purity
     "pure", "register_pure", "is_registered", "get_pure", "diff_pure_hashes",
     "Registry", "DEFAULT_REGISTRY",
     # agent loop
-    "AgentConfig", "AgentState", "Decision", "interpret_brain_reply",
+    "AgentConfig", "AgentState", "Decision", "interpret_reasoner_reply",
     "generalize_trace_to_plan", "extract_plan", "promote_plan",
     "CMAEvent", "CMASession", "CMAClient", "CMAAgentEnv",
     "drive_cma_agent_loop", "manifest_to_custom_tools",
@@ -313,7 +313,7 @@ _BASE_EXPORTS = [
 _TEMPORAL_EXPORTS = [
     "FlowWorkflow", "AgentWorkflow", "FlowInput", "AgentInput",
     "run_flow", "start_flow", "build_worker", "run_worker",
-    "callHand", "invokeBrain", "compilePlan", "verifyPures", "resolveSubflow",
+    "callTool", "invokeReasoner", "compilePlan", "verifyPures", "resolveSubflow",
     "resolveAgentSpec", "resolveRuntimeCapabilities",
 ]
 

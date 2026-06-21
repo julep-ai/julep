@@ -11,11 +11,11 @@ Structure notes:
 
 * The flow uses define-by-construction authoring: ``@flow`` runs once at import
   time with data handles, so ordinary Python assignments name graph nodes while
-  tools, brains, pures, ``cond``, and ``each`` append steps.
-* Independent read/pure/brain work can be inferred as parallel by the DAG
+  tools, reasoners, pures, ``cond``, and ``each`` append steps.
+* Independent read/pure/reasoner work can be inferred as parallel by the DAG
   compiler when effect-safe; write and external-effect steps remain ordered
   barriers, so the CAS read -> model work -> guarded write shape stays intact.
-* The "database" is an in-process store behind two native hands
+* The "database" is an in-process store behind two native tools
   (``read_episode`` / ``write_summary_surfaces``); episode ``ep-1003`` simulates
   a concurrent edit between read and write, exercising the ``stale_source``
   branch end-to-end.
@@ -34,14 +34,14 @@ import json
 from typing import Any
 
 from composable_agents import (
-    Brain,
+    Reasoner,
     Deployment,
     cond,
     deploy,
     each,
     flow,
     pure,
-    register_brain,
+    register_reasoner,
     think,
     tool,
 )
@@ -83,7 +83,7 @@ _SEED: dict[str, str] = {
 }
 
 # ep-1003 simulates a user editing the episode while the summary is in flight:
-# the read hand serves the original text, then bumps the stored content, so the
+# the read tool serves the original text, then bumps the stored content, so the
 # CAS write later observes a different hash and reports stale_source.
 _CONCURRENT_EDIT_ID = "ep-1003"
 
@@ -111,7 +111,7 @@ reset_store()
 
 
 # --------------------------------------------------------------------------- #
-# Hands (the product's DB steps).
+# Tools (the product's DB steps).
 # --------------------------------------------------------------------------- #
 @tool(effect="read", idempotent=True)
 def read_episode(episode_id: str) -> dict[str, Any]:
@@ -155,10 +155,10 @@ TOOLS = [read_episode, write_summary_surfaces]
 
 
 # --------------------------------------------------------------------------- #
-# Brains (the product's two LLM passes), addressed by name from the worker.
+# Reasoners (the product's two LLM passes), addressed by name from the worker.
 # --------------------------------------------------------------------------- #
-register_brain(
-    Brain(
+register_reasoner(
+    Reasoner(
         name=SUMMARIZER,
         model=MODEL,
         system=(
@@ -176,8 +176,8 @@ register_brain(
     )
 )
 
-register_brain(
-    Brain(
+register_reasoner(
+    Reasoner(
         name=ONE_LINER,
         model=MODEL,
         system=(
@@ -251,11 +251,11 @@ def batch(episode_ids: list[str]) -> dict[str, Any]:
 
 
 def build() -> Deployment:
-    return deploy(batch, tools=TOOLS, brains=[SUMMARIZER, ONE_LINER])
+    return deploy(batch, tools=TOOLS, reasoners=[SUMMARIZER, ONE_LINER])
 
 
 # --------------------------------------------------------------------------- #
-# Keyless dry run: deterministic fake brains on InMemoryEnv.
+# Keyless dry run: deterministic fake reasoners on InMemoryEnv.
 # --------------------------------------------------------------------------- #
 def _fake_summarizer(value: dict[str, Any]) -> dict[str, Any]:
     return {"summary": f"[fake summary] {value['text'][:60]}..."}
@@ -270,7 +270,7 @@ async def run_demo(batch: list[str] | None = None) -> Any:
     deployment = build()
     return await deployment.adry_run(
         batch or EPISODE_BATCH,
-        brains={SUMMARIZER: _fake_summarizer, ONE_LINER: _fake_one_liner},
+        reasoners={SUMMARIZER: _fake_summarizer, ONE_LINER: _fake_one_liner},
     )
 
 

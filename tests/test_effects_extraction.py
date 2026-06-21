@@ -28,9 +28,9 @@ def test_effects_importable_without_temporalio():
     assert "ok" in out.stdout
 
 
-def test_call_hand_effect_routes_mcp():
+def test_run_call_effect_routes_mcp():
     from composable_agents.execution.effects import (
-        CallHandInput, WorkerContext, callHand, configure,
+        CallToolInput, WorkerContext, callTool, configure,
     )
 
     seen = {}
@@ -40,11 +40,11 @@ def test_call_hand_effect_routes_mcp():
         return {"hits": 3}
 
     configure(WorkerContext(mcp_call=fake_mcp))
-    inp = CallHandInput(
+    inp = CallToolInput(
         tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
         value={"q": "x"}, cid="cid-1",
     )
-    result = asyncio.run(callHand(inp))
+    result = asyncio.run(callTool(inp))
     assert result == {"hits": 3}
     assert seen == {"server": "kb", "tool": "search", "value": {"q": "x"}, "key": "cid-1"}
 
@@ -85,18 +85,18 @@ def _restore_ctx(prev):
 
 
 def test_resolve_qos_activity_clamps_non_batchable_batch_request():
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import (
         ResolveQoSInput, WorkerContext, resolveQoS,
     )
     from composable_agents.registry import Registry
 
     registry = Registry()
-    registry.register_brain(Brain(name="b", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
     prev = _configure_restoring(WorkerContext(registry=registry))
     try:
         inp = ResolveQoSInput(
-            brain="b",
+            reasoner="b",
             node_batchable=False,
             principal={"qos": "BATCH"},
         )
@@ -106,18 +106,18 @@ def test_resolve_qos_activity_clamps_non_batchable_batch_request():
 
 
 def test_resolve_qos_activity_allows_batch_for_batchable_node():
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import (
         ResolveQoSInput, WorkerContext, resolveQoS,
     )
     from composable_agents.registry import Registry
 
     registry = Registry()
-    registry.register_brain(Brain(name="b", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
     prev = _configure_restoring(WorkerContext(registry=registry))
     try:
         inp = ResolveQoSInput(
-            brain="b",
+            reasoner="b",
             node_batchable=True,
             principal={"qos": "BATCH"},
         )
@@ -127,7 +127,7 @@ def test_resolve_qos_activity_allows_batch_for_batchable_node():
 
 
 def test_resolve_qos_activity_honors_worker_context_resolver_override():
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import (
         ResolveQoSInput, WorkerContext, resolveQoS,
     )
@@ -135,7 +135,7 @@ def test_resolve_qos_activity_honors_worker_context_resolver_override():
     from composable_agents.registry import Registry
 
     registry = Registry()
-    registry.register_brain(Brain(name="b", model="test", system="s"))
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
 
     def resolve_priority(*args, **kwargs):
         return QoSTier.PRIORITY
@@ -145,7 +145,7 @@ def test_resolve_qos_activity_honors_worker_context_resolver_override():
     )
     try:
         inp = ResolveQoSInput(
-            brain="b",
+            reasoner="b",
             node_batchable=True,
             principal={"qos": "BATCH"},
         )
@@ -163,39 +163,39 @@ def test_activities_reexport_worker_context():
     assert A is E
 
 
-def test_brain_dispatch_defaults():
+def test_reasoner_dispatch_defaults():
     import dataclasses
 
-    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.qos import ReasonerDispatch, QoSTier
 
-    d = BrainDispatch()
+    d = ReasonerDispatch()
     assert d.qos is QoSTier.STANDARD
     assert d.batch_id is None
-    assert dataclasses.is_dataclass(BrainDispatch)
-    assert BrainDispatch.__dataclass_params__.frozen is True
+    assert dataclasses.is_dataclass(ReasonerDispatch)
+    assert ReasonerDispatch.__dataclass_params__.frozen is True
 
 
 def test_adapt_llm_caller_legacy_2_3_4_arg_get_default_dispatch():
     from conftest import run
 
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import _adapt_llm_caller
-    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.qos import ReasonerDispatch, QoSTier
 
     sentinel_2 = object()
     sentinel_3 = object()
     sentinel_4 = object()
-    brain = Brain(name="t", model="m", system="s")
+    reasoner = Reasoner(name="t", model="m", system="s")
     value = {"v": 1}
     principal = {"tenant": "t"}
 
-    async def fake_2(brain, value):
+    async def fake_2(reasoner, value):
         return sentinel_2
 
-    async def fake_3(brain, value, principal):
+    async def fake_3(reasoner, value, principal):
         return sentinel_3
 
-    async def fake_4(brain, value, principal, transcript):
+    async def fake_4(reasoner, value, principal, transcript):
         return sentinel_4
 
     for fn, sentinel in (
@@ -206,11 +206,11 @@ def test_adapt_llm_caller_legacy_2_3_4_arg_get_default_dispatch():
         adapted = _adapt_llm_caller(fn)
         result = run(
             adapted(
-                brain,
+                reasoner,
                 value,
                 principal,
                 None,
-                BrainDispatch(qos=QoSTier.FLEX),
+                ReasonerDispatch(qos=QoSTier.FLEX),
             )
         )
         assert result is sentinel
@@ -219,48 +219,48 @@ def test_adapt_llm_caller_legacy_2_3_4_arg_get_default_dispatch():
 def test_adapt_llm_caller_5arg_receives_dispatch():
     from conftest import run
 
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import _adapt_llm_caller
-    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.qos import ReasonerDispatch, QoSTier
 
-    async def fake_5(brain, value, principal, transcript, dispatch):
+    async def fake_5(reasoner, value, principal, transcript, dispatch):
         return dispatch.qos
 
     adapted = _adapt_llm_caller(fake_5)
     result = run(
         adapted(
-            Brain(name="t", model="m", system="s"),
+            Reasoner(name="t", model="m", system="s"),
             {"v": 1},
             {"tenant": "t"},
             None,
-            BrainDispatch(qos=QoSTier.PRIORITY),
+            ReasonerDispatch(qos=QoSTier.PRIORITY),
         )
     )
     assert result is QoSTier.PRIORITY
 
 
-def test_invoke_brain_passes_dispatch_qos_to_llm():
+def test_invoke_reasoner_passes_dispatch_qos_to_llm():
     from conftest import run
 
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeBrainInput, WorkerContext
-    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
+    from composable_agents.qos import ReasonerDispatch, QoSTier
     from composable_agents.registry import Registry
 
     registry = Registry()
-    registry.register_brain(Brain(name="b", model="test", system="s"))
-    captured: dict[str, BrainDispatch] = {}
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
+    captured: dict[str, ReasonerDispatch] = {}
 
-    async def fake_llm(brain, value, principal, transcript, dispatch):
+    async def fake_llm(reasoner, value, principal, transcript, dispatch):
         captured["dispatch"] = dispatch
         return "ok"
 
     prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
     try:
         result = run(
-            effects.invokeBrain(
-                InvokeBrainInput(brain="b", value="hi", cid="think@1", qos="FLEX")
+            effects.invokeReasoner(
+                InvokeReasonerInput(reasoner="b", value="hi", cid="think@1", qos="FLEX")
             )
         )
     finally:
@@ -270,28 +270,28 @@ def test_invoke_brain_passes_dispatch_qos_to_llm():
     assert captured["dispatch"].qos is QoSTier.FLEX
 
 
-def test_invoke_brain_clamps_batch_qos_to_standard():
+def test_invoke_reasoner_clamps_batch_qos_to_standard():
     from conftest import run
 
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeBrainInput, WorkerContext
-    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
+    from composable_agents.qos import ReasonerDispatch, QoSTier
     from composable_agents.registry import Registry
 
     registry = Registry()
-    registry.register_brain(Brain(name="b", model="test", system="s"))
-    captured: dict[str, BrainDispatch] = {}
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
+    captured: dict[str, ReasonerDispatch] = {}
 
-    async def fake_llm(brain, value, principal, transcript, dispatch):
+    async def fake_llm(reasoner, value, principal, transcript, dispatch):
         captured["dispatch"] = dispatch
         return "ok"
 
     prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
     try:
         result = run(
-            effects.invokeBrain(
-                InvokeBrainInput(brain="b", value="hi", cid="think@1", qos="BATCH")
+            effects.invokeReasoner(
+                InvokeReasonerInput(reasoner="b", value="hi", cid="think@1", qos="BATCH")
             )
         )
     finally:
@@ -301,28 +301,28 @@ def test_invoke_brain_clamps_batch_qos_to_standard():
     assert captured["dispatch"].qos is QoSTier.STANDARD
 
 
-def test_invoke_brain_default_qos_is_standard():
+def test_invoke_reasoner_default_qos_is_standard():
     from conftest import run
 
-    from composable_agents.dotctx import Brain
+    from composable_agents.dotctx import Reasoner
     from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeBrainInput, WorkerContext
-    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
+    from composable_agents.qos import ReasonerDispatch, QoSTier
     from composable_agents.registry import Registry
 
     registry = Registry()
-    registry.register_brain(Brain(name="b", model="test", system="s"))
-    captured: dict[str, BrainDispatch] = {}
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
+    captured: dict[str, ReasonerDispatch] = {}
 
-    async def fake_llm(brain, value, principal, transcript, dispatch):
+    async def fake_llm(reasoner, value, principal, transcript, dispatch):
         captured["dispatch"] = dispatch
         return "ok"
 
     prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
     try:
         result = run(
-            effects.invokeBrain(
-                InvokeBrainInput(brain="b", value="hi", cid="think@1")
+            effects.invokeReasoner(
+                InvokeReasonerInput(reasoner="b", value="hi", cid="think@1")
             )
         )
     finally:

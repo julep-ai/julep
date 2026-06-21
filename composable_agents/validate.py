@@ -220,7 +220,7 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
 
     if op == Op.EVAL_PLAN:
         # A plan is either baked in (extracted/pre-validated) or produced at
-        # runtime by `controller` (a planner brain). At least one must be present.
+        # runtime by `controller` (a planner reasoner). At least one must be present.
         if n.plan is None and n.controller is None:
             err("EVAL_NO_PLAN", "eval_plan requires a plan payload or a planner controller")
         if n.plan is not None:
@@ -250,7 +250,7 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
             if n.ctx.scope == ContextScope.SUMMARY and n.summarizer is None:
                 err(
                     "APP_SUMMARY_NO_SUMMARIZER",
-                    "app with summary context requires a named summarizer brain "
+                    "app with summary context requires a named summarizer reasoner "
                     "(summarizer=...); there is no implicit default model",
                 )
 
@@ -296,7 +296,7 @@ def _check_json_value(
             elif SECRET_KEY_RE.search(key):
                 err(
                     "ARR_ARGS_SECRET",
-                    f"arr static arg key {path}.{key} looks secret-shaped; use env/hands instead",
+                    f"arr static arg key {path}.{key} looks secret-shaped; use env/tools instead",
                 )
                 ok = False
             child_path = f"{path}.{key}" if isinstance(key, str) else f"{path}.<key>"

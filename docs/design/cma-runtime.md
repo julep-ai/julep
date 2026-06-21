@@ -51,7 +51,7 @@ A third `run_agent` backend, built as a control-flow inversion of the local
   - **Custom tools take object schemas + named-argument objects.** CMA rejects a
     non-object `input_schema` and the model emits `{"<param>": value}`. The
     facade's `cma_tool_binding` projects an object schema naming the parameter and
-    adapts the hand to translate the model's arg object back to the framework's
+    adapts the tool to translate the model's arg object back to the framework's
     single threaded value (multi-arg/object tools pass through). See *Tool
     argument convention* below.
   Swap the transport for SDK-typed calls once a new enough SDK ships.
@@ -97,16 +97,16 @@ plug in.
 
 ## Four framings, very different feasibility
 
-### 1. As a Brain — trivially possible, pointless
+### 1. As a Reasoner — trivially possible, pointless
 
-A CMA session could back the `(brain, payload) -> reply` controller callable.
+A CMA session could back the `(reasoner, payload) -> reply` controller callable.
 But that pays for CMA's loop, sandbox, and durability only to use it as one
 expensive single-shot model call. It is not a runtime in any meaningful sense.
 
-### 2. As a Hand / Sub — clean, recommended today
+### 2. As a Tool / Sub — clean, recommended today
 
 From the framework's perspective a CMA session is an *opaque external effect
-that returns a value* — indistinguishable from an MCP tool or an HTTP hand.
+that returns a value* — indistinguishable from an MCP tool or an HTTP tool.
 Wrap "run a managed-agent session to do X, wait for its terminal result" as a
 `@tool(effect="external")` or as a `sub`. A `sub` then genuinely *is* surface-
 opaque — the **Sub one-way mirror** ([SPEC §2 invariant 5](../SPEC.md#2-invariants-normative)):
@@ -235,7 +235,7 @@ async def drive_cma_agent_loop(*, input, cfg, session, call_tool,
 `CMAAgentEnv.run_agent` resolves the loop policy (with `app_config` budget/
 maxRounds overrides), builds the manifest-only custom-tool surface, calls
 `client.create_session(agent=..., environment=..., session_cid=cid, input=value)`,
-and hands a `call_tool` closure (name → bound hand) to the driver. The returned
+and tools a `call_tool` closure (name → bound tool) to the driver. The returned
 `terminal_result(...)` is byte-identical to the local/Temporal backends for the
 same scenario — the parity test asserts exactly that.
 
@@ -244,7 +244,7 @@ same scenario — the parity test asserts exactly that.
 What the v1 implementation settles, and what is deliberately deferred:
 
 - **Per-tool-call idempotency keys — addressed.** Each call gets a deterministic
-  `{session_cid}-call-{round}` cid, mirroring the Temporal `callHand` discipline
+  `{session_cid}-call-{round}` cid, mirroring the Temporal `callTool` discipline
   ([SPEC §8.5](../SPEC.md#85-idempotency-keys)). (There is no documented
   session-create idempotency key in the CMA HTTP API, so session-create dedup on
   replay remains the adapter's concern — e.g. reusing a known session id.)
@@ -291,12 +291,12 @@ What the v1 implementation settles, and what is deliberately deferred:
 
 The framework models a native tool as `fn(value)` over a single threaded value,
 so a single scalar-arg tool's `input_schema` is that value's schema (e.g.
-`{"type": "string"}`) and a multi-arg tool's is an object the hand unpacks. CMA
+`{"type": "string"}`) and a multi-arg tool's is an object the tool unpacks. CMA
 instead requires every custom tool's `input_schema` to be a JSON **object** and
 the hosted model emits a named-argument object (`{"city": "Tokyo"}`).
 `Agent.arun_on_cma` bridges the two with `cma_tool_binding`: object/multi-arg
 tools pass through unchanged; a scalar single-arg tool is projected as an object
-schema naming its parameter, and its hand is wrapped to unwrap the model's
+schema naming its parameter, and its tool is wrapped to unwrap the model's
 `{<param>: value}` back to the bare value. The local `.run()` path is untouched,
 so the *same* `fn` receives the *same* argument shape on both backends.
 

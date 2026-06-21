@@ -13,10 +13,10 @@ from temporalio import activity
 
 # Re-exports: every public name that previously lived here.
 from .effects import (
-    CallHandInput as CallHandInput,
+    CallToolInput as CallToolInput,
     CommitStateInput as CommitStateInput,
     CompilePlanInput as CompilePlanInput,
-    InvokeBrainInput as InvokeBrainInput,
+    InvokeReasonerInput as InvokeReasonerInput,
     LlmCaller as LlmCaller,
     LoadStateInput as LoadStateInput,
     McpCaller as McpCaller,
@@ -53,14 +53,14 @@ async def putBlob(inp: PutBlobInput) -> str:
     return await effects.putBlob(inp)
 
 
-@activity.defn(name="callHand")
-async def callHand(inp: CallHandInput) -> Any:
-    return await effects.callHand(inp)
+@activity.defn(name="callTool")
+async def callTool(inp: CallToolInput) -> Any:
+    return await effects.callTool(inp)
 
 
-@activity.defn(name="invokeBrain")
-async def invokeBrain(inp: InvokeBrainInput) -> Any:
-    return await effects.invokeBrain(inp)
+@activity.defn(name="invokeReasoner")
+async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
+    return await effects.invokeReasoner(inp)
 
 
 @activity.defn(name="compilePlan")

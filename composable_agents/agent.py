@@ -28,7 +28,7 @@ from .agent_loop import AgentConfig, drive_agent_loop
 from .capabilities import Budget, CapabilityManifest, ToolGrant
 from .contracts import ToolContract
 from .deploy import Deployment, deploy
-from .dotctx import Brain, register_brain
+from .dotctx import Reasoner, register_reasoner
 from .dsl import app, call, native
 from .errors import ValidationError
 from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
@@ -96,20 +96,20 @@ AGENT_REPLY_SCHEMA: JSONSchema = {
     ]
 }
 
-_DEFAULT_LOCAL_BRAIN_WARNING = (
+_DEFAULT_LOCAL_REASONER_WARNING = (
     "Agent llm=None: no model configured; returning input unprocessed. "
     "Pass llm= for real behavior."
 )
-_default_local_brain_warned = False
+_default_local_reasoner_warned = False
 _KEEP: Any = object()
 
 
-def default_local_brain(_brain_name: str, payload: dict[str, Any]) -> dict[str, Any]:
-    """Keyless demo brain: terminal, explicit, and never silently intelligent."""
-    global _default_local_brain_warned
-    if not _default_local_brain_warned:
-        warnings.warn(_DEFAULT_LOCAL_BRAIN_WARNING, RuntimeWarning, stacklevel=2)
-        _default_local_brain_warned = True
+def default_local_reasoner(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Keyless demo reasoner: terminal, explicit, and never silently intelligent."""
+    global _default_local_reasoner_warned
+    if not _default_local_reasoner_warned:
+        warnings.warn(_DEFAULT_LOCAL_REASONER_WARNING, RuntimeWarning, stacklevel=2)
+        _default_local_reasoner_warned = True
     return {
         "output": {
             "note": (
@@ -236,8 +236,8 @@ class Tool(FlowLike[In, Out]):
         return call(native(self.name))
 
     @property
-    def bound_hand(self) -> Callable[[Any], Any]:
-        """Hand wrapper for the single threaded value: positional-only params are
+    def bound_tool(self) -> Callable[[Any], Any]:
+        """Tool wrapper for the single threaded value: positional-only params are
         passed positionally (declared order), the rest by keyword."""
         if len(self.param_names) <= 1:
             return self.fn
@@ -248,12 +248,12 @@ class Tool(FlowLike[In, Out]):
             if parameter.kind is inspect.Parameter.POSITIONAL_ONLY
         )
 
-        def _hand(value: Any) -> Any:
+        def _tool(value: Any) -> Any:
             args = [value[name] for name in positional_only if name in value]
             kwargs = {key: item for key, item in value.items() if key not in positional_only}
             return fn(*args, **kwargs)
 
-        return _hand
+        return _tool
 
     @property
     def native_spec(self) -> NativeToolSpec:
@@ -291,17 +291,17 @@ def cma_tool_binding(native_tool: Tool[Any, Any]) -> tuple[JSONSchema, Callable[
     CMA requires every custom tool's ``input_schema`` to be a JSON object and the
     hosted model emits a named-argument object (e.g. ``{"city": "Tokyo"}``). The
     framework's native model threads a single value, so a single scalar-arg tool
-    has a non-object schema and a hand expecting the bare value. This returns the
-    CMA-valid object schema plus a hand that translates the model's argument
+    has a non-object schema and a tool expecting the bare value. This returns the
+    CMA-valid object schema plus a tool that translates the model's argument
     object back to the framework's threaded value. Multi-arg / already-object
-    tools pass through unchanged (``bound_hand`` already unpacks the object).
+    tools pass through unchanged (``bound_tool`` already unpacks the object).
     """
     schema = native_tool.input_schema
-    bound = native_tool.bound_hand
+    bound = native_tool.bound_tool
 
     if not native_tool.param_names:
         # Zero-argument tool: CMA still requires an object schema and emits an
-        # object (typically {}); the hand takes no value, so ignore the input.
+        # object (typically {}); the tool takes no value, so ignore the input.
         zero_fn = native_tool.fn
         zero_schema: JSONSchema = (
             schema if isinstance(schema, dict) and schema.get("type") == "object" else _OBJECT_SCHEMA
@@ -403,7 +403,7 @@ class Agent(FlowLike[Any, Any]):
 
     def __init__(
         self,
-        brain: str,
+        reasoner: str,
         tools: Sequence[FlowLike[Any, Any] | SplitCapability] = (),
         *,
         name: Optional[str] = None,
@@ -453,7 +453,7 @@ class Agent(FlowLike[Any, Any]):
         system = instructions or ""
         if name is None:
             resolved_name = _derive_agent_name(
-                model=brain,
+                model=reasoner,
                 tool_names=tool_names,
                 budget_cost=budget_cost,
                 max_rounds=max_rounds,
@@ -462,7 +462,7 @@ class Agent(FlowLike[Any, Any]):
         else:
             resolved_name = name
         self._name = resolved_name
-        self._brain_model = brain
+        self._reasoner_model = reasoner
         self._caps = caps
         self._tools = tuple(tool_caps)
         self._flow_caps: dict[str, FlowLike[Any, Any]] = {
@@ -475,7 +475,7 @@ class Agent(FlowLike[Any, Any]):
         self._budget_cost = budget_cost
         self._max_rounds = max_rounds
         self._instructions = instructions
-        self._brain_fn = llm or default_local_brain
+        self._reasoner_fn = llm or default_local_reasoner
         self._budget = Budget(cost=budget_cost) if budget_cost is not None else None
         self._mode = EnforcementMode.coerce(mode)
         self._cfg = AgentConfig(max_rounds=max_rounds, budget=self._budget, mode=self._mode)
@@ -492,10 +492,10 @@ class Agent(FlowLike[Any, Any]):
             if isinstance(cap, Flow):
                 register_flow(ref, cap)
 
-        register_brain(
-            Brain(
+        register_reasoner(
+            Reasoner(
                 name=resolved_name,
-                model=brain,
+                model=reasoner,
                 system=system,
                 reply_schema=AGENT_REPLY_SCHEMA,
                 tools=tool_names,
@@ -537,7 +537,7 @@ class Agent(FlowLike[Any, Any]):
 
     def _params(self) -> dict[str, Any]:
         return {
-            "brain": self._brain_model,
+            "reasoner": self._reasoner_model,
             "tools": list(self._caps),
             "llm": self._llm,
             "budget_cost": self._budget_cost,
@@ -549,8 +549,8 @@ class Agent(FlowLike[Any, Any]):
     def _reconstruct(self, **overrides: Any) -> "Agent":
         params = self._params()
         params.update(overrides)
-        brain = params.pop("brain")
-        return Agent(brain, name=None, **params)
+        reasoner = params.pop("reasoner")
+        return Agent(reasoner, name=None, **params)
 
     @staticmethod
     def _cap_name(cap: FlowLike[Any, Any] | SplitCapability) -> Optional[str]:
@@ -589,7 +589,7 @@ class Agent(FlowLike[Any, Any]):
     def replace(
         self,
         *,
-        brain: Optional[str] = None,
+        reasoner: Optional[str] = None,
         budget_cost: Any = _KEEP,
         max_rounds: Optional[int] = None,
         instructions: Any = _KEEP,
@@ -597,8 +597,8 @@ class Agent(FlowLike[Any, Any]):
         llm: Any = _KEEP,
     ) -> "Agent":
         overrides: dict[str, Any] = {}
-        if brain is not None:
-            overrides["brain"] = brain
+        if reasoner is not None:
+            overrides["reasoner"] = reasoner
         if max_rounds is not None:
             overrides["max_rounds"] = max_rounds
         if budget_cost is not _KEEP:
@@ -725,7 +725,7 @@ class Agent(FlowLike[Any, Any]):
         deployment = self._deploy()
         plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
         emitter = ProjectionEmitter(InMemoryProjection())
-        tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
+        tool_fns = {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
         max_call_limits = (
             deployment.capabilities.max_call_limits()
             if deployment.capabilities is not None
@@ -738,11 +738,11 @@ class Agent(FlowLike[Any, Any]):
             contracts.setdefault(tool_name, {})["maxCalls"] = limit
 
         async def invoke_controller(payload: dict[str, Any]) -> Any:
-            # Pass the brain *name* (not the model string): it is the registry key
+            # Pass the reasoner *name* (not the model string): it is the registry key
             # a real llm caller resolves to recover system + reply_schema, and it
-            # matches the long-documented ``_brain_name`` parameter. Scripted
+            # matches the long-documented ``_reasoner_name`` parameter. Scripted
             # callers ignore it, so this is behaviour-preserving for them.
-            reply = self._brain_fn(self._name, payload)
+            reply = self._reasoner_fn(self._name, payload)
             if inspect.isawaitable(reply):
                 return await reply
             return reply
@@ -772,7 +772,7 @@ class Agent(FlowLike[Any, Any]):
                 sub_env = InMemoryEnv(
                     sub_deployment.manifest,
                     emitter,
-                    hands=tool_fns,
+                    tools=tool_fns,
                     mode=self._mode,
                 )
                 sub_result = await interpret(sub_deployment.flow, value, sub_env)
@@ -781,7 +781,7 @@ class Agent(FlowLike[Any, Any]):
         env = InMemoryEnv(
             deployment.manifest,
             emitter,
-            hands=tool_fns,
+            tools=tool_fns,
             agents={
                 self._name: lambda value: drive_agent_loop(
                     input=value,
@@ -810,7 +810,7 @@ class Agent(FlowLike[Any, Any]):
     ) -> "Result[Any]":
         deployment = self._deploy()
         emitter = ProjectionEmitter(InMemoryProjection())
-        tool_fns = {native_tool.name: native_tool.bound_hand for native_tool in self._tools}
+        tool_fns = {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
         max_call_limits = (
             deployment.capabilities.max_call_limits()
             if deployment.capabilities is not None
@@ -823,13 +823,13 @@ class Agent(FlowLike[Any, Any]):
             contracts.setdefault(tool_name, {})["maxCalls"] = limit
 
         # CMA needs object input schemas + named-argument objects; bind each tool
-        # to that calling convention (and adapt its hand to translate back).
+        # to that calling convention (and adapt its tool to translate back).
         cma_schemas: dict[str, JSONSchema] = {}
-        cma_hands: dict[str, Callable[[Any], Any]] = {}
+        cma_tools: dict[str, Callable[[Any], Any]] = {}
         for native_tool in self._tools:
-            schema, hand = cma_tool_binding(native_tool)
+            schema, tool = cma_tool_binding(native_tool)
             cma_schemas[native_tool.name] = schema
-            cma_hands[native_tool.name] = hand
+            cma_tools[native_tool.name] = tool
 
         custom_tools = manifest_to_custom_tools(
             self._tool_names,
@@ -839,14 +839,14 @@ class Agent(FlowLike[Any, Any]):
         inner = InMemoryEnv(
             deployment.manifest,
             emitter,
-            hands=tool_fns,
+            tools=tool_fns,
             mode=self._mode,
         )
         cma_env = CMAAgentEnv(
             inner,
             client=client,
             environment=environment,
-            hands=cma_hands,
+            tools=cma_tools,
             cfg=self._cfg,
             granted=self._granted,
             contracts=contracts,

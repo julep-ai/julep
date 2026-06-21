@@ -1,4 +1,4 @@
-"""Temporal dispatch helpers for cross-run brain-call batching."""
+"""Temporal dispatch helpers for cross-run reasoner-call batching."""
 
 from __future__ import annotations
 
@@ -31,10 +31,10 @@ def provider_safe_custom_id(raw: str) -> str:
 
 
 @dataclass
-class BrainCall:
-    """Neutral brain-call payload submitted to a batch collector."""
+class ReasonerCall:
+    """Neutral reasoner-call payload submitted to a batch collector."""
 
-    brain: str
+    reasoner: str
     value: Any
     principal: Optional[dict[str, Any]] = None
     transcript: Optional[list[dict[str, Any]]] = None
@@ -44,13 +44,13 @@ class BrainCall:
 
 
 @dataclass
-class SubmitBrainBatchInput:
-    """Serializable input for the submitBrainBatch activity."""
+class SubmitReasonerBatchInput:
+    """Serializable input for the submitReasonerBatch activity."""
 
     provider: str
     qos: str
     principal_key: str
-    call: BrainCall
+    call: ReasonerCall
 
 
 @dataclass
@@ -66,7 +66,7 @@ class BatchCollectorInput:
     max_wait_s: Optional[float] = None
     task_queue: str = "composable-agents"
     batch_seq: int = 0
-    pending: list[BrainCall] = field(default_factory=list)
+    pending: list[ReasonerCall] = field(default_factory=list)
     pending_first_at: Optional[str] = None
     pending_last_at: Optional[str] = None
 
@@ -79,7 +79,7 @@ class BatchPollInput:
     qos: str
     principal: Optional[dict[str, Any]] = None
     task_queue: str = "composable-agents"
-    calls: list[BrainCall] = field(default_factory=list)
+    calls: list[ReasonerCall] = field(default_factory=list)
     batch_id: Optional[str] = None
 
 
@@ -105,7 +105,7 @@ class SubmitBatchInput:
     provider: str
     qos: str
     principal: Optional[dict[str, Any]] = None
-    calls: list[BrainCall] = field(default_factory=list)
+    calls: list[ReasonerCall] = field(default_factory=list)
 
 
 @dataclass
@@ -122,7 +122,7 @@ class FetchBatchResultsInput:
 
     provider: str
     batch_id: str
-    calls: list[BrainCall] = field(default_factory=list)
+    calls: list[ReasonerCall] = field(default_factory=list)
 
 
 _BATCH_CTX: Optional[BatchDispatchContext] = None
@@ -136,8 +136,8 @@ def _parse_at(s: Optional[str]) -> Optional[datetime]:
     return datetime.fromisoformat(s) if s else None
 
 
-def _coerce_call(item: Any) -> BrainCall:
-    return BrainCall(**item) if isinstance(item, dict) else cast(BrainCall, item)
+def _coerce_call(item: Any) -> ReasonerCall:
+    return ReasonerCall(**item) if isinstance(item, dict) else cast(ReasonerCall, item)
 
 
 def install_batch_dispatch_context(ctx: BatchDispatchContext) -> None:
@@ -165,10 +165,10 @@ def _principal_key(principal: Optional[dict[str, Any]]) -> str:
 
 @workflow.defn(name="BatchCollector")
 class BatchCollector:
-    """Collect batchable brain calls and start detached provider pollers."""
+    """Collect batchable reasoner calls and start detached provider pollers."""
 
     def __init__(self) -> None:
-        self._items: list[BrainCall] = []
+        self._items: list[ReasonerCall] = []
         self._first_at: Optional[datetime] = None
         self._last_at: Optional[datetime] = None
         self._seen_custom_ids: set[str] = set()
@@ -264,12 +264,12 @@ class BatchCollector:
 class BatchPoll:
     """Submit, poll, fetch, and route one provider batch."""
 
-    async def _signal_brain_result(
+    async def _signal_reasoner_result(
         self, reply_to: str, custom_id: str, payload: dict[str, Any]
     ) -> bool:
         handle = workflow.get_external_workflow_handle(reply_to)
         try:
-            await handle.signal("submitBrainResult", payload)
+            await handle.signal("submitReasonerResult", payload)
         except Exception:
             workflow.logger.debug("failed to route batch result for %s", custom_id)
             return False
@@ -309,7 +309,7 @@ class BatchPoll:
                 for call in calls:
                     if not call.reply_to:
                         continue
-                    await self._signal_brain_result(
+                    await self._signal_reasoner_result(
                         call.reply_to,
                         call.custom_id,
                         {
@@ -353,25 +353,25 @@ class BatchPoll:
                     "reply": entry["reply"],
                 }
                 signal_payload = {"custom_id": custom_id, "reply": payload}
-            if await self._signal_brain_result(reply_to, custom_id, signal_payload):
+            if await self._signal_reasoner_result(reply_to, custom_id, signal_payload):
                 routed += 1
 
         return {"batchId": batch_id, "routed": routed}
 
 
-async def submit_brain_batch(
+async def submit_reasoner_batch(
     client: Any,
     *,
     provider: str,
     qos: str,
     principal: Optional[dict[str, Any]],
-    call: BrainCall,
+    call: ReasonerCall,
     quiet_s: float,
     max_items: Optional[int],
     max_wait_s: Optional[float],
     task_queue: str = "composable-agents",
 ) -> Any:
-    """Submit one brain call to the provider/qos/principal batch collector."""
+    """Submit one reasoner call to the provider/qos/principal batch collector."""
 
     principal_key = _principal_key(principal)
     key = f"batch:{provider}:{qos}:{principal_key}"
@@ -394,12 +394,12 @@ async def submit_brain_batch(
     )
 
 
-@activity.defn(name="submitBrainBatch")
-async def submitBrainBatch(inp: SubmitBrainBatchInput) -> None:
+@activity.defn(name="submitReasonerBatch")
+async def submitReasonerBatch(inp: SubmitReasonerBatchInput) -> None:
     """Signal-with-start the batch collector from a Temporal activity."""
 
     ctx = get_batch_dispatch_context()
-    await submit_brain_batch(
+    await submit_reasoner_batch(
         ctx.client,
         provider=inp.provider,
         qos=inp.qos,
@@ -421,7 +421,7 @@ def _provider_adapter_by_name(provider: str) -> "BatchProvider":
     return cls()
 
 
-def _coerce_calls(calls: list[BrainCall]) -> list[BrainCall]:
+def _coerce_calls(calls: list[ReasonerCall]) -> list[ReasonerCall]:
     return [_coerce_call(c) for c in calls]
 
 
@@ -429,14 +429,14 @@ def _record_batch_attempt(
     *,
     provider: str,
     batch_id: str,
-    brain: Any,
+    reasoner: Any,
 ) -> None:
     from . import effects
     from ..resilience import AttemptRecord
 
     effects._notify_attempt(
         AttemptRecord(
-            model=str(getattr(brain, "model", "")),
+            model=str(getattr(reasoner, "model", "")),
             provider=provider,
             outcome="ok",
             tier="BATCH",
@@ -451,20 +451,20 @@ async def submitBatch(inp: SubmitBatchInput) -> str:
 
     from . import effects
     from .batch_provider import select_batch_provider
-    from ..prompt import rendered_brain_for
+    from ..prompt import rendered_reasoner_for
 
     calls = _coerce_calls(inp.calls)
     if not calls:
         raise ValueError("cannot submit an empty batch")
 
-    first_brain = effects._registry().get_brain(calls[0].brain)
-    first_rendered = rendered_brain_for(first_brain, calls[0].value)
+    first_reasoner = effects._registry().get_reasoner(calls[0].reasoner)
+    first_rendered = rendered_reasoner_for(first_reasoner, calls[0].value)
     adapter = select_batch_provider(first_rendered.model)
 
     requests: list[dict[str, Any]] = []
     for call in calls:
-        brain_obj = effects._registry().get_brain(call.brain)
-        rendered = rendered_brain_for(brain_obj, call.value)
+        reasoner_obj = effects._registry().get_reasoner(call.reasoner)
+        rendered = rendered_reasoner_for(reasoner_obj, call.value)
         requests.append(
             adapter.build_request(
                 call.custom_id,
@@ -487,7 +487,7 @@ async def pollBatch(inp: PollBatchInput) -> str:
 
 @activity.defn(name="fetchBatchResults")
 async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]:
-    """Fetch provider batch results and parse them through the matching brain."""
+    """Fetch provider batch results and parse them through the matching reasoner."""
 
     import inspect
 
@@ -495,8 +495,8 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
 
     adapter = _provider_adapter_by_name(inp.provider)
     calls = _coerce_calls(inp.calls)
-    brains_by_custom_id = {
-        call.custom_id: effects._registry().get_brain(call.brain) for call in calls
+    reasoners_by_custom_id = {
+        call.custom_id: effects._registry().get_reasoner(call.reasoner) for call in calls
     }
 
     out: list[dict[str, Any]] = []
@@ -504,16 +504,16 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
     if hasattr(data, "__aiter__"):
         async for custom_id, raw in data:
             cid = str(custom_id)
-            brain_obj = brains_by_custom_id[cid]
+            reasoner_obj = reasoners_by_custom_id[cid]
             try:
-                parsed = adapter.parse(raw, brain_obj)
+                parsed = adapter.parse(raw, reasoner_obj)
             except Exception as exc:
                 out.append({"custom_id": cid, "error": True, "reason": str(exc)})
             else:
                 _record_batch_attempt(
                     provider=inp.provider,
                     batch_id=inp.batch_id,
-                    brain=brain_obj,
+                    reasoner=reasoner_obj,
                 )
                 out.append({"custom_id": cid, "reply": parsed})
         return out
@@ -522,16 +522,16 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
         data = await data
     for custom_id, raw in data:
         cid = str(custom_id)
-        brain_obj = brains_by_custom_id[cid]
+        reasoner_obj = reasoners_by_custom_id[cid]
         try:
-            parsed = adapter.parse(raw, brain_obj)
+            parsed = adapter.parse(raw, reasoner_obj)
         except Exception as exc:
             out.append({"custom_id": cid, "error": True, "reason": str(exc)})
         else:
             _record_batch_attempt(
                 provider=inp.provider,
                 batch_id=inp.batch_id,
-                brain=brain_obj,
+                reasoner=reasoner_obj,
             )
             out.append({"custom_id": cid, "reply": parsed})
     return out
@@ -543,17 +543,17 @@ __all__ = [
     "BatchDispatchContext",
     "BatchPoll",
     "BatchPollInput",
-    "BrainCall",
+    "ReasonerCall",
     "FetchBatchResultsInput",
     "PollBatchInput",
     "SubmitBatchInput",
-    "SubmitBrainBatchInput",
+    "SubmitReasonerBatchInput",
     "fetchBatchResults",
     "get_batch_dispatch_context",
     "install_batch_dispatch_context",
     "pollBatch",
     "provider_safe_custom_id",
     "submitBatch",
-    "submitBrainBatch",
-    "submit_brain_batch",
+    "submitReasonerBatch",
+    "submit_reasoner_batch",
 ]

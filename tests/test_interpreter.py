@@ -29,7 +29,7 @@ def _env(flow, **kw):
     return fr, env
 
 
-HANDS = {
+TOOLS = {
     "srv/inc": lambda v: v + 1,
     "srv/double": lambda v: v * 2,
     "srv/half": lambda v: v // 2,
@@ -41,7 +41,7 @@ HANDS = {
 
 def test_pipeline_threads_value():
     flow = seq(call(mcp("srv", "inc")), call(mcp("srv", "double")))
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     out = run(interpret(fr.flow, 5, env))
     assert out.value == 12  # (5+1)*2
 
@@ -64,7 +64,7 @@ def test_retryable_call_retries_to_success_with_backoff_sleeps():
         mcp("srv", "inc"),
         ann=Ann(max_attempts=3, retry_interval_s=0.5, backoff_rate=2.0),
     )
-    fr, env = _env(flow, hands={"srv/inc": flaky}, sleeper=sleeper)
+    fr, env = _env(flow, tools={"srv/inc": flaky}, sleeper=sleeper)
 
     out = run(interpret(fr.flow, "x", env))
 
@@ -95,7 +95,7 @@ def test_non_retryable_contract_ignores_ann_retry_policy():
     env = InMemoryEnv(
         fr.manifest,
         ProjectionEmitter(InMemoryProjection()),
-        hands={"srv/writer": always_fails},
+        tools={"srv/writer": always_fails},
     )
 
     with pytest.raises(RuntimeError, match="no retry"):
@@ -120,7 +120,7 @@ def test_policy_error_does_not_consume_retry_attempts_or_sleep():
         mcp("srv", "inc"),
         ann=Ann(max_attempts=3, retry_interval_s=0.01, backoff_rate=2.0),
     )
-    fr, env = _env(flow, hands={"srv/inc": denied}, sleeper=sleeper)
+    fr, env = _env(flow, tools={"srv/inc": denied}, sleeper=sleeper)
 
     with pytest.raises(CapabilityDenied, match="denied"):
         run(interpret(fr.flow, "x", env))
@@ -131,7 +131,7 @@ def test_policy_error_does_not_consume_retry_attempts_or_sleep():
 
 def test_parallel_collects_branches():
     flow = par(call(mcp("srv", "a")), call(mcp("srv", "b")))
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     out = run(interpret(fr.flow, 9, env))
     assert out.value == [("a", 9), ("b", 9)]
 
@@ -142,15 +142,15 @@ class RecordingEnv(InMemoryEnv):
         self.events = []
         self.gather_calls = 0
 
-    async def invoke_brain(self, brain, value, cid, timeout_s, batchable=False):
-        self.events.append("brain:start")
-        self.events.append("brain:end")
-        return ("brain", value)
+    async def invoke_reasoner(self, reasoner, value, cid, timeout_s, batchable=False):
+        self.events.append("reasoner:start")
+        self.events.append("reasoner:end")
+        return ("reasoner", value)
 
-    async def call_hand(self, node, value, cid):
-        self.events.append("hand:start")
-        self.events.append("hand:end")
-        return ("hand", value)
+    async def run_call(self, node, value, cid):
+        self.events.append("tool:start")
+        self.events.append("tool:end")
+        return ("tool", value)
 
     async def gather(self, coros):
         self.gather_calls += 1
@@ -169,9 +169,9 @@ def test_parallel_degrades_to_sequential_when_branch_reads_whole_session():
 
     out = run(interpret(fr.flow, 7, env))
 
-    assert out.value == [("brain", 7), ("hand", 7)]
+    assert out.value == [("reasoner", 7), ("tool", 7)]
     assert env.gather_calls == 0
-    assert env.events == ["brain:start", "brain:end", "hand:start", "hand:end"]
+    assert env.events == ["reasoner:start", "reasoner:end", "tool:start", "tool:end"]
     par_did = next(e for e in store.events() if e.node == fr.flow.id and e.type == EventType.DID)
     assert par_did.attrs == {"merge": "degraded", "reason": "whole_session"}
 
@@ -189,7 +189,7 @@ def test_parallel_without_whole_session_still_fans_out():
 
 def test_race_emits_scheduling_attrs():
     flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
-    fr, env, store = _env_and_store(flow, hands=HANDS)
+    fr, env, store = _env_and_store(flow, tools=TOOLS)
 
     out = run(interpret(fr.flow, 1, env))
 
@@ -203,18 +203,18 @@ def test_real_run_cost_rolls_up_from_annotations():
         call(mcp("srv", "a"), ann=Ann(cost=0.25)),
         think("summarizer", ann=Ann(cost=0.75)),
     )
-    fr, env, store = _env_and_store(flow, hands=HANDS, brains={"summarizer": lambda v: v})
+    fr, env, store = _env_and_store(flow, tools=TOOLS, reasoners={"summarizer": lambda v: v})
 
     run(interpret(fr.flow, 1, env))
 
     assert store.cost_by_shape()["Pipeline"] == pytest.approx(1.0)
 
 
-def test_brain_reported_cost_metadata_overrides_default():
+def test_reasoner_reported_cost_metadata_overrides_default():
     flow = think("metered")
     fr, env, store = _env_and_store(
         flow,
-        brains={"metered": lambda v: {"output": v, "usage": {"costUsd": 0.33}}},
+        reasoners={"metered": lambda v: {"output": v, "usage": {"costUsd": 0.33}}},
     )
 
     run(interpret(fr.flow, "doc", env))
@@ -225,9 +225,9 @@ def test_brain_reported_cost_metadata_overrides_default():
 def test_alt_routes_by_pure_predicate():
     register_pure("is_even", lambda v: v % 2 == 0)
     flow = alt("is_even", call(mcp("srv", "half")), call(mcp("srv", "inc")))
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     assert run(interpret(fr.flow, 8, env)).value == 4   # even -> half
-    fr2, env2 = _env(flow, hands=HANDS)
+    fr2, env2 = _env(flow, tools=TOOLS)
     assert run(interpret(fr2.flow, 7, env2)).value == 8  # odd -> inc
 
 
@@ -270,31 +270,31 @@ def test_iter_up_to_runs_bound_times_and_converges():
     register_pure("at_least_10", lambda v: v >= 10)
     # No convergence: runs exactly bound times.
     flow = iter_up_to(3, call(mcp("srv", "inc")))
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     assert run(interpret(fr.flow, 5, env)).value == 8  # 5 -> 6 -> 7 -> 8
     # With convergence: stops early once predicate holds.
     flow2 = iter_up_to(100, call(mcp("srv", "inc")), until="at_least_10")
-    fr2, env2 = _env(flow2, hands=HANDS)
+    fr2, env2 = _env(flow2, tools=TOOLS)
     assert run(interpret(fr2.flow, 7, env2)).value == 10  # stops at 10
 
 
 def test_race_picks_first_branch_with_sync_fakes():
     flow = race(call(mcp("srv", "a")), call(mcp("srv", "b")))
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     out = run(interpret(fr.flow, 1, env))
     assert out.value == ("a", 1)  # branch order under synchronous fakes
 
 
 def test_quorum_returns_m_results():
     flow = quorum(call(mcp("srv", "a")), call(mcp("srv", "b")), call(mcp("srv", "c")), k=2)
-    fr, env = _env(flow, hands=HANDS)
+    fr, env = _env(flow, tools=TOOLS)
     out = run(interpret(fr.flow, 1, env))
     assert isinstance(out.value, list) and len(out.value) == 2
 
 
-def test_think_invokes_brain():
+def test_think_invokes_reasoner():
     flow = think("summarizer")
-    fr, env = _env(flow, brains={"summarizer": lambda v: f"summary:{v}"})
+    fr, env = _env(flow, reasoners={"summarizer": lambda v: f"summary:{v}"})
     assert run(interpret(fr.flow, "doc", env)).value == "summary:doc"
 
 
@@ -323,14 +323,14 @@ def test_stage_compiles_then_runs_plan_with_late_binding():
         return seq(call(mcp("srv", "inc")), call(mcp("srv", "double")))
 
     flow = stage("planner")
-    fr, env = _env(flow, hands=HANDS, planners={"planner": planner})
+    fr, env = _env(flow, tools=TOOLS, planners={"planner": planner})
     out = run(interpret(fr.flow, 5, env))
-    assert out.value == 12  # plan: (5+1)*2, executed via late-bound hands
+    assert out.value == 12  # plan: (5+1)*2, executed via late-bound tools
 
 
 def test_max_calls_under_limit_succeeds():
     flow = seq(call(mcp("srv", "inc")), call(mcp("srv", "inc")))
-    fr, env = _env(flow, hands=HANDS, max_calls={"srv/inc": 2})
+    fr, env = _env(flow, tools=TOOLS, max_calls={"srv/inc": 2})
 
     out = run(interpret(fr.flow, 5, env))
 
@@ -346,7 +346,7 @@ def test_max_calls_over_limit_raises_before_extra_effect():
         return value + 1
 
     flow = seq(call(mcp("srv", "inc")), call(mcp("srv", "inc")))
-    fr, env = _env(flow, hands={**HANDS, "srv/inc": inc}, max_calls={"srv/inc": 1})
+    fr, env = _env(flow, tools={**TOOLS, "srv/inc": inc}, max_calls={"srv/inc": 1})
 
     with pytest.raises(CapabilityDenied):
         run(interpret(fr.flow, 5, env))

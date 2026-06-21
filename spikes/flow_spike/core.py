@@ -443,10 +443,10 @@ def tool(tool_obj: Tool[Any, Any]) -> ToolRef:
     return ToolRef(tool_obj)
 
 
-def think(brain_name: str, value: Handle) -> Handle:
+def think(reasoner_name: str, value: Handle) -> Handle:
     handle = _ensure_handle(value)
     graph = handle.graph or _current_graph()
-    return graph.append("think", brain_name, [handle], target=brain_name)
+    return graph.append("think", reasoner_name, [handle], target=reasoner_name)
 
 
 def apply(fn: Any, value: Handle) -> Handle:

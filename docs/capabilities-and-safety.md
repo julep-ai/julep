@@ -2,7 +2,7 @@
 
 Composable Agents treats authority as data. A flow is not allowed to discover a
 tool at runtime, infer a model from a planner reply, or inherit a child agent's
-hands. The compile pipeline freezes the IR, validates it, applies the capability
+tools. The compile pipeline freezes the IR, validates it, applies the capability
 manifest, checks approval dominance, and admits races before the artifact can run
 in strict mode. See [README.md](../README.md), [concepts.md](concepts.md), and
 [SPEC §5](SPEC.md#5-compile-pipeline).
@@ -17,13 +17,13 @@ Grant sections distinguish absence from emptiness:
 
 This is normative in [SPEC §7.1](SPEC.md#71-absent-vs-empty). In
 `CapabilityManifest`, section-presence flags preserve the distinction for
-`tools`, `brains`, `models`, `subflows`, `memory`, `network`, and `mcp_servers`.
+`tools`, `reasoners`, `models`, `subflows`, `memory`, `network`, and `mcp_servers`.
 If `tools` is present, every `call(...)` and every inline `app(tools=[...])`
 tool must be named in that list. A hallucinated or ungranted tool is denied with
 `CAP_TOOL_DENIED` or `CAP_APP_TOOL_DENIED`, not routed to an ambient executor.
 
 The same stance applies at run time where the manifest has run-time seams:
-`network` gates native HTTP hand egress, `budget` gates estimated spend, and
+`network` gates native HTTP tool egress, `budget` gates estimated spend, and
 `maxCalls` is exposed to the Temporal environment as deterministic workflow
 state.
 
@@ -32,15 +32,15 @@ state.
 The manifest is a YAML/dict mapping parsed by `CapabilityManifest.from_yaml(...)`
 or `CapabilityManifest.from_dict(...)`. Its grant sections are:
 
-- `tools`: tool refs by key; native hands use `name`, MCP tools use
+- `tools`: tool refs by key; native tools use `name`, MCP tools use
   `server/tool`. A grant may include `effect`, `idempotency`, `approval`, and
   `maxCalls`.
-- `brains`: named brain refs.
-- `models`: resolved `Brain.model` ids.
+- `reasoners`: named reasoner refs.
+- `models`: resolved `Reasoner.model` ids.
 - `subflows`: invokable child-flow refs.
 - `memory`: `ContextScope` values such as `local`, `summary`, and
   `whole_session`.
-- `network`: native hand egress domains.
+- `network`: native tool egress domains.
 - `mcp_servers` / `mcpServers`: server -> optional version constraint.
 - `budget`: `cost`, `tokens`, and `wallSeconds` / `wall_seconds`.
 
@@ -54,12 +54,12 @@ tools:
     effect: dangerous
     idempotency: required
     approval: required
-brains:
+reasoners:
   - support-controller
 models:
   - claude-sonnet-4-6
 network:
-  - hands.internal.example
+  - tools.internal.example
 mcp_servers:
   search: ">=1"
 budget:
@@ -94,8 +94,8 @@ This is why `Agent` capabilities are represented as subflows rather than merged
 tool lists:
 
 ```python
-triage = Agent(brain="haiku", tools=[search, classify], name="triage.v1")
-desk = Agent(brain="claude-sonnet-4-6", tools=[lookup, triage])
+triage = Agent(reasoner="haiku", tools=[search, classify], name="triage.v1")
+desk = Agent(reasoner="claude-sonnet-4-6", tools=[lookup, triage])
 ```
 
 `desk` may call `lookup` and may invoke `triage.v1` as a sub-capability. It does
@@ -107,7 +107,7 @@ fail with `CAP_APP_FLOW_UNNAMED`.
 
 ## Approval gates
 
-`human_gate(prompt=..., timeout_s=...)` lowers to a reserved native hand,
+`human_gate(prompt=..., timeout_s=...)` lowers to a reserved native tool,
 `__human_gate__`. The Temporal harness turns that leaf into a durable
 `submitHuman` signal wait; timeout returns:
 
@@ -144,7 +144,7 @@ for diag in deployment.prod_gap:
 `deploy(..., mode="dev")` and `Agent(..., mode="dev")` return the deployment and
 retain would-block diagnostics in `deployment.prod_gap`. `prod_gap_summary()`
 groups them into deploy-facing buckets such as ungranted tool, ungranted
-brain/model, ungated dangerous/approval call, and version pin mismatch.
+reasoner/model, ungated dangerous/approval call, and version pin mismatch.
 
 Temporal runs stay prod-strict. `Deployment.run(...)` refuses a dev-mode
 deployment and requires the prod gap to be resolved before running on Temporal.

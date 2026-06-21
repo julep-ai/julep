@@ -107,7 +107,7 @@ def classify_error(exc: BaseException) -> ErrorClass:
     """Map a model-call exception to its :class:`ErrorClass`.
 
     An auth error anywhere in the ``__cause__``/``__context__`` chain wins:
-    callers like ``complete_brain`` reissue a failed native structured call
+    callers like ``complete_reasoner`` reissue a failed native structured call
     with a prompt-injected schema, and the reissue's failure (often transient)
     would otherwise mask the original 401/403 — a bad key must stay CONFIG no
     matter what the second attempt died of. For the rest, the *top* exception
@@ -161,7 +161,7 @@ class ResiliencePolicy:
 
     ``fallbacks`` maps a primary model slug to its ranked fallback models
     (each entry uses the same ``"provider:model"`` addressing as
-    :class:`~composable_agents.dotctx.Brain`). The chain is walked strictly in
+    :class:`~composable_agents.dotctx.Reasoner`). The chain is walked strictly in
     order; there is no load balancing and no randomness. Per-class same-model
     attempt counts and the backoff curve are the only other knobs.
     """

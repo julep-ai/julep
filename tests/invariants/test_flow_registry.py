@@ -60,15 +60,15 @@ def test_renamed_reasserts_and_can_replace_changed_flow() -> None:
     assert get_flow("tf5.r2").node.to_json() == replaced.to_ir().to_json()
 
 
-def test_named_rejects_brain_name_collision() -> None:
-    @tool(effect="read", idempotent=True, name="tf5_lookup_brain")
-    def lookup_brain(value: str) -> str:
+def test_named_rejects_reasoner_name_collision() -> None:
+    @tool(effect="read", idempotent=True, name="tf5_lookup_reasoner")
+    def lookup_reasoner(value: str) -> str:
         return value
 
-    Agent("m", tools=[lookup_brain], name="tf5_collide_brain_1")
+    Agent("m", tools=[lookup_reasoner], name="tf5_collide_reasoner_1")
 
     with pytest.raises(FlowRegistryError, match="collides"):
-        as_flow(call(native("tf5_collision_z"))).named("tf5_collide_brain_1")
+        as_flow(call(native("tf5_collision_z"))).named("tf5_collide_reasoner_1")
 
 
 def test_named_rejects_registered_agent_tool_name_collision() -> None:

@@ -10,7 +10,7 @@ What it teaches: the core `@flow` loop plus CAS-guarded writes.
 
 Rung: primary authoring surface with keyless `deploy(...).dry_run(...)`.
 
-Key APIs: `@flow`, `@tool`, `@pure`, `Brain`, `register_brain`, `think`, `cond`, `each`, `deploy(tools=..., brains=...)`, `Deployment.dry_run(...)`.
+Key APIs: `@flow`, `@tool`, `@pure`, `Reasoner`, `register_reasoner`, `think`, `cond`, `each`, `deploy(tools=..., reasoners=...)`, `Deployment.dry_run(...)`.
 
 Run:
 
@@ -19,13 +19,13 @@ python examples/episode_summary_flow.py
 ```
 
 This example is keyless and deterministic. It reads an episode, runs two fake
-brain passes in dry-run mode, and writes summary surfaces only if the source
+reasoner passes in dry-run mode, and writes summary surfaces only if the source
 hash is unchanged. The demo rollup stays at two `success`, one `stale_source`,
 and one `not_found`.
 
 ## `examples/cluster_labeling_flow.py`
 
-What it teaches: fan-out, closure captures, `switch`, inferred parallel brain
+What it teaches: fan-out, closure captures, `switch`, inferred parallel reasoner
 steps, and retry options.
 
 Rung: product-shaped `@flow` porting example.
@@ -98,12 +98,12 @@ What it teaches: running a facade `Agent` durably on a real Temporal server.
 
 Rung: durable execution path.
 
-Key APIs: `Agent`, `@tool`, `Agent.deployment()`, `Agent.deploy(...)`, `WorkerContext`, `build_worker`, Temporal `Client`, HTTP native hands.
+Key APIs: `Agent`, `@tool`, `Agent.deployment()`, `Agent.deploy(...)`, `WorkerContext`, `build_worker`, Temporal `Client`, HTTP native tools.
 
 Run a Temporal dev server in another terminal with `temporal server start-dev`,
 then run `python examples/temporal_durable_agent.py`.
 
-The controller is still keyless: `scripted_controller` is a deterministic async callable. The durability comes from Temporal. The example starts a tiny stdlib HTTP hand server, builds a worker with `WorkerContext`, runs `AgentWorkflow`, and prints the terminal result. For the production worker shape, see [Deploy on Temporal](deploy-temporal.md).
+The controller is still keyless: `scripted_controller` is a deterministic async callable. The durability comes from Temporal. The example starts a tiny stdlib HTTP tool server, builds a worker with `WorkerContext`, runs `AgentWorkflow`, and prints the terminal result. For the production worker shape, see [Deploy on Temporal](deploy-temporal.md).
 
 ## `examples/cma_managed_agent.py`
 
@@ -124,7 +124,7 @@ What it teaches: capstone composition across the largest part of the public surf
 
 Rung: read-last reference for typed, durable, capability-bounded dataflows.
 
-Key APIs: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `call`, `think`, `mcp`, `native`, `hedge`, `quorum`, `human_gate`, `pure`, `Brain`, `register_brain`, `Budget`, `CapabilityManifest`, `McpSnapshot`, `McpServerSnapshot`, `McpToolSpec`, `NativeToolSpec`, `ToolContract`, `deploy`, `start_flow`.
+Key APIs: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `call`, `think`, `mcp`, `native`, `hedge`, `quorum`, `human_gate`, `pure`, `Reasoner`, `register_reasoner`, `Budget`, `CapabilityManifest`, `McpSnapshot`, `McpServerSnapshot`, `McpToolSpec`, `NativeToolSpec`, `ToolContract`, `deploy`, `start_flow`.
 
 Run:
 

@@ -9,7 +9,7 @@ hash-addressed artifact, running every static gate in order:
    the only way a non-read tool becomes legal inside a race.
 2. **Validate** (well-formedness): per-op structure, schema edges, and the
    whole-session degrade warning for ``par``.
-3. **Capability enforcement** (§9): the flow may only use granted tools, brains,
+3. **Capability enforcement** (§9): the flow may only use granted tools, reasoners,
    memory scopes and servers; ungranted use is blocking.
 4. **Approval gates** (§7.3): dangerous or grant-approved tools must be dominated
    by a human gate.
@@ -46,7 +46,7 @@ from . import __version__
 from .capabilities import CapabilityManifest, check_approval_gates
 from .contracts import McpAnnotations, ToolManifest, manifest_to_json
 from .derived import check_race_admission
-from .dotctx import Brain, get_brain
+from .dotctx import Reasoner, get_reasoner
 from .errors import ValidationError
 from .freeze import (
     CapabilityOverrides,
@@ -88,7 +88,7 @@ def snapshot_from_listings(
     ``listings`` maps ``server -> {tool_name -> {"inputSchema": ..., "annotations": {...}}}``,
     exactly the shape an MCP ``tools/list`` response flattens to. This is the
     integration point where a concrete MCP client plugs in: gather each server's
-    tools, hand them here, and the result is a frozen-ready snapshot. ``versions``
+    tools, tool them here, and the result is a frozen-ready snapshot. ``versions``
     optionally pins a server version into the content hash.
     """
     versions = versions or {}
@@ -134,47 +134,47 @@ def _pure_source_hashes(flow: Node) -> dict[str, str | None]:
 
 def _renderer_source_hashes(flow: Node) -> dict[str, str]:
     out: dict[str, str] = {}
-    for name in _referenced_brains(flow):
+    for name in _referenced_reasoners(flow):
         try:
-            brain = get_brain(name)
+            reasoner = get_reasoner(name)
         except KeyError:
             continue
-        for render_name in (brain.system_render, brain.user_render):
+        for render_name in (reasoner.system_render, reasoner.user_render):
             if render_name and render_name in DEFAULT_REGISTRY.renderers:
                 out[render_name] = DEFAULT_REGISTRY.renderer_source_hash_of(render_name)
     return out
 
 
-def _referenced_brains(flow: Node) -> list[str]:
+def _referenced_reasoners(flow: Node) -> list[str]:
     names: set[str] = set()
     for node in flow.walk():
         step = node.step
         if isinstance(step, ThinkStep):
-            names.add(step.brain)
+            names.add(step.reasoner)
         if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
             names.add(node.controller)
     return sorted(names)
 
 
-def _brain_identity(name: str) -> dict[str, Any]:
+def _reasoner_identity(name: str) -> dict[str, Any]:
     try:
-        brain: Brain = get_brain(name)
+        reasoner: Reasoner = get_reasoner(name)
     except KeyError:
         return {"name": name}
     ident: dict[str, Any] = {
-        "name": brain.name,
-        "model": brain.model,
-        "system": brain.system,
-        "replySchema": brain.reply_schema,
-        "tools": list(brain.tools),
+        "name": reasoner.name,
+        "model": reasoner.model,
+        "system": reasoner.system,
+        "replySchema": reasoner.reply_schema,
+        "tools": list(reasoner.tools),
     }
     # New fields enter only when set, so pre-existing artifacts hash identically.
-    if brain.system_render is not None:
-        ident["systemRender"] = brain.system_render
-    if brain.user_render is not None:
-        ident["userRender"] = brain.user_render
-    if brain.max_tokens is not None:
-        ident["maxTokens"] = brain.max_tokens
+    if reasoner.system_render is not None:
+        ident["systemRender"] = reasoner.system_render
+    if reasoner.user_render is not None:
+        ident["userRender"] = reasoner.user_render
+    if reasoner.max_tokens is not None:
+        ident["maxTokens"] = reasoner.max_tokens
     return ident
 
 
@@ -192,7 +192,7 @@ def _hash_artifact_components(components: dict[str, Any]) -> str:
 
 def _capabilities_from_tools(
     tools: Sequence[Tool[Any, Any]],
-    brains: Optional[Sequence[str]],
+    reasoners: Optional[Sequence[str]],
 ) -> CapabilityManifest:
     data: dict[str, Any] = {
         "tools": [
@@ -204,8 +204,8 @@ def _capabilities_from_tools(
             for native_tool in tools
         ]
     }
-    if brains is not None:
-        data["brains"] = list(brains)
+    if reasoners is not None:
+        data["reasoners"] = list(reasoners)
     return CapabilityManifest.from_dict(data)
 
 
@@ -243,9 +243,9 @@ class Deployment:
             "flowJson": self.flow_json,
             "manifestJson": self.manifest_json,
             "pureSourceHashes": _pure_source_hashes(self.flow),
-            "brains": {
-                name: _brain_identity(name)
-                for name in _referenced_brains(self.flow)
+            "reasoners": {
+                name: _reasoner_identity(name)
+                for name in _referenced_reasoners(self.flow)
             },
             "capabilities": capabilities_json,
             "executionPolicy": None,
@@ -416,14 +416,14 @@ class Deployment:
         self,
         value: Any,
         *,
-        brains: Optional[dict[str, Callable[[Any], Any]]] = None,
+        reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
     ) -> "InterpreterResult":
-        """Run this deployment locally with stashed native tools and fake brains."""
+        """Run this deployment locally with stashed native tools and fake reasoners."""
         if self._tools is None:
             raise ValueError(
                 "Deployment.dry_run() requires a deployment built with "
                 "deploy(tools=...). Rebuild with deploy(..., tools=...) so local "
-                "dry runs can bind native tool hands."
+                "dry runs can bind native tool tools."
             )
 
         from .execution.interpreter import InMemoryEnv, interpret  # lazy: keeps deploy import-light
@@ -432,8 +432,8 @@ class Deployment:
         env = InMemoryEnv(
             self.manifest,
             ProjectionEmitter(InMemoryProjection()),
-            hands={native_tool.name: native_tool.bound_hand for native_tool in self._tools},
-            brains=brains,
+            tools={native_tool.name: native_tool.bound_tool for native_tool in self._tools},
+            reasoners=reasoners,
             max_calls=(
                 self.capabilities.max_call_limits()
                 if self.capabilities is not None
@@ -446,10 +446,10 @@ class Deployment:
         self,
         value: Any,
         *,
-        brains: Optional[dict[str, Callable[[Any], Any]]] = None,
+        reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
     ) -> "InterpreterResult":
         """Synchronously run this deployment locally via :meth:`adry_run`."""
-        return asyncio.run(self.adry_run(value, brains=brains))
+        return asyncio.run(self.adry_run(value, reasoners=reasoners))
 
 
 def deploy(
@@ -457,7 +457,7 @@ def deploy(
     snapshot: Optional[McpSnapshot] = None,
     *,
     tools: Optional[Sequence[Tool[Any, Any]]] = None,
-    brains: Optional[Sequence[str]] = None,
+    reasoners: Optional[Sequence[str]] = None,
     capabilities: Optional[CapabilityManifest] = None,
     extra_overrides: Optional[CapabilityOverrides] = None,
     strict: bool = True,
@@ -475,15 +475,15 @@ def deploy(
 
     ``capabilities`` (a §9 manifest) both supplies contract-assertion overrides
     (so asserted-idempotent tools may appear in races) and constrains which
-    tools/brains/servers the flow may use. ``extra_overrides`` merges additional
+    tools/reasoners/servers the flow may use. ``extra_overrides`` merges additional
     assertions on top. ``freeze_timing`` selects the §6 seam; pass
     ``snapshot_source`` for the per-run case so :meth:`Deployment.refresh` can
     re-freeze without an explicit snapshot.
     """
-    if brains is not None and capabilities is not None:
-        raise ValueError("pass either capabilities or brains=, not both")
-    if brains is not None and tools is None:
-        raise ValueError("brains= requires tools= so deploy can derive capabilities")
+    if reasoners is not None and capabilities is not None:
+        raise ValueError("pass either capabilities or reasoners=, not both")
+    if reasoners is not None and tools is None:
+        raise ValueError("reasoners= requires tools= so deploy can derive capabilities")
     if snapshot is not None and tools is not None:
         raise ValueError("pass either snapshot or tools=, not both")
     if snapshot is None and tools is None:
@@ -499,7 +499,7 @@ def deploy(
         snapshot = snapshot_from_tools(tools)
         retained_tools = tools
         if capabilities is None:
-            capabilities = _capabilities_from_tools(tools, brains)
+            capabilities = _capabilities_from_tools(tools, reasoners)
     assert snapshot is not None
 
     enforcement_mode = EnforcementMode.coerce(mode)
@@ -515,7 +515,7 @@ def deploy(
     diagnostics: list[Diagnostic] = []
     # 2. Well-formedness + schema edges.
     diagnostics.extend(validate(fr.flow, fr.manifest))
-    # 3. Capability enforcement (§9): granted tools/brains/servers only.
+    # 3. Capability enforcement (§9): granted tools/reasoners/servers only.
     if capabilities is not None:
         diagnostics.extend(capabilities.enforce_compile(fr.flow, fr.manifest))
     # 4. Approval gates (§7.3): dangerous or explicitly-approved calls need a gate.
@@ -554,7 +554,7 @@ def deploy(
 
 def _prod_gap_bucket(code: str) -> str:
     if code.startswith("CAP_MODEL") and code.endswith("_DENIED"):
-        return "ungranted brain/model"
+        return "ungranted reasoner/model"
     if code in {"CAP_TOOL_DENIED", "CAP_APP_TOOL_DENIED"}:
         return "ungranted tool"
     if code in {"CAP_SUBFLOW_DENIED", "CAP_APP_SUBFLOW_DENIED"}:

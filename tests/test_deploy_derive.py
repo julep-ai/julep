@@ -51,7 +51,7 @@ def _episode_batch():
     return each(summarize_one, max_parallel=2, reducer="tally_summary_statuses")
 
 
-def _episode_capabilities(*, include_brains: bool = True) -> CapabilityManifest:
+def _episode_capabilities(*, include_reasoners: bool = True) -> CapabilityManifest:
     data: dict[str, object] = {
         "tools": [
             {
@@ -66,8 +66,8 @@ def _episode_capabilities(*, include_brains: bool = True) -> CapabilityManifest:
             },
         ],
     }
-    if include_brains:
-        data["brains"] = [episode.SUMMARIZER, episode.ONE_LINER]
+    if include_reasoners:
+        data["reasoners"] = [episode.SUMMARIZER, episode.ONE_LINER]
     return CapabilityManifest.from_dict(data)
 
 
@@ -83,7 +83,7 @@ def test_deploy_tools_path_matches_episode_capability_oracle_hash() -> None:
     derived = deploy(
         batch,
         tools=episode.TOOLS,
-        brains=[episode.SUMMARIZER, episode.ONE_LINER],
+        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
     )
 
     assert derived.artifact_hash == old_path.artifact_hash
@@ -120,23 +120,23 @@ def test_deploy_rejects_missing_snapshot_and_tools() -> None:
         deploy(_episode_batch())
 
 
-def test_deploy_rejects_brains_without_tools() -> None:
-    with pytest.raises(ValueError, match="brains=.*tools="):
+def test_deploy_rejects_reasoners_without_tools() -> None:
+    with pytest.raises(ValueError, match="reasoners=.*tools="):
         deploy(
             _episode_batch(),
             snapshot_from_tools(episode.TOOLS),
-            brains=[episode.SUMMARIZER],
+            reasoners=[episode.SUMMARIZER],
         )
 
 
-def test_deploy_rejects_brains_with_explicit_capabilities() -> None:
-    explicit = _episode_capabilities(include_brains=False)
+def test_deploy_rejects_reasoners_with_explicit_capabilities() -> None:
+    explicit = _episode_capabilities(include_reasoners=False)
 
-    with pytest.raises(ValueError, match="capabilities.*brains"):
+    with pytest.raises(ValueError, match="capabilities.*reasoners"):
         deploy(
             _episode_batch(),
             tools=episode.TOOLS,
-            brains=["not-the-derived-brain-set"],
+            reasoners=["not-the-derived-reasoner-set"],
             capabilities=explicit,
         )
 
@@ -146,7 +146,7 @@ def test_deployment_refresh_retains_tools_for_dry_run() -> None:
     deployment = deploy(
         _episode_batch(),
         tools=episode.TOOLS,
-        brains=[episode.SUMMARIZER, episode.ONE_LINER],
+        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
     )
 
     refreshed = deployment.refresh(snapshot_from_tools(episode.TOOLS))
@@ -155,7 +155,7 @@ def test_deployment_refresh_retains_tools_for_dry_run() -> None:
     assert "_tools" not in refreshed.artifact_components
     result = refreshed.dry_run(
         episode.EPISODE_BATCH,
-        brains={
+        reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,
         },
@@ -179,12 +179,12 @@ def test_deployment_dry_run_reproduces_episode_demo_rollup() -> None:
     deployment = deploy(
         _episode_batch(),
         tools=episode.TOOLS,
-        brains=[episode.SUMMARIZER, episode.ONE_LINER],
+        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
     )
 
     result = deployment.dry_run(
         episode.EPISODE_BATCH,
-        brains={
+        reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,
         },

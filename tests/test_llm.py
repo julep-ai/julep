@@ -14,16 +14,16 @@ from typing import Any, Optional
 import pytest
 
 from composable_agents import Agent, tool
-from composable_agents.agent_loop import Decision, interpret_brain_reply
-from composable_agents.dotctx import Brain, register_brain
+from composable_agents.agent_loop import Decision, interpret_reasoner_reply
+from composable_agents.dotctx import Reasoner, register_reasoner
 from composable_agents.execution.llm import (
     _split_model,
     _strip_code_fence,
-    complete_brain,
+    complete_reasoner,
     make_llm_caller,
-    make_local_brain,
+    make_local_reasoner,
 )
-from composable_agents.qos import BrainDispatch, QoSTier
+from composable_agents.qos import ReasonerDispatch, QoSTier
 from conftest import run
 
 
@@ -90,10 +90,10 @@ def test_strip_code_fence() -> None:
 # --------------------------------------------------------------------------- #
 def test_caller_routes_provider_model_and_builds_messages() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
-    brain = Brain(name="b1", model="openai:gpt-4o", system="be terse")
+    reasoner = Reasoner(name="b1", model="openai:gpt-4o", system="be terse")
     caller = make_llm_caller(acompletion=rec)
 
-    run(caller(brain, {"input": "hi", "trace": []}))
+    run(caller(reasoner, {"input": "hi", "trace": []}))
 
     call = rec.calls[0]
     assert call["provider"] == "openai" and call["model"] == "gpt-4o"
@@ -105,8 +105,8 @@ def test_caller_routes_provider_model_and_builds_messages() -> None:
 
 def test_bare_model_falls_back_to_default_provider() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
-    brain = Brain(name="b2", model="claude-opus-4-8")
-    run(make_llm_caller(default_provider="anthropic", acompletion=rec)(brain, "hello"))
+    reasoner = Reasoner(name="b2", model="claude-opus-4-8")
+    run(make_llm_caller(default_provider="anthropic", acompletion=rec)(reasoner, "hello"))
     assert rec.calls[0]["provider"] == "anthropic"
     assert rec.calls[0]["model"] == "claude-opus-4-8"
     # string value passes through verbatim (not double-encoded)
@@ -115,56 +115,56 @@ def test_bare_model_falls_back_to_default_provider() -> None:
 
 def test_temperature_passthrough() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
-    brain = Brain(name="b3", model="openai:gpt-4o", temperature=0.2)
-    run(make_llm_caller(acompletion=rec)(brain, "x"))
+    reasoner = Reasoner(name="b3", model="openai:gpt-4o", temperature=0.2)
+    run(make_llm_caller(acompletion=rec)(reasoner, "x"))
     assert rec.calls[0]["temperature"] == 0.2
 
 
 def test_qos_request_field_openai_per_tier() -> None:
-    brain = Brain(name="t", model="openai:gpt-x", system="s")
+    reasoner = Reasoner(name="t", model="openai:gpt-x", system="s")
 
     rec = Recorder([_completion(content="ok")])
-    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.PRIORITY)))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.PRIORITY)))
     assert rec.calls[-1].get("service_tier") == "priority"
 
     rec = Recorder([_completion(content="ok")])
-    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.STANDARD)))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.STANDARD)))
     assert "service_tier" not in rec.calls[-1]
 
     rec = Recorder([_completion(content="ok")])
-    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.FLEX)))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.FLEX)))
     assert rec.calls[-1].get("service_tier") == "flex"
 
 
 def test_qos_request_field_anthropic_per_tier() -> None:
-    brain = Brain(name="t", model="anthropic:claude-x", system="s")
+    reasoner = Reasoner(name="t", model="anthropic:claude-x", system="s")
 
     rec = Recorder([_completion(content="ok")])
-    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.PRIORITY)))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.PRIORITY)))
     assert rec.calls[-1].get("service_tier") == "priority"
 
     rec = Recorder([_completion(content="ok")])
-    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.STANDARD)))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.STANDARD)))
     assert "service_tier" not in rec.calls[-1]
 
     rec = Recorder([_completion(content="ok")])
-    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.FLEX)))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.FLEX)))
     assert rec.calls[-1].get("service_tier") == "standard_only"
 
 
-def test_qos_batch_rejected_by_complete_brain() -> None:
+def test_qos_batch_rejected_by_complete_reasoner() -> None:
     rec = Recorder([_completion(content="ok")])
-    brain = Brain(name="t", model="openai:gpt-x", system="s")
+    reasoner = Reasoner(name="t", model="openai:gpt-x", system="s")
 
-    with pytest.raises(ValueError, match="BATCH must not reach complete_brain"):
-        run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.BATCH)))
+    with pytest.raises(ValueError, match="BATCH must not reach complete_reasoner"):
+        run(complete_reasoner(reasoner, "hi", acompletion=rec, dispatch=ReasonerDispatch(qos=QoSTier.BATCH)))
 
 
-def test_complete_brain_default_dispatch_sets_no_tier_field() -> None:
+def test_complete_reasoner_default_dispatch_sets_no_tier_field() -> None:
     rec = Recorder([_completion(content="ok")])
-    brain = Brain(name="t", model="openai:gpt-x", system="s")
+    reasoner = Reasoner(name="t", model="openai:gpt-x", system="s")
 
-    run(complete_brain(brain, "hi", acompletion=rec))
+    run(complete_reasoner(reasoner, "hi", acompletion=rec))
 
     assert "service_tier" not in rec.calls[-1]
 
@@ -180,8 +180,8 @@ _DECISION_SCHEMA: dict[str, Any] = {
 
 def test_schema_uses_native_response_format_for_standard_provider() -> None:
     rec = Recorder(_json_replies({"tool": "search", "input": "q"}))
-    brain = Brain(name="b4", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
-    run(make_llm_caller(acompletion=rec)(brain, "x"))
+    reasoner = Reasoner(name="b4", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
+    run(make_llm_caller(acompletion=rec)(reasoner, "x"))
 
     call = rec.calls[0]
     assert call["response_format"]["type"] == "json_schema"
@@ -192,8 +192,8 @@ def test_schema_uses_native_response_format_for_standard_provider() -> None:
 
 def test_fallback_provider_uses_prompt_injection_not_response_format() -> None:
     rec = Recorder(_json_replies({"tool": "search", "input": "q"}))
-    brain = Brain(name="b5", model="gemini:gemini-2.0", system="sys", reply_schema=_DECISION_SCHEMA)
-    run(make_llm_caller(acompletion=rec)(brain, "x"))
+    reasoner = Reasoner(name="b5", model="gemini:gemini-2.0", system="sys", reply_schema=_DECISION_SCHEMA)
+    run(make_llm_caller(acompletion=rec)(reasoner, "x"))
 
     call = rec.calls[0]
     assert "response_format" not in call
@@ -214,8 +214,8 @@ def test_native_failure_retries_with_prompt_injection() -> None:
             return _completion(content=json.dumps({"output": "ok"}))
 
     flaky = Flaky()
-    brain = Brain(name="b6", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
-    reply = run(make_llm_caller(acompletion=flaky)(brain, "x"))
+    reasoner = Reasoner(name="b6", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
+    reply = run(make_llm_caller(acompletion=flaky)(reasoner, "x"))
 
     assert reply == {"output": "ok"}
     assert len(flaky.calls) == 2  # native attempt, then prompt-injected retry
@@ -229,53 +229,53 @@ def test_native_failure_retries_with_prompt_injection() -> None:
 # --------------------------------------------------------------------------- #
 def test_reply_json_parsed_and_interpreted_as_call() -> None:
     rec = Recorder([_completion(content='```json\n{"tool": "search", "input": "q"}\n```')])
-    brain = Brain(name="b7", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
-    reply = run(make_llm_caller(acompletion=rec)(brain, "x"))
+    reasoner = Reasoner(name="b7", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
+    reply = run(make_llm_caller(acompletion=rec)(reasoner, "x"))
 
     assert reply == {"tool": "search", "input": "q"}
-    action = interpret_brain_reply(reply)
+    action = interpret_reasoner_reply(reply)
     assert action.decision is Decision.CALL
     assert action.payload == {"tool": "search", "input": "q"}
 
 
 def test_parsed_field_preferred_over_content() -> None:
     rec = Recorder([_completion(parsed={"output": "structured"})])
-    brain = Brain(name="b8", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
-    assert run(make_llm_caller(acompletion=rec)(brain, "x")) == {"output": "structured"}
+    reasoner = Reasoner(name="b8", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
+    assert run(make_llm_caller(acompletion=rec)(reasoner, "x")) == {"output": "structured"}
 
 
 def test_no_schema_returns_raw_text() -> None:
     rec = Recorder([_completion(content="just prose")])
-    brain = Brain(name="b9", model="openai:gpt-4o")
-    assert run(make_llm_caller(acompletion=rec)(brain, "x")) == "just prose"
+    reasoner = Reasoner(name="b9", model="openai:gpt-4o")
+    assert run(make_llm_caller(acompletion=rec)(reasoner, "x")) == "just prose"
 
 
 def test_unparseable_json_with_schema_returns_raw_for_controller_error() -> None:
     rec = Recorder([_completion(content="not json at all")])
-    brain = Brain(name="b10", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
-    reply = run(make_llm_caller(acompletion=rec)(brain, "x"))
+    reasoner = Reasoner(name="b10", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
+    reply = run(make_llm_caller(acompletion=rec)(reasoner, "x"))
     # raw string flows through; strict interpretation flags it cleanly
     assert reply == "not json at all"
-    assert interpret_brain_reply(reply).decision is Decision.CONTROLLER_ERROR
+    assert interpret_reasoner_reply(reply).decision is Decision.CONTROLLER_ERROR
 
 
 # --------------------------------------------------------------------------- #
-# Facade seam: make_local_brain resolves the registered Brain by name.
+# Facade seam: make_local_reasoner resolves the registered Reasoner by name.
 # --------------------------------------------------------------------------- #
-def test_make_local_brain_resolves_registered_brain() -> None:
-    register_brain(Brain(name="resolver_brain", model="openai:gpt-4o", system="resolved-system"))
+def test_make_local_reasoner_resolves_registered_reasoner() -> None:
+    register_reasoner(Reasoner(name="resolver_reasoner", model="openai:gpt-4o", system="resolved-system"))
     rec = Recorder(_json_replies({"output": "ok"}))
-    local = make_local_brain(acompletion=rec)
+    local = make_local_reasoner(acompletion=rec)
 
-    run(local("resolver_brain", {"input": "hi", "trace": []}))
+    run(local("resolver_reasoner", {"input": "hi", "trace": []}))
 
     assert rec.calls[0]["provider"] == "openai"
     assert rec.calls[0]["messages"][0]["content"] == "resolved-system"
 
 
-def test_agent_facade_drives_real_loop_through_local_brain() -> None:
+def test_agent_facade_drives_real_loop_through_local_reasoner() -> None:
     """End-to-end: a real provider caller drives the facade's local loop, proving
-    both the make_local_brain seam and the facade passing the brain *name*."""
+    both the make_local_reasoner seam and the facade passing the reasoner *name*."""
 
     @tool(effect="read", idempotent=True)
     def lookup(q: str) -> dict[str, str]:
@@ -292,7 +292,7 @@ def test_agent_facade_drives_real_loop_through_local_brain() -> None:
         tools=[lookup],
         name="multi_provider_facade_agent",
         instructions="Look one thing up, then answer.",
-        llm=make_local_brain(acompletion=rec),
+        llm=make_local_reasoner(acompletion=rec),
         budget_cost=20.0,
     )
 
@@ -307,10 +307,10 @@ def test_agent_facade_drives_real_loop_through_local_brain() -> None:
     assert rec.calls[0]["provider"] == "openai" and rec.calls[0]["model"] == "gpt-4o"
 
 
-def test_complete_brain_direct_is_provider_agnostic() -> None:
+def test_complete_reasoner_direct_is_provider_agnostic() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
-    brain = Brain(name="b11", model="mistral:mistral-small", system="s", reply_schema=_DECISION_SCHEMA)
-    reply = run(complete_brain(brain, "v", acompletion=rec, default_provider="anthropic"))
+    reasoner = Reasoner(name="b11", model="mistral:mistral-small", system="s", reply_schema=_DECISION_SCHEMA)
+    reply = run(complete_reasoner(reasoner, "v", acompletion=rec, default_provider="anthropic"))
     assert reply == {"output": "ok"}
     assert rec.calls[0]["provider"] == "mistral" and rec.calls[0]["model"] == "mistral-small"
 

@@ -1,9 +1,9 @@
 # Design note: composable prompts via registered renderers
 
-**Status: proposed (design).** Let a `Brain`'s system prompt be computed by a
+**Status: proposed (design).** Let a `Reasoner`'s system prompt be computed by a
 **registered renderer** — a pure, name-addressed `Context -> str` — referenced by
-name on the brain, reading a per-invoke **projected context** that does not exist
-in the runtime today. Additive and deploy-safe: `Brain.system: str` stays as the
+name on the reasoner, reading a per-invoke **projected context** that does not exist
+in the runtime today. Additive and deploy-safe: `Reasoner.system: str` stays as the
 literal/fallback; a new `system_render: Optional[str]` carries the renderer name.
 Only **strings** (`system` + `system_render`) ever enter the deploy artifact, so
 canonical-JSON artifact hashing and the cross-language corpus keep working. The
@@ -16,18 +16,18 @@ named/registered before freeze).
 
 ## Motivation — two gaps, not one
 
-`Brain.system` is a static `str` (`dotctx.py:42`). To make a prompt react to
-context you hand-assemble the upstream `payload`; the prompt itself stays inert.
-`algebra.hs` models what's missing — `decide brain x ctx` with `ctx = project
-(ctxPolicy brain) s x` — but that is the **formal model**, not the code. Two real
+`Reasoner.system` is a static `str` (`dotctx.py:42`). To make a prompt react to
+context you tool-assemble the upstream `payload`; the prompt itself stays inert.
+`algebra.hs` models what's missing — `decide reasoner x ctx` with `ctx = project
+(ctxPolicy reasoner) s x` — but that is the **formal model**, not the code. Two real
 gaps in the Python:
 
 1. **No projected context at the invoke boundary.** The interpreter passes only
-   `(brain, value, cid)` to `env.invoke_brain` (`execution/interpreter.py`), and
-   the Temporal `InvokeBrainInput` carries only `brain`/`value`/`cid`
+   `(reasoner, value, cid)` to `env.invoke_reasoner` (`execution/interpreter.py`), and
+   the Temporal `InvokeReasonerInput` carries only `reasoner`/`value`/`cid`
    (`execution/activities.py`). There is no `Context` object for a prompt to read.
 2. **No way to compute a prompt from context.** `system` is a constant handed
-   straight to the LLM caller; existing callers may read `brain.system` as a
+   straight to the LLM caller; existing callers may read `reasoner.system` as a
    plain string.
 
 So this is **not** "expose what the loop already gives you" — that context isn't
@@ -42,26 +42,26 @@ Context = Mapping[str, Any]      # the projected value (see "The projection path
 Renderer = Callable[[Context], str]   # registered by name in DEFAULT_REGISTRY, like a pure
 ```
 
-`Brain` gains one optional **string** field; `system` stays a `str`:
+`Reasoner` gains one optional **string** field; `system` stays a `str`:
 
 ```python
 @dataclass(frozen=True)
-class Brain:
+class Reasoner:
     system: str = ""                       # literal / fallback (unchanged)
     system_render: Optional[str] = None    # registered renderer name (new; a string)
     ...
 
-def render_system(brain: Brain, ctx: Context) -> str:
-    if brain.system_render is not None:
-        return DEFAULT_REGISTRY.get_renderer(brain.system_render)(ctx)
-    return brain.system
+def render_system(reasoner: Reasoner, ctx: Context) -> str:
+    if reasoner.system_render is not None:
+        return DEFAULT_REGISTRY.get_renderer(reasoner.system_render)(ctx)
+    return reasoner.system
 ```
 
 `render_system` is called where the system prompt is materialized — inside
-`invokeBrain` (`execution/activities.py`), the one place `ctx` is in hand — and
-its **`str`** result is what every existing LLM caller sees. Brains without a
-renderer are byte-for-byte unchanged; `brain.system` never becomes a non-string,
-so no downstream `brain.system` reader breaks.
+`invokeReasoner` (`execution/activities.py`), the one place `ctx` is in tool — and
+its **`str`** result is what every existing LLM caller sees. Reasoners without a
+renderer are byte-for-byte unchanged; `reasoner.system` never becomes a non-string,
+so no downstream `reasoner.system` reader breaks.
 
 ### The Fragment ADT — an authoring builder for renderers
 
@@ -94,28 +94,28 @@ register_renderer("research.system.v1", fragments(
     Under(lambda c: c["task"], TASK_BLOCK),     # render TASK_BLOCK against ctx["task"]
     Ask("trace", fmt=summarize_trace),           # fold the trace slice -> str
 ))
-Brain(name="researcher", model="claude-opus-4-8", system_render="research.system.v1")
+Reasoner(name="researcher", model="claude-opus-4-8", system_render="research.system.v1")
 ```
 
 `Under` is the variance point made concrete: a template *consumes* its
 environment, so it is contravariant in `Context` — `Under` is Reader's `local`.
 `Concat` is the string-monoid combine (identity `Lift("")`), which is what lets
 overlapping-context fragments assemble into one prompt without threading a dict by
-hand.
+tool.
 
 ### The projection path (the new wiring — gap #1)
 
 This is the real work, and the spec owns it explicitly. Extend the invoke
-boundary so the activity computes `Context` from `(value, brain.context_scope,
+boundary so the activity computes `Context` from `(value, reasoner.context_scope,
 session)` and passes it to `render_system`:
 
-- `InvokeBrainInput` / `env.invoke_brain` gain the projected `Context` (or the
+- `InvokeReasonerInput` / `env.invoke_reasoner` gain the projected `Context` (or the
   inputs to compute it). `Context` = the leaf `value` plus the session slice that
-  `brain.context_scope` (`ContextScope` / `ContextPolicy`) already authorizes —
+  `reasoner.context_scope` (`ContextScope` / `ContextPolicy`) already authorizes —
   `NoCtx` → just `value`; `Local` → value + local thread; `WholeSession` → value +
   the full (degraded, [SPEC §8.2](../SPEC.md#82-whole_session-degradation)) slice.
 - For the agent loop, the round payload `{"input": state.last, "trace": [...]}`
-  (`agent_loop.py:451`) is the natural `Context` for a controller brain.
+  (`agent_loop.py:451`) is the natural `Context` for a controller reasoner.
 
 The projection *is* the security boundary (gap #7, below): a renderer can only
 read what `project(ctxPolicy)` put in `Context`, so it **cannot widen
@@ -124,7 +124,7 @@ read what `project(ctxPolicy)` put in `Context`, so it **cannot widen
 
 ## Deploy, drift, and cross-language (gaps #6/#8 — solved, not deferred)
 
-- **Artifact stays string-only.** `deploy.py` canonical-JSON-hashes `brain.system`
+- **Artifact stays string-only.** `deploy.py` canonical-JSON-hashes `reasoner.system`
   (`deploy.py:143,181,201`). With this design the artifact carries `system`
   (str) + `system_render` (str **name**) — both serializable. A `Fragment`
   object never touches the wire. No artifact-hash breakage.
@@ -163,11 +163,11 @@ compaction lives at the Sub firewall (`SummaryPolicy`,
 
 ## Invariants preserved (checklist)
 
-- **`brain.system` stays `str`** — renderer output is a string; no downstream
-  `brain.system` reader breaks (the additive promise, kept literally).
+- **`reasoner.system` stays `str`** — renderer output is a string; no downstream
+  `reasoner.system` reader breaks (the additive promise, kept literally).
 - **Artifact / golden / cross-language** — only strings (`system`,
   `system_render`) are hashed; the renderer is name+hash-registered like a pure;
-  hashes don't move for existing string brains.
+  hashes don't move for existing string reasoners.
 - **Context honesty (`algebra.hs` law 2).** A renderer reads only the projected
   `Context`; it cannot reach global session state or widen `ctxPolicy`, because
   the projection is what builds `Context`.
@@ -178,11 +178,11 @@ compaction lives at the Sub firewall (`SummaryPolicy`,
 ## Phasing
 
 1. **The projection path.** Compute `Context` at the invoke boundary
-   (`InvokeBrainInput` / `env.invoke_brain`) from `(value, context_scope,
+   (`InvokeReasonerInput` / `env.invoke_reasoner`) from `(value, context_scope,
    session)`. No prompt change yet — just make `Context` exist. Tests: existing
-   brains render identically (no renderer ⇒ `system` verbatim).
-2. **Renderer registry + `Brain.system_render` + `render_system`** wired into
-   `invokeBrain`. Existing string brains untouched.
+   reasoners render identically (no renderer ⇒ `system` verbatim).
+2. **Renderer registry + `Reasoner.system_render` + `render_system`** wired into
+   `invokeReasoner`. Existing string reasoners untouched.
 3. **Fragment ADT** (`Lift`/`Ask`/`Concat`/`Under`/`Map`) + `register_renderer` +
    `fragments()` + the order-insensitive `summarize_trace` example.
 4. **Drift/determinism parity** for renderers (§6.4 content-hash + purity gate)

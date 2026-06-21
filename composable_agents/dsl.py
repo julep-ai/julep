@@ -90,7 +90,7 @@ def _ctx(c: CtxArg) -> Optional[ContextPolicy]:
 # Leaves.
 # --------------------------------------------------------------------------- #
 def native(name: str) -> NativeTool:
-    """Reference a native HTTP hand we own."""
+    """Reference a native HTTP tool we own."""
     return NativeTool(name)
 
 
@@ -113,16 +113,16 @@ def call(ref_or_name: str | ToolRef, *, ctx: CtxArg = None, ann: Optional[Ann] =
                  step=CallStep(tool=ref, ctx=_ctx(ctx)))
 
 
-def think(brain: str, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
-    """A single model call against a named brain config."""
+def think(reasoner: str, *, ctx: CtxArg = None, ann: Optional[Ann] = None) -> Node:
+    """A single model call against a named reasoner config."""
     return _node(op=Op.PRIM, id=_nid("think"), ann=ann,
-                 step=ThinkStep(brain=brain, ctx=_ctx(ctx)))
+                 step=ThinkStep(reasoner=reasoner, ctx=_ctx(ctx)))
 
 
-def brain_from_ctx(path: str, *, ctx: CtxArg = None) -> Node:
+def reasoner_from_ctx(path: str, *, ctx: CtxArg = None) -> Node:
     """A think leaf backed by a dotctx prompt directory.
 
-    The brain id is the dotctx path; the full settings.yaml -> Brain mapping is
+    The reasoner id is the dotctx path; the full settings.yaml -> Reasoner mapping is
     done by :mod:`composable_agents.dotctx` at deploy. Context reading is always
     explicit, never ambient.
     """
@@ -262,7 +262,7 @@ def iter_up_to(max: int, body: Node, *, until: Optional[str] = None) -> Node:
 def stage(planner: str) -> Node:
     """Stage a model-generated plan (Staged).
 
-    ``planner`` is a brain/dotctx that emits a Plan. At runtime the plan is
+    ``planner`` is a reasoner/dotctx that emits a Plan. At runtime the plan is
     compiled, validated (<= Feedback, granted tools only) and run as ordinary IR.
     """
     return _node(op=Op.EVAL_PLAN, id=_nid("stage"), controller=planner)
@@ -283,7 +283,7 @@ def app(
     ``ctx`` declares how much session context the controller sees each round
     (docs/design/agent-transcripts.md): ``WHOLE_SESSION``/``SUMMARY`` require
     ``ctx.max_tokens``, and ``SUMMARY`` additionally requires ``summarizer``
-    (a named brain) — both are deploy-time blocking diagnostics, never implicit
+    (a named reasoner) — both are deploy-time blocking diagnostics, never implicit
     defaults. Omitting ``ctx`` keeps today's LOCAL behavior and wire format.
     """
     return _node(

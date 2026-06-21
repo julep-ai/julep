@@ -2,9 +2,9 @@
 
 This is the end-to-end durable path (not the in-memory interpreter): the agent's
 think -> call -> observe loop runs inside Temporal's ``AgentWorkflow``, each round
-recorded in workflow history and replayable. The agent's ``@tool`` hands are
-served over HTTP (the framework's "native hands as stateless HTTP microservices"
-model); the controller brain is a deterministic in-process stub (no API key).
+recorded in workflow history and replayable. The agent's ``@tool`` tools are
+served over HTTP (the framework's "native tools as stateless HTTP microservices"
+model); the controller reasoner is a deterministic in-process stub (no API key).
 
 Prereqs (one-time, in another terminal):
 
@@ -15,7 +15,7 @@ Then:
     .venv/bin/python examples/temporal_durable_agent.py
 
 Watch it in the UI: http://localhost:8233 — open the latest workflow to see the
-AgentWorkflow history (invokeBrain / callHand activities, each loop round).
+AgentWorkflow history (invokeReasoner / callTool activities, each loop round).
 """
 
 from __future__ import annotations
@@ -32,13 +32,13 @@ from composable_agents import Agent, tool
 from composable_agents.execution.activities import WorkerContext
 from composable_agents.execution.worker import DEFAULT_TASK_QUEUE, build_worker
 
-HAND_PORT = 8799
+TOOL_PORT = 8799
 TEMPORAL_HOST = "localhost:7233"
 UI = "http://localhost:8233"
 
 
 # --------------------------------------------------------------------------- #
-# Native @tool hands (read-only, idempotent). Each is served over HTTP below.
+# Native @tool tools (read-only, idempotent). Each is served over HTTP below.
 # --------------------------------------------------------------------------- #
 @tool(effect="read", idempotent=True)
 def lookup_account(account_id: str) -> dict[str, Any]:
@@ -66,11 +66,11 @@ TOOLS = [lookup_account, classify_risk]
 
 
 # --------------------------------------------------------------------------- #
-# Deterministic controller (the "brain"). Worker signature: (Brain, value).
+# Deterministic controller (the "reasoner"). Worker signature: (Reasoner, value).
 # value == {"input": state.last, "trace": [...]}. Reply is the closed agent
 # vocabulary; omitting "input" threads state.last into the call.
 # --------------------------------------------------------------------------- #
-async def scripted_controller(brain: Any, value: dict[str, Any]) -> dict[str, Any]:
+async def scripted_controller(reasoner: Any, value: dict[str, Any]) -> dict[str, Any]:
     step = len(value.get("trace", []))
     if step == 0:
         return {"tool": "lookup_account"}      # input -> state.last (the account id)
@@ -80,10 +80,10 @@ async def scripted_controller(brain: Any, value: dict[str, Any]) -> dict[str, An
 
 
 # --------------------------------------------------------------------------- #
-# A tiny stdlib HTTP hand server: POST {"input": v} -> JSON result, per the
-# callHand native contract (Idempotency-Key header is accepted, not required).
+# A tiny stdlib HTTP tool server: POST {"input": v} -> JSON result, per the
+# callTool native contract (Idempotency-Key header is accepted, not required).
 # --------------------------------------------------------------------------- #
-class _HandHandler(BaseHTTPRequestHandler):
+class _ToolHandler(BaseHTTPRequestHandler):
     tools_by_name: dict[str, Any] = {}
 
     def do_POST(self) -> None:  # noqa: N802
@@ -91,7 +91,7 @@ class _HandHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length) or b"{}")
         tool_obj = self.tools_by_name[name]
-        result = tool_obj.bound_hand(payload["input"])
+        result = tool_obj.bound_tool(payload["input"])
         body = json.dumps(result).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -103,22 +103,22 @@ class _HandHandler(BaseHTTPRequestHandler):
         return
 
 
-def start_hand_server(tools: list[Any], port: int) -> ThreadingHTTPServer:
-    _HandHandler.tools_by_name = {t.name: t for t in tools}
-    srv = ThreadingHTTPServer(("127.0.0.1", port), _HandHandler)
+def start_tool_server(tools: list[Any], port: int) -> ThreadingHTTPServer:
+    _ToolHandler.tools_by_name = {t.name: t for t in tools}
+    srv = ThreadingHTTPServer(("127.0.0.1", port), _ToolHandler)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
 
 async def main() -> None:
-    hand_srv = start_hand_server(TOOLS, HAND_PORT)
+    tool_srv = start_tool_server(TOOLS, TOOL_PORT)
     try:
-        # The facade agent (tool-only -> deploys cleanly; registers its brain).
-        agent = Agent(brain="triage-controller", tools=TOOLS, name="triage_agent", max_rounds=6)
+        # The facade agent (tool-only -> deploys cleanly; registers its reasoner).
+        agent = Agent(reasoner="triage-controller", tools=TOOLS, name="triage_agent", max_rounds=6)
 
         client = await Client.connect(TEMPORAL_HOST)
         ctx = WorkerContext(
-            hand_urls={t.name: f"http://127.0.0.1:{HAND_PORT}/{t.name}" for t in TOOLS},
+            tool_urls={t.name: f"http://127.0.0.1:{TOOL_PORT}/{t.name}" for t in TOOLS},
             llm=scripted_controller,
             capabilities=agent.deployment().capabilities,  # resolveAgentSpec grants from here
         )
@@ -138,7 +138,7 @@ async def main() -> None:
             print(f"  - {entry['decision']} {entry.get('ref','')} (${entry['cost']})")
         print(f"\nInspect the workflow history in the UI: {UI}")
     finally:
-        hand_srv.shutdown()
+        tool_srv.shutdown()
 
 
 if __name__ == "__main__":

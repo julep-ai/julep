@@ -5,7 +5,7 @@ import pytest
 pytest.importorskip("temporalio")
 
 from composable_agents import (
-    Brain,
+    Reasoner,
     CapabilityManifest,
     Effect,
     FrozenTool,
@@ -13,7 +13,7 @@ from composable_agents import (
     ToolContract,
     call,
     mcp,
-    register_brain,
+    register_reasoner,
 )
 from composable_agents.agent_loop import TraceEntry
 from composable_agents.contracts import CONSERVATIVE_DEFAULT, manifest_to_json
@@ -128,10 +128,10 @@ def test_compile_plan_returns_bound_plan_json() -> None:
     manifest = {tool.execution_hash: tool}
     expected_plan = call(mcp("srv", "lookup")).to_json()
 
-    async def llm(_brain: Brain, _value: object) -> dict[str, object]:
+    async def llm(_reasoner: Reasoner, _value: object) -> dict[str, object]:
         return {"plan": expected_plan}
 
-    register_brain(Brain(name=planner, model="test", system=""))
+    register_reasoner(Reasoner(name=planner, model="test", system=""))
     configure(WorkerContext(llm=llm, capabilities=_caps("srv/lookup")))
     try:
         raw = run(

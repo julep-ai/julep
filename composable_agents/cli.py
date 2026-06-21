@@ -167,8 +167,8 @@ def _cmd_run_local(args: argparse.Namespace, out: TextIO) -> int:
     env = InMemoryEnv(
         {},
         ProjectionEmitter(store),
-        hands=_echo_hands(flow),
-        brains=_echo_brains(flow),
+        tools=_echo_tools(flow),
+        reasoners=_echo_reasoners(flow),
         subs=_echo_subs(flow),
         agents=_echo_agents(flow),
         gate=lambda value: {"approved": True, "input": value},
@@ -408,23 +408,23 @@ def _clear_frozen_hashes(flow: Node) -> None:
             step.frozen_hash = None
 
 
-def _echo_hands(flow: Node) -> dict[str, Any]:
-    hands: dict[str, Any] = {}
+def _echo_tools(flow: Node) -> dict[str, Any]:
+    tools: dict[str, Any] = {}
     for ref in flow.tool_refs():
-        hands[toolref_key(ref)] = lambda value: value
-    return hands
+        tools[toolref_key(ref)] = lambda value: value
+    return tools
 
 
-def _echo_brains(flow: Node) -> dict[str, Any]:
-    brains: dict[str, Any] = {}
+def _echo_reasoners(flow: Node) -> dict[str, Any]:
+    reasoners: dict[str, Any] = {}
     for node in flow.walk():
         step = node.step
-        brain = getattr(step, "brain", None)
-        if brain is not None:
-            brains[brain] = lambda value: value
+        reasoner = getattr(step, "reasoner", None)
+        if reasoner is not None:
+            reasoners[reasoner] = lambda value: value
         if node.op in {Op.APP, Op.EVAL_PLAN} and node.controller is not None:
-            brains[node.controller] = lambda value: value
-    return brains
+            reasoners[node.controller] = lambda value: value
+    return reasoners
 
 
 def _echo_subs(flow: Node) -> dict[str, Any]:

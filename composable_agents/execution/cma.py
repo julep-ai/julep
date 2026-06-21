@@ -259,7 +259,7 @@ class CMAAgentEnv:
         *,
         client: CMAClient,
         environment: Any = None,
-        hands: Mapping[str, Callable[[Any], Any]],
+        tools: Mapping[str, Callable[[Any], Any]],
         cfg: AgentConfig,
         granted: Optional[set[str]] = None,
         contracts: Optional[AgentContractMap] = None,
@@ -276,7 +276,7 @@ class CMAAgentEnv:
         self.segment_seq = getattr(inner, "segment_seq", 0)
         self._client = client
         self._environment = environment
-        self._hands = hands
+        self._tools = tools
         self._cfg = cfg
         self._granted = granted
         self._contracts = contracts
@@ -291,18 +291,18 @@ class CMAAgentEnv:
     def charge_call(self, tool_key: str) -> None:
         return self._inner.charge_call(tool_key)
 
-    async def call_hand(self, node: Node, value: Any, cid: str) -> Any:
-        return await self._inner.call_hand(node, value, cid)
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any:
+        return await self._inner.run_call(node, value, cid)
 
-    async def invoke_brain(
+    async def invoke_reasoner(
         self,
-        brain: str,
+        reasoner: str,
         value: Any,
         cid: str,
         timeout_s: Optional[int],
         batchable: bool = False,
     ) -> Any:
-        return await self._inner.invoke_brain(brain, value, cid, timeout_s, batchable)
+        return await self._inner.invoke_reasoner(reasoner, value, cid, timeout_s, batchable)
 
     async def run_sub(
         self,
@@ -326,7 +326,7 @@ class CMAAgentEnv:
             "name": controller,
             "tools": self._custom_tools
             or manifest_to_custom_tools(
-                self._granted if self._granted is not None else self._hands.keys()
+                self._granted if self._granted is not None else self._tools.keys()
             ),
         }
         session = await self._client.create_session(
@@ -337,7 +337,7 @@ class CMAAgentEnv:
         )
 
         async def call_tool(tool: str, v: Any, _call_cid: str) -> Any:
-            fn = self._hands.get(tool)
+            fn = self._tools.get(tool)
             if fn is None:
                 return {"error": f"tool {tool!r} unavailable"}
             result = fn(v)

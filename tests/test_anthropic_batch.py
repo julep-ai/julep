@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Brain
+from composable_agents.dotctx import Reasoner
 from composable_agents.execution.anthropic_batch import AnthropicBatchProvider
 from composable_agents.execution.batch_provider import select_batch_provider
 from composable_agents.execution.llm import _parse_reply
@@ -84,9 +84,9 @@ def test_registers_anthropic_provider() -> None:
 
 def test_build_request_splits_system_and_messages() -> None:
     provider = AnthropicBatchProvider(client=FakeAsyncClient())
-    brain = Brain(name="b", model="anthropic:claude-x", system="s", reply_schema=None)
+    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s", reply_schema=None)
 
-    request = provider.build_request("c1", brain, "hello")
+    request = provider.build_request("c1", reasoner, "hello")
 
     assert request["custom_id"] == "c1"
     assert request["params"]["model"] == "claude-x"
@@ -98,9 +98,9 @@ def test_build_request_splits_system_and_messages() -> None:
 def test_build_request_injects_schema_hint_into_system() -> None:
     provider = AnthropicBatchProvider(client=FakeAsyncClient())
     schema = {"type": "object", "properties": {"x": {"type": "integer"}}}
-    brain = Brain(name="b", model="anthropic:claude-x", system="s", reply_schema=schema)
+    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s", reply_schema=schema)
 
-    request = provider.build_request("c1", brain, {"input": "hello"})
+    request = provider.build_request("c1", reasoner, {"input": "hello"})
 
     system_text = request["params"]["system"]
     assert "s" in system_text
@@ -140,13 +140,13 @@ def test_poll_status_maps_ended_to_completed() -> None:
 
 
 def test_results_and_parse_successful_entries() -> None:
-    json_brain = Brain(
+    json_reasoner = Reasoner(
         name="json",
         model="anthropic:claude-x",
         system="s",
         reply_schema={"type": "object"},
     )
-    text_brain = Brain(name="text", model="anthropic:claude-x", system="s")
+    text_reasoner = Reasoner(name="text", model="anthropic:claude-x", system="s")
     batches = FakeBatches(
         [
             FakeEntry(
@@ -167,8 +167,8 @@ def test_results_and_parse_successful_entries() -> None:
     async def collect() -> list[tuple[str, Any]]:
         out = []
         async for custom_id, raw in provider.results("batch_x"):
-            brain = json_brain if custom_id == "json-1" else text_brain
-            out.append((custom_id, provider.parse(raw, brain)))
+            reasoner = json_reasoner if custom_id == "json-1" else text_reasoner
+            out.append((custom_id, provider.parse(raw, reasoner)))
         return out
 
     assert run(collect()) == [("json-1", {"x": 1}), ("text-1", "hello")]
@@ -176,7 +176,7 @@ def test_results_and_parse_successful_entries() -> None:
 
 def test_parse_structured_entry_matches_shared_llm_parser() -> None:
     provider = AnthropicBatchProvider(client=FakeAsyncClient())
-    brain = Brain(
+    reasoner = Reasoner(
         name="json",
         model="anthropic:claude-x",
         system="s",
@@ -188,17 +188,17 @@ def test_parse_structured_entry_matches_shared_llm_parser() -> None:
         choices=[FakeChoice(SyncFakeMessage(content='{"x": 0}', parsed=parsed))]
     )
 
-    assert provider.parse(raw, brain) == _parse_reply(sync_completion, expect_json=True)
+    assert provider.parse(raw, reasoner) == _parse_reply(sync_completion, expect_json=True)
 
 
 def test_parse_entry_error_raises() -> None:
     batches = FakeBatches([FakeEntry("c1", FakeResultPayload("errored"))])
     provider = AnthropicBatchProvider(client=FakeAsyncClient(batches))
-    brain = Brain(name="b", model="anthropic:claude-x", system="s")
+    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s")
 
     async def collect() -> None:
         async for _, raw in provider.results("batch_x"):
-            provider.parse(raw, brain)
+            provider.parse(raw, reasoner)
 
     with pytest.raises(RuntimeError, match="batch entry errored"):
         run(collect())

@@ -5,7 +5,7 @@ A transcript is *derived, not stored*: :func:`transcript_for` is a
 deterministic projection of the agent loop's trace (plus the run input) into a
 neutral, provider-agnostic list of :class:`Turn`. It emits the *plan* — turns
 carry blob ``content_ref``s, not content. Hydration of refs, the token budget,
-and summarization happen later, in the ``invoke_brain`` effect, where blob
+and summarization happen later, in the ``invoke_reasoner`` effect, where blob
 refs can resolve outside workflow history.
 
 Pure module: no IO, no engine imports, strict-typed. The budget helpers take
@@ -44,7 +44,7 @@ TokenCounter = Callable[[str], int]
 # (and NONE) keep today's {input, trace, last} behavior unchanged.
 TRANSCRIPT_SCOPES = (ContextScope.WHOLE_SESSION, ContextScope.SUMMARY)
 
-# Envelope key invokeBrain uses to hand a freshly produced running summary back
+# Envelope key invokeReasoner uses to tool a freshly produced running summary back
 # to the workflow (see split_summary_reply). Reserved; never a controller key.
 SUMMARY_KEY = "__ca_summary__"
 
@@ -166,7 +166,7 @@ def bounded_transcript(
 
 
 def split_summary_reply(reply: Any) -> tuple[Optional[str], Any]:
-    """Unwrap the ``invokeBrain`` summary envelope: ``(new_summary, reply)``.
+    """Unwrap the ``invokeReasoner`` summary envelope: ``(new_summary, reply)``.
 
     A SUMMARY-scope round whose summarizer ran returns
     ``{SUMMARY_KEY: <summary>, "reply": <controller reply>}`` so the workflow

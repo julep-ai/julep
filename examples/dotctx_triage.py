@@ -1,16 +1,16 @@
-"""Load a dotctx directory into a Brain and run it on a real provider.
+"""Load a dotctx directory into a Reasoner and run it on a real provider.
 
 A *dotctx* is a directory that describes one model call: a ``settings.yaml`` plus
 a system-prompt file and an optional reply schema (see
 ``examples/dotctx/ticket_triage/``). ``load_dotctx`` reads that layout into a
-:class:`Brain` (registered by name); ``brain_to_flow`` lowers the brain's round
+:class:`Reasoner` (registered by name); ``reasoner_to_flow`` lowers the reasoner's round
 policy to an execution shape (single ``think`` -> Pipeline, bounded ``max_rounds``
 -> Feedback, ``agent: true`` -> Agent).
 
 This example loads the bundled ``ticket_triage`` dotctx and runs it through the
 any-llm-backed ``LlmCaller`` (``make_llm_caller``), so the ``provider:model`` named
 in ``settings.yaml`` drives the call on whichever provider you point it at. The
-brain carries its own system prompt and reply schema, so a single call returns a
+reasoner carries its own system prompt and reply schema, so a single call returns a
 structured classification.
 
 Prereqs:
@@ -23,7 +23,7 @@ Then:
 
     python examples/dotctx_triage.py
 
-With no key set it still prints the loaded brain and its lowered shape, then skips
+With no key set it still prints the loaded reasoner and its lowered shape, then skips
 the live call, so it is a clean no-op.
 """
 
@@ -32,7 +32,7 @@ from __future__ import annotations
 import asyncio
 import os
 
-from composable_agents.dotctx import Brain, brain_to_flow, load_dotctx
+from composable_agents.dotctx import Reasoner, reasoner_to_flow, load_dotctx
 from composable_agents.execution.llm import DEFAULT_PROVIDER, make_llm_caller
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -50,43 +50,43 @@ def _key_env(model: str) -> str:
     return f"{provider.upper()}_API_KEY"
 
 
-def _shape_label(brain: Brain) -> str:
-    """The execution shape a brain's round policy lowers to (mirrors brain_to_flow)."""
-    if brain.sub_contract is not None:
+def _shape_label(reasoner: Reasoner) -> str:
+    """The execution shape a reasoner's round policy lowers to (mirrors reasoner_to_flow)."""
+    if reasoner.sub_contract is not None:
         return "Staged (sub / child workflow)"
-    if brain.is_agent or (brain.max_rounds is not None and brain.max_rounds <= 0):
+    if reasoner.is_agent or (reasoner.max_rounds is not None and reasoner.max_rounds <= 0):
         return "Agent (open-ended app loop)"
-    if brain.max_rounds is not None and brain.max_rounds >= 1:
+    if reasoner.max_rounds is not None and reasoner.max_rounds >= 1:
         return "Feedback (bounded iter_up_to)"
     return "Pipeline (single think)"
 
 
 async def main() -> None:
-    # Directory -> Brain. The brain is registered under its `name`, and its
+    # Directory -> Reasoner. The reasoner is registered under its `name`, and its
     # system prompt + reply schema are read from the files settings.yaml names.
-    brain = load_dotctx(DOTCTX_DIR)
+    reasoner = load_dotctx(DOTCTX_DIR)
 
     # Round policy -> IR shape (the defining move of a dotctx). No execution here;
-    # this just shows which shape the framework would build for this brain.
-    flow = brain_to_flow(brain)
+    # this just shows which shape the framework would build for this reasoner.
+    flow = reasoner_to_flow(reasoner)
 
     print(f"loaded dotctx: {os.path.relpath(DOTCTX_DIR, HERE)}")
-    print(f"  brain name: {brain.name}")
-    print(f"  model:      {brain.model}")
-    print(f"  shape:      {_shape_label(brain)} [op={getattr(flow.op, 'name', flow.op)}]")
-    print(f"  reply keys: {list((brain.reply_schema or {}).get('properties', {}))}")
+    print(f"  reasoner name: {reasoner.name}")
+    print(f"  model:      {reasoner.model}")
+    print(f"  shape:      {_shape_label(reasoner)} [op={getattr(flow.op, 'name', flow.op)}]")
+    print(f"  reply keys: {list((reasoner.reply_schema or {}).get('properties', {}))}")
 
-    key_env = _key_env(brain.model)
+    key_env = _key_env(reasoner.model)
     if not os.environ.get(key_env):
         print(f"\n- {key_env} not set; skipping the live call. Set it (or edit "
               "settings.yaml `model:`) to run the triage.")
         return
 
-    # The activity-seam LlmCaller takes the Brain directly: it reads the brain's
+    # The activity-seam LlmCaller takes the Reasoner directly: it reads the reasoner's
     # model (routing the provider), system prompt, and reply schema, and returns
     # the parsed structured reply.
     caller = make_llm_caller()
-    reply = await caller(brain, TICKET)
+    reply = await caller(reasoner, TICKET)
 
     print("\nticket:")
     print(f"  {TICKET}")

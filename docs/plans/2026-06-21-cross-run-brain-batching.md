@@ -1,13 +1,13 @@
-# Cross-Run Brain-Call Batching (QoS + Batch API)
+# Cross-Run Reasoner-Call Batching (QoS + Batch API)
 
 **Status:** plan. **Engine:** Temporal first; DBOS trails (see table). **Date:** 2026-06-21.
 
 ## What this is
 
 Today every `think` resolves through one seam — `WorkerContext.llm`, the
-`LlmCaller` invoked from `invokeBrain` (`execution/effects.py`). It makes one
+`LlmCaller` invoked from `invokeReasoner` (`execution/effects.py`). It makes one
 provider call and blocks until the reply returns. This plan adds a layer
-*behind that seam* that transparently collects brain calls **across independent
+*behind that seam* that transparently collects reasoner calls **across independent
 in-flight runs** and dispatches them at a chosen quality-of-service tier —
 including the provider async **Batch API** (Anthropic Message Batches, OpenAI
 Batch), which trades latency for ~50% cost on work that isn't latency-sensitive.
@@ -20,14 +20,14 @@ capability flag; everything else is dispatch.
 This is **not** `execution.debounce`. The two batch at different layers and are
 complementary (cf. `docs/dispatch-boundary.md`):
 
-| | Debounce collator | Brain-call batching (this doc) |
+| | Debounce collator | Reasoner-call batching (this doc) |
 |---|---|---|
-| Collapses | *flow-run submissions* into one run | *brain calls* across many runs into one provider batch |
+| Collapses | *flow-run submissions* into one run | *reasoner calls* across many runs into one provider batch |
 | Granularity | whole flow | one `think` step |
 | Output | one `FlowWorkflow` over `list[item]` (fan out with `each`) | N replies fanned back to N suspended runs |
 | Keyed by | submission `key` | `(provider, qos, principal)` |
 
-Debounce decides *when a batch of inputs exists*; this decides *how the brain
+Debounce decides *when a batch of inputs exists*; this decides *how the reasoner
 calls inside already-running flows are dispatched*.
 
 ## The IR / dispatch split
@@ -35,7 +35,7 @@ calls inside already-running flows are dispatched*.
 Two new concepts, deliberately on opposite sides of the dispatch boundary.
 
 - **`batchable` — IR capability (frozen).** A correctness fact about the call
-  site: may this single brain call be durably deferred and resumed later without
+  site: may this single reasoner call be durably deferred and resumed later without
   changing user-visible semantics? It is still a one-shot provider request; it is
   not an online agent/controller loop or a multi-round conversation. A downstream
   `seq` step may absolutely depend on the reply — the point is that the workflow
@@ -44,7 +44,7 @@ Two new concepts, deliberately on opposite sides of the dispatch boundary.
   Omitted means `False`.
   The `@flow` frontend may expose sugar such as
   `think("b", value, batchable=True)`, but that sugar must fold into `Ann`.
-  Brain-level defaults are deferred for v1; the call site is explicit. It is a
+  Reasoner-level defaults are deferred for v1; the call site is explicit. It is a
   *capability*, never a policy — it sets the **floor** of how low on the QoS
   ladder a call may go.
 
@@ -78,7 +78,7 @@ OpenAI `service_tier`). Only BATCH needs new machinery.
 A `resolve_qos` seam on `WorkerContext`:
 
 ```
-resolve_qos(brain, node_ann, principal, load=None) -> QoSTier
+resolve_qos(reasoner, node_ann, principal, load=None) -> QoSTier
 ```
 
 Precedence: **author hint < deploy default < runtime**. Day one it reads
@@ -87,7 +87,7 @@ opts into priority" and "operator demotes under load" are the *same* mechanism
 reading different inputs.
 
 **Replay safety.** The *async-or-not* outcome must be deterministic, so it is
-resolved **once at the brain step's first execution and recorded** (side-effect
+resolved **once at the reasoner step's first execution and recorded** (side-effect
 / short activity); replay reads the tier from history and takes the same branch.
 Sync-tier dialing (PRIORITY/STANDARD/FLEX) stays live inside the activity since
 it never changes control flow.
@@ -96,7 +96,7 @@ Keep the request shape small:
 
 ```
 @dataclass(frozen=True)
-class BrainDispatch:
+class ReasonerDispatch:
     qos: QoSTier = QoSTier.STANDARD
     batch_id: str | None = None
 ```
@@ -105,20 +105,20 @@ Widen the canonical `LlmCaller` one time to accept this as a final optional
 argument:
 
 ```
-(brain, value, principal, transcript, dispatch) -> reply
+(reasoner, value, principal, transcript, dispatch) -> reply
 ```
 
-`configure(...)` adapts legacy 2/3/4-argument callers to `BrainDispatch()` so
+`configure(...)` adapts legacy 2/3/4-argument callers to `ReasonerDispatch()` so
 existing users keep working. Sync rungs pass `dispatch.qos` down to
-`complete_brain(...)`, where provider-specific request fields are set. The BATCH
-rung does **not** reach `complete_brain` through this path; it enters the
+`complete_reasoner(...)`, where provider-specific request fields are set. The BATCH
+rung does **not** reach `complete_reasoner` through this path; it enters the
 collector/poller machinery below.
 
 ## Topology: a collector workflow, not in-process
 
 BATCH dispatch uses a durable **`BatchCollector` workflow**, mirroring
 `DebounceCollector` inverted. In-process coalescing was rejected for BATCH: it
-would hold an `invokeBrain` activity open for the window *plus* batch turnaround
+would hold an `invokeReasoner` activity open for the window *plus* batch turnaround
 (up to 24h) — thousands of parked pending-activity records. A workflow
 rendezvous makes the wait a durable timer/signal, survives worker restarts, and
 keeps batch state durable by construction.
@@ -133,7 +133,7 @@ Reuses the debounce structure almost verbatim:
 - keyed `batch:{provider}:{qos}:{principal_key}` — one batch runs as one
   principal (as in debounce);
 - `submit` signal-with-start carries a neutral
-  `BrainCall(brain, value, principal, transcript, cid, reply_to=run_id)` — the
+  `ReasonerCall(reasoner, value, principal, transcript, cid, reply_to=run_id)` — the
   run submits the *neutral* form, so no rendering happens in workflow code;
 - fires on quiet / `max_items` / `max_wait` (the same fire loop), `max_items` a
   hard cap, surplus carried via `continue_as_new`;
@@ -148,7 +148,7 @@ Reuses the debounce structure almost verbatim:
 - the child routes each result home by **`custom_id`** (see Providers — the cid
   alone is not unique across runs).
 
-### Brain-step rendezvous
+### Reasoner-step rendezvous
 
 Reuses the human-gate machinery (`harness.py` — `submitHuman` + `wait_condition`),
 inverted and automated. The BATCH branch:
@@ -158,9 +158,9 @@ inverted and automated. The BATCH branch:
    `submit_debounced` does). Workflow code *cannot* signal-with-start — it can
    only signal an already-running external workflow — so the create-or-join must
    sit behind an activity, consistent with every other effect going through one;
-2. `wait_condition(custom_id in self._brain_inbox, timeout=node.timeout)`;
+2. `wait_condition(custom_id in self._reasoner_inbox, timeout=node.timeout)`;
 3. the child `BatchPoll` workflow signals each `reply_to` with
-   `submitBrainResult(custom_id, reply)` via an external-workflow handle (a
+   `submitReasonerResult(custom_id, reply)` via an external-workflow handle (a
    workflow *can* signal an existing workflow).
 
 The inbox is keyed by `custom_id`, and the signal handler **ignores a result
@@ -169,8 +169,8 @@ promote) — and the child tolerates signal-delivery failure to a closed run —
 a late batch completion can neither clobber an advanced step nor fail the poll.
 
 Implementation boundary: make this a Temporal-only activity such as
-`submitBrainBatch`, not a backend-neutral effect in `effects.py`. It receives a
-serializable `SubmitBrainBatchInput` and uses a small worker-installed
+`submitReasonerBatch`, not a backend-neutral effect in `effects.py`. It receives a
+serializable `SubmitReasonerBatchInput` and uses a small worker-installed
 `BatchDispatchContext` containing only the Temporal client, task queue, and
 collector defaults (`quiet_s`, `max_items`, `max_wait_s`). `build_worker(...)`
 already receives the client, so it is the right place to install this context.
@@ -179,27 +179,27 @@ it has its own durable suspend/collector equivalent.
 
 ### Result routing — signal-back
 
-Push: `FlowWorkflow` exposes its id and a `submitBrainResult` signal; the
+Push: `FlowWorkflow` exposes its id and a `submitReasonerResult` signal; the
 collector signals each originating run. Chosen over a shared result store
 (pull + polling) because it reuses the human gate and is cheaper.
 
 ## Providers
 
-Lift **both** message rendering *and response parsing* out of `complete_brain`
-into shared helpers (`_messages`, `_response_format`, `rendered_brain_for`, and
+Lift **both** message rendering *and response parsing* out of `complete_reasoner`
+into shared helpers (`_messages`, `_response_format`, `rendered_reasoner_for`, and
 **`_parse_reply`**) so sync and batch produce identical *replies*. For
-`reply_schema` brains `complete_brain` doesn't just build messages — it unwraps
+`reply_schema` reasoners `complete_reasoner` doesn't just build messages — it unwraps
 the response into the parsed JSON object (or prompt-fallback JSON) that
 downstream `think` steps expect; the batch adapter must run the same parser on
 each entry, or structured steps receive the wrong shape. A `BatchProvider`
-adapter per provider, selected from `brain.model` via `_split_model` (`llm.py`):
+adapter per provider, selected from `reasoner.model` via `_split_model` (`llm.py`):
 
 - **Anthropic** — inline `requests=[Request(custom_id=…, params=…)]`; poll
   `processing_status == "ended"`; stream `.results(id)`. One batch may mix models.
 - **OpenAI** — upload JSONL (`purpose="batch"`) → `batches.create(input_file_id,
   endpoint, completion_window="24h")`; poll `status == "completed"`; parse
   `output_file_id`. **OpenAI requires one model per input file**, so the OpenAI
-  adapter **sub-splits a partition's items by `brain.model` into one file/batch
+  adapter **sub-splits a partition's items by `reasoner.model` into one file/batch
   per model** at flush. This stays out of the collector key — `model` is *not* a
   partition key (the principle holds); the per-model split is an adapter-local
   concern.
@@ -217,17 +217,17 @@ both providers — always key by `custom_id`.
   `timeout_s` < the batch's minimum viable window, `resolve_qos` never returns
   BATCH — the call resolves to FLEX/STANDARD up front. No wasted wait.
 - **Reactive (backstop).** If it did enter BATCH and the `wait_condition` times
-  out, fall through to the normal `invokeBrain` activity (sync), recording
+  out, fall through to the normal `invokeReasoner` activity (sync), recording
   `promoted, reason=batch_timeout`. Both are deterministic branches.
 
 ## Errors / expiry
 
 A per-entry provider error or `expired` result **promotes the call to the sync
-`invokeBrain` activity** — the same path as a reactive timeout. This is the
+`invokeReasoner` activity** — the same path as a reactive timeout. This is the
 concrete meaning of "route into the existing resilience path": the
 fallback/retry/circuit-breaker logic lives *inside* `make_resilient_llm_caller`,
-reached only via `invokeBrain` → `_CTX.llm`. A bare error signal has no
-resilience hook, so re-entering `invokeBrain` *is* the mechanism — not a new
+reached only via `invokeReasoner` → `_CTX.llm`. A bare error signal has no
+resilience hook, so re-entering `invokeReasoner` *is* the mechanism — not a new
 handler. The cost: a flaky provider can quietly turn a "bulk" call into a sync
 one (accepted). Whole-batch failure fails the child poll workflow loudly and
 signals every `reply_to` an error. Dedup on `custom_id`.
@@ -236,7 +236,7 @@ signals every `reply_to` an error. Dedup on `custom_id`.
 
 Two sinks, and the projection is the subtle one. The in-workflow **derived
 projection** is driven by the interpreter's `Result` envelope from
-`env.invoke_brain` — *not* by the worker-side `AttemptRecord`. So to make a
+`env.invoke_reasoner` — *not* by the worker-side `AttemptRecord`. So to make a
 successful batched `think` explainable, `batch_id` + `tier` must ride back in a
 framework envelope, then be unwrapped immediately by the interpreter:
 
@@ -245,7 +245,7 @@ framework envelope, then be unwrapped immediately by the interpreter:
 ```
 
 Only `actual_reply` flows downstream and is stored as the `Did.value`; the
-metadata becomes `Result.attrs` on that `Did` event. This keeps structured brain
+metadata becomes `Result.attrs` on that `Did` event. This keeps structured reasoner
 replies untouched. The unwrapping helper must handle both framework envelopes:
 preserve today's summary unwrap, then strip `__ca_meta__` into attrs before the
 reply enters user flow data. Extending `AttemptRecord` alone only feeds the
@@ -259,10 +259,10 @@ preserve the explain-every-step guarantee.
 |---|---|---|
 | `Ann.batchable` (IR) | ✅ M0 | ✅ (IR is engine-neutral) |
 | `resolve_qos` seam + recorded tier | ✅ M0 | trails |
-| `LlmCaller` `BrainDispatch` argument | ✅ M1 | trails |
+| `LlmCaller` `ReasonerDispatch` argument | ✅ M1 | trails |
 | Sync rungs (priority/standard/flex via request field) | ✅ M1 | trails |
 | Sync coalescer (Path A, gather) | ✅ M1 | trails |
-| `submitBrainBatch` Temporal activity + client context | ✅ M2 | trails |
+| `submitReasonerBatch` Temporal activity + client context | ✅ M2 | trails |
 | `BatchCollector` + rendezvous (BATCH rung) | ✅ M2 | trails — needs DBOS equivalent of signal-with-start collector + durable suspend (cf. `dbos.Debouncer`) |
 | Promote / errors / expiry | ✅ M3 | trails |
 | OpenAI `BatchProvider` | ✅ M4 | trails |
@@ -270,16 +270,16 @@ preserve the explain-every-step guarantee.
 
 DBOS trails because the collector is workflow-shaped (as `execution.debounce`
 is Temporal-only today); the DBOS port mirrors `dbos.Debouncer` + a durable
-brain-step suspend.
+reasoner-step suspend.
 
 ## Milestones
 
 - **M0** — `Ann.batchable` + `resolve_qos` seam + recorded QoS step; BATCH
   no-ops to STANDARD. Proves the branch + recording with no new infra.
-- **M1** — `BrainDispatch` on `LlmCaller`, shared renderer + `BatchProvider`
+- **M1** — `ReasonerDispatch` on `LlmCaller`, shared renderer + `BatchProvider`
   interface + sync coalescer. Ships Path A (in-process micro-batching) as a real
   deliverable, no durability risk.
-- **M2** — `submitBrainBatch` activity + `BatchCollector` + rendezvous +
+- **M2** — `submitReasonerBatch` activity + `BatchCollector` + rendezvous +
   Anthropic Batch API. The BATCH rung.
 - **M3** — promote (predictive + reactive), per-entry errors, expiry.
 - **M4** — OpenAI `BatchProvider`. *(Later: FLEX/PRIORITY rungs hardening,

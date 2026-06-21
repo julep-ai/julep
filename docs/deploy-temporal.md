@@ -1,7 +1,7 @@
 # Deploy to Temporal
 
 The durable path runs the same admitted artifact as the local interpreter: a
-frozen `flow_json`, a frozen `manifest_json`, pinned pure source hashes, brain
+frozen `flow_json`, a frozen `manifest_json`, pinned pure source hashes, reasoner
 identity, capability manifest, framework version, and an `artifact_hash`. Only
 the injected `Env` changes. Local tests use in-memory callables; Temporal uses
 workflows, activities, child workflows, durable signals, and activity retry
@@ -68,7 +68,7 @@ from composable_agents.execution.worker import DEFAULT_TASK_QUEUE, build_worker
 
 client = await Client.connect("localhost:7233")
 context = WorkerContext(
-    hand_urls={"send_email": "https://hands.example/send_email"},
+    tool_urls={"send_email": "https://tools.example/send_email"},
     mcp_call=my_async_mcp_caller,
     llm=my_async_llm,
     capabilities=caps,
@@ -79,10 +79,10 @@ worker = build_worker(client, context, task_queue=DEFAULT_TASK_QUEUE)
 await worker.run()
 ```
 
-`WorkerContext` fields are process-global activity configuration: `hand_urls`
-maps native hand names to HTTP URLs; `mcp_call` is async
+`WorkerContext` fields are process-global activity configuration: `tool_urls`
+maps native tool names to HTTP URLs; `mcp_call` is async
 `(server, tool, value, idempotency_key) -> result`; `llm` is async
-`(brain, value) -> result`; `capabilities` is the active
+`(reasoner, value) -> result`; `capabilities` is the active
 `CapabilityManifest`. It also carries `registry`, `http_timeout_s`, `subflows`,
 and `agents`. `DEFAULT_TASK_QUEUE` is `"composable-agents"`.
 
@@ -101,12 +101,12 @@ Kubernetes/KEDA path — see [deploy-kubernetes.md](deploy-kubernetes.md).
 
 - `verifyPures`: compare deploy-pinned pure source hashes to the worker
   registry before the workflow executes effects.
-- `callHand`: invoke a native HTTP hand or MCP tool. Native hands receive
+- `callTool`: invoke a native HTTP tool or MCP tool. Native tools receive
   `Idempotency-Key: <cid>`; MCP callers receive the same deterministic `cid` as
   the transport idempotency key.
-- `invokeBrain`: call the configured LLM function with a resolved `Brain`
+- `invokeReasoner`: call the configured LLM function with a resolved `Reasoner`
   definition and input value.
-- `compilePlan`: ask a planner brain for a plan, parse it to IR, and run staged
+- `compilePlan`: ask a planner reasoner for a plan, parse it to IR, and run staged
   plan admission before execution.
 - `resolveSubflow`: resolve a subflow ref to frozen `flowJson`, `manifestJson`,
   and optional pure pins from the worker registry.
@@ -163,12 +163,12 @@ requires durable projection sinks to be derived out-of-band from history.
 key:
 
 1. `lookup_account` and `classify_risk` are native `@tool(effect="read",
-   idempotent=True)` hands.
+   idempotent=True)` tools.
 2. `scripted_controller(...)` is the LLM callable. It returns
    `lookup_account`, then `classify_risk`, then a final `output`.
-3. `ThreadingHTTPServer` exposes the tools as stdlib HTTP hands. The handler
-   accepts `POST {"input": value}` and returns JSON, matching `callHand`.
-4. `WorkerContext` wires `hand_urls`, `llm=scripted_controller`, and
+3. `ThreadingHTTPServer` exposes the tools as stdlib HTTP tools. The handler
+   accepts `POST {"input": value}` and returns JSON, matching `callTool`.
+4. `WorkerContext` wires `tool_urls`, `llm=scripted_controller`, and
    `capabilities=agent.deployment().capabilities`.
 5. `build_worker(...)` starts the worker on `DEFAULT_TASK_QUEUE`.
 6. `agent.deploy(client, session_id="triage-run-1", input="acct-42")` starts
@@ -187,7 +187,7 @@ In another terminal:
 ```
 
 Watch `http://localhost:8233`. Open the latest `AgentWorkflow` and inspect
-`invokeBrain` / `callHand` activity history across the loop rounds. The final
+`invokeReasoner` / `callTool` activity history across the loop rounds. The final
 stdout prints the terminal status, output, and trace.
 
 ## Debounced batch dispatch
