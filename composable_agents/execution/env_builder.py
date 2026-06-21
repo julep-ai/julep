@@ -37,6 +37,10 @@ def _normalized_project_name(requirement: str) -> str:
     return match.group(1).lower().replace("_", "-").replace(".", "-")
 
 
+def _pep503_normalized_name(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
 def _env_hash(deps: Sequence[str], requires_python: str | None) -> str:
     return deps_mod.env_hash(deps, requires_python, deps_mod.base_component_hash())
 
@@ -130,6 +134,7 @@ def build_env_component(
         site_packages.mkdir(parents=True)
         for project in sorted({_normalized_project_name(dep) for dep in deps}):
             _download_and_extract_wasi_wheel(project, site_packages)
+        _verify_pinned_versions(deps, site_packages)
 
         command = [
             "componentize-py",
@@ -196,6 +201,170 @@ def _download_and_extract_wasi_wheel(project: str, target: Path) -> None:
             _safe_extract(tar, target)
     except (tarfile.TarError, OSError) as e:
         raise EnvBuildError(f"failed to extract WASI wheel archive for {project!r}") from e
+
+
+def _verify_pinned_versions(deps: Sequence[str], site_packages: Path) -> None:
+    available_versions = _available_distribution_versions(site_packages)
+    for dep in deps:
+        project, specifier = _requirement_name_and_specifier(dep)
+        if not specifier:
+            continue
+
+        available_version = available_versions.get(project)
+        if available_version is None:
+            raise EnvBuildError(
+                "WASI wheel version cannot be verified for dependency "
+                f"{dep!r}: requested {specifier!r}, but the fetched archive has "
+                "available version <unknown>"
+            )
+
+        if _specifier_satisfied(specifier, available_version, dep):
+            continue
+
+        raise EnvBuildError(
+            "WASI wheel version mismatch for dependency "
+            f"{dep!r}: requested {specifier!r}, but the fetched archive provides "
+            f"version {available_version!r}"
+        )
+
+
+def _available_distribution_versions(site_packages: Path) -> dict[str, str]:
+    versions: dict[str, str] = {}
+    for dist_info in site_packages.rglob("*.dist-info"):
+        if not dist_info.is_dir():
+            continue
+        name, version = _dist_info_name_version(dist_info)
+        if name is None or version is None:
+            continue
+
+        normalized = _pep503_normalized_name(name)
+        previous = versions.get(normalized)
+        if previous is not None and previous != version:
+            raise EnvBuildError(
+                "WASI wheel archive contains multiple versions for distribution "
+                f"{normalized!r}: {previous!r} and {version!r}"
+            )
+        versions[normalized] = version
+    return versions
+
+
+def _dist_info_name_version(dist_info: Path) -> tuple[str | None, str | None]:
+    metadata_name, metadata_version = _metadata_name_version(dist_info / "METADATA")
+    directory_name, directory_version = _dist_info_directory_name_version(dist_info)
+    return metadata_name or directory_name, metadata_version or directory_version
+
+
+def _metadata_name_version(metadata: Path) -> tuple[str | None, str | None]:
+    try:
+        lines = metadata.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None, None
+
+    name: str | None = None
+    version: str | None = None
+    for line in lines:
+        key, separator, value = line.partition(":")
+        if separator != ":":
+            continue
+        normalized_key = key.lower()
+        if normalized_key == "name":
+            name = value.strip()
+        elif normalized_key == "version":
+            version = value.strip()
+        if name is not None and version is not None:
+            break
+    return name, version
+
+
+def _dist_info_directory_name_version(dist_info: Path) -> tuple[str | None, str | None]:
+    suffix = ".dist-info"
+    if not dist_info.name.endswith(suffix):
+        return None, None
+
+    stem = dist_info.name[: -len(suffix)]
+    if "-" not in stem:
+        return None, None
+
+    name, version = stem.rsplit("-", 1)
+    return name, version
+
+
+def _requirement_name_and_specifier(requirement: str) -> tuple[str, str]:
+    try:
+        from packaging.requirements import InvalidRequirement, Requirement
+    except ImportError:
+        return _fallback_requirement_name_and_specifier(requirement)
+
+    try:
+        parsed = Requirement(requirement)
+    except InvalidRequirement as e:
+        raise EnvBuildError(f"dependency requirement is not valid PEP 508: {requirement!r}") from e
+    return _pep503_normalized_name(parsed.name), str(parsed.specifier)
+
+
+def _fallback_requirement_name_and_specifier(requirement: str) -> tuple[str, str]:
+    match = _PROJECT_NAME.match(requirement)
+    if match is None:
+        raise EnvBuildError(f"dependency requirement has no PEP 508 project name: {requirement!r}")
+
+    remainder = requirement[match.end() :].strip()
+    if remainder.startswith("["):
+        extras_end = remainder.find("]")
+        if extras_end != -1:
+            remainder = remainder[extras_end + 1 :].strip()
+    specifier = remainder.split(";", 1)[0].strip()
+    return _pep503_normalized_name(match.group(1)), specifier
+
+
+def _specifier_satisfied(specifier: str, available_version: str, requirement: str) -> bool:
+    try:
+        from packaging.specifiers import InvalidSpecifier, SpecifierSet
+        from packaging.version import InvalidVersion
+    except ImportError:
+        return _fallback_specifier_satisfied(specifier, available_version, requirement)
+
+    try:
+        return SpecifierSet(specifier).contains(available_version, prereleases=True)
+    except InvalidSpecifier as e:
+        raise EnvBuildError(
+            f"dependency requirement {requirement!r} has invalid version specifier {specifier!r}"
+        ) from e
+    except InvalidVersion as e:
+        raise EnvBuildError(
+            "WASI wheel version cannot be verified for dependency "
+            f"{requirement!r}: requested {specifier!r}, but the fetched archive provides "
+            f"an invalid version {available_version!r}"
+        ) from e
+
+
+def _fallback_specifier_satisfied(
+    specifier: str,
+    available_version: str,
+    requirement: str,
+) -> bool:
+    compact_specifier = specifier.replace(" ", "")
+    if "," in compact_specifier:
+        raise EnvBuildError(
+            "packaging is required in the build toolchain to verify compound dependency "
+            f"specifier {specifier!r} for {requirement!r}"
+        )
+    if compact_specifier.startswith("==="):
+        expected = compact_specifier[3:]
+    elif compact_specifier.startswith("=="):
+        expected = compact_specifier[2:]
+    else:
+        raise EnvBuildError(
+            "packaging is required in the build toolchain to verify dependency "
+            f"specifier {specifier!r} for {requirement!r}"
+        )
+
+    return available_version == expected or _fallback_normalized_version(
+        available_version
+    ) == _fallback_normalized_version(expected)
+
+
+def _fallback_normalized_version(version: str) -> str:
+    return re.sub(r"[-_.]+", ".", version.strip().lower().removeprefix("v"))
 
 
 def _safe_extract(tar: tarfile.TarFile, target: Path) -> None:
