@@ -7,7 +7,7 @@ name = "composable-agents"
 version = "0.1.0"
 description = "A typed, durable framework for composable serverless agents on Temporal."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Julep AI" }]
 keywords = ["agents", "llm", "temporal", "durable-execution", "mcp", "workflow"]
