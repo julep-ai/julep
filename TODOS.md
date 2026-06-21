@@ -46,23 +46,28 @@ review: 0 blocking, 6 non-blocking. Deferred (start P5; breadcrumb the rest). Pl
 `docs/plans/2026-06-11-code-as-data-distribution.md` (P4). Each item is `FIXME(P4-n)`
 in the source.
 
-- **S2 wasm-wheel e2e — the skipped leg.** A `register_pure_from_source` dep'd pure
-  cannot yet run a REAL wasi-wheel in wasm. Two causes: (1) **ABI** — upstream
-  wasi-wheels ship cp312 `.so` but the base `executor.wasm` is cp314. **SOLVED:**
-  cp314 wheels for pydantic-core 2.14.5 + regex are built & ABI-verified at
-  `/home/diwank/wasi-wheels-314/dist` with a reproducible `build.sh`. (2) **`--stub-wasi`
-  stat trap** — CPython's import machinery `stat()`s and traps (`wasm trap:
-  unreachable`); STILL OPEN, orthogonal to ABI. **Close:** vendor the cp314 wheels
-  into `composable_agents/execution/_wasm/`, switch
-  `env_builder._download_and_extract_wasi_wheel` to local-first/immutable, solve the
-  stat trap (non-stub WASI build with a preopened read-only wheel dir, a virtual FS,
-  or freeze the `.so`), then unskip
-  `tests/test_env_cache.py::test_real_regex_wheel_env_component_imports_and_runs`.
-- **FIXME(P4-1) major — non-reproducible env bytes.** `env_builder._WASI_WHEELS_RELEASE`
-  is the mutable `latest` tag; componentize-py output is never asserted deterministic.
-  `envComponent` feeds bundleHash/publishedArtifactHash, so the same envHash can map to
-  different bytes. Fix via the vendored cp314 wheels above + per-wheel content hashes +
-  a real-build determinism test.
+- **S2 wasm-wheel e2e — the skipped leg. CLOSED for regex (2026-06-20).** A
+  `register_pure_from_source` dep'd pure now runs a REAL wasi-wheel in wasm. Both root
+  causes fixed: (1) **ABI** — the earlier cp314 wheels were built against the WRONG pair
+  (wasi-sdk 27 / a different cpython ref), so componentize linking failed with unresolved
+  private symbols (`_PyLong_AsByteArray`, `_PyLong_NumBits`). Rebuilt `regex==2024.11.6`
+  against componentize-py 0.24.0's EXACT interpreter — dicej/cpython `v3.14.0-wasi-sdk-30`
+  + wasi-sdk 33 (clang 22.1.0-wasi-sdk) — and vendored it into
+  `composable_agents/execution/_wasm/wasi_wheels/regex/`. (2) **`--stub-wasi` stat trap** —
+  the env component now imports each declared dep at MODULE TOP LEVEL (generated
+  `env_component.py`), so componentize's pre-init snapshot bakes the module into
+  `sys.modules`; the pure body's runtime `import regex` then resolves with no fs stat.
+  Both `tests/...::test_real_regex_wheel_env_component_imports_and_runs` now PASS.
+  Remaining: pydantic-core wheel against the same pair (PyO3/maturin build).
+- **FIXME(P4-1) — wheel-source half CLOSED; componentize-determinism half OPEN.**
+  `env_builder` no longer downloads from the mutable `latest` tag — it reads immutable,
+  in-repo, content-addressed wheels from `_wasm/wasi_wheels/`, so the env build INPUTS are
+  reproducible. BUT componentize-py `--stub-wasi` bakes a fresh PRNG seed into the snapshot
+  every build and CPython's pre-init heap snapshot is not byte-stable, so the OUTPUT bytes
+  (and thus the `envComponent` CAS digest that feeds bundleHash/publishedArtifactHash) still
+  vary build-to-build. `envHash` (the deterministic identity) is stable; only the shipped
+  component bytes differ. Close via an upstream componentize determinism mode or a post-link
+  canonicalization/seed-pinning pass, then add a real-build determinism assertion.
 - **FIXME(P4-2) major — module-top PEP 723 dropped (fail-OPEN).** `register_pure` /
   bundle source use `inspect.getsource(fn)`, which omits a module-top `# /// script`
   block, so a dep'd baked pure publishes as no-dep and imports fail late in wasm. Reject

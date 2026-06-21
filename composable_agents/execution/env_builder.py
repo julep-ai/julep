@@ -130,7 +130,21 @@ def build_env_component(
     *,
     out_dir: str | Path | None = None,
 ) -> Path:
-    """Build a pre-initialized wasm env component for supported WASI wheels."""
+    """Build a pre-initialized wasm env component for supported WASI wheels.
+
+    The *inputs* are now fully reproducible: immutable, content-hashed wheels
+    vendored under ``_wasm/wasi_wheels/`` (no more mutable ``latest`` download)
+    plus the deterministic generated entry module. The *output bytes* are still
+    NOT bit-reproducible, however: componentize-py ``--stub-wasi`` bakes a fresh
+    PRNG seed into the snapshot at every build (so Python ``random`` is fixed at
+    runtime), and CPython's pre-init heap snapshot is not byte-stable across
+    runs. So two builds of the same dep set yield the same ``envHash`` (the
+    content-addressed identity, derived purely from deps + base component) but
+    different ``envComponent`` CAS digests. Resolution is keyed by ``envHash``
+    and ships whatever component bytes were published for it; byte-identical
+    rebuilds would require an upstream componentize determinism mode or a
+    post-link canonicalization pass (residual P4-1 follow-up; see TODOS.md).
+    """
     _verify_exact_pins(deps)
     if not supported_deps(deps):
         unsupported = sorted(
