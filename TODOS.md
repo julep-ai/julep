@@ -58,7 +58,19 @@ in the source.
   `env_component.py`), so componentize's pre-init snapshot bakes the module into
   `sys.modules`; the pure body's runtime `import regex` then resolves with no fs stat.
   Both `tests/...::test_real_regex_wheel_env_component_imports_and_runs` now PASS.
-  Remaining: pydantic-core wheel against the same pair (PyO3/maturin build).
+- **pydantic-core in wasm — BLOCKED (host interpreter, not the wheel).** Built
+  `pydantic_core==2.14.5` against the SAME matched pair (dicej/cpython v3.14.0-wasi-sdk-30
+  + wasi-sdk 33, PyO3/maturin, ABI-verified wasm module). componentize linking still fails
+  with `unresolved symbol(s): _PyLong_AsByteArray, _PyLong_NumBits`. Root cause: PyO3 0.20.0
+  (pinned by pydantic-core 2.14.5, `pyo3-ffi/src/longobject.rs`) imports those PRIVATE
+  CPython symbols; componentize-py 0.24.0's embedded interpreter does NOT export them in its
+  dylink table (regex links fine because it uses only PUBLIC `PyLong_*` APIs). This is a
+  host-interpreter export-surface gap, independent of the wheel toolchain — rebuilding the
+  wheel cannot fix it. The matched wheel is staged at `/home/diwank/wasi-deps-v2/dist/
+  pydantic_core/` (NOT vendored, since it cannot link). Close via: (a) componentize-py
+  exporting those private symbols / a build that does, or (b) bumping pydantic-core to a
+  PyO3 version that uses only public APIs (changes the vendored layout the repo expects).
+  `pydantic-core` stays in SUPPORTED_WASI_WHEELS but is unvendored → fails closed.
 - **FIXME(P4-1) — wheel-source half CLOSED; componentize-determinism half OPEN.**
   `env_builder` no longer downloads from the mutable `latest` tag — it reads immutable,
   in-repo, content-addressed wheels from `_wasm/wasi_wheels/`, so the env build INPUTS are

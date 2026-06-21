@@ -15,6 +15,15 @@ from pathlib import Path
 
 from .. import deps as deps_mod
 
+# regex is fully working in the wasm env tier (vendored, links, imports, runs).
+# pydantic-core stays on the curated list but is NOT vendored: its wheel builds
+# against the matched toolchain, but PyO3 0.20.0 (pinned by pydantic-core 2.14.5)
+# references private CPython symbols (_PyLong_AsByteArray, _PyLong_NumBits) that
+# componentize-py 0.24.0's embedded interpreter does not export, so componentize
+# linking fails regardless of the wheel's build toolchain. Declaring a
+# pydantic-core pure therefore fails closed at env build with a clear "not
+# vendored" error until componentize exports those symbols (or PyO3 is bumped to a
+# version that uses only public APIs). See TODOS.md (P4-1 / pydantic-core blocker).
 SUPPORTED_WASI_WHEELS: frozenset[str] = frozenset({"pydantic-core", "regex"})
 _WASI_PROJECT_IMPORT_MODULES: dict[str, str] = {
     "pydantic-core": "pydantic_core",
