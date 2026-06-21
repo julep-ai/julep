@@ -31,10 +31,10 @@ from composable_agents.execution.worker import build_worker
 from composable_agents.freeze import McpSnapshot
 
 API_KEY_ENV = "ANTHROPIC_API_KEY"
-MODEL = "anthropic:claude-3-5-haiku-latest"
+MODEL = "anthropic:claude-haiku-4-5-20251001"
 TEMPORAL_HOST = "localhost:7233"
 UI = "http://localhost:8233"
-RESULT_TIMEOUT_S = 180
+RESULT_TIMEOUT_S = int(os.environ.get("CA_BATCH_RESULT_TIMEOUT_S", "180"))
 N = 4
 INPUTS = [
     "I love this!",
@@ -42,6 +42,12 @@ INPUTS = [
     "It is fine.",
     "Absolutely amazing.",
 ]
+# The collector partition key is derived from the principal. All N runs in ONE
+# invocation share this principal, so they batch together (the point of the
+# demo); the per-invocation tag keeps repeated demo runs from colliding on a
+# prior run's collector/poll workflow ids. In production the principal is your
+# stable tenant key.
+DEMO_PRINCIPAL = {"qos": "BATCH", "demo": uuid.uuid4().hex}
 
 
 def require_api_key() -> None:
@@ -137,7 +143,7 @@ async def main() -> None:
                     session_id=session_id,
                     input=input_value,
                     task_queue=tq,
-                    principal={"qos": "BATCH"},
+                    principal=DEMO_PRINCIPAL,
                 )
                 for session_id, input_value in runs
             )
