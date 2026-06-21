@@ -31,6 +31,7 @@ from temporalio.worker.workflow_sandbox import (
 
 from ..capabilities import CapabilityManifest
 from . import anthropic_batch as _anthropic_batch  # noqa: F401 (registers Anthropic BatchProvider)
+from . import openai_batch as _openai_batch  # noqa: F401 (registers OpenAI BatchProvider)
 from .activities import (
     LlmCaller,
     McpCaller,
