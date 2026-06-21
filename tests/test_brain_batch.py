@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import uuid
 from typing import Any, ClassVar
 
@@ -30,6 +31,7 @@ if HAVE_TEMPORAL:
         fetchBatchResults,
         install_batch_dispatch_context,
         pollBatch,
+        provider_safe_custom_id,
         submitBatch,
         submit_brain_batch,
         submitBrainBatch,
@@ -41,6 +43,16 @@ if HAVE_TEMPORAL:
     from composable_agents.freeze import McpSnapshot
     from composable_agents.qos import QoSTier
     from test_llm import FakeChoice, FakeCompletion, FakeMessage
+
+    _PROVIDER_CUSTOM_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
+
+
+    def _expected_provider_custom_id(session: str, segment_seq: int, cid: str) -> str:
+        return provider_safe_custom_id(f"{session}:{segment_seq}:{cid}")
+
+
+    def _assert_provider_custom_id(value: str) -> None:
+        assert _PROVIDER_CUSTOM_ID_RE.fullmatch(value)
 
 
 if HAVE_TEMPORAL:
@@ -140,6 +152,23 @@ if HAVE_TEMPORAL:
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_provider_safe_custom_id_contract() -> None:
+    raw = "workflow:tenant/$@1:" + ("x" * 100)
+    first = provider_safe_custom_id(raw)
+    second = provider_safe_custom_id(raw)
+    different_session = provider_safe_custom_id("other-session:" + raw)
+    same_prefix_different_tail = provider_safe_custom_id(
+        "workflow:tenant/$@1:" + ("x" * 100) + ":tail"
+    )
+
+    _assert_provider_custom_id(first)
+    assert len(first) <= 64
+    assert first == second
+    assert first != different_session
+    assert first != same_prefix_different_tail
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
     captured = {}
 
@@ -150,10 +179,11 @@ def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
             captured["kwargs"] = kwargs
             return "handle"
 
+    custom_id = _expected_provider_custom_id("r1", 0, "think@1")
     call = BrainCall(
         brain="b",
         value=1,
-        custom_id="r1:think@1",
+        custom_id=custom_id,
         reply_to="r1",
         cid="think@1",
     )
@@ -180,7 +210,8 @@ def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
         f"batch:anthropic:BATCH:{_principal_key({'storeId': 1})}"
     )
     assert captured["kwargs"]["start_signal"] == "submit"
-    assert captured["kwargs"]["start_signal_args"][0].custom_id == "r1:think@1"
+    _assert_provider_custom_id(custom_id)
+    assert captured["kwargs"]["start_signal_args"][0].custom_id == custom_id
     assert captured["kwargs"]["task_queue"] == "composable-agents"
 
 
@@ -218,7 +249,7 @@ def test_submit_brain_batch_activity_uses_installed_context(
                     brain="b",
                     value=1,
                     principal={"storeId": 1},
-                    custom_id="r1:think@1",
+                    custom_id=_expected_provider_custom_id("r1", 0, "think@1"),
                     reply_to="r1",
                     cid="think@1",
                 ),
@@ -261,12 +292,13 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
             id="run-1",
             task_queue=tq,
         )
+        custom_id = _expected_provider_custom_id("run-1", 0, "think@1")
         call = BrainCall(
             brain="echo_brain",
             value=7,
             cid="think@1",
             reply_to="run-1",
-            custom_id="run-1:think@1",
+            custom_id=custom_id,
         )
         await submit_brain_batch(
             env.client,
@@ -283,7 +315,8 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
         out = await receiver.result()
 
     assert out == "7"
-    assert FakeBatch.requests_by_batch["bx"] == [{"custom_id": "run-1:think@1"}]
+    _assert_provider_custom_id(custom_id)
+    assert FakeBatch.requests_by_batch["bx"] == [{"custom_id": custom_id}]
 
 
 async def _run_all() -> None:
@@ -360,8 +393,10 @@ async def _flow_brain_rendezvous_through_build_worker(
     )
     assert think_did["attrs"]["tier"] == "BATCH"
     assert think_did["attrs"]["batch_id"]
+    expected_custom_id = _expected_provider_custom_id(sid, 0, "$@1")
+    _assert_provider_custom_id(expected_custom_id)
     assert FakeBatch.requests_by_batch["bx"] == [
-        {"custom_id": f"{sid}:0:$@1"}
+        {"custom_id": expected_custom_id}
     ]
 
 
@@ -432,8 +467,10 @@ async def _two_runs_do_not_misroute(env: WorkflowEnvironment) -> None:
     assert llm_calls == 0
     assert out_a == "alpha"
     assert out_b == "beta"
-    custom_id_a = f"{sid_a}:0:$@1"
-    custom_id_b = f"{sid_b}:0:$@1"
+    custom_id_a = _expected_provider_custom_id(sid_a, 0, "$@1")
+    custom_id_b = _expected_provider_custom_id(sid_b, 0, "$@1")
+    _assert_provider_custom_id(custom_id_a)
+    _assert_provider_custom_id(custom_id_b)
     assert custom_id_a != custom_id_b
     assert custom_id_a in FakeBatch.values
     assert custom_id_b in FakeBatch.values
@@ -508,8 +545,10 @@ async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
     assert think_did["attrs"]["tier"] == "STANDARD"
     assert think_did["attrs"]["promoted"] is True
     assert think_did["attrs"]["reason"] == "batch_timeout"
+    expected_custom_id = _expected_provider_custom_id(sid, 0, "$@1")
+    _assert_provider_custom_id(expected_custom_id)
     assert PendingFakeBatch.requests_by_batch["bx"] == [
-        {"custom_id": f"{sid}:0:$@1"}
+        {"custom_id": expected_custom_id}
     ]
 
 
@@ -580,8 +619,10 @@ async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
     assert think_did["attrs"]["tier"] == "STANDARD"
     assert think_did["attrs"]["promoted"] is True
     assert think_did["attrs"]["reason"] == "batch_error"
+    expected_custom_id = _expected_provider_custom_id(sid, 0, "$@1")
+    _assert_provider_custom_id(expected_custom_id)
     assert ErrorFakeBatch.requests_by_batch["bx"] == [
-        {"custom_id": f"{sid}:0:$@1"}
+        {"custom_id": expected_custom_id}
     ]
 
 
@@ -654,8 +695,10 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
     assert think_did["attrs"]["tier"] == "STANDARD"
     assert think_did["attrs"]["promoted"] is True
     assert think_did["attrs"]["reason"] == "batch_failed"
+    expected_custom_id = _expected_provider_custom_id(sid, 0, "$@1")
+    _assert_provider_custom_id(expected_custom_id)
     assert FailedFakeBatch.requests_by_batch["bx"] == [
-        {"custom_id": f"{sid}:0:$@1"}
+        {"custom_id": expected_custom_id}
     ]
 
 

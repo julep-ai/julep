@@ -513,10 +513,13 @@ class _TemporalEnv:
         if tier is QoSTier.BATCH and self._batch_waiter is not None:
             from .brain_batch import (
                 BrainCall as _BrainCall,
+                provider_safe_custom_id as _provider_safe_custom_id,
                 SubmitBrainBatchInput as _SubmitBrainBatchInput,
             )
 
-            custom_id = f"{self._session}:{self.segment_seq}:{cid}"
+            custom_id = _provider_safe_custom_id(
+                f"{self._session}:{self.segment_seq}:{cid}"
+            )
             provider, _ = _split_model(
                 _DEFAULT_REGISTRY.get_brain(brain).model, "anthropic"
             )

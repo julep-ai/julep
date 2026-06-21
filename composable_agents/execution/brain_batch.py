@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import re
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Optional, cast
@@ -15,6 +17,17 @@ from ..ir import canonical_json
 
 if TYPE_CHECKING:
     from .batch_provider import BatchProvider
+
+
+_UNSAFE_CUSTOM_ID_CHARS = re.compile(r"[^A-Za-z0-9_-]")
+
+
+def provider_safe_custom_id(raw: str) -> str:
+    """Return a deterministic provider-safe opaque batch custom_id."""
+
+    sanitized = _UNSAFE_CUSTOM_ID_CHARS.sub("-", raw)
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+    return f"{sanitized[:46]}-{digest}"
 
 
 @dataclass
@@ -509,6 +522,7 @@ __all__ = [
     "get_batch_dispatch_context",
     "install_batch_dispatch_context",
     "pollBatch",
+    "provider_safe_custom_id",
     "submitBatch",
     "submitBrainBatch",
     "submit_brain_batch",
