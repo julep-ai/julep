@@ -36,6 +36,9 @@ class GCError(Exception):
 @dataclass(frozen=True)
 class Lease:
     bundle_hash: str
+    # FIXME(P5-2): signature_digest is optional, but the detached signature is a hard
+    # replay dependency — a lease without it lets the signature blob be collected as an
+    # orphan (fail-open). Require it (or always fold it into the closure). See TODOS.md.
     signature_digest: str | None = None
     name: str | None = None
 
@@ -153,6 +156,9 @@ def reachable_closure(store: CASStore, lease: Lease) -> set[str]:
     return reachable
 
 
+# FIXME(P5-1): GC vs publish TOCTOU — a bundle mid-publish (blobs written, lease not yet
+# acquired) can be swept as an orphan. Publish must acquire the lease before/within the
+# publish transaction, or GC must honor a grace window for recently-written objects. See TODOS.md.
 def gc(
     store: CASStore,
     lease_store: LeaseStore,

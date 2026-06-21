@@ -386,6 +386,9 @@ class _TemporalEnv:
         # pures. Registered pures must be deterministic by contract (see
         # purity.py), so the lookup remains replay-safe.
         executor = _executor_of_from_registry(name)
+        # FIXME(P5-3): this rejects a native-tier pure LATE (mid-workflow, at pure-call
+        # time) rather than at bundle resolution. Reject native bundle pures on the
+        # Temporal worker at resolve_and_register so it fails fast, not mid-flow. See TODOS.md.
         if executor == "native_venv":
             raise ComposableAgentsError(
                 f"pure {name!r} is native-tier (native_venv): native-dependency pures "

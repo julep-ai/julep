@@ -84,3 +84,33 @@ in the source.
   subprocess execution is not run in CI (needs uv + network). A numpy pure through the
   native tier on a worker is the natural P5 dep'd-pure acceptance. Manifest wiring for
   `CA_PURE_NATIVE_DEPS` in the k3d/EKS worker manifests is done.
+
+## P5 runtime/infra/docs: review follow-ups
+
+Captured 2026-06-20 after the P5 build (commits `ed6ffb1..8140e8d`). Final codex review:
+0 blocking, 7 non-blocking. Deferred (breadcrumbed `FIXME(P5-n)` in source). Plan: P5
+section of `docs/plans/2026-06-11-code-as-data-distribution.md`.
+
+- **FIXME(P5-1) major — GC vs publish TOCTOU.** `gc.gc()` can sweep a bundle that is
+  mid-publish (blobs written, lease not yet acquired) as an orphan. Publish must acquire the
+  lease within/before the publish transaction, or GC must honor a grace window for recently
+  written objects. (`composable_agents/gc.py` + `deploy.py` publish path.)
+- **FIXME(P5-2) major — lease signature_digest optional (fail-open).** `gc.Lease` allows a
+  null `signature_digest`, but the detached ed25519 signature is a hard replay dependency; a
+  lease without it lets the signature blob be collected. Require it / always fold it in.
+- **FIXME(P5-3) major — native pure fails LATE on the Temporal harness.** `harness.get_pure`
+  raises for a `native_venv` pure at pure-call time mid-workflow (fail-closed but late);
+  reject native bundle pures at `worker_store.resolve_and_register` so it fails fast.
+- **P5-4 minor — runbook overclaims tier uniformity.** `docs/ops/wasm-tier-runbook.md` says
+  the tier decision "applies uniformly" across all three backends; native tier is not
+  supported on the Temporal harness (see P5-3). Correct the doc.
+- **P5-5 minor — AUTHORING native tier caveat.** `docs/AUTHORING.md` presents the native tier
+  as generally supported without the Temporal-harness limitation; add the caveat.
+- **P5-6 nit — `GCResult.deleted` redundant** (recomputable from `collectable`).
+- **P5-7 nit — `_delete_local_object` shard-dir rmdir** best-effort can race shard recreation.
+- **S3CAS GC unimplemented** — `gc()` raises `GCError` for `S3CAS` (paginated list+delete
+  deferred); implement if S3-backed CAS retention is needed.
+- **Live EKS dep'd-pure acceptance (P5 final gate, still pending).** Brand-new flow with a
+  dep'd pure → publish → EKS run via the native tier (`CA_PURE_NATIVE_DEPS` granted on the
+  pod), cold start within budget — the real-cluster acceptance, run deliberately like the P3
+  EKS run (not in the autonomous build workflow).
