@@ -38,3 +38,49 @@
   surface decode failures as span-bearing diagnostics rather than a bare swallow.
 - **Depends on:** P2.6 code-as-data bundle path; coordinate with the P3 wasm/EKS
   production-gate work.
+
+## P4 deps-as-data: review follow-ups + wasm-wheel e2e closure
+
+Captured 2026-06-20 after the P4 build (commits `fd530b7..de7713a`). Final codex
+review: 0 blocking, 6 non-blocking. Deferred (start P5; breadcrumb the rest). Plan:
+`docs/plans/2026-06-11-code-as-data-distribution.md` (P4). Each item is `FIXME(P4-n)`
+in the source.
+
+- **S2 wasm-wheel e2e — the skipped leg.** A `register_pure_from_source` dep'd pure
+  cannot yet run a REAL wasi-wheel in wasm. Two causes: (1) **ABI** — upstream
+  wasi-wheels ship cp312 `.so` but the base `executor.wasm` is cp314. **SOLVED:**
+  cp314 wheels for pydantic-core 2.14.5 + regex are built & ABI-verified at
+  `/home/diwank/wasi-wheels-314/dist` with a reproducible `build.sh`. (2) **`--stub-wasi`
+  stat trap** — CPython's import machinery `stat()`s and traps (`wasm trap:
+  unreachable`); STILL OPEN, orthogonal to ABI. **Close:** vendor the cp314 wheels
+  into `composable_agents/execution/_wasm/`, switch
+  `env_builder._download_and_extract_wasi_wheel` to local-first/immutable, solve the
+  stat trap (non-stub WASI build with a preopened read-only wheel dir, a virtual FS,
+  or freeze the `.so`), then unskip
+  `tests/test_env_cache.py::test_real_regex_wheel_env_component_imports_and_runs`.
+- **FIXME(P4-1) major — non-reproducible env bytes.** `env_builder._WASI_WHEELS_RELEASE`
+  is the mutable `latest` tag; componentize-py output is never asserted deterministic.
+  `envComponent` feeds bundleHash/publishedArtifactHash, so the same envHash can map to
+  different bytes. Fix via the vendored cp314 wheels above + per-wheel content hashes +
+  a real-build determinism test.
+- **FIXME(P4-2) major — module-top PEP 723 dropped (fail-OPEN).** `register_pure` /
+  bundle source use `inspect.getsource(fn)`, which omits a module-top `# /// script`
+  block, so a dep'd baked pure publishes as no-dep and imports fail late in wasm. Reject
+  pures importing an undeclared third-party module, or support module-top metadata; fix
+  `examples/regex_extract_flow.py` to the documented placement.
+- **FIXME(P4-3) major — weak validation.** `deps.parse_pep723` coerces invalid
+  `requires-python` to null (envHash collision) and does not PEP 508-validate deps.
+  Reject both at parse/publish.
+- **FIXME(P4-4) minor — non-canonical manifest accepted.** `worker_store._manifest_pures`
+  accepts explicit `executorTier:"wasm"` and absent-vs-null; enforce SPEC §6.5 canonical
+  presence. (Bounded: manifest is content-addressed + signed.)
+- **FIXME(P4-5) minor — tar extraction.** `env_builder._safe_extract` lacks
+  `filter='data'`; add it / refuse symlink+hardlink members.
+- **FIXME(P4-6) nit — vestigial baked-deps parse.** `register_pure` parses PEP 723 but
+  module-top is dropped, so baked native pures always get `deps=()`; wire consistently or
+  drop the parse.
+- **Native tier real e2e (not yet exercised).** The `uv`-venv native tier
+  (`native_venv_executor`) resolves/registers behind `CA_PURE_NATIVE_DEPS` but its in-venv
+  subprocess execution is not run in CI (needs uv + network). A numpy pure through the
+  native tier on a worker is the natural P5 dep'd-pure acceptance, plus wiring
+  `CA_PURE_NATIVE_DEPS` into the k3d/EKS worker manifests.

@@ -20,6 +20,10 @@ from .. import deps as deps_mod
 SUPPORTED_WASI_WHEELS: frozenset[str] = frozenset({"pydantic-core", "regex"})
 
 _PROJECT_NAME = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
+# FIXME(P4-1): mutable `latest` tag + unvalidated componentize-py output => the env
+# component bytes envHash maps to are NOT reproducible (envComponent feeds bundleHash /
+# publishedArtifactHash). Vendor immutable cp314 wheels (built at /home/diwank/wasi-wheels-314)
+# into _wasm/, switch to local-first, content-hash each wheel. See TODOS.md (P4 follow-ups).
 _WASI_WHEELS_RELEASE = "https://github.com/dicej/wasi-wheels/releases/download/latest"
 _WASM_ROOT = Path(__file__).parent / "_wasm"
 _WIT = _WASM_ROOT / "wit" / "executor.wit"
@@ -405,6 +409,9 @@ def _fallback_normalized_version(version: str) -> str:
 
 
 def _safe_extract(tar: tarfile.TarFile, target: Path) -> None:
+    # FIXME(P4-5): precheck uses .resolve() (follows symlinks) then extractall without
+    # filter="data". Pass filter="data" (py3.12+) / refuse symlink+hardlink members.
+    # Defense-in-depth: archive source is a trusted HTTPS release today. See TODOS.md.
     root = target.resolve()
     for member in tar.getmembers():
         destination = (target / member.name).resolve()

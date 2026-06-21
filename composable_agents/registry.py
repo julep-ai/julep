@@ -136,6 +136,10 @@ class Registry:
     def list_brains(self) -> list[str]:
         return sorted(self.brains)
 
+    # FIXME(P4-2/P4-6): inspect.getsource(fn) drops a module-top `# /// script` block
+    # (the idiomatic PEP 723 placement) => a dep-declaring baked pure registers as no-dep
+    # and `import <dep>` fails OPEN late in wasm. Reject pures that import an undeclared
+    # third-party module, or support module-top metadata. See TODOS.md (P4 follow-ups).
     def register_pure(self, name: str, fn: PureFn) -> PureEntry:
         if name in self.pures and self.pures[name].fn is not fn:
             raise ValueError(f"pure name already registered to a different fn: {name!r}")

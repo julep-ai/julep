@@ -41,6 +41,9 @@ def native_dep_grants(explicit: Iterable[str] | str | None = None) -> frozenset[
 
 def parse_pep723(source: str) -> tuple[tuple[str, ...], str | None]:
     """Return canonical PEP 723 dependencies and raw requires-python metadata."""
+    # FIXME(P4-3): an invalid requires-python is coerced to null (env_hash collision with
+    # an omitted one) and deps are not PEP 508-validated (e.g. "numpy @@@" passes, then
+    # fails late at `uv pip install` on the worker). Reject both here. See TODOS.md.
     lines = source.splitlines()
     blocks: list[str] = []
     index = 0
