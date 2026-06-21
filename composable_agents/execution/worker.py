@@ -30,6 +30,7 @@ from temporalio.worker.workflow_sandbox import (
 )
 
 from ..capabilities import CapabilityManifest
+from . import anthropic_batch as _anthropic_batch  # noqa: F401 (registers Anthropic BatchProvider)
 from .activities import (
     LlmCaller,
     McpCaller,
@@ -48,6 +49,16 @@ from .activities import (
     verifyPures,
 )
 from .blobstore import BlobStore
+from .brain_batch import (
+    BatchCollector,
+    BatchDispatchContext,
+    BatchPoll,
+    fetchBatchResults,
+    install_batch_dispatch_context,
+    pollBatch,
+    submitBatch,
+    submitBrainBatch,
+)
 from .bundle_runner import BundleResolvingWorkflowRunner
 from .codec import ClaimCheckCodec
 from .debounce import DebounceCollector
@@ -80,8 +91,12 @@ ACTIVITIES = [
     finishTrajectory,
     flushStructural,
     runSubCapture,
+    submitBrainBatch,
+    submitBatch,
+    pollBatch,
+    fetchBatchResults,
 ]
-WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector]
+WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector, BatchCollector, BatchPoll]
 
 
 def claim_check_converter(
@@ -137,6 +152,9 @@ def build_worker(
     ``workflow_runner`` to override.
     """
     configure(context)
+    install_batch_dispatch_context(
+        BatchDispatchContext(client=client, task_queue=task_queue)
+    )
     if "workflow_runner" not in worker_kwargs:
         store_url = os.environ.get("STORE_URL", "").strip()
         store = cas_from_url(store_url) if store_url else None

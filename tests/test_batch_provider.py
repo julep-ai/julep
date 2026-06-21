@@ -52,14 +52,14 @@ def test_batch_provider_is_abc() -> None:
 
 
 def test_select_batch_provider_unregistered_raises() -> None:
-    with pytest.raises(NotImplementedError, match="anthropic"):
-        select_batch_provider("anthropic:claude-x")
+    with pytest.raises(NotImplementedError, match="missingp"):
+        select_batch_provider("missingp:claude-x")
 
-    with pytest.raises(NotImplementedError, match="openai"):
-        select_batch_provider("openai:gpt-x")
+    with pytest.raises(NotImplementedError, match="otherp"):
+        select_batch_provider("otherp:gpt-x")
 
-    with pytest.raises(NotImplementedError, match="anthropic"):
-        select_batch_provider("claude-x")
+    with pytest.raises(NotImplementedError, match="missingdefault"):
+        select_batch_provider("claude-x", default_provider="missingdefault")
 
 
 def test_register_and_select() -> None:

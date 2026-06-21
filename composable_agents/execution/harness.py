@@ -68,7 +68,9 @@ with workflow.unsafe.imports_passed_through():
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
     from ..qos import QoSTier
+    from ..registry import DEFAULT_REGISTRY as _DEFAULT_REGISTRY
     from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
+    from .llm import _split_model
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .timeouts import activity_timeout
@@ -356,6 +358,8 @@ class _TemporalEnv:
         manifest_json: Optional[dict[str, Any]],
         policy: ExecutionPolicy,
         gate_waiter: Callable[[Any, str, Optional[int]], Awaitable[Any]],
+        batch_waiter: Optional[Callable[[str, Optional[int]], Awaitable[Any]]] = None,
+        workflow_id: Optional[str] = None,
         max_call_limits: Optional[dict[str, int]] = None,
         call_counts: Optional[dict[str, int]] = None,
         principal: Optional[dict[str, Any]] = None,
@@ -372,6 +376,8 @@ class _TemporalEnv:
         self._manifest_json = manifest_json
         self._policy = policy
         self._gate_waiter = gate_waiter
+        self._batch_waiter = batch_waiter
+        self._workflow_id = workflow_id
         self._max_call_limits = dict(max_call_limits or {})
         self._call_counts: dict[str, int] = dict(call_counts or {})
         self._cid = 0
@@ -481,8 +487,39 @@ class _TemporalEnv:
             tier = QoSTier(resolved)
         except (TypeError, ValueError):
             tier = QoSTier.STANDARD
-        # M0: BATCH no-ops to STANDARD for dispatch (no collector yet); the
-        # resolved tier is still recorded (above) and carried into the sync call.
+        if tier is QoSTier.BATCH and self._batch_waiter is not None:
+            from .brain_batch import (
+                BrainCall as _BrainCall,
+                SubmitBrainBatchInput as _SubmitBrainBatchInput,
+            )
+
+            custom_id = f"{self._session}:{self.segment_seq}:{cid}"
+            provider, _ = _split_model(
+                _DEFAULT_REGISTRY.get_brain(brain).model, "anthropic"
+            )
+            await workflow.execute_activity(
+                "submitBrainBatch",
+                _SubmitBrainBatchInput(
+                    provider=provider,
+                    qos=tier.value,
+                    principal_key="",
+                    call=_BrainCall(
+                        brain=brain,
+                        value=value,
+                        principal=self.principal,
+                        transcript=None,
+                        cid=cid,
+                        reply_to=self._workflow_id or self._session,
+                        custom_id=custom_id,
+                    ),
+                ),
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=3,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+            return await self._batch_waiter(custom_id, timeout_s)
 
         return await workflow.execute_activity(
             invokeBrain,
@@ -703,6 +740,8 @@ def _make_emitter() -> tuple[InMemoryProjection, ProjectionEmitter]:
 class FlowWorkflow:
     def __init__(self) -> None:
         self._human_inbox: dict[str, Any] = {}
+        self._brain_inbox: dict[str, Any] = {}
+        self._resolved_brains: set[str] = set()
         self._open_gates: set[str] = set()
         self._store: Optional[InMemoryProjection] = None
 
@@ -711,6 +750,13 @@ class FlowWorkflow:
     def submit_human(self, payload: dict[str, Any]) -> None:
         """Deliver a human decision keyed by activation id (``cid``)."""
         self._human_inbox[payload["cid"]] = payload.get("value")
+
+    @workflow.signal(name="submitBrainResult")
+    def submit_brain_result(self, payload: dict[str, Any]) -> None:
+        custom_id = payload["custom_id"]
+        if custom_id in self._resolved_brains:
+            return
+        self._brain_inbox[custom_id] = payload.get("reply")
 
     async def _await_human(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         timeout = timedelta(seconds=timeout_s) if timeout_s else None
@@ -722,6 +768,18 @@ class FlowWorkflow:
         finally:
             self._open_gates.discard(cid)
         return self._human_inbox.pop(cid)
+
+    async def _await_brain_result(self, custom_id: str, timeout_s: Optional[int]) -> Any:
+        timeout = timedelta(seconds=timeout_s) if timeout_s else None
+        try:
+            await workflow.wait_condition(
+                lambda: custom_id in self._brain_inbox, timeout=timeout
+            )
+        except asyncio.TimeoutError:
+            self._resolved_brains.add(custom_id)
+            raise
+        self._resolved_brains.add(custom_id)
+        return self._brain_inbox.pop(custom_id)
 
     @workflow.query(name="openGates")
     def open_gates(self) -> list[str]:
@@ -905,6 +963,8 @@ class FlowWorkflow:
             manifest_json=manifest_json,
             policy=policy,
             gate_waiter=self._await_human,
+            batch_waiter=self._await_brain_result,
+            workflow_id=inp.session_id,
             max_call_limits=max_call_limits,
             call_counts=call_counts,
             principal=inp.principal,
