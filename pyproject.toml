@@ -95,6 +95,10 @@ addopts = "-q"
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+# Vendored third-party WASI wheel sources (regex, pydantic-core) ship under
+# _wasm/wasi_wheels/ so the env-component build can link them. They are upstream
+# code, not ours to lint — exclude them exactly as mypy excludes _wasm/.
+extend-exclude = ["composable_agents/execution/_wasm/wasi_wheels"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

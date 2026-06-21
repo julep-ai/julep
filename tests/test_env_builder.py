@@ -86,8 +86,10 @@ def test_build_env_component_accepts_exact_pin_guard(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fake_download_and_extract_wasi_wheel(project: str, target: Path) -> None:
-        _write_dist_info(target, project, "2024.11.6")
+    # Wheels are local-first (vendored under _wasm/wasi_wheels/), so the exact-pin
+    # and dist-info version guards run against the real vendored regex package.
+    # Stub only componentize-py so this stays a fast guard test, not a wasm build.
+    observed: dict[str, bool] = {}
 
     def fake_run(
         command: list[str],
@@ -95,17 +97,24 @@ def test_build_env_component_accepts_exact_pin_guard(
         cwd: Path,  # noqa: ARG001
         check: bool,  # noqa: ARG001
     ) -> object:
+        # The temp site-packages is cleaned up when build_env_component returns, so
+        # assert per-dep isolation here while it still exists: the declared dep was
+        # staged and the other supported wheel (pydantic_core) was NOT dragged in.
+        # Command tail is: --python-path <runtime> --python-path <site_packages>
+        # env_component -o <output>, so site_packages is the 4th-from-last arg.
+        site_packages = Path(command[-4])
+        observed["invoked"] = True
+        observed["has_regex"] = (site_packages / "regex").is_dir()
+        observed["no_pydantic_core"] = not (site_packages / "pydantic_core").exists()
         output = Path(command[-1])
         output.write_bytes(b"component")
         return object()
 
-    monkeypatch.setattr(
-        env_builder,
-        "_download_and_extract_wasi_wheel",
-        fake_download_and_extract_wasi_wheel,
-    )
     monkeypatch.setattr(env_builder.subprocess, "run", fake_run)
 
     path = env_builder.build_env_component(("regex==2024.11.6",), ">=3.11", out_dir=tmp_path)
 
     assert path.read_bytes() == b"component"
+    assert observed.get("invoked"), "componentize-py was not invoked"
+    assert observed["has_regex"]
+    assert observed["no_pydantic_core"]
