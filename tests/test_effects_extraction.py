@@ -161,3 +161,172 @@ def test_activities_reexport_worker_context():
     from composable_agents.execution.effects import WorkerContext as E
 
     assert A is E
+
+
+def test_brain_dispatch_defaults():
+    import dataclasses
+
+    from composable_agents.qos import BrainDispatch, QoSTier
+
+    d = BrainDispatch()
+    assert d.qos is QoSTier.STANDARD
+    assert d.batch_id is None
+    assert dataclasses.is_dataclass(BrainDispatch)
+    assert BrainDispatch.__dataclass_params__.frozen is True
+
+
+def test_adapt_llm_caller_legacy_2_3_4_arg_get_default_dispatch():
+    from conftest import run
+
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution.effects import _adapt_llm_caller
+    from composable_agents.qos import BrainDispatch, QoSTier
+
+    sentinel_2 = object()
+    sentinel_3 = object()
+    sentinel_4 = object()
+    brain = Brain(name="t", model="m", system="s")
+    value = {"v": 1}
+    principal = {"tenant": "t"}
+
+    async def fake_2(brain, value):
+        return sentinel_2
+
+    async def fake_3(brain, value, principal):
+        return sentinel_3
+
+    async def fake_4(brain, value, principal, transcript):
+        return sentinel_4
+
+    for fn, sentinel in (
+        (fake_2, sentinel_2),
+        (fake_3, sentinel_3),
+        (fake_4, sentinel_4),
+    ):
+        adapted = _adapt_llm_caller(fn)
+        result = run(
+            adapted(
+                brain,
+                value,
+                principal,
+                None,
+                BrainDispatch(qos=QoSTier.FLEX),
+            )
+        )
+        assert result is sentinel
+
+
+def test_adapt_llm_caller_5arg_receives_dispatch():
+    from conftest import run
+
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution.effects import _adapt_llm_caller
+    from composable_agents.qos import BrainDispatch, QoSTier
+
+    async def fake_5(brain, value, principal, transcript, dispatch):
+        return dispatch.qos
+
+    adapted = _adapt_llm_caller(fake_5)
+    result = run(
+        adapted(
+            Brain(name="t", model="m", system="s"),
+            {"v": 1},
+            {"tenant": "t"},
+            None,
+            BrainDispatch(qos=QoSTier.PRIORITY),
+        )
+    )
+    assert result is QoSTier.PRIORITY
+
+
+def test_invoke_brain_passes_dispatch_qos_to_llm():
+    from conftest import run
+
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import InvokeBrainInput, WorkerContext
+    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_brain(Brain(name="b", model="test", system="s"))
+    captured: dict[str, BrainDispatch] = {}
+
+    async def fake_llm(brain, value, principal, transcript, dispatch):
+        captured["dispatch"] = dispatch
+        return "ok"
+
+    prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
+    try:
+        result = run(
+            effects.invokeBrain(
+                InvokeBrainInput(brain="b", value="hi", cid="think@1", qos="FLEX")
+            )
+        )
+    finally:
+        _restore_ctx(prev)
+
+    assert result == "ok"
+    assert captured["dispatch"].qos is QoSTier.FLEX
+
+
+def test_invoke_brain_clamps_batch_qos_to_standard():
+    from conftest import run
+
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import InvokeBrainInput, WorkerContext
+    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_brain(Brain(name="b", model="test", system="s"))
+    captured: dict[str, BrainDispatch] = {}
+
+    async def fake_llm(brain, value, principal, transcript, dispatch):
+        captured["dispatch"] = dispatch
+        return "ok"
+
+    prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
+    try:
+        result = run(
+            effects.invokeBrain(
+                InvokeBrainInput(brain="b", value="hi", cid="think@1", qos="BATCH")
+            )
+        )
+    finally:
+        _restore_ctx(prev)
+
+    assert result == "ok"
+    assert captured["dispatch"].qos is QoSTier.STANDARD
+
+
+def test_invoke_brain_default_qos_is_standard():
+    from conftest import run
+
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import InvokeBrainInput, WorkerContext
+    from composable_agents.qos import BrainDispatch, QoSTier
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_brain(Brain(name="b", model="test", system="s"))
+    captured: dict[str, BrainDispatch] = {}
+
+    async def fake_llm(brain, value, principal, transcript, dispatch):
+        captured["dispatch"] = dispatch
+        return "ok"
+
+    prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
+    try:
+        result = run(
+            effects.invokeBrain(
+                InvokeBrainInput(brain="b", value="hi", cid="think@1")
+            )
+        )
+    finally:
+        _restore_ctx(prev)
+
+    assert result == "ok"
+    assert captured["dispatch"].qos is QoSTier.STANDARD

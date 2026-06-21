@@ -18,6 +18,7 @@ is ignored by this v1 default implementation.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -29,6 +30,12 @@ class QoSTier(str, Enum):
     STANDARD = "STANDARD"
     FLEX = "FLEX"
     BATCH = "BATCH"
+
+
+@dataclass(frozen=True)
+class BrainDispatch:
+    qos: QoSTier = QoSTier.STANDARD
+    batch_id: str | None = None
 
 
 def _requested_qos_from_principal(principal: Any) -> QoSTier:

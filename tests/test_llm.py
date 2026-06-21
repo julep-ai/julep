@@ -23,6 +23,7 @@ from composable_agents.execution.llm import (
     make_llm_caller,
     make_local_brain,
 )
+from composable_agents.qos import BrainDispatch, QoSTier
 from conftest import run
 
 
@@ -117,6 +118,55 @@ def test_temperature_passthrough() -> None:
     brain = Brain(name="b3", model="openai:gpt-4o", temperature=0.2)
     run(make_llm_caller(acompletion=rec)(brain, "x"))
     assert rec.calls[0]["temperature"] == 0.2
+
+
+def test_qos_request_field_openai_per_tier() -> None:
+    brain = Brain(name="t", model="openai:gpt-x", system="s")
+
+    rec = Recorder([_completion(content="ok")])
+    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.PRIORITY)))
+    assert rec.calls[-1].get("service_tier") == "priority"
+
+    rec = Recorder([_completion(content="ok")])
+    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.STANDARD)))
+    assert "service_tier" not in rec.calls[-1]
+
+    rec = Recorder([_completion(content="ok")])
+    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.FLEX)))
+    assert rec.calls[-1].get("service_tier") == "flex"
+
+
+def test_qos_request_field_anthropic_per_tier() -> None:
+    brain = Brain(name="t", model="anthropic:claude-x", system="s")
+
+    rec = Recorder([_completion(content="ok")])
+    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.PRIORITY)))
+    assert rec.calls[-1].get("service_tier") == "priority"
+
+    rec = Recorder([_completion(content="ok")])
+    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.STANDARD)))
+    assert "service_tier" not in rec.calls[-1]
+
+    rec = Recorder([_completion(content="ok")])
+    run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.FLEX)))
+    assert rec.calls[-1].get("service_tier") == "standard_only"
+
+
+def test_qos_batch_rejected_by_complete_brain() -> None:
+    rec = Recorder([_completion(content="ok")])
+    brain = Brain(name="t", model="openai:gpt-x", system="s")
+
+    with pytest.raises(ValueError, match="BATCH must not reach complete_brain"):
+        run(complete_brain(brain, "hi", acompletion=rec, dispatch=BrainDispatch(qos=QoSTier.BATCH)))
+
+
+def test_complete_brain_default_dispatch_sets_no_tier_field() -> None:
+    rec = Recorder([_completion(content="ok")])
+    brain = Brain(name="t", model="openai:gpt-x", system="s")
+
+    run(complete_brain(brain, "hi", acompletion=rec))
+
+    assert "service_tier" not in rec.calls[-1]
 
 
 # --------------------------------------------------------------------------- #
