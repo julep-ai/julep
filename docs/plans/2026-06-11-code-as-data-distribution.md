@@ -219,15 +219,27 @@ ran it, returned the exact expected result (`passRate 0.8`, tally A1/B2/C1/F1), 
 **0→1→0**, ~28s cold start incl. a fresh image pull. This re-confirms the whole code-as-data
 pipeline under all the P4/P5 changes.
 
-**The dep'd-pure-in-wasm acceptance is DEFERRED (upstream-toolchain-blocked), not done.** Neither
-dep tier can run a dep'd pure on the EKS Temporal worker today: the **native** (uv-venv) tier is
-rejected on the durable Temporal harness by design (subprocess breaks determinism — see
-`FIXME(P5-3)`), and the **wasm** tier needs an env component whose real wheel import is blocked by
-(a) the `--stub-wasi` stat trap and (b) a CPython-3.14 private-ABI skew between the cp314 wheels
-(dicej `v3.14.0rc3`) and componentize-py 0.24.0's embedded CPython (`_PyLong_AsByteArray` /
-`_PyLong_NumBits` unresolved at link). cp314 wheels are built (`/home/diwank/wasi-wheels-314`) and
-the integration WIP is on branch `cad-wasm-wheel-close` (`7707900`); closing it is a multi-iteration
-grind against **unmaintained** upstream wasi tooling. Tracked in TODOS.md (P4/P5 follow-ups).
+**Dep'd-pure-in-wasm on EKS — DONE (2026-06-21, regex).** After landing the wasm-wheel close
+(`d32aa43`: `regex==2024.11.6` rebuilt against componentize-py 0.24.0's exact interpreter —
+`dicej/cpython@v3.14.0-wasi-sdk-30` + wasi-sdk 33 — plus a top-level pre-init import so the
+`--stub-wasi` snapshot bakes the module in), a wasm-tier `regex` dep'd pure
+(`examples/regex_extract_flow.py`) ran end to end on the EKS Temporal+KEDA generic worker (image
+`…worker:cad-p6`): the env component bundling the regex wheel was published to S3, the generic pod
+resolved it, ran regex **in the `--stub-wasi` wasm sandbox** (regex never installed on the worker),
+returned the correct rollup (`emails` ×4, `rows` 4, `rowsWithEmail` 3, `totalMatches` 6), KEDA
+**0→1→0**. The dep traveled as data; zero docker in the per-flow loop; deps-as-data closed for the
+wasi-wheel set on the durable harness.
+
+Caveats: (1) `pydantic-core` stays **blocked** — a host-side gap, not a wheel defect: PyO3 0.20
+(pinned by pydantic-core 2.14.5) imports private CPython symbols (`_PyLong_AsByteArray`/
+`_PyLong_NumBits`) that componentize-py 0.24.0's interpreter doesn't export; needs a pydantic-core
+on a newer PyO3 (public-API only) or componentize exporting them. (2) The **native** (uv-venv) tier
+remains Temporal-incompatible by design (`FIXME(P5-3)`). (3) Cold-compiling the env component blocks
+the worker's asyncio health loop on a small node (worked around with a startupProbe + CPU headroom
+in `tooling/eks-cad-demo/worker.yaml`; real fix = compile off-loop / cache the `.cwasm`). (4) Env
+component **output** bytes aren't bit-reproducible (componentize `--stub-wasi` bakes a fresh PRNG
+seed) so a dep'd bundle's `envComponent`/`bundleHash` varies build-to-build though `envHash` is
+stable — P4-1 input-reproducibility done, output-reproducibility open. All tracked in TODOS.md.
 
 ### P6 — parked: tools out-of-process
 

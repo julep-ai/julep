@@ -127,7 +127,18 @@ section of `docs/plans/2026-06-11-code-as-data-distribution.md`.
 - **P5-7 nit — `_delete_local_object` shard-dir rmdir** best-effort can race shard recreation.
 - **S3CAS GC unimplemented** — `gc()` raises `GCError` for `S3CAS` (paginated list+delete
   deferred); implement if S3-backed CAS retention is needed.
-- **Live EKS dep'd-pure acceptance (P5 final gate, still pending).** Brand-new flow with a
-  dep'd pure → publish → EKS run via the native tier (`CA_PURE_NATIVE_DEPS` granted on the
-  pod), cold start within budget — the real-cluster acceptance, run deliberately like the P3
-  EKS run (not in the autonomous build workflow).
+- **Live EKS dep'd-pure acceptance (P5 final gate) — DONE 2026-06-21.** A wasm-tier `regex`
+  dep'd pure (`examples/regex_extract_flow.py`) ran end-to-end on the EKS Temporal+KEDA generic
+  worker (image `…worker:cad-p6` from `d32aa43`): the env component (bundling the cp314 regex
+  wheel) was published to S3, the generic pod resolved it, ran regex in the `--stub-wasi`
+  sandbox, returned the correct rollup (4 emails, rows 4, rowsWithEmail 3, totalMatches 6),
+  KEDA 0→1→0. (The native uv-venv tier remains Temporal-incompatible — FIXME(P5-3) — so the
+  wasm tier is the one that closes this gate.)
+- **FIXME — env-component compile blocks the health event loop.** The worker cold-compiles a
+  dep'd-pure bundle's wasm env component (cranelift) synchronously at startup/first-resolution,
+  which blocks the asyncio loop in `composable_agents/execution/serve.py` so `/healthz` times
+  out → liveness SIGTERMs the pod mid-compile (only surfaced on a small/constrained node;
+  no-dep bundles compile nothing extra). Worked around in `tooling/eks-cad-demo/worker.yaml`
+  with a startupProbe + CPU burst headroom. Real fix: run the wasm `Component` compile off the
+  loop (`asyncio.to_thread`) and/or cache/pre-warm the env-component `.cwasm` so cold start is
+  bounded.

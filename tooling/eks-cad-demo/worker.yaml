@@ -56,6 +56,17 @@ spec:
                 secretKeyRef: {name: aws-cas-creds, key: AWS_SECRET_ACCESS_KEY}
           ports:
             - {containerPort: 8080, name: health}
+          # A dep'd-pure bundle ships a wasm env component; the worker must
+          # cold-compile it (cranelift) at startup on first resolution, which is
+          # CPU-heavy and currently blocks the asyncio health loop (see TODOS:
+          # "env-component compile blocks the health event loop"). The
+          # startupProbe gives that cold compile a generous window before
+          # liveness/readiness engage, so the pod is not SIGTERM'd mid-compile.
+          # No-dep bundles compile nothing extra and pass startup immediately.
+          startupProbe:
+            httpGet: {path: /healthz, port: health}
+            periodSeconds: 5
+            failureThreshold: 40   # ~200s grace for a cold env-component compile
           livenessProbe:
             httpGet: {path: /healthz, port: health}
             periodSeconds: 5
@@ -63,8 +74,10 @@ spec:
             httpGet: {path: /readyz, port: health}
             periodSeconds: 2
           resources:
-            requests: {cpu: 250m, memory: 512Mi}
-            limits: {memory: 1Gi}
+            # Burst headroom so the cold env-component compile finishes quickly;
+            # request stays modest so it schedules on a small node.
+            requests: {cpu: 400m, memory: 768Mi}
+            limits: {cpu: "1700m", memory: 2500Mi}
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
