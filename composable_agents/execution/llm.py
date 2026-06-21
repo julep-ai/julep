@@ -5,7 +5,7 @@ module fills it with a caller that dispatches to any provider any-llm supports.
 Two factories expose the same core under the two seam shapes in the codebase:
 
 * :func:`make_llm_caller` — the activity seam (``activities.py``):
-  ``(Brain, value, principal, transcript) -> reply``, the canonical 4-arg
+  ``(Brain, value, principal, transcript, dispatch) -> reply``, the canonical
   ``LlmCaller``. Wire it via ``start_worker(llm=...)``.
 * :func:`make_local_brain` — the facade seam (``agent.py``):
   ``(brain_name, payload) -> reply``. Wire it via ``Agent(..., llm=...)``; it
@@ -39,6 +39,7 @@ from typing import Any, Optional
 from ..dotctx import Brain, get_brain
 from ..errors import ResilienceExhausted
 from ..prompt import rendered_brain_for, rendered_user_for
+from ..qos import BrainDispatch, QoSTier
 from ..resilience import (
     AttemptRecord,
     CircuitBreaker,
@@ -58,6 +59,7 @@ DEFAULT_PROVIDER = "anthropic"
 # them prompt-injected JSON instead of a native structured request.
 # (mozilla-ai/any-llm issues #541 gemini, #542 xai.)
 _PROMPT_FALLBACK_PROVIDERS = frozenset({"gemini", "xai"})
+_DEFAULT_BRAIN_DISPATCH = BrainDispatch()
 
 
 # --------------------------------------------------------------------------- #
@@ -69,6 +71,27 @@ def _split_model(model: str, default_provider: str) -> tuple[str, str]:
     if sep:
         return provider, rest
     return default_provider, model
+
+
+def _qos_request_fields(provider: str, qos: QoSTier) -> dict[str, Any]:
+    """Provider-specific QoS request kwargs for sync brain dispatch."""
+    qos = QoSTier(qos)
+    if qos is QoSTier.BATCH:
+        raise ValueError("BATCH must not reach complete_brain")
+
+    if provider == "openai":
+        return {
+            QoSTier.PRIORITY: {"service_tier": "priority"},
+            QoSTier.STANDARD: {},
+            QoSTier.FLEX: {"service_tier": "flex"},
+        }[qos]
+    if provider == "anthropic":
+        return {
+            QoSTier.PRIORITY: {"service_tier": "priority"},
+            QoSTier.STANDARD: {},
+            QoSTier.FLEX: {"service_tier": "standard_only"},
+        }[qos]
+    return {}
 
 
 def _strip_code_fence(text: str) -> str:
@@ -194,12 +217,16 @@ async def complete_brain(
     acompletion: AnyCompletion,
     default_provider: str = DEFAULT_PROVIDER,
     transcript: Optional[list[dict[str, Any]]] = None,
+    dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
 ) -> Any:
     """One model call for ``brain`` against ``value``, returning its parsed reply.
 
     ``transcript`` is the materialized neutral turn list for transcript-scoped
     app rounds (agent-transcripts design); it renders as provider messages
     between the system prompt and the user turn."""
+    if dispatch.qos == QoSTier.BATCH:
+        raise ValueError("BATCH must not reach complete_brain")
+
     # Render named system/user templates here so both seams (activity + facade)
     # see the same strings; already-rendered brains pass through unchanged.
     brain = rendered_brain_for(brain, value)
@@ -224,6 +251,7 @@ async def complete_brain(
             kwargs["temperature"] = brain.temperature
         if brain.max_tokens is not None:
             kwargs["max_tokens"] = brain.max_tokens
+        kwargs.update(_qos_request_fields(provider, dispatch.qos))
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
     if schema is not None and provider not in _PROMPT_FALLBACK_PROVIDERS:
@@ -261,9 +289,9 @@ def make_llm_caller(
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
 ) -> Callable[..., Awaitable[Any]]:
-    """Activity-seam ``LlmCaller``: ``(Brain, value, principal, transcript) -> reply``.
+    """Activity-seam ``LlmCaller``: ``(Brain, value, principal, transcript, dispatch)``.
 
-    The canonical 4-argument caller form: the principal is accepted (this
+    The canonical 5-argument caller form: the principal is accepted (this
     caller resolves no per-tenant credentials itself) and the transcript is
     rendered into provider messages. Pass ``acompletion`` to inject a client
     (tests); otherwise any-llm's is imported lazily on first call.
@@ -274,12 +302,14 @@ def make_llm_caller(
         value: Any,
         principal: Optional[dict[str, Any]] = None,
         transcript: Optional[list[dict[str, Any]]] = None,
+        dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
     ) -> Any:
         return await complete_brain(
             brain, value,
             acompletion=_resolve_acompletion(acompletion),
             default_provider=default_provider,
             transcript=transcript,
+            dispatch=dispatch,
         )
 
     return caller
@@ -363,6 +393,7 @@ def make_resilient_llm_caller(
         value: Any,
         principal: Optional[dict[str, Any]] = None,
         transcript: Optional[list[dict[str, Any]]] = None,
+        dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
     ) -> Any:
         resolved = _resolve_acompletion(acompletion)
         attempts: list[AttemptRecord] = []
@@ -389,6 +420,7 @@ def make_resilient_llm_caller(
                         candidate, value,
                         acompletion=resolved, default_provider=default_provider,
                         transcript=transcript,
+                        dispatch=dispatch,
                     )
                 except Exception as exc:
                     error_class = classifier(exc)

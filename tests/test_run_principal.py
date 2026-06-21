@@ -22,6 +22,7 @@ from composable_agents.execution.effects import (
     CallHandInput,
     CompilePlanInput,
     InvokeBrainInput,
+    ResolveQoSInput,
     VerifyPuresInput,
     WorkerContext,
     callHand,
@@ -326,10 +327,16 @@ def test_temporal_env_stamps_principal_into_effect_payloads(monkeypatch):
     asyncio.run(env.invoke_brain("b", 5, "cid-2", None))
     asyncio.run(env.compile_plan("planner", 5, "cid-3"))
 
-    hand, brain, plan = payloads
-    assert isinstance(hand, CallHandInput) and hand.principal == PRINCIPAL
-    assert isinstance(brain, InvokeBrainInput) and brain.principal == PRINCIPAL
-    assert isinstance(plan, CompilePlanInput) and plan.principal == PRINCIPAL
+    # invoke_brain records the resolved QoS tier via a resolveQoS activity
+    # (also principal-stamped) before the sync invokeBrain dispatch.
+    hand = next(p for p in payloads if isinstance(p, CallHandInput))
+    qos = next(p for p in payloads if isinstance(p, ResolveQoSInput))
+    brain = next(p for p in payloads if isinstance(p, InvokeBrainInput))
+    plan = next(p for p in payloads if isinstance(p, CompilePlanInput))
+    assert hand.principal == PRINCIPAL
+    assert qos.principal == PRINCIPAL
+    assert brain.principal == PRINCIPAL
+    assert plan.principal == PRINCIPAL
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

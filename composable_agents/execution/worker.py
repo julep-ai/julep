@@ -30,6 +30,9 @@ from temporalio.worker.workflow_sandbox import (
 )
 
 from ..capabilities import CapabilityManifest
+from ..resilience import OnAttempt
+from . import anthropic_batch as _anthropic_batch  # noqa: F401 (registers Anthropic BatchProvider)
+from . import openai_batch as _openai_batch  # noqa: F401 (registers OpenAI BatchProvider)
 from .activities import (
     LlmCaller,
     McpCaller,
@@ -42,11 +45,22 @@ from .activities import (
     loadState,
     putBlob,
     resolveAgentSpec,
+    resolveQoS,
     resolveRuntimeCapabilities,
     resolveSubflow,
     verifyPures,
 )
 from .blobstore import BlobStore
+from .brain_batch import (
+    BatchCollector,
+    BatchDispatchContext,
+    BatchPoll,
+    fetchBatchResults,
+    install_batch_dispatch_context,
+    pollBatch,
+    submitBatch,
+    submitBrainBatch,
+)
 from .bundle_runner import BundleResolvingWorkflowRunner
 from .codec import ClaimCheckCodec
 from .debounce import DebounceCollector
@@ -72,14 +86,19 @@ ACTIVITIES = [
     putBlob,
     verifyPures,
     resolveSubflow,
+    resolveQoS,
     resolveAgentSpec,
     resolveRuntimeCapabilities,
     startTrajectory,
     finishTrajectory,
     flushStructural,
     runSubCapture,
+    submitBrainBatch,
+    submitBatch,
+    pollBatch,
+    fetchBatchResults,
 ]
-WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector]
+WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector, BatchCollector, BatchPoll]
 
 
 def claim_check_converter(
@@ -109,6 +128,7 @@ def build_worker(
     context: WorkerContext,
     *,
     task_queue: str = DEFAULT_TASK_QUEUE,
+    min_batch_window_s: float = 0.0,
     **worker_kwargs: Any,
 ) -> Worker:
     """Install ``context`` and return a :class:`Worker` registered for everything.
@@ -135,6 +155,13 @@ def build_worker(
     ``workflow_runner`` to override.
     """
     configure(context)
+    install_batch_dispatch_context(
+        BatchDispatchContext(
+            client=client,
+            task_queue=task_queue,
+            min_batch_window_s=min_batch_window_s,
+        )
+    )
     if "workflow_runner" not in worker_kwargs:
         store_url = os.environ.get("STORE_URL", "").strip()
         store = cas_from_url(store_url) if store_url else None
@@ -171,6 +198,7 @@ async def run_worker(
     session_store: Optional[SessionStore] = None,
     trajectory_sink: Optional[Any] = None,
     trajectory_blob_store: Optional[BlobStore] = None,
+    on_attempt: Optional[OnAttempt] = None,
     http_timeout_s: float = 30.0,
     **worker_kwargs: Any,
 ) -> None:
@@ -197,6 +225,7 @@ async def run_worker(
         session_store=session_store,
         trajectory_sink=trajectory_sink,
         trajectory_blob_store=trajectory_blob_store,
+        on_attempt=on_attempt,
     )
     worker = build_worker(client, context, task_queue=task_queue, **worker_kwargs)
     await worker.run()

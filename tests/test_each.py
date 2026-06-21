@@ -165,7 +165,7 @@ def test_each_whole_session_body_runs_sequentially():
             self.gathered = True
             return await super().gather(coros)
 
-        async def invoke_brain(self, brain, value, cid, timeout_s):
+        async def invoke_brain(self, brain, value, cid, timeout_s, batchable=False):
             return ("brain", value)
 
     flow = each(think("reader", ctx=ContextScope.WHOLE_SESSION))

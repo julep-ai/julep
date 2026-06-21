@@ -56,6 +56,28 @@ from temporalio.exceptions import ApplicationError
 # (which would inflate the counter every time workflow code re-executes).
 _LOG = logging.getLogger(__name__)
 
+
+def _unwrap_reply(value: Any) -> Any:
+    if isinstance(value, dict) and "__ca_meta__" in value and "reply" in value:
+        return value["reply"]
+    return value
+
+
+def _batch_error_reason(result: Any) -> Optional[str]:
+    if not isinstance(result, dict) or not result.get("__batch_error__"):
+        return None
+    reason = result.get("reason")
+    return reason if isinstance(reason, str) else None
+
+
+def _batch_signal_error_reason(reason: Any) -> str:
+    if not isinstance(reason, str) or not reason:
+        return "batch_error"
+    if reason == "expired" or reason.startswith("batch entry "):
+        return "batch_error"
+    return reason
+
+
 # Import the pure pieces through the sandbox-safe import pass so Temporal's
 # workflow sandbox does not trip over disallowed modules at definition time.
 with workflow.unsafe.imports_passed_through():
@@ -67,7 +89,10 @@ with workflow.unsafe.imports_passed_through():
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
+    from ..qos import QoSTier
+    from ..registry import DEFAULT_REGISTRY as _DEFAULT_REGISTRY
     from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
+    from .llm import _split_model
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .timeouts import activity_timeout
@@ -87,6 +112,7 @@ with workflow.unsafe.imports_passed_through():
         InvokeBrainInput,
         LoadStateInput,
         PutBlobInput,
+        ResolveQoSInput,
         RunSubInput,
         VerifyPuresInput,
         callHand,
@@ -96,6 +122,7 @@ with workflow.unsafe.imports_passed_through():
         loadState,
         putBlob,
         resolveAgentSpec,
+        resolveQoS,
         resolveRuntimeCapabilities,
         resolveSubflow,
         verifyPures,
@@ -353,6 +380,8 @@ class _TemporalEnv:
         manifest_json: Optional[dict[str, Any]],
         policy: ExecutionPolicy,
         gate_waiter: Callable[[Any, str, Optional[int]], Awaitable[Any]],
+        batch_waiter: Optional[Callable[[str, Optional[int]], Awaitable[Any]]] = None,
+        workflow_id: Optional[str] = None,
         max_call_limits: Optional[dict[str, int]] = None,
         call_counts: Optional[dict[str, int]] = None,
         principal: Optional[dict[str, Any]] = None,
@@ -369,6 +398,8 @@ class _TemporalEnv:
         self._manifest_json = manifest_json
         self._policy = policy
         self._gate_waiter = gate_waiter
+        self._batch_waiter = batch_waiter
+        self._workflow_id = workflow_id
         self._max_call_limits = dict(max_call_limits or {})
         self._call_counts: dict[str, int] = dict(call_counts or {})
         self._cid = 0
@@ -451,6 +482,107 @@ class _TemporalEnv:
         value: Any,
         cid: str,
         timeout_s: Optional[int],
+        batchable: bool = False,
+    ) -> Any:
+        # Resolve + RECORD the QoS tier once, in an activity, so replay reads the
+        # same tier from history and takes the same (async-or-not) branch. A
+        # genuine activity failure propagates (retries/fails the workflow loudly);
+        # only an unrecognized tier value falls back to the STANDARD default.
+        resolved = await workflow.execute_activity(
+            resolveQoS,
+            ResolveQoSInput(
+                brain=brain,
+                node_batchable=batchable,
+                principal=self.principal,
+                cid=cid,
+                run_id=self._session,
+                root_run_id=self.root_run_id,
+                segment_seq=self.segment_seq,
+                timeout_s=timeout_s,
+            ),
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(
+                maximum_attempts=3,
+                non_retryable_error_types=_NON_RETRYABLE,
+            ),
+        )
+        try:
+            tier = QoSTier(resolved)
+        except (TypeError, ValueError):
+            tier = QoSTier.STANDARD
+        if tier is QoSTier.BATCH and self._batch_waiter is not None:
+            from .brain_batch import (
+                BrainCall as _BrainCall,
+                provider_safe_custom_id as _provider_safe_custom_id,
+                SubmitBrainBatchInput as _SubmitBrainBatchInput,
+            )
+
+            custom_id = _provider_safe_custom_id(
+                f"{self._session}:{self.segment_seq}:{cid}"
+            )
+            provider, _ = _split_model(
+                _DEFAULT_REGISTRY.get_brain(brain).model, "anthropic"
+            )
+            await workflow.execute_activity(
+                "submitBrainBatch",
+                _SubmitBrainBatchInput(
+                    provider=provider,
+                    qos=tier.value,
+                    principal_key="",
+                    call=_BrainCall(
+                        brain=brain,
+                        value=value,
+                        principal=self.principal,
+                        transcript=None,
+                        cid=cid,
+                        reply_to=self._workflow_id or self._session,
+                        custom_id=custom_id,
+                    ),
+                ),
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=3,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+            try:
+                result = await self._batch_waiter(custom_id, timeout_s)
+            except asyncio.TimeoutError:
+                reply = await self._invoke_brain_sync(
+                    brain, value, cid, timeout_s, QoSTier.STANDARD
+                )
+                return {
+                    "__ca_meta__": {
+                        "tier": QoSTier.STANDARD.value,
+                        "promoted": True,
+                        "reason": "batch_timeout",
+                    },
+                    "reply": _unwrap_reply(reply),
+                }
+            err_reason = _batch_error_reason(result)
+            if err_reason is not None:
+                reply = await self._invoke_brain_sync(
+                    brain, value, cid, timeout_s, QoSTier.STANDARD
+                )
+                return {
+                    "__ca_meta__": {
+                        "tier": QoSTier.STANDARD.value,
+                        "promoted": True,
+                        "reason": err_reason,
+                    },
+                    "reply": _unwrap_reply(reply),
+                }
+            return result
+
+        return await self._invoke_brain_sync(brain, value, cid, timeout_s, tier)
+
+    async def _invoke_brain_sync(
+        self,
+        brain: str,
+        value: Any,
+        cid: str,
+        timeout_s: Optional[int],
+        tier: QoSTier,
     ) -> Any:
         return await workflow.execute_activity(
             invokeBrain,
@@ -464,6 +596,7 @@ class _TemporalEnv:
                 segment_seq=self.segment_seq,
                 op="think",
                 kind="brain",
+                qos=tier.value,
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
             retry_policy=_brain_retry(self._policy),
@@ -670,6 +803,8 @@ def _make_emitter() -> tuple[InMemoryProjection, ProjectionEmitter]:
 class FlowWorkflow:
     def __init__(self) -> None:
         self._human_inbox: dict[str, Any] = {}
+        self._brain_inbox: dict[str, Any] = {}
+        self._resolved_brains: set[str] = set()
         self._open_gates: set[str] = set()
         self._store: Optional[InMemoryProjection] = None
 
@@ -678,6 +813,19 @@ class FlowWorkflow:
     def submit_human(self, payload: dict[str, Any]) -> None:
         """Deliver a human decision keyed by activation id (``cid``)."""
         self._human_inbox[payload["cid"]] = payload.get("value")
+
+    @workflow.signal(name="submitBrainResult")
+    def submit_brain_result(self, payload: dict[str, Any]) -> None:
+        custom_id = payload["custom_id"]
+        if custom_id in self._resolved_brains:
+            return
+        if payload.get("error"):
+            self._brain_inbox[custom_id] = {
+                "__batch_error__": True,
+                "reason": _batch_signal_error_reason(payload.get("reason")),
+            }
+            return
+        self._brain_inbox[custom_id] = payload.get("reply")
 
     async def _await_human(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         timeout = timedelta(seconds=timeout_s) if timeout_s else None
@@ -689,6 +837,18 @@ class FlowWorkflow:
         finally:
             self._open_gates.discard(cid)
         return self._human_inbox.pop(cid)
+
+    async def _await_brain_result(self, custom_id: str, timeout_s: Optional[int]) -> Any:
+        timeout = timedelta(seconds=timeout_s) if timeout_s else None
+        try:
+            await workflow.wait_condition(
+                lambda: custom_id in self._brain_inbox, timeout=timeout
+            )
+        except asyncio.TimeoutError:
+            self._resolved_brains.add(custom_id)
+            raise
+        self._resolved_brains.add(custom_id)
+        return self._brain_inbox.pop(custom_id)
 
     @workflow.query(name="openGates")
     def open_gates(self) -> list[str]:
@@ -872,6 +1032,8 @@ class FlowWorkflow:
             manifest_json=manifest_json,
             policy=policy,
             gate_waiter=self._await_human,
+            batch_waiter=self._await_brain_result,
+            workflow_id=inp.session_id,
             max_call_limits=max_call_limits,
             call_counts=call_counts,
             principal=inp.principal,

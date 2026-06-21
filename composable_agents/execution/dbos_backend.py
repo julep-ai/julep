@@ -482,8 +482,9 @@ class DbosEnv:
         return decode_policy_error(out)
 
     async def invoke_brain(
-        self, brain: str, value: Any, cid: str, timeout_s: Optional[int],
+        self, brain: str, value: Any, cid: str, timeout_s: Optional[int], batchable: bool = False,
     ) -> Any:
+        # DBOS clamps BATCH to STANDARD in v1: batchable is accepted but ignored (sync only).
         out = await invokeBrainStep({
             "brain": brain, "value": value, "cid": cid,
             "principal": self.principal,

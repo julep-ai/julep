@@ -22,9 +22,11 @@ from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain
 from ..errors import CapabilityDenied, PureDriftError
-from ..ir import ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
+from ..ir import Ann, ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
 from ..kinds import ContextScope, Effect, Idempotency
+from ..qos import BrainDispatch, QoSTier, default_resolve_qos
 from ..registry import DEFAULT_REGISTRY, Registry
+from ..resilience import AttemptRecord, OnAttempt
 from ..prompt import rendered_brain_for
 from ..staged import admit_plan
 from ..trajectory import (
@@ -59,12 +61,15 @@ RunPrincipal = dict[str, Any]
 # Caller signatures the worker supplies.
 # (server, tool, args, key, principal) -> result
 McpCaller = Callable[[str, str, Any, str, Optional[RunPrincipal]], Awaitable[Any]]
-# (brain, value, principal, transcript) -> result. ``transcript`` is the
+# (brain, value, principal, transcript, dispatch) -> result. ``transcript`` is the
 # hydrated, budget-bounded neutral turn list for transcript-scoped app rounds
 # (None everywhere else); the caller maps it to its provider's wire format.
-# The 4-arg form is canonical; :func:`configure` wraps legacy 2-arg and
-# principal-aware 3-arg callers once (those fail fast if a transcript arrives).
-LlmCaller = Callable[[Brain, Any, Optional[RunPrincipal], Optional[Transcript]], Awaitable[Any]]
+# The 5-arg form is canonical; :func:`configure` wraps legacy 2-, 3-, and
+# 4-arg callers once (2-/3-arg callers fail fast if a transcript arrives).
+LlmCaller = Callable[
+    [Brain, Any, Optional[RunPrincipal], Optional[Transcript], BrainDispatch],
+    Awaitable[Any],
+]
 
 
 @dataclass
@@ -83,6 +88,10 @@ class WorkerContext:
     hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
     mcp_call: Optional[McpCaller] = None
     llm: Optional[LlmCaller] = None
+    on_attempt: Optional[OnAttempt] = None
+    # QoS resolver seam for brain dispatch; deployments can override it with
+    # deploy/runtime policy beyond the default principal + annotation rule.
+    resolve_qos: Callable[..., QoSTier] = field(default=default_resolve_qos)
     blob_store: Optional[BlobStore] = None
     session_store: Optional[SessionStore] = None
     capabilities: Optional[CapabilityManifest] = None
@@ -117,6 +126,7 @@ class VerifyPuresInput:
 _CTX = WorkerContext()
 _TRAJECTORY_SINK: Optional[TrajectorySink] = None
 _TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
+_DEFAULT_BRAIN_DISPATCH = BrainDispatch()
 
 
 def set_trajectory_sink(
@@ -151,6 +161,35 @@ def _accepts_positional(fn: Callable[..., Any], arity: int) -> bool:
     return positional >= arity
 
 
+def _predictive_qos_kwargs(
+    fn: Callable[..., Any],
+    *,
+    timeout_s: Optional[float],
+    min_batch_window_s: Optional[float],
+) -> dict[str, Any]:
+    """Select the predictive-clamp kwargs a QoS resolver actually accepts.
+
+    A legacy resolver accepts neither; a resolver with ``**kwargs`` accepts both;
+    a resolver that declares only one of the two gets only that one. This keeps a
+    resolver like ``def r(..., *, timeout_s=None)`` from raising on the unknown
+    ``min_batch_window_s``.
+    """
+    try:
+        sig = inspect.signature(fn)
+    except (TypeError, ValueError):
+        return {}
+    if any(
+        param.kind is inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values()
+    ):
+        return {"timeout_s": timeout_s, "min_batch_window_s": min_batch_window_s}
+    out: dict[str, Any] = {}
+    if "timeout_s" in sig.parameters:
+        out["timeout_s"] = timeout_s
+    if "min_batch_window_s" in sig.parameters:
+        out["min_batch_window_s"] = min_batch_window_s
+    return out
+
+
 def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
     if _accepts_positional(fn, 5):
         return fn
@@ -167,13 +206,28 @@ def _reject_transcript(fn: Callable[..., Awaitable[Any]]) -> RuntimeError:
     return RuntimeError(
         f"this worker's LlmCaller {getattr(fn, '__name__', fn)!r} does not accept a "
         "transcript, but a transcript-scoped app round produced one; update the "
-        "caller to the canonical 4-argument form (brain, value, principal, transcript)"
+        "caller to the canonical 5-argument form "
+        "(brain, value, principal, transcript, dispatch)"
     )
 
 
 def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
-    if _accepts_positional(fn, 4):
+    """Adapt legacy callers to the 5-argument canonical LlmCaller form."""
+    if _accepts_positional(fn, 5):
         return fn
+
+    if _accepts_positional(fn, 4):
+        async def transcript_aware(
+            brain: Brain,
+            value: Any,
+            principal: Optional[RunPrincipal],
+            transcript: Optional[Transcript],
+            dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
+        ) -> Any:
+            del dispatch
+            return await fn(brain, value, principal, transcript)
+
+        return transcript_aware
 
     if _accepts_positional(fn, 3):
         # Principal-aware caller from the run-principal design. No silent drop:
@@ -183,7 +237,9 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
             value: Any,
             principal: Optional[RunPrincipal],
             transcript: Optional[Transcript],
+            dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
         ) -> Any:
+            del dispatch
             if transcript is not None:
                 raise _reject_transcript(fn)
             return await fn(brain, value, principal)
@@ -195,7 +251,9 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
         value: Any,
         principal: Optional[RunPrincipal],
         transcript: Optional[Transcript],
+        dispatch: BrainDispatch = _DEFAULT_BRAIN_DISPATCH,
     ) -> Any:
+        del dispatch
         if transcript is not None:
             raise _reject_transcript(fn)
         return await fn(brain, value)
@@ -207,9 +265,10 @@ def configure(ctx: WorkerContext) -> None:
     """Install the worker-wide context the activities read.
 
     Legacy callers (``mcp_call`` without the trailing ``principal``; ``llm``
-    taking ``(brain, value)`` or ``(brain, value, principal)``) are wrapped
-    here, once, so they keep working unchanged. The canonical ``llm`` form is
-    ``(brain, value, principal, transcript)``; wrapped narrower callers fail
+    taking ``(brain, value)``, ``(brain, value, principal)``, or
+    ``(brain, value, principal, transcript)``) are wrapped here, once, so they
+    keep working unchanged. The canonical ``llm`` form is
+    ``(brain, value, principal, transcript, dispatch)``; wrapped narrower callers fail
     fast if a transcript-scoped app round hands them a transcript.
     """
     global _CTX
@@ -223,6 +282,11 @@ def configure(ctx: WorkerContext) -> None:
 
 def _registry() -> Registry:
     return _CTX.registry or DEFAULT_REGISTRY
+
+
+def _notify_attempt(record: AttemptRecord) -> None:
+    if _CTX.on_attempt is not None:
+        _CTX.on_attempt(record)
 
 
 def _domain_of(url: str) -> str:
@@ -273,6 +337,22 @@ class InvokeBrainInput:
     op: Optional[str] = None
     kind: Optional[str] = None
     causes: tuple[str, ...] = ()
+    # Recorded QoS tier (M0: advisory; dispatch still sync). Carried so the
+    # brain step input reflects the resolved tier deterministically.
+    qos: Optional[str] = None
+
+
+@dataclass
+class ResolveQoSInput:
+    brain: str
+    node_batchable: bool = False
+    principal: Optional[RunPrincipal] = None
+    cid: Optional[str] = None
+    run_id: Optional[str] = None
+    root_run_id: Optional[str] = None
+    segment_seq: Optional[int] = None
+    node_id: Optional[str] = None
+    timeout_s: Optional[float] = None
 
 
 @dataclass
@@ -677,12 +757,42 @@ async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Op
         summarizer = rendered_brain_for(
             _registry().get_brain(inp.summarizer), summarizer_payload
         )
-        raw = await _CTX.llm(summarizer, summarizer_payload, inp.principal, None)
+        raw = await _CTX.llm(
+            summarizer, summarizer_payload, inp.principal, None, BrainDispatch()
+        )
         new_summary = _summary_text(raw, inp.summarizer)
         summary = new_summary
     if summary:
         return [summary_turn(summary), *kept], new_summary
     return kept, new_summary
+
+
+async def resolveQoS(inp: ResolveQoSInput) -> str:
+    """Resolve + record the QoS tier for a brain step.
+
+    Resolved once at first execution; durable backend replay reads the recorded
+    string verbatim from history instead of re-running dispatch policy.
+    """
+    try:
+        brain_obj = _registry().get_brain(inp.brain)
+    except KeyError:
+        brain_obj = inp.brain
+    ann = Ann(batchable=inp.node_batchable)
+    from .brain_batch import get_batch_dispatch_context
+
+    try:
+        min_window = get_batch_dispatch_context().min_batch_window_s
+    except Exception:
+        min_window = None
+
+    resolver = _CTX.resolve_qos
+    kwargs = _predictive_qos_kwargs(
+        resolver, timeout_s=inp.timeout_s, min_batch_window_s=min_window
+    )
+    tier = QoSTier(resolver(brain_obj, ann, inp.principal, **kwargs))
+    if not ann.batchable and tier is QoSTier.BATCH:
+        tier = QoSTier.FLEX
+    return tier.value
 
 
 async def invokeBrain(inp: InvokeBrainInput) -> Any:
@@ -693,7 +803,16 @@ async def invokeBrain(inp: InvokeBrainInput) -> Any:
     if inp.transcript is not None:
         transcript, new_summary = await _materialize_transcript(inp)
     brain = rendered_brain_for(_registry().get_brain(inp.brain), inp.value)
-    reply = await _CTX.llm(brain, inp.value, inp.principal, transcript)
+    tier = QoSTier.STANDARD
+    if inp.qos is not None:
+        try:
+            tier = QoSTier(inp.qos)
+        except (TypeError, ValueError):
+            tier = QoSTier.STANDARD
+    if tier is QoSTier.BATCH:
+        tier = QoSTier.STANDARD
+    dispatch = BrainDispatch(qos=tier)
+    reply = await _CTX.llm(brain, inp.value, inp.principal, transcript, dispatch)
     if new_summary is not None:
         # Envelope so the workflow can persist the running summary in
         # AgentState.summary; split_summary_reply unwraps it deterministically.
@@ -725,7 +844,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     planner = _registry().get_brain(inp.planner)
-    raw = await _CTX.llm(planner, inp.value, inp.principal, None)
+    raw = await _CTX.llm(planner, inp.value, inp.principal, None, BrainDispatch())
 
     plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
     plan = Node.from_json(plan_json)
