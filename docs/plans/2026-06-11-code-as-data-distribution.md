@@ -205,6 +205,30 @@ path against a Temporal time-skipping server, the DBOS env, the CMA env, and a r
 - Acceptance: brand-new flow with a dep'd pure → publish → EKS run, no docker anywhere in the
   loop, cold start within budget.
 
+#### P5 status — what landed (2026-06-20, on `main` `67cfd93`)
+
+GC leases (`composable_agents/gc.py`), the first-class runtime image (`tooling/runtime-image/`),
+AUTHORING PEP-723-deps + ops/trust runbook, and a CI native-tier exec test all landed; 1070
+passed / 24 skipped, mypy/ruff clean, golden byte-identical.
+
+**EKS acceptance — partial (no-dep regression PROVEN; dep'd-pure deferred).** The generic
+runtime image rebuilt from `main` (`…worker:cad-p5`) ran the no-dep `grade_scores` flow on the
+EKS Temporal+KEDA worker end to end: the latest P4/P5 code re-published a **byte-identical**
+bundle (CA_BUNDLES unchanged → publish path is golden-safe), the generic pod resolved it from S3,
+ran it, returned the exact expected result (`passRate 0.8`, tally A1/B2/C1/F1), KEDA scaled
+**0→1→0**, ~28s cold start incl. a fresh image pull. This re-confirms the whole code-as-data
+pipeline under all the P4/P5 changes.
+
+**The dep'd-pure-in-wasm acceptance is DEFERRED (upstream-toolchain-blocked), not done.** Neither
+dep tier can run a dep'd pure on the EKS Temporal worker today: the **native** (uv-venv) tier is
+rejected on the durable Temporal harness by design (subprocess breaks determinism — see
+`FIXME(P5-3)`), and the **wasm** tier needs an env component whose real wheel import is blocked by
+(a) the `--stub-wasi` stat trap and (b) a CPython-3.14 private-ABI skew between the cp314 wheels
+(dicej `v3.14.0rc3`) and componentize-py 0.24.0's embedded CPython (`_PyLong_AsByteArray` /
+`_PyLong_NumBits` unresolved at link). cp314 wheels are built (`/home/diwank/wasi-wheels-314`) and
+the integration WIP is on branch `cad-wasm-wheel-close` (`7707900`); closing it is a multi-iteration
+grind against **unmaintained** upstream wasi tooling. Tracked in TODOS.md (P4/P5 follow-ups).
+
 ### P6 — parked: tools out-of-process
 
 MCP tool executor + Spin pilot (true scale-to-zero tool fleet). Deliberately its own arc — authn
