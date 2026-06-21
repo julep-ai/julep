@@ -1,9 +1,10 @@
 # Generic code-as-data worker on EKS, zero docker in the per-flow loop.
 #
-# The image (__IMAGE__) is the framework runtime image built once — it holds NO
-# flow code. The grade-scores flow + its three custom pures arrive as a signed
-# CAS bundle read from S3 (STORE_URL) at startup; the worker verifies the bundle
-# against CA_BUNDLE_ALLOWED_SIGNERS, then runs the pures in the P3 wasm sandbox.
+# The image (__IMAGE__) is the framework runtime image built once from
+# tooling/runtime-image/Dockerfile -- it holds NO flow code. The grade-scores
+# flow + its three custom pures arrive as a signed CAS bundle read from S3
+# (STORE_URL) at startup; the worker verifies the bundle against
+# CA_BUNDLE_ALLOWED_SIGNERS, then runs the pures in the P3 wasm sandbox.
 #
 # up.sh substitutes __IMAGE__ / __STORE_URL__ / __CA_BUNDLES__ / __SIGNER__.
 # The pod reads S3 with creds from the `aws-cas-creds` secret (the EKS node role
@@ -40,6 +41,11 @@ spec:
               value: "__CA_BUNDLES__"
             - name: CA_BUNDLE_ALLOWED_SIGNERS
               value: "__SIGNER__"
+            # Native dependency tier grant (P4): comma-separated pure names allowed
+            # to use the uv-venv native tier for deps with no WASI wheel. Empty/unset
+            # = no native grant = bundle pures run wasm-only. Off by default.
+            # - name: CA_PURE_NATIVE_DEPS
+            #   value: "my.pkg.heavy_pure,other.pure"
             - name: AWS_DEFAULT_REGION
               value: us-east-1
             - name: AWS_ACCESS_KEY_ID

@@ -5,6 +5,9 @@ zero docker in the per-flow loop.** The worker image is generic and built once;
 a new flow ships as a signed CAS bundle the worker resolves at startup. No image
 rebuild, no redeploy, no flow code on the worker.
 
+The generic runtime image is defined once at `tooling/runtime-image/Dockerfile`;
+`up.sh` builds from that canonical Dockerfile.
+
 ## What it shows
 
 - `examples/grade_scores_flow.py` is a deterministic batch flow whose entire
@@ -63,6 +66,9 @@ core demo runs on the plain `replicas: 1` Deployment regardless.
   The fixed `DEMO_SEED` in `publish.py` is a throwaway demo key, not a secret.
 - The wasm executor needs the `wasm` extra (`wasmtime`) installed in the worker
   image; without it, resolving a bundle pure fails fast at lookup time.
+- The P4 native dependency tier is opt-in only: uncomment `CA_PURE_NATIVE_DEPS`
+  in `worker.yaml` to grant named pures access to the uv-managed native venv
+  tier for deps with no WASI wheel. Empty or unset remains wasm-only.
 
 See `docs/ops/wasm-tier-runbook.md` for the signing/trust tiers and CAS retention
 runbook.

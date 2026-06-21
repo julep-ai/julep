@@ -51,7 +51,7 @@ kubectl wait --for=condition=ready node --all --timeout=120s
 BUILD=/tmp/ca-cad-build
 rm -rf "$BUILD" && mkdir -p "$BUILD"
 git -C "$REPO_ROOT" archive HEAD --prefix=julep-v2/ | tar -x -C "$BUILD"
-cp "$HERE/Dockerfile" "$BUILD/"
+cp "$REPO_ROOT/tooling/runtime-image/Dockerfile" "$BUILD/"
 echo "building $IMAGE ..."
 docker build -t "$IMAGE" "$BUILD" >/tmp/ca-cad-build.log 2>&1 \
   || { echo "image build failed; see /tmp/ca-cad-build.log"; tail -20 /tmp/ca-cad-build.log; exit 1; }

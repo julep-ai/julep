@@ -82,5 +82,5 @@ in the source.
 - **Native tier real e2e (not yet exercised).** The `uv`-venv native tier
   (`native_venv_executor`) resolves/registers behind `CA_PURE_NATIVE_DEPS` but its in-venv
   subprocess execution is not run in CI (needs uv + network). A numpy pure through the
-  native tier on a worker is the natural P5 dep'd-pure acceptance, plus wiring
-  `CA_PURE_NATIVE_DEPS` into the k3d/EKS worker manifests.
+  native tier on a worker is the natural P5 dep'd-pure acceptance. Manifest wiring for
+  `CA_PURE_NATIVE_DEPS` in the k3d/EKS worker manifests is done.

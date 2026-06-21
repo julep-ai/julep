@@ -196,6 +196,8 @@ path against a Temporal time-skipping server, the DBOS env, the CMA env, and a r
 ### P5 — runtime image + infra + docs
 
 - Runtime image replaces the per-flow image; k3d + EKS manifests gain `STORE_URL`; KEDA untouched.
+  Status: the canonical runtime image lives at `tooling/runtime-image/`, and the k3d/EKS
+  manifests carry the `CA_PURE_NATIVE_DEPS` native-tier grant commented off by default.
 - GC implementation (leases against live artifact hashes) as the optimization of P2's standing
   rule.
 - `docs/SPEC.md`: bundle manifest format + `pureRuntimeRefs` (wire commitments); AUTHORING: PEP

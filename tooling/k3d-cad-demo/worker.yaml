@@ -35,6 +35,11 @@ spec:
               value: "__CA_BUNDLES__"
             - name: CA_BUNDLE_ALLOWED_SIGNERS
               value: "__SIGNER__"
+            # Native dependency tier grant (P4): comma-separated pure names allowed
+            # to use the uv-venv native tier for deps with no WASI wheel. Empty/unset
+            # = no native grant = bundle pures run wasm-only. Off by default.
+            # - name: CA_PURE_NATIVE_DEPS
+            #   value: "my.pkg.heavy_pure,other.pure"
             # P3: bundle-sourced pures run in the wasmtime sandbox (not natively
             # in-process), so resolution is ungated -- the old P2 dev-only
             # CA_BUNDLE_NATIVE_EXEC=1 flag is gone.

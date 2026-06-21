@@ -34,6 +34,11 @@ spec:
             #   value: "<bundleHash>:<signatureDigest>"
             # - name: CA_BUNDLE_ALLOWED_SIGNERS
             #   value: "<ed25519-public-key-hex>"
+            # Native dependency tier grant (P4): comma-separated pure names allowed
+            # to use the uv-venv native tier for deps with no WASI wheel. Empty/unset
+            # = no native grant = bundle pures run wasm-only. Off by default.
+            # - name: CA_PURE_NATIVE_DEPS
+            #   value: "my.pkg.heavy_pure,other.pure"
           ports:
             - containerPort: 8080
               name: health

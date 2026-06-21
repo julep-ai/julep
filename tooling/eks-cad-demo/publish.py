@@ -11,6 +11,9 @@ signature) into the S3 bucket and prints/saves the env the generic worker needs:
 ``CA_BUNDLES`` (``<bundleHash>:<signatureDigest>``) and the signer public key.
 The worker pod is given the same ``STORE_URL`` and reads the bundle from S3 at
 startup -- zero docker in the per-flow loop: the flow ships as data, not an image.
+
+Both the k3d and EKS demos use the single runtime image definition at
+``tooling/runtime-image/Dockerfile``.
 """
 
 from __future__ import annotations
