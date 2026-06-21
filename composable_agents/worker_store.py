@@ -391,18 +391,23 @@ def _register_env_components(store: CASStore, verified: Sequence[_VerifiedPure])
     executor = get_wasm_executor()
     base_component_hash: str | None = None
     for pure_record in verified:
-        if pure_record.env_hash is None:
-            continue
-        if pure_record.env_component is None:
-            raise BundleResolutionError(
-                f"pure {pure_record.name!r} carries envHash without envComponent"
-            )
         try:
             parsed_deps, requires_python = deps.parse_pep723(pure_record.source)
         except ValueError as e:
             raise BundleResolutionError(
                 f"pure {pure_record.name!r} has malformed dependency metadata"
             ) from e
+        if pure_record.env_hash is None:
+            if parsed_deps:
+                raise BundleResolutionError(
+                    f"wasm pure {pure_record.name!r} declares dependencies and must ship "
+                    "envHash/envComponent"
+                )
+            continue
+        if pure_record.env_component is None:
+            raise BundleResolutionError(
+                f"pure {pure_record.name!r} carries envHash without envComponent"
+            )
         if not parsed_deps:
             raise BundleResolutionError(
                 f"pure {pure_record.name!r} carries envHash but declares no dependencies"

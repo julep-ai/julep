@@ -93,7 +93,7 @@ def parse_pep723(source: str) -> tuple[tuple[str, ...], str | None]:
 
 def _python_major_minor(requires_python: str | None) -> str | None:
     if requires_python is None:
-        return f"{sys.version_info.major}.{sys.version_info.minor}"
+        return None
     match = _PYTHON_MAJOR_MINOR.match(requires_python)
     if match is None:
         return None

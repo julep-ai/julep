@@ -12,8 +12,8 @@ import tarfile
 import tempfile
 import urllib.error
 import urllib.request
-from pathlib import Path
 from collections.abc import Sequence
+from pathlib import Path
 
 from .. import deps as deps_mod
 
@@ -108,6 +108,7 @@ def build_env_component(
     out_dir: str | Path | None = None,
 ) -> Path:
     """Build a pre-initialized wasm env component for supported WASI wheels."""
+    _verify_exact_pins(deps)
     if not supported_deps(deps):
         unsupported = sorted(
             {
@@ -166,6 +167,42 @@ def build_env_component(
             ) from e
 
     return output
+
+
+def _verify_exact_pins(deps: Sequence[str]) -> None:
+    for requirement in deps:
+        _, specifier = _requirement_name_and_specifier(requirement)
+        if specifier and _is_exact_pin(specifier):
+            continue
+        raise EnvBuildError(
+            f"dependency requirement {requirement!r} is not exactly version-pinned; "
+            "wasm env components require exact-version pins like 'regex==2024.11.6'"
+        )
+
+
+def _is_exact_pin(specifier: str) -> bool:
+    try:
+        from packaging.specifiers import InvalidSpecifier, SpecifierSet
+    except ImportError:
+        compact = specifier.replace(" ", "")
+        if "," in compact:
+            return False
+        if compact.startswith("==="):
+            version = compact[3:]
+        elif compact.startswith("=="):
+            version = compact[2:]
+        else:
+            return False
+        return bool(version) and "*" not in version
+
+    try:
+        specifiers = list(SpecifierSet(specifier))
+    except InvalidSpecifier as e:
+        raise EnvBuildError(f"dependency requirement has invalid version specifier {specifier!r}") from e
+    if len(specifiers) != 1:
+        return False
+    only = specifiers[0]
+    return only.operator in {"==", "==="} and "*" not in only.version
 
 
 def publish_env_component(

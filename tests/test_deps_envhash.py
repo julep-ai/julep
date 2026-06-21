@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -10,6 +11,7 @@ import pytest
 from composable_agents import arr, deploy, pure, seq
 from composable_agents.bundle import publish_bundle
 from composable_agents.cas import LocalDirCAS
+from composable_agents import deps
 from composable_agents.deps import base_component_hash, env_hash, parse_pep723
 from composable_agents.execution import env_builder
 from composable_agents.ir import canonical_json
@@ -139,6 +141,22 @@ def test_env_hash_is_stable_and_hex() -> None:
 
     assert first == second
     assert re.fullmatch(r"[0-9a-f]{64}", first)
+
+
+def test_env_hash_omitted_requires_python_is_host_independent() -> None:
+    base = "a" * 64
+    dep_list = ["regex==2024.11.6"]
+    expected_payload = {
+        "deps": list(deps._normalized_deps(dep_list)),  # noqa: SLF001
+        "requiresPython": None,
+        "baseComponent": deps._base_component_digest(base),  # noqa: SLF001
+    }
+    expected = hashlib.sha256(canonical_json(expected_payload).encode("utf-8")).hexdigest()
+
+    assert deps._python_major_minor(None) is None  # noqa: SLF001
+    assert env_hash(dep_list, None, base) == expected
+    assert env_hash(dep_list, None, base) == env_hash(dep_list, None, base)
+    assert env_hash(dep_list, None, base) != env_hash(dep_list, ">=3.11", base)
 
 
 def test_no_dep_publish_keeps_existing_bytes_without_env_hash(tmp_path: Path) -> None:

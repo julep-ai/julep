@@ -329,9 +329,9 @@ MUST NOT be mutated in place — add `.v2`.
   deps at the worker, not from a pre-initialized wasm component).
 - `envHash` is the dependency environment identity: a 64-hex sha256 over
   canonical JSON of the pure's sorted/de-duplicated PEP 508 dependency
-  requirement strings, the pinned Python major.minor from `requires-python` (or
-  the deploy interpreter's major.minor when omitted), and the sha256 of the
-  vendored base wasm component
+  requirement strings, the pinned Python major.minor parsed from
+  `requires-python` (or `null` when omitted, so the hash is reproducible on any
+  worker regardless of its interpreter), and the sha256 of the vendored base wasm component
   (`composable_agents/execution/_wasm/executor.wasm`). It is emitted into a
   pure's runtime ref only when that pure declares PEP 723 inline-script-metadata
   dependencies; for a pure with no declared deps, `envHash` is ABSENT (key

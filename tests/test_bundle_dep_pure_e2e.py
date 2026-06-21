@@ -19,6 +19,7 @@ from composable_agents.deps import base_component_hash, env_hash, parse_pep723
 from composable_agents.errors import PureExecutionError
 from composable_agents.execution import env_builder
 from composable_agents.execution.wasm_executor import WasmExecutor, get_wasm_executor
+from composable_agents.ir import canonical_json
 from composable_agents.registry import DEFAULT_REGISTRY, Registry
 from composable_agents.worker_store import BundleResolutionError, resolve_and_register
 from conftest import read_snapshot
@@ -46,6 +47,19 @@ def _public_key(seed: str = SEED) -> str:
 
 def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
+
+
+def _put_resigned_manifest(store: LocalDirCAS, manifest: dict[str, Any]) -> tuple[str, str]:
+    manifest_bytes = canonical_json(manifest).encode("utf-8")
+    bundle_hash = store.put(manifest_bytes)
+    signature = {
+        "algo": "ed25519",
+        "bundleHash": bundle_hash,
+        "publicKey": _public_key(),
+        "sig": _key().sign(manifest_bytes).hex(),
+    }
+    signature_digest = store.put(canonical_json(signature).encode("utf-8"))
+    return bundle_hash, signature_digest
 
 
 def _patch_synth_env_builder(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -325,6 +339,36 @@ def test_env_hash_distinguishes_dep_versions_end_to_end(
     assert pure_a["envComponent"] != pure_b["envComponent"]
     assert rec_a["pureRuntimeRefs"][name]["envHash"] != rec_b["pureRuntimeRefs"][name]["envHash"]
     assert rec_a["publishedArtifactHash"] != rec_b["publishedArtifactHash"]
+
+
+def test_wasm_dep_pure_without_env_hash_fails_closed_at_resolution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    name = "dep.e2e.regex.missing_env_hash.v1"
+    store, _, manifest = _publish_source(
+        name,
+        _source(name, "regex==2024.11.6"),
+        tmp_path,
+        monkeypatch,
+    )
+    pure_record = _manifest_pure(manifest, name)
+    pure_record.pop("envHash")
+    pure_record.pop("envComponent")
+    bundle_hash, signature_digest = _put_resigned_manifest(store, manifest)
+
+    with pytest.raises(BundleResolutionError) as excinfo:
+        resolve_and_register(
+            store,
+            bundle_hash,
+            signature_digest=signature_digest,
+            allowed_signers=[_public_key()],
+            registry=Registry(),
+        )
+
+    message = str(excinfo.value)
+    assert name in message
+    assert "envHash" in message
 
 
 @pytest.mark.skip(reason=REAL_WHEEL_SKIP_REASON)
