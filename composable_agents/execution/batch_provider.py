@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from types import SimpleNamespace
 from typing import Any
 
 from .llm import _split_model
@@ -70,6 +71,35 @@ def select_batch_provider(
     if cls is None:
         raise NotImplementedError(f"no BatchProvider registered for provider {provider!r}")
     return cls()
+
+
+def _llm_completion_from_message(content: Any, *, parsed: Any = None) -> Any:
+    """Build the completion shape consumed by ``llm._parse_reply``."""
+
+    message = SimpleNamespace(content=content, parsed=parsed)
+    return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+def _llm_completion_from_openai_body(raw: Any) -> Any:
+    """Coerce an OpenAI batch response body into any-llm's completion shape."""
+
+    if hasattr(raw, "choices"):
+        return raw
+    if not isinstance(raw, dict):
+        return raw
+    choices = raw.get("choices")
+    if not isinstance(choices, list):
+        return raw
+    converted = []
+    for choice in choices:
+        message = choice.get("message") if isinstance(choice, dict) else None
+        if isinstance(message, dict):
+            message = SimpleNamespace(
+                content=message.get("content"),
+                parsed=message.get("parsed"),
+            )
+        converted.append(SimpleNamespace(message=message))
+    return SimpleNamespace(choices=converted)
 
 
 __all__ = ["BatchProvider", "select_batch_provider", "register_batch_provider"]

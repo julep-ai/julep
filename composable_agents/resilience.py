@@ -144,6 +144,8 @@ class AttemptRecord:
     provider: str
     outcome: str  # "ok", "skipped_open_circuit", or an ErrorClass value
     detail: str = ""
+    tier: Optional[str] = None
+    batch_id: Optional[str] = None
 
     @property
     def ok(self) -> bool:

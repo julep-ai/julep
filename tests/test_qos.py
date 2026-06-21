@@ -162,6 +162,48 @@ def test_resolve_qos_activity_predictively_clamps_installed_batch_window(
     assert resolved == QoSTier.FLEX.value
 
 
+def test_resolve_qos_activity_enforces_non_batchable_floor_after_custom_resolver(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    registry = Registry()
+    registry.register_brain(Brain(name="qos.floor", model="test", system="s"))
+    prev_ctx = effects._CTX
+    seen_batchable: list[bool] = []
+
+    def resolver(brain: object, ann: object, principal: object) -> QoSTier:
+        del brain, principal
+        seen_batchable.append(bool(getattr(ann, "batchable", False)))
+        return QoSTier.BATCH
+
+    monkeypatch.setattr(brain_batch, "_BATCH_CTX", None)
+    configure(WorkerContext(registry=registry, resolve_qos=resolver))
+    try:
+        non_batchable = asyncio.run(
+            resolveQoS(
+                ResolveQoSInput(
+                    brain="qos.floor",
+                    node_batchable=False,
+                    principal={"qos": "BATCH"},
+                )
+            )
+        )
+        batchable = asyncio.run(
+            resolveQoS(
+                ResolveQoSInput(
+                    brain="qos.floor",
+                    node_batchable=True,
+                    principal={"qos": "BATCH"},
+                )
+            )
+        )
+    finally:
+        effects._CTX = prev_ctx
+
+    assert non_batchable == QoSTier.FLEX.value
+    assert batchable == QoSTier.BATCH.value
+    assert seen_batchable == [False, True]
+
+
 def test_resolve_qos_activity_tolerates_resolver_with_partial_kwargs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

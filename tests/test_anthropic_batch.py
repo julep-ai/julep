@@ -11,7 +11,9 @@ import pytest
 from composable_agents.dotctx import Brain
 from composable_agents.execution.anthropic_batch import AnthropicBatchProvider
 from composable_agents.execution.batch_provider import select_batch_provider
+from composable_agents.execution.llm import _parse_reply
 from conftest import run
+from test_llm import FakeChoice, FakeCompletion, FakeMessage as SyncFakeMessage
 
 HAS_ANTHROPIC = importlib.util.find_spec("anthropic") is not None
 
@@ -25,6 +27,15 @@ class FakeBlock:
 @dataclass(frozen=True)
 class FakeMessage:
     content: list[FakeBlock]
+    parsed: Any = None
+
+
+@dataclass(frozen=True)
+class FakeParsed:
+    x: int
+
+    def model_dump(self) -> dict[str, int]:
+        return {"x": self.x}
 
 
 @dataclass(frozen=True)
@@ -161,6 +172,23 @@ def test_results_and_parse_successful_entries() -> None:
         return out
 
     assert run(collect()) == [("json-1", {"x": 1}), ("text-1", "hello")]
+
+
+def test_parse_structured_entry_matches_shared_llm_parser() -> None:
+    provider = AnthropicBatchProvider(client=FakeAsyncClient())
+    brain = Brain(
+        name="json",
+        model="anthropic:claude-x",
+        system="s",
+        reply_schema={"type": "object"},
+    )
+    parsed = FakeParsed(7)
+    raw = FakeMessage([FakeBlock("text", '{"x": 0}')], parsed=parsed)
+    sync_completion = FakeCompletion(
+        choices=[FakeChoice(SyncFakeMessage(content='{"x": 0}', parsed=parsed))]
+    )
+
+    assert provider.parse(raw, brain) == _parse_reply(sync_completion, expect_json=True)
 
 
 def test_parse_entry_error_raises() -> None:

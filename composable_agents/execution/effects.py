@@ -26,6 +26,7 @@ from ..ir import Ann, ContextPolicy, Node, canonical_json, toolref_from_json, to
 from ..kinds import ContextScope, Effect, Idempotency
 from ..qos import BrainDispatch, QoSTier, default_resolve_qos
 from ..registry import DEFAULT_REGISTRY, Registry
+from ..resilience import AttemptRecord, OnAttempt
 from ..prompt import rendered_brain_for
 from ..staged import admit_plan
 from ..trajectory import (
@@ -87,6 +88,7 @@ class WorkerContext:
     hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
     mcp_call: Optional[McpCaller] = None
     llm: Optional[LlmCaller] = None
+    on_attempt: Optional[OnAttempt] = None
     # QoS resolver seam for brain dispatch; deployments can override it with
     # deploy/runtime policy beyond the default principal + annotation rule.
     resolve_qos: Callable[..., QoSTier] = field(default=default_resolve_qos)
@@ -280,6 +282,11 @@ def configure(ctx: WorkerContext) -> None:
 
 def _registry() -> Registry:
     return _CTX.registry or DEFAULT_REGISTRY
+
+
+def _notify_attempt(record: AttemptRecord) -> None:
+    if _CTX.on_attempt is not None:
+        _CTX.on_attempt(record)
 
 
 def _domain_of(url: str) -> str:
@@ -782,8 +789,10 @@ async def resolveQoS(inp: ResolveQoSInput) -> str:
     kwargs = _predictive_qos_kwargs(
         resolver, timeout_s=inp.timeout_s, min_batch_window_s=min_window
     )
-    tier = resolver(brain_obj, ann, inp.principal, **kwargs)
-    return QoSTier(tier).value
+    tier = QoSTier(resolver(brain_obj, ann, inp.principal, **kwargs))
+    if not ann.batchable and tier is QoSTier.BATCH:
+        tier = QoSTier.FLEX
+    return tier.value
 
 
 async def invokeBrain(inp: InvokeBrainInput) -> Any:

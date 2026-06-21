@@ -30,6 +30,7 @@ from temporalio.worker.workflow_sandbox import (
 )
 
 from ..capabilities import CapabilityManifest
+from ..resilience import OnAttempt
 from . import anthropic_batch as _anthropic_batch  # noqa: F401 (registers Anthropic BatchProvider)
 from . import openai_batch as _openai_batch  # noqa: F401 (registers OpenAI BatchProvider)
 from .activities import (
@@ -197,6 +198,7 @@ async def run_worker(
     session_store: Optional[SessionStore] = None,
     trajectory_sink: Optional[Any] = None,
     trajectory_blob_store: Optional[BlobStore] = None,
+    on_attempt: Optional[OnAttempt] = None,
     http_timeout_s: float = 30.0,
     **worker_kwargs: Any,
 ) -> None:
@@ -223,6 +225,7 @@ async def run_worker(
         session_store=session_store,
         trajectory_sink=trajectory_sink,
         trajectory_blob_store=trajectory_blob_store,
+        on_attempt=on_attempt,
     )
     worker = build_worker(client, context, task_queue=task_queue, **worker_kwargs)
     await worker.run()

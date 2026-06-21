@@ -232,7 +232,8 @@ class BatchCollector:
         if not self._items:
             self._first_at = None
             self._last_at = None
-        child_id = f"{workflow.info().workflow_id}:p{inp.batch_seq}"
+        info = workflow.info()
+        child_id = f"{info.workflow_id}:p{inp.batch_seq}:{info.run_id}"
         await workflow.start_child_workflow(
             BatchPoll.run,
             BatchPollInput(
@@ -424,6 +425,26 @@ def _coerce_calls(calls: list[BrainCall]) -> list[BrainCall]:
     return [_coerce_call(c) for c in calls]
 
 
+def _record_batch_attempt(
+    *,
+    provider: str,
+    batch_id: str,
+    brain: Any,
+) -> None:
+    from . import effects
+    from ..resilience import AttemptRecord
+
+    effects._notify_attempt(
+        AttemptRecord(
+            model=str(getattr(brain, "model", "")),
+            provider=provider,
+            outcome="ok",
+            tier="BATCH",
+            batch_id=batch_id,
+        )
+    )
+
+
 @activity.defn(name="submitBatch")
 async def submitBatch(inp: SubmitBatchInput) -> str:
     """Render each call, build provider requests, and submit the provider batch."""
@@ -477,7 +498,6 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
     brains_by_custom_id = {
         call.custom_id: effects._registry().get_brain(call.brain) for call in calls
     }
-    # Deferred: OTel AttemptRecord attribution; v1 uses __ca_meta__/Result.attrs projection.
 
     out: list[dict[str, Any]] = []
     data = adapter.results(inp.batch_id)
@@ -490,6 +510,11 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
             except Exception as exc:
                 out.append({"custom_id": cid, "error": True, "reason": str(exc)})
             else:
+                _record_batch_attempt(
+                    provider=inp.provider,
+                    batch_id=inp.batch_id,
+                    brain=brain_obj,
+                )
                 out.append({"custom_id": cid, "reply": parsed})
         return out
 
@@ -503,6 +528,11 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
         except Exception as exc:
             out.append({"custom_id": cid, "error": True, "reason": str(exc)})
         else:
+            _record_batch_attempt(
+                provider=inp.provider,
+                batch_id=inp.batch_id,
+                brain=brain_obj,
+            )
             out.append({"custom_id": cid, "reply": parsed})
     return out
 

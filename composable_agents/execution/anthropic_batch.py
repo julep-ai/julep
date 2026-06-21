@@ -8,8 +8,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..prompt import rendered_user_for
-from .batch_provider import BatchProvider, register_batch_provider
-from .llm import _messages, _split_model, _strip_code_fence
+from .batch_provider import (
+    BatchProvider,
+    _llm_completion_from_message,
+    register_batch_provider,
+)
+from .llm import _messages, _split_model
 
 
 @dataclass(frozen=True)
@@ -128,12 +132,11 @@ class AnthropicBatchProvider(BatchProvider):
                 value = getattr(block, "text", "")
                 text = value if isinstance(value, str) else str(value)
                 break
-        if brain.reply_schema is None:
-            return text
-        try:
-            return json.loads(_strip_code_fence(text))
-        except (json.JSONDecodeError, ValueError):
-            return text
+        completion = _llm_completion_from_message(
+            text,
+            parsed=getattr(raw, "parsed", None),
+        )
+        return super().parse(completion, brain)
 
 
 register_batch_provider("anthropic", AnthropicBatchProvider)

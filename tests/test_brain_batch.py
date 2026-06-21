@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 import uuid
-from typing import Any, ClassVar
+from typing import Any, Callable, ClassVar
 
 import pytest
 
@@ -14,13 +14,13 @@ from composable_agents import HAVE_TEMPORAL
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
-    from temporalio import workflow
+    from temporalio import activity, workflow
     from temporalio.testing import WorkflowEnvironment
     from temporalio.worker import Worker
 
     from composable_agents import Ann, freeze, manifest_to_json, think
     from composable_agents.dotctx import Brain, register_brain
-    from composable_agents.execution.activities import WorkerContext
+    from composable_agents.execution.activities import WorkerContext, configure
     from composable_agents.execution.batch_provider import BatchProvider, register_batch_provider
     import composable_agents.execution.brain_batch as brain_batch
     from composable_agents.execution.brain_batch import (
@@ -28,6 +28,7 @@ if HAVE_TEMPORAL:
         BatchDispatchContext,
         BatchPoll,
         BrainCall,
+        FetchBatchResultsInput,
         fetchBatchResults,
         install_batch_dispatch_context,
         pollBatch,
@@ -42,6 +43,7 @@ if HAVE_TEMPORAL:
     from composable_agents.execution.worker import build_worker
     from composable_agents.freeze import McpSnapshot
     from composable_agents.qos import QoSTier
+    from composable_agents.resilience import AttemptRecord
     from test_llm import FakeChoice, FakeCompletion, FakeMessage
 
     _PROVIDER_CUSTOM_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
@@ -128,6 +130,48 @@ if HAVE_TEMPORAL:
         async def poll_status(self, batch_id: str) -> str:
             assert batch_id == "bx"
             return "failed"
+
+
+    class BlockingFakeBatch(FakeBatch):
+        values: ClassVar[dict[str, Any]] = {}
+        requests_by_batch: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+        submit_workflow_ids: ClassVar[list[str]] = []
+        poll_workflow_ids: ClassVar[list[str]] = []
+        release: ClassVar[bool] = False
+
+        @classmethod
+        def reset(cls) -> None:
+            cls.values.clear()
+            cls.requests_by_batch.clear()
+            cls.submit_workflow_ids.clear()
+            cls.poll_workflow_ids.clear()
+            cls.release = False
+
+        async def submit(self, requests: list[dict[str, Any]]) -> str:
+            workflow_id = activity.info().workflow_id or ""
+            type(self).submit_workflow_ids.append(workflow_id)
+            batch_id = f"bx-{len(type(self).submit_workflow_ids)}"
+            type(self).requests_by_batch[batch_id] = list(requests)
+            return batch_id
+
+        async def poll_status(self, batch_id: str) -> str:
+            workflow_id = activity.info().workflow_id or ""
+            if workflow_id not in type(self).poll_workflow_ids:
+                type(self).poll_workflow_ids.append(workflow_id)
+            assert batch_id in type(self).requests_by_batch
+            return "completed" if type(self).release else "pending"
+
+        async def results(self, batch_id: str) -> Any:
+            assert batch_id in type(self).requests_by_batch
+            for request in type(self).requests_by_batch[batch_id]:
+                custom_id = str(request["custom_id"])
+                value = type(self).values[custom_id]
+                yield (
+                    custom_id,
+                    FakeCompletion(
+                        choices=[FakeChoice(FakeMessage(content=str(value)))]
+                    ),
+                )
 
 
     class _FakeBatchEntryError:
@@ -319,14 +363,177 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
     assert FakeBatch.requests_by_batch["bx"] == [{"custom_id": custom_id}]
 
 
+async def _wait_until(
+    predicate: Callable[[], bool],
+    *,
+    timeout_s: float = 10.0,
+) -> None:
+    deadline = asyncio.get_running_loop().time() + timeout_s
+    while not predicate():
+        if asyncio.get_running_loop().time() >= deadline:
+            raise AssertionError("condition did not become true")
+        await asyncio.sleep(0.05)
+
+
+async def _same_key_fresh_collectors_start_distinct_poll_workflows(
+    env: WorkflowEnvironment,
+) -> None:
+    BlockingFakeBatch.reset()
+    register_batch_provider("blockingfake", BlockingFakeBatch)
+    brain_name = f"blocking_brain_{uuid.uuid4().hex}"
+    register_brain(Brain(name=brain_name, model="blockingfake:m", system=""))
+
+    tq = f"ca-brain-batch-collision-{uuid.uuid4()}"
+    principal = {"tenant": "same"}
+    collector_id = f"batch:blockingfake:BATCH:{_principal_key(principal)}"
+
+    async with Worker(
+        env.client,
+        task_queue=tq,
+        workflows=[BatchCollector, BatchPoll, ReceiverWorkflow],
+        activities=[submitBatch, pollBatch, fetchBatchResults],
+    ):
+        receiver_a_id = f"receiver-a-{uuid.uuid4()}"
+        receiver_b_id = f"receiver-b-{uuid.uuid4()}"
+        receiver_a = await env.client.start_workflow(
+            ReceiverWorkflow.run,
+            id=receiver_a_id,
+            task_queue=tq,
+        )
+        custom_id_a = _expected_provider_custom_id(receiver_a_id, 0, "think@1")
+        await submit_brain_batch(
+            env.client,
+            provider="blockingfake",
+            qos="BATCH",
+            principal=principal,
+            call=BrainCall(
+                brain=brain_name,
+                value="alpha",
+                cid="think@1",
+                reply_to=receiver_a_id,
+                custom_id=custom_id_a,
+            ),
+            quiet_s=600,
+            max_items=1,
+            max_wait_s=600,
+            task_queue=tq,
+        )
+        await _wait_until(lambda: len(BlockingFakeBatch.submit_workflow_ids) == 1)
+        await env.client.get_workflow_handle(collector_id).terminate(
+            reason="force fresh collector run"
+        )
+
+        receiver_b = await env.client.start_workflow(
+            ReceiverWorkflow.run,
+            id=receiver_b_id,
+            task_queue=tq,
+        )
+        custom_id_b = _expected_provider_custom_id(receiver_b_id, 0, "think@1")
+        await submit_brain_batch(
+            env.client,
+            provider="blockingfake",
+            qos="BATCH",
+            principal=principal,
+            call=BrainCall(
+                brain=brain_name,
+                value="beta",
+                cid="think@1",
+                reply_to=receiver_b_id,
+                custom_id=custom_id_b,
+            ),
+            quiet_s=600,
+            max_items=1,
+            max_wait_s=600,
+            task_queue=tq,
+        )
+        await _wait_until(lambda: len(BlockingFakeBatch.submit_workflow_ids) == 2)
+
+        assert len(set(BlockingFakeBatch.submit_workflow_ids)) == 2
+        assert all(
+            workflow_id.startswith(f"{collector_id}:p0:")
+            for workflow_id in BlockingFakeBatch.submit_workflow_ids
+        )
+
+        BlockingFakeBatch.release = True
+        out_a, out_b = await asyncio.gather(receiver_a.result(), receiver_b.result())
+
+    assert out_a == "alpha"
+    assert out_b == "beta"
+    assert BlockingFakeBatch.requests_by_batch == {
+        "bx-1": [{"custom_id": custom_id_a}],
+        "bx-2": [{"custom_id": custom_id_b}],
+    }
+
+
 async def _run_all() -> None:
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _collector_routes_batch_result(env)
 
 
+async def _run_same_key_fresh_collectors_start_distinct_poll_workflows() -> None:
+    async with await WorkflowEnvironment.start_time_skipping() as env:
+        await _same_key_fresh_collectors_start_distinct_poll_workflows(env)
+
+
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_batch_collector_poll_routes_result_end_to_end() -> None:
     asyncio.run(asyncio.wait_for(_run_all(), timeout=120))
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_same_key_fresh_collectors_start_distinct_poll_workflows() -> None:
+    asyncio.run(
+        asyncio.wait_for(
+            _run_same_key_fresh_collectors_start_distinct_poll_workflows(),
+            timeout=120,
+        )
+    )
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_fetch_batch_results_emits_batch_attempt_record() -> None:
+    FakeBatch.values.clear()
+    FakeBatch.requests_by_batch.clear()
+    register_batch_provider("fakeattempt", FakeBatch)
+    brain_name = f"batch_attempt_brain_{uuid.uuid4().hex}"
+    register_brain(
+        Brain(name=brain_name, model="fakeattempt:m", system="", reply_schema=None)
+    )
+    custom_id = "attempt-cid"
+    FakeBatch.values[custom_id] = "hello"
+    FakeBatch.requests_by_batch["bx"] = [{"custom_id": custom_id}]
+    attempts: list[AttemptRecord] = []
+
+    try:
+        configure(WorkerContext(on_attempt=attempts.append))
+        out = asyncio.run(
+            fetchBatchResults(
+                FetchBatchResultsInput(
+                    provider="fakeattempt",
+                    batch_id="bx",
+                    calls=[
+                        BrainCall(
+                            brain=brain_name,
+                            value="hello",
+                            custom_id=custom_id,
+                        )
+                    ],
+                )
+            )
+        )
+    finally:
+        configure(WorkerContext())
+
+    assert out == [{"custom_id": custom_id, "reply": "hello"}]
+    assert attempts == [
+        AttemptRecord(
+            model="fakeattempt:m",
+            provider="fakeattempt",
+            outcome="ok",
+            tier="BATCH",
+            batch_id="bx",
+        )
+    ]
 
 
 async def _flow_brain_rendezvous_through_build_worker(

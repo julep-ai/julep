@@ -9,8 +9,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..prompt import rendered_user_for
-from .batch_provider import BatchProvider, register_batch_provider
-from .llm import _messages, _response_format, _split_model, _strip_code_fence
+from .batch_provider import (
+    BatchProvider,
+    _llm_completion_from_openai_body,
+    register_batch_provider,
+)
+from .llm import _messages, _response_format, _split_model
 
 
 @dataclass(frozen=True)
@@ -130,13 +134,7 @@ class OpenAIBatchProvider(BatchProvider):
         if isinstance(raw, _BatchEntryError):
             raise RuntimeError(f"batch entry {raw.type}")
 
-        text = raw["choices"][0]["message"]["content"]
-        if brain.reply_schema is None:
-            return text
-        try:
-            return json.loads(_strip_code_fence(text))
-        except (json.JSONDecodeError, ValueError):
-            return text
+        return super().parse(_llm_completion_from_openai_body(raw), brain)
 
 
 def _split_composite_id(batch_id: str) -> list[str]:

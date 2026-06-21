@@ -10,7 +10,9 @@ import pytest
 import composable_agents.execution.openai_batch as openai_batch
 from composable_agents.dotctx import Brain
 from composable_agents.execution.batch_provider import select_batch_provider
+from composable_agents.execution.llm import _parse_reply
 from conftest import run
+from test_llm import FakeChoice, FakeCompletion, FakeMessage
 
 HAS_OPENAI = importlib.util.find_spec("openai") is not None
 
@@ -38,6 +40,14 @@ class FakeReadContent:
 
     def read(self) -> bytes:
         return self.payload
+
+
+@dataclass(frozen=True)
+class FakeParsed:
+    x: int
+
+    def model_dump(self) -> dict[str, int]:
+        return {"x": self.x}
 
 
 class FakeFiles:
@@ -300,3 +310,29 @@ def test_results_and_parse_success_and_error() -> None:
     assert provider.parse(raw_by_id["json-1"], json_brain) == {"x": 1}
     with pytest.raises(RuntimeError, match="batch entry"):
         provider.parse(raw_by_id["bad-1"], text_brain)
+
+
+def test_parse_structured_entry_matches_shared_llm_parser() -> None:
+    provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
+    brain = Brain(
+        name="json",
+        model="openai:gpt-x",
+        system="s",
+        reply_schema={"type": "object"},
+    )
+    parsed = FakeParsed(9)
+    raw = {
+        "choices": [
+            {
+                "message": {
+                    "content": '{"x": 0}',
+                    "parsed": parsed,
+                }
+            }
+        ]
+    }
+    sync_completion = FakeCompletion(
+        choices=[FakeChoice(FakeMessage(content='{"x": 0}', parsed=parsed))]
+    )
+
+    assert provider.parse(raw, brain) == _parse_reply(sync_completion, expect_json=True)
