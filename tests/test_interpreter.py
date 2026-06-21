@@ -142,7 +142,7 @@ class RecordingEnv(InMemoryEnv):
         self.events = []
         self.gather_calls = 0
 
-    async def invoke_brain(self, brain, value, cid, timeout_s):
+    async def invoke_brain(self, brain, value, cid, timeout_s, batchable=False):
         self.events.append("brain:start")
         self.events.append("brain:end")
         return ("brain", value)

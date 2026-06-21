@@ -33,6 +33,14 @@ def test_call_and_think_nodes_resolve_annotation_timeout_with_helper() -> None:
     assert activity_timeout(think_node.ann.timeout, 120) == timedelta(seconds=17)
 
 
+def test_ann_batchable_serializes_only_when_true_and_round_trips() -> None:
+    assert Ann(batchable=True).to_json() == {"batchable": True}
+    assert "batchable" not in Ann().to_json()
+    assert "batchable" not in Ann(batchable=False).to_json()
+    assert Ann.from_json(Ann(batchable=True).to_json()).batchable is True
+    assert Ann.from_json({}).batchable is False
+
+
 def _temporal_env(manifest, policy: harness.ExecutionPolicy) -> harness._TemporalEnv:
     async def gate_waiter(value: Any, cid: str, timeout_s: int | None) -> Any:
         return {"value": value, "cid": cid, "timeout_s": timeout_s}
@@ -102,6 +110,8 @@ def test_interpreter_forwards_think_timeout_to_temporal_activity(monkeypatch) ->
     captured: dict[str, Any] = {}
 
     async def fake_execute_activity(activity, arg, **kwargs):
+        if activity is harness.resolveQoS:
+            return "STANDARD"
         captured["activity"] = activity
         captured["arg"] = arg
         captured["timeout"] = kwargs["start_to_close_timeout"]
@@ -117,3 +127,57 @@ def test_interpreter_forwards_think_timeout_to_temporal_activity(monkeypatch) ->
     assert captured["activity"] is harness.invokeBrain
     assert captured["arg"].brain == "summarizer"
     assert captured["timeout"] == timedelta(seconds=13)
+
+
+def test_temporal_env_records_batch_qos_before_brain_dispatch(monkeypatch) -> None:
+    calls: list[tuple[Any, Any]] = []
+
+    async def fake_execute_activity(activity, arg, **kwargs):
+        calls.append((activity, arg))
+        if activity is harness.resolveQoS:
+            return "BATCH"
+        return {"summary": arg.value}
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    fr = freeze(think("summarizer", ann=Ann(batchable=True)), read_snapshot())
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(brain_timeout_s=120))
+
+    out = run(interpret(fr.flow, {"doc": "x"}, env))
+
+    resolve_calls = [(activity, arg) for activity, arg in calls if activity is harness.resolveQoS]
+    invoke_calls = [(activity, arg) for activity, arg in calls if activity is harness.invokeBrain]
+
+    assert out.value == {"summary": {"doc": "x"}}
+    assert [activity for activity, _ in calls] == [harness.resolveQoS, harness.invokeBrain]
+    assert len(resolve_calls) == 1
+    assert resolve_calls[0][1].node_batchable is True
+    assert resolve_calls[0][1].brain == "summarizer"
+    assert len(invoke_calls) == 1
+    assert invoke_calls[0][1].qos == "BATCH"
+
+
+def test_temporal_env_records_non_batchable_qos_before_brain_dispatch(monkeypatch) -> None:
+    calls: list[tuple[Any, Any]] = []
+
+    async def fake_execute_activity(activity, arg, **kwargs):
+        calls.append((activity, arg))
+        if activity is harness.resolveQoS:
+            return "STANDARD"
+        return {"summary": arg.value}
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    fr = freeze(think("summarizer", ann=Ann()), read_snapshot())
+    env = _temporal_env(fr.manifest, harness.ExecutionPolicy(brain_timeout_s=120))
+
+    out = run(interpret(fr.flow, {"doc": "x"}, env))
+
+    resolve_calls = [(activity, arg) for activity, arg in calls if activity is harness.resolveQoS]
+    invoke_calls = [(activity, arg) for activity, arg in calls if activity is harness.invokeBrain]
+
+    assert out.value == {"summary": {"doc": "x"}}
+    assert [activity for activity, _ in calls] == [harness.resolveQoS, harness.invokeBrain]
+    assert len(resolve_calls) == 1
+    assert resolve_calls[0][1].node_batchable is False
+    assert resolve_calls[0][1].brain == "summarizer"
+    assert len(invoke_calls) == 1
+    assert invoke_calls[0][1].qos == "STANDARD"

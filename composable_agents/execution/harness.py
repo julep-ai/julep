@@ -67,6 +67,7 @@ with workflow.unsafe.imports_passed_through():
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
+    from ..qos import QoSTier
     from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
@@ -87,6 +88,7 @@ with workflow.unsafe.imports_passed_through():
         InvokeBrainInput,
         LoadStateInput,
         PutBlobInput,
+        ResolveQoSInput,
         RunSubInput,
         VerifyPuresInput,
         callHand,
@@ -96,6 +98,7 @@ with workflow.unsafe.imports_passed_through():
         loadState,
         putBlob,
         resolveAgentSpec,
+        resolveQoS,
         resolveRuntimeCapabilities,
         resolveSubflow,
         verifyPures,
@@ -451,7 +454,36 @@ class _TemporalEnv:
         value: Any,
         cid: str,
         timeout_s: Optional[int],
+        batchable: bool = False,
     ) -> Any:
+        # Resolve + RECORD the QoS tier once, in an activity, so replay reads the
+        # same tier from history and takes the same (async-or-not) branch. A
+        # genuine activity failure propagates (retries/fails the workflow loudly);
+        # only an unrecognized tier value falls back to the STANDARD default.
+        resolved = await workflow.execute_activity(
+            resolveQoS,
+            ResolveQoSInput(
+                brain=brain,
+                node_batchable=batchable,
+                principal=self.principal,
+                cid=cid,
+                run_id=self._session,
+                root_run_id=self.root_run_id,
+                segment_seq=self.segment_seq,
+            ),
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(
+                maximum_attempts=3,
+                non_retryable_error_types=_NON_RETRYABLE,
+            ),
+        )
+        try:
+            tier = QoSTier(resolved)
+        except (TypeError, ValueError):
+            tier = QoSTier.STANDARD
+        # M0: BATCH no-ops to STANDARD for dispatch (no collector yet); the
+        # resolved tier is still recorded (above) and carried into the sync call.
+
         return await workflow.execute_activity(
             invokeBrain,
             InvokeBrainInput(
@@ -464,6 +496,7 @@ class _TemporalEnv:
                 segment_seq=self.segment_seq,
                 op="think",
                 kind="brain",
+                qos=tier.value,
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.brain_timeout_s),
             retry_policy=_brain_retry(self._policy),

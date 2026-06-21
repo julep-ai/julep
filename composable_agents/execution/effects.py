@@ -22,8 +22,9 @@ from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Brain
 from ..errors import CapabilityDenied, PureDriftError
-from ..ir import ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
+from ..ir import Ann, ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
 from ..kinds import ContextScope, Effect, Idempotency
+from ..qos import QoSTier, default_resolve_qos
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..prompt import rendered_brain_for
 from ..staged import admit_plan
@@ -83,6 +84,9 @@ class WorkerContext:
     hand_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
     mcp_call: Optional[McpCaller] = None
     llm: Optional[LlmCaller] = None
+    # QoS resolver seam for brain dispatch; deployments can override it with
+    # deploy/runtime policy beyond the default principal + annotation rule.
+    resolve_qos: Callable[..., QoSTier] = field(default=default_resolve_qos)
     blob_store: Optional[BlobStore] = None
     session_store: Optional[SessionStore] = None
     capabilities: Optional[CapabilityManifest] = None
@@ -273,6 +277,21 @@ class InvokeBrainInput:
     op: Optional[str] = None
     kind: Optional[str] = None
     causes: tuple[str, ...] = ()
+    # Recorded QoS tier (M0: advisory; dispatch still sync). Carried so the
+    # brain step input reflects the resolved tier deterministically.
+    qos: Optional[str] = None
+
+
+@dataclass
+class ResolveQoSInput:
+    brain: str
+    node_batchable: bool = False
+    principal: Optional[RunPrincipal] = None
+    cid: Optional[str] = None
+    run_id: Optional[str] = None
+    root_run_id: Optional[str] = None
+    segment_seq: Optional[int] = None
+    node_id: Optional[str] = None
 
 
 @dataclass
@@ -683,6 +702,21 @@ async def _materialize_transcript(inp: InvokeBrainInput) -> tuple[Transcript, Op
     if summary:
         return [summary_turn(summary), *kept], new_summary
     return kept, new_summary
+
+
+async def resolveQoS(inp: ResolveQoSInput) -> str:
+    """Resolve + record the QoS tier for a brain step.
+
+    Resolved once at first execution; durable backend replay reads the recorded
+    string verbatim from history instead of re-running dispatch policy.
+    """
+    try:
+        brain_obj = _registry().get_brain(inp.brain)
+    except KeyError:
+        brain_obj = inp.brain
+    ann = Ann(batchable=inp.node_batchable)
+    tier = _CTX.resolve_qos(brain_obj, ann, inp.principal)
+    return QoSTier(tier).value
 
 
 async def invokeBrain(inp: InvokeBrainInput) -> Any:

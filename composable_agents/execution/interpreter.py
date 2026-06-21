@@ -144,6 +144,7 @@ class Env(Protocol):
         value: Any,
         cid: str,
         timeout_s: Optional[int],
+        batchable: bool = False,
     ) -> Any: ...
     async def run_sub(
         self,
@@ -334,7 +335,8 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         raise AssertionError("unreachable retry loop exit")
     if isinstance(step, ThinkStep):
         timeout_s = node.ann.timeout if node.ann else None
-        out = await env.invoke_brain(step.brain, value, cid, timeout_s)
+        batchable = bool(node.ann.batchable) if node.ann else False
+        out = await env.invoke_brain(step.brain, value, cid, timeout_s, batchable)
         return Result(out, reported_cost=_reported_brain_cost(out))
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
@@ -737,6 +739,7 @@ class InMemoryEnv:
         value: Any,
         cid: str,
         timeout_s: Optional[int],
+        batchable: bool = False,
     ) -> Any:
         if brain not in self._brains:
             raise KeyError(f"no in-memory brain for {brain!r}")

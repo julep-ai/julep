@@ -21,6 +21,7 @@ from .effects import (
     LoadStateInput as LoadStateInput,
     McpCaller as McpCaller,
     PutBlobInput as PutBlobInput,
+    ResolveQoSInput as ResolveQoSInput,
     RunPrincipal as RunPrincipal,
     RunSubInput as RunSubInput,
     VerifyPuresInput as VerifyPuresInput,
@@ -75,6 +76,11 @@ async def verifyPures(inp: Any) -> None:
 @activity.defn(name="resolveSubflow")
 async def resolveSubflow(ref: str) -> dict[str, Any]:
     return await effects.resolveSubflow(ref)
+
+
+@activity.defn(name="resolveQoS")
+async def resolveQoS(inp: ResolveQoSInput) -> str:
+    return await effects.resolveQoS(inp)
 
 
 @activity.defn(name="resolveRuntimeCapabilities")

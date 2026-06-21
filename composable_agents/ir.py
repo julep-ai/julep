@@ -153,6 +153,7 @@ class Ann:
     max_attempts: Optional[int] = None
     retry_interval_s: Optional[float] = None
     backoff_rate: Optional[float] = None
+    batchable: bool = False
 
     def __init__(
         self,
@@ -165,6 +166,7 @@ class Ann:
         max_attempts: Optional[int] = None,
         retry_interval_s: Optional[float] = None,
         backoff_rate: Optional[float] = None,
+        batchable: bool = False,
     ) -> None:
         self.cost = cost
         self.risk = risk
@@ -174,6 +176,7 @@ class Ann:
         self.max_attempts = max_attempts
         self.retry_interval_s = retry_interval_s
         self.backoff_rate = backoff_rate
+        self.batchable = batchable
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -193,6 +196,8 @@ class Ann:
             out["retryIntervalS"] = self.retry_interval_s
         if self.backoff_rate is not None:
             out["backoffRate"] = self.backoff_rate
+        if self.batchable:
+            out["batchable"] = True
         return out
 
     @staticmethod
@@ -206,6 +211,7 @@ class Ann:
             max_attempts=d.get("maxAttempts"),
             retry_interval_s=d.get("retryIntervalS"),
             backoff_rate=d.get("backoffRate"),
+            batchable=bool(d.get("batchable", False)),
         )
 
 

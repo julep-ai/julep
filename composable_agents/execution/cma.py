@@ -300,8 +300,9 @@ class CMAAgentEnv:
         value: Any,
         cid: str,
         timeout_s: Optional[int],
+        batchable: bool = False,
     ) -> Any:
-        return await self._inner.invoke_brain(brain, value, cid, timeout_s)
+        return await self._inner.invoke_brain(brain, value, cid, timeout_s, batchable)
 
     async def run_sub(
         self,

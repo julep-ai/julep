@@ -224,7 +224,10 @@ def test_temporal_env_stamps_run_identity_into_effect_payloads(monkeypatch):
     asyncio.run(env.call_hand(call(mcp("kb", "search")), {"q": "x"}, "cid-1"))
     asyncio.run(env.invoke_brain("b", 5, "cid-2", None))
 
-    hand, brain = payloads
+    # invoke_brain now records the resolved QoS tier via a resolveQoS activity
+    # before the sync invokeBrain dispatch, so the brain leg yields two payloads.
+    hand = next(p for p in payloads if getattr(p, "kind", None) == "hand")
+    brain = next(p for p in payloads if getattr(p, "kind", None) == "brain")
     # run_id is this segment's session; root_run_id + segment_seq are the run identity.
     assert hand.run_id == "seg-sess"
     assert hand.root_run_id == ROOT and hand.segment_seq == 2

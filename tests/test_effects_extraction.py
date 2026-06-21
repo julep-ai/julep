@@ -56,6 +56,104 @@ def test_toolref_json_roundtrip():
     assert toolref_json_from_key("fetch") == {"kind": "native", "name": "fetch"}
 
 
+def test_worker_context_defaults_to_default_resolve_qos():
+    from composable_agents.execution.effects import WorkerContext
+    from composable_agents.qos import default_resolve_qos
+
+    assert WorkerContext().resolve_qos is default_resolve_qos
+
+
+def _configure_restoring(ctx):
+    """configure(ctx) but restore the previous global _CTX afterward.
+
+    The resolveQoS tests install a custom registry; without restoring the
+    process-global _CTX they would leak that registry into later tests that
+    rely on DEFAULT_REGISTRY (e.g. test_prompt_renderers).
+    """
+    from composable_agents.execution import effects as _effects
+    from composable_agents.execution.effects import configure
+
+    prev = _effects._CTX
+    configure(ctx)
+    return prev
+
+
+def _restore_ctx(prev):
+    from composable_agents.execution import effects as _effects
+
+    _effects._CTX = prev
+
+
+def test_resolve_qos_activity_clamps_non_batchable_batch_request():
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution.effects import (
+        ResolveQoSInput, WorkerContext, resolveQoS,
+    )
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_brain(Brain(name="b", model="test", system="s"))
+    prev = _configure_restoring(WorkerContext(registry=registry))
+    try:
+        inp = ResolveQoSInput(
+            brain="b",
+            node_batchable=False,
+            principal={"qos": "BATCH"},
+        )
+        assert asyncio.run(resolveQoS(inp)) == "FLEX"
+    finally:
+        _restore_ctx(prev)
+
+
+def test_resolve_qos_activity_allows_batch_for_batchable_node():
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution.effects import (
+        ResolveQoSInput, WorkerContext, resolveQoS,
+    )
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_brain(Brain(name="b", model="test", system="s"))
+    prev = _configure_restoring(WorkerContext(registry=registry))
+    try:
+        inp = ResolveQoSInput(
+            brain="b",
+            node_batchable=True,
+            principal={"qos": "BATCH"},
+        )
+        assert asyncio.run(resolveQoS(inp)) == "BATCH"
+    finally:
+        _restore_ctx(prev)
+
+
+def test_resolve_qos_activity_honors_worker_context_resolver_override():
+    from composable_agents.dotctx import Brain
+    from composable_agents.execution.effects import (
+        ResolveQoSInput, WorkerContext, resolveQoS,
+    )
+    from composable_agents.qos import QoSTier
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_brain(Brain(name="b", model="test", system="s"))
+
+    def resolve_priority(*args, **kwargs):
+        return QoSTier.PRIORITY
+
+    prev = _configure_restoring(
+        WorkerContext(registry=registry, resolve_qos=resolve_priority)
+    )
+    try:
+        inp = ResolveQoSInput(
+            brain="b",
+            node_batchable=True,
+            principal={"qos": "BATCH"},
+        )
+        assert asyncio.run(resolveQoS(inp)) == "PRIORITY"
+    finally:
+        _restore_ctx(prev)
+
+
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_activities_reexport_worker_context():
     # Backward compat: existing imports from .activities keep working.
