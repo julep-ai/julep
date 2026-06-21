@@ -159,6 +159,35 @@ def _accepts_positional(fn: Callable[..., Any], arity: int) -> bool:
     return positional >= arity
 
 
+def _predictive_qos_kwargs(
+    fn: Callable[..., Any],
+    *,
+    timeout_s: Optional[float],
+    min_batch_window_s: Optional[float],
+) -> dict[str, Any]:
+    """Select the predictive-clamp kwargs a QoS resolver actually accepts.
+
+    A legacy resolver accepts neither; a resolver with ``**kwargs`` accepts both;
+    a resolver that declares only one of the two gets only that one. This keeps a
+    resolver like ``def r(..., *, timeout_s=None)`` from raising on the unknown
+    ``min_batch_window_s``.
+    """
+    try:
+        sig = inspect.signature(fn)
+    except (TypeError, ValueError):
+        return {}
+    if any(
+        param.kind is inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values()
+    ):
+        return {"timeout_s": timeout_s, "min_batch_window_s": min_batch_window_s}
+    out: dict[str, Any] = {}
+    if "timeout_s" in sig.parameters:
+        out["timeout_s"] = timeout_s
+    if "min_batch_window_s" in sig.parameters:
+        out["min_batch_window_s"] = min_batch_window_s
+    return out
+
+
 def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
     if _accepts_positional(fn, 5):
         return fn
@@ -316,6 +345,7 @@ class ResolveQoSInput:
     root_run_id: Optional[str] = None
     segment_seq: Optional[int] = None
     node_id: Optional[str] = None
+    timeout_s: Optional[float] = None
 
 
 @dataclass
@@ -741,7 +771,18 @@ async def resolveQoS(inp: ResolveQoSInput) -> str:
     except KeyError:
         brain_obj = inp.brain
     ann = Ann(batchable=inp.node_batchable)
-    tier = _CTX.resolve_qos(brain_obj, ann, inp.principal)
+    from .brain_batch import get_batch_dispatch_context
+
+    try:
+        min_window = get_batch_dispatch_context().min_batch_window_s
+    except Exception:
+        min_window = None
+
+    resolver = _CTX.resolve_qos
+    kwargs = _predictive_qos_kwargs(
+        resolver, timeout_s=inp.timeout_s, min_batch_window_s=min_window
+    )
+    tier = resolver(brain_obj, ann, inp.principal, **kwargs)
     return QoSTier(tier).value
 
 

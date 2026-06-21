@@ -72,13 +72,17 @@ class BatchPollInput:
 
 @dataclass
 class BatchDispatchContext:
-    """Worker-installed dispatch context, not serialized into workflow history."""
+    """Worker-installed dispatch context, not serialized into workflow history.
+
+    ``min_batch_window_s`` of 0.0 disables predictive QoS clamping.
+    """
 
     client: Any
     task_queue: str = "composable-agents"
     quiet_s: float = 1.0
     max_items: Optional[int] = 256
     max_wait_s: Optional[float] = 3600.0
+    min_batch_window_s: float = 0.0
 
 
 @dataclass
@@ -246,6 +250,17 @@ class BatchCollector:
 class BatchPoll:
     """Submit, poll, fetch, and route one provider batch."""
 
+    async def _signal_brain_result(
+        self, reply_to: str, custom_id: str, payload: dict[str, Any]
+    ) -> bool:
+        handle = workflow.get_external_workflow_handle(reply_to)
+        try:
+            await handle.signal("submitBrainResult", payload)
+        except Exception:
+            workflow.logger.debug("failed to route batch result for %s", custom_id)
+            return False
+        return True
+
     @workflow.run
     async def run(self, inp: BatchPollInput) -> dict[str, Any]:
         calls = [_coerce_call(c) for c in inp.calls]
@@ -277,6 +292,18 @@ class BatchPoll:
             if status == "completed":
                 break
             if status == "failed":
+                for call in calls:
+                    if not call.reply_to:
+                        continue
+                    await self._signal_brain_result(
+                        call.reply_to,
+                        call.custom_id,
+                        {
+                            "custom_id": call.custom_id,
+                            "error": True,
+                            "reason": "batch_failed",
+                        },
+                    )
                 raise ApplicationError("batch failed")
             await asyncio.sleep(5.0)
 
@@ -300,19 +327,19 @@ class BatchPoll:
             reply_to = reply_to_by_custom_id.get(custom_id)
             if not reply_to:
                 continue
-            payload = {
-                "__ca_meta__": {"tier": "BATCH", "batch_id": batch_id},
-                "reply": entry["reply"],
-            }
-            handle = workflow.get_external_workflow_handle(reply_to)
-            try:
-                await handle.signal(
-                    "submitBrainResult",
-                    {"custom_id": custom_id, "reply": payload},
-                )
-            except Exception:
-                workflow.logger.debug("failed to route batch result for %s", custom_id)
+            if entry.get("error"):
+                signal_payload = {
+                    "custom_id": custom_id,
+                    "error": True,
+                    "reason": entry.get("reason"),
+                }
             else:
+                payload = {
+                    "__ca_meta__": {"tier": "BATCH", "batch_id": batch_id},
+                    "reply": entry["reply"],
+                }
+                signal_payload = {"custom_id": custom_id, "reply": payload}
+            if await self._signal_brain_result(reply_to, custom_id, signal_payload):
                 routed += 1
 
         return {"batchId": batch_id, "routed": routed}
@@ -443,17 +470,27 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
     data = adapter.results(inp.batch_id)
     if hasattr(data, "__aiter__"):
         async for custom_id, raw in data:
-            brain_obj = brains_by_custom_id[str(custom_id)]
-            out.append(
-                {"custom_id": str(custom_id), "reply": adapter.parse(raw, brain_obj)}
-            )
+            cid = str(custom_id)
+            brain_obj = brains_by_custom_id[cid]
+            try:
+                parsed = adapter.parse(raw, brain_obj)
+            except Exception as exc:
+                out.append({"custom_id": cid, "error": True, "reason": str(exc)})
+            else:
+                out.append({"custom_id": cid, "reply": parsed})
         return out
 
     if inspect.isawaitable(data):
         data = await data
     for custom_id, raw in data:
-        brain_obj = brains_by_custom_id[str(custom_id)]
-        out.append({"custom_id": str(custom_id), "reply": adapter.parse(raw, brain_obj)})
+        cid = str(custom_id)
+        brain_obj = brains_by_custom_id[cid]
+        try:
+            parsed = adapter.parse(raw, brain_obj)
+        except Exception as exc:
+            out.append({"custom_id": cid, "error": True, "reason": str(exc)})
+        else:
+            out.append({"custom_id": cid, "reply": parsed})
     return out
 
 

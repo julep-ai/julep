@@ -126,6 +126,7 @@ def build_worker(
     context: WorkerContext,
     *,
     task_queue: str = DEFAULT_TASK_QUEUE,
+    min_batch_window_s: float = 0.0,
     **worker_kwargs: Any,
 ) -> Worker:
     """Install ``context`` and return a :class:`Worker` registered for everything.
@@ -153,7 +154,11 @@ def build_worker(
     """
     configure(context)
     install_batch_dispatch_context(
-        BatchDispatchContext(client=client, task_queue=task_queue)
+        BatchDispatchContext(
+            client=client,
+            task_queue=task_queue,
+            min_batch_window_s=min_batch_window_s,
+        )
     )
     if "workflow_runner" not in worker_kwargs:
         store_url = os.environ.get("STORE_URL", "").strip()

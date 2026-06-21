@@ -56,6 +56,28 @@ from temporalio.exceptions import ApplicationError
 # (which would inflate the counter every time workflow code re-executes).
 _LOG = logging.getLogger(__name__)
 
+
+def _unwrap_reply(value: Any) -> Any:
+    if isinstance(value, dict) and "__ca_meta__" in value and "reply" in value:
+        return value["reply"]
+    return value
+
+
+def _batch_error_reason(result: Any) -> Optional[str]:
+    if not isinstance(result, dict) or not result.get("__batch_error__"):
+        return None
+    reason = result.get("reason")
+    return reason if isinstance(reason, str) else None
+
+
+def _batch_signal_error_reason(reason: Any) -> str:
+    if not isinstance(reason, str) or not reason:
+        return "batch_error"
+    if reason == "expired" or reason.startswith("batch entry "):
+        return "batch_error"
+    return reason
+
+
 # Import the pure pieces through the sandbox-safe import pass so Temporal's
 # workflow sandbox does not trip over disallowed modules at definition time.
 with workflow.unsafe.imports_passed_through():
@@ -476,6 +498,7 @@ class _TemporalEnv:
                 run_id=self._session,
                 root_run_id=self.root_run_id,
                 segment_seq=self.segment_seq,
+                timeout_s=timeout_s,
             ),
             start_to_close_timeout=timedelta(seconds=30),
             retry_policy=RetryPolicy(
@@ -519,8 +542,45 @@ class _TemporalEnv:
                     non_retryable_error_types=_NON_RETRYABLE,
                 ),
             )
-            return await self._batch_waiter(custom_id, timeout_s)
+            try:
+                result = await self._batch_waiter(custom_id, timeout_s)
+            except asyncio.TimeoutError:
+                reply = await self._invoke_brain_sync(
+                    brain, value, cid, timeout_s, QoSTier.STANDARD
+                )
+                return {
+                    "__ca_meta__": {
+                        "tier": QoSTier.STANDARD.value,
+                        "promoted": True,
+                        "reason": "batch_timeout",
+                    },
+                    "reply": _unwrap_reply(reply),
+                }
+            err_reason = _batch_error_reason(result)
+            if err_reason is not None:
+                reply = await self._invoke_brain_sync(
+                    brain, value, cid, timeout_s, QoSTier.STANDARD
+                )
+                return {
+                    "__ca_meta__": {
+                        "tier": QoSTier.STANDARD.value,
+                        "promoted": True,
+                        "reason": err_reason,
+                    },
+                    "reply": _unwrap_reply(reply),
+                }
+            return result
 
+        return await self._invoke_brain_sync(brain, value, cid, timeout_s, tier)
+
+    async def _invoke_brain_sync(
+        self,
+        brain: str,
+        value: Any,
+        cid: str,
+        timeout_s: Optional[int],
+        tier: QoSTier,
+    ) -> Any:
         return await workflow.execute_activity(
             invokeBrain,
             InvokeBrainInput(
@@ -755,6 +815,12 @@ class FlowWorkflow:
     def submit_brain_result(self, payload: dict[str, Any]) -> None:
         custom_id = payload["custom_id"]
         if custom_id in self._resolved_brains:
+            return
+        if payload.get("error"):
+            self._brain_inbox[custom_id] = {
+                "__batch_error__": True,
+                "reason": _batch_signal_error_reason(payload.get("reason")),
+            }
             return
         self._brain_inbox[custom_id] = payload.get("reply")
 

@@ -53,16 +53,28 @@ def default_resolve_qos(
     node_ann: Any,
     principal: Any,
     load: Any | None = None,
+    *,
+    timeout_s: float | None = None,
+    min_batch_window_s: float | None = None,
 ) -> QoSTier:
     """Resolve the day-one QoS tier from principal hints and node annotations.
 
     ``brain`` and ``load`` are part of the stable resolver seam, but the default
     policy intentionally ignores them until deploy/runtime policy is wired in.
+    ``timeout_s`` is ``None`` for unbounded waits and does not clamp BATCH.
     """
 
     del brain, load
 
     requested = _requested_qos_from_principal(principal)
-    if not getattr(node_ann, "batchable", False) and requested is QoSTier.BATCH:
+    if requested is not QoSTier.BATCH:
+        return requested
+    if not getattr(node_ann, "batchable", False):
+        return QoSTier.FLEX
+    if (
+        timeout_s is not None
+        and min_batch_window_s is not None
+        and timeout_s < min_batch_window_s
+    ):
         return QoSTier.FLEX
     return requested

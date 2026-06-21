@@ -100,6 +100,45 @@ if HAVE_TEMPORAL:
                 )
 
 
+    class PendingFakeBatch(FakeBatch):
+        values: ClassVar[dict[str, Any]] = {}
+        requests_by_batch: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+
+        async def poll_status(self, batch_id: str) -> str:
+            assert batch_id == "bx"
+            return "pending"
+
+
+    class FailedFakeBatch(FakeBatch):
+        values: ClassVar[dict[str, Any]] = {}
+        requests_by_batch: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+
+        async def poll_status(self, batch_id: str) -> str:
+            assert batch_id == "bx"
+            return "failed"
+
+
+    class _FakeBatchEntryError:
+        def __init__(self, reason: str) -> None:
+            self.reason = reason
+
+
+    class ErrorFakeBatch(FakeBatch):
+        values: ClassVar[dict[str, Any]] = {}
+        requests_by_batch: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+
+        async def results(self, batch_id: str) -> Any:
+            assert batch_id == "bx"
+            for request in type(self).requests_by_batch[batch_id]:
+                yield (str(request["custom_id"]), _FakeBatchEntryError("expired"))
+
+        def parse(self, raw: Any, brain: Any) -> Any:
+            del brain
+            if isinstance(raw, _FakeBatchEntryError):
+                raise RuntimeError(f"batch entry {raw.reason}")
+            raise RuntimeError("unexpected batch entry")
+
+
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_submit_brain_batch_signal_with_starts_keyed_collector() -> None:
     captured = {}
@@ -402,6 +441,224 @@ async def _two_runs_do_not_misroute(env: WorkflowEnvironment) -> None:
     assert FakeBatch.values[custom_id_b] == "beta"
 
 
+async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
+    PendingFakeBatch.values.clear()
+    PendingFakeBatch.requests_by_batch.clear()
+    register_batch_provider("pending", PendingFakeBatch)
+    brain_name = f"batch_brain_{uuid.uuid4().hex}"
+    register_brain(Brain(name=brain_name, model="pending:m", system="", reply_schema=None))
+
+    flow = think(brain_name, ann=Ann(batchable=True, timeout_s=5))
+    frozen = freeze(flow, McpSnapshot())
+    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    llm_calls = 0
+
+    def resolve_qos(
+        brain: Any,
+        ann: Any,
+        principal: Any,
+        load: Any = None,
+        *,
+        timeout_s: float | None = None,
+        min_batch_window_s: float | None = None,
+    ) -> QoSTier:
+        del brain, principal, load, timeout_s, min_batch_window_s
+        if getattr(ann, "batchable", False):
+            return QoSTier.BATCH
+        return QoSTier.STANDARD
+
+    async def llm_sync_promote(
+        brain: Any,
+        value: Any,
+        principal: Any = None,
+        transcript: Any = None,
+        dispatch: Any = None,
+    ) -> Any:
+        nonlocal llm_calls
+        del brain, principal, transcript
+        llm_calls += 1
+        assert dispatch.qos is QoSTier.STANDARD
+        return f"sync:{value}"
+
+    ctx = WorkerContext(
+        resolve_qos=resolve_qos,
+        llm=llm_sync_promote,
+        registry=None,
+    )
+    async with build_worker(env.client, ctx, task_queue=tq):
+        sid = f"brain-batch-timeout-{uuid.uuid4()}"
+        handle = await start_flow(
+            env.client,
+            frozen.flow.to_json(),
+            manifest_to_json(frozen.manifest),
+            session_id=sid,
+            input="slice3",
+            task_queue=tq,
+        )
+        out = await handle.result()
+        projection = await handle.query("projection")
+
+    assert out == "sync:slice3"
+    assert llm_calls == 1
+    think_did = next(
+        event
+        for event in projection["events"]
+        if event["type"] == "Did" and event["cid"] == "$@1"
+    )
+    assert think_did["attrs"]["tier"] == "STANDARD"
+    assert think_did["attrs"]["promoted"] is True
+    assert think_did["attrs"]["reason"] == "batch_timeout"
+    assert PendingFakeBatch.requests_by_batch["bx"] == [
+        {"custom_id": f"{sid}:0:$@1"}
+    ]
+
+
+async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
+    ErrorFakeBatch.values.clear()
+    ErrorFakeBatch.requests_by_batch.clear()
+    register_batch_provider("errorfake", ErrorFakeBatch)
+    brain_name = f"batch_brain_{uuid.uuid4().hex}"
+    register_brain(Brain(name=brain_name, model="errorfake:m", system="", reply_schema=None))
+
+    flow = think(brain_name, ann=Ann(batchable=True, timeout_s=5))
+    frozen = freeze(flow, McpSnapshot())
+    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    llm_calls = 0
+
+    def resolve_qos(
+        brain: Any,
+        ann: Any,
+        principal: Any,
+        load: Any = None,
+        *,
+        timeout_s: float | None = None,
+        min_batch_window_s: float | None = None,
+    ) -> QoSTier:
+        del brain, principal, load, timeout_s, min_batch_window_s
+        if getattr(ann, "batchable", False):
+            return QoSTier.BATCH
+        return QoSTier.STANDARD
+
+    async def llm_sync_promote(
+        brain: Any,
+        value: Any,
+        principal: Any = None,
+        transcript: Any = None,
+        dispatch: Any = None,
+    ) -> Any:
+        nonlocal llm_calls
+        del brain, principal, transcript
+        llm_calls += 1
+        assert dispatch.qos is QoSTier.STANDARD
+        return f"sync:{value}"
+
+    ctx = WorkerContext(
+        resolve_qos=resolve_qos,
+        llm=llm_sync_promote,
+        registry=None,
+    )
+    async with build_worker(env.client, ctx, task_queue=tq):
+        sid = f"brain-batch-error-{uuid.uuid4()}"
+        handle = await start_flow(
+            env.client,
+            frozen.flow.to_json(),
+            manifest_to_json(frozen.manifest),
+            session_id=sid,
+            input="slice3",
+            task_queue=tq,
+        )
+        out = await handle.result()
+        projection = await handle.query("projection")
+
+    assert out == "sync:slice3"
+    assert llm_calls == 1
+    think_did = next(
+        event
+        for event in projection["events"]
+        if event["type"] == "Did" and event["cid"] == "$@1"
+    )
+    assert think_did["attrs"]["tier"] == "STANDARD"
+    assert think_did["attrs"]["promoted"] is True
+    assert think_did["attrs"]["reason"] == "batch_error"
+    assert ErrorFakeBatch.requests_by_batch["bx"] == [
+        {"custom_id": f"{sid}:0:$@1"}
+    ]
+
+
+async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> None:
+    FailedFakeBatch.values.clear()
+    FailedFakeBatch.requests_by_batch.clear()
+    register_batch_provider("failedfake", FailedFakeBatch)
+    brain_name = f"batch_brain_{uuid.uuid4().hex}"
+    register_brain(
+        Brain(name=brain_name, model="failedfake:m", system="", reply_schema=None)
+    )
+
+    flow = think(brain_name, ann=Ann(batchable=True, timeout_s=5))
+    frozen = freeze(flow, McpSnapshot())
+    tq = f"ca-brain-rendezvous-{uuid.uuid4()}"
+    llm_calls = 0
+
+    def resolve_qos(
+        brain: Any,
+        ann: Any,
+        principal: Any,
+        load: Any = None,
+        *,
+        timeout_s: float | None = None,
+        min_batch_window_s: float | None = None,
+    ) -> QoSTier:
+        del brain, principal, load, timeout_s, min_batch_window_s
+        if getattr(ann, "batchable", False):
+            return QoSTier.BATCH
+        return QoSTier.STANDARD
+
+    async def llm_sync_promote(
+        brain: Any,
+        value: Any,
+        principal: Any = None,
+        transcript: Any = None,
+        dispatch: Any = None,
+    ) -> Any:
+        nonlocal llm_calls
+        del brain, principal, transcript
+        llm_calls += 1
+        assert dispatch.qos is QoSTier.STANDARD
+        return f"sync:{value}"
+
+    ctx = WorkerContext(
+        resolve_qos=resolve_qos,
+        llm=llm_sync_promote,
+        registry=None,
+    )
+    async with build_worker(env.client, ctx, task_queue=tq):
+        sid = f"brain-batch-failed-{uuid.uuid4()}"
+        handle = await start_flow(
+            env.client,
+            frozen.flow.to_json(),
+            manifest_to_json(frozen.manifest),
+            session_id=sid,
+            input="slice3",
+            task_queue=tq,
+        )
+        out = await handle.result()
+        projection = await handle.query("projection")
+
+    assert out == "sync:slice3"
+    assert llm_calls == 1
+    think_did = next(
+        event
+        for event in projection["events"]
+        if event["type"] == "Did" and event["cid"] == "$@1"
+    )
+    assert think_did["attrs"]["tier"] == "STANDARD"
+    assert think_did["attrs"]["promoted"] is True
+    assert think_did["attrs"]["reason"] == "batch_failed"
+    assert FailedFakeBatch.requests_by_batch["bx"] == [
+        {"custom_id": f"{sid}:0:$@1"}
+    ]
+
+
 async def _run_flow_rendezvous_all() -> None:
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _flow_brain_rendezvous_through_build_worker(env)
@@ -412,6 +669,21 @@ async def _run_two_runs_do_not_misroute() -> None:
         await _two_runs_do_not_misroute(env)
 
 
+async def _run_batch_timeout_promotes_to_sync() -> None:
+    async with await WorkflowEnvironment.start_time_skipping() as env:
+        await _batch_timeout_promotes_to_sync(env)
+
+
+async def _run_batch_entry_error_promotes_to_sync() -> None:
+    async with await WorkflowEnvironment.start_time_skipping() as env:
+        await _batch_entry_error_promotes_to_sync(env)
+
+
+async def _run_whole_batch_failure_promotes_to_sync() -> None:
+    async with await WorkflowEnvironment.start_time_skipping() as env:
+        await _whole_batch_failure_promotes_to_sync(env)
+
+
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_flow_brain_rendezvous_through_build_worker() -> None:
     asyncio.run(asyncio.wait_for(_run_flow_rendezvous_all(), timeout=120))
@@ -420,3 +692,22 @@ def test_flow_brain_rendezvous_through_build_worker() -> None:
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_two_runs_do_not_misroute() -> None:
     asyncio.run(asyncio.wait_for(_run_two_runs_do_not_misroute(), timeout=120))
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_batch_timeout_promotes_to_sync() -> None:
+    asyncio.run(asyncio.wait_for(_run_batch_timeout_promotes_to_sync(), timeout=120))
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_batch_entry_error_promotes_to_sync() -> None:
+    asyncio.run(
+        asyncio.wait_for(_run_batch_entry_error_promotes_to_sync(), timeout=120)
+    )
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_whole_batch_failure_promotes_to_sync() -> None:
+    asyncio.run(
+        asyncio.wait_for(_run_whole_batch_failure_promotes_to_sync(), timeout=120)
+    )
