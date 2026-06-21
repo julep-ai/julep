@@ -26,6 +26,14 @@ _WASM_ROOT = Path(__file__).parent / "_wasm"
 _WASI_WHEELS_DIR = _WASM_ROOT / "wasi_wheels"
 _WIT = _WASM_ROOT / "wit" / "executor.wit"
 _BASE_COMPONENT = _WASM_ROOT / "executor.wasm"
+_ENV_SUPPORT_ENTRIES = (
+    "executor_component.py",
+    "wit_world",
+    "poll_loop.py",
+    "componentize_py_async_support",
+    "componentize_py_runtime.pyi",
+    "componentize_py_types.py",
+)
 
 
 class EnvBuildError(Exception):
@@ -159,10 +167,11 @@ def build_env_component(
                     shutil.copy2(source, destination)
         _verify_pinned_versions(deps, site_packages)
 
-        env_entry_dir = temp_root / "env_entry"
-        env_entry_dir.mkdir()
-        env_entry_dir.joinpath("env_component.py").write_text(
-            _env_entry_source(_wasi_import_module(project) for project in projects),
+        runtime_dir = temp_root / "runtime"
+        runtime_dir.mkdir()
+        _copy_env_support(runtime_dir)
+        runtime_dir.joinpath("env_component.py").write_text(
+            _env_entry_source(tuple(_wasi_import_module(project) for project in projects)),
             encoding="utf-8",
         )
 
@@ -175,9 +184,7 @@ def build_env_component(
             "componentize",
             "--stub-wasi",
             "--python-path",
-            str(env_entry_dir),
-            "--python-path",
-            str(_WASM_ROOT),
+            str(runtime_dir),
             "--python-path",
             str(site_packages),
             "env_component",
@@ -185,7 +192,7 @@ def build_env_component(
             str(output),
         ]
         try:
-            subprocess.run(command, cwd=_WASM_ROOT, check=True)
+            subprocess.run(command, cwd=temp_root, check=True)
         except FileNotFoundError as e:
             raise EnvBuildError(
                 "componentize-py is not available; install the build toolchain "
@@ -198,6 +205,21 @@ def build_env_component(
             ) from e
 
     return output
+
+
+def _copy_env_support(runtime_dir: Path) -> None:
+    for name in _ENV_SUPPORT_ENTRIES:
+        source = _WASM_ROOT / name
+        destination = runtime_dir / name
+        if source.is_dir():
+            shutil.copytree(
+                source,
+                destination,
+                symlinks=True,
+                ignore=shutil.ignore_patterns("__pycache__"),
+            )
+        else:
+            shutil.copy2(source, destination)
 
 
 def _env_entry_source(import_modules: Sequence[str]) -> str:

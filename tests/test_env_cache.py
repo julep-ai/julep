@@ -24,10 +24,6 @@ from conftest import read_snapshot
 
 
 SEED = "44" * 32
-REAL_WHEEL_SKIP_REASON = (
-    "ABI: wasi-wheels ship cp312 .so, base component is cp314; and imports trap "
-    "under --stub-wasi (stat). wasi-wheels is unmaintained."
-)
 
 
 def _key(seed: str) -> Ed25519PrivateKey:
@@ -290,7 +286,6 @@ def test_off_list_dep_publish_fails_closed(tmp_path: Path, monkeypatch: pytest.M
             deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED)
 
 
-@pytest.mark.skip(reason=REAL_WHEEL_SKIP_REASON)
 def test_real_regex_wheel_env_component_imports_and_runs(tmp_path: Path) -> None:
     dep_list = ("regex==2024.11.6",)
     component_path = env_builder.build_env_component(dep_list, ">=3.11", out_dir=tmp_path)

@@ -28,10 +28,6 @@ from conftest import read_snapshot
 SEED = "66" * 32
 EXTRACT_NAME = "cad.demo.extract_emails.v1"
 MERGE_NAME = "cad.demo.merge_extractions.v1"
-REAL_WHEEL_SKIP_REASON = (
-    "ABI: wasi-wheels ship cp312 .so, base component is cp314; and imports trap "
-    "under --stub-wasi (stat). wasi-wheels is unmaintained."
-)
 
 
 def _key(seed: str = SEED) -> Ed25519PrivateKey:
@@ -215,10 +211,10 @@ def test_example_publish_resolve_carries_env_hash_end_to_end(
         executor._select_component(EXTRACT_NAME, "f" * 64)  # noqa: SLF001
     assert excinfo.value.error_type == "WasmEnvUnavailable"
 
-    # Blocked leg: actually importing regex from the dep env needs the real
-    # wasi-wheel component, which is blocked by the ABI/stat-trap issue below.
-    assert REAL_WHEEL_SKIP_REASON
-
+    # Actually importing regex from a real dep env (built by componentize from the
+    # vendored wasi wheel) is covered by
+    # test_real_regex_wheel_env_component_imports_and_runs below. Here the synth
+    # component only carries the env identity, so this leg exercises a no-dep pure.
     base_source = _source("dep.e2e.base.identity.v1", None)
     assert executor.run("dep.e2e.base.identity.v1", base_source, {"ok": True}, {}) == {
         "ok": True
@@ -371,7 +367,6 @@ def test_wasm_dep_pure_without_env_hash_fails_closed_at_resolution(
     assert "envHash" in message
 
 
-@pytest.mark.skip(reason=REAL_WHEEL_SKIP_REASON)
 def test_real_regex_wheel_env_component_imports_and_runs(tmp_path: Path) -> None:
     dep_list = ("regex==2024.11.6",)
     component_path = env_builder.build_env_component(dep_list, ">=3.11", out_dir=tmp_path)
