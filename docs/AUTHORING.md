@@ -57,6 +57,87 @@ Names are single-assignment graph fields derived from whole-function AST source
 when available. Use `name=` as the explicit escape hatch; REPL and `exec`
 contexts fall back to deterministic generated names.
 
+## Third-Party Dependencies on Pures (PEP 723)
+
+A pure declares third-party dependencies with a PEP 723 inline-script-metadata
+block in the captured pure source:
+
+```python
+# /// script
+# dependencies = ["regex==2024.11.6"]
+# requires-python = ">=3.11"
+# ///
+```
+
+`dependencies` is parsed as sorted, de-duplicated PEP 508 requirement strings.
+`requires-python`, when present, is reduced to the pinned Python major.minor
+used for dependency environment identity. The dependency list, pinned
+major.minor, and vendored base wasm component hash feed the pure's `envHash`;
+see [SPEC §6.5](SPEC.md#65-pureruntimerefs--published-runtime-identity).
+
+A pure with no declared dependencies has no `envHash`. Its bundle manifest and
+published artifact remain byte-identical to a pre-deps-as-data deployment.
+
+### Dependency tiers
+
+The supported WASI-wheel set is exactly `pydantic-core` and `regex`
+(`composable_agents/execution/env_builder.py::SUPPORTED_WASI_WHEELS`). If every
+declared dependency is in that set, the pure resolves to the wasm tier: publish
+builds a pre-initialized wasm environment component, content-addresses it as
+`envComponent`, records the corresponding `envHash`, and the worker resolves
+that component before running the pure in the wasmtime sandbox.
+
+An off-list dependency such as `numpy` has no curated WASI wheel. Such a pure
+can run only on the native tier: a `uv`-managed subprocess in a worker venv.
+Native tier is opt-in per pure. The pure name must be present in the
+`CA_PURE_NATIVE_DEPS` allowlist at both publish/deploy and worker resolution.
+Without that grant, publish fails closed and names the pure plus the offending
+dependency; a worker refuses to register an off-list native-tier pure it has not
+granted. Native-tier refs carry no `envHash` or `envComponent`; the venv is
+built from the declared dependencies at the worker. For operator trust
+boundaries, see [the wasm tier runbook](ops/wasm-tier-runbook.md).
+
+### Warning: metadata placement is load-bearing
+
+`register_pure` and bundle publishing capture pure source with
+`inspect.getsource(fn)`. `getsource` returns text from the decorator line
+through the function body. It does not include a module-top block.
+
+Today, a module-top `# /// script` block is silently dropped from the captured
+source. The bundle publishes as a no-dependency pure, with no `envHash`, and the
+missing dependency fails late when the worker imports inside the wasm sandbox.
+This is a fail-open footgun: deploy can pass because the import works in the
+native host environment, then the wasm-tier run fails at import.
+
+Place the metadata between the `@pure(...)` decorator and `def`, so it is inside
+the captured source span:
+
+```python
+@pure("cad.demo.extract_emails.v1")
+# /// script
+# dependencies = ["regex==2024.11.6"]
+# requires-python = ">=3.11"
+# ///
+def extract_emails(record: dict[str, Any]) -> dict[str, Any]:
+    import regex
+
+    text = str(record["text"])
+    emails = regex.findall(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text)
+    return {"emails": sorted({email.lower() for email in emails})}
+```
+
+Do not place the block at module top. `FIXME(P4-2)` tracks the deferred fix:
+rejecting undeclared third-party imports and/or supporting module-top metadata.
+
+### Current WASI-wheel limit
+
+The env-component build path is wired, and `envHash`/`envComponent` are real
+wire identity. The end-to-end leg where a real WASI wheel imports and runs
+inside the `--stub-wasi` wasm build is not closed yet: CPython import still
+traps on `stat()`. Reproducible vendored cp314 wheels are deferred. See
+`TODOS.md` entries "S2 wasm-wheel e2e -- the skipped leg" and `FIXME(P4-1)` for
+the current state.
+
 ## Define-Time Errors
 
 Define-time diagnostics are part of the public API. They include source spans

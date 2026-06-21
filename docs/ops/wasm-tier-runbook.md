@@ -2,9 +2,11 @@
 
 Bundle-sourced pures (registered via `register_pure_from_source` after arriving
 from a signed CAS bundle) execute inside a **wasmtime CPython sandbox** — a fresh
-instance per call, with no clock, filesystem, or network. Baked pures
-(`register_pure`) and `std.*` keep running natively in-process, unchanged. This
-runbook covers the operational and trust surface of that wasm tier.
+instance per call, with no clock, filesystem, network, or entropy. A bundle pure
+with off-list dependencies may instead execute in the explicit native tier,
+behind a per-pure operator grant. Baked pures (`register_pure`) and `std.*` keep
+running natively in-process, unchanged. This runbook covers the operational and
+trust surface of those bundle execution tiers.
 
 ## What runs where
 
@@ -12,14 +14,39 @@ runbook covers the operational and trust surface of that wasm tier.
 | --- | --- | --- | --- |
 | Baked into the worker image | `register_pure` / `@pure(...)` | native (in-process) | none (trusted code) |
 | `std.*` library | baked | native | none |
-| Signed CAS bundle | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
+| Signed CAS bundle, no deps or supported WASI-wheel deps | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
+| Signed CAS bundle, off-list deps with `CA_PURE_NATIVE_DEPS` grant | `register_pure_from_source` | **native** (`uv` venv subprocess) | none (operator-trusted bundle source) |
 
 The selection is a single seam: `Registry.get_pure(name)` returns a wasm-bound
-callable for `executor == "wasm"` entries. All three backends (Temporal harness,
-DBOS, CMA) route pure lookups through the registry, so the wasm tier applies
-uniformly. The wasm call runs **synchronously** inside the interpreter (it is
-deterministic pure compute), not as a Temporal activity, so it does not perturb
-the projection/trajectory event stream relative to a native pure.
+callable for `executor == "wasm"` entries and a native-venv callable for
+capability-granted `executor == "native"` bundle entries. All three backends
+(Temporal harness, DBOS, CMA) route pure lookups through the registry, so the
+tier decision applies uniformly. The wasm call runs **synchronously** inside the
+interpreter (it is deterministic pure compute), not as a Temporal activity, so
+it does not perturb the projection/trajectory event stream relative to a native
+pure.
+
+## Execution tiers and trust boundaries
+
+The **wasm tier** is the default for bundle pures. Bundle-shipped source runs in
+the wasmtime sandbox, fresh per call, with no clock, filesystem, network, or
+entropy. Treat this as the untrusted-code-safe tier for deterministic pure
+compute.
+
+The **native tier** exists only for bundle pures whose declared dependencies are
+off the curated WASI-wheel set. The worker executes the bundle-shipped source as
+a real OS subprocess in a `uv`-managed venv
+(`composable_agents/execution/native_venv_executor.py`) with the declared deps
+installed. This is outside the wasm sandbox. `CA_PURE_NATIVE_DEPS` is therefore
+the operator trust boundary: adding a pure name to that allowlist means trusting
+that bundle's source to run as native code on the worker.
+
+`CA_PURE_NATIVE_DEPS` is empty by default, per-pure, and required at both
+publish/deploy and worker resolution. Without it, publish fails closed for
+off-list deps and workers refuse to register native-tier manifest pures they
+have not granted. A native-tier runtime ref carries no `envHash`; the worker
+builds the venv from the declared deps. See [SPEC §6.5](../SPEC.md#65-pureruntimerefs--published-runtime-identity)
+and [§6.6](../SPEC.md#66-bundle-manifest--detached-signature).
 
 ## Worker requirements
 
@@ -104,9 +131,16 @@ failing closed with a structured diagnostic rather than a bare `WasmtimeError`.
 
 ## Trust model & signing
 
-Bundle resolution is **fail-closed** and ungated in P3 (the former P2 dev-only
-`CA_BUNDLE_NATIVE_EXEC` native-exec flag is gone, because bundle pures no longer
-run natively — they run in the wasm sandbox).
+Bundle resolution is **fail-closed**. The former P2 dev-only
+`CA_BUNDLE_NATIVE_EXEC` escape hatch is gone. Bundle pures default to the wasm
+sandbox; the only native bundle path is the per-pure `CA_PURE_NATIVE_DEPS`
+capability described above.
+
+Signatures are ed25519 DETACHED signatures. `bundleHash` is sha256 over the
+unsigned canonical manifest bytes, so bundle identity does not depend on who
+signed it. The stored manifest's `signature` field is always `null`; the
+detached signature object is stored and verified separately, consistent with
+[SPEC §6.6](../SPEC.md#66-bundle-manifest--detached-signature).
 
 Resolution verifies, in order, and refuses to register anything on any failure:
 
@@ -124,6 +158,8 @@ Resolution verifies, in order, and refuses to register anything on any failure:
    different source hash, resolution refuses with operator guidance (stale image
    vs stale bundle).
 
+Unsigned bundles and signatures from unknown public keys fail closed.
+
 ### Signing tiers (recommended)
 
 - **Development**: a throwaway ed25519 seed kept out of the repo; the k3d demo
@@ -137,16 +173,49 @@ Resolution verifies, in order, and refuses to register anything on any failure:
 
 ## CAS retention
 
-- Bundles are content-addressed and immutable; a `bundleHash` (plus its
-  `signatureDigest`) is a stable, replay-safe pointer.
-- **Do not garbage-collect** a bundle (its manifest, source blobs, or signature)
-  while any worker may resolve it. On the Temporal path a worker re-resolves the
-  bundle from `FlowInput.bundle` on every fresh activation (including replay on a
-  new worker), so the blobs must outlive every in-flight and replayable run.
-- Retain at least: all bundles referenced by currently-deployed artifacts, plus
-  any bundle still reachable by an in-flight or recently-completed workflow that
-  could replay. A safe default is to retain by deployment lineage and expire only
-  bundles no deployment references.
+Bundles are content-addressed and immutable. CAS exposes no public delete API:
+a `bundleHash` plus optional signature digest is a stable, replay-safe pointer.
+Garbage collection is the narrow private mark-sweep exception, implemented for
+local stores in `composable_agents/gc.py` (P5-S1, shipped commit `ed6ffb1`).
+
+**Do not garbage-collect** a bundle while any worker may resolve it. On the
+Temporal path a worker re-resolves the bundle from `FlowInput.bundle` on every
+fresh activation, including replay on a new worker, so the blobs must outlive
+every in-flight and replayable run. Retain at least all bundles referenced by
+currently deployed artifacts, plus any bundle still reachable by an in-flight or
+recently completed workflow that could replay. A safe default is to retain by
+deployment lineage and expire only bundles no deployment references.
+
+### Lease-backed GC
+
+Leases encode the retention rule for local CAS stores. A `Lease` records
+`bundle_hash`, optional `signature_digest`, and optional `name`, and persists
+under `<cas_root>/leases/` outside the sharded blob tree. The reachable set is
+the closure over each leased bundle manifest:
+
+| Manifest field | Retained object |
+| --- | --- |
+| lease `bundle_hash` | manifest blob |
+| lease `signature_digest` | detached signature object |
+| `artifactComponents` | canonical artifact envelope |
+| `flow` | canonical `flowJson` |
+| each pure `source` | shipped pure source blob |
+| each pure `envComponent` | pre-initialized wasm env component, when present |
+
+`gc(store, lease_store, dry_run=...)` enumerates every CAS object, subtracts the
+union of all lease closures, and reports the remainder as collectable.
+`dry_run` defaults to `True`: it reports `reachable` and `collectable` and
+deletes nothing. Pass `dry_run=False` to delete collectable objects.
+
+GC fails closed. A single incomputable lease closure, such as an unreadable or
+malformed manifest or a missing blob, raises `GCError` and aborts the whole
+sweep before any deletion. A partial root set is never used to decide
+deletions.
+
+Only `LocalDirCAS` is enumerable and collectable today. `S3CAS` GC raises
+`GCError`; paginated list/delete is deferred. On S3-backed CAS, keep applying
+the retention rule manually: retain anything a live or replayable run may
+resolve. Lease GC is the automated local-store optimization of that rule.
 
 ## Live EKS acceptance (manual)
 
