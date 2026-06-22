@@ -38,7 +38,7 @@ from .typed import Flow, FlowLike, SplitCapability
 from .flow_registry import register_flow
 from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency
-from .projection import InMemoryProjection, ProjectionEmitter
+from .projection import InMemoryProjection, ProjectionEmitter, ProjectionEvent
 from .result import Result
 from .validate import Diagnostic, blocking
 
@@ -412,6 +412,9 @@ class Agent(FlowLike[Any, Any]):
         max_rounds: int = 24,
         instructions: Optional[str] = None,
         mode: EnforcementMode | str = EnforcementMode.STRICT,
+        langfuse_export: Optional[
+            Callable[[Sequence[ProjectionEvent], str], None]
+        ] = None,
     ) -> None:
         """Create an agent facade.
 
@@ -476,6 +479,7 @@ class Agent(FlowLike[Any, Any]):
         self._max_rounds = max_rounds
         self._instructions = instructions
         self._reasoner_fn = llm or default_local_reasoner
+        self._langfuse_export = langfuse_export
         self._budget = Budget(cost=budget_cost) if budget_cost is not None else None
         self._mode = EnforcementMode.coerce(mode)
         self._cfg = AgentConfig(max_rounds=max_rounds, budget=self._budget, mode=self._mode)
@@ -544,6 +548,7 @@ class Agent(FlowLike[Any, Any]):
             "max_rounds": self._max_rounds,
             "instructions": self._instructions,
             "mode": self._mode,
+            "langfuse_export": self._langfuse_export,
         }
 
     def _reconstruct(self, **overrides: Any) -> "Agent":
@@ -724,7 +729,8 @@ class Agent(FlowLike[Any, Any]):
     ) -> "Result[Any]":
         deployment = self._deploy()
         plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
-        emitter = ProjectionEmitter(InMemoryProjection())
+        projection = InMemoryProjection()
+        emitter = ProjectionEmitter(projection)
         tool_fns = {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
         max_call_limits = (
             deployment.capabilities.max_call_limits()
@@ -799,6 +805,8 @@ class Agent(FlowLike[Any, Any]):
             principal=principal,
         )
         result = await interpret(deployment.flow, input, env)
+        if self._langfuse_export is not None:
+            self._langfuse_export(projection.events(), self._name)
         return Result(cast("dict[str, Any]", result.value))
 
     async def arun_on_cma(

@@ -10,7 +10,7 @@ OpenTelemetry SDK + OTLP exporter are optional; imports are guarded.
 from __future__ import annotations
 
 import base64
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 import hashlib
 import os
@@ -275,6 +275,23 @@ class LangfuseExporterHandle:
 
     def shutdown(self) -> None:
         self._provider.shutdown()
+
+
+def langfuse_export_hook(
+    handle: LangfuseExporterHandle,
+    *,
+    capture_io: bool = False,
+) -> Callable[[Sequence[ProjectionEvent], str], None]:
+    def _hook(events: Sequence[ProjectionEvent], run_id: str) -> None:
+        export_run_to_langfuse(
+            events,
+            run_id=run_id,
+            tracer=handle.tracer,
+            capture_io=capture_io,
+        )
+        handle.flush()
+
+    return _hook
 
 
 def configure_langfuse(config: LangfuseConfig | None = None) -> LangfuseExporterHandle:
