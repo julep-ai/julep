@@ -47,6 +47,7 @@ from ..transcript import (
 from ..cas import cas_from_url
 from ..worker_store import bundle_ref_entries, resolve_entries
 from .blobstore import BlobStore, parse_ref
+from .llm_result import LlmResult
 from .session_store import SessionStore
 
 logger = logging.getLogger("composable_agents.execution.effects")
@@ -127,6 +128,26 @@ _CTX = WorkerContext()
 _TRAJECTORY_SINK: Optional[TrajectorySink] = None
 _TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
 _DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
+_CA_META_KEY = "__ca_meta__"
+
+
+def _unwrap_llm(out: Any) -> tuple[Any, dict[str, Any]]:
+    """Accept either an LlmResult or a bare reply (back-compat for fake callers)."""
+    if isinstance(out, LlmResult):
+        return out.reply, out.meta.to_attrs()
+    return out, {}
+
+
+def _with_ca_meta(value: Any, attrs: dict[str, Any]) -> Any:
+    if not attrs:
+        return value
+    if isinstance(value, dict) and _CA_META_KEY in value and "reply" in value:
+        meta = value[_CA_META_KEY]
+        existing = dict(meta) if isinstance(meta, dict) else {"meta": meta}
+        return {**value, _CA_META_KEY: {**existing, **attrs}}
+    if isinstance(value, dict) and SUMMARY_KEY in value and "reply" in value:
+        return {**value, _CA_META_KEY: attrs}
+    return {"reply": value, _CA_META_KEY: attrs}
 
 
 def set_trajectory_sink(
@@ -760,7 +781,8 @@ async def _materialize_transcript(inp: InvokeReasonerInput) -> tuple[Transcript,
         raw = await _CTX.llm(
             summarizer, summarizer_payload, inp.principal, None, ReasonerDispatch()
         )
-        new_summary = _summary_text(raw, inp.summarizer)
+        summary_reply, _ = _unwrap_llm(raw)
+        new_summary = _summary_text(summary_reply, inp.summarizer)
         summary = new_summary
     if summary:
         return [summary_turn(summary), *kept], new_summary
@@ -812,13 +834,15 @@ async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
     if tier is QoSTier.BATCH:
         tier = QoSTier.STANDARD
     dispatch = ReasonerDispatch(qos=tier)
-    reply = await _CTX.llm(reasoner, inp.value, inp.principal, transcript, dispatch)
+    raw = await _CTX.llm(reasoner, inp.value, inp.principal, transcript, dispatch)
+    reply, llm_attrs = _unwrap_llm(raw)
     if new_summary is not None:
         # Envelope so the workflow can persist the running summary in
         # AgentState.summary; split_summary_reply unwraps it deterministically.
         result = {SUMMARY_KEY: new_summary, "reply": reply}
     else:
         result = reply
+    result = _with_ca_meta(result, llm_attrs)
     await _capture_effect(
         op="think",
         kind="reasoner",
