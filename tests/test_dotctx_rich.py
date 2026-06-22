@@ -316,7 +316,7 @@ def test_complete_reasoner_uses_rendered_user_turn_and_max_tokens() -> None:
     out = run(complete_reasoner(
         rich.reasoner, {"persona": "skeptic", "question": "why?"}, acompletion=rec,
     ))
-    assert out == reply
+    assert out.reply == reply
     call = rec.calls[0]
     assert call["max_tokens"] == 800 and call["temperature"] == 0.3
     msgs = call["messages"]
@@ -330,7 +330,7 @@ def test_complete_reasoner_keeps_value_as_user_turn_without_user_render() -> Non
     rich = load_rich_dotctx(str(FIXTURES / "summarizer.ctx"))
     rec = Recorder(replies=[FakeCompletion([FakeChoice(FakeMessage(content="done"))])])
     out = run(complete_reasoner(rich.reasoner, {"audience": "execs", "text": "T"}, acompletion=rec))
-    assert out == "done"
+    assert out.reply == "done"
     msgs = rec.calls[0]["messages"]
     assert msgs[0]["content"] == "Summarize for execs."
     assert msgs[1]["content"] == json.dumps({"audience": "execs", "text": "T"})

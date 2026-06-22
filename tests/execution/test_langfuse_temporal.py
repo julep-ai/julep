@@ -12,8 +12,12 @@ class _FakeClient:
     def get_workflow_handle(self, wid): return _FakeHandleObj(self._e)
 
 class _ExpHandle:
-    def __init__(self): self.tracer = _Tracer(); self.flushed = False
-    def flush(self): self.flushed = True
+    def __init__(self):
+        self.tracer = _Tracer()
+        self.flushed = False
+
+    def flush(self):
+        self.flushed = True
 
 def test_export_temporal_run_queries_and_exports():
     events_json = [

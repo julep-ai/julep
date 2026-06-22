@@ -41,6 +41,7 @@ from ..freeze import bind
 from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SLEEP_TOOL, SubContract, SubStep, ThinkStep, toolref_key
 from ..kinds import EnforcementMode, Op
 from ..projection import ProjectionEmitter
+from .llm_result import LlmResult
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..shapes import surface_shape
 from ..validate import reads_whole_session
@@ -455,7 +456,16 @@ _CA_META_KEY = "__ca_meta__"
 
 
 def _unwrap_ca_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
-    """Strip the framework batch-attribution envelope."""
+    """Strip the framework reasoner-attribution envelope.
+
+    Two shapes reach this single gateway: an ``LlmResult`` (the facade/in-memory
+    path, where ``make_local_reasoner`` calls ``complete_reasoner`` directly) and
+    the ``__ca_meta__`` dict envelope (the engine path, where the ``invokeReasoner``
+    activity wraps the reply). Both surface their LLM ``meta`` as DID ``attrs`` so
+    a usage-bearing generation reaches the projection (and thus Langfuse).
+    """
+    if isinstance(value, LlmResult):
+        return value.reply, value.meta.to_attrs()
     if isinstance(value, dict) and _CA_META_KEY in value and "reply" in value:
         meta = value[_CA_META_KEY]
         return value.get("reply"), (dict(meta) if isinstance(meta, dict) else {"meta": meta})

@@ -33,6 +33,7 @@ from .dsl import app, call, native
 from .errors import ValidationError
 from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
 from .execution.interpreter import InMemoryEnv, interpret
+from .execution.llm_result import LlmResult
 from .freeze import McpSnapshot, NativeToolSpec
 from .typed import Flow, FlowLike, SplitCapability
 from .flow_registry import register_flow
@@ -750,7 +751,13 @@ class Agent(FlowLike[Any, Any]):
             # callers ignore it, so this is behaviour-preserving for them.
             reply = self._reasoner_fn(self._name, payload)
             if inspect.isawaitable(reply):
-                return await reply
+                reply = await reply
+            # A provider llm seam (make_local_reasoner) returns an LlmResult so the
+            # engine path can capture usage; the facade controller loop consumes a
+            # bare reply (interpret_reasoner_reply). The flow facade path unwraps in
+            # interpreter._unwrap_ca_meta; this is its app-loop counterpart.
+            if isinstance(reply, LlmResult):
+                return reply.reply
             return reply
 
         async def call_tool(name: str, value: Any) -> Any:

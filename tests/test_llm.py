@@ -215,7 +215,7 @@ def test_native_failure_retries_with_prompt_injection() -> None:
 
     flaky = Flaky()
     reasoner = Reasoner(name="b6", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
-    reply = run(make_llm_caller(acompletion=flaky)(reasoner, "x"))
+    reply = run(make_llm_caller(acompletion=flaky)(reasoner, "x")).reply
 
     assert reply == {"output": "ok"}
     assert len(flaky.calls) == 2  # native attempt, then prompt-injected retry
@@ -230,7 +230,7 @@ def test_native_failure_retries_with_prompt_injection() -> None:
 def test_reply_json_parsed_and_interpreted_as_call() -> None:
     rec = Recorder([_completion(content='```json\n{"tool": "search", "input": "q"}\n```')])
     reasoner = Reasoner(name="b7", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
-    reply = run(make_llm_caller(acompletion=rec)(reasoner, "x"))
+    reply = run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply
 
     assert reply == {"tool": "search", "input": "q"}
     action = interpret_reasoner_reply(reply)
@@ -241,19 +241,19 @@ def test_reply_json_parsed_and_interpreted_as_call() -> None:
 def test_parsed_field_preferred_over_content() -> None:
     rec = Recorder([_completion(parsed={"output": "structured"})])
     reasoner = Reasoner(name="b8", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
-    assert run(make_llm_caller(acompletion=rec)(reasoner, "x")) == {"output": "structured"}
+    assert run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply == {"output": "structured"}
 
 
 def test_no_schema_returns_raw_text() -> None:
     rec = Recorder([_completion(content="just prose")])
     reasoner = Reasoner(name="b9", model="openai:gpt-4o")
-    assert run(make_llm_caller(acompletion=rec)(reasoner, "x")) == "just prose"
+    assert run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply == "just prose"
 
 
 def test_unparseable_json_with_schema_returns_raw_for_controller_error() -> None:
     rec = Recorder([_completion(content="not json at all")])
     reasoner = Reasoner(name="b10", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
-    reply = run(make_llm_caller(acompletion=rec)(reasoner, "x"))
+    reply = run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply
     # raw string flows through; strict interpretation flags it cleanly
     assert reply == "not json at all"
     assert interpret_reasoner_reply(reply).decision is Decision.CONTROLLER_ERROR
@@ -310,7 +310,7 @@ def test_agent_facade_drives_real_loop_through_local_reasoner() -> None:
 def test_complete_reasoner_direct_is_provider_agnostic() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
     reasoner = Reasoner(name="b11", model="mistral:mistral-small", system="s", reply_schema=_DECISION_SCHEMA)
-    reply = run(complete_reasoner(reasoner, "v", acompletion=rec, default_provider="anthropic"))
+    reply = run(complete_reasoner(reasoner, "v", acompletion=rec, default_provider="anthropic")).reply
     assert reply == {"output": "ok"}
     assert rec.calls[0]["provider"] == "mistral" and rec.calls[0]["model"] == "mistral-small"
 

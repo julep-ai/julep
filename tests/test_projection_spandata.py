@@ -2,7 +2,8 @@ from composable_agents.projection import ProjectionEvent, EventType, to_otel_spa
 
 def _ev(**kw):
     base = dict(event_id="e0", type=EventType.PLANNED, node="n", cid="c0", ts=0.0)
-    base.update(kw); return ProjectionEvent(**base)
+    base.update(kw)
+    return ProjectionEvent(**base)
 
 def test_spandata_carries_attrs_cost_refs():
     planned = _ev(event_id="e0", type=EventType.PLANNED, node="n", cid="c0", ts=0.0)

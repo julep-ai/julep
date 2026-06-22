@@ -1,4 +1,4 @@
-from composable_agents.execution.langfuse import export_run_to_langfuse, span_id_for
+from composable_agents.execution.langfuse import export_run_to_langfuse
 from composable_agents.projection import ProjectionEvent, EventType
 
 def _planned(node, cid, eid, causes=()):
@@ -8,17 +8,38 @@ def _did(node, cid, eid, causes=(), attrs=None, cost=None):
                            causes=causes, attrs=attrs or {}, cost=cost)
 
 class _Span:
-    def __init__(self, name, ctx): self.name=name; self.ctx=ctx; self.attrs={}; self.ended=False
-    def set_attribute(self,k,v): self.attrs[k]=v
-    def set_status(self,*a,**k): pass
-    def record_exception(self,*a,**k): pass
-    def get_span_context(self): return self.ctx
-    def end(self, end_time=None): self.ended=True
+    def __init__(self, name, ctx):
+        self.name = name
+        self.ctx = ctx
+        self.attrs = {}
+        self.ended = False
+
+    def set_attribute(self, k, v):
+        self.attrs[k] = v
+
+    def set_status(self, *a, **k):
+        pass
+
+    def record_exception(self, *a, **k):
+        pass
+
+    def get_span_context(self):
+        return self.ctx
+
+    def end(self, end_time=None):
+        self.ended = True
+
 
 class _Tracer:
-    def __init__(self): self.spans=[]
+    def __init__(self):
+        self.spans = []
+
     def start_span(self, name, start_time=None, links=None, context=None):
-        s=_Span(name, object()); s.parent_ctx=context; s.links=links; self.spans.append(s); return s
+        s = _Span(name, object())
+        s.parent_ctx = context
+        s.links = links
+        self.spans.append(s)
+        return s
 
 def test_export_emits_root_plus_spans():
     events = [

@@ -8,7 +8,7 @@ vendor-neutral dict that rides the existing ``Result.attrs`` ->
 attributes downstream. Pure module: no IO, no engine imports.
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 @dataclass(frozen=True)
