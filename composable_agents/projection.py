@@ -323,6 +323,11 @@ class SpanData:
     status: str                 # "ok" | "error" | "unfinished"
     parents: tuple[str, ...]    # causing cids
     error: Optional[str] = None
+    attrs: dict[str, Any] = field(default_factory=dict)
+    cost: Optional[float] = None
+    value_ref: Optional[str] = None
+    planned_event_id: Optional[str] = None
+    terminal_event_id: Optional[str] = None
 
 
 def to_otel_spans(events: list[ProjectionEvent]) -> list[SpanData]:
@@ -351,6 +356,8 @@ def to_otel_spans(events: list[ProjectionEvent]) -> list[SpanData]:
                 name=start.node, cid=cid, node=start.node,
                 start_ts=start.ts, end_ts=None, status="unfinished",
                 parents=parents,
+                attrs=dict(start.attrs),
+                planned_event_id=start.event_id,
             ))
         else:
             status = "ok" if end.type == EventType.DID else "error"
@@ -358,5 +365,8 @@ def to_otel_spans(events: list[ProjectionEvent]) -> list[SpanData]:
                 name=start.node, cid=cid, node=start.node,
                 start_ts=start.ts, end_ts=end.ts, status=status,
                 parents=parents, error=end.error,
+                attrs={**start.attrs, **end.attrs},
+                cost=end.cost, value_ref=end.value_ref,
+                planned_event_id=start.event_id, terminal_event_id=end.event_id,
             ))
     return spans
