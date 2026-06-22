@@ -10,6 +10,7 @@ from typing import Any
 from ..prompt import rendered_user_for
 from .batch_provider import (
     BatchProvider,
+    BatchReply,
     _llm_completion_from_message,
     register_batch_provider,
 )
@@ -137,6 +138,16 @@ class AnthropicBatchProvider(BatchProvider):
             parsed=getattr(raw, "parsed", None),
         )
         return super().parse(completion, reasoner)
+
+    def parse_with_usage(self, raw: Any, reasoner: Any) -> BatchReply:
+        u = getattr(raw, "usage", None)
+        input_tokens = getattr(u, "input_tokens", None)
+        output_tokens = getattr(u, "output_tokens", None)
+        return BatchReply(
+            reply=self.parse(raw, reasoner),
+            input_tokens=input_tokens if isinstance(input_tokens, int) else None,
+            output_tokens=output_tokens if isinstance(output_tokens, int) else None,
+        )
 
 
 register_batch_provider("anthropic", AnthropicBatchProvider)

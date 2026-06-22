@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
 
 from .llm import _split_model
+
+
+@dataclass(frozen=True)
+class BatchReply:
+    reply: Any
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
 
 class BatchProvider(ABC):
@@ -102,4 +110,4 @@ def _llm_completion_from_openai_body(raw: Any) -> Any:
     return SimpleNamespace(choices=converted)
 
 
-__all__ = ["BatchProvider", "select_batch_provider", "register_batch_provider"]
+__all__ = ["BatchProvider", "BatchReply", "select_batch_provider", "register_batch_provider"]

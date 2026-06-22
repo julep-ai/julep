@@ -11,6 +11,7 @@ from typing import Any
 from ..prompt import rendered_user_for
 from .batch_provider import (
     BatchProvider,
+    BatchReply,
     _llm_completion_from_openai_body,
     register_batch_provider,
 )
@@ -135,6 +136,17 @@ class OpenAIBatchProvider(BatchProvider):
             raise RuntimeError(f"batch entry {raw.type}")
 
         return super().parse(_llm_completion_from_openai_body(raw), reasoner)
+
+    def parse_with_usage(self, raw: Any, reasoner: Any) -> BatchReply:
+        usage = raw.get("usage") if isinstance(raw, dict) else None
+        usage = usage or {}
+        input_tokens = usage.get("prompt_tokens")
+        output_tokens = usage.get("completion_tokens")
+        return BatchReply(
+            reply=self.parse(raw, reasoner),
+            input_tokens=input_tokens if isinstance(input_tokens, int) else None,
+            output_tokens=output_tokens if isinstance(output_tokens, int) else None,
+        )
 
 
 def _split_composite_id(batch_id: str) -> list[str]:
