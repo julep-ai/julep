@@ -9,10 +9,21 @@ OpenTelemetry SDK + OTLP exporter are optional; imports are guarded.
 """
 from __future__ import annotations
 
+import base64
 from collections.abc import Sequence
 from dataclasses import dataclass
 import hashlib
+import os
 from typing import Any
+
+try:
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    HAVE_OTLP = True
+except ModuleNotFoundError:
+    HAVE_OTLP = False
 
 from ..projection import SpanData
 from .otel import _json
@@ -120,3 +131,55 @@ def build_tree(spans: Sequence[SpanData], run_id: str) -> list[TreeNode]:
             )
         )
     return nodes
+
+
+@dataclass(frozen=True)
+class LangfuseConfig:
+    host: str
+    public_key: str
+    secret_key: str
+    capture_io: bool = False
+
+    @staticmethod
+    def from_env() -> LangfuseConfig:
+        return LangfuseConfig(
+            host=os.environ["LANGFUSE_HOST"],
+            public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
+            secret_key=os.environ["LANGFUSE_SECRET_KEY"],
+            capture_io=os.environ.get("LANGFUSE_CAPTURE_IO", "").lower()
+            in ("1", "true"),
+        )
+
+    def endpoint(self) -> str:
+        return self.host.rstrip("/") + "/api/public/otel/v1/traces"
+
+    def headers(self) -> dict[str, str]:
+        auth = base64.b64encode(
+            f"{self.public_key}:{self.secret_key}".encode()
+        ).decode()
+        return {"Authorization": f"Basic {auth}", "x-langfuse-ingestion-version": "4"}
+
+
+@dataclass
+class LangfuseExporterHandle:
+    tracer: Any
+    _provider: Any
+
+    def flush(self) -> None:
+        self._provider.force_flush()
+
+    def shutdown(self) -> None:
+        self._provider.shutdown()
+
+
+def configure_langfuse(config: LangfuseConfig | None = None) -> LangfuseExporterHandle:
+    if not HAVE_OTLP:
+        raise RuntimeError("configure_langfuse requires composable-agents[langfuse]")
+    cfg = config or LangfuseConfig.from_env()
+    exporter = OTLPSpanExporter(endpoint=cfg.endpoint(), headers=cfg.headers())
+    provider = TracerProvider()
+    provider.add_span_processor(BatchSpanProcessor(exporter))
+    return LangfuseExporterHandle(
+        tracer=provider.get_tracer("composable_agents"),
+        _provider=provider,
+    )
