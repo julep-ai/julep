@@ -17,6 +17,14 @@ import os
 from typing import Any
 
 try:
+    from opentelemetry import trace as _t
+    from opentelemetry.trace import Link, SpanContext, set_span_in_context
+
+    HAVE_OTEL = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_OTEL = False
+
+try:
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -25,7 +33,7 @@ try:
 except ModuleNotFoundError:
     HAVE_OTLP = False
 
-from ..projection import SpanData
+from ..projection import ProjectionEvent, SpanData, to_otel_spans
 from .otel import _json
 
 
@@ -131,6 +139,103 @@ def build_tree(spans: Sequence[SpanData], run_id: str) -> list[TreeNode]:
             )
         )
     return nodes
+
+
+def _ns(ts: float | None) -> int | None:
+    return None if ts is None else int(ts * 1_000_000_000)
+
+
+def _real_span_context(span: Any) -> Any | None:
+    if not HAVE_OTEL:
+        return None
+    get_span_context = getattr(span, "get_span_context", None)
+    if not callable(get_span_context):
+        return None
+    span_context = get_span_context()
+    return span_context if isinstance(span_context, SpanContext) else None
+
+
+def _ctx_of(span: Any) -> Any:
+    if HAVE_OTEL and _real_span_context(span) is not None:
+        return set_span_in_context(span)
+    get_span_context = getattr(span, "get_span_context", None)
+    if callable(get_span_context):
+        return get_span_context()
+    return span
+
+
+def _links_for(ids: Sequence[int], contexts: dict[int, Any]) -> list[Any]:
+    links: list[Any] = []
+    for span_id in ids:
+        ctx = contexts.get(span_id)
+        if ctx is None:
+            continue
+        if HAVE_OTEL:
+            try:
+                span = _t.get_current_span(ctx)
+                span_context = span.get_span_context()
+            except Exception:
+                span_context = None
+            if isinstance(span_context, SpanContext):
+                links.append(Link(span_context))
+                continue
+        links.append(ctx)
+    return links
+
+
+def export_run_to_langfuse(
+    events: Sequence[ProjectionEvent],
+    *,
+    run_id: str,
+    tracer: Any,
+    trace_name: str | None = None,
+    session_id: str | None = None,
+    capture_io: bool = False,
+) -> int:
+    spans = to_otel_spans(list(events))
+    nodes = build_tree(spans, run_id=run_id)
+    resolved_trace_name = trace_name or run_id
+    resolved_session_id = session_id or run_id
+    count = 0
+    contexts: dict[int, Any] = {}
+    root_span: Any | None = None
+
+    for node in nodes:
+        if node.is_root:
+            root_span = tracer.start_span(resolved_trace_name, context=None)
+            root_span.set_attribute("langfuse.trace.name", resolved_trace_name)
+            root_span.set_attribute("langfuse.session.id", resolved_session_id)
+            contexts[node.span_id] = _ctx_of(root_span)
+            count += 1
+            continue
+
+        span_data = node.span
+        if span_data is None:
+            continue
+        parent_ctx = contexts.get(node.parent_id) if node.parent_id is not None else None
+        start_ns = _ns(span_data.attrs.get("llm.started_at", span_data.start_ts))
+        span = tracer.start_span(
+            span_data.name,
+            start_time=start_ns,
+            context=parent_ctx,
+            links=_links_for(node.link_ids, contexts),
+        )
+        for key, value in span_attributes(
+            span_data,
+            session_id=resolved_session_id,
+            trace_name=resolved_trace_name,
+            capture_io=capture_io,
+        ).items():
+            span.set_attribute(key, value)
+        contexts[node.span_id] = _ctx_of(span)
+        end_src = span_data.attrs.get("llm.ended_at", span_data.end_ts)
+        if end_src is not None:
+            span.end(end_time=_ns(end_src))
+        count += 1
+
+    if root_span is not None:
+        root_span.end()
+    return count
 
 
 @dataclass(frozen=True)

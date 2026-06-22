@@ -45,6 +45,12 @@ dotctx = ["jinja2>=3.1"]
 providers = ["any-llm-sdk>=1.17; python_version >= '3.11'"]
 # OpenTelemetry span export of the projection.
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
+# Langfuse OTLP/HTTP export of the projection.
+langfuse = [
+    "opentelemetry-api>=1.20",
+    "opentelemetry-sdk>=1.20",
+    "opentelemetry-exporter-otlp-proto-http>=1.20",
+]
 # Artifact distribution stores and bundle signing primitives (ed25519 lands in P2.3).
 store = ["boto3>=1.34", "cryptography>=42"]
 # Sandboxed wasm execution of bundle-sourced pures (wasmtime host; componentize-py is build-only/dev).
@@ -63,6 +69,7 @@ dev = [
     "jinja2>=3.1",
     "opentelemetry-api>=1.20",
     "opentelemetry-sdk>=1.20",
+    "opentelemetry-exporter-otlp-proto-http>=1.20",
     "pydantic>=2",
     "types-PyYAML>=6.0",
     "wasmtime>=45,<46",
