@@ -14,6 +14,17 @@ IMAGE_URI="$(terraform -chdir="$TF_DIR" output -raw worker_image_uri)"
 REGISTRY="${IMAGE_URI%%/*}"
 
 aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME" --alias "$CLUSTER_NAME"
+
+# Expose the Temporal UI via an internal ALB (EKS Auto Mode). Templated from
+# terraform outputs because IngressClassParams has no typed Terraform resource.
+if [[ "$(terraform -chdir="$TF_DIR" output -raw temporal_ui_enabled)" == "true" ]]; then
+  SUBNET_IDS_CSV="$(terraform -chdir="$TF_DIR" output -json control_plane_subnet_ids \
+    | python3 -c 'import sys, json; print(", ".join(json.load(sys.stdin)))')"
+  VPC_CIDR="$(terraform -chdir="$TF_DIR" output -raw vpc_cidr_block)"
+  sed -e "s|__SUBNET_IDS__|${SUBNET_IDS_CSV}|" -e "s|__VPC_CIDR__|${VPC_CIDR}|" \
+    "$ROOT_DIR/infra/k8s/temporal-ui-ingress.yaml" | kubectl apply -f -
+fi
+
 aws ecr get-login-password --region "$AWS_REGION" \
   | docker login --username AWS --password-stdin "$REGISTRY" >/dev/null
 

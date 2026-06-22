@@ -32,6 +32,37 @@ and waits for the EKS worker pod to complete real Anthropic-backed tool use.
 
 `eks-demo-down.sh` destroys the Terraform stack.
 
+## Temporal UI access
+
+The Temporal web UI is reachable without any public endpoint. `eks-demo-up.sh`
+provisions an internal-scheme ALB in front of the `temporal-web` service, and the
+team reaches it by tunneling through an SSM-managed bastion.
+
+1. Set the team's IAM principals so the access stack is created:
+
+   ```hcl
+   # terraform.tfvars
+   team_principal_arns = [
+     "arn:aws:iam::<account-id>:user/alice",
+     "arn:aws:iam::<account-id>:role/SomeSSORole",
+   ]
+   ```
+
+   Leaving `team_principal_arns` empty disables the whole access stack (no bastion,
+   no role). `temporal_ui_enabled = false` turns it off entirely.
+
+2. Apply (`scripts/eks-demo-up.sh`). This creates the `<name_prefix>-team` role
+   (cluster-admin via an EKS access entry), the SSM bastion, and the internal ALB.
+
+3. From a laptop with creds that can assume the team role:
+
+   ```bash
+   ASSUME_TEAM_ROLE=1 scripts/temporal-ui.sh
+   # then open http://localhost:8233
+   ```
+
+See `docs/temporal-ui-access.md` for the full flow and security model.
+
 ## Notes
 
 - RDS is private to the default VPC CIDR for this demo. For production, tighten

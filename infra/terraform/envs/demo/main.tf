@@ -401,3 +401,230 @@ resource "helm_release" "worker" {
     helm_release.temporal,
   ]
 }
+
+# ---------------------------------------------------------------------------
+# Temporal UI access
+#
+# The Temporal web UI (temporal-web Service) is exposed through an internal-scheme
+# ALB (created via kubectl in scripts/eks-demo-up.sh, since EKS Auto Mode's ALB
+# scheme/subnets live in the IngressClassParams CRD). The only network path into
+# the VPC to reach that ALB is an SSM-managed bastion: team members assume the
+# shared temporal-team role (cluster-admin via an EKS access entry) and tunnel
+# through the bastion with `aws ssm start-session` port-forwarding. No public
+# endpoint; the gate is IAM + SSM + internal ALB.
+# ---------------------------------------------------------------------------
+
+locals {
+  # The whole access stack is a no-op unless enabled AND at least one team
+  # principal is supplied (an assume-role policy with no principals is invalid).
+  temporal_ui_access_enabled = var.temporal_ui_enabled && length(var.team_principal_arns) > 0 ? 1 : 0
+}
+
+# Tag the ALB subnets so EKS Auto Mode discovers them for internal load balancers.
+resource "aws_ec2_tag" "internal_elb" {
+  for_each    = var.temporal_ui_enabled ? toset(local.control_plane_subnet_ids) : toset([])
+  resource_id = each.value
+  key         = "kubernetes.io/role/internal-elb"
+  value       = "1"
+}
+
+# Shared role the team assumes for both Temporal UI tunneling and kubectl access.
+data "aws_iam_policy_document" "team_assume" {
+  count = local.temporal_ui_access_enabled
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "AWS"
+      identifiers = var.team_principal_arns
+    }
+  }
+}
+
+resource "aws_iam_role" "team" {
+  count              = local.temporal_ui_access_enabled
+  name               = "${var.name_prefix}-team"
+  assume_role_policy = data.aws_iam_policy_document.team_assume[0].json
+}
+
+resource "aws_eks_access_entry" "team" {
+  count         = local.temporal_ui_access_enabled
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = aws_iam_role.team[0].arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "team_admin" {
+  count         = local.temporal_ui_access_enabled
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = aws_iam_role.team[0].arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.team]
+}
+
+# SSM bastion: the only network path into the VPC to reach the internal ALB.
+resource "aws_iam_role" "bastion" {
+  count = local.temporal_ui_access_enabled
+  name  = "${var.name_prefix}-bastion"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "bastion_ssm" {
+  count      = local.temporal_ui_access_enabled
+  role       = aws_iam_role.bastion[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "bastion" {
+  count = local.temporal_ui_access_enabled
+  name  = "${var.name_prefix}-bastion"
+  role  = aws_iam_role.bastion[0].name
+}
+
+# Scoped egress (NOT egress-all): this is the gate that stops a temporal-team
+# member from tunneling through the bastion to e.g. RDS:5432.
+resource "aws_security_group" "bastion" {
+  count       = local.temporal_ui_access_enabled
+  name        = "${var.name_prefix}-bastion"
+  description = "SSM tunnel bastion for ${var.name_prefix}; scoped egress only."
+  vpc_id      = data.aws_vpc.default.id
+
+  egress {
+    description = "SSM endpoints (ssm, ssmmessages, ec2messages) over HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Internal ALB (Temporal UI) within the VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.default.cidr_block]
+  }
+
+  egress {
+    description = "VPC DNS resolver to resolve the internal ALB hostname"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [data.aws_vpc.default.cidr_block]
+  }
+
+  egress {
+    description = "VPC DNS resolver (TCP fallback)"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.default.cidr_block]
+  }
+}
+
+data "aws_ssm_parameter" "al2023" {
+  count = local.temporal_ui_access_enabled
+  name  = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
+}
+
+resource "aws_instance" "bastion" {
+  count                       = local.temporal_ui_access_enabled
+  ami                         = data.aws_ssm_parameter.al2023[0].value
+  instance_type               = var.bastion_instance_type
+  subnet_id                   = local.control_plane_subnet_ids[0]
+  vpc_security_group_ids      = [aws_security_group.bastion[0].id]
+  iam_instance_profile        = aws_iam_instance_profile.bastion[0].name
+  associate_public_ip_address = true
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-bastion"
+  }
+}
+
+# SSM tunnel permissions for the team role.
+data "aws_iam_policy_document" "ssm_tunnel" {
+  count = local.temporal_ui_access_enabled
+
+  statement {
+    sid     = "StartPortForwardSession"
+    effect  = "Allow"
+    actions = ["ssm:StartSession"]
+    resources = [
+      aws_instance.bastion[0].arn,
+      "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:document/AWS-StartPortForwardingSessionToRemoteHost",
+    ]
+
+    condition {
+      test     = "BoolIfExists"
+      variable = "ssm:SessionDocumentAccessCheck"
+      values   = ["true"]
+    }
+  }
+
+  # ssmmessages:OpenDataChannel does not support resource-level scoping (it is
+  # granted on "*", same as AmazonSSMManagedInstanceCore does instance-side). The
+  # real boundary is StartSession above (bastion + port-forward document only)
+  # plus the bastion's scoped egress.
+  statement {
+    sid       = "OpenDataChannel"
+    effect    = "Allow"
+    actions   = ["ssmmessages:OpenDataChannel"]
+    resources = ["*"]
+  }
+
+  # Scoped to the session resource type (not per-owner): assumed-role sessions are
+  # named "<role-session-name>-<random>", which no IAM policy variable cleanly
+  # matches (${aws:userid} carries a colon).
+  statement {
+    sid    = "ManageSessions"
+    effect = "Allow"
+    actions = [
+      "ssm:TerminateSession",
+      "ssm:ResumeSession",
+    ]
+    resources = ["arn:aws:ssm:*:*:session/*"]
+  }
+
+  statement {
+    sid    = "DescribeForTunnel"
+    effect = "Allow"
+    actions = [
+      "ssm:DescribeInstanceInformation",
+      "ssm:GetConnectionStatus",
+      "ec2:DescribeInstances",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "ssm_tunnel" {
+  count  = local.temporal_ui_access_enabled
+  name   = "${var.name_prefix}-ssm-tunnel"
+  policy = data.aws_iam_policy_document.ssm_tunnel[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "team_ssm_tunnel" {
+  count      = local.temporal_ui_access_enabled
+  role       = aws_iam_role.team[0].name
+  policy_arn = aws_iam_policy.ssm_tunnel[0].arn
+}

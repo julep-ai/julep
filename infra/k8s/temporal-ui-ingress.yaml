@@ -1,0 +1,53 @@
+# Internal ALB for the Temporal web UI on EKS Auto Mode.
+#
+# Applied by scripts/eks-demo-up.sh, which substitutes the __SUBNET_IDS__ and
+# __VPC_CIDR__ placeholders from `terraform output`. Not managed by Terraform:
+# IngressClassParams is an EKS Auto Mode CRD with no typed provider resource, and
+# generic kubernetes_manifest hits plan-time discovery problems against a cluster
+# created in the same apply.
+#
+# EKS Auto Mode sets ALB scheme/subnets via IngressClassParams (not annotations)
+# and defaults the target mode to IP, so no scheme/subnets/target-type annotations
+# go on the Ingress itself.
+apiVersion: eks.amazonaws.com/v1
+kind: IngressClassParams
+metadata:
+  name: temporal-internal-alb
+spec:
+  scheme: internal
+  subnets:
+    ids: [__SUBNET_IDS__]
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: temporal-internal-alb
+spec:
+  controller: eks.amazonaws.com/alb
+  parameters:
+    apiGroup: eks.amazonaws.com
+    kind: IngressClassParams
+    name: temporal-internal-alb
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: temporal-web
+  namespace: temporal
+  annotations:
+    # Temporal web UI readiness path (chart-configured), not "/".
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/inbound-cidrs: __VPC_CIDR__
+spec:
+  ingressClassName: temporal-internal-alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                # Verify name/port at apply: `kubectl -n temporal get svc`
+                name: temporal-web
+                port:
+                  number: 8080

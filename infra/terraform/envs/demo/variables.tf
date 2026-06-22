@@ -81,3 +81,21 @@ variable "worker_max_replicas" {
   description = "Maximum worker replicas controlled by KEDA."
   default     = 4
 }
+
+variable "temporal_ui_enabled" {
+  type        = bool
+  description = "Provision the internal-ALB + SSM-bastion Temporal UI access stack."
+  default     = true
+}
+
+variable "team_principal_arns" {
+  type        = list(string)
+  description = "IAM principal ARNs (users/roles) allowed to assume the temporal-team role for Temporal UI and cluster-admin access. Empty disables the team-access stack."
+  default     = []
+}
+
+variable "bastion_instance_type" {
+  type        = string
+  description = "Instance type for the SSM tunnel bastion (arm64)."
+  default     = "t4g.nano"
+}
