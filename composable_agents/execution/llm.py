@@ -33,6 +33,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import json
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Optional
 
@@ -48,6 +49,7 @@ from ..resilience import (
     ResiliencePolicy,
     classify_error,
 )
+from .llm_result import AttemptMeta, LlmCallMeta, LlmResult
 
 # any-llm's ``acompletion``-shaped callable: keyword-driven, returns an
 # OpenAI-typed completion (``.choices[0].message.{content,parsed}``).
@@ -207,6 +209,25 @@ def _parse_reply(completion: Any, *, expect_json: bool) -> Any:
         return content
 
 
+def _usage_of(completion: Any) -> tuple[int | None, int | None, int | None]:
+    usage = getattr(completion, "usage", None)
+    if usage is None:
+        return None, None, None
+    pt = getattr(usage, "prompt_tokens", None)
+    ct = getattr(usage, "completion_tokens", None)
+    tt = getattr(usage, "total_tokens", None)
+    if tt is None and pt is not None and ct is not None:
+        tt = pt + ct
+    return pt, ct, tt
+
+
+def _served_model_of(completion: Any, fallback: str) -> str:
+    m = getattr(completion, "model", None)
+    if not isinstance(m, str) or not m:
+        return fallback
+    return m.split("/", 1)[1] if "/" in m else m
+
+
 # --------------------------------------------------------------------------- #
 # Core.
 # --------------------------------------------------------------------------- #
@@ -218,7 +239,7 @@ async def complete_reasoner(
     default_provider: str = DEFAULT_PROVIDER,
     transcript: Optional[list[dict[str, Any]]] = None,
     dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
-) -> Any:
+) -> LlmResult:
     """One model call for ``reasoner`` against ``value``, returning its parsed reply.
 
     ``transcript`` is the materialized neutral turn list for transcript-scoped
@@ -254,6 +275,7 @@ async def complete_reasoner(
         kwargs.update(_qos_request_fields(provider, dispatch.qos))
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
+    started = time.time()
     if schema is not None and provider not in _PROMPT_FALLBACK_PROVIDERS:
         try:
             completion = await call(native=True)
@@ -263,8 +285,16 @@ async def complete_reasoner(
             completion = await call(native=False)
     else:
         completion = await call(native=False)
-
-    return _parse_reply(completion, expect_json=schema is not None)
+    ended = time.time()
+    reply = _parse_reply(completion, expect_json=schema is not None)
+    pt, ct, tt = _usage_of(completion)
+    meta = LlmCallMeta(
+        served_model=_served_model_of(completion, model),
+        provider=provider,
+        input_tokens=pt, output_tokens=ct, total_tokens=tt,
+        started_at=started, ended_at=ended,
+    )
+    return LlmResult(reply=reply, meta=meta)
 
 
 def _resolve_acompletion(acompletion: Optional[AnyCompletion]) -> AnyCompletion:
