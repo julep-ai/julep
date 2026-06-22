@@ -192,3 +192,19 @@ An independent Codex review (read against the real source) changed the design in
 3. Stable derived trace/span IDs for idempotent re-export.
 4. Multi-attempt + batch coverage surfaced as explicit scope decisions (resolved: final+attempt-list; batch in scope).
 5. Confirmations: synthetic root required, `proto-http` (not gRPC), `x-langfuse-ingestion-version: 4`, emit both `langfuse.observation.*` and `gen_ai.*`, propagate trace-level attrs onto every span.
+
+## 9. Spike results (2026-06-22) — VERIFIED against Langfuse Cloud (`us.cloud.langfuse.com`)
+
+The Task 0 OTLP spike ran against a live Langfuse Cloud project and was verified through the Langfuse public API (`GET /api/public/traces/{traceId}`), not just a successful POST. All confirmed:
+
+- **Endpoint:** `https://us.cloud.langfuse.com/api/public/otel/v1/traces` (HTTP/protobuf).
+- **Auth:** `Authorization: Basic b64(public:secret)` + `x-langfuse-ingestion-version: 4`.
+- **Generation mapping:** `gen_ai.request.model`/`gen_ai.response.model` → model; `gen_ai.usage.input_tokens`/`output_tokens` → usage `{input, output, total}` (Langfuse computed `total` = 1540 from 1200+340).
+- **Cost:** **auto-derived** by Langfuse from model + tokens — `claude-opus-4-8` (1200 in / 340 out) → `calculatedTotalCost = $0.0145`. We do **not** need to send cost; `meta.cost` stays an optional override only.
+- **Observation type:** `langfuse.observation.type="generation"` honored; `langfuse.observation.input`/`output` rendered.
+- **Trace-level:** `langfuse.trace.name` + `langfuse.session.id` applied.
+- **Tree:** root + child generation nested (2 observations) — parent/child via OTel `parent_span_id`.
+- **Stable IDs:** `trace_id = hash128(run_id)`, `span_id = hash64(cid)` survived ingestion; the trace was fetchable by its known hex id → **idempotent re-export design (Task 6) validated live.**
+- **API read-back keys** (for any future verification): observation `type == "GENERATION"`; usage under `usage`/`usageDetails` `{input, output, total}`; cost under `calculatedTotalCost`.
+
+**Plan impact:** Task 8 attribute mapping and Task 6 ID scheme need **no changes**. Spike script: `spikes/langfuse_otlp/spike.py`.
