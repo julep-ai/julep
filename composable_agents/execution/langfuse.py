@@ -12,8 +12,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 import hashlib
+from typing import Any
 
 from ..projection import SpanData
+from .otel import _json
 
 
 @dataclass(frozen=True)
@@ -36,6 +38,44 @@ def trace_id_for(run_id: str) -> int:
 def span_id_for(cid: str) -> int:
     h = hashlib.sha256(("span:" + cid).encode()).digest()
     return int.from_bytes(h[:8], "big") or 1
+
+
+def span_attributes(
+    span: SpanData,
+    *,
+    session_id: str,
+    trace_name: str,
+    capture_io: bool,
+) -> dict[str, Any]:
+    out: dict[str, Any] = {
+        "langfuse.session.id": session_id,
+        "langfuse.trace.name": trace_name,
+        "ca.cid": span.cid,
+        "ca.node": span.node,
+    }
+    usage = span.attrs.get("llm.usage")
+    model = span.attrs.get("llm.model")
+    is_generation = model is not None or usage is not None
+    if is_generation:
+        out["langfuse.observation.type"] = "generation"
+        if model is not None:
+            out["gen_ai.request.model"] = model
+            out["gen_ai.response.model"] = model
+        if isinstance(usage, dict):
+            if usage.get("input") is not None:
+                out["gen_ai.usage.input_tokens"] = usage["input"]
+            if usage.get("output") is not None:
+                out["gen_ai.usage.output_tokens"] = usage["output"]
+    if span.cost is not None:
+        out["gen_ai.usage.cost"] = span.cost
+    if capture_io:
+        if "llm.input" in span.attrs:
+            out["langfuse.observation.input"] = span.attrs["llm.input"]
+        if "llm.output" in span.attrs:
+            out["langfuse.observation.output"] = span.attrs["llm.output"]
+    if span.attrs.get("llm.attempts"):
+        out["ca.llm.attempts"] = _json(span.attrs["llm.attempts"])
+    return out
 
 
 def build_tree(spans: Sequence[SpanData], run_id: str) -> list[TreeNode]:
