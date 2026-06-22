@@ -446,12 +446,13 @@ def make_resilient_llm_caller(
             attempt = 0
             while True:
                 try:
-                    reply = await complete_reasoner(
+                    result = await complete_reasoner(
                         candidate, value,
                         acompletion=resolved, default_provider=default_provider,
                         transcript=transcript,
                         dispatch=dispatch,
                     )
+                    reply = result.reply
                 except Exception as exc:
                     error_class = classifier(exc)
                     record = AttemptRecord(
@@ -489,7 +490,16 @@ def make_resilient_llm_caller(
                 record = AttemptRecord(model=model, provider=provider, outcome="ok")
                 attempts.append(record)
                 _notify(record)
-                return reply
+                meta = dataclasses.replace(
+                    result.meta,
+                    attempts=tuple(
+                        AttemptMeta(
+                            model=a.model, provider=a.provider, outcome=a.outcome
+                        )
+                        for a in attempts
+                    ),
+                )
+                return LlmResult(reply=reply, meta=meta)
 
         raise ResilienceExhausted(attempts) from last_exc
 
