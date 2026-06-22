@@ -20,6 +20,7 @@ touches workflow determinism.
 
 from __future__ import annotations
 
+import json
 from typing import Any, Optional, Sequence
 
 from ..projection import ProjectionEvent, SpanData, to_otel_spans
@@ -51,6 +52,8 @@ def spans_to_dicts(events: Sequence[ProjectionEvent]) -> list[dict[str, Any]]:
                 "status": s.status,
                 "parents": list(s.parents),
                 "error": s.error,
+                "attrs": s.attrs,
+                "cost": s.cost,
             }
         )
     return out
@@ -58,6 +61,10 @@ def spans_to_dicts(events: Sequence[ProjectionEvent]) -> list[dict[str, Any]]:
 
 def _ns(ts: Optional[float]) -> Optional[int]:
     return None if ts is None else int(ts * 1_000_000_000)
+
+
+def _json(v: Any) -> str:
+    return json.dumps(v, default=str)
 
 
 def export_spans(
@@ -90,9 +97,15 @@ def export_spans(
     count = 0
     for s in spans:
         links = [Link(contexts[p]) for p in s.parents if p in contexts]
-        span = tr.start_span(s.name, start_time=_ns(s.start_ts), links=links)
+        start_ns = _ns(s.attrs.get("llm.started_at", s.start_ts))
+        span = tr.start_span(s.name, start_time=start_ns, links=links)
         span.set_attribute("ca.cid", s.cid)
         span.set_attribute("ca.node", s.node)
+        for k, v in s.attrs.items():
+            attr = v if isinstance(v, (str, int, float, bool)) else _json(v)
+            span.set_attribute(k, attr)
+        if s.cost is not None:
+            span.set_attribute("ca.cost", s.cost)
         if s.status == "error":
             span.set_status(Status(StatusCode.ERROR, s.error or "error"))
             if s.error:
@@ -101,8 +114,9 @@ def export_spans(
             span.set_status(Status(StatusCode.OK))
         contexts[s.cid] = span.get_span_context()
         # An unfinished activation has no end; leave it open for the live UI.
-        if s.end_ts is not None:
-            span.end(end_time=_ns(s.end_ts))
+        end_src = s.attrs.get("llm.ended_at", s.end_ts)
+        if end_src is not None:
+            span.end(end_time=_ns(end_src))
         count += 1
     return count
 
