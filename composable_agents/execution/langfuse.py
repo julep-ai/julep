@@ -6,15 +6,19 @@ owns the Langfuse-specific shaping: one synthetic root span per run, a
 deterministic primary-parent tree, stable IDs derived from run_id/cid (so
 history re-export is idempotent), and gen_ai/langfuse attribute mapping. The
 OpenTelemetry SDK + OTLP exporter are optional; imports are guarded.
+
+``export_temporal_run`` runs outside the workflow, so querying and flushing are
+determinism-safe. A history-tail durable path for completed or expired
+workflows is a follow-up.
 """
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 import hashlib
 import os
-from typing import Any
+from typing import Any, cast
 
 try:
     from opentelemetry import trace as _t
@@ -236,6 +240,34 @@ def export_run_to_langfuse(
     if root_span is not None:
         root_span.end()
     return count
+
+
+async def export_temporal_run(
+    handle: Any,
+    *,
+    client: Any,
+    workflow_id: str,
+    run_id: str | None = None,
+    trace_name: str | None = None,
+    session_id: str | None = None,
+    capture_io: bool = False,
+) -> int:
+    wf = client.get_workflow_handle(workflow_id)
+    raw: Any = await wf.query("projection")
+    raw_events = raw.get("events", []) if isinstance(raw, Mapping) else raw
+    events_json = cast(Sequence[dict[str, Any]], raw_events)
+    events = [ProjectionEvent.from_json(d) for d in events_json]
+    resolved_run_id = run_id or workflow_id
+    n = export_run_to_langfuse(
+        events,
+        run_id=resolved_run_id,
+        tracer=handle.tracer,
+        trace_name=trace_name or workflow_id,
+        session_id=session_id or workflow_id,
+        capture_io=capture_io,
+    )
+    handle.flush()
+    return n
 
 
 @dataclass(frozen=True)
