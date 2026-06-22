@@ -14,6 +14,8 @@ from temporalio.exceptions import ApplicationError
 from temporalio.workflow import ParentClosePolicy
 
 from ..ir import canonical_json
+from .batch_provider import BatchReply
+from .llm_result import LlmCallMeta
 
 if TYPE_CHECKING:
     from .batch_provider import BatchProvider
@@ -123,6 +125,8 @@ class FetchBatchResultsInput:
     provider: str
     batch_id: str
     calls: list[ReasonerCall] = field(default_factory=list)
+    submitted_at: Optional[float] = None
+    completed_at: Optional[float] = None
 
 
 _BATCH_CTX: Optional[BatchDispatchContext] = None
@@ -161,6 +165,29 @@ def _principal_key(principal: Optional[dict[str, Any]]) -> str:
     if principal is None:
         return ""
     return canonical_json(principal)
+
+
+def batch_reply_attrs(
+    br: BatchReply,
+    *,
+    model: str,
+    provider: str,
+    submitted_at: Optional[float] = None,
+    completed_at: Optional[float] = None,
+) -> dict[str, Any]:
+    total = None
+    if br.input_tokens is not None and br.output_tokens is not None:
+        total = br.input_tokens + br.output_tokens
+    meta = LlmCallMeta(
+        served_model=model,
+        provider=provider,
+        input_tokens=br.input_tokens,
+        output_tokens=br.output_tokens,
+        total_tokens=total,
+        started_at=submitted_at,
+        ended_at=completed_at,
+    )
+    return meta.to_attrs()
 
 
 @workflow.defn(name="BatchCollector")
@@ -279,7 +306,10 @@ class BatchPoll:
     async def run(self, inp: BatchPollInput) -> dict[str, Any]:
         calls = [_coerce_call(c) for c in inp.calls]
         batch_id = inp.batch_id
+        submitted_at: Optional[float] = None
+        completed_at: Optional[float] = None
         if batch_id is None:
+            submitted_at = workflow.now().timestamp()
             batch_id = cast(
                 str,
                 await workflow.execute_activity(
@@ -304,6 +334,7 @@ class BatchPoll:
                 ),
             )
             if status == "completed":
+                completed_at = workflow.now().timestamp()
                 break
             if status == "failed":
                 for call in calls:
@@ -329,6 +360,8 @@ class BatchPoll:
                     provider=inp.provider,
                     batch_id=batch_id,
                     calls=calls,
+                    submitted_at=submitted_at,
+                    completed_at=completed_at,
                 ),
                 start_to_close_timeout=timedelta(minutes=10),
             ),
@@ -348,8 +381,13 @@ class BatchPoll:
                     "reason": entry.get("reason"),
                 }
             else:
+                attrs = dict(entry.get("attrs") or {})
                 payload = {
-                    "__ca_meta__": {"tier": "BATCH", "batch_id": batch_id},
+                    "__ca_meta__": {
+                        **attrs,
+                        "tier": "BATCH",
+                        "batch_id": batch_id,
+                    },
                     "reply": entry["reply"],
                 }
                 signal_payload = {"custom_id": custom_id, "reply": payload}
@@ -445,6 +483,30 @@ def _record_batch_attempt(
     )
 
 
+def _parse_batch_reply(adapter: "BatchProvider", raw: Any, reasoner: Any) -> BatchReply:
+    parse_with_usage = getattr(adapter, "parse_with_usage", None)
+    if callable(parse_with_usage):
+        parsed = parse_with_usage(raw, reasoner)
+        if isinstance(parsed, BatchReply):
+            return parsed
+        return BatchReply(reply=parsed)
+    return BatchReply(reply=adapter.parse(raw, reasoner))
+
+
+def _has_batch_projection_attrs(
+    br: BatchReply,
+    *,
+    submitted_at: Optional[float],
+    completed_at: Optional[float],
+) -> bool:
+    return (
+        br.input_tokens is not None
+        or br.output_tokens is not None
+        or submitted_at is not None
+        or completed_at is not None
+    )
+
+
 @activity.defn(name="submitBatch")
 async def submitBatch(inp: SubmitBatchInput) -> str:
     """Render each call, build provider requests, and submit the provider batch."""
@@ -506,7 +568,7 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
             cid = str(custom_id)
             reasoner_obj = reasoners_by_custom_id[cid]
             try:
-                parsed = adapter.parse(raw, reasoner_obj)
+                batch_reply = _parse_batch_reply(adapter, raw, reasoner_obj)
             except Exception as exc:
                 out.append({"custom_id": cid, "error": True, "reason": str(exc)})
             else:
@@ -515,7 +577,21 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
                     batch_id=inp.batch_id,
                     reasoner=reasoner_obj,
                 )
-                out.append({"custom_id": cid, "reply": parsed})
+                attrs = batch_reply_attrs(
+                    batch_reply,
+                    model=str(getattr(reasoner_obj, "model", "")),
+                    provider=inp.provider,
+                    submitted_at=inp.submitted_at,
+                    completed_at=inp.completed_at,
+                )
+                entry = {"custom_id": cid, "reply": batch_reply.reply}
+                if _has_batch_projection_attrs(
+                    batch_reply,
+                    submitted_at=inp.submitted_at,
+                    completed_at=inp.completed_at,
+                ):
+                    entry["attrs"] = attrs
+                out.append(entry)
         return out
 
     if inspect.isawaitable(data):
@@ -524,7 +600,7 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
         cid = str(custom_id)
         reasoner_obj = reasoners_by_custom_id[cid]
         try:
-            parsed = adapter.parse(raw, reasoner_obj)
+            batch_reply = _parse_batch_reply(adapter, raw, reasoner_obj)
         except Exception as exc:
             out.append({"custom_id": cid, "error": True, "reason": str(exc)})
         else:
@@ -533,11 +609,26 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
                 batch_id=inp.batch_id,
                 reasoner=reasoner_obj,
             )
-            out.append({"custom_id": cid, "reply": parsed})
+            attrs = batch_reply_attrs(
+                batch_reply,
+                model=str(getattr(reasoner_obj, "model", "")),
+                provider=inp.provider,
+                submitted_at=inp.submitted_at,
+                completed_at=inp.completed_at,
+            )
+            entry = {"custom_id": cid, "reply": batch_reply.reply}
+            if _has_batch_projection_attrs(
+                batch_reply,
+                submitted_at=inp.submitted_at,
+                completed_at=inp.completed_at,
+            ):
+                entry["attrs"] = attrs
+            out.append(entry)
     return out
 
 
 __all__ = [
+    "batch_reply_attrs",
     "BatchCollector",
     "BatchCollectorInput",
     "BatchDispatchContext",
