@@ -12,7 +12,7 @@ cd julep-v2
 python -m pip install -e '.[dev]'
 ```
 
-The package requires Python 3.10 or newer. CI tests Python 3.10, 3.11, and 3.12.
+The package requires Python 3.12 or newer (see `pyproject.toml`). CI tests Python 3.12.
 
 The published package name is `composable-agents`. The console entry point is:
 
@@ -30,7 +30,7 @@ ruff check composable_agents
 python -m mypy --no-incremental --cache-dir=/dev/null composable_agents
 ```
 
-CI runs tests on Python 3.10, 3.11, and 3.12 with Temporal absent:
+CI runs tests on Python 3.12 with Temporal absent:
 
 ```bash
 python -m pip install -e . pytest
@@ -38,7 +38,7 @@ python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is False"
 python -m pytest -q
 ```
 
-CI also runs tests on Python 3.10, 3.11, and 3.12 with Temporal present:
+CI also runs tests on Python 3.12 with Temporal present:
 
 ```bash
 python -m pip install -e '.[dev]'

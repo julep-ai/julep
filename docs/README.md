@@ -3,6 +3,12 @@
 New here? Read the repository [README](../README.md), then
 [AUTHORING.md](AUTHORING.md) and [concepts.md](concepts.md).
 
+## For the team
+
+- [Team guide](team-guide.md) — internal orientation for engineers authoring agents and flows: setup, the day-to-day authoring loop, which surface to use, and where to get help.
+- [Cheat-sheet](cheatsheet.md) — dense quick reference for the `@flow` surfaces, registration, `deploy`/`dry_run`, the `Agent` facade, combinators, and the CLI.
+- [Gotchas & FAQ](gotchas.md) — the recurring traps (define-time vs runtime, determinism, capability denials, dev-vs-strict, the PEP 723 footgun) and how to get unstuck.
+
 ## Start here
 
 - [Getting started](getting-started.md) — install the package, run a keyless local agent facade, and understand the first deploy path.
