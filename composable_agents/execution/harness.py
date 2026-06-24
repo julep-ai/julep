@@ -47,6 +47,7 @@ from typing import Any, Awaitable, Callable, Optional, Sequence
 
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
+from temporalio.client import WorkflowUpdateFailedError
 from temporalio.exceptions import ApplicationError
 
 # Best-effort swallow paths log via stdlib logging: it never raises, works
@@ -55,6 +56,17 @@ from temporalio.exceptions import ApplicationError
 # workflow.logger (which requires a workflow context) or trajectory._best_effort
 # (which would inflate the counter every time workflow code re-executes).
 _LOG = logging.getLogger(__name__)
+
+
+if not getattr(WorkflowUpdateFailedError, "_ca_repr_includes_cause", False):
+    def _workflow_update_failed_repr(self: WorkflowUpdateFailedError) -> str:
+        cause = getattr(self, "__cause__", None)
+        if cause is None:
+            return f"{type(self).__name__}({self.args[0]!r})"
+        return f"{type(self).__name__}({self.args[0]!r}, cause={cause!r})"
+
+    WorkflowUpdateFailedError.__repr__ = _workflow_update_failed_repr  # type: ignore[method-assign]
+    WorkflowUpdateFailedError._ca_repr_includes_cause = True  # type: ignore[attr-defined]
 
 
 def _unwrap_reply(value: Any) -> Any:
@@ -85,7 +97,8 @@ with workflow.unsafe.imports_passed_through():
     from ..continuation import continuation_value, is_continuation
     from ..contracts import ToolContract, contract_allows_retry, manifest_from_json
     from ..errors import ComposableAgentsError
-    from ..ir import Ann, Node
+    from ..ir import Ann, CallStep, EMIT_TOOL, NativeTool, Node, RECV_TOOL
+    from ..kinds import Op
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
@@ -95,10 +108,12 @@ with workflow.unsafe.imports_passed_through():
     from .llm import _split_model
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
+    from .session_store import value_fingerprint
     from .timeouts import activity_timeout
     from .interpreter import (
         BranchThunk,
         Result,
+        SessionClosed,
         call_contract,
         call_ref_key,
         gather_bounded,
@@ -108,18 +123,22 @@ with workflow.unsafe.imports_passed_through():
     from .activities import (
         CallToolInput,
         CommitStateInput,
+        CommitValueInput,
         CompilePlanInput,
         InvokeReasonerInput,
         LoadStateInput,
+        LoadValueInput,
         PutBlobInput,
         ResolveQoSInput,
         RunSubInput,
         VerifyPuresInput,
         callTool,
         commitState,
+        commitValue,
         compilePlan,
         invokeReasoner,
         loadState,
+        loadValue,
         putBlob,
         resolveAgentSpec,
         resolveQoS,
@@ -127,6 +146,7 @@ with workflow.unsafe.imports_passed_through():
         resolveSubflow,
         verifyPures,
     )
+    from ..validate import blocking, validate
 
 
 # Errors that represent a settled policy decision must never be retried.
@@ -138,6 +158,18 @@ _NON_RETRYABLE = [
     "PureDriftError",
     "PrincipalRequired",
 ]
+
+
+def _reserved_channel_tool_name(node: Node) -> Optional[str]:
+    step = node.step
+    if (
+        node.op == Op.PRIM
+        and isinstance(step, CallStep)
+        and isinstance(step.tool, NativeTool)
+        and step.tool.name in (RECV_TOOL, EMIT_TOOL)
+    ):
+        return step.tool.name
+    return None
 
 
 @activity.defn(name="finishTrajectory")
@@ -345,6 +377,33 @@ class FlowInput:
 
 
 @dataclass
+class SessionInput:
+    """Run a long-lived root ``Op.LOOP`` session."""
+
+    session_id: str
+    flow_json: dict[str, Any]
+    manifest_json: Optional[dict[str, Any]]
+    init: Any
+    in_channel: str = "in"
+    out_channel: str = "out"
+    policy: Optional[dict[str, Any]] = None
+    principal: Optional[dict[str, Any]] = None
+    root_run_id: Optional[str] = None
+    segment_seq: int = 0
+    history_threshold: Optional[int] = None
+    channel_capacity: Optional[int] = None
+    state_cursor: Optional[int] = None
+    has_carrier: bool = False
+    carrier: Any = None
+    inbox: Optional[dict[str, list[dict[str, Any]]]] = None
+    out_buffers: Optional[dict[str, list[dict[str, Any]]]] = None
+    ack_cursors: Optional[dict[str, int]] = None
+    seq_cursors: Optional[dict[str, int]] = None
+    closed: bool = False
+    idempotency_index: Optional[dict[str, dict[str, int]]] = None
+
+
+@dataclass
 class AgentInput:
     controller: str
     session_id: str
@@ -380,6 +439,8 @@ class _TemporalEnv:
         manifest_json: Optional[dict[str, Any]],
         policy: ExecutionPolicy,
         gate_waiter: Callable[[Any, str, Optional[int]], Awaitable[Any]],
+        recv_waiter: Optional[Callable[[str, str, Optional[int]], Awaitable[Any]]] = None,
+        emit_sink: Optional[Callable[[str, Any, str], Awaitable[None]]] = None,
         batch_waiter: Optional[Callable[[str, Optional[int]], Awaitable[Any]]] = None,
         workflow_id: Optional[str] = None,
         max_call_limits: Optional[dict[str, int]] = None,
@@ -398,6 +459,8 @@ class _TemporalEnv:
         self._manifest_json = manifest_json
         self._policy = policy
         self._gate_waiter = gate_waiter
+        self._recv_waiter = recv_waiter
+        self._emit_sink = emit_sink
         self._batch_waiter = batch_waiter
         self._workflow_id = workflow_id
         self._max_call_limits = dict(max_call_limits or {})
@@ -760,6 +823,16 @@ class _TemporalEnv:
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return await self._gate_waiter(value, cid, timeout_s)
 
+    async def recv(self, channel: str, cid: str, timeout_s: Optional[int]) -> Any:
+        if self._recv_waiter is None:
+            raise SessionClosed(f"session channel {channel!r} is closed")
+        return await self._recv_waiter(channel, cid, timeout_s)
+
+    async def emit(self, channel: str, value: Any, cid: str) -> None:
+        if self._emit_sink is None:
+            return
+        await self._emit_sink(channel, value, cid)
+
     async def sleep(self, seconds: float, cid: str) -> None:
         # asyncio.sleep inside a Temporal workflow is a durable timer.
         await asyncio.sleep(seconds)
@@ -1020,7 +1093,23 @@ class FlowWorkflow:
             max_call_limits = runtime_caps.get("maxCalls", {})
 
         flow = Node.from_json(flow_json)
-        node_ops = {n.id: n.op.value for n in flow.walk()}
+        nodes = list(flow.walk())
+        for node in nodes:
+            if node.op == Op.LOOP:
+                raise ApplicationError(
+                    "FlowWorkflow cannot run a session Op.LOOP; use SessionWorkflow for LOOP artifacts",
+                    type="ValidationError",
+                    non_retryable=True,
+                )
+            reserved = _reserved_channel_tool_name(node)
+            if reserved is not None:
+                raise ApplicationError(
+                    f"FlowWorkflow cannot run reserved session channel operation {reserved!r}; "
+                    "use SessionWorkflow for recv/emit channel artifacts",
+                    type="ValidationError",
+                    non_retryable=True,
+                )
+        node_ops = {n.id: n.op.value for n in nodes}
         manifest = manifest_from_json(manifest_json or {})
 
         store, emitter = _make_emitter()
@@ -1079,6 +1168,417 @@ class FlowWorkflow:
             segment_seq=inp.segment_seq,
         )
         return result.value
+
+
+# --------------------------------------------------------------------------- #
+# SessionWorkflow — a durable root Op.LOOP with channel updates.
+# --------------------------------------------------------------------------- #
+class RecvTimeout(Exception):
+    def __init__(self, channel: str) -> None:
+        self.channel = channel
+        super().__init__(f"session channel {channel!r} receive timed out")
+
+
+@workflow.defn(name="SessionWorkflow")
+class SessionWorkflow:
+    def __init__(self) -> None:
+        self._pending: dict[str, list[dict[str, Any]]] = {}
+        self._out_buffers: dict[str, list[dict[str, Any]]] = {}
+        self._ack_cursors: dict[str, int] = {}
+        self._seq_cursors: dict[str, int] = {}
+        self._idempotency_index: dict[str, dict[str, int]] = {}
+        self._open_receives: dict[str, int] = {}
+        self._closed: bool = False
+        self._carrier_current: Any = None
+        self._capacity: Optional[int] = None
+
+    @staticmethod
+    def _in_seq_key(channel: str) -> str:
+        return f"in:{channel}"
+
+    @staticmethod
+    def _out_seq_key(channel: str) -> str:
+        return f"out:{channel}"
+
+    @staticmethod
+    def _consumed_seq_key(channel: str) -> str:
+        return f"consumed:{channel}"
+
+    def _next_seq(self, key: str) -> int:
+        seq = self._seq_cursors.get(key, 0) + 1
+        self._seq_cursors[key] = seq
+        return seq
+
+    def _raise_if_send_rejected(
+        self,
+        channel: str,
+        idempotency_key: Any,
+    ) -> None:
+        if self._closed:
+            raise ApplicationError(
+                "session is closed",
+                type="ValidationError",
+                non_retryable=True,
+            )
+        if idempotency_key is not None:
+            prior = self._idempotency_index.get(channel, {}).get(str(idempotency_key))
+            if prior is not None:
+                return
+        pending = self._pending.get(channel, [])
+        if self._capacity is not None and len(pending) >= self._capacity:
+            raise ApplicationError(
+                f"ChannelFull: channel {channel!r} is full",
+                type="ChannelFull",
+                non_retryable=True,
+            )
+
+    def _evict_acked(self, channel: str) -> None:
+        acked = self._ack_cursors.get(channel, 0)
+        if acked <= 0:
+            return
+        self._out_buffers[channel] = [
+            item for item in self._out_buffers.get(channel, [])
+            if int(item.get("seq", 0)) > acked
+        ]
+
+    def _rehydrate(self, inp: SessionInput) -> None:
+        self._pending = {
+            str(channel): [dict(item) for item in items]
+            for channel, items in (inp.inbox or {}).items()
+        }
+        self._out_buffers = {
+            str(channel): [dict(item) for item in items]
+            for channel, items in (inp.out_buffers or {}).items()
+        }
+        self._ack_cursors = {
+            str(channel): int(seq) for channel, seq in (inp.ack_cursors or {}).items()
+        }
+        for channel in list(self._out_buffers):
+            self._evict_acked(channel)
+        self._seq_cursors = dict(inp.seq_cursors or {})
+        self._idempotency_index = {
+            str(channel): {str(key): int(seq) for key, seq in entries.items()}
+            for channel, entries in (inp.idempotency_index or {}).items()
+        }
+        self._closed = bool(inp.closed)
+        self._capacity = inp.channel_capacity
+
+    @workflow.update(name="send")
+    def send(self, payload: dict[str, Any]) -> dict[str, Any]:
+        channel = str(payload.get("channel", "in"))
+        idempotency_key = payload.get("idempotency_key")
+        self._raise_if_send_rejected(channel, idempotency_key)
+        if idempotency_key is not None:
+            key = str(idempotency_key)
+            channel_index = self._idempotency_index.setdefault(channel, {})
+            prior = channel_index.get(key)
+            if prior is not None:
+                return {"seq": prior, "channel": channel}
+
+        pending = self._pending.setdefault(channel, [])
+        seq = self._next_seq(self._in_seq_key(channel))
+        item = {"seq": seq, "value": payload.get("value")}
+        if idempotency_key is not None:
+            key = str(idempotency_key)
+            item["idempotency_key"] = key
+            self._idempotency_index.setdefault(channel, {})[key] = seq
+        pending.append(item)
+        return {"seq": seq, "channel": channel}
+
+    @send.validator
+    def validate_send(self, payload: dict[str, Any]) -> None:
+        self._raise_if_send_rejected(
+            str(payload.get("channel", "in")),
+            payload.get("idempotency_key"),
+        )
+
+    @workflow.update(name="close")
+    def close(self, payload: dict[str, Any]) -> dict[str, Any]:
+        del payload
+        self._closed = True
+        return {"closed": True}
+
+    @workflow.update(name="ack")
+    def ack(self, payload: dict[str, Any]) -> dict[str, Any]:
+        channel = str(payload["channel"])
+        seq = int(payload["seq"])
+        acked = max(self._ack_cursors.get(channel, 0), seq)
+        self._ack_cursors[channel] = acked
+        self._evict_acked(channel)
+        return {"channel": channel, "acked": acked}
+
+    @workflow.query(name="open_receives")
+    def open_receives(self) -> list[dict[str, Any]]:
+        return [
+            {"channel": channel, "seq": seq}
+            for channel, seq in sorted(self._open_receives.items())
+        ]
+
+    @workflow.query(name="state")
+    def state(self) -> dict[str, Any]:
+        return {
+            "emitted": {
+                channel: [dict(item) for item in items]
+                for channel, items in sorted(self._out_buffers.items())
+            },
+            "ack_cursors": dict(self._ack_cursors),
+            "capacity": self._capacity,
+            "carrier": self._carrier_current,
+            "closed": self._closed,
+            "pending": {
+                channel: len(items)
+                for channel, items in sorted(self._pending.items())
+            },
+        }
+
+    async def _recv_waiter(
+        self,
+        channel: str,
+        cid: str,
+        timeout_s: Optional[int],
+    ) -> Any:
+        del cid
+        timeout = timedelta(seconds=timeout_s) if timeout_s is not None else None
+        self._open_receives[channel] = (
+            self._seq_cursors.get(self._consumed_seq_key(channel), 0) + 1
+        )
+        try:
+            await workflow.wait_condition(
+                lambda: bool(self._pending.get(channel)) or self._closed,
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError as exc:
+            if self._closed:
+                raise SessionClosed(f"session channel {channel!r} is closed") from exc
+            raise RecvTimeout(channel) from exc
+        finally:
+            self._open_receives.pop(channel, None)
+
+        pending = self._pending.setdefault(channel, [])
+        if pending:
+            item = pending.pop(0)
+            seq = int(item.get("seq", 0))
+            self._seq_cursors[self._consumed_seq_key(channel)] = seq
+            return item.get("value")
+        raise SessionClosed(f"session channel {channel!r} is closed")
+
+    async def _emit_sink(self, channel: str, value: Any, cid: str) -> None:
+        del cid
+        if self._capacity is not None:
+            await workflow.wait_condition(
+                lambda: (
+                    len(self._out_buffers.get(channel, [])) < self._capacity
+                    or self._closed
+                )
+            )
+        if self._closed:
+            return
+        seq = self._next_seq(self._out_seq_key(channel))
+        self._out_buffers.setdefault(channel, []).append({"seq": seq, "payload": value})
+
+    async def _load_carrier(self, inp: SessionInput) -> Any:
+        if inp.has_carrier:
+            return inp.carrier
+        if inp.state_cursor is None:
+            return inp.init
+        return await workflow.execute_activity(
+            loadValue,
+            LoadValueInput(session_id=inp.session_id, cursor=inp.state_cursor),
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(
+                maximum_attempts=3,
+                non_retryable_error_types=_NON_RETRYABLE,
+            ),
+        )
+
+    async def _commit_carrier(
+        self,
+        inp: SessionInput,
+        *,
+        base_cursor: Optional[int],
+        carrier: Any,
+    ) -> int:
+        return await workflow.execute_activity(
+            commitValue,
+            CommitValueInput(
+                session_id=inp.session_id,
+                base=base_cursor or 0,
+                value=carrier,
+                value_hash=value_fingerprint(carrier),
+            ),
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(
+                maximum_attempts=3,
+                non_retryable_error_types=_NON_RETRYABLE,
+            ),
+        )
+
+    def _should_continue_as_new(self, inp: SessionInput) -> bool:
+        if inp.history_threshold is None:
+            return False
+        return workflow.info().get_current_history_length() >= inp.history_threshold
+
+    def _continue_as_new(
+        self,
+        inp: SessionInput,
+        *,
+        carrier: Any,
+        state_cursor: int,
+        flow_json: dict[str, Any],
+        manifest_json: Optional[dict[str, Any]],
+        policy: ExecutionPolicy,
+    ) -> None:
+        workflow.continue_as_new(
+            SessionInput(
+                session_id=inp.session_id,
+                flow_json=flow_json,
+                manifest_json=manifest_json,
+                init=inp.init,
+                in_channel=inp.in_channel,
+                out_channel=inp.out_channel,
+                policy=policy.to_json(),
+                principal=inp.principal,
+                root_run_id=(inp.root_run_id or inp.session_id),
+                segment_seq=inp.segment_seq + 1,
+                history_threshold=inp.history_threshold,
+                channel_capacity=inp.channel_capacity,
+                state_cursor=state_cursor,
+                has_carrier=True,
+                carrier=carrier,
+                inbox={
+                    channel: [dict(item) for item in items]
+                    for channel, items in self._pending.items()
+                },
+                out_buffers={
+                    channel: [dict(item) for item in items]
+                    for channel, items in self._out_buffers.items()
+                },
+                ack_cursors=dict(self._ack_cursors),
+                seq_cursors=dict(self._seq_cursors),
+                closed=self._closed,
+                idempotency_index={
+                    channel: dict(entries)
+                    for channel, entries in self._idempotency_index.items()
+                },
+            )
+        )
+
+    @workflow.run
+    async def run(self, inp: SessionInput) -> Any:
+        if workflow.info().workflow_id != inp.session_id:
+            raise ApplicationError(
+                f"session store fencing violated: session_id {inp.session_id!r} != workflow id "
+                f"{workflow.info().workflow_id!r}; durable sessions delegate mutual exclusion to "
+                "Temporal's one-running-execution-per-workflow-id guarantee, so they must be 1:1",
+                type="ValidationError",
+                non_retryable=True,
+            )
+
+        policy = ExecutionPolicy.from_json(inp.policy)
+        flow_json = inp.flow_json
+        manifest_json = inp.manifest_json
+        flow = Node.from_json(flow_json)
+        manifest = manifest_from_json(manifest_json or {})
+
+        if flow.op != Op.LOOP:
+            raise ApplicationError(
+                "SessionWorkflow requires a root Op.LOOP",
+                type="ValidationError",
+                non_retryable=True,
+            )
+        diagnostics = [
+            d
+            for d in blocking(validate(flow, manifest, target="session"))
+            if d.code != "UNKNOWN_PURE"
+        ]
+        if diagnostics:
+            details = "; ".join(f"{d.code}: {d.message}" for d in diagnostics)
+            raise ApplicationError(
+                f"invalid session LOOP: {details}",
+                type="ValidationError",
+                non_retryable=True,
+            )
+        assert flow.body is not None
+
+        self._rehydrate(inp)
+        carrier = await self._load_carrier(inp)
+        state_cursor = inp.state_cursor
+        self._carrier_current = carrier
+
+        store, emitter = _make_emitter()
+        del store
+        env = _TemporalEnv(
+            manifest=manifest,
+            emitter=emitter,
+            session_id=inp.session_id,
+            manifest_json=manifest_json,
+            policy=policy,
+            gate_waiter=lambda value, cid, timeout_s: self._recv_waiter(
+                "human", cid, timeout_s
+            ),
+            recv_waiter=self._recv_waiter,
+            emit_sink=self._emit_sink,
+            workflow_id=inp.session_id,
+            principal=inp.principal,
+            root_run_id=(inp.root_run_id or inp.session_id),
+            segment_seq=inp.segment_seq,
+        )
+
+        split_result = bool(flow.args and flow.args.get("split") is True)
+        try:
+            while True:
+                try:
+                    result: Result = await interpret(flow.body, carrier, env)
+                except RecvTimeout as exc:
+                    self._open_receives[exc.channel] = (
+                        self._seq_cursors.get(self._consumed_seq_key(exc.channel), 0)
+                        + 1
+                    )
+                    try:
+                        await workflow.wait_condition(
+                            lambda: bool(self._pending.get(exc.channel)) or self._closed
+                        )
+                    finally:
+                        self._open_receives.pop(exc.channel, None)
+                    continue
+                except SessionClosed:
+                    break
+
+                if (
+                    split_result
+                    and isinstance(result.value, tuple)
+                    and len(result.value) == 2
+                ):
+                    carrier, output = result.value
+                    await self._emit_sink(inp.out_channel, output, f"{flow.id}:out")
+                else:
+                    carrier = result.value
+                self._carrier_current = carrier
+
+                want_can = self._should_continue_as_new(inp)
+                if want_can:
+                    cursor = await self._commit_carrier(
+                        inp,
+                        base_cursor=state_cursor,
+                        carrier=carrier,
+                    )
+                    state_cursor = cursor
+                if want_can and state_cursor is not None:
+                    self._continue_as_new(
+                        inp,
+                        carrier=carrier,
+                        state_cursor=state_cursor,
+                        flow_json=flow_json,
+                        manifest_json=manifest_json,
+                        policy=policy,
+                    )
+        except ComposableAgentsError as exc:
+            raise ApplicationError(
+                str(exc),
+                type=type(exc).__name__,
+                non_retryable=True,
+            ) from exc
+        return carrier
 
 
 # --------------------------------------------------------------------------- #
@@ -1654,8 +2154,11 @@ async def start_flow(
 __all__ = [
     "ExecutionPolicy",
     "FlowWorkflow",
+    "SessionWorkflow",
+    "RecvTimeout",
     "AgentWorkflow",
     "FlowInput",
+    "SessionInput",
     "AgentInput",
     "finishTrajectory",
     "startTrajectory",

@@ -6,14 +6,14 @@ mutual exclusion belongs to Temporal. The cursor compare-and-swap here exists
 only for crash-recovery idempotency (invariant 1), letting a retried committed
 write return the original cursor instead of appending a duplicate revision.
 
-Stored session carriers and blobs are JSON-canonical: values are serialized
-with ``json.dumps(sort_keys=True)``, so refs from ``put_blob`` are content
-addresses of the canonical JSON encoding — not of raw bytes — and are
-intentionally distinct from the wire codec's refs (``codec.py`` addresses raw
-Temporal Payload protobuf bytes). Non-JSON-serializable values are rejected:
-the ``TypeError`` from ``json.dumps`` propagates, and that loud failure is
-intended. The typed ``AgentState`` load/commit path remains as a compatibility
-layer over the generic JSON carrier primitive.
+Stored session carriers and blobs are JSON-canonical: values are serialized in
+compact, sorted-key JSON form, so refs from ``put_blob`` are content addresses
+of the canonical JSON encoding — not of raw bytes — and are intentionally
+distinct from the wire codec's refs (``codec.py`` addresses raw Temporal
+Payload protobuf bytes). Non-JSON-serializable values are rejected: the
+``TypeError`` from ``json.dumps`` propagates, and that loud failure is intended.
+The typed ``AgentState`` load/commit path remains as a compatibility layer over
+the generic JSON carrier primitive.
 """
 
 from __future__ import annotations
@@ -30,7 +30,8 @@ Cursor = int
 
 def _canonical_json_text(value: Any) -> str:
     try:
-        return json.dumps(value, sort_keys=True, separators=(",", ":"))
+        normalized = json.loads(json.dumps(value))
+        return json.dumps(normalized, sort_keys=True, separators=(",", ":"))
     except TypeError as exc:
         raise TypeError(
             "value_fingerprint: value is not JSON-serializable "
@@ -89,17 +90,12 @@ class InMemorySessionStore:
         blob_store: Optional[BlobStore] = None,
         *,
         empty_value: Any = None,
-        state_schema: Optional[dict[str, Any]] = None,
     ) -> None:
         self._blob_store = blob_store or InMemoryBlobStore()
         self._empty_value = empty_value
-        self._state_schema = state_schema
         self._revisions: dict[str, list[_Revision]] = {}
 
     async def load(self, session_id: str, cursor: Cursor) -> al.AgentState:
-        if cursor == 0:
-            return al.AgentState()
-
         value = await self.load_value(session_id, cursor)
         if value is None:
             return al.AgentState()
@@ -130,7 +126,7 @@ class InMemorySessionStore:
 
         for revision in revisions:
             if revision.cursor == cursor:
-                return _canonical_json_value(revision.value)
+                return revision.value
 
         raise SessionStoreError(f"session cursor not found: {session_id!r}@{cursor}")
 
@@ -141,47 +137,23 @@ class InMemorySessionStore:
         value: Any,
         value_hash: str,
     ) -> Cursor:
-        actual_hash = value_fingerprint(value)
-        if actual_hash != value_hash:
-            raise SessionStoreError(
-                f"value_hash mismatch: expected {value_hash!r}, got {actual_hash!r}"
-            )
+        del value_hash
+        canonical_value = _canonical_json_value(value)
+        actual_hash = value_fingerprint(canonical_value)
 
         revisions = self._revisions.setdefault(session_id, [])
         head = revisions[-1].cursor if revisions else 0
 
         for revision in revisions:
-            if revision.base == base and revision.value_hash == value_hash:
+            if revision.base == base and revision.value_hash == actual_hash:
                 return revision.cursor
 
         if base != head:
             raise CursorConflict(f"stale cursor: base={base}, head={head}")
 
-        canonical_value = _canonical_json_value(value)
-        self._validate_state_schema(canonical_value)
         cursor = head + 1
-        revisions.append(_Revision(cursor, base, canonical_value, value_hash))
+        revisions.append(_Revision(cursor, base, canonical_value, actual_hash))
         return cursor
-
-    def _validate_state_schema(self, value: Any) -> None:
-        if self._state_schema is None:
-            return
-
-        try:
-            import jsonschema
-        except ImportError as exc:
-            raise SessionStoreError(
-                "jsonschema not installed but state_schema was configured"
-            ) from exc
-
-        try:
-            jsonschema.validate(instance=value, schema=self._state_schema)
-        except jsonschema.ValidationError as exc:
-            raise SessionStoreError(
-                f"state_schema validation failed: {exc.message}"
-            ) from exc
-        except jsonschema.SchemaError as exc:
-            raise SessionStoreError(f"invalid state_schema: {exc.message}") from exc
 
     async def put_blob(self, tenant: str, value: Any) -> str:
         """Store ``value`` as canonical JSON; the ref addresses that encoding.
@@ -190,7 +162,7 @@ class InMemorySessionStore:
         loudly, and the ref-space is distinct from the wire codec's
         (``codec.py``), which addresses raw Temporal Payload protobuf bytes.
         """
-        data = json.dumps(value, sort_keys=True).encode()
+        data = _canonical_json_text(value).encode()
         return await self._blob_store.put(tenant, data)
 
     async def get_blob(self, tenant: str, ref: str) -> Any:

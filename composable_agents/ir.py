@@ -532,7 +532,7 @@ class Node:
                 out["summarizer"] = self.summarizer
         if self.pure is not None:
             out["pure"] = self.pure
-        if self.op == Op.ARR and self.args is not None:
+        if self.op in (Op.ARR, Op.LOOP) and self.args is not None:
             out["args"] = self.args
         if _is_reserved_channel_prim(self) and self.prompt is not None:
             out["channel"] = self.prompt

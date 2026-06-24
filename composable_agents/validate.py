@@ -175,7 +175,7 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
     if op != Op.ALT and (n.select is not None or n.cases is not None or n.default is not None):
         err("ALT_FIELDS_ON_NONALT", f"{op.value} node must not carry alt switch fields")
 
-    if op != Op.ARR and n.args is not None and not _is_emit(n):
+    if op not in (Op.ARR, Op.LOOP) and n.args is not None and not _is_emit(n):
         err("ARR_ARGS_ON_NONARR", f"{op.value} node must not carry arr static args")
 
     if op in (Op.SEQ, Op.PAR):

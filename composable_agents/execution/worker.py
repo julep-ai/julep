@@ -39,10 +39,12 @@ from .activities import (
     WorkerContext,
     callTool,
     commitState,
+    commitValue,
     compilePlan,
     configure,
     invokeReasoner,
     loadState,
+    loadValue,
     putBlob,
     resolveAgentSpec,
     resolveQoS,
@@ -67,6 +69,7 @@ from .debounce import DebounceCollector
 from .harness import (
     AgentWorkflow,
     FlowWorkflow,
+    SessionWorkflow,
     finishTrajectory,
     flushStructural,
     runSubCapture,
@@ -80,8 +83,10 @@ from ..cas import cas_from_url
 ACTIVITIES = [
     callTool,
     commitState,
+    commitValue,
     invokeReasoner,
     loadState,
+    loadValue,
     compilePlan,
     putBlob,
     verifyPures,
@@ -98,7 +103,14 @@ ACTIVITIES = [
     pollBatch,
     fetchBatchResults,
 ]
-WORKFLOWS = [FlowWorkflow, AgentWorkflow, DebounceCollector, BatchCollector, BatchPoll]
+WORKFLOWS = [
+    FlowWorkflow,
+    SessionWorkflow,
+    AgentWorkflow,
+    DebounceCollector,
+    BatchCollector,
+    BatchPoll,
+]
 
 
 def claim_check_converter(

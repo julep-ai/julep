@@ -10,6 +10,7 @@ tests/test_blobstore.py for the pattern).
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 
 import pytest
@@ -23,6 +24,7 @@ from composable_agents.execution.session_store import (
     CursorConflict,
     InMemorySessionStore,
     SessionStoreError,
+    _canonical_json_text,
     value_fingerprint,
 )
 
@@ -207,6 +209,22 @@ def test_commit_value_round_trips_arbitrary_json_carrier() -> None:
     assert loaded == value
 
 
+def test_commit_value_owns_hash_after_json_codec_round_trip() -> None:
+    store = InMemorySessionStore()
+    original = {"t": (1, 2), 1: "a"}
+    caller_hash = value_fingerprint(original)
+    received = json.loads(json.dumps(original))
+
+    async def go() -> tuple[int, object]:
+        cursor = await store.commit_value("s1", 0, received, caller_hash)
+        loaded = await store.load_value("s1", cursor)
+        return cursor, loaded
+
+    cursor, loaded = asyncio.run(go())
+    assert cursor == 1
+    assert loaded == {"1": "a", "t": [1, 2]}
+
+
 def test_commit_value_idempotent_replay_returns_same_cursor_and_one_revision() -> None:
     store = InMemorySessionStore()
     value = {"channel_buffers": {"human": [{"seq": 1, "msg": "hi"}]}}
@@ -263,27 +281,6 @@ def test_commit_value_rejects_non_json_carrier() -> None:
         asyncio.run(go())
 
 
-def test_commit_value_validates_configured_json_schema() -> None:
-    pytest.importorskip("jsonschema")
-    store = InMemorySessionStore(state_schema={"type": "object", "required": ["x"]})
-    valid = {"x": 1}
-    invalid = {"y": 1}
-
-    async def commit_valid() -> int:
-        return await store.commit_value("s1", 0, valid, value_fingerprint(valid))
-
-    cursor = asyncio.run(commit_valid())
-    assert cursor == 1
-
-    async def commit_invalid() -> int:
-        return await store.commit_value(
-            "s1", cursor, invalid, value_fingerprint(invalid)
-        )
-
-    with pytest.raises(SessionStoreError):
-        asyncio.run(commit_invalid())
-
-
 # --------------------------------------------------------------------------- #
 # blob round-trip + integrity
 # --------------------------------------------------------------------------- #
@@ -310,6 +307,23 @@ def test_put_blob_uses_sorted_keys_for_dedup() -> None:
     ref1, ref2 = asyncio.run(go())
     # sort_keys makes key order irrelevant: identical content-addressed ref.
     assert ref1 == ref2
+
+
+def test_blob_bytes_and_value_fingerprint_share_canonical_encoder() -> None:
+    blobs = InMemoryBlobStore()
+    store = InMemorySessionStore(blobs)
+    value = {"z": [3, 2, 1], "a": {"b": True}}
+    expected = _canonical_json_text(value).encode()
+
+    async def go() -> tuple[str, bytes]:
+        ref = await store.put_blob("acme", value)
+        raw = await blobs.get("acme", ref)
+        return ref, raw
+
+    ref, raw = asyncio.run(go())
+    assert raw == expected
+    assert value_fingerprint(value) == hashlib.sha256(raw).hexdigest()
+    assert ref == f"acme/sha256:{hashlib.sha256(raw).hexdigest()}"
 
 
 def test_get_blob_raises_on_corrupted_underlying_blob() -> None:

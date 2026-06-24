@@ -15,10 +15,12 @@ from temporalio import activity
 from .effects import (
     CallToolInput as CallToolInput,
     CommitStateInput as CommitStateInput,
+    CommitValueInput as CommitValueInput,
     CompilePlanInput as CompilePlanInput,
     InvokeReasonerInput as InvokeReasonerInput,
     LlmCaller as LlmCaller,
     LoadStateInput as LoadStateInput,
+    LoadValueInput as LoadValueInput,
     McpCaller as McpCaller,
     PutBlobInput as PutBlobInput,
     ResolveQoSInput as ResolveQoSInput,
@@ -46,6 +48,16 @@ async def loadState(inp: LoadStateInput) -> dict[str, Any]:
 @activity.defn(name="commitState")
 async def commitState(inp: CommitStateInput) -> int:
     return await effects.commitState(inp)
+
+
+@activity.defn(name="loadValue")
+async def loadValue(inp: LoadValueInput) -> Any:
+    return await effects.loadValue(inp)
+
+
+@activity.defn(name="commitValue")
+async def commitValue(inp: CommitValueInput) -> int:
+    return await effects.commitValue(inp)
 
 
 @activity.defn(name="putBlob")

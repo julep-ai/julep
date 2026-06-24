@@ -9,7 +9,7 @@ configured with the in-memory reference stores, and assert that:
   trips the committed state JSON;
 * ``putBlob`` returns a content-addressed ref that the blob store resolves, and
   the ref matches ``SessionStore.put_blob`` for the same value (shared
-  ``json.dumps(..., sort_keys=True)`` serialization);
+  compact canonical JSON serialization);
 * each activity raises ``RuntimeError`` when its backing store is ``None``.
 """
 

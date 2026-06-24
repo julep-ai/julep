@@ -48,7 +48,7 @@ from ..cas import cas_from_url
 from ..worker_store import bundle_ref_entries, resolve_entries
 from .blobstore import BlobStore, parse_ref
 from .llm_result import LlmResult
-from .session_store import SessionStore
+from .session_store import SessionStore, _canonical_json_text
 
 logger = logging.getLogger("composable_agents.execution.effects")
 
@@ -415,6 +415,20 @@ class CommitStateInput:
 
 
 @dataclass
+class LoadValueInput:
+    session_id: str
+    cursor: int
+
+
+@dataclass
+class CommitValueInput:
+    session_id: str
+    base: int
+    value: Any
+    value_hash: str
+
+
+@dataclass
 class PutBlobInput:
     tenant: str
     value: Any
@@ -438,20 +452,31 @@ async def commitState(inp: CommitStateInput) -> int:
     )
 
 
+async def loadValue(inp: LoadValueInput) -> Any:
+    if _CTX.session_store is None:
+        raise RuntimeError("worker has no session store configured")
+    return await _CTX.session_store.load_value(inp.session_id, inp.cursor)
+
+
+async def commitValue(inp: CommitValueInput) -> int:
+    if _CTX.session_store is None:
+        raise RuntimeError("worker has no session store configured")
+    return await _CTX.session_store.commit_value(
+        inp.session_id, inp.base, inp.value, inp.value_hash
+    )
+
+
 async def putBlob(inp: PutBlobInput) -> str:
     """JSON-canonical claim check for trace/context refs (``trace_content_refs``).
 
-    Refs address the canonical JSON encoding (``json.dumps(sort_keys=True)``) —
-    a deliberately distinct ref-space from the wire codec's raw-payload refs
-    (``codec.py``); non-JSON values are rejected loudly (``TypeError``).
+    Refs address the compact canonical JSON encoding — a deliberately distinct
+    ref-space from the wire codec's raw-payload refs (``codec.py``);
+    non-JSON values are rejected loudly (``TypeError``).
     """
     if _CTX.blob_store is None:
         raise RuntimeError("worker has no blob store configured")
-    import json
 
-    return await _CTX.blob_store.put(
-        inp.tenant, json.dumps(inp.value, sort_keys=True).encode()
-    )
+    return await _CTX.blob_store.put(inp.tenant, _canonical_json_text(inp.value).encode())
 
 
 async def _capture_effect(
