@@ -110,7 +110,6 @@ def run(
 ) -> None:
     """Execute an agent locally and stream its terminal trace tree."""
     cfg = load_config(Path("."))
-    rid = run_id or f"ca-{name}-local"
     try:
         parsed = _json.loads(input)
     except _json.JSONDecodeError as exc:
@@ -120,19 +119,30 @@ def run(
         typer.echo(f"error: unknown env {env!r}", err=True)
         raise typer.Exit(2)
     if env != "local":
-        result = run_on_env(cfg, name, cfg.envs[env], parsed, run_id=rid)
+        # Pass through an explicit --run-id, but for a cloud env DO NOT fabricate
+        # a fixed 'ca-<name>-local' id: that collides/dedups across runs and is
+        # mislabelled 'local'. An empty id lets run_on_env mint a unique,
+        # env-scoped session id.
+        result = run_on_env(cfg, name, cfg.envs[env], parsed, run_id=run_id or None)
         if isinstance(result, RunOutcome):
             if result.error is not None:
                 typer.echo(f"error: {result.error}", err=True)
+                save_run(
+                    str(cfg.root), run_id=result.run_id, agent=name, status="error", events=result.events
+                )
                 raise typer.Exit(1)
             typer.echo(render_tree(result.events))
             typer.echo(f"\noutput: {_json.dumps(result.value, default=str)}")
-        else:
-            typer.echo(f"output: {_json.dumps(result, default=str)}")
-        url = trace_url(rid)
-        if url:
-            typer.echo(f"\nlangfuse: {url}")
+            save_run(
+                str(cfg.root), run_id=result.run_id, agent=name, status="done", events=result.events
+            )
+            url = trace_url(result.run_id)
+            if url:
+                typer.echo(f"\nlangfuse: {url}")
+            return
+        typer.echo(f"output: {_json.dumps(result, default=str)}")
         return
+    rid = run_id or f"ca-{name}-local"
     resolved = resolve_agent(cfg, name)
     outcome = run_agent_local(resolved, parsed, run_id=rid)
     if outcome.error is not None:
@@ -152,6 +162,9 @@ def deploy(
 ) -> None:
     """Freeze, publish, and record selected agents for an environment."""
     cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
     module = build_module(cfg)
     names = [a.name for a in select(module, selector, exclude=exclude)]
     if not names:
@@ -175,6 +188,9 @@ def status(
 ) -> None:
     """Show deployment status and drift for an environment."""
     cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
     rows = status_for_env(cfg, env)
     if selector.strip() or exclude.strip():
         module = build_module(cfg)

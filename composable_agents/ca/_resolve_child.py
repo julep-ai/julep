@@ -101,11 +101,14 @@ def _freeze_agent(
     found: FlowLike[Any, Any],
     modules: list[ModuleType],
     cas: str,
+    *,
+    publish: bool = True,
 ) -> dict[str, Any]:
     from composable_agents.agent import Tool, snapshot_from_tools
     from composable_agents.cas import LocalDirCAS, cas_from_url
     from composable_agents.deploy import deploy
     from composable_agents.ir import toolref_key
+    from composable_agents.validate import blocking
 
     tools_by_name: dict[str, Tool[Any, Any]] = {}
     for mod in modules:
@@ -135,17 +138,38 @@ def _freeze_agent(
                 break
 
     snapshot = snapshot_from_tools(selected_tools)
+    # strict=False so we can surface the prod gap ourselves rather than letting
+    # ValidationError abort before we can attach a human-readable summary. We
+    # still REFUSE to publish/record a blocking deployment below.
     dep = deploy(node, snapshot, strict=False)
-    store = cas_from_url(cas) if cas.startswith("s3://") else LocalDirCAS(cas)
-    if not cas.startswith("s3://"):
-        os.environ.setdefault("CA_BUNDLE_SIGNING_KEY", _LOCAL_DEV_SIGNING_KEY)
-    dep.publish(store)
-    return {
+    bad = blocking(dep.diagnostics)
+    if bad:
+        return {"error": dep.prod_gap_summary()}
+
+    pinned_pures = {
+        key: value
+        for key, value in dep.artifact_components["pureSourceHashes"].items()
+        if isinstance(value, str)
+    }
+    result: dict[str, Any] = {
         "artifact_hash": dep.artifact_hash,
         "flow_json": dep.flow_json,
         "manifest_json": dep.manifest_json,
         "bundle_ref": dep.bundle_ref,
+        "pinned_pures": pinned_pures,
     }
+    if not publish:
+        # Read-only path (`ca status`): the artifact_hash is a cached_property of
+        # artifact_components and needs no CAS mutation / S3 upload to compute.
+        return result
+
+    store = cas_from_url(cas) if cas.startswith("s3://") else LocalDirCAS(cas)
+    if not cas.startswith("s3://"):
+        os.environ.setdefault("CA_BUNDLE_SIGNING_KEY", _LOCAL_DEV_SIGNING_KEY)
+    dep.publish(store)
+    # publish() may rewrite bundle_ref (runtime refs present -> a list, else None).
+    result["bundle_ref"] = dep.bundle_ref
+    return result
 
 
 def main() -> int:
@@ -155,13 +179,20 @@ def main() -> int:
     target: str = payload["name"]
     action = payload.get("action", "resolve")
 
-    if action == "freeze":
+    if action in ("freeze", "freeze_check"):
         try:
             result = _discover_agent(root, src, target)
             if result.found is None:
                 _emit({"error": _not_found_error(target, result.import_errors)})
                 return 0
-            _emit(_freeze_agent(result.found, result.modules, str(payload["cas"])))
+            _emit(
+                _freeze_agent(
+                    result.found,
+                    result.modules,
+                    str(payload["cas"]),
+                    publish=action == "freeze",
+                )
+            )
         except Exception as exc:  # noqa: BLE001 - serialize child failures for the parent.
             _emit({"error": f"{type(exc).__name__}: {exc}"})
         return 0

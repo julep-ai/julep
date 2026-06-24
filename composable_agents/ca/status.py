@@ -56,7 +56,9 @@ def status_for_env(cfg: CaConfig, env: str) -> list[AgentStatus]:
             )
             continue
 
-        artifact = freeze_agent(cfg, name, env)
+        # Status is read-only: compute the artifact hash WITHOUT publishing to
+        # CAS / uploading to S3 (publish=False).
+        artifact = freeze_agent(cfg, name, env, publish=False)
         if artifact.error is not None:
             statuses.append(
                 AgentStatus(

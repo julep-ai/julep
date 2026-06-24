@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +25,9 @@ class DeployRecord:
     manifest_json: dict[str, Any]
     bundle_ref: list[dict[str, Any]] | None
     deployed_at: str
+    # Pinned pure source hashes captured at deploy time; passed as run_flow's
+    # pinned_pures on replay so worker-side pure-registry drift is detected.
+    pinned_pures: dict[str, str] = field(default_factory=dict)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -33,6 +36,7 @@ class DeployRecord:
             "flow_json": self.flow_json,
             "manifest_json": self.manifest_json,
             "bundle_ref": self.bundle_ref,
+            "pinned_pures": self.pinned_pures,
             "deployed_at": self.deployed_at,
         }
 
@@ -47,6 +51,8 @@ class DeployRecord:
             flow_json=_dict_field(data, "flow_json"),
             manifest_json=_dict_field(data, "manifest_json"),
             bundle_ref=_bundle_ref_field(data, "bundle_ref"),
+            # Backward compatible: ledgers written before pinned_pures existed.
+            pinned_pures=_pinned_pures_field(data, "pinned_pures"),
             deployed_at=_str_field(data, "deployed_at"),
         )
 
@@ -108,6 +114,21 @@ def _dict_field(data: dict[str, Any], name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"DeployRecord.{name} must be a JSON object")
     return _string_keyed_dict(value, f"DeployRecord.{name}")
+
+
+def _pinned_pures_field(data: dict[str, Any], name: str) -> dict[str, str]:
+    # Optional + backward compatible: pre-existing ledgers have no such key.
+    value = data.get(name)
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError(f"DeployRecord.{name} must be a JSON object or null")
+    pinned: dict[str, str] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or not isinstance(item, str):
+            raise ValueError(f"DeployRecord.{name} must map string keys to string hashes")
+        pinned[key] = item
+    return pinned
 
 
 def _bundle_ref_field(data: dict[str, Any], name: str) -> list[dict[str, Any]] | None:

@@ -19,6 +19,7 @@ class FrozenArtifact:
     flow_json: dict[str, Any] = field(default_factory=dict)
     manifest_json: dict[str, Any] = field(default_factory=dict)
     bundle_ref: list[dict[str, Any]] | None = None
+    pinned_pures: dict[str, str] = field(default_factory=dict)
     error: str | None = None
 
 
@@ -63,6 +64,20 @@ def _bundle_ref_field(data: dict[str, Any]) -> list[dict[str, Any]] | None:
     return bundle_ref
 
 
+def _pinned_pures_field(data: dict[str, Any]) -> dict[str, str]:
+    value = data.get("pinned_pures")
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError("pinned_pures must be a JSON object or null")
+    pinned: dict[str, str] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or not isinstance(item, str):
+            raise ValueError("pinned_pures must map string keys to string hashes")
+        pinned[key] = item
+    return pinned
+
+
 def _artifact_from_payload(name: str, data: dict[str, Any]) -> FrozenArtifact:
     artifact_hash = data.get("artifact_hash")
     if not isinstance(artifact_hash, str):
@@ -73,16 +88,20 @@ def _artifact_from_payload(name: str, data: dict[str, Any]) -> FrozenArtifact:
         flow_json=_dict_field(data, "flow_json"),
         manifest_json=_dict_field(data, "manifest_json"),
         bundle_ref=_bundle_ref_field(data),
+        pinned_pures=_pinned_pures_field(data),
         error=None,
     )
 
 
-def freeze_agent(cfg: CaConfig, name: str, env: str) -> FrozenArtifact:
-    env_cfg = cfg.envs[env]
+def freeze_agent(cfg: CaConfig, name: str, env: str, *, publish: bool = True) -> FrozenArtifact:
+    try:
+        env_cfg = cfg.envs[env]
+    except KeyError:
+        raise ValueError(f"unknown env {env!r}") from None
     cas = env_cfg.cas or str(cfg.root / ".ca" / "cas")
     arg = json.dumps(
         {
-            "action": "freeze",
+            "action": "freeze" if publish else "freeze_check",
             "root": str(cfg.root),
             "src": cfg.src,
             "name": name,
@@ -138,6 +157,7 @@ def deploy_agents(
                 flow_json=artifact.flow_json,
                 manifest_json=artifact.manifest_json,
                 bundle_ref=artifact.bundle_ref,
+                pinned_pures=artifact.pinned_pures,
                 deployed_at=now_iso,
             )
         )

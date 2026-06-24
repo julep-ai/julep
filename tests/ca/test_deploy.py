@@ -71,3 +71,50 @@ def test_freeze_agent_unknown_surfaces_error_no_ledger(sample_module: Path) -> N
     assert "does_not_exist" in artifact.error
     # No ledger written for a failed freeze.
     assert not (sample_module / ".ca" / "deploys" / "local.json").exists()
+
+
+def test_freeze_check_is_read_only_and_hash_matches_publish(sample_module: Path) -> None:
+    """publish=False computes the same artifact_hash without mutating the CAS."""
+    cfg = load_config(sample_module)
+
+    published = freeze_agent(cfg, "triage", "local", publish=True)
+    assert published.error is None, published.error
+    assert _cas_files(sample_module), "publish should write CAS objects"
+
+    # Wipe all on-disk state, then run the read-only check path.
+    import shutil
+
+    shutil.rmtree(sample_module / ".ca", ignore_errors=True)
+    checked = freeze_agent(cfg, "triage", "local", publish=False)
+
+    assert checked.error is None, checked.error
+    # Same program identity, no publish needed.
+    assert checked.artifact_hash == published.artifact_hash
+    # The read-only path must not create the CAS directory at all.
+    assert not (sample_module / ".ca" / "cas").exists()
+
+
+def test_freeze_agent_captures_pinned_pures(sample_module: Path) -> None:
+    cfg = load_config(sample_module)
+    artifact = freeze_agent(cfg, "triage", "local")
+    assert artifact.error is None, artifact.error
+    # The sample flow folds env pures (std.*); their source hashes are pinned.
+    assert artifact.pinned_pures
+    assert all(isinstance(k, str) and isinstance(v, str) for k, v in artifact.pinned_pures.items())
+
+
+def test_deploy_persists_pinned_pures_in_ledger(sample_module: Path) -> None:
+    cfg = load_config(sample_module)
+    records = deploy_agents(cfg, ["triage"], "local", now_iso=_NOW)
+    assert records[0].pinned_pures
+    # Round-trips through the committed ledger.
+    ledger = read_ledger(sample_module, "local")
+    assert ledger["triage"].pinned_pures == records[0].pinned_pures
+
+
+def test_freeze_agent_unknown_env_raises_value_error(sample_module: Path) -> None:
+    cfg = load_config(sample_module)
+    import pytest
+
+    with pytest.raises(ValueError, match="unknown env"):
+        freeze_agent(cfg, "triage", "staging")

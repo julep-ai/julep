@@ -157,6 +157,57 @@ def test_cloud_env_replays_deployed_flow_via_run_flow(tmp_path: Path) -> None:
     assert fake.calls and fake.calls[0].kwargs["task_queue"] == "ca-staging-queue"
 
 
+def test_cloud_replay_passes_pinned_pures_from_ledger(tmp_path: Path) -> None:
+    cfg = _cloud_cfg(tmp_path)
+    flow_json: dict[str, Any] = {"name": "triage", "nodes": ["lookup"]}
+    rec = DeployRecord(
+        agent="triage",
+        artifact_hash="sha256:deadbeef",
+        flow_json=flow_json,
+        manifest_json={"agent": "triage"},
+        bundle_ref=None,
+        pinned_pures={"std.init": "sha256:aa", "std.merge": "sha256:bb"},
+        deployed_at="2026-06-23T00:00:00+00:00",
+    )
+    upsert_records(tmp_path, "staging", [rec])
+
+    captured: dict[str, Any] = {}
+
+    def _spy_run_flow(client: Any, flow_json: Any, manifest_json: Any, **kwargs: Any) -> Any:
+        captured["kwargs"] = kwargs
+        return {"output": "ok"}
+
+    run_on_env(
+        cfg,
+        "triage",
+        cfg.envs["staging"],
+        None,
+        client=_FakeClient(result=None),
+        run_flow=_spy_run_flow,
+    )
+
+    # The deploy-time pinned pure hashes reach run_flow so worker-side pure
+    # drift is detected on replay.
+    assert captured["kwargs"]["pinned_pures"] == {"std.init": "sha256:aa", "std.merge": "sha256:bb"}
+
+
+def test_non_local_env_without_temporal_address_raises(tmp_path: Path) -> None:
+    """A non-'local' env missing temporal_address must NOT silently run source."""
+    cfg = CaConfig(
+        root=tmp_path,
+        envs={"staging": EnvConfig(name="staging", temporal_address=None)},
+    )
+
+    with pytest.raises(ValueError, match="temporal_address"):
+        run_on_env(
+            cfg,
+            "triage",
+            cfg.envs["staging"],
+            None,
+            run_flow=lambda *a, **k: None,  # must never be reached
+        )
+
+
 def test_cloud_env_errors_when_agent_not_deployed(tmp_path: Path) -> None:
     cfg = _cloud_cfg(tmp_path)
     fake = _FakeClient(result=None)

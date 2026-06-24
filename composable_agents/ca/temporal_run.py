@@ -28,9 +28,18 @@ def run_on_env(
 ) -> Any:
     """Run an agent locally or through the deployed Temporal environment."""
 
-    if _is_local_env(env):
+    if env.name == "local":
         resolved = resolve_agent(cfg, name)
         return run_agent_local(resolved, value, run_id=run_id or _local_run_id())
+
+    # A deliberately non-local env MUST have a Temporal address; otherwise we'd
+    # silently re-run live source instead of the deployed artifact (immutability
+    # violation). Fail loud rather than fall back to the in-memory path.
+    if env.temporal_address is None:
+        raise ValueError(
+            f"env {env.name!r} has no temporal_address; cannot run the deployed "
+            f"artifact remotely"
+        )
 
     records = read_ledger(cfg.root, env.name)
     if name not in records:
@@ -52,12 +61,9 @@ def run_on_env(
         input=value,
         task_queue=env.task_queue,
         bundle=record.bundle_ref,
+        pinned_pures=record.pinned_pures or None,
     )
     return _await_if_needed(result)
-
-
-def _is_local_env(env: EnvConfig) -> bool:
-    return env.name == "local" or env.temporal_address is None
 
 
 def _local_run_id() -> str:
