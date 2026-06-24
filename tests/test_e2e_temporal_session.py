@@ -44,6 +44,7 @@ if HAVE_TEMPORAL:
     from composable_agents.derived import emit as emit_leaf
     from composable_agents.derived import recv as recv_leaf
     from composable_agents.errors import ValidationError
+    from composable_agents.errors import ComposableAgentsError, SessionTurnError
     from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
     from composable_agents.session import SessionEvent, loop, scan
     from composable_agents.execution.activities import WorkerContext, configure
@@ -53,6 +54,7 @@ if HAVE_TEMPORAL:
         FlowInput,
         SessionWorkflow,
         SessionInput,
+        TemporalSessionHandle,
         run_flow,
     )
     from composable_agents.execution.session_store import InMemorySessionStore
@@ -82,6 +84,23 @@ def _identity_step(value):
 register_pure("test.session_identity_step", _identity_step)
 
 
+def _nonfatal_or_echo(value):
+    if value["msg"] == "fail":
+        raise SessionTurnError("try again", fatal=False)
+    return _echo_step(value)
+
+
+register_pure("test.session_nonfatal_or_echo", _nonfatal_or_echo)
+
+
+def _fatal_step(value):
+    del value
+    raise SessionTurnError("fatal turn", fatal=True)
+
+
+register_pure("test.session_fatal_step", _fatal_step)
+
+
 def _make_session_flow():
     # scan(turn, init) where turn = recv -> arr(step). The scan marks the LOOP
     # ``split`` so the driver splits the 2-tuple into (carrier, emit).
@@ -91,6 +110,16 @@ def _make_session_flow():
 
 def _make_timeout_session_flow():
     turn = seq(recv_leaf("in", timeout_s=1), arr("test.session_echo_step"))
+    return scan(turn, init=0, in_channel="in", out_channel="out")
+
+
+def _make_nonfatal_session_flow():
+    turn = seq(recv_leaf("in"), arr("test.session_nonfatal_or_echo"))
+    return scan(turn, init=0, in_channel="in", out_channel="out")
+
+
+def _make_fatal_session_flow():
+    turn = seq(recv_leaf("in"), arr("test.session_fatal_step"))
     return scan(turn, init=0, in_channel="in", out_channel="out")
 
 
@@ -657,6 +686,228 @@ async def _facade_close_flushes_in_flight_turn(env):
         ]
 
 
+async def _facade_close_returns_after_quiescence(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-close-quiesce"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_make_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-close-quiesce-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+
+        await handle.send("a")
+        await handle.close("done")
+        snap = await handle.state()
+        assert snap["closed"] is True, snap
+        assert snap["emitted"]["out"] == [
+            {"seq": 1, "payload": {"echo": "a", "turn": 1}},
+        ], snap
+
+        records = await handle._wfhandle.query("events")
+        assert records[-1]["kind"] == "closed", records
+
+
+async def _facade_events_single_consumer(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-single-events"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_make_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-single-events-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+        handle.events()
+        with pytest.raises(ComposableAgentsError, match="single-consumer"):
+            handle.events()
+        await handle.close("done")
+
+
+async def _facade_output_capacity_progresses_with_event_ack(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-output-capacity"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_make_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-output-capacity-{uuid.uuid4()}",
+            task_queue=tq,
+            channel_capacity=1,
+        )
+        agen = handle.events()
+
+        await handle.send("a")
+        first = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(3)
+        ]
+        assert first == [
+            ("turn", "started", None, None, None),
+            ("emit", None, 1, {"echo": "a", "turn": 1}, None),
+            ("turn", "done", None, None, None),
+        ]
+
+        await handle.send("b")
+        second = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(3)
+        ]
+        assert second == [
+            ("turn", "started", None, None, None),
+            ("emit", None, 2, {"echo": "b", "turn": 2}, None),
+            ("turn", "done", None, None, None),
+        ]
+
+        snap = await handle.state()
+        assert len(snap.get("emitted", {}).get("out", [])) <= 1, snap
+        await handle.close("done")
+        closed = await asyncio.wait_for(agen.__anext__(), timeout=5)
+        assert closed == SessionEvent.closed("done")
+
+
+async def _facade_carried_event_log_is_deterministic(env):
+    store = InMemorySessionStore(empty_value=0)
+    fr, session = _frozen_session()
+    tq = "ca-session-event-log-can"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        sid = f"session-event-log-can-{uuid.uuid4()}"
+        await env.client.start_workflow(
+            SessionWorkflow.run,
+            SessionInput(
+                session_id=sid,
+                flow_json=fr.flow.to_json(),
+                manifest_json=manifest_to_json(fr.manifest),
+                init=0,
+                in_channel="in",
+                out_channel="out",
+                policy=ExecutionPolicy().to_json(),
+                history_threshold=1,
+            ),
+            id=sid,
+            task_queue=tq,
+        )
+
+        def _committed_count():
+            return sum(len(revs) for revs in store._revisions.values())
+
+        events = []
+        for index, word in enumerate(("a", "b", "c"), start=1):
+            chain = env.client.get_workflow_handle(sid)
+            await chain.execute_update("send", {"channel": "in", "value": word})
+
+            async def _committed():
+                return _committed_count() >= index
+
+            await _wait_for(_committed, attempts=400)
+
+        public = TemporalSessionHandle(env.client.get_workflow_handle(sid))
+        agen = public.events()
+        for _ in range(9):
+            events.append(
+                _event_contract_tuple(
+                    await asyncio.wait_for(agen.__anext__(), timeout=5)
+                )
+            )
+        await public.close("done")
+        events.append(
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+        )
+
+        assert events == [
+            ("turn", "started", None, None, None),
+            ("emit", None, 1, {"echo": "a", "turn": 1}, None),
+            ("turn", "done", None, None, None),
+            ("turn", "started", None, None, None),
+            ("emit", None, 2, {"echo": "b", "turn": 2}, None),
+            ("turn", "done", None, None, None),
+            ("turn", "started", None, None, None),
+            ("emit", None, 3, {"echo": "c", "turn": 3}, None),
+            ("turn", "done", None, None, None),
+            ("closed", None, None, "done", None),
+        ]
+
+
+async def _facade_nonfatal_turn_error_books_and_proceeds(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-nonfatal"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_make_nonfatal_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-nonfatal-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+        agen = handle.events()
+
+        await handle.send("fail")
+        first = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(3)
+        ]
+        assert first == [
+            ("turn", "started", None, None, None),
+            ("error", None, None, "try again", False),
+            ("turn", "done", None, None, None),
+        ]
+        snap = await handle.state()
+        assert snap["carrier"] == 0, snap
+
+        await handle.send("ok")
+        second = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(3)
+        ]
+        assert second == [
+            ("turn", "started", None, None, None),
+            ("emit", None, 1, {"echo": "ok", "turn": 1}, None),
+            ("turn", "done", None, None, None),
+        ]
+        await handle.close("done")
+        assert await asyncio.wait_for(agen.__anext__(), timeout=5) == SessionEvent.closed("done")
+
+
+async def _facade_fatal_turn_error_appends_closed(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-fatal"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_make_fatal_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-fatal-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+        agen = handle.events()
+
+        await handle.send("boom")
+        events = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(3)
+        ]
+        assert events == [
+            ("turn", "started", None, None, None),
+            ("error", None, None, "fatal turn", True),
+            ("closed", None, None, "fatal turn", None),
+        ]
+
+
 def _find_application_error(exc, *, error_type):
     cause = exc
     while cause is not None and not (
@@ -664,6 +915,45 @@ def _find_application_error(exc, *, error_type):
     ):
         cause = cause.__cause__
     return cause
+
+
+def test_session_rehydrate_restamps_pre_rehydrate_pending_items():
+    wf = SessionWorkflow()
+    wf._pending = {
+        "in": [
+            {"seq": 1, "value": "late", "idempotency_key": "late-key"},
+        ]
+    }
+    wf._seq_cursors = {"in:in": 1}
+    wf._idempotency_index = {"in": {"late-key": 1}}
+    wf._idempotency_fp = {"in": {"late-key": "late-fp"}}
+
+    carried = [{"seq": seq, "value": f"old-{seq}"} for seq in range(1, 6)]
+    wf._rehydrate(
+        SessionInput(
+            session_id="s",
+            flow_json={},
+            manifest_json={},
+            init=None,
+            inbox={"in": carried},
+            seq_cursors={"in:in": 5},
+            idempotency_index={},
+            idempotency_fp={},
+        )
+    )
+
+    pending = wf._pending["in"]
+    assert [item["value"] for item in pending] == [
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4",
+        "old-5",
+        "late",
+    ]
+    assert [item["seq"] for item in pending] == [1, 2, 3, 4, 5, 6]
+    assert wf._seq_cursors["in:in"] == 6
+    assert wf._idempotency_index["in"]["late-key"] == 6
 
 
 # --------------------------------------------------------------------------- #
@@ -907,6 +1197,12 @@ def test_durable_sessions():
             await _facade_ack_lags_delivery(env)
             await _facade_event_contract_matches_local(env)
             await _facade_close_flushes_in_flight_turn(env)
+            await _facade_close_returns_after_quiescence(env)
+            await _facade_events_single_consumer(env)
+            await _facade_output_capacity_progresses_with_event_ack(env)
+            await _facade_carried_event_log_is_deterministic(env)
+            await _facade_nonfatal_turn_error_books_and_proceeds(env)
+            await _facade_fatal_turn_error_appends_closed(env)
             await _facade_max_calls_denies_second_turn(env)
             await _facade_budget_closes_over_budget(env)
             await _facade_ungranted_tool_denied_at_open(env)

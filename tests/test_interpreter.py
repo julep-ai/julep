@@ -373,3 +373,41 @@ def test_temporal_env_inherits_call_counts_for_child_flows() -> None:
 
     with pytest.raises(CapabilityDenied):
         env.charge_call("srv/inc")
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
+    from composable_agents.execution import harness
+    from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
+    from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+
+    async def gate_waiter(value, cid, timeout_s):  # noqa: ANN001
+        return value
+
+    async def fake_execute_child_workflow(*args, **kwargs):  # noqa: ANN001
+        return {
+            "status": "done",
+            "output": "ok",
+            "callCounts": {"srv/inc": 2, "srv/other": "3"},
+        }
+
+    monkeypatch.setattr(
+        harness.workflow,
+        "execute_child_workflow",
+        fake_execute_child_workflow,
+    )
+
+    env = _TemporalEnv(
+        manifest={},
+        emitter=ProjectionEmitter(InMemoryProjection()),
+        session_id="s",
+        manifest_json={},
+        policy=ExecutionPolicy(),
+        gate_waiter=gate_waiter,
+        max_call_limits={"srv/inc": 5, "srv/other": 5},
+        call_counts={"srv/inc": 1},
+    )
+
+    out = run(env.run_agent("controller", "value", "cid"))
+    assert out["output"] == "ok"
+    assert env.call_counts_snapshot() == {"srv/inc": 2, "srv/other": 3}

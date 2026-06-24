@@ -59,6 +59,7 @@ def test_to_json_preserves_other_keys() -> None:
 def test_schema_version_does_not_leak_into_terminal_result() -> None:
     out = terminal_result("ok", _sample_state(), output="done")
     assert "schemaVersion" not in out
+    assert out["callCounts"] == {"fetch": 1, "search": 2}
 
 
 def test_schema_version_does_not_leak_into_trace_entry() -> None:

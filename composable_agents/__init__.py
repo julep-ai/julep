@@ -332,7 +332,7 @@ _BASE_EXPORTS = [
 
 _TEMPORAL_EXPORTS = [
     "FlowWorkflow", "SessionWorkflow", "AgentWorkflow", "FlowInput", "SessionInput", "AgentInput",
-    "run_flow", "start_flow", "start_session", "TemporalSessionHandle", "build_worker", "run_worker",
+    "run_flow", "start_flow", "TemporalSessionHandle", "build_worker", "run_worker",
     "callTool", "invokeReasoner", "compilePlan", "verifyPures", "resolveSubflow",
     "resolveAgentSpec", "resolveRuntimeCapabilities",
 ]

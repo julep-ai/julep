@@ -406,10 +406,11 @@ class LocalSessionHandle:
         max_turns: int = 100000,
         channel_capacity: Optional[int] = None,
         env: Optional[_LiveLocalEnv] = None,
+        manifest: Optional[Any] = None,
     ) -> "LocalSessionHandle":
         if env is None:
             env = _LiveLocalEnv(
-                {},
+                manifest or {},
                 ProjectionEmitter(InMemoryProjection()),
                 tools=tools,
                 reasoners=reasoners,

@@ -939,15 +939,21 @@ class Agent(FlowLike[Any, Any]):
         session_id: Optional[str] = None,
     ) -> SessionHandle:
         if backend == "local":
-            deployment = self._deploy()
+            session_deployment = deploy(
+                session.body,
+                self._snapshot,
+                capabilities=self._capabilities,
+                target="session",
+                mode=self._mode,
+            )
             plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
             tool_fns = {
                 native_tool.name: native_tool.bound_tool
                 for native_tool in self._tools
             }
             max_call_limits = (
-                deployment.capabilities.max_call_limits()
-                if deployment.capabilities is not None
+                session_deployment.capabilities.max_call_limits()
+                if session_deployment.capabilities is not None
                 else {}
             )
             contracts: dict[str, dict[str, Any]] = {
@@ -1017,21 +1023,33 @@ class Agent(FlowLike[Any, Any]):
                 mode=self._mode,
                 principal=principal,
                 channel_capacity=channel_capacity,
+                manifest=session_deployment.manifest,
             )
 
         if backend == "temporal":
             if client is None:
                 raise ValueError("Agent.open(backend='temporal') requires client=")
-            from .execution.harness import TemporalSessionHandle, start_session
+            from .execution.harness import TemporalSessionHandle, _start_session
 
             sid = session_id or f"session-{uuid.uuid4()}"
             deployment = self._deploy_session(session)
             budget = None
             if deployment.capabilities is not None and deployment.capabilities.budget is not None:
                 cap_budget = deployment.capabilities.budget
+                if cap_budget.tokens is not None or cap_budget.wall_seconds is not None:
+                    raise ValidationError(
+                        [
+                            Diagnostic(
+                                "SESSION_TEMPORAL_BUDGET_DIMENSION",
+                                deployment.flow.id,
+                                "Temporal session backend enforces only the `cost` budget "
+                                "dimension and cannot enforce tokens/wallSeconds",
+                            )
+                        ]
+                    )
                 if cap_budget.cost is not None:
                     budget = {"cost": cap_budget.cost}
-            wfhandle = await start_session(
+            wfhandle = await _start_session(
                 client,
                 deployment.flow.to_json(),
                 deployment.manifest_json,

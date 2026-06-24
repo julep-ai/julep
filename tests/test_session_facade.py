@@ -9,22 +9,26 @@ import pytest
 
 from composable_agents import (
     Agent,
+    CapabilityManifest,
     SessionEvent,
     arr,
+    call,
     deploy,
+    mcp,
     recv,
     register_pure,
     scan,
     seq,
     validate,
 )
+from composable_agents.contracts import McpAnnotations
 from composable_agents.errors import (
     ComposableAgentsError,
     SessionTurnError,
     ValidationError,
 )
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.freeze import McpSnapshot
+from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
 from composable_agents.validate import blocking
 from conftest import run
@@ -70,6 +74,22 @@ def _session():
         init=[],
         in_channel="in",
         out_channel="out",
+    )
+
+
+def _mcp_snapshot() -> McpSnapshot:
+    ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
+    return McpSnapshot(
+        servers={
+            "srv": McpServerSnapshot(
+                server="srv",
+                version="1",
+                tools={
+                    name: McpToolSpec(input_schema={}, annotations=ann)
+                    for name in ("echo", "other")
+                },
+            )
+        }
     )
 
 
@@ -267,6 +287,51 @@ def test_local_events_is_single_consumer() -> None:
         with pytest.raises(ComposableAgentsError, match="single-consumer"):
             handle.events()
         await handle.close()
+
+    run(main())
+
+
+def test_agent_open_local_enforces_session_body_capabilities() -> None:
+    async def main() -> None:
+        agent = Agent("test-model", llm=None)
+        agent._snapshot = _mcp_snapshot()
+        agent._capabilities = CapabilityManifest.from_dict(
+            {
+                "tools": [
+                    {
+                        "name": "srv/other",
+                        "effect": "read",
+                        "idempotency": "native",
+                    }
+                ],
+                "budget": {"cost": 1000},
+            }
+        )
+        session = scan(
+            seq(recv("in"), call(mcp("srv", "echo"))),
+            init=[],
+            in_channel="in",
+            out_channel="out",
+        )
+        with pytest.raises(ValidationError):
+            await agent.open(session=session, backend="local")
+
+    run(main())
+
+
+def test_agent_open_temporal_rejects_tokens_and_wall_budget() -> None:
+    async def main() -> None:
+        agent = Agent("test-model", llm=None)
+        agent._capabilities = CapabilityManifest.from_dict(
+            {"tools": [], "budget": {"tokens": 100, "wallSeconds": 10}}
+        )
+        with pytest.raises(ValidationError, match="only the `cost` budget"):
+            await agent.open(
+                session=_session(),
+                backend="temporal",
+                client=object(),
+                session_id="budget-dimensions",
+            )
 
     run(main())
 

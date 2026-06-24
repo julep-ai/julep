@@ -47,7 +47,7 @@ from typing import Any, AsyncIterator, Awaitable, Callable, Optional, Sequence
 
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
-from temporalio.client import WorkflowUpdateFailedError
+from temporalio.client import WorkflowFailureError, WorkflowUpdateFailedError
 from temporalio.exceptions import ApplicationError
 
 # Best-effort swallow paths log via stdlib logging: it never raises, works
@@ -834,15 +834,15 @@ class _TemporalEnv:
                 )
 
         # Parity with run_sub: parent call counts seed the child agent so an
-        # app node cannot reset an already-consumed maxCalls budget. Counts
-        # flow one-way; the child's counts are not merged back.
+        # app node cannot reset an already-consumed maxCalls budget. Terminal
+        # child counts merge back below as cumulative high-water marks.
         state_json = (
             al.AgentState(last=value, call_counts=dict(self._call_counts)).to_json()
             if self._call_counts
             else None
         )
 
-        return await workflow.execute_child_workflow(
+        out = await workflow.execute_child_workflow(
             AgentWorkflow.run,
             AgentInput(
                 controller=controller,
@@ -861,6 +861,14 @@ class _TemporalEnv:
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.agent_task_timeout_s),
         )
+        if isinstance(out, dict) and isinstance(out.get("callCounts"), dict):
+            for tool, count in out["callCounts"].items():
+                key = str(tool)
+                self._call_counts[key] = max(
+                    self._call_counts.get(key, 0),
+                    int(count),
+                )
+        return out
 
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return await self._gate_waiter(value, cid, timeout_s)
@@ -1285,6 +1293,25 @@ class SessionWorkflow:
             if int(item.get("eseq", 0)) > self._event_ack
         ]
 
+    def _ack_outputs_through_event_ack(self) -> None:
+        if self._event_ack <= 0:
+            return
+        touched: set[str] = set()
+        for item in self._event_log:
+            if (
+                int(item.get("eseq", 0)) <= self._event_ack
+                and item.get("kind") == "emit"
+            ):
+                channel = str(item.get("channel", "out"))
+                seq = int(item.get("seq", 0))
+                self._ack_cursors[channel] = max(
+                    self._ack_cursors.get(channel, 0),
+                    seq,
+                )
+                touched.add(channel)
+        for channel in touched:
+            self._evict_acked(channel)
+
     def _append_event(self, kind: str, **fields: Any) -> None:
         self._event_seq += 1
         record = {"eseq": self._event_seq, "kind": kind, **fields}
@@ -1323,8 +1350,6 @@ class SessionWorkflow:
             str(channel): [dict(item) for item in items]
             for channel, items in (inp.inbox or {}).items()
         }
-        for channel, items in pre_pending.items():
-            self._pending.setdefault(channel, []).extend(items)
         self._out_buffers = {
             str(channel): [dict(item) for item in items]
             for channel, items in (inp.out_buffers or {}).items()
@@ -1341,14 +1366,38 @@ class SessionWorkflow:
             str(channel): {str(key): int(seq) for key, seq in entries.items()}
             for channel, entries in (inp.idempotency_index or {}).items()
         }
-        for channel, entries in pre_idempotency_index.items():
-            target = self._idempotency_index.setdefault(channel, {})
-            for key, seq in entries.items():
-                target[str(key)] = int(seq)
         self._idempotency_fp = {
             str(channel): {str(key): str(fp) for key, fp in entries.items()}
             for channel, entries in (inp.idempotency_fp or {}).items()
         }
+        restamped: dict[str, dict[int, int]] = {}
+        for channel, items in pre_pending.items():
+            pending = self._pending.setdefault(channel, [])
+            channel_map = restamped.setdefault(channel, {})
+            carried_high_water = int(
+                (inp.seq_cursors or {}).get(self._in_seq_key(channel), 0)
+            )
+            for raw in items:
+                item = dict(raw)
+                old_seq = int(item.get("seq", 0))
+                if old_seq <= carried_high_water:
+                    new_seq = self._next_seq(self._in_seq_key(channel))
+                    item["seq"] = new_seq
+                    channel_map[old_seq] = new_seq
+                else:
+                    new_seq = old_seq
+                pending.append(item)
+                key = item.get("idempotency_key")
+                if key is not None:
+                    self._idempotency_index.setdefault(channel, {})[str(key)] = new_seq
+                    fp = pre_idempotency_fp.get(channel, {}).get(str(key))
+                    if fp is not None:
+                        self._idempotency_fp.setdefault(channel, {})[str(key)] = str(fp)
+        for channel, entries in pre_idempotency_index.items():
+            target = self._idempotency_index.setdefault(channel, {})
+            for key, seq in entries.items():
+                if str(key) not in target:
+                    target[str(key)] = restamped.get(channel, {}).get(int(seq), int(seq))
         for channel, entries in pre_idempotency_fp.items():
             target = self._idempotency_fp.setdefault(channel, {})
             for key, fp in entries.items():
@@ -1361,6 +1410,7 @@ class SessionWorkflow:
         for item in self._event_log:
             self._event_seq = max(self._event_seq, int(item.get("eseq", 0)))
         self._event_ack = int(inp.event_ack)
+        self._ack_outputs_through_event_ack()
         self._evict_acked_events()
 
     @workflow.update(name="send")
@@ -1429,6 +1479,7 @@ class SessionWorkflow:
     def ack_events(self, payload: dict[str, Any]) -> dict[str, Any]:
         eseq = int(payload["eseq"])
         self._event_ack = max(self._event_ack, eseq)
+        self._ack_outputs_through_event_ack()
         self._evict_acked_events()
         return {"acked": self._event_ack}
 
@@ -1503,6 +1554,8 @@ class SessionWorkflow:
                     or self._closed
                 )
             )
+        # Capacity is best-effort at close: once closed, append the final emit
+        # anyway so close-flush semantics preserve in-flight output.
         seq = self._next_seq(self._out_seq_key(channel))
         self._out_buffers.setdefault(channel, []).append({"seq": seq, "payload": value})
         self._append_event("emit", channel=channel, seq=seq, payload=value)
@@ -1561,6 +1614,9 @@ class SessionWorkflow:
         call_counts: dict[str, int],
         spent: float,
     ) -> None:
+        assert not self._turn_started, (
+            "continue_as_new must only happen at a turn boundary (quiesce, never mid-body)"
+        )
         workflow.continue_as_new(
             SessionInput(
                 session_id=inp.session_id,
@@ -1609,6 +1665,51 @@ class SessionWorkflow:
                 event_ack=self._event_ack,
             )
         )
+
+    async def _post_turn_budget_and_can(
+        self,
+        inp: SessionInput,
+        store: InMemoryProjection,
+        env: _TemporalEnv,
+        budget: Optional[Budget],
+        *,
+        carrier: Any,
+        state_cursor: Optional[int],
+        flow_json: dict[str, Any],
+        manifest_json: Optional[dict[str, Any]],
+        policy: ExecutionPolicy,
+    ) -> tuple[bool, Optional[int]]:
+        segment_spent = sum(store.cost_by_shape().values())
+        total_spent = inp.spent + segment_spent
+        if al.would_exceed_budget(
+            al.AgentState(spent=inp.spent),
+            segment_spent,
+            budget,
+        ):
+            self._close_reason = "over_budget"
+            self._closed = True
+            return True, state_cursor
+
+        want_can = self._should_continue_as_new(inp)
+        if want_can:
+            cursor = await self._commit_carrier(
+                inp,
+                base_cursor=state_cursor,
+                carrier=carrier,
+            )
+            state_cursor = cursor
+        if want_can and state_cursor is not None:
+            self._continue_as_new(
+                inp,
+                carrier=carrier,
+                state_cursor=state_cursor,
+                flow_json=flow_json,
+                manifest_json=manifest_json,
+                policy=policy,
+                call_counts=env.call_counts_snapshot(),
+                spent=total_spent,
+            )
+        return False, state_cursor
 
     @workflow.run
     async def run(self, inp: SessionInput) -> Any:
@@ -1706,6 +1807,19 @@ class SessionWorkflow:
                         raise
                     self._append_event("error", reason=str(exc), fatal=False)
                     self._append_turn_done_if_started()
+                    should_break, state_cursor = await self._post_turn_budget_and_can(
+                        inp,
+                        store,
+                        env,
+                        budget,
+                        carrier=carrier,
+                        state_cursor=state_cursor,
+                        flow_json=flow_json,
+                        manifest_json=manifest_json,
+                        policy=policy,
+                    )
+                    if should_break:
+                        break
                     continue
 
                 if (
@@ -1720,38 +1834,24 @@ class SessionWorkflow:
                 self._carrier_current = carrier
                 self._append_turn_done_if_started()
 
-                segment_spent = sum(store.cost_by_shape().values())
-                total_spent = inp.spent + segment_spent
-                if al.would_exceed_budget(
-                    al.AgentState(spent=inp.spent),
-                    segment_spent,
+                should_break, state_cursor = await self._post_turn_budget_and_can(
+                    inp,
+                    store,
+                    env,
                     budget,
-                ):
-                    self._close_reason = "over_budget"
-                    self._closed = True
+                    carrier=carrier,
+                    state_cursor=state_cursor,
+                    flow_json=flow_json,
+                    manifest_json=manifest_json,
+                    policy=policy,
+                )
+                if should_break:
                     break
-
-                want_can = self._should_continue_as_new(inp)
-                if want_can:
-                    cursor = await self._commit_carrier(
-                        inp,
-                        base_cursor=state_cursor,
-                        carrier=carrier,
-                    )
-                    state_cursor = cursor
-                if want_can and state_cursor is not None:
-                    self._continue_as_new(
-                        inp,
-                        carrier=carrier,
-                        state_cursor=state_cursor,
-                        flow_json=flow_json,
-                        manifest_json=manifest_json,
-                        policy=policy,
-                        call_counts=env.call_counts_snapshot(),
-                        spent=total_spent,
-                    )
         except ComposableAgentsError as exc:
             self._append_event("error", reason=str(exc), fatal=True)
+            self._closed = True
+            self._close_reason = str(exc)
+            self._append_closed_once()
             raise ApplicationError(
                 str(exc),
                 type=type(exc).__name__,
@@ -2332,7 +2432,7 @@ async def start_flow(
     )
 
 
-async def start_session(
+async def _start_session(
     client,
     flow_json: dict[str, Any],
     manifest_json: dict[str, Any],
@@ -2351,7 +2451,12 @@ async def start_session(
     budget: Optional[dict[str, Any]] = None,
     bundle: Optional[list[dict[str, str]]] = None,
 ):
-    """Start :class:`SessionWorkflow` and return its Temporal handle."""
+    """Internal session starter for deployments validated by ``Agent._deploy_session``.
+
+    The caller must provide a frozen Deployment that has already run
+    validate(target="session"), capability compile enforcement, max-call limit
+    extraction, and pinned-pure/bundle wiring.
+    """
     handle = await client.start_workflow(
         SessionWorkflow.run,
         SessionInput(
@@ -2394,6 +2499,7 @@ class TemporalSessionHandle:
         self._poll_s = poll_s
         self._close_requested = False
         self._close_reason: Optional[str] = None
+        self._events_subscribed = False
 
     async def send(
         self,
@@ -2418,6 +2524,32 @@ class TemporalSessionHandle:
         self._close_requested = True
         self._close_reason = reason
         await self._wfhandle.execute_update("close", {"reason": reason})
+        deadline = asyncio.get_running_loop().time() + 30.0
+        while True:
+            try:
+                snap = await self.state()
+                records = await self._wfhandle.query("events")
+                if (
+                    snap.get("closed") is True
+                    and (not records or records[-1].get("kind") == "closed")
+                ):
+                    return
+            except WorkflowFailureError:
+                return
+            except Exception:
+                try:
+                    await asyncio.wait_for(
+                        self._wfhandle.result(),
+                        timeout=self._poll_s,
+                    )
+                    return
+                except asyncio.TimeoutError:
+                    pass
+                except WorkflowFailureError:
+                    return
+            if asyncio.get_running_loop().time() >= deadline:
+                raise TimeoutError("session close did not quiesce")
+            await asyncio.sleep(self._poll_s)
 
     @staticmethod
     def _event_from_record(record: dict[str, Any]) -> SessionEvent:
@@ -2447,64 +2579,75 @@ class TemporalSessionHandle:
             )
         return SessionEvent.error(f"unknown session event kind {kind!r}", fatal=True)
 
-    async def events(self) -> AsyncIterator[SessionEvent]:
-        last_eseq = 0
-        last_acked_eseq = 0
-        while True:
-            if last_eseq > last_acked_eseq:
-                try:
-                    await self._wfhandle.execute_update(
-                        "ack_events",
-                        {"eseq": last_eseq},
-                    )
-                    last_acked_eseq = last_eseq
-                except Exception:
-                    if self._close_requested:
+    def events(self) -> AsyncIterator[SessionEvent]:
+        if self._events_subscribed:
+            raise ComposableAgentsError("session events() is single-consumer per handle")
+        self._events_subscribed = True
+
+        async def gen() -> AsyncIterator[SessionEvent]:
+            last_eseq = 0
+            last_acked_eseq = 0
+            while True:
+                if last_eseq > last_acked_eseq:
+                    try:
+                        await self._wfhandle.execute_update(
+                            "ack_events",
+                            {"eseq": last_eseq},
+                        )
+                        last_acked_eseq = last_eseq
+                    except Exception:
+                        if self._close_requested:
+                            last_acked_eseq = last_eseq
+                            continue
+                        # A fatal workflow can complete before the lazy ack for
+                        # an already-delivered event is accepted. Delivery has
+                        # advanced, so keep reading the durable log.
                         last_acked_eseq = last_eseq
                         continue
-                    raise
 
-            try:
-                records = await self._wfhandle.query("events")
-            except Exception as exc:
-                yield SessionEvent.error(str(exc), fatal=True)
-                yield SessionEvent.closed()
-                return
-
-            next_item: Optional[dict[str, Any]] = None
-            for item in sorted(records, key=lambda entry: int(entry.get("eseq", 0))):
-                if int(item.get("eseq", 0)) > last_eseq:
-                    next_item = dict(item)
-                    break
-
-            if next_item is not None:
-                last_eseq = int(next_item.get("eseq", 0))
-                event = self._event_from_record(next_item)
-                yield event
-                if event.is_closed:
-                    if last_eseq > last_acked_eseq:
-                        try:
-                            await self._wfhandle.execute_update(
-                                "ack_events",
-                                {"eseq": last_eseq},
-                            )
-                            last_acked_eseq = last_eseq
-                        except Exception:
-                            pass
+                try:
+                    records = await self._wfhandle.query("events")
+                except Exception as exc:
+                    yield SessionEvent.error(str(exc), fatal=True)
+                    yield SessionEvent.closed()
                     return
-                continue
 
-            try:
-                snap = await self.state()
-            except Exception as exc:
-                yield SessionEvent.error(str(exc), fatal=True)
-                yield SessionEvent.closed()
-                return
-            if snap.get("closed") and self._close_requested:
-                # The workflow appends a durable Closed event after quiescing;
-                # keep polling for that record unless the query path fails.
-                pass
-            await asyncio.sleep(self._poll_s)
+                next_item: Optional[dict[str, Any]] = None
+                for item in sorted(records, key=lambda entry: int(entry.get("eseq", 0))):
+                    if int(item.get("eseq", 0)) > last_eseq:
+                        next_item = dict(item)
+                        break
+
+                if next_item is not None:
+                    last_eseq = int(next_item.get("eseq", 0))
+                    event = self._event_from_record(next_item)
+                    yield event
+                    if event.is_closed:
+                        if last_eseq > last_acked_eseq:
+                            try:
+                                await self._wfhandle.execute_update(
+                                    "ack_events",
+                                    {"eseq": last_eseq},
+                                )
+                                last_acked_eseq = last_eseq
+                            except Exception:
+                                pass
+                        return
+                    continue
+
+                try:
+                    snap = await self.state()
+                except Exception as exc:
+                    yield SessionEvent.error(str(exc), fatal=True)
+                    yield SessionEvent.closed()
+                    return
+                if snap.get("closed") and self._close_requested:
+                    # The workflow appends a durable Closed event after quiescing;
+                    # keep polling for that record unless the query path fails.
+                    pass
+                await asyncio.sleep(self._poll_s)
+
+        return gen()
 
 
 __all__ = [
@@ -2522,6 +2665,5 @@ __all__ = [
     "runSubCapture",
     "run_flow",
     "start_flow",
-    "start_session",
     "TemporalSessionHandle",
 ]

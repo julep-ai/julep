@@ -369,6 +369,8 @@ def terminal_result(status: str, state: AgentState, output: Any = None,
     }
     if reason is not None:
         out["reason"] = reason
+    if state.call_counts:
+        out["callCounts"] = dict(sorted(state.call_counts.items()))
     return out
 
 
