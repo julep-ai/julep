@@ -537,6 +537,11 @@ class Agent(FlowLike[Any, Any]):
     def to_ir(self) -> Node:
         return self._flow
 
+    @property
+    def name(self) -> str:
+        """The agent's controller name (explicit ``name=`` or derived)."""
+        return self._name
+
     def _durable_ref(self) -> Optional[str]:
         return self._name
 

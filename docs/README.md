@@ -13,6 +13,7 @@ New here? Read the repository [README](../README.md), then
 
 - [Getting started](getting-started.md) — install the package, run a keyless local agent facade, and understand the first deploy path.
 - [Authoring guide](AUTHORING.md) — the `@flow` surfaces, determinism contract, and define-time diagnostics.
+- [`ca` developer CLI](cli.md) — discover, inspect, run, lint, test, trace, and deploy a whole module of agents with one selection grammar ("dbt for agents").
 - [Examples](examples.md) — runnable examples that show `@flow`, the facade, approvals, budgets, and lower-level combinators.
 
 ## Understand it

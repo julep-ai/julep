@@ -137,7 +137,7 @@ Used identically by `ls`, `graph`, `lint`, `test`, `eval`, `run`, `deploy`, `log
 | `a b` (space) | union | ✅ |
 | `a,b` (comma) | intersection | ✅ |
 | `--exclude EXPR` | subtract a set | ✅ |
-| `+triage` / `triage+` / `@triage` / `triage+2` | upstream callers / downstream callees / both / depth-bounded | ⏳ post-v1 |
+| `+triage` / `triage+` / `+triage+` / `2+triage` / `triage+2` / `@triage` | upstream (callees/deps) / downstream (callers/dependents) / both / depth-bounded / `@`-closure | ✅ v1.5 |
 
 **Environment is orthogonal to selection.** `--env local|staging|prod` (default `local`) selects the *target backend* for outer-loop verbs and is read from the optional config's env table. `state:modified` enables dbt-style Slim CI: `ca test state:modified` / `ca deploy state:modified --env staging`.
 
@@ -153,7 +153,7 @@ Convergent pattern stolen from Terraform / Spectral / dbt / promptfoo:
 
 ## 8. Configuration (convention + optional)
 
-Zero-config works: `ca` in any dir with `@flow`s. The optional committed config (name TBD: `ca.toml` / `[tool.ca]` in `pyproject.toml` — see open questions) adds only what convention can't infer:
+Zero-config works: `ca` in any dir with `@flow`s. The optional committed config — `[tool.ca]` in `pyproject.toml`, overridden by a sibling `ca.toml` when present (§11.1) — adds only what convention can't infer:
 
 ```toml
 [tool.ca]
@@ -190,10 +190,12 @@ The config is reviewable, drift-detectable (`ca status`), and never required to 
 - No replacement of the `composable-agents` JSON-artifact commands — `ca` wraps them.
 - Not a prompt-management or dataset product (that's Langfuse/other tooling).
 
-## 11. Open questions (for the plan / review)
+## 11. Resolved decisions (settled before planning)
 
-1. **Config location** — `ca.toml` vs `[tool.ca]` in `pyproject.toml` vs reuse an existing project file. Leaning `[tool.ca]` to avoid a new file (progressive disclosure ethos).
-2. **CLI framework** — Typer vs Click vs argparse (existing `cli.py` is argparse). Typer buys help/UX cheaply; argparse keeps the zero-dep core. Likely Typer in a `dev`/CLI extra so core stays dependency-light.
-3. **Discovery cost** — importing a package to scan `@flow`s runs module-level code. Need an import sandbox / guard so discovery is safe and fast (Dagster `dg check defs` precedent).
-4. **`state:modified` baseline** — diff against git HEAD, the working tree, or the last frozen artifact hash? Probably git-tree by default with `--state <ref>` override.
-5. **Trace tree source for local runs** — render directly from in-memory projection events (no Langfuse round-trip), and only deep-link Langfuse for deployed runs? Leaning yes.
+| # | Question | Decision | Notes |
+|---|---|---|---|
+| 1 | Config location | **Both, auto-detected** | Read `[tool.ca]` from `pyproject.toml`; a sibling `ca.toml` overrides it when present. Precedence: `ca.toml` > `[tool.ca]` > convention defaults. Documented precedence is the only added cost. |
+| 2 | CLI framework | **Typer**, in a new `cli`/`dev` extra | Type-hint-driven commands, rich `--help`, shell completion. Pulls `typer`+`click` into the extra only — **core stays PyYAML-only**. The existing argparse `composable-agents` plumbing CLI is left as-is underneath. |
+| 3 | Discovery mechanism | **Hybrid: AST static scan + lazy subprocess import** | Cheap AST scan finds `@flow` agents and `app`/`sub` edges for `ls`/`graph`/`select` with zero side effects; import in an **isolated subprocess** only when a verb needs runtime fidelity (`run`, deep `lint`). Default is safe + fast; full fidelity on demand. |
+| 4 | `state:modified` baseline | **Git tree** (HEAD default, `--state <ref>` override) | Working-tree-dirty layered on top, so uncommitted edits also count as modified. Rejected last-frozen-artifact-hash as the default — too coupled to deploy state for an inner-loop selector. |
+| 5 | Local trace source | **In-memory projection events** for local runs; Langfuse deep link only for deployed/exported runs | `ca run`/`ca dev` render the terminal trace tree directly from projection events — no network round-trip, fully offline. Deep links appear only when a run actually exported to Langfuse. |

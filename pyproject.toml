@@ -23,6 +23,10 @@ classifiers = [
 # inside workflows, and span export are optional extras.
 dependencies = [
     "PyYAML>=6.0",
+    # The `ca` developer CLI console script is always installed (see
+    # [project.scripts]) and imports typer at module load, so typer is a hard
+    # dependency rather than an optional extra.
+    "typer>=0.12",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +59,10 @@ langfuse = [
 store = ["boto3>=1.34", "cryptography>=42"]
 # Sandboxed wasm execution of bundle-sourced pures (wasmtime host; componentize-py is build-only/dev).
 wasm = ["wasmtime>=45,<46"]
+# Developer CLI (`ca`) — Typer-based porcelain. typer is now a core dependency
+# (the `ca` script always needs it); this extra is kept as a no-op alias for
+# backward compatibility with `pip install composable-agents[cli]`.
+cli = ["typer>=0.12"]
 # Everything needed to run the full test suite (including the Temporal E2E test)
 # and to drive real providers from the examples. The unit tests inject a fake
 # acompletion and never import any-llm, so the SDK + its provider plugins live
@@ -73,6 +81,7 @@ dev = [
     "pydantic>=2",
     "types-PyYAML>=6.0",
     "wasmtime>=45,<46",
+    "typer>=0.12",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]
 
@@ -82,6 +91,7 @@ Issues = "https://github.com/julep-ai/julep-v2/issues"
 
 [project.scripts]
 composable-agents = "composable_agents.cli:main"
+ca = "composable_agents.ca.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["composable_agents*"]
