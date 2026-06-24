@@ -49,7 +49,7 @@ tests/ca/test_envconfig.py test_ledger.py test_deploy.py test_status.py test_tem
 
 ## Task 2 — Deploy ledger (`ledger.py`)
 
-**Contract:** `DeployRecord(agent, artifact_hash, bundle_ref: list[dict]|None, deployed_at: str)` (ISO ts passed in by the caller — never generate time inside a workflow context, but the CLI is plain Python so `datetime.now(timezone.utc).isoformat()` is fine here). `ledger_path(root, env) -> Path` = `.ca/deploys/<env>.json`. `read_ledger(root, env) -> dict[str, DeployRecord]` (empty if missing). `upsert_records(root, env, records) -> None` (merge + write pretty JSON, stable key order). `deployed_hashes(root, env) -> dict[str,str]` convenience.
+**Contract:** `DeployRecord(agent, artifact_hash, flow_json: dict, manifest_json: dict, bundle_ref: list[dict]|None, deployed_at: str)` — the frozen IR is stored in the record so the committed ledger is **self-describing** and `run --env` replays the *deployed* artifact with no re-freeze (accept the larger ledger file; it IS the deploy artifact). ISO ts passed in by the caller — never generate time inside a workflow context, but the CLI is plain Python so `datetime.now(timezone.utc).isoformat()` is fine here). `ledger_path(root, env) -> Path` = `.ca/deploys/<env>.json`. `read_ledger(root, env) -> dict[str, DeployRecord]` (empty if missing). `upsert_records(root, env, records) -> None` (merge + write pretty JSON, stable key order). `deployed_hashes(root, env) -> dict[str,str]` convenience.
 
 - [ ] Test (`tests/ca/test_ledger.py`): upsert two records → read back; upsert again updates one, keeps the other; missing ledger → `{}`; JSON is stable/sorted.
 - [ ] Implement; `ruff` + `mypy --strict` clean.
