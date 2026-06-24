@@ -73,9 +73,27 @@ print(result.value)
 pip install composable-agents            # authoring + compile only (PyYAML)
 pip install 'composable-agents[temporal]' # + durable execution on Temporal
 pip install 'composable-agents[temporal,http,otel]'  # + native HTTP tools + OTel export
+pip install 'composable-agents[cli]'      # + the `ca` developer CLI (see docs/cli.md)
 ```
 
 `composable_agents.HAVE_TEMPORAL` reports whether the runtime is available; the package imports and compiles flows either way.
+
+---
+
+## Developer CLI (`ca`)
+
+`ca` is the developer CLI for a whole **module of agents** — "dbt for agents, terminal-native." Point it at a directory; it discovers every `@flow`/`Agent(...)`, treats each as a node in a cross-agent graph, and gives you one selection grammar across every verb:
+
+```bash
+ca ls                                  # list agents (name · kind · tags)
+ca graph                               # the cross-agent DAG as Graphviz DOT
+ca run triage --input '"TICKET-42"'    # execute locally, stream the trace tree
+ca lint +triage                        # validate an agent and everything it depends on
+ca deploy triage --env staging         # freeze → publish → record in the deploy ledger
+ca status --env staging                # what's deployed where + drift (exit 3 on drift)
+```
+
+Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs/cli.md](docs/cli.md)**.
 
 ---
 
