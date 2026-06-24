@@ -4,20 +4,24 @@ import enum as _enum
 import json as _json
 import subprocess as _subprocess
 import sys as _sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import click
 import typer
 
 from composable_agents.ca.config import load_config
+from composable_agents.ca.deploy import deploy_agents
 from composable_agents.ca.doctor import overall_code, run_checks
 from composable_agents.ca.langfuse_link import trace_url
 from composable_agents.ca.lint import lint_agents
 from composable_agents.ca.model import Module, build_module
 from composable_agents.ca.resolve import resolve_agent
 from composable_agents.ca.runcache import load_run, save_run
-from composable_agents.ca.runner import run_agent_local
+from composable_agents.ca.runner import RunOutcome, run_agent_local
 from composable_agents.ca.select import select
+from composable_agents.ca.status import status_exit_code, status_for_env
+from composable_agents.ca.temporal_run import run_on_env
 from composable_agents.ca.tracetree import render_tree
 from composable_agents.projection import ProjectionEvent
 
@@ -102,6 +106,7 @@ def run(
     name: str = typer.Argument(..., help="Agent name."),
     input: str = typer.Option("null", "--input", help="JSON-encoded input value."),
     run_id: str = typer.Option("", "--run-id", help="Run id (default: ca-<name>-local)."),
+    env: str = typer.Option("local", "--env", help="Environment name."),
 ) -> None:
     """Execute an agent locally and stream its terminal trace tree."""
     cfg = load_config(Path("."))
@@ -111,6 +116,23 @@ def run(
     except _json.JSONDecodeError as exc:
         typer.echo(f"error: invalid --input JSON: {exc}", err=True)
         raise typer.Exit(2) from None
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    if env != "local":
+        result = run_on_env(cfg, name, cfg.envs[env], parsed, run_id=rid)
+        if isinstance(result, RunOutcome):
+            if result.error is not None:
+                typer.echo(f"error: {result.error}", err=True)
+                raise typer.Exit(1)
+            typer.echo(render_tree(result.events))
+            typer.echo(f"\noutput: {_json.dumps(result.value, default=str)}")
+        else:
+            typer.echo(f"output: {_json.dumps(result, default=str)}")
+        url = trace_url(rid)
+        if url:
+            typer.echo(f"\nlangfuse: {url}")
+        return
     resolved = resolve_agent(cfg, name)
     outcome = run_agent_local(resolved, parsed, run_id=rid)
     if outcome.error is not None:
@@ -120,6 +142,47 @@ def run(
     typer.echo(render_tree(outcome.events))
     typer.echo(f"\noutput: {_json.dumps(outcome.value)}")
     save_run(str(cfg.root), run_id=rid, agent=name, status="done", events=outcome.events)
+
+
+@app.command("deploy")
+def deploy(
+    selector: str = typer.Argument("", help="Selection expression (default: all)."),
+    exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
+    env: str = typer.Option("local", "--env", help="Environment name."),
+) -> None:
+    """Freeze, publish, and record selected agents for an environment."""
+    cfg = load_config(Path("."))
+    module = build_module(cfg)
+    names = [a.name for a in select(module, selector, exclude=exclude)]
+    if not names:
+        typer.echo("no agents matched")
+        raise typer.Exit(0)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    try:
+        records = deploy_agents(cfg, names, env, now_iso=now_iso)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from None
+    for record in records:
+        typer.echo(f"{record.agent}  {record.artifact_hash[:19]}")
+
+
+@app.command("status")
+def status(
+    selector: str = typer.Argument("", help="Selection expression (default: all)."),
+    exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
+    env: str = typer.Option("local", "--env", help="Environment name."),
+) -> None:
+    """Show deployment status and drift for an environment."""
+    cfg = load_config(Path("."))
+    rows = status_for_env(cfg, env)
+    if selector.strip() or exclude.strip():
+        module = build_module(cfg)
+        names = {a.name for a in select(module, selector, exclude=exclude)}
+        rows = [row for row in rows if row.name in names]
+    for row in rows:
+        typer.echo(f"{row.name:24} {row.state:11} {row.deployed_hash or '-'}")
+    raise typer.Exit(status_exit_code(rows))
 
 
 @app.command("lint")

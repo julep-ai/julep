@@ -24,6 +24,10 @@ dist/
 .codex-runs/
 *.codex-out.txt
 
+# ca outer-loop run/cas artifacts (deploys ledger stays tracked)
+.ca/runs/
+.ca/cas/
+
 # Terraform
 **/.terraform/
 *.tfstate
