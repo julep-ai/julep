@@ -137,7 +137,7 @@ Used identically by `ls`, `graph`, `lint`, `test`, `eval`, `run`, `deploy`, `log
 | `a b` (space) | union | ✅ |
 | `a,b` (comma) | intersection | ✅ |
 | `--exclude EXPR` | subtract a set | ✅ |
-| `+triage` / `triage+` / `@triage` / `triage+2` | upstream callers / downstream callees / both / depth-bounded | ⏳ post-v1 |
+| `+triage` / `triage+` / `+triage+` / `2+triage` / `triage+2` / `@triage` | upstream (callees/deps) / downstream (callers/dependents) / both / depth-bounded / `@`-closure | ✅ v1.5 |
 
 **Environment is orthogonal to selection.** `--env local|staging|prod` (default `local`) selects the *target backend* for outer-loop verbs and is read from the optional config's env table. `state:modified` enables dbt-style Slim CI: `ca test state:modified` / `ca deploy state:modified --env staging`.
 
