@@ -109,8 +109,8 @@ The pre-existing layer provides: `SessionStore` — `load(session_id, cursor)` /
 | Spec concept | Existing mechanism |
 |---|---|
 | segment / epoch counter | the store's `Cursor` (no separate epoch) |
-| persist carrier across `continue_as_new` | `SessionStore.commit(session_id, base, state, hash)` |
-| rehydrate after truncation | `SessionStore.load(session_id, cursor)` |
+| persist carrier across `continue_as_new` | `SessionStore.commit_value(session_id, base, value, hash)` — store is sole hash authority (`value_fingerprint`); `commit`/`load` kept as `AgentState` compat |
+| rehydrate after truncation | `SessionStore.load_value(session_id, cursor)` |
 | truncation-boundary dedup / idempotency | the store's **cursor compare-and-swap** (`base != head` ⇒ `CursorConflict`; a re-applied committed write returns the original cursor) |
 | oversize carrier / channel buffers | `ClaimCheckCodec` + `BlobStore` (keeps the Temporal payload under limit; cf. §7.4) |
 
@@ -281,7 +281,10 @@ The one capability not pre-built for free is **interruption/barge-in** — turn-
 - **Enforce at build (MAJOR) — resolved.** `loop()`/`scan()` run the blocking `SESSION_*` `validate()` subset and raise `SessionValidationError` at construction (`scan(ident())` raises recv-guard; `recv` under `par` raises the fence).
 - **Deferred to M2 (minor):** orphan `PLANNED` projection span on the terminating turn's `recv` (cosmetic, no FAILED); `FlowWorkflow`/`deploy` actually passing `target="flow"`; structural re-validation of runtime-compiled plans (`effects.py`).
 
-**M2 — durable Temporal sessions (next).** `SessionWorkflow` wired to the **existing** `SessionStore` (carrier via `commit`/`load`, cursor = segment index) + `ClaimCheckCodec` for oversize; N typed channel inboxes; `send` as Temporal Update; `open_receives`/`state` queries; `FlowWorkflow` rejects `LOOP`; `Agent.open` + `SessionHandle` on **local** + **Temporal**. This is durability *wiring*, not a new store.
+**M2-core — durable runtime — DONE on `main` (`bfecd5d`,`8c5fdaa`; 1351 passed, mypy clean).** `SessionStore` generalized to a JSON carrier via `commit_value`/`load_value`/`value_fingerprint` (cursor-CAS preserved; `AgentState` `commit`/`load` kept as a typed compat caller; **carrier-schema validation stays in `validate.py` per §5 — not the store**). `SessionWorkflow`: durable `recv`/`emit` on `_TemporalEnv` (signal-wait like `human_gate`); per-channel seq; carrier persisted via `commit_value` at park (cursor = segment index); `continue_as_new` recurs at each history threshold carrying `(carrier, inbox, out_buffers, seq_cursors, ack_cursors)`; `session_id`↔workflow-id 1:1; `send` as a Temporal Update (ack/`ChannelFull`); output **ack cursor** with emit back-pressure (§7.4); `open_receives`/`state` queries; `FlowWorkflow` walks the full tree and rejects any `Op.LOOP`/stray `recv`/`emit`. Stays Temporal-sandboxed.
+  - *Deferred (beyond-spec hardening):* the store holds only the carrier (buffers/idempotency ride the `continue_as_new` carry per §6.3), so **store-only disaster recovery** (restart from cursor without the carry) would lose in-flight messages + send-dedup — acceptable for M2; revisit if catastrophic-history-loss recovery is required.
+
+**M2-facade — `Agent.open` surface (NEXT).** `Agent.open(...) -> SessionHandle` (sibling of `arun`/`deploy`) on **local** + **Temporal** backends; the `SessionEvent` contract (§8); `deploy`/freeze passing `target="flow"` so ordinary flows hard-reject sessions; wire the remaining deferred minors (orphan `PLANNED` span, runtime-compiled-plan re-validation).
 
 **M3 — facade + CMA.** CMA backend for `SessionHandle` (one-session-per-turn, unify `CMASession`); `@session` coroutine sugar (carrier lifting); `ca chat`.
 
