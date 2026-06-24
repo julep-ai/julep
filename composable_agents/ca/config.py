@@ -12,12 +12,23 @@ else:
 
 
 @dataclass(frozen=True)
+class EnvConfig:
+    name: str
+    temporal_address: str | None = None
+    temporal_namespace: str = 'default'
+    task_queue: str = 'composable-agents'
+    cas: str | None = None
+    langfuse_host: str | None = None
+
+
+@dataclass(frozen=True)
 class CaConfig:
     root: Path
     src: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
     tags: dict[str, list[str]] = field(default_factory=dict)
     fail_severity: str = 'error'
+    envs: dict[str, EnvConfig] = field(default_factory=dict)
 
 
 def _read_toml(path: Path) -> dict[str, Any]:
@@ -28,6 +39,55 @@ def _read_toml(path: Path) -> dict[str, Any]:
     with path.open('rb') as fh:
         data: dict[str, Any] = _tomllib.load(fh)
         return data
+
+
+def _env_fields(table: object) -> dict[str, str | None]:
+    if not isinstance(table, dict):
+        return {}
+    fields: dict[str, str | None] = {}
+    for key in (
+        'temporal_address',
+        'temporal_namespace',
+        'task_queue',
+        'cas',
+        'langfuse_host',
+    ):
+        if key in table:
+            value = table[key]
+            fields[key] = None if value is None else str(value)
+    return fields
+
+
+def _build_envs(
+    root: Path,
+    pyproject_envs: object,
+    ca_toml_envs: object,
+) -> dict[str, EnvConfig]:
+    env_tables: dict[str, dict[str, str | None]] = {}
+    for raw_envs in (pyproject_envs, ca_toml_envs):
+        if not isinstance(raw_envs, dict):
+            continue
+        for name, table in raw_envs.items():
+            env_name = str(name)
+            env_tables.setdefault(env_name, {}).update(_env_fields(table))
+
+    local_defaults: dict[str, str | None] = {
+        'cas': str(root / '.ca' / 'cas'),
+        'temporal_address': None,
+    }
+    env_tables['local'] = {**local_defaults, **env_tables.get('local', {})}
+
+    return {
+        name: EnvConfig(
+            name=name,
+            temporal_address=fields.get('temporal_address'),
+            temporal_namespace=fields.get('temporal_namespace') or 'default',
+            task_queue=fields.get('task_queue') or 'composable-agents',
+            cas=fields.get('cas'),
+            langfuse_host=fields.get('langfuse_host'),
+        )
+        for name, fields in env_tables.items()
+    }
 
 
 def load_config(root: str | Path) -> CaConfig:
@@ -43,4 +103,5 @@ def load_config(root: str | Path) -> CaConfig:
         exclude=list(merged.get('exclude', [])),
         tags={k: list(v) for k, v in merged.get('tags', {}).items()},
         fail_severity=str(gates.get('fail_severity', 'error')),
+        envs=_build_envs(root, pyproject.get('env', {}), ca_toml.get('env', {})),
     )
