@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from collections import deque
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
 
@@ -38,7 +39,18 @@ from ..errors import (
     RaceAllFailed,
 )
 from ..freeze import bind
-from ..ir import CallStep, HUMAN_GATE_TOOL, Node, SLEEP_TOOL, SubContract, SubStep, ThinkStep, toolref_key
+from ..ir import (
+    CallStep,
+    EMIT_TOOL,
+    HUMAN_GATE_TOOL,
+    Node,
+    RECV_TOOL,
+    SLEEP_TOOL,
+    SubContract,
+    SubStep,
+    ThinkStep,
+    toolref_key,
+)
 from ..kinds import EnforcementMode, Op
 from ..projection import ProjectionEmitter
 from .llm_result import LlmResult
@@ -73,6 +85,10 @@ class BranchOutcome:
 
 
 BranchThunk = Callable[[], Awaitable[Any]]
+
+
+class SessionClosed(ComposableAgentsError):
+    """Raised by session receives when an inbound channel is exhausted."""
 
 
 def call_ref_key(node: Node, manifest: ToolManifest) -> str:
@@ -165,6 +181,8 @@ class Env(Protocol):
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node: ...
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any: ...
     async def sleep(self, seconds: float, cid: str) -> None: ...
+    async def recv(self, channel: str, cid: str, timeout_s: Optional[int]) -> Any: ...
+    async def emit(self, channel: str, value: Any, cid: str) -> None: ...
 
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]: ...
     async def race_first(
@@ -174,8 +192,13 @@ class Env(Protocol):
 
 async def interpret(
     node: Node,
+    # ``env`` is typed ``Any`` (not ``Env``) at this public entry point so a
+    # non-session caller's env (e.g. ``CMAAgentEnv``, which has no channel
+    # machinery and never evaluates ``Op.LOOP``/recv/emit) is still accepted.
+    # The internal ``_eval``/``_eval_prim`` keep the strict ``Env`` annotation,
+    # so recv/emit usage is still type-checked where it actually runs.
     value: Any,
-    env: Env,
+    env: Any,
     causes: tuple[str, ...] = (),
     *,
     principal: Optional[dict[str, Any]] = None,
@@ -286,6 +309,19 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
                 break
         return Result(cur)
 
+    if op == Op.LOOP:
+        assert node.body is not None
+        carrier = value
+        last_event = planned
+        while True:
+            try:
+                r = await interpret(node.body, carrier, env, causes=(last_event,))
+            except SessionClosed:
+                break
+            carrier = r.value
+            last_event = r.event_id or last_event
+        return Result(carrier)
+
     if op == Op.EVAL_PLAN:
         # Baked plan, or compile one at runtime from the planner controller.
         plan = node.plan
@@ -317,6 +353,21 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
             seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
             await env.sleep(seconds, cid)
             return Result(value)
+        # Reserved recv tool becomes a channel take, not an HTTP call.
+        if step.tool.kind == "native" and getattr(step.tool, "name", None) == RECV_TOOL:
+            if node.prompt is None:
+                raise ComposableAgentsError("recv: missing channel")
+            timeout_s = node.ann.timeout if node.ann else None
+            return Result(await env.recv(node.prompt, cid, timeout_s))
+        # Reserved emit tool becomes a channel append, not an HTTP call.
+        if step.tool.kind == "native" and getattr(step.tool, "name", None) == EMIT_TOOL:
+            if node.prompt is None:
+                raise ComposableAgentsError("emit: missing channel")
+            emit_value = value
+            if node.args is not None and "value" in node.args and node.args["value"] is not None:
+                emit_value = node.args["value"]
+            await env.emit(node.prompt, emit_value, cid)
+            return Result(emit_value)
         if getattr(env, "native_call_retries", False):
             return Result(await env.run_call(node, value, cid))
         attempts = _retry_attempts_for_call(node, env.manifest)
@@ -696,6 +747,7 @@ class InMemoryEnv:
         principal: Optional[dict[str, Any]] = None,
         root_run_id: Optional[str] = None,
         segment_seq: int = 0,
+        inbound: Optional[dict[str, list[Any]]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -717,6 +769,11 @@ class InMemoryEnv:
         self._registry = registry
         self.call_counts: dict[str, int] = {}
         self.sleeps: list[float] = []
+        self._inbound = {
+            channel: deque(messages)
+            for channel, messages in (inbound or {}).items()
+        }
+        self._emitted: dict[str, list[Any]] = {}
         self._cid = 0
 
     # --- identity / pures --- #
@@ -803,6 +860,18 @@ class InMemoryEnv:
         self.sleeps.append(seconds)
         if self._sleeper is not None:
             await self._sleeper(seconds)
+
+    async def recv(self, channel: str, cid: str, timeout_s: Optional[int]) -> Any:
+        messages = self._inbound.get(channel)
+        if not messages:
+            raise SessionClosed(f"session channel {channel!r} is closed")
+        return messages.popleft()
+
+    async def emit(self, channel: str, value: Any, cid: str) -> None:
+        self._emitted.setdefault(channel, []).append(value)
+
+    def emitted(self, channel: str) -> list[Any]:
+        return list(self._emitted.get(channel, []))
 
     # --- concurrency --- #
     async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
