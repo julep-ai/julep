@@ -292,17 +292,31 @@ def main(argv: list[str] | None = None) -> int:
     With ``standalone_mode=False`` click does not raise on ``typer.Exit``; it
     *returns* the exit code, so we propagate that return value.
     """
+    # Recent Typer (>=0.13) vendors its own copy of Click under ``typer._click``,
+    # so the usage/no-args errors it raises are NOT instances of the top-level
+    # ``click`` package's exceptions. Catch both so a usage error is converted to
+    # a clean exit code regardless of which Click the installed Typer uses.
+    click_exceptions: tuple[type[BaseException], ...] = (click.exceptions.ClickException,)
+    try:  # pragma: no cover - import shape depends on the installed Typer version
+        from typer._click.exceptions import ClickException as _TyperClickException
+
+        click_exceptions = (*click_exceptions, _TyperClickException)
+    except Exception:  # noqa: BLE001 - older Typer reuses the real click package
+        pass
+
     try:
         result = app(args=argv, standalone_mode=False)
     except SystemExit as exc:  # argparse-style callers expect an int
         return int(exc.code or 0)
     except typer.Exit as exc:
         return int(exc.exit_code)
-    except click.exceptions.ClickException as exc:
+    except click_exceptions as exc:
         # Unknown command / missing args / bad option: print the usage error and
         # return its conventional exit code (2) instead of leaking a traceback.
-        exc.show()
-        return int(exc.exit_code)
+        # ``exc`` is a (real or Typer-vendored) ClickException; both expose
+        # ``show()`` and ``exit_code`` even though they are distinct classes.
+        exc.show()  # type: ignore[attr-defined]
+        return int(exc.exit_code)  # type: ignore[attr-defined]
     return int(result) if isinstance(result, int) else 0
 
 

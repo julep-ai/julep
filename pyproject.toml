@@ -25,8 +25,11 @@ dependencies = [
     "PyYAML>=6.0",
     # The `ca` developer CLI console script is always installed (see
     # [project.scripts]) and imports typer at module load, so typer is a hard
-    # dependency rather than an optional extra.
+    # dependency rather than an optional extra. ca/cli.py also imports `click`
+    # directly; recent typer resolves to the `typer-slim` distribution which does
+    # NOT pull in click, so it is declared explicitly here.
     "typer>=0.12",
+    "click>=8.1",
 ]
 
 [project.optional-dependencies]

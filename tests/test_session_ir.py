@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from conftest import run
 from composable_agents import call, emit, human_gate, recv
 from composable_agents.derived import HUMAN_CHANNEL
 from composable_agents.errors import ComposableAgentsError
@@ -98,8 +99,7 @@ def test_loop_is_agent_shaped() -> None:
     assert closed_shape(session.body) == Shape.AGENT
 
 
-@pytest.mark.asyncio
-async def test_scan_and_drive_session_thread_carrier_and_outputs() -> None:
+def test_scan_and_drive_session_thread_carrier_and_outputs() -> None:
     session = scan(recv("in"), init=[])
 
     async def step(carrier: object, msg: str) -> tuple[object, str]:
@@ -107,14 +107,13 @@ async def test_scan_and_drive_session_thread_carrier_and_outputs() -> None:
         next_carrier = [*carrier, msg]
         return next_carrier, f"reply:{msg}"
 
-    carrier, outputs = await drive_session(session, step, inputs=["a", "b", "c"])
+    carrier, outputs = run(drive_session(session, step, inputs=["a", "b", "c"]))
 
     assert carrier == ["a", "b", "c"]
     assert outputs == ["reply:a", "reply:b", "reply:c"]
 
 
-@pytest.mark.asyncio
-async def test_drive_session_raises_when_max_turns_exceeded() -> None:
+def test_drive_session_raises_when_max_turns_exceeded() -> None:
     session = scan(recv("in"), init=0)
 
     async def step(carrier: object, msg: int) -> tuple[object, int]:
@@ -122,22 +121,60 @@ async def test_drive_session_raises_when_max_turns_exceeded() -> None:
         return carrier + msg, carrier + msg
 
     with pytest.raises(ComposableAgentsError, match="did not park within 2 turns"):
-        await drive_session(session, step, inputs=[1, 2, 3], max_turns=2)
+        run(drive_session(session, step, inputs=[1, 2, 3], max_turns=2))
 
 
-@pytest.mark.asyncio
-async def test_channel_buffers_inputs_and_outputs() -> None:
+def test_channel_buffers_inputs_and_outputs() -> None:
     channel: Channel[str] = Channel("events")
     channel.append("first")
     channel.append("second")
 
-    assert await channel.recv() == "first"
-    assert await channel.recv() == "second"
+    assert run(channel.recv()) == "first"
+    assert run(channel.recv()) == "second"
 
     channel.emit({"ok": True})
     channel.emit("done")
     assert channel.drain() == [{"ok": True}, "done"]
     assert channel.drain() == []
+
+
+def test_recv_emit_channel_and_value_survive_json_round_trip() -> None:
+    from composable_agents import seq
+
+    flow = seq(recv("in"), emit("out", value="hi"))
+    rt = Node.from_json(flow.to_json())
+
+    assert rt.left is not None and rt.right is not None
+    assert rt.left.prompt == "in"  # recv channel preserved
+    assert rt.right.prompt == "out"  # emit channel preserved
+    assert rt.right.args == {"value": "hi"}  # emit literal preserved
+    assert rt.to_json() == flow.to_json()
+
+
+def test_different_channels_and_values_hash_differently() -> None:
+    a = canonical_json(recv("in").to_json())
+    b = canonical_json(recv("other").to_json())
+    assert a != b
+
+    c = canonical_json(emit("out", value="x").to_json())
+    d = canonical_json(emit("out", value="y").to_json())
+    assert c != d
+
+
+def test_session_flow_freezes_with_recv_emit() -> None:
+    from composable_agents import seq
+    from composable_agents.freeze import McpSnapshot, freeze
+
+    session = scan(seq(recv("in"), emit("out", value="ack")), init={})
+    frozen = freeze(session.body, McpSnapshot(servers={}))
+
+    # Channel + emit value still present on the frozen, normalized tree.
+    rt = Node.from_json(frozen.flow.to_json())
+    body = rt.body
+    assert body is not None and body.left is not None and body.right is not None
+    assert body.left.prompt == "in"
+    assert body.right.prompt == "out"
+    assert body.right.args == {"value": "ack"}
 
 
 def test_normalize_ids_recurses_into_loop_body() -> None:

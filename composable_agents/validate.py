@@ -175,7 +175,7 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
     if op != Op.ALT and (n.select is not None or n.cases is not None or n.default is not None):
         err("ALT_FIELDS_ON_NONALT", f"{op.value} node must not carry alt switch fields")
 
-    if op != Op.ARR and n.args is not None:
+    if op != Op.ARR and n.args is not None and not _is_emit(n):
         err("ARR_ARGS_ON_NONARR", f"{op.value} node must not carry arr static args")
 
     if op in (Op.SEQ, Op.PAR):
@@ -591,6 +591,27 @@ def _check_session_loop_placement(flow: Node, out: list[Diagnostic]) -> None:
     rec(flow, False, False)
 
 
+def _check_session_channel_declared(flow: Node, out: list[Diagnostic]) -> None:
+    for n in flow.walk():
+        if n.op != Op.LOOP or n.body is None:
+            continue
+        declared = {c.name for c in (n.channels or [])}
+        for d in n.body.walk():
+            if _is_recv(d) or _is_emit(d):
+                if d.prompt is None or d.prompt not in declared:
+                    out.append(
+                        Diagnostic(
+                            code="CHANNEL_UNDECLARED",
+                            node_id=d.id,
+                            message=(
+                                f"recv/emit targets channel {d.prompt!r} not declared "
+                                f"in the loop's channels {sorted(declared)}"
+                            ),
+                            severity="warning",
+                        )
+                    )
+
+
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:
     step = n.step
     if isinstance(step, CallStep) and manifest is not None:
@@ -665,6 +686,7 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
     _check_session_concurrency_fence(flow, out)
     _check_session_loop_productivity(flow, out)
     _check_session_loop_placement(flow, out)
+    _check_session_channel_declared(flow, out)
 
     for n in flow.walk():
         _check_structure(n, out)

@@ -407,6 +407,16 @@ class Merge:
 RACE_LIKE_MERGES = frozenset({"race", "hedge", "quorum"})
 
 
+def _is_reserved_channel_prim(n: "Node") -> bool:
+    step = n.step
+    return (
+        n.op == Op.PRIM
+        and isinstance(step, CallStep)
+        and isinstance(step.tool, NativeTool)
+        and step.tool.name in (RECV_TOOL, EMIT_TOOL)
+    )
+
+
 @dataclass
 class Node:
     op: Op
@@ -524,6 +534,16 @@ class Node:
             out["pure"] = self.pure
         if self.op == Op.ARR and self.args is not None:
             out["args"] = self.args
+        if _is_reserved_channel_prim(self) and self.prompt is not None:
+            out["channel"] = self.prompt
+        if (
+            _is_reserved_channel_prim(self)
+            and isinstance(self.step, CallStep)
+            and isinstance(self.step.tool, NativeTool)
+            and self.step.tool.name == EMIT_TOOL
+            and self.args is not None
+        ):
+            out["args"] = self.args
         if self.merge is not None:
             out["merge"] = self.merge.to_json()
         return out
@@ -563,6 +583,7 @@ class Node:
             max_rounds=d.get("maxRounds", d.get("max_rounds")),
             ctx=ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None,
             summarizer=d.get("summarizer"),
+            prompt=d.get("channel"),
         )
 
 

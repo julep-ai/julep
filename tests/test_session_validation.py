@@ -196,3 +196,22 @@ def test_recv_before_iter_up_to_satisfies_recv_guard() -> None:
     flow = scan(seq(recv("in"), iter_up_to(3, ident())), init={}).body
 
     assert_no_session_codes(flow)
+
+
+# --------------------------------------------------------------------------- #
+# Declared-channel check (non-blocking warning).
+# --------------------------------------------------------------------------- #
+def test_undeclared_channel_emits_warning() -> None:
+    # recv targets "typo" but the loop only declares "in"/"out".
+    flow = scan(seq(recv("typo"), emit("out")), init={}).body
+
+    assert "CHANNEL_UNDECLARED" in codes(flow)
+    # It is a non-blocking warning: never surfaces as an error, never as SESSION_*.
+    assert "CHANNEL_UNDECLARED" not in err_codes(flow)
+    assert "CHANNEL_UNDECLARED" not in session_codes(flow)
+
+
+def test_declared_channels_emit_no_warning() -> None:
+    flow = scan(seq(recv("in"), emit("out")), init={}).body
+
+    assert "CHANNEL_UNDECLARED" not in codes(flow)

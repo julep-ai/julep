@@ -234,6 +234,8 @@ async def interpret(
             node.id, cid, f"{err.error_type}: {err.message}", causes=(planned,)
         )
         raise
+    except SessionClosed:
+        raise
     except ComposableAgentsError:
         env.emitter.fail(node.id, cid, "framework-error", causes=(planned,))
         raise
@@ -342,32 +344,34 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
 async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
     step = node.step
     if isinstance(step, CallStep):
+        if step.tool.kind == "native":
+            # Reserved human-gate tool becomes a signal-wait, not an HTTP call.
+            if getattr(step.tool, "name", None) == HUMAN_GATE_TOOL:
+                timeout_s = node.ann.timeout if node.ann else None
+                return Result(await env.human_gate(value, cid, timeout_s))
+            # Reserved sleep tool becomes a durable timer, not an HTTP call.
+            if getattr(step.tool, "name", None) == SLEEP_TOOL:
+                seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
+                await env.sleep(seconds, cid)
+                return Result(value)
+            # Reserved recv tool becomes a channel take, not an HTTP call.
+            if getattr(step.tool, "name", None) == RECV_TOOL:
+                if node.prompt is None:
+                    raise ComposableAgentsError("recv: missing channel")
+                timeout_s = node.ann.timeout if node.ann else None
+                return Result(await env.recv(node.prompt, cid, timeout_s))
+            # Reserved emit tool becomes a channel append, not an HTTP call.
+            if getattr(step.tool, "name", None) == EMIT_TOOL:
+                if node.prompt is None:
+                    raise ComposableAgentsError("emit: missing channel")
+                emit_value = value
+                if node.args is not None and "value" in node.args and node.args["value"] is not None:
+                    emit_value = node.args["value"]
+                await env.emit(node.prompt, emit_value, cid)
+                return Result(emit_value)
+
         key = call_ref_key(node, env.manifest)
         env.charge_call(key)
-        # Reserved human-gate tool becomes a signal-wait, not an HTTP call.
-        if step.tool.kind == "native" and getattr(step.tool, "name", None) == HUMAN_GATE_TOOL:
-            timeout_s = node.ann.timeout if node.ann else None
-            return Result(await env.human_gate(value, cid, timeout_s))
-        # Reserved sleep tool becomes a durable timer, not an HTTP call.
-        if step.tool.kind == "native" and getattr(step.tool, "name", None) == SLEEP_TOOL:
-            seconds = node.ann.timeout if node.ann and node.ann.timeout is not None else 0
-            await env.sleep(seconds, cid)
-            return Result(value)
-        # Reserved recv tool becomes a channel take, not an HTTP call.
-        if step.tool.kind == "native" and getattr(step.tool, "name", None) == RECV_TOOL:
-            if node.prompt is None:
-                raise ComposableAgentsError("recv: missing channel")
-            timeout_s = node.ann.timeout if node.ann else None
-            return Result(await env.recv(node.prompt, cid, timeout_s))
-        # Reserved emit tool becomes a channel append, not an HTTP call.
-        if step.tool.kind == "native" and getattr(step.tool, "name", None) == EMIT_TOOL:
-            if node.prompt is None:
-                raise ComposableAgentsError("emit: missing channel")
-            emit_value = value
-            if node.args is not None and "value" in node.args and node.args["value"] is not None:
-                emit_value = node.args["value"]
-            await env.emit(node.prompt, emit_value, cid)
-            return Result(emit_value)
         if getattr(env, "native_call_retries", False):
             return Result(await env.run_call(node, value, cid))
         attempts = _retry_attempts_for_call(node, env.manifest)

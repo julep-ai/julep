@@ -16,7 +16,7 @@ from composable_agents import (
 )
 from composable_agents.execution.interpreter import InMemoryEnv, SessionClosed, interpret
 from composable_agents.ir import Node
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
 from conftest import run
 
 
@@ -68,6 +68,31 @@ def test_loop_echo_session_e2e() -> None:
     run(interpret(flow, session.init, env))
 
     assert env.emitted("out") == ["a", "b", "c"]
+
+
+def test_clean_session_shutdown_records_no_failed_event() -> None:
+    store = InMemoryProjection()
+    session = scan(seq(recv("in"), emit("out")), init=None)
+    env = InMemoryEnv({}, ProjectionEmitter(store), inbound={"in": ["a", "b"]})
+
+    run(interpret(session.body, session.init, env))
+
+    failed = [e for e in store.events() if e.type == EventType.FAILED]
+    assert failed == []
+
+
+def test_recv_emit_do_not_consume_tool_call_quota() -> None:
+    flow = seq(recv("in"), emit("out"))
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        inbound={"in": ["hi"]},
+    )
+
+    run(interpret(flow, "ignored", env))
+
+    # Reserved channel ops short-circuit before charge_call: no call accounting.
+    assert dict(env.call_counts) == {}
 
 
 def test_loop_accumulator_session_e2e() -> None:

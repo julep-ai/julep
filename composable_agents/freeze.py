@@ -28,11 +28,13 @@ from .contracts import (
 from .errors import FreezeError
 from .ir import (
     CallStep,
+    EMIT_TOOL,
     HUMAN_GATE_TOOL,
     JSONSchema,
     McpTool,
     NativeTool,
     Node,
+    RECV_TOOL,
     SLEEP_TOOL,
     SourceSpan,
     ThinkStep,
@@ -52,6 +54,9 @@ _HUMAN_GATE_CONTRACT = ToolContract(effect=Effect.EXTERNAL, idempotency=Idempote
 
 # The reserved sleep tool is side-effect-free and replay-safe by construction.
 _SLEEP_CONTRACT = ToolContract(effect=Effect.READ, idempotency=Idempotency.NATIVE)
+
+_RECV_CONTRACT = ToolContract(effect=Effect.EXTERNAL, idempotency=Idempotency.NONE)
+_EMIT_CONTRACT = ToolContract(effect=Effect.EXTERNAL, idempotency=Idempotency.NONE)
 
 
 # --------------------------------------------------------------------------- #
@@ -134,6 +139,26 @@ def _resolve(
             ref=ref,
             input_schema={},
             contract=asserted_contract or _SLEEP_CONTRACT,
+            output_schema=None,
+            server_version=None,
+            asserted=True,
+        )
+
+    if isinstance(ref, NativeTool) and ref.name == RECV_TOOL:
+        return FrozenTool.create(
+            ref=ref,
+            input_schema={},
+            contract=asserted_contract or _RECV_CONTRACT,
+            output_schema=None,
+            server_version=None,
+            asserted=True,
+        )
+
+    if isinstance(ref, NativeTool) and ref.name == EMIT_TOOL:
+        return FrozenTool.create(
+            ref=ref,
+            input_schema={},
+            contract=asserted_contract or _EMIT_CONTRACT,
             output_schema=None,
             server_version=None,
             asserted=True,
