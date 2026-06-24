@@ -9,10 +9,14 @@ carrier, and collects emitted outputs.
 from __future__ import annotations
 
 import asyncio
+import ast
+import copy
+import inspect
+import textwrap
 from dataclasses import dataclass
 from collections.abc import AsyncIterator, Callable
 from itertools import islice
-from typing import Any, Generic, Iterable, Optional, Protocol, TypeVar
+from typing import Any, Generic, Iterable, Optional, Protocol, TypeVar, cast, overload
 
 from .dsl import _nid, _node
 from .errors import ComposableAgentsError, SessionTurnError
@@ -149,6 +153,10 @@ class SessionValidationError(ComposableAgentsError):
     """Raised when a public session constructor receives an unsafe LOOP body."""
 
 
+class SessionCompileError(ComposableAgentsError):
+    """Raised when ``@session`` coroutine sugar cannot be safely lifted."""
+
+
 def scan(
     step_flow: Node,
     init: object,
@@ -172,6 +180,562 @@ def scan(
         in_channel=in_channel,
         out_channel=out_channel,
     )
+
+
+@overload
+def session(
+    func: Callable[..., Any],
+    *,
+    in_channel: str = "in",
+    out_channel: str = "out",
+    state_schema: Optional[JSONSchema] = None,
+) -> Session[Any, Any]: ...
+
+
+@overload
+def session(
+    func: None = None,
+    *,
+    in_channel: str = "in",
+    out_channel: str = "out",
+    state_schema: Optional[JSONSchema] = None,
+) -> Callable[[Callable[..., Any]], Session[Any, Any]]: ...
+
+
+def session(
+    func: Optional[Callable[..., Any]] = None,
+    *,
+    in_channel: str = "in",
+    out_channel: str = "out",
+    state_schema: Optional[JSONSchema] = None,
+) -> Session[Any, Any] | Callable[[Callable[..., Any]], Session[Any, Any]]:
+    """EXPERIMENTAL: lift a straight-line async turn loop into ``scan(...)``.
+
+    The accepted shape is intentionally narrow: pre-loop assignments followed
+    by a final ``while True`` whose body receives once via ``await s.recv()``,
+    emits once via ``await s.emit(value)``, and reassigns carried locals.
+    Non-liftable functions should be expressed explicitly with ``scan(step, init)``.
+    """
+
+    def decorate(inner: Callable[..., Any]) -> Session[Any, Any]:
+        return _compile_session_function(
+            inner,
+            in_channel=in_channel,
+            out_channel=out_channel,
+            state_schema=state_schema,
+        )
+
+    if func is None:
+        return decorate
+    return decorate(func)
+
+
+def _session_compile_error(reason: str) -> SessionCompileError:
+    return SessionCompileError(
+        f"cannot compile @session coroutine: {reason}. "
+        "Declare the session explicitly with scan(step, init)."
+    )
+
+
+def _compile_session_function(
+    func: Callable[..., Any],
+    *,
+    in_channel: str,
+    out_channel: str,
+    state_schema: Optional[JSONSchema],
+) -> Session[Any, Any]:
+    from .derived import recv
+    from .dsl import arr, seq
+    from .purity import register_pure
+
+    parsed = _ParsedSession.from_function(func)
+    init = parsed.build_init(func)
+    step = parsed.build_step(func)
+    pure_name = f"session.{func.__module__}.{func.__qualname__}"
+    register_pure(pure_name, step)
+    return scan(
+        seq(recv(in_channel), arr(pure_name)),
+        init=init,
+        in_channel=in_channel,
+        out_channel=out_channel,
+        state_schema=state_schema,
+    )
+
+
+@dataclass(frozen=True)
+class _ParsedSession:
+    pre_loop: list[ast.stmt]
+    loop_body: list[ast.stmt]
+    session_arg: str
+    recv_target: str
+    carried_names: tuple[str, ...]
+    filename: str
+
+    @classmethod
+    def from_function(cls, func: Callable[..., Any]) -> "_ParsedSession":
+        if not inspect.iscoroutinefunction(func):
+            raise _session_compile_error("decorated object must be an async def")
+        try:
+            source = inspect.getsource(func)
+        except (OSError, TypeError) as exc:
+            raise _session_compile_error(
+                "source is unavailable for AST lifting"
+            ) from exc
+
+        module = ast.parse(textwrap.dedent(source))
+        fn = _find_async_function(module, func.__name__)
+        if fn is None:
+            raise _session_compile_error("could not find the async function body")
+        session_arg = _session_arg_name(fn)
+        body = _strip_docstring(fn.body)
+        if not body or not isinstance(body[-1], ast.While):
+            raise _session_compile_error(
+                "body must be pre-loop assignments followed by a final while True"
+            )
+        if len([stmt for stmt in body if isinstance(stmt, ast.While)]) != 1:
+            raise _session_compile_error("body must contain exactly one while True loop")
+
+        pre_loop = list(body[:-1])
+        loop = body[-1]
+        if not _is_literal_true(loop.test):
+            raise _session_compile_error("the loop test must be literal True")
+        if loop.orelse:
+            raise _session_compile_error("while True loops with else blocks are not liftable")
+        if not all(_is_simple_pre_loop_assign(stmt) for stmt in pre_loop):
+            raise _session_compile_error(
+                "pre-loop code must be simple assignments that compute init"
+            )
+
+        loop_body = list(loop.body)
+        recv_target = _recv_target(loop_body[0] if loop_body else None, session_arg)
+        recv_count = _count_awaited_calls(loop_body, session_arg, "recv")
+        if recv_count != 1:
+            raise _session_compile_error(
+                f"loop body must contain exactly one await {session_arg}.recv() call"
+            )
+        emit_count = _count_awaited_calls(loop_body, session_arg, "emit")
+        if emit_count != 1:
+            raise _session_compile_error(
+                f"loop body must contain exactly one await {session_arg}.emit(...) call"
+            )
+        if _contains_control_flow(loop_body):
+            raise _session_compile_error(
+                "loop body must be straight-line code around recv and emit"
+            )
+
+        pre_names = _assigned_names(pre_loop)
+        assigned_after_recv = _assigned_names(loop_body[1:])
+        read_after_recv = _loaded_names(loop_body[1:])
+        carried = tuple(
+            name
+            for name in pre_names
+            if name in assigned_after_recv and name in read_after_recv and name != recv_target
+        )
+        if _nested_captures(loop_body, set(carried)):
+            raise _session_compile_error(
+                "a carried local is captured by a nested function or lambda"
+            )
+
+        transformed = _transform_loop_body(loop_body, session_arg)
+        if _contains_await(transformed[1:]):
+            raise _session_compile_error(
+                "only recv and emit awaits are supported in @session loop bodies"
+            )
+
+        return cls(
+            pre_loop=pre_loop,
+            loop_body=transformed,
+            session_arg=session_arg,
+            recv_target=recv_target,
+            carried_names=carried,
+            filename=inspect.getsourcefile(func) or "<session>",
+        )
+
+    def build_init(self, func: Callable[..., Any]) -> object:
+        name = "__session_init__"
+        body = [copy.deepcopy(stmt) for stmt in self.pre_loop]
+        body.append(ast.Return(value=self._carrier_expr()))
+        init_fn = ast.FunctionDef(
+            name=name,
+            args=ast.arguments(
+                posonlyargs=[],
+                args=[],
+                vararg=None,
+                kwonlyargs=[],
+                kw_defaults=[],
+                kwarg=None,
+                defaults=[],
+            ),
+            body=body or [ast.Return(value=ast.Constant(value=None))],
+            decorator_list=[],
+        )
+        namespace = _exec_namespace(func)
+        module = ast.fix_missing_locations(ast.Module(body=[init_fn], type_ignores=[]))
+        exec(compile(module, self.filename, "exec"), namespace)
+        result = namespace[name]()
+        return result
+
+    def build_step(self, func: Callable[..., Any]) -> Callable[[dict[str, Any]], tuple[object, object]]:
+        name = "__session_step__"
+        body: list[ast.stmt] = [
+            ast.Assign(
+                targets=[ast.Name(id="__carrier", ctx=ast.Store())],
+                value=ast.Subscript(
+                    value=ast.Name(id="__value", ctx=ast.Load()),
+                    slice=ast.Constant(value="carrier"),
+                    ctx=ast.Load(),
+                ),
+            ),
+            ast.Assign(
+                targets=[ast.Name(id="__msg", ctx=ast.Store())],
+                value=ast.Subscript(
+                    value=ast.Name(id="__value", ctx=ast.Load()),
+                    slice=ast.Constant(value="msg"),
+                    ctx=ast.Load(),
+                ),
+            ),
+        ]
+        body.extend(self._carrier_unpack_stmts())
+        body.append(
+            ast.Assign(
+                targets=[ast.Name(id=self.recv_target, ctx=ast.Store())],
+                value=ast.Name(id="__msg", ctx=ast.Load()),
+            )
+        )
+        body.extend(copy.deepcopy(self.loop_body[1:]))
+        body.append(
+            ast.Return(
+                value=ast.Tuple(
+                    elts=[
+                        self._carrier_expr(),
+                        ast.Name(id="__session_output", ctx=ast.Load()),
+                    ],
+                    ctx=ast.Load(),
+                )
+            )
+        )
+        step_fn = ast.FunctionDef(
+            name=name,
+            args=ast.arguments(
+                posonlyargs=[],
+                args=[ast.arg(arg="__value")],
+                vararg=None,
+                kwonlyargs=[],
+                kw_defaults=[],
+                kwarg=None,
+                defaults=[],
+            ),
+            body=body,
+            decorator_list=[],
+        )
+        namespace = _exec_namespace(func)
+        module = ast.fix_missing_locations(ast.Module(body=[step_fn], type_ignores=[]))
+        exec(compile(module, self.filename, "exec"), namespace)
+        step = cast(Callable[[dict[str, Any]], tuple[object, object]], namespace[name])
+        if not callable(step):
+            raise _session_compile_error("generated step pure is not callable")
+        return step
+
+    def _carrier_expr(self) -> ast.expr:
+        if not self.carried_names:
+            return ast.Constant(value=None)
+        if len(self.carried_names) == 1:
+            return ast.Name(id=self.carried_names[0], ctx=ast.Load())
+        return ast.Tuple(
+            elts=[ast.Name(id=name, ctx=ast.Load()) for name in self.carried_names],
+            ctx=ast.Load(),
+        )
+
+    def _carrier_unpack_stmts(self) -> list[ast.stmt]:
+        if not self.carried_names:
+            return []
+        if len(self.carried_names) == 1:
+            return [
+                ast.Assign(
+                    targets=[ast.Name(id=self.carried_names[0], ctx=ast.Store())],
+                    value=ast.Name(id="__carrier", ctx=ast.Load()),
+                )
+            ]
+        return [
+            ast.Assign(
+                targets=[
+                    ast.Tuple(
+                        elts=[
+                            ast.Name(id=name, ctx=ast.Store())
+                            for name in self.carried_names
+                        ],
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Name(id="__carrier", ctx=ast.Load()),
+            )
+        ]
+
+
+def _exec_namespace(func: Callable[..., Any]) -> dict[str, Any]:
+    namespace = dict(func.__globals__)
+    closure = inspect.getclosurevars(func)
+    namespace.update(closure.globals)
+    namespace.update(closure.nonlocals)
+    return namespace
+
+
+def _find_async_function(module: ast.Module, name: str) -> Optional[ast.AsyncFunctionDef]:
+    for node in module.body:
+        if isinstance(node, ast.AsyncFunctionDef) and node.name == name:
+            return node
+    for walked in ast.walk(module):
+        if isinstance(walked, ast.AsyncFunctionDef) and walked.name == name:
+            return walked
+    return None
+
+
+def _session_arg_name(fn: ast.AsyncFunctionDef) -> str:
+    args = fn.args
+    if (
+        args.posonlyargs
+        or len(args.args) != 1
+        or args.vararg is not None
+        or args.kwonlyargs
+        or args.kwarg is not None
+    ):
+        raise _session_compile_error("async session functions must accept exactly one parameter")
+    return args.args[0].arg
+
+
+def _strip_docstring(body: list[ast.stmt]) -> list[ast.stmt]:
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        return body[1:]
+    return body
+
+
+def _is_literal_true(expr: ast.expr) -> bool:
+    return isinstance(expr, ast.Constant) and expr.value is True
+
+
+def _is_simple_pre_loop_assign(stmt: ast.stmt) -> bool:
+    if isinstance(stmt, ast.Assign):
+        return all(isinstance(target, ast.Name) for target in stmt.targets)
+    if isinstance(stmt, ast.AnnAssign):
+        return isinstance(stmt.target, ast.Name) and stmt.value is not None
+    return False
+
+
+def _recv_target(stmt: Optional[ast.stmt], session_arg: str) -> str:
+    value: ast.expr
+    target: ast.expr
+    if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1:
+        target = stmt.targets[0]
+        value = stmt.value
+    elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+        target = stmt.target
+        value = stmt.value
+    else:
+        raise _session_compile_error(
+            f"first loop statement must assign await {session_arg}.recv() to a name"
+        )
+    if not isinstance(target, ast.Name):
+        raise _session_compile_error("recv target must be a single local name")
+    if not _is_awaited_call(value, session_arg, "recv"):
+        raise _session_compile_error(
+            f"first loop statement must assign await {session_arg}.recv() to a name"
+        )
+    return target.id
+
+
+def _is_awaited_call(expr: ast.AST, session_arg: str, method: str) -> bool:
+    if not isinstance(expr, ast.Await):
+        return False
+    call = expr.value
+    return _is_session_call(call, session_arg, method)
+
+
+def _is_session_call(node: ast.AST, session_arg: str, method: str) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == method
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == session_arg
+    )
+
+
+def _count_awaited_calls(stmts: list[ast.stmt], session_arg: str, method: str) -> int:
+    count = 0
+    for node in _walk_without_nested_defs(stmts):
+        if isinstance(node, ast.Await) and _is_session_call(node.value, session_arg, method):
+            count += 1
+    return count
+
+
+def _contains_control_flow(stmts: list[ast.stmt]) -> bool:
+    control_flow = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try)
+    for node in _walk_without_nested_defs(stmts):
+        if isinstance(node, control_flow):
+            return True
+    return False
+
+
+def _contains_await(stmts: list[ast.stmt]) -> bool:
+    return any(isinstance(node, ast.Await) for node in _walk_without_nested_defs(stmts))
+
+
+def _walk_without_nested_defs(stmts: list[ast.stmt]) -> list[ast.AST]:
+    out: list[ast.AST] = []
+
+    class Visitor(ast.NodeVisitor):
+        def generic_visit(self, node: ast.AST) -> None:
+            out.append(node)
+            super().generic_visit(node)
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            out.append(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            out.append(node)
+
+        def visit_Lambda(self, node: ast.Lambda) -> None:
+            out.append(node)
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            out.append(node)
+
+    visitor = Visitor()
+    for stmt in stmts:
+        visitor.visit(stmt)
+    return out
+
+
+def _assigned_names(stmts: list[ast.stmt]) -> tuple[str, ...]:
+    names: list[str] = []
+
+    class Visitor(ast.NodeVisitor):
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            names.append(node.name)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            names.append(node.name)
+
+        def visit_Lambda(self, node: ast.Lambda) -> None:
+            del node
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            names.append(node.name)
+
+        def visit_Name(self, node: ast.Name) -> None:
+            if isinstance(node.ctx, ast.Store) and node.id not in names:
+                names.append(node.id)
+
+    visitor = Visitor()
+    for stmt in stmts:
+        visitor.visit(stmt)
+    return tuple(names)
+
+
+def _loaded_names(stmts: list[ast.stmt]) -> set[str]:
+    names: set[str] = set()
+
+    class Visitor(ast.NodeVisitor):
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            del node
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            del node
+
+        def visit_Lambda(self, node: ast.Lambda) -> None:
+            del node
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            del node
+
+        def visit_Name(self, node: ast.Name) -> None:
+            if isinstance(node.ctx, ast.Load):
+                names.add(node.id)
+
+    visitor = Visitor()
+    for stmt in stmts:
+        visitor.visit(stmt)
+    return names
+
+
+def _nested_captures(stmts: list[ast.stmt], carried: set[str]) -> bool:
+    if not carried:
+        return False
+    for stmt in stmts:
+        for node in ast.walk(stmt):
+            nested_body: list[ast.stmt]
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                nested_body = list(node.body)
+            elif isinstance(node, ast.Lambda):
+                nested_body = [ast.Expr(value=node.body)]
+            else:
+                continue
+            if _loaded_names_including_nested(nested_body) & carried:
+                return True
+    return False
+
+
+def _loaded_names_including_nested(stmts: list[ast.stmt]) -> set[str]:
+    names: set[str] = set()
+
+    class Visitor(ast.NodeVisitor):
+        def visit_Name(self, node: ast.Name) -> None:
+            if isinstance(node.ctx, ast.Load):
+                names.add(node.id)
+
+    visitor = Visitor()
+    for stmt in stmts:
+        visitor.visit(stmt)
+    return names
+
+
+def _transform_loop_body(stmts: list[ast.stmt], session_arg: str) -> list[ast.stmt]:
+    return [_EmitTransformer(session_arg).visit_stmt(copy.deepcopy(stmt)) for stmt in stmts]
+
+
+class _EmitTransformer(ast.NodeTransformer):
+    def __init__(self, session_arg: str) -> None:
+        self._session_arg = session_arg
+
+    def visit_stmt(self, stmt: ast.stmt) -> ast.stmt:
+        transformed = self.visit(stmt)
+        if not isinstance(transformed, ast.stmt):
+            raise _session_compile_error("loop body transformation produced invalid AST")
+        return transformed
+
+    def visit_Expr(self, node: ast.Expr) -> ast.stmt:
+        if isinstance(node.value, ast.Await) and _is_session_call(
+            node.value.value,
+            self._session_arg,
+            "emit",
+        ):
+            call = node.value.value
+            if not isinstance(call, ast.Call):
+                raise _session_compile_error("emit call could not be analyzed")
+            return ast.Assign(
+                targets=[ast.Name(id="__session_output", ctx=ast.Store())],
+                value=_emit_value_expr(call),
+            )
+        transformed = self.generic_visit(node)
+        if not isinstance(transformed, ast.stmt):
+            raise _session_compile_error("loop body transformation produced invalid AST")
+        return transformed
+
+
+def _emit_value_expr(call: ast.Call) -> ast.expr:
+    if call.args:
+        if len(call.args) != 1:
+            raise _session_compile_error("emit must be called with one value")
+        return call.args[0]
+    for keyword in call.keywords:
+        if keyword.arg == "value":
+            return keyword.value
+    raise _session_compile_error("emit must be called with a value")
 
 
 def loop(
