@@ -30,11 +30,22 @@ if HAVE_TEMPORAL:
         SandboxRestrictions,
     )
 
-    from composable_agents import Agent, arr, freeze, manifest_to_json, seq
+    from composable_agents import (
+        Agent,
+        CapabilityManifest,
+        arr,
+        call,
+        freeze,
+        manifest_to_json,
+        mcp,
+        seq,
+    )
+    from composable_agents.contracts import McpAnnotations
     from composable_agents.derived import emit as emit_leaf
     from composable_agents.derived import recv as recv_leaf
-    from composable_agents.freeze import McpSnapshot
-    from composable_agents.session import loop, scan
+    from composable_agents.errors import ValidationError
+    from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from composable_agents.session import SessionEvent, loop, scan
     from composable_agents.execution.activities import WorkerContext, configure
     from composable_agents.execution.harness import (
         ExecutionPolicy,
@@ -95,6 +106,11 @@ def _frozen_timeout_session():
     return fr, session
 
 
+def _call_session(tool="echo"):
+    turn = seq(recv_leaf("in"), call(mcp("srv", tool)))
+    return scan(turn, init=0, in_channel="in", out_channel="out")
+
+
 async def _wait_for(predicate, *, attempts=100):
     for _ in range(attempts):
         if await predicate():
@@ -103,11 +119,90 @@ async def _wait_for(predicate, *, attempts=100):
     assert await predicate()
 
 
+def _event_contract_tuple(event: SessionEvent):
+    if event.is_turn:
+        return ("turn", event.turn, None, None, None)
+    if event.is_emit:
+        return ("emit", None, event.seq, event.payload, None)
+    if event.is_error:
+        return ("error", None, None, event.reason, event.fatal)
+    return (event.kind, None, None, event.reason, None)
+
+
+def _expected_echo_event_contract(reason="done"):
+    return [
+        ("turn", "started", None, None, None),
+        ("emit", None, 1, {"echo": "a", "turn": 1}, None),
+        ("turn", "done", None, None, None),
+        ("turn", "started", None, None, None),
+        ("emit", None, 2, {"echo": "b", "turn": 2}, None),
+        ("turn", "done", None, None, None),
+        ("closed", None, None, reason, None),
+    ]
+
+
+async def _collect_two_turn_contract(handle):
+    agen = handle.events()
+    await handle.send("a")
+    await handle.send("b")
+    events = [
+        _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+        for _ in range(6)
+    ]
+    await handle.close("done")
+    events.append(
+        _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+    )
+    return events
+
+
 # --------------------------------------------------------------------------- #
 # Worker helper.
 # --------------------------------------------------------------------------- #
-def _build_worker(env, task_queue, store):
-    ctx = WorkerContext(session_store=store)
+async def _mcp(server, tool, value, idempotency_key):
+    assert idempotency_key
+    assert server == "srv"
+    if tool == "echo":
+        return value
+    if tool == "double":
+        return value * 2
+    raise ValueError(tool)
+
+
+def _mcp_snapshot():
+    ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
+    return McpSnapshot(
+        servers={
+            "srv": McpServerSnapshot(
+                server="srv",
+                version="1",
+                tools={
+                    name: McpToolSpec(input_schema={}, annotations=ann)
+                    for name in ("echo", "double")
+                },
+            )
+        }
+    )
+
+
+def _mcp_caps(*, tools=None, budget=None):
+    return CapabilityManifest.from_dict(
+        {
+            "tools": list(tools or []),
+            "budget": budget,
+        }
+    )
+
+
+def _agent_with_mcp_caps(caps):
+    agent = Agent("test-model", llm=None)
+    agent._snapshot = _mcp_snapshot()
+    agent._capabilities = caps
+    return agent
+
+
+def _build_worker(env, task_queue, store, *, mcp_call=None):
+    ctx = WorkerContext(session_store=store, mcp_call=mcp_call)
     configure(ctx)
     return Worker(
         env.client,
@@ -409,6 +504,12 @@ async def _facade(env):
         )
 
         ack1 = await handle.send("hi")
+
+        async def _first_emitted():
+            snap = await handle.state()
+            return len(snap.get("emitted", {}).get("out", [])) >= 1
+
+        await _wait_for(_first_emitted, attempts=200)
         ack2 = await handle.send("yo")
         assert ack1 == {"seq": 1, "channel": "in"}
         assert ack2 == {"seq": 2, "channel": "in"}
@@ -417,18 +518,22 @@ async def _facade(env):
             snap = await handle.state()
             return len(snap.get("emitted", {}).get("out", [])) >= 2
 
-        await _wait_for(_emitted, attempts=50)
+        await _wait_for(_emitted, attempts=200)
 
         agen = handle.events()
-        emits = []
-        for _ in range(2):
-            ev = await asyncio.wait_for(agen.__anext__(), timeout=5)
-            assert ev.is_emit
-            emits.append(ev)
+        events = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(6)
+        ]
 
-        assert [ev.seq for ev in emits] == [1, 2]
-        assert [ev.payload["echo"] for ev in emits] == ["hi", "yo"]
-        assert [ev.payload["turn"] for ev in emits] == [1, 2]
+        assert events == [
+            ("turn", "started", None, None, None),
+            ("emit", None, 1, {"echo": "hi", "turn": 1}, None),
+            ("turn", "done", None, None, None),
+            ("turn", "started", None, None, None),
+            ("emit", None, 2, {"echo": "yo", "turn": 2}, None),
+            ("turn", "done", None, None, None),
+        ]
 
         await handle.close("done")
         closed = await asyncio.wait_for(agen.__anext__(), timeout=5)
@@ -457,38 +562,211 @@ async def _facade_ack_lags_delivery(env):
         )
 
         await handle.send("hi")
-        await handle.send("yo")
 
-        async def _emitted():
-            snap = await handle.state()
-            return len(snap.get("emitted", {}).get("out", [])) >= 2
+        async def _event_log_has_emit():
+            records = await handle._wfhandle.query("events")
+            return any(item.get("kind") == "emit" for item in records)
 
-        await _wait_for(_emitted, attempts=50)
+        await _wait_for(_event_log_has_emit, attempts=200)
 
         agen = handle.events()
         first = await asyncio.wait_for(agen.__anext__(), timeout=5)
-        assert first.is_emit
-        assert first.seq == 1
+        assert first == SessionEvent.turn_started()
 
-        snap = await handle.state()
-        emits = snap.get("emitted", {}).get("out", [])
-        assert any(int(item["seq"]) == 1 for item in emits), snap
-        assert snap.get("ack_cursors", {}).get("out", 0) < 1, snap
+        events = await handle._wfhandle.query("events")
+        assert any(int(item["eseq"]) == 1 for item in events), events
 
         second = await asyncio.wait_for(agen.__anext__(), timeout=5)
         assert second.is_emit
-        assert second.seq == 2
+        assert second.seq == 1
 
-        snap = await handle.state()
-        emits = snap.get("emitted", {}).get("out", [])
-        assert not any(int(item["seq"]) == 1 for item in emits), snap
-        assert any(int(item["seq"]) == 2 for item in emits), snap
-        assert snap.get("ack_cursors", {}).get("out", 0) >= 1, snap
+        events = await handle._wfhandle.query("events")
+        assert not any(int(item["eseq"]) == 1 for item in events), events
+        assert any(
+            int(item["eseq"]) == 2 and item.get("kind") == "emit"
+            for item in events
+        ), events
 
         await handle.close("done")
-        closed = await asyncio.wait_for(agen.__anext__(), timeout=5)
-        assert closed.is_closed
-        assert closed.reason == "done"
+        remaining = []
+        while True:
+            ev = await asyncio.wait_for(agen.__anext__(), timeout=5)
+            remaining.append(ev)
+            if ev.is_closed:
+                break
+        assert any(ev == SessionEvent.turn_done() for ev in remaining)
+        assert remaining[-1].reason == "done"
+
+
+# --------------------------------------------------------------------------- #
+# 4cd. Backend-agnostic SessionEvent contract: local and Temporal match.
+# --------------------------------------------------------------------------- #
+async def _facade_event_contract_matches_local(env):
+    local_agent = Agent("test-model", llm=None)
+    local_handle = await local_agent.open(session=_make_session_flow(), backend="local")
+    local_events = await _collect_two_turn_contract(local_handle)
+
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-event-contract"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        temporal_agent = Agent("test-model", llm=None)
+        temporal_handle = await temporal_agent.open(
+            session=_make_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-event-contract-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+        temporal_events = await _collect_two_turn_contract(temporal_handle)
+
+    assert local_events == temporal_events
+    assert temporal_events == _expected_echo_event_contract()
+
+
+# --------------------------------------------------------------------------- #
+# 4ce. Temporal close quiesces the in-flight turn before Closed.
+# --------------------------------------------------------------------------- #
+async def _facade_close_flushes_in_flight_turn(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-close-flush"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_make_session_flow(),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-close-flush-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+        agen = handle.events()
+
+        await handle.send("a")
+        await handle.close("done")
+
+        events = [
+            _event_contract_tuple(await asyncio.wait_for(agen.__anext__(), timeout=5))
+            for _ in range(4)
+        ]
+        assert events == [
+            ("turn", "started", None, None, None),
+            ("emit", None, 1, {"echo": "a", "turn": 1}, None),
+            ("turn", "done", None, None, None),
+            ("closed", None, None, "done", None),
+        ]
+
+
+def _find_application_error(exc, *, error_type):
+    cause = exc
+    while cause is not None and not (
+        isinstance(cause, ApplicationError) and cause.type == error_type
+    ):
+        cause = cause.__cause__
+    return cause
+
+
+# --------------------------------------------------------------------------- #
+# 4ca. Public Temporal facade enforces maxCalls across session turns.
+# --------------------------------------------------------------------------- #
+async def _facade_max_calls_denies_second_turn(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-guards-max"
+    worker = _build_worker(env, tq, store, mcp_call=_mcp)
+    caps = _mcp_caps(
+        tools=[
+            {
+                "name": "srv/echo",
+                "effect": "read",
+                "idempotency": "native",
+                "maxCalls": 1,
+            }
+        ],
+        budget={"cost": 1000},
+    )
+    async with worker:
+        agent = _agent_with_mcp_caps(caps)
+        handle = await agent.open(
+            session=_call_session("echo"),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-guard-max-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+
+        await handle.send("first")
+
+        async def _parked_again():
+            recvs = await handle.open_receives()
+            return any(r["channel"] == "in" and int(r["seq"]) >= 2 for r in recvs)
+
+        await _wait_for(_parked_again, attempts=100)
+        await handle.send("second", idempotency_key="guard-max-2")
+
+        with pytest.raises(WorkflowFailureError) as raised:
+            await handle._wfhandle.result()
+        cause = _find_application_error(raised.value, error_type="CapabilityDenied")
+        assert isinstance(cause, ApplicationError), raised.value
+        assert "maxCalls=1" in str(cause)
+
+
+# --------------------------------------------------------------------------- #
+# 4cb. Public Temporal facade closes the session when its budget is exceeded.
+# --------------------------------------------------------------------------- #
+async def _facade_budget_closes_over_budget(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-guards-budget"
+    worker = _build_worker(env, tq, store, mcp_call=_mcp)
+    caps = _mcp_caps(
+        tools=[
+            {
+                "name": "srv/echo",
+                "effect": "read",
+                "idempotency": "native",
+            }
+        ],
+        budget={"cost": 0.5},
+    )
+    async with worker:
+        agent = _agent_with_mcp_caps(caps)
+        handle = await agent.open(
+            session=_call_session("echo"),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-guard-budget-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+
+        await handle.send("spend", idempotency_key="guard-budget-1")
+        await asyncio.wait_for(handle._wfhandle.result(), timeout=10)
+        snap = await handle.state()
+        assert snap["closed"] is True, snap
+        assert snap["close_reason"] == "over_budget", snap
+
+
+# --------------------------------------------------------------------------- #
+# 4cc. Public Temporal facade rejects ungranted session calls at deploy time.
+# --------------------------------------------------------------------------- #
+async def _facade_ungranted_tool_denied_at_open(env):
+    caps = _mcp_caps(
+        tools=[
+            {
+                "name": "srv/double",
+                "effect": "read",
+                "idempotency": "native",
+            }
+        ],
+        budget={"cost": 1000},
+    )
+    agent = _agent_with_mcp_caps(caps)
+    with pytest.raises(ValidationError):
+        await agent.open(
+            session=_call_session("echo"),
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-guard-deny-{uuid.uuid4()}",
+            task_queue="ca-session-guards-deny",
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -627,6 +905,11 @@ def test_durable_sessions():
             await _channel_full(env)
             await _facade(env)
             await _facade_ack_lags_delivery(env)
+            await _facade_event_contract_matches_local(env)
+            await _facade_close_flushes_in_flight_turn(env)
+            await _facade_max_calls_denies_second_turn(env)
+            await _facade_budget_closes_over_budget(env)
+            await _facade_ungranted_tool_denied_at_open(env)
             await _idempotency_conflict(env)
             await _flowworkflow_rejects_loop(env)
             await _flowworkflow_rejects_nested_loop(env)

@@ -15,7 +15,7 @@ from itertools import islice
 from typing import Any, Generic, Iterable, Optional, Protocol, TypeVar
 
 from .dsl import _nid, _node
-from .errors import ComposableAgentsError
+from .errors import ComposableAgentsError, SessionTurnError
 from .ir import ChannelRef, JSONSchema, Node
 from .kinds import EnforcementMode, Op
 from .execution.interpreter import InMemoryEnv, SessionClosed, interpret
@@ -331,6 +331,15 @@ class _LiveLocalEnv(InMemoryEnv):
             for channel, items in self._live_emitted.items()
         }
 
+    def evict_emit(self, channel: str, seq: Optional[int]) -> None:
+        if seq is None:
+            return
+        self._live_emitted[channel] = [
+            item
+            for item in self._live_emitted.get(channel, [])
+            if int(item.get("seq", 0)) != seq
+        ]
+
     def pending_counts(self) -> dict[str, int]:
         return {
             channel: queue.qsize()
@@ -429,6 +438,13 @@ class LocalSessionHandle:
                     result = await interpret(turn_body, self._carrier, self._env)
                 except SessionClosed:
                     break
+                except SessionTurnError as exc:
+                    if exc.fatal:
+                        raise
+                    await self._events.put(SessionEvent.error(str(exc), fatal=False))
+                    if self._env.take_turn_started():
+                        await self._events.put(SessionEvent.turn_done())
+                    continue
                 if split_result and isinstance(result.value, tuple) and len(result.value) == 2:
                     self._carrier, output = result.value
                     await self._env.emit(self._session.out_channel, output, result.event_id or "")
@@ -460,6 +476,8 @@ class LocalSessionHandle:
             while True:
                 event = await self._events.get()
                 yield event
+                if event.is_emit:
+                    self._env.evict_emit(event.channel or "", event.seq)
                 if event.is_closed:
                     return
 

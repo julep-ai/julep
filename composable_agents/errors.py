@@ -16,6 +16,18 @@ class ComposableAgentsError(Exception):
     """Base for everything this framework raises."""
 
 
+class SessionTurnError(ComposableAgentsError):
+    """Explicit per-turn session error signal.
+
+    ``fatal=False`` lets a live session report the failed turn and continue to
+    the next receive without advancing the carrier.
+    """
+
+    def __init__(self, message: str, *, fatal: bool = False) -> None:
+        self.fatal = fatal
+        super().__init__(message)
+
+
 class ValidationError(ComposableAgentsError):
     """Raised at deploy when ``validate`` finds blocking diagnostics."""
 

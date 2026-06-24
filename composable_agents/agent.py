@@ -27,7 +27,7 @@ from typing import (
 
 from .agent_loop import AgentConfig, drive_agent_loop
 from .capabilities import Budget, CapabilityManifest, ToolGrant
-from .contracts import ToolContract, manifest_to_json
+from .contracts import ToolContract
 from .deploy import Deployment, deploy
 from .dotctx import Reasoner, register_reasoner
 from .dsl import app, call, native
@@ -35,7 +35,7 @@ from .errors import ValidationError
 from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
 from .execution.interpreter import InMemoryEnv, interpret
 from .execution.llm_result import LlmResult
-from .freeze import McpSnapshot, NativeToolSpec, freeze
+from .freeze import McpSnapshot, NativeToolSpec
 from .session import LocalSessionHandle, Session, SessionHandle
 from .typed import Flow, FlowLike, SplitCapability
 from .flow_registry import register_flow
@@ -673,6 +673,29 @@ class Agent(FlowLike[Any, Any]):
         ]
         return self._deployment_cache
 
+    def _deploy_session(self, session: Session[Any, Any]) -> Deployment:
+        # Fail loud rather than diverge silently: the facade does not yet
+        # auto-wire sub-capability child deployments into the session worker's
+        # registry, so a SUB decision would resolve via WorkerContext.subflows
+        # (possibly stale/missing). Tool-only agents open sessions normally.
+        if self._flow_caps:
+            raise NotImplementedError(
+                "Agent.open(backend='temporal') does not yet auto-wire "
+                "sub-capability deployments into the session worker (a documented "
+                "seam). This agent has sub-capabilities "
+                f"{sorted(self._flow_caps)}; their compiled child deployments are "
+                "available via agent.sub_deployments() — register them on your "
+                "worker (WorkerContext.subflows), then open the parent session. "
+                "Tool-only agents open sessions normally."
+            )
+        return deploy(
+            session.body,
+            self._snapshot,
+            capabilities=self._capabilities,
+            target="session",
+            mode=self._mode,
+        )
+
     def _eager_capability_checks(self) -> None:
         tool_names = list(self._tool_names)
         sub_refs = list(self._sub_refs)
@@ -1002,11 +1025,16 @@ class Agent(FlowLike[Any, Any]):
             from .execution.harness import TemporalSessionHandle, start_session
 
             sid = session_id or f"session-{uuid.uuid4()}"
-            frozen = freeze(session.body, self._snapshot)
+            deployment = self._deploy_session(session)
+            budget = None
+            if deployment.capabilities is not None and deployment.capabilities.budget is not None:
+                cap_budget = deployment.capabilities.budget
+                if cap_budget.cost is not None:
+                    budget = {"cost": cap_budget.cost}
             wfhandle = await start_session(
                 client,
-                frozen.flow.to_json(),
-                manifest_to_json(frozen.manifest),
+                deployment.flow.to_json(),
+                deployment.manifest_json,
                 session_id=sid,
                 init=session.init,
                 in_channel=session.in_channel,
@@ -1016,6 +1044,14 @@ class Agent(FlowLike[Any, Any]):
                 principal=principal,
                 history_threshold=history_threshold,
                 channel_capacity=channel_capacity,
+                max_call_limits=(
+                    deployment.capabilities.max_call_limits()
+                    if deployment.capabilities is not None
+                    else None
+                ),
+                pinned_pures=deployment.artifact_components["pureSourceHashes"],
+                budget=budget,
+                bundle=deployment.bundle_ref,
             )
             return TemporalSessionHandle(
                 wfhandle,

@@ -29,7 +29,18 @@ from .contracts import ToolContract, ToolManifest
 from .dotctx import get_reasoner
 from .errors import CapabilityDenied
 from .freeze import CapabilityOverrides
-from .ir import CallStep, HUMAN_GATE_TOOL, McpTool, Node, SubStep, ThinkStep, toolref_key
+from .ir import (
+    CallStep,
+    EMIT_TOOL,
+    HUMAN_GATE_TOOL,
+    McpTool,
+    Node,
+    RECV_TOOL,
+    SLEEP_TOOL,
+    SubStep,
+    ThinkStep,
+    toolref_key,
+)
 from .kinds import ContextScope, Effect, Idempotency, Op
 from .validate import Diagnostic
 
@@ -236,7 +247,11 @@ class CapabilityManifest:
             step = n.step
             if isinstance(step, CallStep):
                 key = toolref_key(step.tool)
-                if self._has_tools and key not in self.tools:
+                if (
+                    key not in {HUMAN_GATE_TOOL, RECV_TOOL, EMIT_TOOL, SLEEP_TOOL}
+                    and self._has_tools
+                    and key not in self.tools
+                ):
                     out.append(Diagnostic("CAP_TOOL_DENIED", n.id,
                                           f"tool {key!r} is not granted by the capability manifest"))
                 if self._has_servers and isinstance(step.tool, McpTool):

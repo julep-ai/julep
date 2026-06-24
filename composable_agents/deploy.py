@@ -464,6 +464,7 @@ def deploy(
     mode: EnforcementMode | str = EnforcementMode.STRICT,
     freeze_timing: str = "deploy_time",
     snapshot_source: Optional[Callable[[], McpSnapshot]] = None,
+    target: str = "flow",
 ) -> Deployment:
     """Compile ``flow`` against ``snapshot`` into a runnable :class:`Deployment`.
 
@@ -514,7 +515,7 @@ def deploy(
 
     diagnostics: list[Diagnostic] = []
     # 2. Well-formedness + schema edges.
-    diagnostics.extend(validate(fr.flow, fr.manifest, target="flow"))
+    diagnostics.extend(validate(fr.flow, fr.manifest, target=target))
     # 3. Capability enforcement (§9): granted tools/reasoners/servers only.
     if capabilities is not None:
         diagnostics.extend(capabilities.enforce_compile(fr.flow, fr.manifest))
