@@ -23,11 +23,23 @@ from composable_agents.execution.session_store import (
     CursorConflict,
     InMemorySessionStore,
     SessionStoreError,
+    value_fingerprint,
 )
 
 
 def _state(round: int, last: object) -> al.AgentState:
     return al.AgentState(round=round, spent=float(round), last=last)
+
+
+# --------------------------------------------------------------------------- #
+# generic JSON carrier fingerprint
+# --------------------------------------------------------------------------- #
+def test_value_fingerprint_matches_agent_state_fingerprint() -> None:
+    state = _state(2, {"answer": [1, 2, 3]})
+    state.trace.append(al.TraceEntry(decision="plan", ref="think", output_ref="out"))
+    state.call_counts["think"] = 1
+
+    assert value_fingerprint(state.to_json()) == al.state_fingerprint(state)
 
 
 # --------------------------------------------------------------------------- #
@@ -173,6 +185,103 @@ def test_commit_rejects_mismatched_state_hash() -> None:
 
     with pytest.raises(SessionStoreError):
         asyncio.run(go())
+
+
+# --------------------------------------------------------------------------- #
+# generic JSON carrier load/commit
+# --------------------------------------------------------------------------- #
+def test_commit_value_round_trips_arbitrary_json_carrier() -> None:
+    store = InMemorySessionStore()
+    value = {
+        "channel_buffers": {"human": [{"seq": 1, "msg": "hi"}]},
+        "s": [1, 2, 3],
+    }
+
+    async def go() -> tuple[int, object]:
+        cursor = await store.commit_value("s1", 0, value, value_fingerprint(value))
+        loaded = await store.load_value("s1", cursor)
+        return cursor, loaded
+
+    cursor, loaded = asyncio.run(go())
+    assert cursor == 1
+    assert loaded == value
+
+
+def test_commit_value_idempotent_replay_returns_same_cursor_and_one_revision() -> None:
+    store = InMemorySessionStore()
+    value = {"channel_buffers": {"human": [{"seq": 1, "msg": "hi"}]}}
+    h = value_fingerprint(value)
+
+    async def go() -> tuple[int, int]:
+        first = await store.commit_value("s1", 0, value, h)
+        second = await store.commit_value("s1", 0, value, h)
+        return first, second
+
+    first, second = asyncio.run(go())
+    assert first == 1
+    assert second == 1
+
+    async def head() -> object:
+        return await store.load_value("s1", 2)
+
+    with pytest.raises(SessionStoreError):
+        asyncio.run(head())
+
+
+def test_commit_value_cursor_conflict_on_stale_base_with_different_hash() -> None:
+    store = InMemorySessionStore()
+
+    async def go() -> None:
+        await store.commit_value("s1", 0, {"x": 1}, value_fingerprint({"x": 1}))
+        await store.commit_value("s1", 0, {"x": 2}, value_fingerprint({"x": 2}))
+
+    with pytest.raises(CursorConflict):
+        asyncio.run(go())
+
+
+def test_agent_state_round_trips_via_typed_caller() -> None:
+    store = InMemorySessionStore()
+    state = _state(3, {"status": "ok"})
+    h = al.state_fingerprint(state)
+
+    async def go() -> al.AgentState:
+        cursor = await store.commit("s1", 0, state, h)
+        return await store.load("s1", cursor)
+
+    loaded = asyncio.run(go())
+    assert loaded == state
+
+
+def test_commit_value_rejects_non_json_carrier() -> None:
+    store = InMemorySessionStore()
+    value = {"x": object()}
+
+    async def go() -> int:
+        return await store.commit_value("s1", 0, value, "deadbeef")
+
+    with pytest.raises(TypeError):
+        asyncio.run(go())
+
+
+def test_commit_value_validates_configured_json_schema() -> None:
+    pytest.importorskip("jsonschema")
+    store = InMemorySessionStore(state_schema={"type": "object", "required": ["x"]})
+    valid = {"x": 1}
+    invalid = {"y": 1}
+
+    async def commit_valid() -> int:
+        return await store.commit_value("s1", 0, valid, value_fingerprint(valid))
+
+    cursor = asyncio.run(commit_valid())
+    assert cursor == 1
+
+    async def commit_invalid() -> int:
+        return await store.commit_value(
+            "s1", cursor, invalid, value_fingerprint(invalid)
+        )
+
+    with pytest.raises(SessionStoreError):
+        asyncio.run(commit_invalid())
 
 
 # --------------------------------------------------------------------------- #
