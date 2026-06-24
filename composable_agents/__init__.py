@@ -96,11 +96,13 @@ from .session import (
     Channel as Channel,
     LocalSessionHandle as LocalSessionHandle,
     Session as Session,
+    SessionCompileError as SessionCompileError,
     SessionEvent as SessionEvent,
     SessionHandle as SessionHandle,
     drive_session as drive_session,
     loop as loop,
     scan as scan,
+    session as session,
 )
 
 # --- contracts + tool manifest --------------------------------------------- #
@@ -289,7 +291,7 @@ _BASE_EXPORTS = [
     "continue_with", "is_continuation", "continuation_value", "run_chained",
     # session
     "Channel", "Session", "SessionEvent", "SessionHandle", "LocalSessionHandle",
-    "scan", "loop", "drive_session",
+    "scan", "loop", "drive_session", "session", "SessionCompileError",
     # contracts
     "ToolContract", "FrozenTool", "McpAnnotations", "ToolManifest",
     "definition_hash", "execution_hash", "manifest_to_json", "manifest_from_json",

@@ -16,7 +16,10 @@ from __future__ import annotations
 
 from importlib import import_module
 from importlib.util import find_spec
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .cma_session import CMASessionHandle as CMASessionHandle
 
 from .blobstore import BlobStore, InMemoryBlobStore, content_ref
 from .effects import RunPrincipal, WorkerContext, configure
@@ -128,6 +131,11 @@ _DBOS_ATTR_MODULES = {name: ".dbos_backend" for name in _DBOS_EXPORTS}
 
 
 def __getattr__(name: str) -> Any:
+    if name == "CMASessionHandle":
+        module = import_module(".cma_session", __name__)
+        value = module.CMASessionHandle
+        globals()[name] = value
+        return value
     module_name = _TEMPORAL_ATTR_MODULES.get(name)
     if module_name is not None:
         if not HAVE_TEMPORAL:
@@ -159,6 +167,7 @@ __all__ = [
     "BlobStore",
     "InMemoryBlobStore",
     "content_ref",
+    "CMASessionHandle",
     "SessionStore",
     "InMemorySessionStore",
     "Cursor",

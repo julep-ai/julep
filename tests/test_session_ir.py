@@ -130,7 +130,9 @@ def test_scan_and_drive_session_thread_carrier_and_outputs() -> None:
 
 
 def test_drive_session_runs_real_body_through_interpret(monkeypatch: pytest.MonkeyPatch) -> None:
-    import composable_agents.session as session_mod
+    import importlib
+
+    session_mod = importlib.import_module("composable_agents.session")
 
     session = scan(seq(recv("in"), arr("tests.session_ir.turn_msg"), emit("out")), init="seed")
     real_interpret = session_mod.interpret
