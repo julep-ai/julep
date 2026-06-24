@@ -273,7 +273,12 @@ The one capability not pre-built for free is **interruption/barge-in** — turn-
 
 ## 12. Milestones
 
-**M1 — local / in-memory core — LANDED on `main` (`e13d1fe`,`ea9ddca`,`5e8b372`), in green-up/review.** `Op.LOOP` (AGENT-shaped) + `ChannelRef` + `__recv__`/`__emit__`; `scan`/`loop` primitive (explicit typed carrier); sequential-position validator + recv-guard check; `drive_session`; `InMemoryEnv` channels + local e2e; `human_gate` re-expressed over `recv`. (Open follow-ups: session tests must use the repo `asyncio.run` convention, not `@pytest.mark.asyncio`.)
+**M1 — local / in-memory core — LANDED + GREEN on `main` (`e13d1fe`,`ea9ddca`,`5e8b372`,`64f82de`).** `Op.LOOP` (AGENT-shaped) + `ChannelRef` + `__recv__`/`__emit__`; `scan`/`loop` primitive; sequential-position validator + recv-guard check; `drive_session`; `InMemoryEnv` channels; `human_gate` (still a distinct leaf — recv-unification deferred). Green-up (`64f82de`) fixed: `to_json` channel-drop, freeze rejecting recv/emit, spurious FAILED span on clean close, async-test convention; added `click` to core deps. pytest 1322 passed, mypy clean.
+
+**M1.5 — make the carrier real + enforce safety (NEXT — deferred BLOCKERs from M1 review).**
+- **Carrier threading (BLOCKER).** Today `recv` discards the threaded carrier, so state doesn't thread (the accumulator test passes only via an external closure). **Decision:** a LOOP turn is the step `(carrier, msg) → (carrier', outputs)`; the LOOP **driver owns the boundary `recv`**, forms `(carrier, msg)` as the step input, and splits the step result into `(carrier', outputs)`. `drive_session` and the interpreter `Op.LOOP` case must both implement this *one* driver (resolving the "two divergent drivers" finding). `scan(step, init)` is exactly this; the `@session` coroutine's first `recv` is the boundary, loop-carried locals are the carrier.
+- **Flow-vs-session target gate (BLOCKER).** `validate()` must classify a flow: `FlowWorkflow`-targeted rejects any `LOOP`/`recv`/`emit`; session-targeted requires a root `LOOP` and forbids stray `recv`/`emit`. At minimum, reject `recv`/`emit` outside a `LOOP`.
+- **Enforce at build (MAJOR).** Run the session `validate()` subset inside `loop()`/`scan()` (and/or freeze) so the recv-guard/fence/placement rules actually gate, not just lint.
 
 **M2 — durable Temporal sessions (next).** `SessionWorkflow` wired to the **existing** `SessionStore` (carrier via `commit`/`load`, cursor = segment index) + `ClaimCheckCodec` for oversize; N typed channel inboxes; `send` as Temporal Update; `open_receives`/`state` queries; `FlowWorkflow` rejects `LOOP`; `Agent.open` + `SessionHandle` on **local** + **Temporal**. This is durability *wiring*, not a new store.
 
