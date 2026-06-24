@@ -993,6 +993,7 @@ class Agent(FlowLike[Any, Any]):
                 max_calls=max_call_limits,
                 mode=self._mode,
                 principal=principal,
+                channel_capacity=channel_capacity,
             )
 
         if backend == "temporal":
@@ -1040,6 +1041,12 @@ class Agent(FlowLike[Any, Any]):
         try:
             asyncio.get_running_loop()
         except RuntimeError:
+            if backend == "local":
+                raise RuntimeError(
+                    "Agent.open_session(backend='local') is unsupported because the live "
+                    "handle is bound to the event loop; use `await "
+                    "Agent.open(session=..., backend='local')` instead."
+                )
             return asyncio.run(
                 self.open(
                     session=session,

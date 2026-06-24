@@ -26,6 +26,15 @@ O = TypeVar("O")
 T = TypeVar("T")
 
 
+def _local_value_fingerprint(value: Any) -> str:
+    try:
+        from .execution.session_store import value_fingerprint
+
+        return value_fingerprint(value)
+    except Exception:
+        return repr(value)
+
+
 class Channel(Generic[T]):
     """A typed in-memory session port."""
 
@@ -130,6 +139,8 @@ class SessionHandle(Protocol):
     ) -> dict[str, Any]: ...
 
     async def state(self) -> dict[str, Any]: ...
+
+    async def open_receives(self) -> list[dict[str, Any]]: ...
 
     async def close(self, reason: Optional[str] = None) -> None: ...
 
@@ -255,6 +266,7 @@ class _LiveLocalEnv(InMemoryEnv):
         self,
         *args: Any,
         event_queue: asyncio.Queue[SessionEvent],
+        channel_capacity: Optional[int] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -262,6 +274,8 @@ class _LiveLocalEnv(InMemoryEnv):
         self._live_inbound: dict[str, asyncio.Queue[Any]] = {}
         self._live_emitted: dict[str, list[dict[str, Any]]] = {}
         self._live_seq: dict[str, int] = {}
+        self._open_recv: dict[str, int] = {}
+        self._capacity = channel_capacity
         self._live_closed = False
         self._turn_started = False
 
@@ -286,11 +300,19 @@ class _LiveLocalEnv(InMemoryEnv):
         while True:
             if self._live_closed and queue.empty():
                 raise SessionClosed(f"session channel {channel!r} is closed")
-            item = await queue.get()
+            self._open_recv[channel] = (
+                self._live_seq.get(f"consumed:{channel}", 0) + 1
+            )
+            try:
+                item = await queue.get()
+            finally:
+                self._open_recv.pop(channel, None)
             if item is self._WAKE:
                 if self._live_closed and queue.empty():
                     raise SessionClosed(f"session channel {channel!r} is closed")
                 continue
+            consumed = self._live_seq.get(f"consumed:{channel}", 0) + 1
+            self._live_seq[f"consumed:{channel}"] = consumed
             self._turn_started = True
             await self._event_queue.put(SessionEvent.turn_started())
             return item
@@ -314,6 +336,19 @@ class _LiveLocalEnv(InMemoryEnv):
             channel: queue.qsize()
             for channel, queue in self._live_inbound.items()
         }
+
+    def pending_count(self, channel: str) -> int:
+        return self._queue(channel).qsize()
+
+    def capacity(self) -> Optional[int]:
+        return self._capacity
+
+    def open_receives_records(self) -> list[dict[str, Any]]:
+        # cid is deferred to match the current workflow query shape.
+        return [
+            {"channel": channel, "seq": seq}
+            for channel, seq in sorted(self._open_recv.items())
+        ]
 
     def take_turn_started(self) -> bool:
         started = self._turn_started
@@ -341,6 +376,9 @@ class LocalSessionHandle:
         self._close_reason = reason
         self._done = asyncio.Event()
         self._closed_event_sent = False
+        self._driver_exc: Optional[BaseException] = None
+        self._events_subscribed = False
+        self._idem: dict[str, dict[str, tuple[int, str]]] = {}
         self._driver = asyncio.create_task(self._drive())
 
     @classmethod
@@ -357,6 +395,7 @@ class LocalSessionHandle:
         mode: EnforcementMode | str = EnforcementMode.STRICT,
         principal: Optional[dict[str, Any]] = None,
         max_turns: int = 100000,
+        channel_capacity: Optional[int] = None,
         env: Optional[_LiveLocalEnv] = None,
     ) -> "LocalSessionHandle":
         if env is None:
@@ -372,6 +411,7 @@ class LocalSessionHandle:
                 mode=mode,
                 principal=principal,
                 event_queue=asyncio.Queue(),
+                channel_capacity=channel_capacity,
             )
         return cls(session, env, max_turns=max_turns)
 
@@ -402,8 +442,8 @@ class LocalSessionHandle:
                 )
         except Exception as exc:
             reason = str(exc)
+            self._driver_exc = exc
             await self._events.put(SessionEvent.error(reason, fatal=True))
-            raise
         finally:
             self._closed = True
             self._env.close_channels()
@@ -412,6 +452,10 @@ class LocalSessionHandle:
             self._done.set()
 
     def events(self) -> AsyncIterator[SessionEvent]:
+        if self._events_subscribed:
+            raise ComposableAgentsError("session events() is single-consumer per handle")
+        self._events_subscribed = True
+
         async def gen() -> AsyncIterator[SessionEvent]:
             while True:
                 event = await self._events.get()
@@ -428,11 +472,34 @@ class LocalSessionHandle:
         channel: Optional[str] = None,
         idempotency_key: Any = None,
     ) -> dict[str, Any]:
-        del idempotency_key
         if self._closed:
             raise SessionClosed("session is closed")
         ch = channel or self._session.in_channel
+
+        if idempotency_key is not None:
+            key = str(idempotency_key)
+            fingerprint = _local_value_fingerprint(value)
+            channel_index = self._idem.setdefault(ch, {})
+            prior = channel_index.get(key)
+            if prior is not None:
+                seq, prior_fingerprint = prior
+                if prior_fingerprint != fingerprint:
+                    raise ComposableAgentsError(
+                        f"idempotency_key {key!r} reused with a different payload "
+                        f"on channel {ch!r}"
+                    )
+                return {"seq": seq, "channel": ch}
+
+        capacity = self._env.capacity()
+        if capacity is not None and self._env.pending_count(ch) >= capacity:
+            raise ComposableAgentsError(f"ChannelFull: channel {ch!r} is full")
+
         seq = self._env.append_live(ch, value)
+        if idempotency_key is not None:
+            self._idem.setdefault(ch, {})[str(idempotency_key)] = (
+                seq,
+                _local_value_fingerprint(value),
+            )
         return {"seq": seq, "channel": ch}
 
     async def state(self) -> dict[str, Any]:
@@ -440,14 +507,18 @@ class LocalSessionHandle:
             "emitted": self._env.emitted_records(),
             "carrier": self._carrier,
             "closed": self._closed,
+            "capacity": self._env.capacity(),
             "pending": self._env.pending_counts(),
         }
+
+    async def open_receives(self) -> list[dict[str, Any]]:
+        return self._env.open_receives_records()
 
     async def close(self, reason: Optional[str] = None) -> None:
         self._close_reason = reason
         self._env.close_channels()
         try:
-            await self._driver
+            await asyncio.gather(self._driver, return_exceptions=True)
         finally:
             if not self._done.is_set():
                 self._done.set()

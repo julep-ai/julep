@@ -433,8 +433,116 @@ async def _facade(env):
         await handle.close("done")
         closed = await asyncio.wait_for(agen.__anext__(), timeout=5)
         assert closed.is_closed
+        assert closed.reason == "done"
         with pytest.raises(StopAsyncIteration):
             await agen.__anext__()
+
+
+# --------------------------------------------------------------------------- #
+# 4c. Public Temporal facade: events() acks only after yielded delivery advances.
+# --------------------------------------------------------------------------- #
+async def _facade_ack_lags_delivery(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-facade-ack"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        session = _make_session_flow()
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=session,
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-facade-ack-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+
+        await handle.send("hi")
+        await handle.send("yo")
+
+        async def _emitted():
+            snap = await handle.state()
+            return len(snap.get("emitted", {}).get("out", [])) >= 2
+
+        await _wait_for(_emitted, attempts=50)
+
+        agen = handle.events()
+        first = await asyncio.wait_for(agen.__anext__(), timeout=5)
+        assert first.is_emit
+        assert first.seq == 1
+
+        snap = await handle.state()
+        emits = snap.get("emitted", {}).get("out", [])
+        assert any(int(item["seq"]) == 1 for item in emits), snap
+        assert snap.get("ack_cursors", {}).get("out", 0) < 1, snap
+
+        second = await asyncio.wait_for(agen.__anext__(), timeout=5)
+        assert second.is_emit
+        assert second.seq == 2
+
+        snap = await handle.state()
+        emits = snap.get("emitted", {}).get("out", [])
+        assert not any(int(item["seq"]) == 1 for item in emits), snap
+        assert any(int(item["seq"]) == 2 for item in emits), snap
+        assert snap.get("ack_cursors", {}).get("out", 0) >= 1, snap
+
+        await handle.close("done")
+        closed = await asyncio.wait_for(agen.__anext__(), timeout=5)
+        assert closed.is_closed
+        assert closed.reason == "done"
+
+
+# --------------------------------------------------------------------------- #
+# 4d. Durable send idempotency rejects conflicting payload reuse.
+# --------------------------------------------------------------------------- #
+async def _idempotency_conflict(env):
+    store = InMemorySessionStore(empty_value=0)
+    fr, session = _frozen_session()
+    tq = "ca-session-idem"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        sid = f"session-idem-{uuid.uuid4()}"
+        handle = await env.client.start_workflow(
+            SessionWorkflow.run,
+            SessionInput(
+                session_id=sid,
+                flow_json=fr.flow.to_json(),
+                manifest_json=manifest_to_json(fr.manifest),
+                init=0,
+                in_channel="in",
+                out_channel="out",
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue=tq,
+        )
+
+        ack1 = await handle.execute_update(
+            "send",
+            {"channel": "in", "value": "a", "idempotency_key": "k1"},
+        )
+        ack2 = await handle.execute_update(
+            "send",
+            {"channel": "in", "value": "a", "idempotency_key": "k1"},
+        )
+        assert ack1 == {"seq": 1, "channel": "in"}
+        assert ack2 == ack1
+
+        with pytest.raises(Exception) as raised:
+            await handle.execute_update(
+                "send",
+                {"channel": "in", "value": "DIFFERENT", "idempotency_key": "k1"},
+            )
+
+        cause = raised.value
+        while cause is not None and not (
+            isinstance(cause, ApplicationError) and cause.type == "ValidationError"
+        ):
+            cause = cause.__cause__
+        assert isinstance(cause, ApplicationError), raised.value
+        assert cause.type == "ValidationError"
+
+        await handle.execute_update("close", {})
+        await handle.result()
 
 
 # --------------------------------------------------------------------------- #
@@ -518,6 +626,8 @@ def test_durable_sessions():
             await _recv_timeout_keeps_session_alive(env)
             await _channel_full(env)
             await _facade(env)
+            await _facade_ack_lags_delivery(env)
+            await _idempotency_conflict(env)
             await _flowworkflow_rejects_loop(env)
             await _flowworkflow_rejects_nested_loop(env)
         finally:

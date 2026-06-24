@@ -18,7 +18,7 @@ from composable_agents import (
     seq,
     validate,
 )
-from composable_agents.errors import ValidationError
+from composable_agents.errors import ComposableAgentsError, ValidationError
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.freeze import McpSnapshot
 from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
@@ -34,6 +34,14 @@ def _facade_append_with_reply(value: dict[str, Any]) -> tuple[list[Any], dict[st
 
 
 register_pure("tests.session_facade.append_with_reply", _facade_append_with_reply)
+
+
+def _facade_boom(value: Any) -> Any:
+    del value
+    raise RuntimeError("boom")
+
+
+register_pure("tests.session_facade.boom", _facade_boom)
 
 
 def _session():
@@ -84,6 +92,120 @@ def test_agent_open_local_drives_live_session_until_closed() -> None:
         assert closed == SessionEvent.closed("done")
         with pytest.raises(StopAsyncIteration):
             await agen.__anext__()
+
+    run(main())
+
+
+def test_local_open_receives_reports_parked_channel() -> None:
+    async def main() -> None:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(session=_session(), backend="local")
+        handle.events()
+
+        records = []
+        for _ in range(50):
+            records = await handle.open_receives()
+            if any(record.get("channel") == "in" for record in records):
+                break
+            await asyncio.sleep(0.01)
+
+        parked = [record for record in records if record.get("channel") == "in"]
+        assert parked, records
+        assert set(parked[0]) == {"channel", "seq"}
+        assert isinstance(parked[0]["seq"], int)
+
+        await handle.close()
+
+    run(main())
+
+
+def test_local_session_turn_error_surfaces_error_event_no_unretrieved() -> None:
+    async def main() -> None:
+        session = scan(
+            seq(recv("in"), arr("tests.session_facade.boom")),
+            init=[],
+            in_channel="in",
+            out_channel="out",
+        )
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(session=session, backend="local")
+        agen = handle.events()
+
+        await handle.send("a")
+
+        started = await _next_event(agen)
+        assert started == SessionEvent.turn_started()
+
+        error = await _next_event(agen)
+        assert error.is_error
+        assert error.fatal is True
+        assert "boom" in (error.reason or "")
+
+        closed = await _next_event(agen)
+        assert closed.is_closed
+
+        await handle.close()
+
+    run(main())
+
+
+def test_local_events_is_single_consumer() -> None:
+    async def main() -> None:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(session=_session(), backend="local")
+        handle.events()
+        with pytest.raises(ComposableAgentsError, match="single-consumer"):
+            handle.events()
+        await handle.close()
+
+    run(main())
+
+
+def test_local_send_idempotency_key_dedups_and_conflicts() -> None:
+    async def main() -> None:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(session=_session(), backend="local")
+
+        ack1 = await handle.send("a", idempotency_key="k1")
+        ack2 = await handle.send("a", idempotency_key="k1")
+        assert ack1 == {"seq": 1, "channel": "in"}
+        assert ack2 == ack1
+
+        with pytest.raises(ComposableAgentsError, match="different payload"):
+            await handle.send("DIFFERENT", idempotency_key="k1")
+
+        agen = handle.events()
+        events = [_event_to_tuple(await _next_event(agen)) for _ in range(3)]
+        assert events == [
+            ("turn", "started"),
+            ("emit", 1, {"seen": ["a"], "reply": "ack:a"}),
+            ("turn", "done"),
+        ]
+
+        await handle.close()
+
+    run(main())
+
+
+def test_open_session_local_is_unsupported() -> None:
+    agent = Agent("test-model", llm=None)
+    with pytest.raises(RuntimeError, match="await"):
+        agent.open_session(session=_session(), backend="local")
+
+
+def test_local_channel_capacity_is_surfaced_in_state() -> None:
+    async def main() -> None:
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=_session(),
+            backend="local",
+            channel_capacity=1,
+        )
+
+        snap = await handle.state()
+        assert snap["capacity"] == 1
+
+        await handle.close()
 
     run(main())
 

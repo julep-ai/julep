@@ -401,7 +401,9 @@ class SessionInput:
     ack_cursors: Optional[dict[str, int]] = None
     seq_cursors: Optional[dict[str, int]] = None
     closed: bool = False
+    close_reason: Optional[str] = None
     idempotency_index: Optional[dict[str, dict[str, int]]] = None
+    idempotency_fp: Optional[dict[str, dict[str, str]]] = None
 
 
 @dataclass
@@ -1188,8 +1190,10 @@ class SessionWorkflow:
         self._ack_cursors: dict[str, int] = {}
         self._seq_cursors: dict[str, int] = {}
         self._idempotency_index: dict[str, dict[str, int]] = {}
+        self._idempotency_fp: dict[str, dict[str, str]] = {}
         self._open_receives: dict[str, int] = {}
         self._closed: bool = False
+        self._close_reason: Optional[str] = None
         self._carrier_current: Any = None
         self._capacity: Optional[int] = None
 
@@ -1261,7 +1265,12 @@ class SessionWorkflow:
             str(channel): {str(key): int(seq) for key, seq in entries.items()}
             for channel, entries in (inp.idempotency_index or {}).items()
         }
+        self._idempotency_fp = {
+            str(channel): {str(key): str(fp) for key, fp in entries.items()}
+            for channel, entries in (inp.idempotency_fp or {}).items()
+        }
         self._closed = bool(inp.closed)
+        self._close_reason = inp.close_reason
         self._capacity = inp.channel_capacity
 
     @workflow.update(name="send")
@@ -1271,9 +1280,21 @@ class SessionWorkflow:
         self._raise_if_send_rejected(channel, idempotency_key)
         if idempotency_key is not None:
             key = str(idempotency_key)
+            fingerprint = value_fingerprint(payload.get("value"))
             channel_index = self._idempotency_index.setdefault(channel, {})
             prior = channel_index.get(key)
             if prior is not None:
+                prior_fingerprint = self._idempotency_fp.get(channel, {}).get(key)
+                if (
+                    prior_fingerprint is not None
+                    and prior_fingerprint != fingerprint
+                ):
+                    raise ApplicationError(
+                        f"idempotency_key {key!r} reused with a different payload "
+                        f"on channel {channel!r}",
+                        type="ValidationError",
+                        non_retryable=True,
+                    )
                 return {"seq": prior, "channel": channel}
 
         pending = self._pending.setdefault(channel, [])
@@ -1283,6 +1304,9 @@ class SessionWorkflow:
             key = str(idempotency_key)
             item["idempotency_key"] = key
             self._idempotency_index.setdefault(channel, {})[key] = seq
+            self._idempotency_fp.setdefault(channel, {})[key] = value_fingerprint(
+                payload.get("value")
+            )
         pending.append(item)
         return {"seq": seq, "channel": channel}
 
@@ -1295,7 +1319,10 @@ class SessionWorkflow:
 
     @workflow.update(name="close")
     def close(self, payload: dict[str, Any]) -> dict[str, Any]:
-        del payload
+        reason = payload.get("reason")
+        self._close_reason = (
+            reason if reason is None or isinstance(reason, str) else str(reason)
+        )
         self._closed = True
         return {"closed": True}
 
@@ -1326,6 +1353,7 @@ class SessionWorkflow:
             "capacity": self._capacity,
             "carrier": self._carrier_current,
             "closed": self._closed,
+            "close_reason": self._close_reason,
             "pending": {
                 channel: len(items)
                 for channel, items in sorted(self._pending.items())
@@ -1457,9 +1485,14 @@ class SessionWorkflow:
                 ack_cursors=dict(self._ack_cursors),
                 seq_cursors=dict(self._seq_cursors),
                 closed=self._closed,
+                close_reason=self._close_reason,
                 idempotency_index={
                     channel: dict(entries)
                     for channel, entries in self._idempotency_index.items()
+                },
+                idempotency_fp={
+                    channel: dict(entries)
+                    for channel, entries in self._idempotency_fp.items()
                 },
             )
         )
@@ -2204,6 +2237,8 @@ class TemporalSessionHandle:
         self._in_channel = in_channel
         self._out_channel = out_channel
         self._poll_s = poll_s
+        self._close_requested = False
+        self._close_reason: Optional[str] = None
 
     async def send(
         self,
@@ -2221,33 +2256,68 @@ class TemporalSessionHandle:
     async def state(self) -> dict[str, Any]:
         return await self._wfhandle.query("state")
 
+    async def open_receives(self) -> list[dict[str, Any]]:
+        return await self._wfhandle.query("open_receives")
+
     async def close(self, reason: Optional[str] = None) -> None:
-        del reason
-        await self._wfhandle.execute_update("close", {})
+        self._close_requested = True
+        self._close_reason = reason
+        await self._wfhandle.execute_update("close", {"reason": reason})
 
     async def events(self) -> AsyncIterator[SessionEvent]:
-        cursor = 0
+        last_delivered = 0
+        last_acked = 0
         while True:
-            snap = await self.state()
+            if last_delivered > last_acked:
+                try:
+                    await self._wfhandle.execute_update(
+                        "ack",
+                        {"channel": self._out_channel, "seq": last_delivered},
+                    )
+                    last_acked = last_delivered
+                except Exception:
+                    if self._close_requested:
+                        yield SessionEvent.closed(self._close_reason)
+                        return
+                    raise
+
+            try:
+                snap = await self.state()
+            except Exception as exc:
+                yield SessionEvent.error(str(exc), fatal=True)
+                yield SessionEvent.closed()
+                return
+
             emitted = snap.get("emitted", {}).get(self._out_channel, [])
-            for item in emitted:
-                seq = int(item.get("seq", 0))
-                if seq <= cursor:
-                    continue
-                cursor = seq
-                await self._wfhandle.execute_update(
-                    "ack",
-                    {"channel": self._out_channel, "seq": cursor},
-                )
+            next_item = None
+            for item in sorted(emitted, key=lambda entry: int(entry.get("seq", 0))):
+                if int(item.get("seq", 0)) > last_delivered:
+                    next_item = item
+                    break
+
+            if next_item is not None:
+                seq = int(next_item.get("seq", 0))
+                last_delivered = seq
                 yield SessionEvent.emit(
                     self._out_channel,
                     seq,
-                    item.get("payload"),
+                    next_item.get("payload"),
                 )
+                continue
+
             if snap.get("closed") and not any(
-                int(item.get("seq", 0)) > cursor for item in emitted
+                int(item.get("seq", 0)) > last_delivered for item in emitted
             ):
-                yield SessionEvent.closed()
+                if last_delivered > last_acked:
+                    try:
+                        await self._wfhandle.execute_update(
+                            "ack",
+                            {"channel": self._out_channel, "seq": last_delivered},
+                        )
+                        last_acked = last_delivered
+                    except Exception:
+                        pass
+                yield SessionEvent.closed(snap.get("close_reason"))
                 return
             await asyncio.sleep(self._poll_s)
 
