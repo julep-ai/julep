@@ -320,6 +320,8 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
                 r = await interpret(node.body, carrier, env, causes=(last_event,))
             except SessionClosed:
                 break
+            # The turn body's final output is the next carrier. If a body emits
+            # an intermediate reply, it must still yield the next carrier after.
             carrier = r.value
             last_event = r.event_id or last_event
         return Result(carrier)
@@ -359,7 +361,8 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
                 if node.prompt is None:
                     raise ComposableAgentsError("recv: missing channel")
                 timeout_s = node.ann.timeout if node.ann else None
-                return Result(await env.recv(node.prompt, cid, timeout_s))
+                msg = await env.recv(node.prompt, cid, timeout_s)
+                return Result({"carrier": value, "msg": msg})
             # Reserved emit tool becomes a channel append, not an HTTP call.
             if getattr(step.tool, "name", None) == EMIT_TOOL:
                 if node.prompt is None:

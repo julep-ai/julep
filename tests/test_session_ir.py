@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from conftest import run
-from composable_agents import call, emit, human_gate, recv
+from composable_agents import arr, call, emit, human_gate, register_pure, recv, seq
 from composable_agents.derived import HUMAN_CHANNEL
 from composable_agents.errors import ComposableAgentsError
 from composable_agents.ir import (
@@ -25,8 +27,27 @@ from composable_agents.shapes import closed_shape, surface_shape
 from composable_agents.transforms import normalize_ids
 
 
+def _turn_msg(value: dict[str, Any]) -> Any:
+    return value["msg"]
+
+
+def _append_msg(value: dict[str, Any]) -> list[Any]:
+    carrier = value["carrier"]
+    assert isinstance(carrier, list)
+    return [*carrier, value["msg"]]
+
+
+def _sum_turn(value: dict[str, Any]) -> int:
+    return int(value["carrier"]) + int(value["msg"])
+
+
+register_pure("tests.session_ir.turn_msg", _turn_msg)
+register_pure("tests.session_ir.append_msg", _append_msg)
+register_pure("tests.session_ir.sum_turn", _sum_turn)
+
+
 def test_loop_ir_round_trips_and_non_loop_json_is_unchanged() -> None:
-    body = call("turn")
+    body = seq(recv("in"), emit("out"))
     state_schema = {"type": "array", "items": {"type": "string"}}
 
     session = scan(body, init=[], state_schema=state_schema)
@@ -100,28 +121,42 @@ def test_loop_is_agent_shaped() -> None:
 
 
 def test_scan_and_drive_session_thread_carrier_and_outputs() -> None:
-    session = scan(recv("in"), init=[])
+    session = scan(seq(recv("in"), arr("tests.session_ir.append_msg"), emit("out")), init=[])
 
-    async def step(carrier: object, msg: str) -> tuple[object, str]:
-        assert isinstance(carrier, list)
-        next_carrier = [*carrier, msg]
-        return next_carrier, f"reply:{msg}"
-
-    carrier, outputs = run(drive_session(session, step, inputs=["a", "b", "c"]))
+    carrier, outputs = run(drive_session(session, inputs=["a", "b", "c"]))
 
     assert carrier == ["a", "b", "c"]
-    assert outputs == ["reply:a", "reply:b", "reply:c"]
+    assert outputs == [["a"], ["a", "b"], ["a", "b", "c"]]
+
+
+def test_drive_session_runs_real_body_through_interpret(monkeypatch: pytest.MonkeyPatch) -> None:
+    import composable_agents.session as session_mod
+
+    session = scan(seq(recv("in"), arr("tests.session_ir.turn_msg"), emit("out")), init="seed")
+    real_interpret = session_mod.interpret
+    calls: list[tuple[Node, object, Any]] = []
+
+    async def spy(flow: Node, value: object, env: Any, **kwargs: Any) -> Any:
+        calls.append((flow, value, env))
+        return await real_interpret(flow, value, env, **kwargs)
+
+    monkeypatch.setattr(session_mod, "interpret", spy)
+
+    carrier, outputs = run(drive_session(session, inputs=["x", "y"]))
+
+    assert carrier == "y"
+    assert outputs == ["x", "y"]
+    assert len(calls) == 1
+    assert calls[0][0] is session.body
+    assert calls[0][1] == "seed"
+    assert calls[0][2].emitted("out") == ["x", "y"]
 
 
 def test_drive_session_raises_when_max_turns_exceeded() -> None:
-    session = scan(recv("in"), init=0)
-
-    async def step(carrier: object, msg: int) -> tuple[object, int]:
-        assert isinstance(carrier, int)
-        return carrier + msg, carrier + msg
+    session = scan(seq(recv("in"), arr("tests.session_ir.sum_turn"), emit("out")), init=0)
 
     with pytest.raises(ComposableAgentsError, match="did not park within 2 turns"):
-        run(drive_session(session, step, inputs=[1, 2, 3], max_turns=2))
+        run(drive_session(session, inputs=[1, 2, 3], max_turns=2))
 
 
 def test_channel_buffers_inputs_and_outputs() -> None:
@@ -139,8 +174,6 @@ def test_channel_buffers_inputs_and_outputs() -> None:
 
 
 def test_recv_emit_channel_and_value_survive_json_round_trip() -> None:
-    from composable_agents import seq
-
     flow = seq(recv("in"), emit("out", value="hi"))
     rt = Node.from_json(flow.to_json())
 
@@ -162,7 +195,6 @@ def test_different_channels_and_values_hash_differently() -> None:
 
 
 def test_session_flow_freezes_with_recv_emit() -> None:
-    from composable_agents import seq
     from composable_agents.freeze import McpSnapshot, freeze
 
     session = scan(seq(recv("in"), emit("out", value="ack")), init={})
@@ -178,7 +210,7 @@ def test_session_flow_freezes_with_recv_emit() -> None:
 
 
 def test_normalize_ids_recurses_into_loop_body() -> None:
-    session = scan(call("turn"), init={})
+    session = scan(seq(recv("in"), emit("out")), init={})
 
     normalized = normalize_ids(session.body)
 

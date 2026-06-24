@@ -6,10 +6,20 @@ import pytest
 
 from composable_agents.derived import emit, hedge, human_gate, quorum, race, recv
 from composable_agents.dsl import alt, each, ident, iter_up_to, par, seq, stage, think
-from composable_agents.ir import Node
+from composable_agents.errors import ComposableAgentsError
+from composable_agents.ir import ChannelRef, Node
 from composable_agents.kinds import Op
-from composable_agents.session import loop, scan
+from composable_agents.session import scan
 from composable_agents.validate import blocking, validate
+
+
+def raw_loop(body: Node) -> Node:
+    return Node(
+        op=Op.LOOP,
+        id="raw-loop",
+        body=body,
+        channels=[ChannelRef("in"), ChannelRef("out")],
+    )
 
 
 def codes(flow: Node) -> set[str]:
@@ -32,19 +42,19 @@ def assert_no_session_codes(flow: Node) -> None:
 # Sequential-position fence.
 # --------------------------------------------------------------------------- #
 def test_recv_under_plain_par_is_rejected() -> None:
-    flow = scan(par(recv("in"), think("a")), init={}).body
+    flow = raw_loop(par(recv("in"), think("a")))
 
     assert "SESSION_RECV_IN_PARALLEL" in err_codes(flow)
 
 
 def test_emit_under_plain_par_is_rejected() -> None:
-    flow = scan(seq(recv("in"), par(emit("out"), think("a"))), init={}).body
+    flow = raw_loop(seq(recv("in"), par(emit("out"), think("a"))))
 
     assert "SESSION_EMIT_IN_PARALLEL" in err_codes(flow)
 
 
 def test_recv_under_each_is_rejected() -> None:
-    flow = scan(each(recv("in")), init={}).body
+    flow = raw_loop(each(recv("in")))
 
     assert "SESSION_RECV_IN_PARALLEL" in err_codes(flow)
 
@@ -58,7 +68,7 @@ def test_recv_under_each_is_rejected() -> None:
     ],
 )
 def test_recv_under_race_like_par_is_rejected(flow: Node) -> None:
-    session = scan(flow, init={}).body
+    session = raw_loop(flow)
 
     assert "SESSION_RECV_IN_PARALLEL" in err_codes(session)
 
@@ -98,21 +108,21 @@ def test_loop_at_session_root_is_accepted_by_placement() -> None:
 
 
 def test_loop_nested_under_loop_is_rejected() -> None:
-    inner = scan(seq(recv("in"), emit("out")), init={}).body
-    outer = loop(inner, init={}).body
+    inner = raw_loop(seq(recv("in"), emit("out")))
+    outer = raw_loop(inner)
 
     assert "SESSION_LOOP_NESTED" in err_codes(outer)
 
 
 def test_loop_inside_eval_plan_plan_is_rejected() -> None:
-    inner = scan(seq(recv("in"), emit("out")), init={}).body
+    inner = raw_loop(seq(recv("in"), emit("out")))
     flow = Node(op=Op.EVAL_PLAN, id="ev-loop-plan", plan=inner)
 
     assert "SESSION_LOOP_IN_EVAL_PLAN" in err_codes(flow)
 
 
 def test_loop_under_par_is_rejected_by_fence() -> None:
-    inner = scan(seq(recv("in"), emit("out")), init={}).body
+    inner = raw_loop(seq(recv("in"), emit("out")))
     flow = par(inner, ident())
 
     assert "SESSION_LOOP_IN_PARALLEL" in err_codes(flow)
@@ -130,28 +140,27 @@ def test_guarded_loop_body_is_accepted() -> None:
 
 
 def test_emit_before_recv_is_rejected() -> None:
-    flow = scan(seq(emit("out"), recv("in")), init={}).body
+    flow = raw_loop(seq(emit("out"), recv("in")))
 
     assert "SESSION_LOOP_EMIT_BEFORE_RECV" in err_codes(flow)
 
 
 def test_missing_recv_on_loop_body_path_is_rejected() -> None:
-    flow = scan(ident(), init={}).body
+    flow = raw_loop(ident())
 
     assert "SESSION_LOOP_NOT_RECV_GUARDED" in err_codes(flow)
 
 
 def test_human_gate_does_not_satisfy_recv_guard() -> None:
-    flow = scan(human_gate(prompt="approve"), init={}).body
+    flow = raw_loop(human_gate(prompt="approve"))
 
     assert "SESSION_LOOP_NOT_RECV_GUARDED" in err_codes(flow)
 
 
 def test_conditional_recv_under_alt_is_rejected() -> None:
-    flow = scan(
+    flow = raw_loop(
         alt(pred="p", if_true=recv("in"), if_false=ident()),
-        init={},
-    ).body
+    )
 
     assert "SESSION_LOOP_NOT_RECV_GUARDED" in err_codes(flow)
 
@@ -171,7 +180,7 @@ def test_baked_eval_plan_with_recv_in_loop_body_is_accepted() -> None:
         id="ev-baked-recv",
         plan=seq(recv("in"), emit("out")),
     )
-    flow = scan(body, init={}).body
+    flow = raw_loop(body)
 
     session = session_codes(flow)
     assert "SESSION_LOOP_NOT_RECV_GUARDED" not in session
@@ -179,7 +188,7 @@ def test_baked_eval_plan_with_recv_in_loop_body_is_accepted() -> None:
 
 
 def test_controller_only_eval_plan_in_loop_body_is_rejected() -> None:
-    flow = scan(stage("planner"), init={}).body
+    flow = raw_loop(stage("planner"))
 
     session = err_codes(flow)
     assert "SESSION_LOOP_EVAL_PLAN_CONTROLLER" in session
@@ -187,7 +196,7 @@ def test_controller_only_eval_plan_in_loop_body_is_rejected() -> None:
 
 
 def test_iter_up_to_does_not_satisfy_recv_guard() -> None:
-    flow = scan(iter_up_to(3, recv("in")), init={}).body
+    flow = raw_loop(iter_up_to(3, recv("in")))
 
     assert "SESSION_LOOP_NOT_RECV_GUARDED" in err_codes(flow)
 
@@ -215,3 +224,59 @@ def test_declared_channels_emit_no_warning() -> None:
     flow = scan(seq(recv("in"), emit("out")), init={}).body
 
     assert "CHANNEL_UNDECLARED" not in codes(flow)
+
+
+# --------------------------------------------------------------------------- #
+# Flow-vs-session target gate.
+# --------------------------------------------------------------------------- #
+def test_ordinary_flow_rejects_recv_emit_session_ops() -> None:
+    flow = seq(recv("in"), emit("out"))
+
+    errors = err_codes(flow)
+    assert "SESSION_RECV_IN_FLOW" in errors
+    assert "SESSION_EMIT_IN_FLOW" in errors
+
+
+def test_ordinary_flow_without_session_ops_has_no_target_codes() -> None:
+    assert_no_session_codes(ident())
+
+
+def test_ordinary_flow_rejects_bare_emit() -> None:
+    assert "SESSION_EMIT_IN_FLOW" in err_codes(emit("out"))
+
+
+def test_well_formed_session_has_no_target_gate_codes() -> None:
+    flow = scan(seq(recv("in"), emit("out")), init={}).body
+
+    assert_no_session_codes(flow)
+
+
+def test_recv_reachable_outside_loop_is_rejected() -> None:
+    flow = seq(recv("x"), raw_loop(seq(recv("in"), emit("out"))))
+
+    assert "SESSION_RECV_OUTSIDE_LOOP" in err_codes(flow)
+
+
+# --------------------------------------------------------------------------- #
+# Build-time enforcement.
+# --------------------------------------------------------------------------- #
+def test_scan_raises_for_unguarded_loop_body() -> None:
+    with pytest.raises(
+        ComposableAgentsError,
+        match="SESSION_LOOP_NOT_RECV_GUARDED",
+    ):
+        scan(ident(), init={})
+
+
+def test_scan_raises_for_recv_under_parallel_fence() -> None:
+    with pytest.raises(
+        ComposableAgentsError,
+        match="SESSION_RECV_IN_PARALLEL",
+    ):
+        scan(par(recv("in"), think("a")), init={})
+
+
+def test_well_formed_session_builds() -> None:
+    session = scan(seq(recv("in"), emit("out")), init={})
+
+    assert session.body.op == Op.LOOP

@@ -7,9 +7,9 @@ from typing import Any
 import pytest
 
 from composable_agents import (
-    call,
+    arr,
     emit,
-    mcp,
+    register_pure,
     recv,
     scan,
     seq,
@@ -18,6 +18,18 @@ from composable_agents.execution.interpreter import InMemoryEnv, SessionClosed, 
 from composable_agents.ir import Node
 from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
 from conftest import run
+
+
+def _turn_msg(value: dict[str, Any]) -> Any:
+    return value["msg"]
+
+
+def _turn_sum(value: dict[str, Any]) -> int:
+    return int(value["carrier"]) + int(value["msg"])
+
+
+register_pure("tests.session.turn_msg", _turn_msg)
+register_pure("tests.session.turn_sum", _turn_sum)
 
 
 def _env(flow: Node, **kw: Any) -> tuple[Node, InMemoryEnv]:
@@ -40,7 +52,7 @@ class RecordingSessionEnv(InMemoryEnv):
 
 
 def test_recv_emit_nonretryable() -> None:
-    flow = seq(recv("in", timeout_s=3), emit("out"))
+    flow = seq(recv("in", timeout_s=3), arr("tests.session.turn_msg"), emit("out"))
     env = RecordingSessionEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
@@ -62,7 +74,7 @@ def test_recv_exhausted_raises_session_closed() -> None:
 
 
 def test_loop_echo_session_e2e() -> None:
-    session = scan(seq(recv("in"), emit("out")), init=None)
+    session = scan(seq(recv("in"), arr("tests.session.turn_msg"), emit("out")), init=None)
     flow, env = _env(session.body, inbound={"in": ["a", "b", "c"]})
 
     run(interpret(flow, session.init, env))
@@ -72,7 +84,7 @@ def test_loop_echo_session_e2e() -> None:
 
 def test_clean_session_shutdown_records_no_failed_event() -> None:
     store = InMemoryProjection()
-    session = scan(seq(recv("in"), emit("out")), init=None)
+    session = scan(seq(recv("in"), arr("tests.session.turn_msg"), emit("out")), init=None)
     env = InMemoryEnv({}, ProjectionEmitter(store), inbound={"in": ["a", "b"]})
 
     run(interpret(session.body, session.init, env))
@@ -82,7 +94,7 @@ def test_clean_session_shutdown_records_no_failed_event() -> None:
 
 
 def test_recv_emit_do_not_consume_tool_call_quota() -> None:
-    flow = seq(recv("in"), emit("out"))
+    flow = seq(recv("in"), arr("tests.session.turn_msg"), emit("out"))
     env = InMemoryEnv(
         {},
         ProjectionEmitter(InMemoryProjection()),
@@ -96,20 +108,12 @@ def test_recv_emit_do_not_consume_tool_call_quota() -> None:
 
 
 def test_loop_accumulator_session_e2e() -> None:
-    total = [0]
+    session = scan(seq(recv("in"), arr("tests.session.turn_sum"), emit("out")), init=0)
 
-    def accum(value: int) -> int:
-        total[0] += value
-        return total[0]
+    for _ in range(2):
+        flow, env = _env(session.body, inbound={"in": [1, 2, 3]})
 
-    session = scan(seq(recv("in"), call(mcp("srv", "accum")), emit("out")), init=0)
-    flow, env = _env(
-        session.body,
-        tools={"srv/accum": accum},
-        inbound={"in": [1, 2, 3]},
-    )
+        out = run(interpret(flow, session.init, env))
 
-    out = run(interpret(flow, session.init, env))
-
-    assert env.emitted("out") == [1, 3, 6]
-    assert out.value == 6
+        assert env.emitted("out") == [1, 3, 6]
+        assert out.value == 6

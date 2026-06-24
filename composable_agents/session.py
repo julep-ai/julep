@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Generic, Iterable, Optional, TypeVar
+from typing import Any, Generic, Iterable, Optional, TypeVar
 
 from .dsl import _nid, _node
 from .errors import ComposableAgentsError
 from .ir import ChannelRef, JSONSchema, Node
 from .kinds import Op
+from .execution.interpreter import InMemoryEnv, interpret
+from .projection import InMemoryProjection, ProjectionEmitter
 
 I = TypeVar("I")
 O = TypeVar("O")
@@ -63,6 +65,10 @@ class Session(Generic[I, O]):
     out_channel: str
 
 
+class SessionValidationError(ComposableAgentsError):
+    """Raised when a public session constructor receives an unsafe LOOP body."""
+
+
 def scan(
     step_flow: Node,
     init: object,
@@ -90,13 +96,13 @@ def loop(
     state_schema: Optional[JSONSchema] = None,
 ) -> Session[Any, Any]:
     """Build a LOOP IR node around an already-authored turn body."""
-    loop_node = _node(
-        op=Op.LOOP,
-        id=_nid("loop"),
-        body=body,
+    loop_node = _loop_node(
+        body,
+        in_channel=in_channel,
+        out_channel=out_channel,
         state_schema=state_schema,
-        channels=[ChannelRef(in_channel), ChannelRef(out_channel)],
     )
+    _raise_on_blocking_session_diagnostics(loop_node)
     return Session(
         body=loop_node,
         init=init,
@@ -105,21 +111,55 @@ def loop(
     )
 
 
+def _loop_node(
+    body: Node,
+    *,
+    in_channel: str = "in",
+    out_channel: str = "out",
+    state_schema: Optional[JSONSchema] = None,
+) -> Node:
+    """Build a LOOP node without running the public construction gate."""
+    return _node(
+        op=Op.LOOP,
+        id=_nid("loop"),
+        body=body,
+        state_schema=state_schema,
+        channels=[ChannelRef(in_channel), ChannelRef(out_channel)],
+    )
+
+
+def _raise_on_blocking_session_diagnostics(loop_node: Node) -> None:
+    from .validate import blocking, validate
+
+    # Enforce at construction rather than freeze time: deploy.py freezes before
+    # validate, and session safety should not perturb that order.
+    errors = [
+        d
+        for d in blocking(validate(loop_node))
+        if d.code.startswith("SESSION_")
+    ]
+    if not errors:
+        return
+    details = "; ".join(f"{d.code}: {d.message}" for d in errors)
+    raise SessionValidationError(f"invalid session LOOP: {details}")
+
+
 async def drive_session(
     session: Session[I, O],
-    step: Callable[[object, I], Awaitable[tuple[object, O]]],
     *,
     inputs: Iterable[I],
     max_turns: int = 1000,
 ) -> tuple[object, list[O]]:
-    """Local unfold: recv -> turn -> emit -> thread carrier -> park."""
-    carrier = session.init
-    outs: list[O] = []
-    for turn, msg in enumerate(inputs):
-        if turn >= max_turns:
-            raise ComposableAgentsError(
-                f"session did not park within {max_turns} turns"
-            )
-        carrier, out = await step(carrier, msg)
-        outs.append(out)
-    return carrier, outs
+    """Run a session LOOP over in-memory channel input and collect emissions."""
+    messages = list(inputs)
+    if len(messages) > max_turns:
+        raise ComposableAgentsError(
+            f"session did not park within {max_turns} turns"
+        )
+    env = InMemoryEnv(
+        {},
+        ProjectionEmitter(InMemoryProjection()),
+        inbound={session.in_channel: messages},
+    )
+    result = await interpret(session.body, session.init, env)
+    return result.value, env.emitted(session.out_channel)

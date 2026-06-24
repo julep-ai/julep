@@ -612,6 +612,96 @@ def _check_session_channel_declared(flow: Node, out: list[Diagnostic]) -> None:
                     )
 
 
+def _check_session_target(flow: Node, out: list[Diagnostic]) -> None:
+    is_session = flow.op == Op.LOOP
+
+    def contains_loop(n: Node) -> bool:
+        return any(d.op == Op.LOOP for d in n.walk())
+
+    has_loop = contains_loop(flow)
+
+    def rec(n: Node, inside_loop: bool) -> None:
+        if not is_session:
+            if n.op == Op.LOOP:
+                out.append(
+                    Diagnostic(
+                        "SESSION_LOOP_IN_FLOW",
+                        n.id,
+                        "LOOP requires a session (root Op.LOOP); this flow targets "
+                        "FlowWorkflow",
+                    )
+                )
+            if _is_recv(n):
+                out.append(
+                    Diagnostic(
+                        "SESSION_RECV_IN_FLOW",
+                        n.id,
+                        "recv requires a session (root Op.LOOP); this flow targets "
+                        "FlowWorkflow",
+                    )
+                )
+                if has_loop and not inside_loop:
+                    out.append(
+                        Diagnostic(
+                            "SESSION_RECV_OUTSIDE_LOOP",
+                            n.id,
+                            "recv is reachable outside a LOOP body; session channel "
+                            "operations must be inside the root Op.LOOP body",
+                        )
+                    )
+            if _is_emit(n):
+                out.append(
+                    Diagnostic(
+                        "SESSION_EMIT_IN_FLOW",
+                        n.id,
+                        "emit requires a session (root Op.LOOP); this flow targets "
+                        "FlowWorkflow",
+                    )
+                )
+                if has_loop and not inside_loop:
+                    out.append(
+                        Diagnostic(
+                            "SESSION_EMIT_OUTSIDE_LOOP",
+                            n.id,
+                            "emit is reachable outside a LOOP body; session channel "
+                            "operations must be inside the root Op.LOOP body",
+                        )
+                    )
+
+        if is_session and not inside_loop:
+            if _is_recv(n):
+                out.append(
+                    Diagnostic(
+                        "SESSION_RECV_OUTSIDE_LOOP",
+                        n.id,
+                        "recv is reachable outside the root LOOP body",
+                    )
+                )
+            if _is_emit(n):
+                out.append(
+                    Diagnostic(
+                        "SESSION_EMIT_OUTSIDE_LOOP",
+                        n.id,
+                        "emit is reachable outside the root LOOP body",
+                    )
+                )
+
+        if n.op == Op.LOOP:
+            if n.body is not None:
+                rec(n.body, True)
+            return
+
+        for child in n.children():
+            rec(child, inside_loop)
+
+    if flow.op == Op.LOOP:
+        if flow.body is not None:
+            rec(flow.body, True)
+        return
+
+    rec(flow, False)
+
+
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:
     step = n.step
     if isinstance(step, CallStep) and manifest is not None:
@@ -687,6 +777,7 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
     _check_session_loop_productivity(flow, out)
     _check_session_loop_placement(flow, out)
     _check_session_channel_declared(flow, out)
+    _check_session_target(flow, out)
 
     for n in flow.walk():
         _check_structure(n, out)
