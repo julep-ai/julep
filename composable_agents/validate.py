@@ -18,6 +18,9 @@ Rules implemented:
 * named-``Pure``: ``arr``/``alt`` must carry a registered ``pure`` (no inline closures)
 * ``arr.args``: static args are canonical JSON objects with identifier keys and
   no secret-shaped keys at any nesting level
+* session ``LOOP`` rules: recv/emit/LOOP are fenced out of concurrent contexts,
+  loop bodies must be recv-guarded before emitting, and LOOP may only appear at
+  a session root
 * ``Ann`` retry fields: ``max_attempts >= 1``, finite ``retry_interval_s >= 0``,
   and finite ``backoff_rate >= 1`` are blocking well-formedness requirements;
   wire values of the wrong JSON type (strings, bools, lists) are blocking
@@ -36,8 +39,12 @@ from .contracts import ToolManifest, contract_allows_retry
 from .ir import (
     CallStep,
     ContextPolicy,
+    EMIT_TOOL,
     JSONSchema,
+    NativeTool,
     Node,
+    RACE_LIKE_MERGES,
+    RECV_TOOL,
     SourceSpan,
     ThinkStep,
     canonical_json,
@@ -69,6 +76,26 @@ class Diagnostic:
 
 def blocking(diags: list[Diagnostic]) -> list[Diagnostic]:
     return [d for d in diags if d.severity == "error"]
+
+
+def _is_recv(n: Node) -> bool:
+    step = n.step
+    return (
+        n.op == Op.PRIM
+        and isinstance(step, CallStep)
+        and isinstance(step.tool, NativeTool)
+        and step.tool.name == RECV_TOOL
+    )
+
+
+def _is_emit(n: Node) -> bool:
+    step = n.step
+    return (
+        n.op == Op.PRIM
+        and isinstance(step, CallStep)
+        and isinstance(step.tool, NativeTool)
+        and step.tool.name == EMIT_TOOL
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -384,6 +411,186 @@ def _is_real_number(value: object) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def _check_session_concurrency_fence(flow: Node, out: list[Diagnostic]) -> None:
+    def concurrency_label(n: Node) -> str:
+        if n.op == Op.EACH:
+            return "each"
+        if n.merge is not None and n.merge.kind in RACE_LIKE_MERGES:
+            return n.merge.kind
+        return "par"
+
+    def rec(n: Node, fenced: bool, label: Optional[str]) -> None:
+        if fenced:
+            assert label is not None
+            if _is_recv(n):
+                out.append(
+                    Diagnostic(
+                        "SESSION_RECV_IN_PARALLEL",
+                        n.id,
+                        f"recv is not allowed under {label}: session input must be "
+                        "consumed sequentially",
+                    )
+                )
+            if _is_emit(n):
+                out.append(
+                    Diagnostic(
+                        "SESSION_EMIT_IN_PARALLEL",
+                        n.id,
+                        f"emit is not allowed under {label}: session output must be "
+                        "produced sequentially",
+                    )
+                )
+            if n.op == Op.LOOP:
+                out.append(
+                    Diagnostic(
+                        "SESSION_LOOP_IN_PARALLEL",
+                        n.id,
+                        f"LOOP is not allowed under {label}: sessions must not be "
+                        "started from concurrent branches",
+                    )
+                )
+                return
+
+        if n.op == Op.PAR:
+            next_label = concurrency_label(n)
+            if n.left is not None:
+                rec(n.left, True, next_label)
+            if n.right is not None:
+                rec(n.right, True, next_label)
+            return
+
+        if n.op == Op.EACH:
+            if n.body is not None:
+                rec(n.body, True, concurrency_label(n))
+            return
+
+        for child in n.children():
+            rec(child, fenced, label)
+
+    rec(flow, False, None)
+
+
+def _check_session_loop_productivity(flow: Node, out: list[Diagnostic]) -> None:
+    def classify(n: Node) -> tuple[bool, bool]:
+        if _is_recv(n):
+            return (True, False)
+        if _is_emit(n):
+            return (False, True)
+
+        if n.op in (Op.PRIM, Op.IDENT, Op.ARR, Op.APP, Op.LOOP):
+            return (False, False)
+
+        if n.op == Op.SEQ:
+            left_recv, left_emit = classify(n.left) if n.left is not None else (False, False)
+            right_recv, right_emit = classify(n.right) if n.right is not None else (False, False)
+            return (
+                left_recv or right_recv,
+                left_emit or (not left_recv and right_emit),
+            )
+
+        if n.op == Op.ALT:
+            branches: list[Node] = []
+            if n.cases is not None:
+                branches.extend(n.cases.values())
+                if n.default is not None:
+                    branches.append(n.default)
+            else:
+                if n.left is not None:
+                    branches.append(n.left)
+                if n.right is not None:
+                    branches.append(n.right)
+            if not branches:
+                return (False, False)
+            classified = [classify(branch) for branch in branches]
+            return (
+                all(all_recv for all_recv, _ in classified),
+                any(emit_before_recv for _, emit_before_recv in classified),
+            )
+
+        if n.op == Op.ITER_UP_TO:
+            _, emit_before_recv = classify(n.body) if n.body is not None else (False, False)
+            return (False, emit_before_recv)
+
+        if n.op in (Op.PAR, Op.EACH):
+            return (False, any(_is_emit(child) for child in n.walk()))
+
+        if n.op == Op.EVAL_PLAN:
+            if n.plan is None:
+                out.append(
+                    Diagnostic(
+                        "SESSION_LOOP_EVAL_PLAN_CONTROLLER",
+                        n.id,
+                        "controller/runtime-compiled eval_plan is not allowed inside a "
+                        "LOOP body; only baked plans are statically walkable",
+                    )
+                )
+                return (False, False)
+            return classify(n.plan)
+
+        return (False, False)
+
+    for n in flow.walk():
+        if n.op != Op.LOOP or n.body is None:
+            continue
+        all_recv, emit_before_recv = classify(n.body)
+        if not all_recv:
+            out.append(
+                Diagnostic(
+                    "SESSION_LOOP_NOT_RECV_GUARDED",
+                    n.id,
+                    "loop body has a path with no recv: the loop could iterate without "
+                    "consuming input",
+                )
+            )
+        if emit_before_recv:
+            out.append(
+                Diagnostic(
+                    "SESSION_LOOP_EMIT_BEFORE_RECV",
+                    n.id,
+                    "loop body can emit before its first recv on some path",
+                )
+            )
+
+
+def _check_session_loop_placement(flow: Node, out: list[Diagnostic]) -> None:
+    def rec(n: Node, inside_eval_plan_or_app: bool, inside_loop: bool) -> None:
+        if n.op == Op.LOOP:
+            if inside_eval_plan_or_app:
+                out.append(
+                    Diagnostic(
+                        "SESSION_LOOP_IN_EVAL_PLAN",
+                        n.id,
+                        "LOOP may only appear at a session root, not inside eval_plan/app",
+                    )
+                )
+            if inside_loop:
+                out.append(
+                    Diagnostic(
+                        "SESSION_LOOP_NESTED",
+                        n.id,
+                        "nested LOOP is not allowed; nested sessions are deferred",
+                    )
+                )
+            if n.body is not None:
+                rec(n.body, inside_eval_plan_or_app, True)
+            return
+
+        if n.op == Op.EVAL_PLAN:
+            if n.plan is not None:
+                rec(n.plan, True, inside_loop)
+            return
+
+        if n.op == Op.APP:
+            for child in n.children():
+                rec(child, True, inside_loop)
+            return
+
+        for child in n.children():
+            rec(child, inside_eval_plan_or_app, inside_loop)
+
+    rec(flow, False, False)
+
+
 def _check_call_and_ctx(n: Node, manifest: Optional[ToolManifest], out: list[Diagnostic]) -> None:
     step = n.step
     if isinstance(step, CallStep) and manifest is not None:
@@ -454,6 +661,10 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
                 f"node id {dup!r} appears more than once (build distinct instances)",
             )
         )
+
+    _check_session_concurrency_fence(flow, out)
+    _check_session_loop_productivity(flow, out)
+    _check_session_loop_placement(flow, out)
 
     for n in flow.walk():
         _check_structure(n, out)
