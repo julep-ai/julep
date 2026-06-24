@@ -7,7 +7,7 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 import typer
 
@@ -73,7 +73,13 @@ async def _listen(
 
     consumer = asyncio.create_task(consume())
     try:
-        for raw_line in in_lines:
+        iterator = iter(in_lines)
+        sentinel = object()
+        while True:
+            raw = await asyncio.to_thread(next, iterator, sentinel)
+            if raw is sentinel:
+                break
+            raw_line = cast(str, raw)
             line = raw_line.strip()
             if not line:
                 continue

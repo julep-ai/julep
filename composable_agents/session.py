@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import ast
 import copy
+import hashlib
 import inspect
 import textwrap
 from dataclasses import dataclass
@@ -246,13 +247,18 @@ def _compile_session_function(
 ) -> Session[Any, Any]:
     from .derived import recv
     from .dsl import arr, seq
-    from .purity import register_pure
+    from .purity import register_pure_with_source
 
     parsed = _ParsedSession.from_function(func)
     init = parsed.build_init(func)
-    step = parsed.build_step(func)
-    pure_name = f"session.{func.__module__}.{func.__qualname__}"
-    register_pure(pure_name, step)
+    step, canonical_source = parsed.build_step(
+        func,
+        in_channel=in_channel,
+        out_channel=out_channel,
+    )
+    short_hash = hashlib.sha256(canonical_source.encode("utf-8")).hexdigest()[:12]
+    pure_name = f"session.{func.__module__}.{func.__qualname__}.{short_hash}"
+    register_pure_with_source(pure_name, step, canonical_source)
     return scan(
         seq(recv(in_channel), arr(pure_name)),
         init=init,
@@ -324,12 +330,11 @@ class _ParsedSession:
             )
 
         pre_names = _assigned_names(pre_loop)
-        assigned_after_recv = _assigned_names(loop_body[1:])
-        read_after_recv = _loaded_names(loop_body[1:])
+        referenced_after_recv = _referenced_names(loop_body[1:])
         carried = tuple(
             name
             for name in pre_names
-            if name in assigned_after_recv and name in read_after_recv and name != recv_target
+            if name in referenced_after_recv and name != recv_target
         )
         if _nested_captures(loop_body, set(carried)):
             raise _session_compile_error(
@@ -375,7 +380,13 @@ class _ParsedSession:
         result = namespace[name]()
         return result
 
-    def build_step(self, func: Callable[..., Any]) -> Callable[[dict[str, Any]], tuple[object, object]]:
+    def build_step(
+        self,
+        func: Callable[..., Any],
+        *,
+        in_channel: str,
+        out_channel: str,
+    ) -> tuple[Callable[[dict[str, Any]], tuple[object, object]], str]:
         name = "__session_step__"
         body: list[ast.stmt] = [
             ast.Assign(
@@ -430,11 +441,18 @@ class _ParsedSession:
         )
         namespace = _exec_namespace(func)
         module = ast.fix_missing_locations(ast.Module(body=[step_fn], type_ignores=[]))
+        fixed_step = cast(ast.FunctionDef, module.body[0])
+        canonical_source = _canonical_step_source(
+            fixed_step,
+            carried_names=self.carried_names,
+            in_channel=in_channel,
+            out_channel=out_channel,
+        )
         exec(compile(module, self.filename, "exec"), namespace)
         step = cast(Callable[[dict[str, Any]], tuple[object, object]], namespace[name])
         if not callable(step):
             raise _session_compile_error("generated step pure is not callable")
-        return step
+        return step, canonical_source
 
     def _carrier_expr(self) -> ast.expr:
         if not self.carried_names:
@@ -470,6 +488,22 @@ class _ParsedSession:
                 value=ast.Name(id="__carrier", ctx=ast.Load()),
             )
         ]
+
+
+def _canonical_step_source(
+    step_fn: ast.FunctionDef,
+    *,
+    carried_names: tuple[str, ...],
+    in_channel: str,
+    out_channel: str,
+) -> str:
+    return (
+        ast.unparse(step_fn)
+        + "\n"
+        + f"# session_carried_names={carried_names!r}\n"
+        + f"# session_in_channel={in_channel!r}\n"
+        + f"# session_out_channel={out_channel!r}\n"
+    )
 
 
 def _exec_namespace(func: Callable[..., Any]) -> dict[str, Any]:
@@ -637,24 +671,12 @@ def _assigned_names(stmts: list[ast.stmt]) -> tuple[str, ...]:
     return tuple(names)
 
 
-def _loaded_names(stmts: list[ast.stmt]) -> set[str]:
+def _referenced_names(stmts: list[ast.stmt]) -> set[str]:
     names: set[str] = set()
 
     class Visitor(ast.NodeVisitor):
-        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-            del node
-
-        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-            del node
-
-        def visit_Lambda(self, node: ast.Lambda) -> None:
-            del node
-
-        def visit_ClassDef(self, node: ast.ClassDef) -> None:
-            del node
-
         def visit_Name(self, node: ast.Name) -> None:
-            if isinstance(node.ctx, ast.Load):
+            if isinstance(node.ctx, (ast.Load, ast.Store)):
                 names.add(node.id)
 
     visitor = Visitor()

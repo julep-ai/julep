@@ -5,7 +5,7 @@ import json
 import sys
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, cast
 
 import typer
 
@@ -53,7 +53,13 @@ async def _chat(
 
     consumer = asyncio.create_task(consume())
     try:
-        for raw_line in in_lines:
+        iterator = iter(in_lines)
+        sentinel = object()
+        while True:
+            raw = await asyncio.to_thread(next, iterator, sentinel)
+            if raw is sentinel:
+                break
+            raw_line = cast(str, raw)
             line = raw_line.strip()
             if not line:
                 continue

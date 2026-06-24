@@ -10,7 +10,7 @@ import typer
 from composable_agents.ca.chat import render_event
 from composable_agents.ca.config import load_config
 from composable_agents.ca.resolve import ResolvedAgent, resolve_agent
-from composable_agents.ca.session_local import open_local_session, parse_json_or_raw
+from composable_agents.ca.session_local import IN_CHANNEL, open_local_session, parse_json_or_raw
 
 
 async def _trigger(
@@ -58,6 +58,12 @@ def trigger_command(
     channel: str = typer.Option("in", "--channel", help="Input channel to send to."),
 ) -> None:
     """Send one event to a local session and print emitted replies."""
+    if channel != IN_CHANNEL:
+        typer.echo(
+            f"error: unsupported channel {channel!r}; ca trigger accepts only {IN_CHANNEL!r}",
+            err=True,
+        )
+        raise typer.Exit(2)
     cfg = load_config(Path("."))
     resolved = resolve_agent(cfg, name)
     if resolved.error is not None:

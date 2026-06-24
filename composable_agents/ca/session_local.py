@@ -15,7 +15,7 @@ from composable_agents.derived import emit, recv
 from composable_agents.dsl import arr, seq
 from composable_agents.ir import Node
 from composable_agents.kinds import EnforcementMode
-from composable_agents.session import LocalSessionHandle, Session, SessionEvent, scan
+from composable_agents.session import LocalSessionHandle, Session, SessionEvent, loop
 
 IN_CHANNEL = "in"
 OUT_CHANNEL = "out"
@@ -47,7 +47,7 @@ def build_session(resolved: ResolvedAgent) -> tuple[Session[Any, Any], Node]:
     node = Node.from_json(resolved.ir)
     _clear_frozen_hashes(node)
     body = seq(recv(IN_CHANNEL), arr("std.pluck", {"key": "msg"}), node, emit(OUT_CHANNEL))
-    session = scan(body, init=None, in_channel=IN_CHANNEL, out_channel=OUT_CHANNEL)
+    session = loop(body, init=None, in_channel=IN_CHANNEL, out_channel=OUT_CHANNEL)
     return session, node
 
 

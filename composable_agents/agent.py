@@ -937,6 +937,7 @@ class Agent(FlowLike[Any, Any]):
         history_threshold: Optional[int] = None,
         channel_capacity: Optional[int] = None,
         session_id: Optional[str] = None,
+        environment: Any = None,
     ) -> SessionHandle:
         if backend == "local":
             session_deployment = deploy(
@@ -1026,6 +1027,50 @@ class Agent(FlowLike[Any, Any]):
                 manifest=session_deployment.manifest,
             )
 
+        if backend == "cma":
+            if client is None:
+                raise ValueError("Agent.open(backend='cma') requires client=")
+            from .execution.cma_session import CMASessionHandle
+
+            session_deployment = self._deploy_session(session)
+            max_call_limits = (
+                session_deployment.capabilities.max_call_limits()
+                if session_deployment.capabilities is not None
+                else {}
+            )
+            cma_contracts: dict[str, dict[str, Any]] = {
+                name: dict(contract) for name, contract in self._contracts.items()
+            }
+            for tool_name, limit in max_call_limits.items():
+                cma_contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+            cma_schemas: dict[str, JSONSchema] = {}
+            cma_tools: dict[str, Callable[[Any], Any]] = {}
+            for native_tool in self._tools:
+                schema, cma_tool = cma_tool_binding(native_tool)
+                cma_schemas[native_tool.name] = schema
+                cma_tools[native_tool.name] = cma_tool
+
+            custom_tools = manifest_to_custom_tools(
+                self._tool_names,
+                input_schemas=cma_schemas,
+                descriptions={
+                    native_tool.name: native_tool.fn.__doc__ or ""
+                    for native_tool in self._tools
+                },
+            )
+            return await CMASessionHandle.open(
+                client=client,
+                tools=cma_tools,
+                agent={"name": self._name, "tools": custom_tools},
+                environment=environment,
+                in_channel=session.in_channel,
+                out_channel=session.out_channel,
+                cfg=self._cfg,
+                granted=self._granted,
+                contracts=cma_contracts,
+            )
+
         if backend == "temporal":
             if client is None:
                 raise ValueError("Agent.open(backend='temporal') requires client=")
@@ -1091,6 +1136,7 @@ class Agent(FlowLike[Any, Any]):
         history_threshold: Optional[int] = None,
         channel_capacity: Optional[int] = None,
         session_id: Optional[str] = None,
+        environment: Any = None,
     ) -> SessionHandle:
         try:
             asyncio.get_running_loop()
@@ -1112,6 +1158,7 @@ class Agent(FlowLike[Any, Any]):
                     history_threshold=history_threshold,
                     channel_capacity=channel_capacity,
                     session_id=session_id,
+                    environment=environment,
                 )
             )
         raise RuntimeError(

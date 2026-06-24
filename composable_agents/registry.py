@@ -163,6 +163,34 @@ class Registry:
         self.pures[name] = entry
         return entry
 
+    def register_pure_with_source(
+        self,
+        name: str,
+        fn: PureFn,
+        source: str,
+    ) -> PureEntry:
+        source_hash = _text_hash(source)
+        existing = self.pures.get(name)
+        if existing is not None:
+            if existing.source_hash == source_hash:
+                return existing
+            raise ValueError(
+                f"pure name {name!r} registered with different source: "
+                f"{existing.source_hash} != {source_hash}"
+            )
+        deps, requires_python = parse_pep723(source)
+        entry = PureEntry(
+            name=name,
+            fn=fn,
+            source_hash=source_hash,
+            executor="native",
+            source=None,
+            deps=deps,
+            requires_python=requires_python,
+        )
+        self.pures[name] = entry
+        return entry
+
     def register_pure_from_source(
         self,
         name: str,

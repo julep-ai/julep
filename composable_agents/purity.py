@@ -88,6 +88,10 @@ def register_pure(name: str, fn: PureFn) -> PureEntry:
     return DEFAULT_REGISTRY.register_pure(name, fn)
 
 
+def register_pure_with_source(name: str, fn: PureFn, source: str) -> PureEntry:
+    return DEFAULT_REGISTRY.register_pure_with_source(name, fn, source)
+
+
 def register_pure_from_source(
     name: str,
     source: str,
