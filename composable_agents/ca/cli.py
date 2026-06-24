@@ -11,10 +11,12 @@ import click
 import typer
 
 from composable_agents.ca.config import load_config
+from composable_agents.ca.chat import chat_command
 from composable_agents.ca.deploy import deploy_agents
 from composable_agents.ca.doctor import overall_code, run_checks
 from composable_agents.ca.langfuse_link import trace_url
 from composable_agents.ca.lint import lint_agents
+from composable_agents.ca.listen import listen_command
 from composable_agents.ca.model import Module, build_module
 from composable_agents.ca.resolve import resolve_agent
 from composable_agents.ca.runcache import load_run, save_run
@@ -23,9 +25,13 @@ from composable_agents.ca.select import select
 from composable_agents.ca.status import status_exit_code, status_for_env
 from composable_agents.ca.temporal_run import run_on_env
 from composable_agents.ca.tracetree import render_tree
+from composable_agents.ca.trigger import trigger_command
 from composable_agents.projection import ProjectionEvent
 
 app = typer.Typer(add_completion=True, no_args_is_help=True, help="Developer CLI for composable-agents modules.")
+app.command("chat")(chat_command)
+app.command("listen")(listen_command)
+app.command("trigger")(trigger_command)
 
 VERSION = "0.1.0"
 
