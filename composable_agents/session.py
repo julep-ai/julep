@@ -10,14 +10,15 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from collections.abc import AsyncIterator, Callable
 from itertools import islice
-from typing import Any, Generic, Iterable, Optional, TypeVar
+from typing import Any, Generic, Iterable, Optional, Protocol, TypeVar
 
 from .dsl import _nid, _node
 from .errors import ComposableAgentsError
 from .ir import ChannelRef, JSONSchema, Node
-from .kinds import Op
-from .execution.interpreter import InMemoryEnv, interpret
+from .kinds import EnforcementMode, Op
+from .execution.interpreter import InMemoryEnv, SessionClosed, interpret
 from .projection import InMemoryProjection, ProjectionEmitter
 
 I = TypeVar("I")
@@ -64,6 +65,73 @@ class Session(Generic[I, O]):
     init: object
     in_channel: str
     out_channel: str
+
+
+@dataclass(frozen=True)
+class SessionEvent:
+    """A normalized event from a live session."""
+
+    kind: str
+    channel: Optional[str] = None
+    seq: Optional[int] = None
+    payload: Any = None
+    turn: Optional[str] = None
+    reason: Optional[str] = None
+    fatal: bool = False
+
+    @classmethod
+    def emit(cls, channel: str, seq: int, payload: Any) -> "SessionEvent":
+        return cls(kind="emit", channel=channel, seq=seq, payload=payload)
+
+    @classmethod
+    def turn_started(cls) -> "SessionEvent":
+        return cls(kind="turn", turn="started")
+
+    @classmethod
+    def turn_done(cls) -> "SessionEvent":
+        return cls(kind="turn", turn="done")
+
+    @classmethod
+    def error(cls, reason: str, *, fatal: bool) -> "SessionEvent":
+        return cls(kind="error", reason=reason, fatal=fatal)
+
+    @classmethod
+    def closed(cls, reason: Optional[str] = None) -> "SessionEvent":
+        return cls(kind="closed", reason=reason)
+
+    @property
+    def is_emit(self) -> bool:
+        return self.kind == "emit"
+
+    @property
+    def is_turn(self) -> bool:
+        return self.kind == "turn"
+
+    @property
+    def is_error(self) -> bool:
+        return self.kind == "error"
+
+    @property
+    def is_closed(self) -> bool:
+        return self.kind == "closed"
+
+
+class SessionHandle(Protocol):
+    """A live session facade shared by local and Temporal backends."""
+
+    def events(self) -> AsyncIterator[SessionEvent]: ...
+
+    async def send(
+        self,
+        value: Any,
+        *,
+        channel: Optional[str] = None,
+        idempotency_key: Any = None,
+    ) -> dict[str, Any]: ...
+
+    async def state(self) -> dict[str, Any]: ...
+
+    async def close(self, reason: Optional[str] = None) -> None: ...
 
 
 class SessionValidationError(ComposableAgentsError):
@@ -176,3 +244,210 @@ async def drive_session(
         )
     result = await interpret(session.body, session.init, env)
     return result.value, env.emitted(session.out_channel)
+
+
+class _LiveLocalEnv(InMemoryEnv):
+    """Channel-backed in-memory env for a long-lived local session."""
+
+    _WAKE: object = object()
+
+    def __init__(
+        self,
+        *args: Any,
+        event_queue: asyncio.Queue[SessionEvent],
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self._event_queue = event_queue
+        self._live_inbound: dict[str, asyncio.Queue[Any]] = {}
+        self._live_emitted: dict[str, list[dict[str, Any]]] = {}
+        self._live_seq: dict[str, int] = {}
+        self._live_closed = False
+        self._turn_started = False
+
+    def _queue(self, channel: str) -> asyncio.Queue[Any]:
+        return self._live_inbound.setdefault(channel, asyncio.Queue())
+
+    def close_channels(self) -> None:
+        self._live_closed = True
+        for queue in self._live_inbound.values():
+            queue.put_nowait(self._WAKE)
+
+    def append_live(self, channel: str, value: Any) -> int:
+        queue = self._queue(channel)
+        seq = self._live_seq.get(f"in:{channel}", 0) + 1
+        self._live_seq[f"in:{channel}"] = seq
+        queue.put_nowait(value)
+        return seq
+
+    async def recv(self, channel: str, cid: str, timeout_s: Optional[int]) -> Any:
+        del cid, timeout_s
+        queue = self._queue(channel)
+        while True:
+            if self._live_closed and queue.empty():
+                raise SessionClosed(f"session channel {channel!r} is closed")
+            item = await queue.get()
+            if item is self._WAKE:
+                if self._live_closed and queue.empty():
+                    raise SessionClosed(f"session channel {channel!r} is closed")
+                continue
+            self._turn_started = True
+            await self._event_queue.put(SessionEvent.turn_started())
+            return item
+
+    async def emit(self, channel: str, value: Any, cid: str) -> None:
+        del cid
+        seq = self._live_seq.get(f"out:{channel}", 0) + 1
+        self._live_seq[f"out:{channel}"] = seq
+        item = {"seq": seq, "payload": value}
+        self._live_emitted.setdefault(channel, []).append(item)
+        await self._event_queue.put(SessionEvent.emit(channel, seq, value))
+
+    def emitted_records(self) -> dict[str, list[dict[str, Any]]]:
+        return {
+            channel: [dict(item) for item in items]
+            for channel, items in self._live_emitted.items()
+        }
+
+    def pending_counts(self) -> dict[str, int]:
+        return {
+            channel: queue.qsize()
+            for channel, queue in self._live_inbound.items()
+        }
+
+    def take_turn_started(self) -> bool:
+        started = self._turn_started
+        self._turn_started = False
+        return started
+
+
+class LocalSessionHandle:
+    """In-memory live session handle."""
+
+    def __init__(
+        self,
+        session: Session[Any, Any],
+        env: _LiveLocalEnv,
+        *,
+        max_turns: int,
+        reason: Optional[str] = None,
+    ) -> None:
+        self._session = session
+        self._env = env
+        self._events: asyncio.Queue[SessionEvent] = env._event_queue
+        self._max_turns = max_turns
+        self._carrier = session.init
+        self._closed = False
+        self._close_reason = reason
+        self._done = asyncio.Event()
+        self._closed_event_sent = False
+        self._driver = asyncio.create_task(self._drive())
+
+    @classmethod
+    async def open(
+        cls,
+        session: Session[Any, Any],
+        *,
+        tools: Optional[dict[str, Callable[[Any], Any]]] = None,
+        reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
+        subs: Optional[dict[str, Callable[[Any], Any]]] = None,
+        agents: Optional[dict[str, Callable[[Any], Any]]] = None,
+        planners: Optional[dict[str, Callable[[Any], Node]]] = None,
+        max_calls: Optional[dict[str, int]] = None,
+        mode: EnforcementMode | str = EnforcementMode.STRICT,
+        principal: Optional[dict[str, Any]] = None,
+        max_turns: int = 100000,
+        env: Optional[_LiveLocalEnv] = None,
+    ) -> "LocalSessionHandle":
+        if env is None:
+            env = _LiveLocalEnv(
+                {},
+                ProjectionEmitter(InMemoryProjection()),
+                tools=tools,
+                reasoners=reasoners,
+                subs=subs,
+                agents=agents,
+                planners=planners,
+                max_calls=max_calls,
+                mode=mode,
+                principal=principal,
+                event_queue=asyncio.Queue(),
+            )
+        return cls(session, env, max_turns=max_turns)
+
+    async def _drive(self) -> None:
+        reason: Optional[str] = None
+        turn_body = self._session.body.body
+        split_result = bool(
+            self._session.body.args and self._session.body.args.get("split") is True
+        )
+        try:
+            if turn_body is None:
+                raise ComposableAgentsError("session LOOP missing body")
+            for _ in range(self._max_turns):
+                try:
+                    result = await interpret(turn_body, self._carrier, self._env)
+                except SessionClosed:
+                    break
+                if split_result and isinstance(result.value, tuple) and len(result.value) == 2:
+                    self._carrier, output = result.value
+                    await self._env.emit(self._session.out_channel, output, result.event_id or "")
+                else:
+                    self._carrier = result.value
+                if self._env.take_turn_started():
+                    await self._events.put(SessionEvent.turn_done())
+            else:
+                raise ComposableAgentsError(
+                    f"session consumed more than {self._max_turns} messages"
+                )
+        except Exception as exc:
+            reason = str(exc)
+            await self._events.put(SessionEvent.error(reason, fatal=True))
+            raise
+        finally:
+            self._closed = True
+            self._env.close_channels()
+            self._closed_event_sent = True
+            await self._events.put(SessionEvent.closed(self._close_reason or reason))
+            self._done.set()
+
+    def events(self) -> AsyncIterator[SessionEvent]:
+        async def gen() -> AsyncIterator[SessionEvent]:
+            while True:
+                event = await self._events.get()
+                yield event
+                if event.is_closed:
+                    return
+
+        return gen()
+
+    async def send(
+        self,
+        value: Any,
+        *,
+        channel: Optional[str] = None,
+        idempotency_key: Any = None,
+    ) -> dict[str, Any]:
+        del idempotency_key
+        if self._closed:
+            raise SessionClosed("session is closed")
+        ch = channel or self._session.in_channel
+        seq = self._env.append_live(ch, value)
+        return {"seq": seq, "channel": ch}
+
+    async def state(self) -> dict[str, Any]:
+        return {
+            "emitted": self._env.emitted_records(),
+            "carrier": self._carrier,
+            "closed": self._closed,
+            "pending": self._env.pending_counts(),
+        }
+
+    async def close(self, reason: Optional[str] = None) -> None:
+        self._close_reason = reason
+        self._env.close_channels()
+        try:
+            await self._driver
+        finally:
+            if not self._done.is_set():
+                self._done.set()

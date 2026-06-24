@@ -173,6 +173,9 @@ class InMemoryProjection:
     def events(self) -> list[ProjectionEvent]:
         return list(self._events)
 
+    def drop_event(self, event_id: str) -> None:
+        self._events = [event for event in self._events if event.event_id != event_id]
+
     # ----- materialized views ---------------------------------------------- #
     def status_by_activation(self) -> dict[str, EventType]:
         """Latest state per activation (cid). PLANNED then DID -> DID."""
@@ -308,6 +311,12 @@ class ProjectionEmitter:
             ts=self._clock(), causes=tuple(causes), error=error,
         ))
         return eid
+
+    def cancel(self, node: str, cid: str, event_id: str) -> None:
+        """Remove an unstarted plan if the activation ended by clean session close."""
+        drop = getattr(self._store, "drop_event", None)
+        if callable(drop):
+            drop(event_id)
 
 
 # --------------------------------------------------------------------------- #

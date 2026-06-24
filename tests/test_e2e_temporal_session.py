@@ -30,7 +30,7 @@ if HAVE_TEMPORAL:
         SandboxRestrictions,
     )
 
-    from composable_agents import arr, freeze, manifest_to_json, seq
+    from composable_agents import Agent, arr, freeze, manifest_to_json, seq
     from composable_agents.derived import emit as emit_leaf
     from composable_agents.derived import recv as recv_leaf
     from composable_agents.freeze import McpSnapshot
@@ -391,6 +391,53 @@ async def _channel_full(env):
 
 
 # --------------------------------------------------------------------------- #
+# 4b. Public Temporal facade: Agent.open + TemporalSessionHandle.events().
+# --------------------------------------------------------------------------- #
+async def _facade(env):
+    store = InMemorySessionStore(empty_value=0)
+    tq = "ca-session-facade"
+    worker = _build_worker(env, tq, store)
+    async with worker:
+        session = _make_session_flow()
+        agent = Agent("test-model", llm=None)
+        handle = await agent.open(
+            session=session,
+            backend="temporal",
+            client=env.client,
+            session_id=f"session-facade-{uuid.uuid4()}",
+            task_queue=tq,
+        )
+
+        ack1 = await handle.send("hi")
+        ack2 = await handle.send("yo")
+        assert ack1 == {"seq": 1, "channel": "in"}
+        assert ack2 == {"seq": 2, "channel": "in"}
+
+        async def _emitted():
+            snap = await handle.state()
+            return len(snap.get("emitted", {}).get("out", [])) >= 2
+
+        await _wait_for(_emitted, attempts=50)
+
+        agen = handle.events()
+        emits = []
+        for _ in range(2):
+            ev = await asyncio.wait_for(agen.__anext__(), timeout=5)
+            assert ev.is_emit
+            emits.append(ev)
+
+        assert [ev.seq for ev in emits] == [1, 2]
+        assert [ev.payload["echo"] for ev in emits] == ["hi", "yo"]
+        assert [ev.payload["turn"] for ev in emits] == [1, 2]
+
+        await handle.close("done")
+        closed = await asyncio.wait_for(agen.__anext__(), timeout=5)
+        assert closed.is_closed
+        with pytest.raises(StopAsyncIteration):
+            await agen.__anext__()
+
+
+# --------------------------------------------------------------------------- #
 # 5. FlowWorkflow rejects a frozen Op.LOOP (no channel machinery -> fail fast).
 # --------------------------------------------------------------------------- #
 async def _flowworkflow_rejects_loop(env):
@@ -470,6 +517,7 @@ def test_durable_sessions():
             await _carrier_survives_continue_as_new(env)
             await _recv_timeout_keeps_session_alive(env)
             await _channel_full(env)
+            await _facade(env)
             await _flowworkflow_rejects_loop(env)
             await _flowworkflow_rejects_nested_loop(env)
         finally:

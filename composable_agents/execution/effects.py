@@ -21,7 +21,7 @@ from .. import agent_loop as al
 from ..capabilities import CapabilityManifest, ToolGrant
 from ..contracts import CONSERVATIVE_DEFAULT, ToolContract
 from ..dotctx import Reasoner
-from ..errors import CapabilityDenied, PureDriftError
+from ..errors import CapabilityDenied, PlanRejected, PureDriftError
 from ..ir import Ann, ContextPolicy, Node, canonical_json, toolref_from_json, toolref_key
 from ..kinds import ContextScope, Effect, Idempotency
 from ..qos import ReasonerDispatch, QoSTier, default_resolve_qos
@@ -898,11 +898,23 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     plan_json = raw["plan"] if isinstance(raw, dict) and "plan" in raw else raw
     plan = Node.from_json(plan_json)
 
-    if _CTX.capabilities is not None:
-        from ..contracts import manifest_from_json  # local import keeps hot path light
+    from ..contracts import manifest_from_json  # local import keeps hot path light
 
-        manifest = manifest_from_json(inp.manifest) if inp.manifest else None
+    manifest = manifest_from_json(inp.manifest) if inp.manifest else None
+    if _CTX.capabilities is not None:
         plan = admit_plan(plan, _CTX.capabilities, manifest)
+    from ..validate import blocking, validate
+
+    session_diagnostics = [
+        diagnostic
+        for diagnostic in blocking(validate(plan, manifest, target="flow"))
+        if diagnostic.code.startswith("SESSION_")
+    ]
+    if session_diagnostics:
+        raise PlanRejected(
+            f"{diagnostic.code}: {diagnostic.message}"
+            for diagnostic in session_diagnostics
+        )
 
     return plan.to_json()
 

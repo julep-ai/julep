@@ -94,7 +94,10 @@ from .continuation import (
 )
 from .session import (
     Channel as Channel,
+    LocalSessionHandle as LocalSessionHandle,
     Session as Session,
+    SessionEvent as SessionEvent,
+    SessionHandle as SessionHandle,
     drive_session as drive_session,
     loop as loop,
     scan as scan,
@@ -285,7 +288,8 @@ _BASE_EXPORTS = [
     # continuation
     "continue_with", "is_continuation", "continuation_value", "run_chained",
     # session
-    "Channel", "Session", "scan", "loop", "drive_session",
+    "Channel", "Session", "SessionEvent", "SessionHandle", "LocalSessionHandle",
+    "scan", "loop", "drive_session",
     # contracts
     "ToolContract", "FrozenTool", "McpAnnotations", "ToolManifest",
     "definition_hash", "execution_hash", "manifest_to_json", "manifest_from_json",
@@ -328,7 +332,7 @@ _BASE_EXPORTS = [
 
 _TEMPORAL_EXPORTS = [
     "FlowWorkflow", "SessionWorkflow", "AgentWorkflow", "FlowInput", "SessionInput", "AgentInput",
-    "run_flow", "start_flow", "build_worker", "run_worker",
+    "run_flow", "start_flow", "start_session", "TemporalSessionHandle", "build_worker", "run_worker",
     "callTool", "invokeReasoner", "compilePlan", "verifyPures", "resolveSubflow",
     "resolveAgentSpec", "resolveRuntimeCapabilities",
 ]

@@ -43,7 +43,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Awaitable, Callable, Optional, Sequence
+from typing import Any, AsyncIterator, Awaitable, Callable, Optional, Sequence
 
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
@@ -147,6 +147,7 @@ with workflow.unsafe.imports_passed_through():
         verifyPures,
     )
     from ..validate import blocking, validate
+    from ..session import SessionEvent
 
 
 # Errors that represent a settled policy decision must never be retried.
@@ -2151,6 +2152,106 @@ async def start_flow(
     )
 
 
+async def start_session(
+    client,
+    flow_json: dict[str, Any],
+    manifest_json: dict[str, Any],
+    *,
+    session_id: str,
+    init: Any,
+    in_channel: str = "in",
+    out_channel: str = "out",
+    task_queue: str = "composable-agents",
+    policy: Optional[ExecutionPolicy] = None,
+    principal: Optional[dict[str, Any]] = None,
+    history_threshold: Optional[int] = None,
+    channel_capacity: Optional[int] = None,
+):
+    """Start :class:`SessionWorkflow` and return its Temporal handle."""
+    handle = await client.start_workflow(
+        SessionWorkflow.run,
+        SessionInput(
+            session_id=session_id,
+            flow_json=flow_json,
+            manifest_json=manifest_json,
+            init=init,
+            in_channel=in_channel,
+            out_channel=out_channel,
+            policy=(policy or ExecutionPolicy()).to_json(),
+            principal=principal,
+            history_threshold=history_threshold,
+            channel_capacity=channel_capacity,
+        ),
+        id=session_id,
+        task_queue=task_queue,
+    )
+    await handle.query("state")
+    return handle
+
+
+class TemporalSessionHandle:
+    """Client-side facade over a live ``SessionWorkflow``."""
+
+    def __init__(
+        self,
+        wfhandle: Any,
+        *,
+        in_channel: str = "in",
+        out_channel: str = "out",
+        poll_s: float = 0.02,
+    ) -> None:
+        self._wfhandle = wfhandle
+        self._in_channel = in_channel
+        self._out_channel = out_channel
+        self._poll_s = poll_s
+
+    async def send(
+        self,
+        value: Any,
+        *,
+        channel: Optional[str] = None,
+        idempotency_key: Any = None,
+    ) -> dict[str, Any]:
+        ch = channel or self._in_channel
+        payload = {"channel": ch, "value": value}
+        if idempotency_key is not None:
+            payload["idempotency_key"] = idempotency_key
+        return await self._wfhandle.execute_update("send", payload)
+
+    async def state(self) -> dict[str, Any]:
+        return await self._wfhandle.query("state")
+
+    async def close(self, reason: Optional[str] = None) -> None:
+        del reason
+        await self._wfhandle.execute_update("close", {})
+
+    async def events(self) -> AsyncIterator[SessionEvent]:
+        cursor = 0
+        while True:
+            snap = await self.state()
+            emitted = snap.get("emitted", {}).get(self._out_channel, [])
+            for item in emitted:
+                seq = int(item.get("seq", 0))
+                if seq <= cursor:
+                    continue
+                cursor = seq
+                await self._wfhandle.execute_update(
+                    "ack",
+                    {"channel": self._out_channel, "seq": cursor},
+                )
+                yield SessionEvent.emit(
+                    self._out_channel,
+                    seq,
+                    item.get("payload"),
+                )
+            if snap.get("closed") and not any(
+                int(item.get("seq", 0)) > cursor for item in emitted
+            ):
+                yield SessionEvent.closed()
+                return
+            await asyncio.sleep(self._poll_s)
+
+
 __all__ = [
     "ExecutionPolicy",
     "FlowWorkflow",
@@ -2166,4 +2267,6 @@ __all__ = [
     "runSubCapture",
     "run_flow",
     "start_flow",
+    "start_session",
+    "TemporalSessionHandle",
 ]

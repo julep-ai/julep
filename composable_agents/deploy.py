@@ -514,7 +514,7 @@ def deploy(
 
     diagnostics: list[Diagnostic] = []
     # 2. Well-formedness + schema edges.
-    diagnostics.extend(validate(fr.flow, fr.manifest))
+    diagnostics.extend(validate(fr.flow, fr.manifest, target="flow"))
     # 3. Capability enforcement (§9): granted tools/reasoners/servers only.
     if capabilities is not None:
         diagnostics.extend(capabilities.enforce_compile(fr.flow, fr.manifest))

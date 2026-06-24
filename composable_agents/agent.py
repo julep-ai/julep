@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import inspect
 import types
+import uuid
 import warnings
 from collections.abc import Mapping as AbcMapping
 from collections.abc import Sequence as AbcSequence
@@ -26,7 +27,7 @@ from typing import (
 
 from .agent_loop import AgentConfig, drive_agent_loop
 from .capabilities import Budget, CapabilityManifest, ToolGrant
-from .contracts import ToolContract
+from .contracts import ToolContract, manifest_to_json
 from .deploy import Deployment, deploy
 from .dotctx import Reasoner, register_reasoner
 from .dsl import app, call, native
@@ -34,7 +35,8 @@ from .errors import ValidationError
 from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
 from .execution.interpreter import InMemoryEnv, interpret
 from .execution.llm_result import LlmResult
-from .freeze import McpSnapshot, NativeToolSpec
+from .freeze import McpSnapshot, NativeToolSpec, freeze
+from .session import LocalSessionHandle, Session, SessionHandle
 from .typed import Flow, FlowLike, SplitCapability
 from .flow_registry import register_flow
 from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
@@ -898,6 +900,162 @@ class Agent(FlowLike[Any, Any]):
         raise RuntimeError(
             "Agent.run_on_cma() cannot be called inside a running event loop; "
             "use await Agent.arun_on_cma(...)"
+        )
+
+    async def open(
+        self,
+        *,
+        session: Session[Any, Any],
+        backend: str = "local",
+        principal: Optional[dict[str, Any]] = None,
+        client: Any = None,
+        task_queue: str = "composable-agents",
+        policy: Any = None,
+        history_threshold: Optional[int] = None,
+        channel_capacity: Optional[int] = None,
+        session_id: Optional[str] = None,
+    ) -> SessionHandle:
+        if backend == "local":
+            deployment = self._deploy()
+            plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
+            tool_fns = {
+                native_tool.name: native_tool.bound_tool
+                for native_tool in self._tools
+            }
+            max_call_limits = (
+                deployment.capabilities.max_call_limits()
+                if deployment.capabilities is not None
+                else {}
+            )
+            contracts: dict[str, dict[str, Any]] = {
+                name: dict(contract) for name, contract in self._contracts.items()
+            }
+            for tool_name, limit in max_call_limits.items():
+                contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+            async def invoke_controller(payload: dict[str, Any]) -> Any:
+                reply = self._reasoner_fn(self._name, payload)
+                if inspect.isawaitable(reply):
+                    reply = await reply
+                if isinstance(reply, LlmResult):
+                    return reply.reply
+                return reply
+
+            async def call_tool(name: str, value: Any) -> Any:
+                if name not in tool_fns:
+                    return {
+                        "error": (
+                            f"tool {name!r} unavailable "
+                            "(dev mode: not a registered tool of this agent)"
+                        )
+                    }
+                result = tool_fns[name](value)
+                if inspect.isawaitable(result):
+                    return await result
+                return result
+
+            run_subflow = None
+            granted_subflows = None
+            if self._flow_caps:
+                granted_subflows = set(self._flow_caps)
+
+                async def run_subflow(ref: str, value: Any) -> Any:
+                    cap = self._flow_caps.get(ref)
+                    if cap is None:
+                        return {"error": f"subflow {ref!r} unavailable"}
+                    if isinstance(cap, Agent):
+                        return await cap.arun(value)
+                    sub_deployment = plain_flow_deployments[ref]
+                    sub_env = InMemoryEnv(
+                        sub_deployment.manifest,
+                        ProjectionEmitter(InMemoryProjection()),
+                        tools=tool_fns,
+                        mode=self._mode,
+                    )
+                    sub_result = await interpret(sub_deployment.flow, value, sub_env)
+                    return sub_result.value
+
+            return await LocalSessionHandle.open(
+                session,
+                tools=tool_fns,
+                agents={
+                    self._name: lambda value: drive_agent_loop(
+                        input=value,
+                        cfg=self._cfg,
+                        invoke_controller=invoke_controller,
+                        call_tool=call_tool,
+                        run_subflow=run_subflow,
+                        granted=self._granted,
+                        granted_subflows=granted_subflows,
+                        contracts=contracts,
+                    )
+                },
+                max_calls=max_call_limits,
+                mode=self._mode,
+                principal=principal,
+            )
+
+        if backend == "temporal":
+            if client is None:
+                raise ValueError("Agent.open(backend='temporal') requires client=")
+            from .execution.harness import TemporalSessionHandle, start_session
+
+            sid = session_id or f"session-{uuid.uuid4()}"
+            frozen = freeze(session.body, self._snapshot)
+            wfhandle = await start_session(
+                client,
+                frozen.flow.to_json(),
+                manifest_to_json(frozen.manifest),
+                session_id=sid,
+                init=session.init,
+                in_channel=session.in_channel,
+                out_channel=session.out_channel,
+                task_queue=task_queue,
+                policy=policy,
+                principal=principal,
+                history_threshold=history_threshold,
+                channel_capacity=channel_capacity,
+            )
+            return TemporalSessionHandle(
+                wfhandle,
+                in_channel=session.in_channel,
+                out_channel=session.out_channel,
+            )
+
+        raise ValueError(f"unknown session backend {backend!r}")
+
+    def open_session(
+        self,
+        *,
+        session: Session[Any, Any],
+        backend: str = "local",
+        principal: Optional[dict[str, Any]] = None,
+        client: Any = None,
+        task_queue: str = "composable-agents",
+        policy: Any = None,
+        history_threshold: Optional[int] = None,
+        channel_capacity: Optional[int] = None,
+        session_id: Optional[str] = None,
+    ) -> SessionHandle:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(
+                self.open(
+                    session=session,
+                    backend=backend,
+                    principal=principal,
+                    client=client,
+                    task_queue=task_queue,
+                    policy=policy,
+                    history_threshold=history_threshold,
+                    channel_capacity=channel_capacity,
+                    session_id=session_id,
+                )
+            )
+        raise RuntimeError(
+            "Agent.open_session() cannot be called inside a running event loop; "
+            "use await Agent.open(...)"
         )
 
     def deployment(self) -> Deployment:

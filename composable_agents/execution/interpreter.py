@@ -235,6 +235,9 @@ async def interpret(
         )
         raise
     except SessionClosed:
+        cancel = getattr(env.emitter, "cancel", None)
+        if callable(cancel):
+            cancel(node.id, cid, planned)
         raise
     except ComposableAgentsError:
         env.emitter.fail(node.id, cid, "framework-error", causes=(planned,))
