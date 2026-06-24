@@ -26,7 +26,11 @@ def lint_agents(
 ) -> tuple[list[Finding], int]:
     """Resolve agents to IR, validate them, and return findings plus an exit code."""
     findings: list[Finding] = []
-    floor = _SEVERITY_ORDER.get(fail_severity, _SEVERITY_ORDER["error"])
+    if fail_severity not in _SEVERITY_ORDER:
+        raise ValueError(
+            f"unknown fail_severity {fail_severity!r}; expected one of {sorted(_SEVERITY_ORDER)}"
+        )
+    floor = _SEVERITY_ORDER[fail_severity]
     gated = False
 
     for name in names:

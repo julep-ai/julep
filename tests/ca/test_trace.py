@@ -28,3 +28,27 @@ def test_trace_unknown_run_returns_2(sample_module, capsys, monkeypatch):
     monkeypatch.chdir(sample_module)
     monkeypatch.delenv("LANGFUSE_HOST", raising=False)
     assert cli.main(["trace", "ghost"]) == 2
+
+
+def test_trace_unknown_run_returns_2_even_with_langfuse(sample_module, capsys, monkeypatch):
+    # A configured Langfuse host must not mask a missing local run via a
+    # fabricated (hashed) deep link.
+    monkeypatch.chdir(sample_module)
+    monkeypatch.setenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+    code = cli.main(["trace", "ghost-run-xyz"])
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "no cached run" in captured.err
+    assert "langfuse" not in captured.out
+
+
+def test_trace_error_run_surfaces_status(sample_module, capsys, monkeypatch):
+    monkeypatch.chdir(sample_module)
+    monkeypatch.delenv("LANGFUSE_HOST", raising=False)
+    from composable_agents.ca.runcache import save_run
+
+    save_run(str(sample_module), run_id="r-err", agent="triage", status="error", events=[])
+    code = cli.main(["trace", "r-err"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "status=error" in out

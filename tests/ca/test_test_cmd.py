@@ -11,3 +11,12 @@ def test_test_runs_pytest_for_selection(sample_module, capsys, monkeypatch):
     assert code == 0
     assert "pytest" in out  # --dry-run prints the command it would run
     assert "-k" in out and "triage" in out
+
+
+def test_test_no_match_selector_does_not_run_whole_suite(sample_module, capsys, monkeypatch):
+    monkeypatch.chdir(sample_module)
+    code = cli.main(["test", "zzznomatch", "--dry-run"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "no agents matched" in out
+    assert "pytest" not in out  # must NOT fall through to a full-suite run

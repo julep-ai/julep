@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import enum as _enum
 import json as _json
 import subprocess as _subprocess
 import sys as _sys
 from pathlib import Path
 
+import click
 import typer
 
 from composable_agents.ca.config import load_config
@@ -22,6 +24,12 @@ from composable_agents.projection import ProjectionEvent
 app = typer.Typer(add_completion=True, no_args_is_help=True, help="Developer CLI for composable-agents modules.")
 
 VERSION = "0.1.0"
+
+
+class _FailSeverity(str, _enum.Enum):
+    error = "error"
+    warning = "warning"
+    info = "info"
 
 
 @app.callback(invoke_without_command=True)
@@ -68,10 +76,13 @@ def show(name: str = typer.Argument(..., help="Agent name.")) -> None:
 
 
 @app.command("graph")
-def graph(selector: str = typer.Argument("", help="Selection expression (default: all).")) -> None:
+def graph(
+    selector: str = typer.Argument("", help="Selection expression (default: all)."),
+    exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
+) -> None:
     """Render the cross-agent dependency DAG as Graphviz DOT."""
     module = _module()
-    chosen = {a.name for a in select(module, selector)}
+    chosen = {a.name for a in select(module, selector, exclude=exclude)}
     lines = ["digraph agents {", "  rankdir=LR;"]
     for a in module.agents:
         if a.name in chosen:
@@ -95,8 +106,13 @@ def run(
     """Execute an agent locally and stream its terminal trace tree."""
     cfg = load_config(Path("."))
     rid = run_id or f"ca-{name}-local"
+    try:
+        parsed = _json.loads(input)
+    except _json.JSONDecodeError as exc:
+        typer.echo(f"error: invalid --input JSON: {exc}", err=True)
+        raise typer.Exit(2) from None
     resolved = resolve_agent(cfg, name)
-    outcome = run_agent_local(resolved, _json.loads(input), run_id=rid)
+    outcome = run_agent_local(resolved, parsed, run_id=rid)
     if outcome.error is not None:
         typer.echo(f"error: {outcome.error}", err=True)
         save_run(str(cfg.root), run_id=rid, agent=name, status="error", events=outcome.events)
@@ -109,13 +125,16 @@ def run(
 @app.command("lint")
 def lint(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
-    fail_severity: str = typer.Option("", "--fail-severity", help="error|warning|info (default: config)."),
+    exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
+    fail_severity: _FailSeverity | None = typer.Option(  # noqa: B008
+        None, "--fail-severity", help="error|warning|info (default: config)."
+    ),
 ) -> None:
     """Lint selected agents (structural validation + severity gating)."""
     cfg = load_config(Path("."))
     module = build_module(cfg)
-    names = [a.name for a in select(module, selector)]
-    floor = fail_severity or cfg.fail_severity
+    names = [a.name for a in select(module, selector, exclude=exclude)]
+    floor = fail_severity.value if fail_severity is not None else cfg.fail_severity
     findings, code = lint_agents(cfg, names, fail_severity=floor)
     for f in findings:
         typer.echo(f"{f.severity.upper():7} {f.agent}: {f.code} — {f.message}")
@@ -127,15 +146,26 @@ def lint(
 @app.command("test")
 def test_cmd(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
+    exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print the pytest command without running."),
 ) -> None:
-    """Run pytest for the selected agents (matches test names by agent name via -k)."""
+    """Run pytest for the selected agents.
+
+    Agent names are passed to pytest via ``-k``, which uses substring matching:
+    a test whose id merely *contains* a selected agent's name will also run, so
+    the gate may cover slightly more tests than the exact selection.
+    """
     cfg = load_config(Path("."))
     module = build_module(cfg)
-    names = [a.name for a in select(module, selector)]
+    names = [a.name for a in select(module, selector, exclude=exclude)]
     cmd = [_sys.executable, "-m", "pytest", "-q"]
     if names:
         cmd += ["-k", " or ".join(names)]
+    elif selector.strip():
+        # An explicit selector that matched nothing must NOT fall through to a
+        # full-suite run; report and exit cleanly.
+        typer.echo("no agents matched")
+        raise typer.Exit(0)
     if dry_run:
         typer.echo(" ".join(cmd))
         raise typer.Exit(0)
@@ -147,15 +177,23 @@ def trace(run_id: str = typer.Argument(..., help="Run id from a prior `ca run` (
     """Render a cached run's trace tree and print its Langfuse deep link."""
     cfg = load_config(Path("."))
     cached = load_run(str(cfg.root), run_id)
-    if cached is not None:
-        events = [ProjectionEvent.from_json(e) for e in cached["events"]]
-        typer.echo(render_tree(events))
+    if cached is None:
+        # No local cache for this run id is a usage error, regardless of whether
+        # trace_url() could fabricate a deep link from the (hashed) run id.
+        typer.echo(f"error: no cached run {run_id!r}", err=True)
+        raise typer.Exit(2)
+
+    events = [ProjectionEvent.from_json(e) for e in cached["events"]]
+    tree = render_tree(events)
+    if tree:
+        typer.echo(tree)
+    else:
+        # Failed/early-exit runs often have no captured events; surface the
+        # cached status instead of echoing a blank line.
+        typer.echo(f"run {run_id!r} status={cached['status']} (no trace events captured)")
     url = trace_url(run_id)
     if url:
         typer.echo(f"\nlangfuse: {url}")
-    elif cached is None:
-        typer.echo(f"error: no cached run {run_id!r} and LANGFUSE_HOST unset", err=True)
-        raise typer.Exit(2)
 
 
 @app.command("doctor")
@@ -180,5 +218,10 @@ def main(argv: list[str] | None = None) -> int:
     except SystemExit as exc:  # argparse-style callers expect an int
         return int(exc.code or 0)
     except typer.Exit as exc:
+        return int(exc.exit_code)
+    except click.exceptions.ClickException as exc:
+        # Unknown command / missing args / bad option: print the usage error and
+        # return its conventional exit code (2) instead of leaking a traceback.
+        exc.show()
         return int(exc.exit_code)
     return int(result) if isinstance(result, int) else 0
