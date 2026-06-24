@@ -1,7 +1,7 @@
 # Long-lived sessions for `composable_agents` — design
 
 **Date:** 2026-06-23
-**Status:** Design converged in brainstorming; reviewed by Codex three times (1st: 7 findings folded in; 2nd: recv-guard / truncation / fence / placement / lifecycle / backpressure tightened to checkable rules; 3rd: all six confirmed closed, plus output-buffer retention + `EVAL_PLAN`-in-`LOOP` fixed); ready for a v1 implementation plan modulo the §14 open questions
+**Status:** Design converged in brainstorming; reviewed by Codex three times (1st: 7 findings folded in; 2nd: recv-guard / truncation / fence / placement / lifecycle / backpressure tightened to checkable rules; 3rd: all six confirmed closed, plus output-buffer retention + `EVAL_PLAN`-in-`LOOP` fixed). **Post-build reconciliation (2026-06-23):** M1 (local/in-memory core) landed on `main`; §6 durability rewritten to build on the **pre-existing** `execution/session_store.py` (`SessionStore` cursor-CAS + `ClaimCheckCodec` + `BlobStore`) rather than reinvent it — see §6, §10, §12
 **Scope:** A first-class **session** primitive — a long-lived, keep-messaging-it agent with a streaming event surface — added to `composable_agents` *as a layer around the existing flow IR*, not a new runtime. Builds the **turn-based** core now, with a pre-built channel + scope substrate so a later **reactive/actor** upgrade is additive. Unifies three mechanisms that exist today but don't compose: `human_gate` (signal-wait), `continue_with`/`run_chained` (the continuation trampoline), and `CMASession.events()` (the live event stream).
 
 ---
@@ -100,21 +100,33 @@ async def chat(s):
 
 > **Carrier-lifting is a known risk (Codex MAJOR #5).** v1 ships the explicit `scan`/`loop` primitive as the *supported, enforced* surface. The coroutine sugar is gated behind the compiler being able to prove which locals cross a `recv` boundary and lift them into the declared state schema; until that analysis is solid, the sugar is opt-in/experimental and the typed schema on `Op.LOOP` is the source of truth.
 
-## 6. State & durability — the dual carrier
+## 6. State & durability — built on the existing `SessionStore`
 
-The typed carrier makes durability fall out of two mechanisms already in the harness, each used where it is strong:
+> **Reconciliation (2026-06-23): this section originally designed durability from scratch. It now builds on `composable_agents/execution/session_store.py`, which already existed on `main` (commit `007db86`) and implements exactly this substrate** — surfaced only after M1 landed. M2 *wires* the session loop to it; it does not reinvent it.
+
+The pre-existing layer provides: `SessionStore` — `load(session_id, cursor)` / `commit(session_id, base, state, state_hash)` with **compare-and-swap on a monotonic `Cursor` for crash-recovery idempotency**, and `session_id`↔Temporal-workflow-id **1:1** (so mutual exclusion is Temporal's job); `ClaimCheckCodec` — oversize-payload offload; `BlobStore` — content-addressed, tenant-scoped. The carrier maps onto it directly:
+
+| Spec concept | Existing mechanism |
+|---|---|
+| segment / epoch counter | the store's `Cursor` (no separate epoch) |
+| persist carrier across `continue_as_new` | `SessionStore.commit(session_id, base, state, hash)` |
+| rehydrate after truncation | `SessionStore.load(session_id, cursor)` |
+| truncation-boundary dedup / idempotency | the store's **cursor compare-and-swap** (`base != head` ⇒ `CursorConflict`; a re-applied committed write returns the original cursor) |
+| oversize carrier / channel buffers | `ClaimCheckCodec` + `BlobStore` (keeps the Temporal payload under limit; cf. §7.4) |
+
+The carrier itself is serialized into an `agent_loop.AgentState`-shaped record (extended for the typed `s` + channel buffers). With that mapping fixed, the typed carrier still makes durability fall out of two mechanisms, each used where it is strong:
 
 - **Within a turn / awaiting the next message** → `wait_condition` on the channel buffer (`harness.py:834`). Keeps history; resumes in place. (This is `human_gate`'s carrier — the suspended stack.)
-- **Across history truncation (long-lived sessions)** → the session is one durable workflow that loops; at a history threshold it `continue_as_new`s, carrying **`(typed state s, per-channel buffers, per-channel seq cursors)`** in the continuation input. `continue_as_new` drops history — which is exactly why `s` and the buffers must be explicit, serializable data. (This is `continue_with`'s carrier, now typed and inbox-complete.)
+- **Across history truncation (long-lived sessions)** → the session is one durable workflow that loops; at a history threshold it `continue_as_new`s. The carrier `(typed state s, per-channel buffers, seq cursors)` is **persisted via `SessionStore.commit` and rehydrated via `SessionStore.load`** at the new segment's `Cursor`; the same data also flows through the `continue_as_new` input for the hot path, with the store as the durable backstop. `continue_as_new` drops history — which is exactly why the carrier must be explicit serializable data. (This is `continue_with`'s carrier, now typed, inbox-complete, and store-backed.)
 
 **Buffer durability is mandatory (Codex BLOCKER #2).** The current inbox is in-memory and continuation carries only input/call-counts (`harness.py:1058`), so pending messages would be lost across truncation. The session workflow must keep channel buffers as durable workflow state and include them (with seq cursors) in the continue-as-new input.
 
 **Truncation-boundary protocol (Codex 2nd-pass BLOCKER).** `continue_as_new` is not atomic w.r.t. inbound signals/updates, so the boundary needs an explicit protocol:
 
-1. **Epoching.** Channel state is tagged with a monotonic `epoch` (segment index, already tracked as `segment_seq`, `interpreter.py:131`). Every buffered item is keyed `(epoch, channel, seq)`.
+1. **Epoching.** The store's monotonic `Cursor` *is* the segment index (no separate epoch). Every buffered item is keyed `(cursor, channel, seq)`.
 2. **Quiesce, then continue.** Truncation is only initiated at a turn boundary — i.e. while parked in a top-level `recv` with **no turn in flight**. A `LOOP` is never truncated mid-`body`. This removes the "parked-recv-mid-turn" race: the only parked waiter at truncation is the top-level `recv`, whose buffered+unconsumed items are carried verbatim.
 3. **Drain into carry.** Before `continue_as_new`, all buffered items (consumed cursor + tail) are serialized into the continuation input; the new segment rehydrates them under `epoch+1`.
-4. **Dedup.** A `send` (Temporal Update, §7.5) returning before the old segment closes may be re-applied to the new segment; consumers and the inbox dedup by `(channel, seq)` so a boundary-straddling delivery is idempotent. Late signals addressed to the closed run are redelivered by Temporal to the new run and deduped the same way.
+4. **Dedup.** The store's **cursor compare-and-swap** makes a boundary-straddling commit idempotent — a retried committed write returns the original cursor, a stale `base` raises `CursorConflict` (`session_store.py:96`). A `send` (Temporal Update, §7.5) re-applied across the boundary, and consumers draining emits, still dedup by `(channel, seq)`; late signals addressed to the closed run are redelivered by Temporal to the new run and deduped the same way.
 
 ## 7. Concurrency, delivery, and ordering
 
@@ -215,11 +227,19 @@ The one capability not pre-built for free is **interruption/barge-in** — turn-
 - `shapes.py`, `transforms.py` — handle `Op.LOOP` (shape `AGENT`; transform passthrough).
 - `InMemoryEnv` — channel fakes for tests.
 
-**Generalize:**
-- `execution/harness.py` — `FlowWorkflow` → `SessionWorkflow`: N typed channel inboxes (not one `_human_inbox`); durable buffers + seq; loop holding typed `s`; threshold `continue_as_new` carrying `(s, buffers, cursors)`; `submitHuman`→`send`, `openGates`→`open_receives`, `projection`→`state`.
+**Reuse (do NOT reinvent — pre-existing, surfaced after M1):**
+- `execution/session_store.py` — `SessionStore` (cursor-CAS) is the durable carrier persistence (§6). M2 commits/loads the carrier here.
+- `execution/codec.py` — `ClaimCheckCodec` for oversize carrier/buffers.
+- `execution/blobstore.py` — `BlobStore` content-addressed backing.
+- `agent_loop.py` — `AgentState` / `state_fingerprint` is the shape the carrier serializes into.
+
+**Generalize (M2):**
+- `execution/harness.py` — `FlowWorkflow` → `SessionWorkflow`: N typed channel inboxes (not one `_human_inbox`); loop holding typed `s`; threshold `continue_as_new` with the carrier **persisted through `SessionStore.commit`/`load`** (cursor = segment index); `submitHuman`→`send` (Update), `openGates`→`open_receives`, `projection`→`state`. `FlowWorkflow` rejects `Op.LOOP`.
 - `agent.py` — `Agent.open(...) -> SessionHandle`; `SessionHandle` generalizing `CMASession`.
 
 **Untouched:** `interpret` core and every arrow combinator, `freeze`/content-hash, contracts core, projection core.
+
+**Status:** M1 (`session.py`, `ir.py` Op.LOOP/ChannelRef, `interpreter.py` recv/emit/LOOP + InMemoryEnv, `validate.py` rules, `derived.py`, `shapes`/`transforms`) **already landed on `main`** (commits `e13d1fe`, `ea9ddca`, `5e8b372`) and is in green-up/review.
 
 ## 11. Codex review — findings → resolutions
 
@@ -251,11 +271,13 @@ The one capability not pre-built for free is **interruption/barge-in** — turn-
 | `emit`'s durable output buffer had no retention policy → unbounded state | §7.4 per-consumer **ack cursor** + evict-`≤`-acked + park-on-full; high-watermark in `state()` |
 | controller-form `EVAL_PLAN` inside a `LOOP` is invisible to the static `recv_guarded` walk | §7.1 only **baked** plans allowed in a `LOOP` body; controller/runtime-compiled `EVAL_PLAN` rejected there |
 
-## 12. v1 slice vs deferred
+## 12. Milestones
 
-**v1 (buildable first):** `Op.LOOP` (AGENT-shaped) + `ChannelRef` + `__recv__`/`__emit__`; `scan`/`loop` primitive (explicit typed carrier); the sequential-position validator + recv-guard check; `drive_session`; `SessionWorkflow` with durable buffers + `continue_as_new` carry; `Agent.open` + `SessionHandle` on **local** and **Temporal**; `InMemoryEnv` channels; `human_gate` re-expressed over `recv`. This is a complete, durable, replay-correct turn-based session end-to-end.
+**M1 — local / in-memory core — LANDED on `main` (`e13d1fe`,`ea9ddca`,`5e8b372`), in green-up/review.** `Op.LOOP` (AGENT-shaped) + `ChannelRef` + `__recv__`/`__emit__`; `scan`/`loop` primitive (explicit typed carrier); sequential-position validator + recv-guard check; `drive_session`; `InMemoryEnv` channels + local e2e; `human_gate` re-expressed over `recv`. (Open follow-ups: session tests must use the repo `asyncio.run` convention, not `@pytest.mark.asyncio`.)
 
-**v1.5:** CMA backend for `SessionHandle` (unify `CMASession`); `@session` coroutine sugar (carrier lifting); `ca chat`.
+**M2 — durable Temporal sessions (next).** `SessionWorkflow` wired to the **existing** `SessionStore` (carrier via `commit`/`load`, cursor = segment index) + `ClaimCheckCodec` for oversize; N typed channel inboxes; `send` as Temporal Update; `open_receives`/`state` queries; `FlowWorkflow` rejects `LOOP`; `Agent.open` + `SessionHandle` on **local** + **Temporal**. This is durability *wiring*, not a new store.
+
+**M3 — facade + CMA.** CMA backend for `SessionHandle` (one-session-per-turn, unify `CMASession`); `@session` coroutine sugar (carrier lifting); `ca chat`.
 
 **Deferred (reactive / north-star):** `Event`/`Cmd` widening, `select`/`try_recv`, cancellation implementation, session↔session channels; `ca listen`/`ca trigger`.
 
