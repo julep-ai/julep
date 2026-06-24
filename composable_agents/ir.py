@@ -32,6 +32,14 @@ HUMAN_GATE_TOOL = "__human_gate__"
 # The duration in seconds rides on the node's Ann.timeout.
 SLEEP_TOOL = "__sleep__"
 
+# Reserved native tool: the harness turns a call to this into a blocking channel receive
+# rather than an HTTP request.
+RECV_TOOL = "__recv__"
+
+# Reserved native tool: the harness turns a call to this into a durable, seq'd output append
+# rather than an HTTP request.
+EMIT_TOOL = "__emit__"
+
 
 # --------------------------------------------------------------------------- #
 # camelCase <-> snake_case helpers for the canonical JSON form.
@@ -88,6 +96,30 @@ def toolref_key(ref: ToolRef) -> str:
     if isinstance(ref, NativeTool):
         return ref.name
     return f"{ref.server}/{ref.tool}"
+
+
+# --------------------------------------------------------------------------- #
+# Channel references. A ChannelRef is a typed session port bound into LOOP IR.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class ChannelRef:
+    name: str
+    payload: Optional[JSONSchema] = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"name": self.name}
+        if self.payload is not None:
+            out["payload"] = self.payload
+        return out
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "ChannelRef":
+        return ChannelRef(name=d["name"], payload=d.get("payload"))
+
+
+def channelref_key(ref: ChannelRef) -> str:
+    """A stable, human-readable identifier used for channel manifests."""
+    return ref.name
 
 
 # --------------------------------------------------------------------------- #
@@ -395,6 +427,9 @@ class Node:
     body: Optional["Node"] = None
     # eval_plan:
     plan: Optional["Node"] = None
+    # LOOP:
+    state_schema: Optional[JSONSchema] = None  # LOOP: typed carrier (ArrowLoop d-channel) schema
+    channels: Optional[list[ChannelRef]] = None  # LOOP: bound channel ports (recv/emit targets)
     # app:
     controller: Optional[str] = None
     # arr / alt predicate (named, content-addressed):
@@ -467,6 +502,11 @@ class Node:
             out["plan"] = self.plan.to_json()
         if self.controller is not None:
             out["controller"] = self.controller
+        if self.op == Op.LOOP:
+            if self.state_schema is not None:
+                out["stateSchema"] = self.state_schema
+            if self.channels is not None:
+                out["channels"] = [c.to_json() for c in self.channels]
         if self.op == Op.APP:
             if self.tools is not None:
                 out["tools"] = self.tools
@@ -507,6 +547,12 @@ class Node:
             bound=d.get("bound"),
             body=Node.from_json(d["body"]) if d.get("body") else None,
             plan=Node.from_json(d["plan"]) if d.get("plan") else None,
+            state_schema=d.get("stateSchema"),
+            channels=(
+                [ChannelRef.from_json(c) for c in d["channels"]]
+                if d.get("channels")
+                else None
+            ),
             controller=d.get("controller"),
             pure=d.get("pure"),
             args=d.get("args"),

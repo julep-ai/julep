@@ -11,9 +11,9 @@ Two reads of the same tree:
 
 Both are pure structural folds: composition is the join of children, with a
 per-operator floor (``par`` >= Dataflow, ``alt`` >= Branching, ``iter_up_to`` >=
-Feedback, ``eval_plan`` == Staged, ``app`` == Agent). Because the node tree is
-finite (recursion only happens at *evaluation* time inside the looping ops),
-this terminates and is decidable.
+Feedback, ``eval_plan`` == Staged, ``app`` == Agent, ``loop`` == Agent). Because
+the node tree is finite (recursion only happens at *evaluation* time inside the
+looping ops), this terminates and is decidable.
 """
 
 from __future__ import annotations
@@ -90,6 +90,10 @@ def _shape(n: Node, mode: str) -> Shape:
 
     if op == Op.APP:
         # Open-ended controller loop -> top of the lattice.
+        return Shape.AGENT
+
+    if op == Op.LOOP:
+        # Unbounded recv-guarded session loop -> opaque AGENT boundary, like APP.
         return Shape.AGENT
 
     raise ValueError(f"unhandled op in shape analysis: {op!r}")

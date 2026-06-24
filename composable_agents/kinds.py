@@ -24,6 +24,7 @@ class Op(str, Enum):
     ITER_UP_TO = "iter_up_to"
     EVAL_PLAN = "eval_plan"
     APP = "app"
+    LOOP = "loop"
 
 
 class Shape(str, Enum):

@@ -36,10 +36,13 @@ from .kinds import (
 
 # --- IR value types (rarely built by tool; useful for typing/introspection) #
 from .ir import (
+    EMIT_TOOL as EMIT_TOOL,
     HUMAN_GATE_TOOL as HUMAN_GATE_TOOL,
+    RECV_TOOL as RECV_TOOL,
     SLEEP_TOOL as SLEEP_TOOL,
     Ann as Ann,
     CacheHint as CacheHint,
+    ChannelRef as ChannelRef,
     ContextPolicy as ContextPolicy,
     McpTool as McpTool,
     NativeTool as NativeTool,
@@ -69,14 +72,17 @@ from .dsl import (
     sub as sub,
 )
 from .derived import (
+    HUMAN_CHANNEL as HUMAN_CHANNEL,
     check_race_admission as check_race_admission,
     delay as delay,
+    emit as emit,
     hedge as hedge,
     human_gate as human_gate,
     map_n as map_n,
     map_reduce as map_reduce,
     quorum as quorum,
     race as race,
+    recv as recv,
     review as review,
     vote as vote,
 )
@@ -85,6 +91,13 @@ from .continuation import (
     continue_with as continue_with,
     is_continuation as is_continuation,
     run_chained as run_chained,
+)
+from .session import (
+    Channel as Channel,
+    Session as Session,
+    drive_session as drive_session,
+    loop as loop,
+    scan as scan,
 )
 
 # --- contracts + tool manifest --------------------------------------------- #
@@ -259,7 +272,8 @@ _BASE_EXPORTS = [
     "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
     # ir
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
-    "NativeTool", "McpTool", "HUMAN_GATE_TOOL", "SLEEP_TOOL",
+    "NativeTool", "McpTool", "ChannelRef",
+    "HUMAN_GATE_TOOL", "SLEEP_TOOL", "RECV_TOOL", "EMIT_TOOL",
     # dsl
     "call", "native", "mcp", "think", "reasoner_from_ctx", "ident", "arr", "sub",
     "seq", "par", "fanout", "each", "alt", "cond", "switch", "reschedule",
@@ -267,9 +281,11 @@ _BASE_EXPORTS = [
     "Contract",
     # derived
     "race", "hedge", "quorum", "map_n", "map_reduce", "vote", "review",
-    "human_gate", "delay", "check_race_admission",
+    "human_gate", "recv", "emit", "HUMAN_CHANNEL", "delay", "check_race_admission",
     # continuation
     "continue_with", "is_continuation", "continuation_value", "run_chained",
+    # session
+    "Channel", "Session", "scan", "loop", "drive_session",
     # contracts
     "ToolContract", "FrozenTool", "McpAnnotations", "ToolManifest",
     "definition_hash", "execution_hash", "manifest_to_json", "manifest_from_json",

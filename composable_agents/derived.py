@@ -26,10 +26,12 @@ from .dsl import _nid, _node, think
 from .ir import (
     Ann,
     CallStep,
+    EMIT_TOOL,
     HUMAN_GATE_TOOL,
     Merge,
     NativeTool,
     Node,
+    RECV_TOOL,
     SLEEP_TOOL,
     SubStep,
 )
@@ -45,6 +47,7 @@ from .validate import Diagnostic
 
 __all__ = [
     "HUMAN_GATE_TOOL",
+    "HUMAN_CHANNEL",
     "SLEEP_TOOL",
     "race",
     "hedge",
@@ -53,11 +56,15 @@ __all__ = [
     "map_reduce",
     "vote",
     "review",
+    "recv",
+    "emit",
     "human_gate",
     "delay",
     "flatten_race_group",
     "check_race_admission",
 ]
+
+HUMAN_CHANNEL = "human"
 
 
 # --------------------------------------------------------------------------- #
@@ -187,13 +194,38 @@ def review(main: Node, reviewer: str, k: int, *, agg: Optional[str] = None) -> N
     return _node(op=Op.SEQ, id=_nid("seq"), left=main, right=reviewers)
 
 
+def recv(channel: str, *, timeout_s: Optional[int] = None) -> Node:
+    """A leaf that blocks until the next message arrives on ``channel``.
+
+    Emits a ``call`` to the reserved tool ``__recv__``; the harness turns it into
+    a blocking channel receive instead of an HTTP call. ``timeout_s`` bounds the
+    wait. The channel name rides on the node's ``prompt`` field (reused as the
+    channel id), mirroring how ``human_gate`` carries its prompt.
+    """
+    ann = Ann(timeout_s=timeout_s) if timeout_s is not None else None
+    return _node(op=Op.PRIM, id=_nid("recv"), ann=ann,
+                 step=CallStep(tool=NativeTool(RECV_TOOL)), prompt=channel)
+
+
+def emit(channel: str, value: Optional[str] = None) -> Node:
+    """A leaf that appends ``value`` or its input to ``channel``'s output buffer.
+
+    Emits a ``call`` to the reserved tool ``__emit__``; this is a non-retryable,
+    deterministic workflow-internal append, not a network call.
+    """
+    args = {"value": value} if value is not None else None
+    return _node(op=Op.PRIM, id=_nid("emit"),
+                 step=CallStep(tool=NativeTool(EMIT_TOOL)), prompt=channel, args=args)
+
+
 def human_gate(*, prompt: Optional[str] = None, timeout_s: Optional[int] = None) -> Node:
     """A leaf that blocks on a human signal, with an optional timeout.
 
     Emits a ``call`` to the reserved tool ``__human_gate__``; the harness turns
     it into a Temporal signal-wait instead of an HTTP call. The leaf's input is
     surfaced to the human as the prompt and the signal payload becomes its
-    output. ``timeout_s`` (carried on the annotation) bounds the wait.
+    output. ``timeout_s`` (carried on the annotation) bounds the wait. This is
+    the back-compatible human-channel form of :func:`recv`.
     """
     ann = Ann(timeout_s=timeout_s) if timeout_s is not None else None
     return _node(op=Op.PRIM, id=_nid("gate"), ann=ann,

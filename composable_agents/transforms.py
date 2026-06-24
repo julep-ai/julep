@@ -48,6 +48,7 @@ def detect_cycles(flow: Node) -> Optional[list[str]]:
     return visit(flow)
 
 
+# LOOP reuses ``body``, so the ordinary structural recursion handles it.
 _SLOTS = ("left", "right", "body", "plan")
 _SLOT_TAG = {"left": "L", "right": "R", "body": "B", "plan": "P"}
 
