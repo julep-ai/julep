@@ -9,14 +9,21 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from types import ModuleType
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from composable_agents.typed import FlowLike
 
 # Unique markers delimiting the JSON payload on stdout. The parent extracts the
 # text between them rather than relying on "json is the last line".
 _BEGIN = "__CA_RESOLVE_BEGIN__"
 _END = "__CA_RESOLVE_END__"
+_LOCAL_DEV_SIGNING_KEY = "0" * 64
 
 
 def _discover_modules(root: str, src: list[str]) -> list[tuple[str, str]]:
@@ -48,15 +55,19 @@ def _emit(data: dict[str, Any]) -> None:
     sys.stdout.flush()
 
 
-def main() -> int:
-    payload = json.loads(sys.argv[1])
-    root: str = payload["root"]
-    src: list[str] = payload["src"]
-    target: str = payload["name"]
+@dataclass(frozen=True)
+class _DiscoveryResult:
+    found: FlowLike[Any, Any] | None
+    modules: list[ModuleType]
+    import_errors: list[str]
+
+
+def _discover_agent(root: str, src: list[str], target: str) -> _DiscoveryResult:
     sys.path.insert(0, root)
-    from composable_agents.define import FlowLike  # type: ignore[attr-defined]
+    from composable_agents.typed import FlowLike
 
     found: FlowLike[Any, Any] | None = None
+    modules: list[ModuleType] = []
     import_errors: list[str] = []
     for path_entry, modname in _discover_modules(root, src):
         if path_entry not in sys.path:
@@ -66,6 +77,7 @@ def main() -> int:
         except Exception as exc:  # noqa: BLE001 - capture so we can surface it below.
             import_errors.append(f"{modname}: {type(exc).__name__}: {exc}")
             continue
+        modules.append(mod)
         for attr in vars(mod).values():
             # @flow exposes a public ``.name``; Agent stores it on ``._name``.
             name = getattr(attr, "name", None) or getattr(attr, "_name", None)
@@ -75,11 +87,89 @@ def main() -> int:
         if found is not None:
             break
 
+    return _DiscoveryResult(found=found, modules=modules, import_errors=import_errors)
+
+
+def _not_found_error(target: str, import_errors: list[str]) -> str:
+    msg = f"agent {target!r} not found"
+    if import_errors:
+        msg += "; import errors: " + " | ".join(import_errors)
+    return msg
+
+
+def _freeze_agent(
+    found: FlowLike[Any, Any],
+    modules: list[ModuleType],
+    cas: str,
+) -> dict[str, Any]:
+    from composable_agents.agent import Tool, snapshot_from_tools
+    from composable_agents.cas import LocalDirCAS, cas_from_url
+    from composable_agents.deploy import deploy
+    from composable_agents.ir import toolref_key
+
+    tools_by_name: dict[str, Tool[Any, Any]] = {}
+    for mod in modules:
+        for attr in vars(mod).values():
+            if isinstance(attr, Tool):
+                tools_by_name[attr.name] = attr
+
+    found_tools = getattr(found, "_tools", ())
+    if isinstance(found_tools, (list, tuple)):
+        for attr in found_tools:
+            if isinstance(attr, Tool):
+                tools_by_name[attr.name] = attr
+
+    node = found.to_ir()
+    selected_tools: list[Tool[Any, Any]] = []
+    selected_names: set[str] = set()
+    for ref in node.tool_refs():
+        names = [toolref_key(ref)]
+        ref_name = getattr(ref, "name", None)
+        if isinstance(ref_name, str) and ref_name not in names:
+            names.append(ref_name)
+        for name in names:
+            tool = tools_by_name.get(name)
+            if tool is not None and tool.name not in selected_names:
+                selected_tools.append(tool)
+                selected_names.add(tool.name)
+                break
+
+    snapshot = snapshot_from_tools(selected_tools)
+    dep = deploy(node, snapshot, strict=False)
+    store = cas_from_url(cas) if cas.startswith("s3://") else LocalDirCAS(cas)
+    if not cas.startswith("s3://"):
+        os.environ.setdefault("CA_BUNDLE_SIGNING_KEY", _LOCAL_DEV_SIGNING_KEY)
+    dep.publish(store)
+    return {
+        "artifact_hash": dep.artifact_hash,
+        "flow_json": dep.flow_json,
+        "manifest_json": dep.manifest_json,
+        "bundle_ref": dep.bundle_ref,
+    }
+
+
+def main() -> int:
+    payload = json.loads(sys.argv[1])
+    root: str = payload["root"]
+    src: list[str] = payload["src"]
+    target: str = payload["name"]
+    action = payload.get("action", "resolve")
+
+    if action == "freeze":
+        try:
+            result = _discover_agent(root, src, target)
+            if result.found is None:
+                _emit({"error": _not_found_error(target, result.import_errors)})
+                return 0
+            _emit(_freeze_agent(result.found, result.modules, str(payload["cas"])))
+        except Exception as exc:  # noqa: BLE001 - serialize child failures for the parent.
+            _emit({"error": f"{type(exc).__name__}: {exc}"})
+        return 0
+
+    result = _discover_agent(root, src, target)
+    found = result.found
     if found is None:
-        msg = f"agent {target!r} not found"
-        if import_errors:
-            msg += "; import errors: " + " | ".join(import_errors)
-        _emit({"error": msg})
+        _emit({"error": _not_found_error(target, result.import_errors)})
         return 0
     node = found.to_ir()
     _emit({"ir": node.to_json(), "name": target})
