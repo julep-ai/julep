@@ -13,12 +13,13 @@ from composable_agents.session import scan
 from composable_agents.validate import blocking, validate
 
 
-def raw_loop(body: Node) -> Node:
+def raw_loop(body: Node, **kwargs: object) -> Node:
     return Node(
         op=Op.LOOP,
         id="raw-loop",
         body=body,
         channels=[ChannelRef("in"), ChannelRef("out")],
+        **kwargs,
     )
 
 
@@ -207,23 +208,53 @@ def test_recv_before_iter_up_to_satisfies_recv_guard() -> None:
     assert_no_session_codes(flow)
 
 
+def test_multiple_recv_on_loop_body_path_is_rejected() -> None:
+    flow = raw_loop(seq(recv("in"), emit("out"), recv("in")))
+
+    assert "SESSION_LOOP_MULTIPLE_RECV" in err_codes(flow)
+
+
+def test_scan_raises_for_multiple_recv_on_loop_body_path() -> None:
+    with pytest.raises(
+        ComposableAgentsError,
+        match="SESSION_LOOP_MULTIPLE_RECV",
+    ):
+        scan(seq(recv("in"), emit("out"), recv("in")), init={})
+
+
+def test_loop_with_non_body_child_is_rejected() -> None:
+    flow = raw_loop(seq(recv("in"), emit("out")), left=recv("in"))
+
+    assert "SESSION_LOOP_BAD_FIELDS" in err_codes(flow)
+
+
 # --------------------------------------------------------------------------- #
 # Declared-channel check (non-blocking warning).
 # --------------------------------------------------------------------------- #
 def test_undeclared_channel_emits_warning() -> None:
     # recv targets "typo" but the loop only declares "in"/"out".
-    flow = scan(seq(recv("typo"), emit("out")), init={}).body
+    flow = raw_loop(seq(recv("typo"), emit("out")))
 
     assert "CHANNEL_UNDECLARED" in codes(flow)
-    # It is a non-blocking warning: never surfaces as an error, never as SESSION_*.
+    # The legacy warning remains non-blocking even though session construction
+    # now also reports a blocking SESSION_* diagnostic.
     assert "CHANNEL_UNDECLARED" not in err_codes(flow)
-    assert "CHANNEL_UNDECLARED" not in session_codes(flow)
+    assert "SESSION_CHANNEL_UNDECLARED" in err_codes(flow)
+
+
+def test_scan_raises_for_undeclared_session_channel() -> None:
+    with pytest.raises(
+        ComposableAgentsError,
+        match="SESSION_CHANNEL_UNDECLARED",
+    ):
+        scan(seq(recv("extra"), emit("out")), init={})
 
 
 def test_declared_channels_emit_no_warning() -> None:
     flow = scan(seq(recv("in"), emit("out")), init={}).body
 
     assert "CHANNEL_UNDECLARED" not in codes(flow)
+    assert "SESSION_CHANNEL_UNDECLARED" not in err_codes(flow)
 
 
 # --------------------------------------------------------------------------- #
@@ -249,6 +280,28 @@ def test_well_formed_session_has_no_target_gate_codes() -> None:
     flow = scan(seq(recv("in"), emit("out")), init={}).body
 
     assert_no_session_codes(flow)
+
+
+def test_explicit_flow_target_rejects_root_loop() -> None:
+    flow = raw_loop(seq(recv("in"), emit("out")))
+
+    errors = {d.code for d in blocking(validate(flow, target="flow"))}
+    assert "SESSION_LOOP_IN_FLOW" in errors
+
+
+def test_explicit_session_target_accepts_root_loop_target() -> None:
+    flow = raw_loop(seq(recv("in"), emit("out")))
+
+    errors = {d.code for d in blocking(validate(flow, target="session"))}
+    assert "SESSION_LOOP_IN_FLOW" not in errors
+
+
+def test_default_target_still_infers_plain_flow_mode() -> None:
+    flow = seq(recv("in"), emit("out"))
+
+    errors = err_codes(flow)
+    assert "SESSION_RECV_IN_FLOW" in errors
+    assert "SESSION_EMIT_IN_FLOW" in errors
 
 
 def test_recv_reachable_outside_loop_is_rejected() -> None:

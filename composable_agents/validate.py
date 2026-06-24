@@ -471,21 +471,26 @@ def _check_session_concurrency_fence(flow: Node, out: list[Diagnostic]) -> None:
 
 
 def _check_session_loop_productivity(flow: Node, out: list[Diagnostic]) -> None:
-    def classify(n: Node) -> tuple[bool, bool]:
+    def classify(n: Node) -> tuple[int, int, bool]:
         if _is_recv(n):
-            return (True, False)
+            return (1, 1, False)
         if _is_emit(n):
-            return (False, True)
+            return (0, 0, True)
 
         if n.op in (Op.PRIM, Op.IDENT, Op.ARR, Op.APP, Op.LOOP):
-            return (False, False)
+            return (0, 0, False)
 
         if n.op == Op.SEQ:
-            left_recv, left_emit = classify(n.left) if n.left is not None else (False, False)
-            right_recv, right_emit = classify(n.right) if n.right is not None else (False, False)
+            left_min, left_max, left_emit = (
+                classify(n.left) if n.left is not None else (0, 0, False)
+            )
+            right_min, right_max, right_emit = (
+                classify(n.right) if n.right is not None else (0, 0, False)
+            )
             return (
-                left_recv or right_recv,
-                left_emit or (not left_recv and right_emit),
+                left_min + right_min,
+                left_max + right_max,
+                left_emit or (left_min == 0 and right_emit),
             )
 
         if n.op == Op.ALT:
@@ -500,19 +505,27 @@ def _check_session_loop_productivity(flow: Node, out: list[Diagnostic]) -> None:
                 if n.right is not None:
                     branches.append(n.right)
             if not branches:
-                return (False, False)
+                return (0, 0, False)
             classified = [classify(branch) for branch in branches]
             return (
-                all(all_recv for all_recv, _ in classified),
-                any(emit_before_recv for _, emit_before_recv in classified),
+                min(min_recv for min_recv, _, _ in classified),
+                max(max_recv for _, max_recv, _ in classified),
+                any(emit_before_recv for _, _, emit_before_recv in classified),
             )
 
         if n.op == Op.ITER_UP_TO:
-            _, emit_before_recv = classify(n.body) if n.body is not None else (False, False)
-            return (False, emit_before_recv)
+            _, body_max, emit_before_recv = (
+                classify(n.body) if n.body is not None else (0, 0, False)
+            )
+            bound = n.bound or 0
+            return (0, body_max * bound, emit_before_recv)
 
         if n.op in (Op.PAR, Op.EACH):
-            return (False, any(_is_emit(child) for child in n.walk()))
+            return (
+                0,
+                max((classify(child)[1] for child in n.children()), default=0),
+                any(_is_emit(child) for child in n.walk()),
+            )
 
         if n.op == Op.EVAL_PLAN:
             if n.plan is None:
@@ -524,16 +537,16 @@ def _check_session_loop_productivity(flow: Node, out: list[Diagnostic]) -> None:
                         "LOOP body; only baked plans are statically walkable",
                     )
                 )
-                return (False, False)
+                return (0, 0, False)
             return classify(n.plan)
 
-        return (False, False)
+        return (0, 0, False)
 
     for n in flow.walk():
         if n.op != Op.LOOP or n.body is None:
             continue
-        all_recv, emit_before_recv = classify(n.body)
-        if not all_recv:
+        min_recv, max_recv, emit_before_recv = classify(n.body)
+        if min_recv == 0:
             out.append(
                 Diagnostic(
                     "SESSION_LOOP_NOT_RECV_GUARDED",
@@ -548,6 +561,15 @@ def _check_session_loop_productivity(flow: Node, out: list[Diagnostic]) -> None:
                     "SESSION_LOOP_EMIT_BEFORE_RECV",
                     n.id,
                     "loop body can emit before its first recv on some path",
+                )
+            )
+        if max_recv > 1:
+            out.append(
+                Diagnostic(
+                    "SESSION_LOOP_MULTIPLE_RECV",
+                    n.id,
+                    "loop body has a path with multiple recv operations; session input "
+                    "must be consumed exactly once at the turn boundary",
                 )
             )
 
@@ -591,6 +613,37 @@ def _check_session_loop_placement(flow: Node, out: list[Diagnostic]) -> None:
     rec(flow, False, False)
 
 
+def _check_session_loop_fields(flow: Node, out: list[Diagnostic]) -> None:
+    illegal_fields = (
+        "left",
+        "right",
+        "plan",
+        "cases",
+        "default",
+        "controller",
+        "select",
+        "pure",
+        "merge",
+    )
+    for n in flow.walk():
+        if n.op != Op.LOOP:
+            continue
+        present = [
+            field
+            for field in illegal_fields
+            if hasattr(n, field) and getattr(n, field) is not None
+        ]
+        if present:
+            out.append(
+                Diagnostic(
+                    "SESSION_LOOP_BAD_FIELDS",
+                    n.id,
+                    "LOOP may only carry body plus session metadata; illegal "
+                    f"fields present: {', '.join(present)}",
+                )
+            )
+
+
 def _check_session_channel_declared(flow: Node, out: list[Diagnostic]) -> None:
     for n in flow.walk():
         if n.op != Op.LOOP or n.body is None:
@@ -610,11 +663,19 @@ def _check_session_channel_declared(flow: Node, out: list[Diagnostic]) -> None:
                             severity="warning",
                         )
                     )
+                    out.append(
+                        Diagnostic(
+                            code="SESSION_CHANNEL_UNDECLARED",
+                            node_id=d.id,
+                            message=(
+                                f"recv/emit targets channel {d.prompt!r} not declared "
+                                f"in the loop's channels {sorted(declared)}"
+                            ),
+                        )
+                    )
 
 
-def _check_session_target(flow: Node, out: list[Diagnostic]) -> None:
-    is_session = flow.op == Op.LOOP
-
+def _check_session_target(flow: Node, out: list[Diagnostic], is_session: bool) -> None:
     def contains_loop(n: Node) -> bool:
         return any(d.op == Op.LOOP for d in n.walk())
 
@@ -694,7 +755,7 @@ def _check_session_target(flow: Node, out: list[Diagnostic]) -> None:
         for child in n.children():
             rec(child, inside_loop)
 
-    if flow.op == Op.LOOP:
+    if is_session and flow.op == Op.LOOP:
         if flow.body is not None:
             rec(flow.body, True)
         return
@@ -750,10 +811,18 @@ def reads_whole_session(n: Node) -> bool:
     return False
 
 
-def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagnostic]:
+def validate(
+    flow: Node,
+    manifest: Optional[ToolManifest] = None,
+    *,
+    target: Optional[str] = None,
+) -> list[Diagnostic]:
     """Validate a flow. Pass ``manifest`` (post-freeze) to enable schema and
     manifest-resolution checks; structural checks always run."""
     out: list[Diagnostic] = []
+    if target not in (None, "flow", "session"):
+        raise ValueError("target must be 'flow', 'session', or None")
+    is_session = flow.op == Op.LOOP if target is None else target == "session"
 
     # finite tree / no knots
     cycle = detect_cycles(flow)
@@ -776,8 +845,9 @@ def validate(flow: Node, manifest: Optional[ToolManifest] = None) -> list[Diagno
     _check_session_concurrency_fence(flow, out)
     _check_session_loop_productivity(flow, out)
     _check_session_loop_placement(flow, out)
+    _check_session_loop_fields(flow, out)
     _check_session_channel_declared(flow, out)
-    _check_session_target(flow, out)
+    _check_session_target(flow, out, is_session)
 
     for n in flow.walk():
         _check_structure(n, out)

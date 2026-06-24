@@ -315,6 +315,7 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
         assert node.body is not None
         carrier = value
         last_event = planned
+        split_result = bool(node.args and node.args.get("split") is True)
         while True:
             try:
                 r = await interpret(node.body, carrier, env, causes=(last_event,))
@@ -322,7 +323,11 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
                 break
             # The turn body's final output is the next carrier. If a body emits
             # an intermediate reply, it must still yield the next carrier after.
-            carrier = r.value
+            if split_result and isinstance(r.value, tuple) and len(r.value) == 2:
+                carrier, output = r.value
+                await env.emit(_loop_out_channel(node), output, cid)
+            else:
+                carrier = r.value
             last_event = r.event_id or last_event
         return Result(carrier)
 
@@ -371,7 +376,7 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
                 if node.args is not None and "value" in node.args and node.args["value"] is not None:
                     emit_value = node.args["value"]
                 await env.emit(node.prompt, emit_value, cid)
-                return Result(emit_value)
+                return Result(value)
 
         key = call_ref_key(node, env.manifest)
         env.charge_call(key)
@@ -401,6 +406,12 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
     raise ComposableAgentsError(f"interpreter: prim with no usable step at {node.id!r}")
+
+
+def _loop_out_channel(node: Node) -> str:
+    if node.channels is not None and len(node.channels) >= 2:
+        return node.channels[1].name
+    return "out"
 
 
 async def _eval_par(node: Node, value: Any, env: Env, planned: str) -> Result:

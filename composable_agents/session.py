@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from itertools import islice
 from typing import Any, Generic, Iterable, Optional, TypeVar
 
 from .dsl import _nid, _node
@@ -78,12 +79,19 @@ def scan(
     state_schema: Optional[JSONSchema] = None,
 ) -> Session[Any, Any]:
     """Wrap ``step_flow`` as the turn body of a session LOOP."""
-    return loop(
+    loop_node = _loop_node(
         step_flow,
-        init=init,
         in_channel=in_channel,
         out_channel=out_channel,
         state_schema=state_schema,
+        split=True,
+    )
+    _raise_on_blocking_session_diagnostics(loop_node)
+    return Session(
+        body=loop_node,
+        init=init,
+        in_channel=in_channel,
+        out_channel=out_channel,
     )
 
 
@@ -117,14 +125,17 @@ def _loop_node(
     in_channel: str = "in",
     out_channel: str = "out",
     state_schema: Optional[JSONSchema] = None,
+    split: bool = False,
 ) -> Node:
     """Build a LOOP node without running the public construction gate."""
+    args = {"split": True} if split else None
     return _node(
         op=Op.LOOP,
         id=_nid("loop"),
         body=body,
         state_schema=state_schema,
         channels=[ChannelRef(in_channel), ChannelRef(out_channel)],
+        args=args,
     )
 
 
@@ -149,17 +160,19 @@ async def drive_session(
     *,
     inputs: Iterable[I],
     max_turns: int = 1000,
+    env: Optional[InMemoryEnv] = None,
 ) -> tuple[object, list[O]]:
     """Run a session LOOP over in-memory channel input and collect emissions."""
-    messages = list(inputs)
+    messages = list(islice(inputs, max(0, max_turns + 1)))
     if len(messages) > max_turns:
         raise ComposableAgentsError(
-            f"session did not park within {max_turns} turns"
+            f"session consumed more than {max_turns} messages"
         )
-    env = InMemoryEnv(
-        {},
-        ProjectionEmitter(InMemoryProjection()),
-        inbound={session.in_channel: messages},
-    )
+    if env is None:
+        env = InMemoryEnv(
+            {},
+            ProjectionEmitter(InMemoryProjection()),
+            inbound={session.in_channel: messages},
+        )
     result = await interpret(session.body, session.init, env)
     return result.value, env.emitted(session.out_channel)

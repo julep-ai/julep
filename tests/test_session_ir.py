@@ -155,7 +155,7 @@ def test_drive_session_runs_real_body_through_interpret(monkeypatch: pytest.Monk
 def test_drive_session_raises_when_max_turns_exceeded() -> None:
     session = scan(seq(recv("in"), arr("tests.session_ir.sum_turn"), emit("out")), init=0)
 
-    with pytest.raises(ComposableAgentsError, match="did not park within 2 turns"):
+    with pytest.raises(ComposableAgentsError, match="session consumed more than 2 messages"):
         run(drive_session(session, inputs=[1, 2, 3], max_turns=2))
 
 
