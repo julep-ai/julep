@@ -20,9 +20,13 @@ authoring/compile path here works with no Temporal install — and
 from __future__ import annotations
 
 from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version as _distribution_version
 from typing import Any
 
-__version__ = "0.1.0"
+try:
+    __version__ = _distribution_version("composable-agents")
+except PackageNotFoundError:  # running from a source checkout without an install
+    __version__ = "0.0.0+unknown"
 
 # --- shape lattice + effect kinds ----------------------------------------- #
 from .kinds import (
