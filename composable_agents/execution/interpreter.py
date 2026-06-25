@@ -843,7 +843,8 @@ class InMemoryEnv:
     ) -> Any:
         if reasoner not in self._reasoners:
             raise KeyError(f"no in-memory reasoner for {reasoner!r}")
-        return self._reasoners[reasoner](value)
+        out = self._reasoners[reasoner](value)
+        return await out if inspect.isawaitable(out) else out
 
     async def run_sub(
         self,

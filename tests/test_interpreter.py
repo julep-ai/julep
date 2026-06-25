@@ -411,3 +411,25 @@ def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
     out = run(env.run_agent("controller", "value", "cid"))
     assert out["output"] == "ok"
     assert env.call_counts_snapshot() == {"srv/inc": 2, "srv/other": 3}
+
+
+def test_inmemory_env_awaits_async_reasoner():
+    """Regression: ``InMemoryEnv.invoke_reasoner`` must await an *async* reasoner.
+
+    The local session backend wraps a real provider call as an async reasoner
+    callable. Before the fix, the un-awaited coroutine leaked out of
+    ``invoke_reasoner`` and the interpreter raised
+    ``Object of type coroutine is not JSON serializable`` (surfaced by the live
+    ``examples/session_demo.py local`` run). This mirrors ``run_agent``'s
+    existing ``await out if inspect.isawaitable(out)`` handling. Sync reasoners
+    must keep working too.
+    """
+
+    async def areason(value):
+        return {"reply": f"async:{value}"}
+
+    fr, env, _ = _env_and_store(think("r"), reasoners={"r": areason})
+    assert run(interpret(fr.flow, "doc", env)).value == {"reply": "async:doc"}
+
+    fr2, env2, _ = _env_and_store(think("r"), reasoners={"r": lambda v: {"reply": f"sync:{v}"}})
+    assert run(interpret(fr2.flow, "doc", env2)).value == {"reply": "sync:doc"}
