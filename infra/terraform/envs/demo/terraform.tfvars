@@ -1,7 +1,7 @@
 # Team principals allowed to assume the temporal-team role (Temporal UI + cluster-admin).
-# "All IAM users" in account 569360421603 (only `hamada` exists today).
+# Replace with your AWS account ID and the IAM users on your team.
 team_principal_arns = [
-  "arn:aws:iam::569360421603:user/hamada",
+  "arn:aws:iam::123456789012:user/your-iam-user",
 ]
 
 # RDS auto-upgraded its minor version; pin to the live version so apply doesn't

@@ -168,7 +168,7 @@ unregenerated/byte-identical):
 
 **Live EKS zero-docker acceptance run — DONE (2026-06-20).** Ran on the live EKS cluster
 `julep-v2-temporal-demo` (us-east-1), KEDA + in-cluster Temporal (RDS). The grade-scores flow was
-published as a signed bundle to an S3 CAS (`s3://julep-v2-cad-cas-569360421603/cad`) and run by the
+published as a signed bundle to an S3 CAS (`s3://julep-v2-cad-cas-<account-id>/cad`) and run by the
 **generic** worker image (`…worker:cad-wasm-v2`, `composable_agents[temporal,store,wasm]`, built
 once — no per-flow image): the three `cad.demo.*` pures arrived only as the S3 bundle and executed
 in the wasm sandbox on the pod. KEDA scaled the worker **0 → 1 → 0** on queue backlog; result
