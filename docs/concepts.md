@@ -162,6 +162,28 @@ rejected. Plan extraction is the offline complement: an observed agent trace can
 be generalized, checked, and promoted to a replayable plan; the agent discovers
 a procedure, and the plan freezes it into ordinary IR.
 
+## Sessions
+
+A flow is a one-shot arrow (one input → one value). A **session** is its
+long-lived dual: you open it once, keep sending messages, and stream events
+back while it threads a typed **carrier** (e.g. conversation history) across
+turns. A session is an `Op.LOOP` — the unbounded, `recv`-guarded sibling of
+`iter_up_to`, sitting at `Agent` on the shape lattice — whose body is an
+ordinary turn flow. The interpreter is unchanged: a turn folds to a value the
+same way a flow does (cata), and a thin driver unfolds the message stream around
+it (ana). `recv`/`emit` are reserved channel leaves; the recv-guard rule keeps
+the loop productive (every turn must consume input).
+
+The same control plane, capability/budget guards, and projection apply.
+`agent.open(session=…, backend=…)` returns a `SessionHandle`
+(`send`/`events`/`state`/`close`) over three backends: **local** (in-memory),
+**Temporal** (durable `SessionWorkflow`; the carrier persists via `SessionStore`
+across `continue_as_new`, `send` is a Temporal Update), and **CMA** (one
+managed-agent session per turn). `events()` yields a normalized `SessionEvent`
+(`Emit`/`Turn`/`Error`/`Closed`) and ends only on `Closed`. Full reference:
+[sessions.md](sessions.md); design rationale in
+[the session design spec](superpowers/specs/2026-06-23-upgradeable-sessions-design.md).
+
 ## Typed authoring surface
 
 The `composable_agents.typed` layer is a typed authoring surface over the same

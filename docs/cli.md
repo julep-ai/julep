@@ -58,6 +58,9 @@ A `local` environment always exists implicitly (LocalDirCAS at `.ca/cas`, no Tem
 | `ca doctor` | Preflight: discovery, git, Langfuse, Temporal. |
 | `ca deploy [SEL] --env <name>` | Freeze → publish bundle to the env CAS → record in the deploy ledger. |
 | `ca status [SEL] --env <name>` | Show what's deployed where + drift (exit 3 on drift). |
+| `ca chat <agent>` | Open a **local session** REPL: type a line, stream `Turn`/`Emit` events back, exit on `Closed`. |
+| `ca trigger <agent> <event> [--channel]` | Send one event into a session and render the resulting emits. |
+| `ca listen <agent> --forward-to URL` | Open a session and forward each emitted event to `URL` (HTTP POST). |
 
 Every `[SEL]` accepts the selection grammar below.
 
@@ -135,7 +138,20 @@ The ledger lives in git (`.ca/deploys/` is tracked); `.ca/runs/` and `.ca/cas/` 
 
 > **Status:** `--env local` (deploy/status/run) is local-only and needs no extra services. `run --env <cloud>` (Temporal) and S3 publishing require the `temporal` / `store` extras and live infrastructure.
 
+## Sessions — chat / trigger / listen
+
+These verbs open a **session** (a long-lived, keep-messaging agent) on the local backend over a selected agent:
+
+```bash
+ca chat support-agent                       # REPL: each line is a message; Turn/Emit events stream back
+ca trigger support-agent '{"text": "hi"}'   # one-shot: send one event, render the reply, close
+ca listen support-agent --forward-to https://example.com/hook   # forward emitted events to a URL
+```
+
+`ca chat`/`ca listen` read stdin off the event loop so events stream concurrently; `ca trigger --channel` validates the channel against the session's input channel up front. Full session model (authoring, the `SessionEvent` stream, and the Temporal/CMA backends): **[docs/sessions.md](sessions.md)**.
+
 ## See also
 
+- [Sessions](sessions.md) — long-lived agents the `chat`/`trigger`/`listen` verbs drive.
 - [Cheat-sheet](cheatsheet.md) — the authoring surfaces `ca` operates on.
 - [Deploy to Temporal](deploy-temporal.md) / [Kubernetes](deploy-kubernetes.md) — the worker that executes deployed flows.

@@ -166,3 +166,8 @@ To promote a `@flow` definition to a named, split-deployable unit, lift it with
 `as_flow(...)` first: `as_flow(my_flow).named("my-flow")` mints a durable ref,
 and `.as_sub(queue=...)` marks it for per-component split deployment — the same
 machinery the typed facade uses.
+
+For a **long-lived, keep-messaging** agent (open once, send many messages, stream
+events, thread state across turns), author a **session** with `scan`/`loop`/`@session`
+and open it via `agent.open(...)`. Sessions reuse this same authoring surface for
+each turn. See [Sessions](sessions.md).

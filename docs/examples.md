@@ -118,6 +118,25 @@ Set `ANTHROPIC_API_KEY` first, then run
 
 Without `ANTHROPIC_API_KEY` the example is a clean no-op (it prints how to run). The hosted model picks the tools (`get_weather`, then `to_fahrenheit`); the framework dispatches each call locally, enforces deny-by-default grants and the budget, and records the same `cost`/`trace` as `.run()`. Note that `spent` is in the framework's abstract cost units, not dollars. This example talks to a beta API (`managed-agents-2026-04-01`) and is experimental.
 
+## `examples/session_demo.py`
+
+What it teaches: a long-lived, **stateful** session driven live across all three backends, proving the carrier threads state across turns (plant a codeword on turn 1, recall it on turn 2).
+
+Rung: the session surface (the long-lived counterpart of a flow).
+
+Key APIs: `scan`/`loop`/`@session`, `recv`/`emit`, `agent.open(session=..., backend="local"|"temporal"|"cma")`, `SessionHandle` (`send`/`events`/`state`/`close`), `SessionEvent`.
+
+Run (keys are not shell-exported, so source `.env` first):
+
+```bash
+set -a; source .env; set +a
+uv run --extra dev --extra providers python examples/session_demo.py local
+uv run --extra dev --extra providers python examples/session_demo.py temporal
+uv run --extra dev --extra providers --extra cma python examples/session_demo.py cma
+```
+
+This one talks to a live service (real `anthropic:claude-haiku-4-5`). `local` and `temporal` thread the carrier natively (recall holds); `cma` opens a fresh hosted session per turn and has no framework carrier, so the driver resends the transcript. Full model: [Sessions](sessions.md).
+
 ## `examples/elnino/swarm.py`
 
 What it teaches: capstone composition across the largest part of the public surface.

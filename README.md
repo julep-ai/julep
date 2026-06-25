@@ -97,6 +97,22 @@ Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/
 
 ---
 
+## Sessions — long-lived, keep-messaging agents
+
+A flow is a one-shot arrow. A **session** is its long-lived counterpart: open it once, keep sending messages, and stream events back while it threads a typed **carrier** (e.g. conversation history) across turns — on the **same** frozen-IR control plane (same interpreter, same capability/budget guards, same projection).
+
+```python
+handle = await agent.open(session=chat, backend="temporal")   # or "local" / "cma"
+await handle.send(user_msg)
+async for ev in handle.events():        # Emit / Turn / Error / Closed (ends on Closed)
+    render(ev)
+await handle.close()
+```
+
+Author with `scan(step, init)` (explicit `(carrier, msg) → (carrier', output)` turn), `loop(...)`, or the `@session` coroutine sugar — all compile to one `Op.LOOP` (the unbounded, `recv`-guarded sibling of `iter_up_to`). Three backends: **local** (in-memory), **Temporal** (durable `SessionWorkflow`; the carrier survives `continue_as_new`), **CMA** (one Anthropic managed-agent session per turn). Drive from the terminal with `ca chat` / `ca trigger` / `ca listen`. Full guide: **[docs/sessions.md](docs/sessions.md)**.
+
+---
+
 ## Why it's different
 
 - **Deny-by-default capabilities.** A hallucinated or ungranted tool call is denied instead of being routed somewhere surprising.
@@ -137,6 +153,7 @@ Key guides:
 - [Getting started](docs/getting-started.md)
 - [Authoring guide](docs/AUTHORING.md)
 - [Concepts](docs/concepts.md)
+- [Sessions](docs/sessions.md) — long-lived, keep-messaging agents on local / Temporal / CMA
 - [Dispatch boundary](docs/dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer
 - [Capabilities and safety](docs/capabilities-and-safety.md)
 - [Deploy to Temporal](docs/deploy-temporal.md)
@@ -250,6 +267,7 @@ The execution layer is the only part that imports `temporalio`, and it does so b
 
 - **`FlowWorkflow`** walks the frozen IR. The same deterministic interpreter (`composable_agents.execution.interpreter.interpret`) runs here and in tests; only the injected `Env` differs (Temporal activities vs. in-memory callables). It verifies deploy-pinned pure source hashes via `verifyPures` at workflow start, before running the interpreter. Per-tool retry policy is derived from each frozen contract — reads/idempotent tools retry liberally; non-idempotent writes retry cautiously behind an `Idempotency-Key` the `callTool` activity sends. Policy-decision errors (`CapabilityDenied`, `PlanRejected`, `ValidationError`, `FreezeError`, `PureDriftError`) are non-retryable.
 - **`AgentWorkflow`** is the `app` loop. It is bounded by construction: each round the controller returns one of a closed action set — *finish*, *escalate*, call one **granted** tool, or invoke one registered **sub-flow** — and a **budget guard** stops the run before any action that would exceed the capability budget. History growth is bounded by **continue-as-new** (a configurable seam). It is a separate workflow precisely so its continue-as-new truncates only the agent's history, not the parent flow's.
+- **`SessionWorkflow`** is the durable **session** loop (`Op.LOOP`): it `recv`s messages (a Temporal **Update** that acks or rejects `ChannelFull`), runs the turn flow, drains a normalized event log to `events()`, and persists the typed carrier via `SessionStore` (cursor = segment) so state survives **continue-as-new**. `agent.open(backend="temporal")` deploys it through the same `target="session"` capability/budget guards as a flow. See [docs/sessions.md](docs/sessions.md).
 - **`Sub`** is a child `FlowWorkflow` resolved by `ref`; the firewall is structural (the surface shape is already opaque), so a child's value crosses while its shape does not. Child flows verify their own pure pins when the subflow registry entry supplies `pureSourceHashes`/`pinnedPures`; pins are not inherited from the parent.
 - **Human gates** are a `submitHuman` signal plus a durable `wait_condition`. Two queries support a review UI: `projection` (the full pomset snapshot — events, `costByShape`, `pending`) and **`openGates`** (the precise activation ids currently parked on a gate — exactly what to signal, excluding structural `seq`/`par` activations).
 
@@ -388,13 +406,16 @@ composable_agents/
   resilience.py     provider fallback policy, error taxonomy, circuit breaker
   dotctx.py         §3.2 Reasoner definitions and lowering to Think nodes
   agent_loop.py     P4 agent loop logic + plan extraction (pure)
-  agent.py          Agent facade + @tool decorator for Python-callable tools
+  agent.py          Agent facade + @tool decorator + Agent.open (sessions)
+  session.py        sessions: scan/loop/@session, recv/emit, SessionHandle (local), SessionEvent
   deploy.py         the compile pipeline + Deployment artifact
   errors.py         the error taxonomy
   execution/
     interpreter.py  the deterministic IR interpreter + InMemoryEnv (pure)
-    harness.py      FlowWorkflow, AgentWorkflow, Temporal Env, client helpers
+    harness.py      FlowWorkflow, AgentWorkflow, SessionWorkflow, Temporal Env, client helpers
     activities.py   callTool / invokeReasoner / compilePlan / resolve* activities
+    session_store.py durable session carrier store (cursor-CAS, claim-check codec, blobs)
+    cma_session.py  CMA per-turn SessionHandle backend
     worker.py       Client + Worker wiring
     serve.py        container worker entrypoint (env config, SIGTERM drain, probes)
     debounce.py     dispatch-layer batch collator (Temporal signal-with-start)

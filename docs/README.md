@@ -19,6 +19,7 @@ New here? Read the repository [README](../README.md), then
 ## Understand it
 
 - [Concepts](concepts.md) — the core model: typed flows, frozen IR, shape analysis, capabilities, and projection.
+- [Sessions](sessions.md) — long-lived, keep-messaging agents with a streaming event surface, on local / Temporal / CMA (`scan`/`loop`/`@session`, `agent.open`, `SessionHandle`).
 - [Capabilities and safety](capabilities-and-safety.md) — deny-by-default grants, approval gates, race admission, and bounded authority.
 - [Dispatch boundary](dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer.
 - [Provider resilience](provider-resilience.md) — deterministic model fallback chains, error taxonomy, and per-provider circuit breakers at the `LlmCaller` seam.

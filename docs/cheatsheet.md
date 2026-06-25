@@ -109,6 +109,13 @@ access (`result.status` **or** `result["status"]`):
   `reasoner="openai:gpt-4o"` / `"gemini:gemini-2.5-flash"` / etc.
 - Durable: `agent.deploy(client, session_id=..., input=...)`.
 
+## Sessions (long-lived, keep-messaging)
+
+- Author a turn loop: `scan(step, init)` (step `(carrier, msg) -> (carrier', output)`), `loop(body, ...)`, or `@session` straight-line sugar. `recv`/`emit` are the channel leaves.
+- Open + drive: `handle = await agent.open(session=chat, backend="local"|"temporal"|"cma")`; then `await handle.send(msg)`, `async for ev in handle.events()` (`Emit`/`Turn`/`Error`/`Closed`), `await handle.state()`, `await handle.close()`.
+- CLI: `ca chat <agent>` / `ca trigger <agent> <event>` / `ca listen <agent> --forward-to URL`.
+- Full guide: [docs/sessions.md](sessions.md).
+
 ## Combinator kernel (drop-down)
 
 What `@flow` compiles to; reach for it for exact structure or a new frontend.
