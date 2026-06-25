@@ -297,6 +297,8 @@ The one capability not pre-built for free is **interruption/barge-in** — turn-
 
 **Deferred (reactive / north-star):** `Event`/`Cmd` widening, `select`/`try_recv`, cancellation implementation, session↔session channels.
 
+**Live verification (2026-06-24, real `anthropic:claude-haiku-4-5` via `examples/session_demo.py`).** All backends ran live: **local** ✅ and **local-Temporal** ✅ thread the carrier (stateful recall confirmed); the **remote EKS Temporal cluster** ✅ ran a worker (built from the working tree, ns `julep-demo`, real frontend via `kubectl port-forward`) to a `Completed` execution with recall, then cleaned up. **CMA** ✅ reached the managed-agents beta (HTTP 200) and streamed turns, but does **not** thread a framework carrier (fresh hosted session per turn; the driver resends the transcript) — `carrier=None` is expected for CMA. Two findings, both fixed/recorded: (1) `InMemoryEnv.invoke_reasoner` didn't `await` async reasoners → broke the local real-provider path; fixed to match `run_agent` (commit `91433f3`, regression test added). (2) **Operational rule:** session pures are content-addressed over `inspect.getsource`, so a remote worker must register pures from the *exact same source file* the deploy pins from — else `PureDriftError`; bake the session source into the worker image.
+
 ## 13. Non-goals
 
 - No new execution backend or durability layer — sessions reuse Temporal/DBOS/CMA and the existing projection plane.
