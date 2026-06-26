@@ -1,0 +1,15 @@
+{
+  "title": "Internals (Theory)",
+  "pages": [
+    "index",
+    "specification",
+    "typed-flow-calculus",
+    "durable-session-store",
+    "agent-loop-as-turn",
+    "agent-transcripts",
+    "cma-runtime",
+    "prompt-fragments",
+    "dotctx-format",
+    "run-principal"
+  ]
+}

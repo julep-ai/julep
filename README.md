@@ -73,7 +73,7 @@ print(result.value)
 pip install composable-agents            # authoring + compile only (PyYAML)
 pip install 'composable-agents[temporal]' # + durable execution on Temporal
 pip install 'composable-agents[temporal,http,otel]'  # + native HTTP tools + OTel export
-pip install 'composable-agents[cli]'      # + the `ca` developer CLI (see docs/cli.md)
+pip install 'composable-agents[cli]'      # + the `ca` developer CLI (see docs-site/content/docs/guides/using-the-cli.md)
 ```
 
 `composable_agents.HAVE_TEMPORAL` reports whether the runtime is available; the package imports and compiles flows either way.
@@ -93,7 +93,7 @@ ca deploy triage --env staging         # freeze → publish → record in the de
 ca status --env staging                # what's deployed where + drift (exit 3 on drift)
 ```
 
-Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs/cli.md](docs/cli.md)**.
+Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs-site/content/docs/guides/using-the-cli.md](docs-site/content/docs/guides/using-the-cli.md)**.
 
 ---
 
@@ -109,7 +109,7 @@ async for ev in handle.events():        # Emit / Turn / Error / Closed (ends on 
 await handle.close()
 ```
 
-Author with `scan(step, init)` (explicit `(carrier, msg) → (carrier', output)` turn), `loop(...)`, or the `@session` coroutine sugar — all compile to one `Op.LOOP` (the unbounded, `recv`-guarded sibling of `iter_up_to`). Three backends: **local** (in-memory), **Temporal** (durable `SessionWorkflow`; the carrier survives `continue_as_new`), **CMA** (one Anthropic managed-agent session per turn). Drive from the terminal with `ca chat` / `ca trigger` / `ca listen`. Full guide: **[docs/sessions.md](docs/sessions.md)**.
+Author with `scan(step, init)` (explicit `(carrier, msg) → (carrier', output)` turn), `loop(...)`, or the `@session` coroutine sugar — all compile to one `Op.LOOP` (the unbounded, `recv`-guarded sibling of `iter_up_to`). Three backends: **local** (in-memory), **Temporal** (durable `SessionWorkflow`; the carrier survives `continue_as_new`), **CMA** (one Anthropic managed-agent session per turn). Drive from the terminal with `ca chat` / `ca trigger` / `ca listen`. Full guide: **[docs-site/content/docs/guides/sessions.md](docs-site/content/docs/guides/sessions.md)**.
 
 ---
 
@@ -146,20 +146,20 @@ For iteration, use dev mode: `deploy(..., mode="dev")` or `Agent(..., mode="dev"
 
 ## Documentation
 
-The documentation index is [docs/README.md](docs/README.md). Newcomers should start with the quickstart above, then read [docs/AUTHORING.md](docs/AUTHORING.md) and [docs/concepts.md](docs/concepts.md).
+The documentation index is [docs-site/content/docs/index.mdx](docs-site/content/docs/index.mdx). Newcomers should start with the quickstart above, then read [docs-site/content/docs/guides/authoring-flows.md](docs-site/content/docs/guides/authoring-flows.md) and [docs-site/content/docs/concepts/model.md](docs-site/content/docs/concepts/model.md).
 
 Key guides:
 
-- [Getting started](docs/getting-started.md)
-- [Authoring guide](docs/AUTHORING.md)
-- [Concepts](docs/concepts.md)
-- [Sessions](docs/sessions.md) — long-lived, keep-messaging agents on local / Temporal / CMA
-- [Dispatch boundary](docs/dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer
-- [Capabilities and safety](docs/capabilities-and-safety.md)
-- [Deploy to Temporal](docs/deploy-temporal.md)
-- [Deploy on DBOS](docs/deploy-dbos.md) — durable flows and agent loops on Postgres via dbos-transact
-- [Examples](docs/examples.md)
-- [Specification](docs/SPEC.md) — the normative contract.
+- [Getting started](docs-site/content/docs/start/first-agent.md)
+- [Authoring guide](docs-site/content/docs/guides/authoring-flows.md)
+- [Concepts](docs-site/content/docs/concepts/model.md)
+- [Sessions](docs-site/content/docs/guides/sessions.md) — long-lived, keep-messaging agents on local / Temporal / CMA
+- [Dispatch boundary](docs-site/content/docs/concepts/dispatch-boundary.md) — what belongs in a flow vs. the dispatch layer
+- [Capabilities and safety](docs-site/content/docs/guides/capabilities-and-safety.md)
+- [Deploy to Temporal](docs-site/content/docs/deploy/temporal.md)
+- [Deploy on DBOS](docs-site/content/docs/deploy/dbos.md) — durable flows and agent loops on Postgres via dbos-transact
+- [Examples](docs-site/content/docs/guides/examples.md)
+- [Specification](docs-site/content/docs/internals/specification.md) — the normative contract.
 
 ---
 
@@ -267,7 +267,7 @@ The execution layer is the only part that imports `temporalio`, and it does so b
 
 - **`FlowWorkflow`** walks the frozen IR. The same deterministic interpreter (`composable_agents.execution.interpreter.interpret`) runs here and in tests; only the injected `Env` differs (Temporal activities vs. in-memory callables). It verifies deploy-pinned pure source hashes via `verifyPures` at workflow start, before running the interpreter. Per-tool retry policy is derived from each frozen contract — reads/idempotent tools retry liberally; non-idempotent writes retry cautiously behind an `Idempotency-Key` the `callTool` activity sends. Policy-decision errors (`CapabilityDenied`, `PlanRejected`, `ValidationError`, `FreezeError`, `PureDriftError`) are non-retryable.
 - **`AgentWorkflow`** is the `app` loop. It is bounded by construction: each round the controller returns one of a closed action set — *finish*, *escalate*, call one **granted** tool, or invoke one registered **sub-flow** — and a **budget guard** stops the run before any action that would exceed the capability budget. History growth is bounded by **continue-as-new** (a configurable seam). It is a separate workflow precisely so its continue-as-new truncates only the agent's history, not the parent flow's.
-- **`SessionWorkflow`** is the durable **session** loop (`Op.LOOP`): it `recv`s messages (a Temporal **Update** that acks or rejects `ChannelFull`), runs the turn flow, drains a normalized event log to `events()`, and persists the typed carrier via `SessionStore` (cursor = segment) so state survives **continue-as-new**. `agent.open(backend="temporal")` deploys it through the same `target="session"` capability/budget guards as a flow. See [docs/sessions.md](docs/sessions.md).
+- **`SessionWorkflow`** is the durable **session** loop (`Op.LOOP`): it `recv`s messages (a Temporal **Update** that acks or rejects `ChannelFull`), runs the turn flow, drains a normalized event log to `events()`, and persists the typed carrier via `SessionStore` (cursor = segment) so state survives **continue-as-new**. `agent.open(backend="temporal")` deploys it through the same `target="session"` capability/budget guards as a flow. See [docs-site/content/docs/guides/sessions.md](docs-site/content/docs/guides/sessions.md).
 - **`Sub`** is a child `FlowWorkflow` resolved by `ref`; the firewall is structural (the surface shape is already opaque), so a child's value crosses while its shape does not. Child flows verify their own pure pins when the subflow registry entry supplies `pureSourceHashes`/`pinnedPures`; pins are not inherited from the parent.
 - **Human gates** are a `submitHuman` signal plus a durable `wait_condition`. Two queries support a review UI: `projection` (the full pomset snapshot — events, `costByShape`, `pending`) and **`openGates`** (the precise activation ids currently parked on a gate — exactly what to signal, excluding structural `seq`/`par` activations).
 

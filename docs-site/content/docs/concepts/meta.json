@@ -1,0 +1,9 @@
+{
+  "title": "Concepts",
+  "pages": [
+    "index",
+    "model",
+    "architecture",
+    "dispatch-boundary"
+  ]
+}

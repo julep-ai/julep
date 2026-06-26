@@ -1,6 +1,6 @@
 # sandbox-k8s — k3s + KEDA in a Claude Code sandbox VM
 
-Run the [deploy-kubernetes.md](../../docs/deploy-kubernetes.md) stack — k3s,
+Run the [deploy-kubernetes.md](../../docs-site/content/docs/deploy/kubernetes.md) stack — k3s,
 KEDA's `temporal` scaler, a Temporal dev server, and the `composable-agents
 worker` container — inside a Claude Code sandbox VM, for live testing of the
 autoscaling path. Verified 2026-06: a 12-workflow burst scales the worker

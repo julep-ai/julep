@@ -1,0 +1,13 @@
+{
+  "title": "Composable Agents",
+  "pages": [
+    "index",
+    "start",
+    "guides",
+    "deploy",
+    "reference",
+    "concepts",
+    "internals",
+    "development"
+  ]
+}

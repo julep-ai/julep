@@ -1,8 +1,11 @@
-# Contributing
+---
+title: "Contributing"
+description: "Development setup, CI checks, golden corpus rules, and pull request expectations."
+---
 
 ## Project layout
 
-`composable-agents` is a Python package for authoring typed, durable, capability-bounded agent flows that compile to a frozen JSON IR. Use the [README module map](README.md#module-map) for the package layout and [docs-site/content/docs/concepts/model.md](docs-site/content/docs/concepts/model.md) for the conceptual model.
+`composable-agents` is a Python package for authoring typed, durable, capability-bounded agent flows that compile to a frozen JSON IR. Use the [README module map](/docs#module-map) for the package layout and [Concepts](/docs/concepts/model) for the conceptual model.
 
 ## Dev setup
 
@@ -60,7 +63,7 @@ Review the resulting `tests/golden/golden_hashes.json` diff as part of the forma
 
 ## Testing norm
 
-The [specification](docs-site/content/docs/internals/specification.md) defines conformance in terms of tested invariants: an item is conformant only when its invariant holds in code with a test. A change is done when the behavior is implemented and the relevant tests have been added or adjusted with it.
+The [specification](/docs/internals/specification) defines conformance in terms of tested invariants: an item is conformant only when its invariant holds in code with a test. A change is done when the behavior is implemented and the relevant tests have been added or adjusted with it.
 
 ## Style
 
@@ -69,3 +72,5 @@ The [specification](docs-site/content/docs/internals/specification.md) defines c
 ## Pull requests
 
 Keep pull requests focused. Ensure all CI gates are green. Describe what changed, why it changed, and any intentional golden corpus movement.
+
+<!-- ported-by ca-docs-site: development/contributing -->

@@ -121,7 +121,7 @@ section of `docs/plans/2026-06-11-code-as-data-distribution.md`.
 - **P5-4 minor — runbook overclaims tier uniformity.** `docs/ops/wasm-tier-runbook.md` says
   the tier decision "applies uniformly" across all three backends; native tier is not
   supported on the Temporal harness (see P5-3). Correct the doc.
-- **P5-5 minor — AUTHORING native tier caveat.** `docs/AUTHORING.md` presents the native tier
+- **P5-5 minor — AUTHORING native tier caveat.** `docs-site/content/docs/guides/authoring-flows.md` presents the native tier
   as generally supported without the Temporal-harness limitation; add the caveat.
 - **P5-6 nit — `GCResult.deleted` redundant** (recomputable from `collectable`).
 - **P5-7 nit — `_delete_local_object` shard-dir rmdir** best-effort can race shard recreation.

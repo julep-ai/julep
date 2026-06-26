@@ -1,0 +1,11 @@
+{
+  "title": "Deploy & Scale",
+  "pages": [
+    "index",
+    "temporal",
+    "kubernetes",
+    "dbos",
+    "operations",
+    "wasm-tier"
+  ]
+}

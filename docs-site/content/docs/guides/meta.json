@@ -1,0 +1,13 @@
+{
+  "title": "Guides",
+  "pages": [
+    "index",
+    "authoring-flows",
+    "sessions",
+    "capabilities-and-safety",
+    "providers-and-resilience",
+    "using-the-cli",
+    "gotchas",
+    "examples"
+  ]
+}
