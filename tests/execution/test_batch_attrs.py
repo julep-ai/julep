@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("temporalio")
+
 from composable_agents.execution.reasoner_batch import batch_reply_attrs  # helper added in Step 3
 from composable_agents.execution.batch_provider import BatchReply
 

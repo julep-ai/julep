@@ -6,6 +6,8 @@ from enum import Enum
 
 import pytest
 
+pytest.importorskip("temporalio")
+
 from composable_agents.dotctx import Reasoner
 from composable_agents.execution import reasoner_batch, effects
 from composable_agents.execution.reasoner_batch import (

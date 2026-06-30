@@ -10,6 +10,7 @@ import pytest
 from composable_agents import (
     Agent,
     CapabilityManifest,
+    HAVE_TEMPORAL,
     SessionEvent,
     arr,
     call,
@@ -319,6 +320,7 @@ def test_agent_open_local_enforces_session_body_capabilities() -> None:
     run(main())
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_agent_open_temporal_rejects_tokens_and_wall_budget() -> None:
     async def main() -> None:
         agent = Agent("test-model", llm=None)

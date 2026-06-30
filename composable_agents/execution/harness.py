@@ -1789,16 +1789,17 @@ class SessionWorkflow:
                 try:
                     result: Result = await interpret(flow.body, carrier, env)
                 except RecvTimeout as exc:
-                    self._open_receives[exc.channel] = (
-                        self._seq_cursors.get(self._consumed_seq_key(exc.channel), 0)
+                    channel = exc.channel
+                    self._open_receives[channel] = (
+                        self._seq_cursors.get(self._consumed_seq_key(channel), 0)
                         + 1
                     )
                     try:
                         await workflow.wait_condition(
-                            lambda: bool(self._pending.get(exc.channel)) or self._closed
+                            lambda channel=channel: bool(self._pending.get(channel)) or self._closed
                         )
                     finally:
-                        self._open_receives.pop(exc.channel, None)
+                        self._open_receives.pop(channel, None)
                     continue
                 except SessionClosed:
                     break

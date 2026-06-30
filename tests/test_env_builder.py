@@ -82,6 +82,10 @@ def test_build_env_component_rejects_unpinned_requirement_before_network() -> No
     assert "exact-version pins" in message
 
 
+@pytest.mark.skipif(
+    not (env_builder._WASM_ROOT / "wit_world").is_dir(),
+    reason="requires generated _wasm/wit_world bindings (produced by the wasm build)",
+)
 def test_build_env_component_accepts_exact_pin_guard(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -26,8 +26,8 @@ from .kinds import EnforcementMode, Op
 from .execution.interpreter import InMemoryEnv, SessionClosed, interpret
 from .projection import InMemoryProjection, ProjectionEmitter
 
-I = TypeVar("I")
-O = TypeVar("O")
+InT = TypeVar("InT")
+OutT = TypeVar("OutT")
 T = TypeVar("T")
 
 
@@ -72,7 +72,7 @@ class Channel(Generic[T]):
 
 
 @dataclass
-class Session(Generic[I, O]):
+class Session(Generic[InT, OutT]):
     """A typed handle for a LOOP body and its local carrier state."""
 
     body: Node
@@ -821,12 +821,12 @@ def _raise_on_blocking_session_diagnostics(loop_node: Node) -> None:
 
 
 async def drive_session(
-    session: Session[I, O],
+    session: Session[InT, OutT],
     *,
-    inputs: Iterable[I],
+    inputs: Iterable[InT],
     max_turns: int = 1000,
     env: Optional[InMemoryEnv] = None,
-) -> tuple[object, list[O]]:
+) -> tuple[object, list[OutT]]:
     """Run a session LOOP over in-memory channel input and collect emissions."""
     messages = list(islice(inputs, max(0, max_turns + 1)))
     if len(messages) > max_turns:
