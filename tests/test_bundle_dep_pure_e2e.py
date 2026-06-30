@@ -10,6 +10,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+pytest.importorskip("cryptography")
+pytest.importorskip("wasmtime")
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 

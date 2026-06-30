@@ -31,9 +31,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install base package
+      - name: Install package without Temporal
         if: matrix.temporal == 'off'
-        run: python -m pip install -e . pytest
+        run: python -m pip install -e '.[test-no-temporal]'
       - name: Assert Temporal is absent
         if: matrix.temporal == 'off'
         run: python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is False"

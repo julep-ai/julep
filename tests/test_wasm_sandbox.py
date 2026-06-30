@@ -22,6 +22,8 @@ import json
 
 import pytest
 
+pytest.importorskip("wasmtime")
+
 from composable_agents.errors import ComposableAgentsError, PureExecutionError
 from composable_agents.execution.wasm_executor import WasmExecutor
 

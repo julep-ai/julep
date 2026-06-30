@@ -18,7 +18,6 @@ from composable_agents.ca.session_local import (
     open_local_session,
     parse_json_or_raw,
 )
-from composable_agents.session import SessionEvent
 
 Poster = Callable[[str, dict[str, Any]], int]
 

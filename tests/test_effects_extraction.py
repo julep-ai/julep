@@ -84,6 +84,7 @@ def _restore_ctx(prev):
     _effects._CTX = prev
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_resolve_qos_activity_clamps_non_batchable_batch_request():
     from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import (
@@ -105,6 +106,7 @@ def test_resolve_qos_activity_clamps_non_batchable_batch_request():
         _restore_ctx(prev)
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_resolve_qos_activity_allows_batch_for_batchable_node():
     from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import (
@@ -126,6 +128,7 @@ def test_resolve_qos_activity_allows_batch_for_batchable_node():
         _restore_ctx(prev)
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_resolve_qos_activity_honors_worker_context_resolver_override():
     from composable_agents.dotctx import Reasoner
     from composable_agents.execution.effects import (

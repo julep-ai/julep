@@ -66,15 +66,14 @@ wasm = ["wasmtime>=45,<46"]
 # (the `ca` script always needs it); this extra is kept as a no-op alias for
 # backward compatibility with `pip install composable-agents[cli]`.
 cli = ["typer>=0.12"]
-# Everything needed to run the full test suite (including the Temporal E2E test)
-# and to drive real providers from the examples. The unit tests inject a fake
-# acompletion and never import any-llm, so the SDK + its provider plugins live
-# here (dev) rather than in core; end users pull the slim ``providers`` extra.
-dev = [
+# Full test suite minus Temporal: the `temporal=off` CI matrix variant installs
+# this to verify the package's no-Temporal degradation path. Mirrors `dev`
+# without temporalio (cryptography is pinned explicitly so the bundle-signing
+# tests run deterministically rather than relying on a transitive dependency).
+test-no-temporal = [
     "mypy>=1.10",
     "pytest>=7",
     "ruff>=0.5",
-    "temporalio>=1.7",
     "dbos>=2.18; python_version >= '3.11'",
     "httpx>=0.24",
     "jinja2>=3.1",
@@ -84,8 +83,17 @@ dev = [
     "pydantic>=2",
     "types-PyYAML>=6.0",
     "wasmtime>=45,<46",
+    "cryptography>=42",
     "typer>=0.12",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
+]
+# Everything needed to run the full test suite (including the Temporal E2E test)
+# and to drive real providers from the examples. The unit tests inject a fake
+# acompletion and never import any-llm, so the SDK + its provider plugins live
+# here (dev) rather than in core; end users pull the slim ``providers`` extra.
+dev = [
+    "composable-agents[test-no-temporal]",
+    "temporalio>=1.7",
 ]
 
 [project.urls]

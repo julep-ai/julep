@@ -25,6 +25,11 @@ jobs:
 
       - id: pages
         uses: actions/configure-pages@v5
+        with:
+          # Create/enable the Pages site via API if it isn't already enabled, so
+          # the build doesn't hard-fail with "Get Pages site failed". Still requires
+          # the repo to allow GitHub Actions as the Pages source (Settings → Pages).
+          enablement: true
 
       - uses: actions/setup-node@v6
         with:

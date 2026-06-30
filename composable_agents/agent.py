@@ -1146,7 +1146,7 @@ class Agent(FlowLike[Any, Any]):
                     "Agent.open_session(backend='local') is unsupported because the live "
                     "handle is bound to the event loop; use `await "
                     "Agent.open(session=..., backend='local')` instead."
-                )
+                ) from None
             return asyncio.run(
                 self.open(
                     session=session,
