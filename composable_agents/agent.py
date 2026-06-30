@@ -29,7 +29,7 @@ from .agent_loop import AgentConfig, drive_agent_loop
 from .capabilities import Budget, CapabilityManifest, ToolGrant
 from .contracts import ToolContract
 from .deploy import Deployment, deploy
-from .dotctx import Reasoner, register_reasoner
+from .dotctx import Reasoner
 from .dsl import app, call, native
 from .errors import ValidationError
 from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
@@ -42,6 +42,7 @@ from .flow_registry import register_flow
 from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
 from .kinds import Effect, EnforcementMode, Idempotency
 from .projection import InMemoryProjection, ProjectionEmitter, ProjectionEvent
+from .registry import DEFAULT_REGISTRY
 from .result import Result
 from .validate import Diagnostic, blocking
 
@@ -406,7 +407,7 @@ class Agent(FlowLike[Any, Any]):
 
     def __init__(
         self,
-        reasoner: str,
+        reasoner: str | Reasoner,
         tools: Sequence[FlowLike[Any, Any] | SplitCapability] = (),
         *,
         name: Optional[str] = None,
@@ -425,6 +426,15 @@ class Agent(FlowLike[Any, Any]):
         config. An explicit ``name`` is used unchanged and must be unique per
         distinct agent config in the current process.
         """
+        if isinstance(reasoner, Reasoner):
+            DEFAULT_REGISTRY.register_reasoner(reasoner)
+            # Drive the controller from the object's *provider config*: its model is
+            # the provider model id (not its registry name), and its system seeds
+            # the controller unless an explicit instructions= overrides it.
+            if instructions is None and reasoner.system:
+                instructions = reasoner.system
+            reasoner = reasoner.model
+
         caps = tuple(tools)
         tool_caps: list[Tool[Any, Any]] = []
         flow_cap_pairs: list[tuple[str, FlowLike[Any, Any]]] = []
@@ -499,12 +509,12 @@ class Agent(FlowLike[Any, Any]):
             if isinstance(cap, Flow):
                 register_flow(ref, cap)
 
-        register_reasoner(
+        DEFAULT_REGISTRY.register_reasoner(
             Reasoner(
                 name=resolved_name,
                 model=reasoner,
                 system=system,
-                reply_schema=AGENT_REPLY_SCHEMA,
+                reply=AGENT_REPLY_SCHEMA,
                 tools=tool_names,
                 is_agent=True,
             )
@@ -602,7 +612,7 @@ class Agent(FlowLike[Any, Any]):
     def replace(
         self,
         *,
-        reasoner: Optional[str] = None,
+        reasoner: Optional[str | Reasoner] = None,
         budget_cost: Any = _KEEP,
         max_rounds: Optional[int] = None,
         instructions: Any = _KEEP,
@@ -611,6 +621,14 @@ class Agent(FlowLike[Any, Any]):
     ) -> "Agent":
         overrides: dict[str, Any] = {}
         if reasoner is not None:
+            if isinstance(reasoner, Reasoner):
+                DEFAULT_REGISTRY.register_reasoner(reasoner)
+                # Mirror __init__: drive the controller from the object's provider
+                # model (not its registry name) and seed instructions from its
+                # system unless instructions are being explicitly overridden here.
+                if instructions is _KEEP and reasoner.system:
+                    instructions = reasoner.system
+                reasoner = reasoner.model
             overrides["reasoner"] = reasoner
         if max_rounds is not None:
             overrides["max_rounds"] = max_rounds

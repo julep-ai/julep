@@ -13,7 +13,7 @@ What it teaches: the core `@flow` loop plus CAS-guarded writes.
 
 Rung: primary authoring surface with keyless `deploy(...).dry_run(...)`.
 
-Key APIs: `@flow`, `@tool`, `@pure`, `Reasoner`, `register_reasoner`, `think`, `cond`, `each`, `deploy(tools=..., reasoners=...)`, `Deployment.dry_run(...)`.
+Key APIs: `@flow`, `@tool`, `@pure`, `Reasoner`, `think`, `cond`, `each`, `deploy(tools=..., reasoners=...)`, `Deployment.dry_run(...)`.
 
 Run:
 
@@ -146,7 +146,7 @@ What it teaches: capstone composition across the largest part of the public surf
 
 Rung: read-last reference for typed, durable, capability-bounded dataflows.
 
-Key APIs: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `call`, `think`, `mcp`, `native`, `hedge`, `quorum`, `human_gate`, `pure`, `Reasoner`, `register_reasoner`, `Budget`, `CapabilityManifest`, `McpSnapshot`, `McpServerSnapshot`, `McpToolSpec`, `NativeToolSpec`, `ToolContract`, `deploy`, `start_flow`.
+Key APIs: `seq`, `par`, `alt`, `iter_up_to`, `stage`, `app`, `sub`, `call`, `think`, `mcp`, `native`, `hedge`, `quorum`, `human_gate`, `pure`, `Reasoner`, `Budget`, `CapabilityManifest`, `McpSnapshot`, `McpServerSnapshot`, `McpToolSpec`, `NativeToolSpec`, `ToolContract`, `deploy`, `start_flow`.
 
 Run:
 

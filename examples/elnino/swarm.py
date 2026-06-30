@@ -81,12 +81,12 @@ from composable_agents import (
     par,
     pure,
     quorum,
-    register_reasoner,
     seq,
     stage,
     sub,
     think,
 )
+from composable_agents.registry import DEFAULT_REGISTRY
 
 
 ZONE_FANOUT = 12
@@ -238,59 +238,59 @@ ZONE_SELECTORS = tuple(f"zone_at_{i:02d}.v1" for i in range(ZONE_FANOUT))
 #    Three interpreters on three different models so a single model's blind spot
 #    cannot dominate the quorum (resilience pillar 5).
 # --------------------------------------------------------------------------- #
-register_reasoner(Reasoner(
+DEFAULT_REGISTRY.register_reasoner(Reasoner(
     name="forecast_interp_gfs",
     model="claude-opus-4-8",
     system="You read GFS-family ensemble output and classify the seasonal regime "
            "(drought|flood|heat_stress|neutral) for one zone. Be calibrated; "
            "report rain anomaly in mm and your confidence.",
-    reply_schema={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
+    reply={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
     tools=["weather/ensemble_gfs"],
 ))
-register_reasoner(Reasoner(
+DEFAULT_REGISTRY.register_reasoner(Reasoner(
     name="forecast_interp_ecmwf",
     model="claude-sonnet-4-6",          # different model — diversity, not monoculture
     system="Same task as the GFS interpreter, but over ECMWF-family output.",
-    reply_schema={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
+    reply={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
     tools=["weather/ensemble_ecmwf"],
 ))
-register_reasoner(Reasoner(
+DEFAULT_REGISTRY.register_reasoner(Reasoner(
     name="forecast_interp_regional",
     model="claude-haiku-4-5-20251001",  # third, cheaper, regionally-tuned source
     system="Same task, over the downscaled regional model for this basin.",
-    reply_schema={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
+    reply={"regime": "str", "rain_anomaly_mm": "number", "confidence": "number"},
     tools=["weather/regional_downscaled"],
 ))
 
-register_reasoner(Reasoner(
+DEFAULT_REGISTRY.register_reasoner(Reasoner(
     name="forecast_synthesizer",
     model="claude-opus-4-8",
     system="Given the consensus forecast and the basin's zone registry, produce "
            "a per-zone context vector: regime, baseline_regime, soil moisture, "
            "and the zone's crop calendar. Do not invent zones.",
-    reply_schema={"zones": "list"},
+    reply={"zones": "list"},
     tools=["soil/moisture_grid", "registry/zones"],
 ))
 
-register_reasoner(Reasoner(
+DEFAULT_REGISTRY.register_reasoner(Reasoner(
     name="zone_agent_controller",
     model="claude-opus-4-8",
     system="You are the adaptive planner for ONE high-uncertainty zone. Each turn, "
            "either CALL one granted tool, run one SUB analysis, FINISH with a "
            "ZoneDemand, or ESCALATE if the situation is outside your competence. "
            "Prefer ESCALATE over guessing on irreversible matters.",
-    reply_schema={"decision": "str", "tool": "str", "input": "any", "payload": "any"},
+    reply={"decision": "str", "tool": "str", "input": "any", "payload": "any"},
     tools=["soil/moisture_grid", "market/commodity_prices", "water/rights_registry"],
 ))
 
-register_reasoner(Reasoner(
+DEFAULT_REGISTRY.register_reasoner(Reasoner(
     name="allocation_planner",
     model="claude-opus-4-8",
     system="Given aggregate zone demand and the shared-capacity envelope, propose "
            "a PLAN that composes already-frozen tools to allocate water, storage, "
            "labour, and to stage procurement. You choose composition only; you "
            "cannot introduce tools that are not in the manifest.",
-    reply_schema={"plan": "object"},
+    reply={"plan": "object"},
     tools=[],  # the planner reasons; the staged plan's calls bind to the manifest
 ))
 

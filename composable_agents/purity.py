@@ -39,13 +39,13 @@ class Pure(FlowLike[Any, Any]):
         self.fn = fn
         update_wrapper(self, fn)
 
-    def __call__(self, value: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         from .define import apply_if_authoring
 
-        authored = apply_if_authoring(self, (value,), kwargs)
+        authored = apply_if_authoring(self, args, kwargs)
         if authored is not NotImplemented:
             return authored
-        return self.fn(value, **kwargs)
+        return self.fn(*args, **kwargs)
 
     def to_ir(self) -> Node:
         return dsl.arr(self.name)

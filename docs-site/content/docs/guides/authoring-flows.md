@@ -30,10 +30,11 @@ python -m pip install composable-agents
 
 Create `quickstart_flow.py`:
 
+<!-- ca:doctest expect-output -->
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, pure, think, tool
 
 
 class SupportReply(TypedDict):
@@ -54,13 +55,11 @@ def ticket_prompt(hit: dict[str, str]) -> dict[str, str]:
     return {"queue": hit["queue"], "context": hit["summary"]}
 
 
-register_reasoner(
-    Reasoner(
-        name="support_reply",
-        model="anthropic:claude-haiku-4-5-20251001",
-        system="Draft one concise support reply as JSON.",
-        reply=SupportReply,
-    )
+SUPPORT_REPLY = Reasoner(
+    name="support_reply",
+    model="anthropic:claude-haiku-4-5-20251001",
+    system="Draft one concise support reply as JSON.",
+    reply=SupportReply,
 )
 
 
@@ -68,7 +67,7 @@ register_reasoner(
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup_ticket(ticket, retries=2, timeout_s=5)
     prompt = ticket_prompt(hit)
-    answer = think("support_reply", prompt, timeout_s=10)
+    answer = think(SUPPORT_REPLY, prompt, timeout_s=10)
     return hit | answer
 
 
@@ -76,7 +75,7 @@ def fake_support_reply(value: dict[str, str]) -> SupportReply:
     return {"reply": f"{value['queue']}: {value['context']}"}
 
 
-deployment = deploy(triage, tools=[lookup_ticket], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup_ticket], reasoners=[SUPPORT_REPLY])
 result = deployment.dry_run(
     "Customer was charged twice.",
     reasoners={"support_reply": fake_support_reply},
@@ -86,17 +85,15 @@ print(result.value)
 print(deployment.surface_shape.value)
 ```
 
+```text
+{'ticket': 'Customer was charged twice.', 'queue': 'billing', 'summary': 'Use the duplicate-charge runbook.', 'reply': 'billing: Use the duplicate-charge runbook.'}
+Dataflow
+```
+
 Run it:
 
 ```bash
 python quickstart_flow.py
-```
-
-Expected output:
-
-```text
-{'ticket': 'Customer was charged twice.', 'queue': 'billing', 'summary': 'Use the duplicate-charge runbook.', 'reply': 'billing: Use the duplicate-charge runbook.'}
-Pipeline
 ```
 
 `@flow` ran `triage(...)` once at import time with `Handle` values. The tool,
@@ -140,6 +137,7 @@ Inside `@flow`, direct calls are allowed only for registered objects:
 
 Tool, pure, and reasoner steps accept these define-time step options:
 
+<!-- ca:doctest skip -->
 ```python
 step = lookup_ticket(ticket, name="hit", retries=2, retry_interval_s=1, backoff_rate=2, timeout_s=5)
 ```
@@ -151,6 +149,7 @@ fields in the frozen IR. `name=` controls the single-assignment output name.
 Do not branch or iterate on a `Handle` with Python control flow. These are
 define-time errors:
 
+<!-- ca:doctest skip -->
 ```python
 if hit:          # use cond(...)
     ...
@@ -161,6 +160,7 @@ for item in xs:  # use each(...)
 
 Use record dataflow instead:
 
+<!-- ca:doctest skip -->
 ```python
 queue = hit["queue"]      # std.pluck
 combined = hit | answer   # std.merge; later dictionaries win
@@ -176,6 +176,7 @@ strings are `"read"`, `"write"`, `"external"`, and `"dangerous"`.
 Pures are deterministic workflow-side functions. They must not do IO, read
 clocks, or depend on mutable globals.
 
+<!-- ca:doctest skip -->
 ```python
 @pure("route.is_billing")
 def is_billing(hit: dict[str, str]) -> bool:
@@ -193,6 +194,91 @@ Use `cond(pred, subject, then=..., orelse=...)` for binary branching and
 The predicate or selector must be a registered `Pure` or pure name. Branch arms
 receive the subject by name, so the remaining arm parameter must match the
 subject handle label; pass other values as keyword captures.
+
+For record-field routing, use the explicit `switch(...)` form when you want to
+name the selector yourself, or `switch_on(subject, key=...)` when the branch key
+is just one field of the subject record. In both forms below, the branch subject
+handle is named `req`, so each arm keeps a `req` parameter and captures the
+separate `team_context` handle by keyword before merging it into the flowing
+input. JSON constants in branch arms should be wrapped in a one-parameter arm;
+`each(...)` is the helper that accepts JSON closure captures directly.
+
+<!-- ca:doctest expect-output -->
+```python
+from composable_agents import deploy, flow, pure, switch, switch_on
+
+
+@pure("authoring_action_selector")
+def action_selector(req: dict[str, object]) -> str:
+    return str(req["action"])
+
+
+@pure("authoring_team_context")
+def team_context_for_arm(req: dict[str, object]) -> dict[str, object]:
+    team_context = req["team_context"]
+    assert isinstance(team_context, dict)
+    return team_context
+
+
+@pure("authoring_assign_review")
+def assign_review(payload: dict[str, object]) -> dict[str, object]:
+    return {"route": "review", "team": payload["team"], "order_id": payload["order_id"]}
+
+
+@pure("authoring_assign_auto")
+def assign_auto(payload: dict[str, object]) -> dict[str, object]:
+    return {"route": "auto", "team": payload["team"], "order_id": payload["order_id"]}
+
+
+@flow
+def review(req: dict[str, object], team_context: dict[str, object]) -> dict[str, object]:
+    payload = req | team_context
+    return assign_review(payload)
+
+
+@flow
+def auto(req: dict[str, object], team_context: dict[str, object]) -> dict[str, object]:
+    payload = req | team_context
+    return assign_auto(payload)
+
+
+@flow
+def route_explicit(req: dict[str, object]) -> dict[str, object]:
+    team_context = team_context_for_arm(req, name="team_context")
+    return switch(
+        action_selector,
+        req,
+        cases={
+            "review": review(team_context=team_context),
+            "auto": auto(team_context=team_context),
+        },
+        default=auto(team_context=team_context),
+    )
+
+
+@flow
+def route_sugar(req: dict[str, object]) -> dict[str, object]:
+    team_context = team_context_for_arm(req, name="team_context")
+    return switch_on(
+        req,
+        key="action",
+        cases={
+            "review": review(team_context=team_context),
+            "auto": auto(team_context=team_context),
+        },
+        default=auto(team_context=team_context),
+    )
+
+
+payload = {"order_id": "ret-100", "action": "review", "team_context": {"team": "returns"}}
+print(deploy(route_explicit, tools=[]).dry_run(payload).value)
+print(deploy(route_sugar, tools=[]).dry_run(payload).value)
+```
+
+```text
+{'route': 'review', 'team': 'returns', 'order_id': 'ret-100'}
+{'route': 'review', 'team': 'returns', 'order_id': 'ret-100'}
+```
 
 Use `each(body, items, max_parallel=..., reducer=...)` for dynamic fan-out over a
 runtime list. The body can be a `@flow`, a partially-bound `@flow`, or a raw
@@ -284,6 +370,7 @@ native host environment, then the wasm-tier run fails at import.
 Place the metadata between the `@pure(...)` decorator and `def`, so it is inside
 the captured source span:
 
+<!-- ca:doctest skip -->
 ```python
 @pure("cad.demo.extract_emails.v1")
 # /// script
@@ -350,6 +437,7 @@ Typed wrappers, `Tool` objects, and Python callables do not enter `Node.to_json(
 
 Use these inspection properties after `deploy(...)`:
 
+<!-- ca:doctest skip -->
 ```python
 deployment.flow_json
 deployment.manifest_json
@@ -369,6 +457,7 @@ iteration.
 The typed layer is an authoring wrapper over the same `Node` IR. It carries
 Python type parameters while you build, then disappears before freeze.
 
+<!-- ca:doctest skip -->
 ```python
 from composable_agents import tool
 from composable_agents.typed import Flow, as_flow, par, seq

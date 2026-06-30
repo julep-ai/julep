@@ -151,6 +151,28 @@ def test_load_dotctx_detects_rich_layout() -> None:
     assert b == _rich().reasoner
 
 
+def test_rich_dotctx_reasoner_lands_in_supplied_registry(tmp_path: Path) -> None:
+    # An isolated Registry must receive the reasoner alongside its renderers and
+    # tool expectations. Regression for the WS5 migration that hardcoded
+    # DEFAULT_REGISTRY.register_reasoner here, splitting the reasoner away from
+    # the renderer names it points at (Codex PR#9, P2).
+    from composable_agents.registry import Registry
+
+    pkg = _write_pkg(
+        tmp_path, "iso.ctx", "name: iso.reasoner\nmodel: iso-model\n",
+        {"prompt.j2": "hello {{ x }}"},
+    )
+    reg = Registry()
+    rich = load_rich_dotctx(str(pkg), registry=reg)
+
+    assert "iso.reasoner" in reg.reasoners
+    assert reg.get_reasoner("iso.reasoner") is rich.reasoner
+    # the reasoner's renderer resolves from the SAME registry it was loaded into
+    assert rich.reasoner.system_render in reg.renderers
+    # nothing leaked into the global default registry
+    assert "iso.reasoner" not in DEFAULT_REGISTRY.reasoners
+
+
 # --------------------------------------------------------------------------- #
 # Rejections.
 # --------------------------------------------------------------------------- #
@@ -230,9 +252,8 @@ def test_reasoner_identity_adds_new_keys_only_when_present() -> None:
     assert ident["userRender"] == rich.reasoner.user_render
     assert ident["maxTokens"] == 800
 
-    from composable_agents.dotctx import Reasoner, register_reasoner
-
-    register_reasoner(Reasoner(name="plain.norich", model="m", system="s"))
+    from composable_agents.dotctx import Reasoner
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="plain.norich", model="m", system="s"))
     plain = _reasoner_identity("plain.norich")
     assert "userRender" not in plain and "maxTokens" not in plain and "systemRender" not in plain
 

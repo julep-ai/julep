@@ -3,7 +3,8 @@ import asyncio
 import pytest
 
 from composable_agents import HAVE_TEMPORAL
-from composable_agents.dotctx import Reasoner, reasoner_from_settings, register_reasoner
+from composable_agents.dotctx import Reasoner, reasoner_from_settings
+from composable_agents.registry import DEFAULT_REGISTRY
 
 if HAVE_TEMPORAL:
     from composable_agents.execution import activities as act
@@ -62,7 +63,7 @@ def test_rendered_reasoner_for_passes_plain_reasoner_through_unchanged() -> None
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_invoke_reasoner_renders_system_before_llm() -> None:
     register_renderer("inv.sys.v1", lambda ctx: f"sys:{ctx['input']}")
-    register_reasoner(Reasoner(name="inv.reasoner", model="m", system_render="inv.sys.v1"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="inv.reasoner", model="m", system_render="inv.sys.v1"))
 
     captured: dict = {}
 

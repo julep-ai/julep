@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents.dotctx import Reasoner, get_reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner, get_reasoner
 from composable_agents.dsl import alt, arr
 from composable_agents.execution.interpreter import InMemoryEnv, interpret
 from composable_agents.projection import InMemoryProjection, ProjectionEmitter
@@ -51,10 +51,10 @@ def test_registry_instances_are_isolated_from_each_other_and_default():
         DEFAULT_REGISTRY.get_pure("p2_2.iso.map")
 
 
-def test_default_registry_shims_preserve_existing_decorator_ergonomics():
+def test_default_registry_preserves_existing_decorator_ergonomics():
     reasoner = Reasoner(name="p2_2.default.reasoner", model="model-default")
 
-    assert register_reasoner(reasoner) is reasoner
+    assert DEFAULT_REGISTRY.register_reasoner(reasoner) is reasoner
     assert get_reasoner("p2_2.default.reasoner") == reasoner
 
     @pure("p2_2.default.map")

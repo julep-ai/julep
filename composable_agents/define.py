@@ -66,9 +66,21 @@ In = TypeVar("In")
 Out = TypeVar("Out")
 _JSON = (str, int, float, bool, type(None), list, dict)
 _RESERVED_STEP_KWARGS = {"name", "retries", "retry_interval_s", "backoff_rate", "timeout_s"}
-_CONTROL_HELPERS = {"cond", "switch", "each", "reschedule"}
+_CONTROL_HELPERS = {"cond", "switch", "switch_on", "each", "reschedule"}
+# Names that are top-level authoring helpers, never methods on a Handle/FlowDef.
+# Used to turn `flow.each(...)` / `handle.switch(...)` into a teaching DefineError.
+_TOP_LEVEL_HELPERS = _CONTROL_HELPERS | {"par", "seq", "map_n"}
 _RESERVED_ENV_NAME_RE = re.compile(r"__.*__")
 _CTX_STACK: list["_BuildContext"] = []
+
+
+def _top_level_helper_error(owner_label: str, name: str, source: Optional[SourceSpan]) -> "DefineError":
+    return DefineError(
+        f"{name} is a top-level helper, not a method"
+        f"{_source_suffix(source)}; call {name}(...) and pass {owner_label} as an argument "
+        f"(e.g. each(body, items) / switch(selector, subject, cases=...)), "
+        f"not {owner_label}.{name}(...)."
+    )
 
 
 class DefineError(dag.GraphDefinitionError):
@@ -171,7 +183,13 @@ class _SourceMap:
                         "assign the step to one name or pass name=... to the step"
                     )
             for call in [node for node in ast.walk(stmt) if isinstance(node, ast.Call)]:
-                if self._call_uses_handle(call, handle_names) and not self._is_allowed_call(call):
+                if self._call_uses_handle(call, handle_names):
+                    top_level_method = self._top_level_method_helper(call, handle_names)
+                    if top_level_method is not None:
+                        owner_label, helper_name = top_level_method
+                        raise _top_level_helper_error(owner_label, helper_name, self._span(call))
+                    if self._is_allowed_call(call):
+                        continue
                     name = self._call_name(call)
                     raise DefineError(
                         "unregistered callable "
@@ -199,6 +217,21 @@ class _SourceMap:
         if target is None:
             return False
         return _is_control_helper(target) or _is_tool(target) or _is_pure(target) or isinstance(target, FlowDef)
+
+    def _top_level_method_helper(self, call: ast.Call, handle_names: set[str]) -> Optional[tuple[str, str]]:
+        if not isinstance(call.func, ast.Attribute):
+            return None
+        helper_name = call.func.attr
+        if helper_name not in _TOP_LEVEL_HELPERS:
+            return None
+        owner_expr = call.func.value
+        owner_label = ast.unparse(owner_expr)
+        if isinstance(owner_expr, ast.Name) and owner_expr.id in handle_names:
+            return owner_label, helper_name
+        owner = self._resolve_expr(owner_expr)
+        if isinstance(owner, FlowDef):
+            return owner_label, helper_name
+        return None
 
     def _resolve_call_target(self, call: ast.Call) -> Any:
         return self._resolve_expr(call.func)
@@ -362,6 +395,8 @@ class Handle:
         return Handle(output, ctx.graph, span)
 
     def __getattr__(self, name: str) -> object:
+        if name in _TOP_LEVEL_HELPERS:
+            raise _top_level_helper_error(self.label, name, self.source)
         raise AttributeError(
             f"Handle attribute access is not runtime data{_source_suffix(self.source)}; "
             f"got {self.label}.{name}. Use {self.label}[{name!r}] for std.pluck."
@@ -512,6 +547,12 @@ class FlowDef(FlowLike[Any, Any]):
             supplied[key] = value
         return supplied
 
+    def __getattr__(self, name: str) -> object:
+        # __getattr__ only fires for genuinely-missing attributes.
+        if name in _TOP_LEVEL_HELPERS:
+            raise _top_level_helper_error(self.name, name, getattr(self, "source", None))
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
     def to_ir(self) -> Node:
         if len(self.param_names) != 1:
             raise DefineError(
@@ -570,6 +611,15 @@ def think(reasoner_or_name: str | Reasoner, value: Handle, /, **kwargs: Any) -> 
 
 def think(reasoner_or_name: str | Reasoner, value: Optional[Handle] = None, /, **kwargs: Any) -> Node | Handle:
     """Dispatch to ``dsl.think(name)`` or append a reasoner step inside ``@flow``."""
+    from .dotctx import Reasoner as _Reasoner
+    from .registry import DEFAULT_REGISTRY
+
+    if isinstance(reasoner_or_name, _Reasoner):
+        # Object-first: register at authoring time so the reasoner is always
+        # resolvable downstream — including when deploy() is given an explicit
+        # CapabilityManifest (which forbids reasoners=) and must enforce the
+        # model-id allow-list. Idempotent for identical config.
+        DEFAULT_REGISTRY.register_reasoner(reasoner_or_name)
     name = _reasoner_name(reasoner_or_name)
     if value is None:
         return dsl.think(name, **kwargs)
@@ -689,6 +739,36 @@ def switch(
     return Handle(output, ctx.graph, span)
 
 
+def switch_on(
+    subject: Handle,
+    *,
+    key: str,
+    cases: dict[str, "FlowDef | BoundFlow"],
+    default: "FlowDef | BoundFlow | None" = None,
+) -> Handle:
+    """Branch on the value of one field of ``subject`` — declarative sugar over ``switch``.
+
+    Derives a deterministic selector pure ``str(subject[key])`` and registers it by
+    source (so it is source-pinned like any ``@pure``), then delegates to ``switch``.
+    Same ``key`` → same registered selector (idempotent); the determinism contract holds
+    without you hand-writing and registering a predicate. ``cases`` keys are matched by
+    string equality against the field value.
+    """
+    from .purity import register_pure_with_source
+
+    selector_name = f"switch_on.{key}"
+    source = f"def _switch_on_selector(value):\n    return str(value[{key!r}])\n"
+
+    def _selector(value: Any) -> str:
+        return str(value[key])
+
+    # Always register by source: idempotent when the same key mints the same
+    # selector, but raises a clear conflict if an unrelated pure already squats on
+    # the ``switch_on.<key>`` name — never silently adopt a foreign predicate.
+    register_pure_with_source(selector_name, _selector, source)
+    return switch(selector_name, subject, cases=cases, default=default)
+
+
 def each(
     body: FlowDef | BoundFlow | Node,
     items: Optional[Handle] = None,
@@ -793,7 +873,13 @@ def apply_if_authoring(fn: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -
         )
     handle = args[0]
     if len(args) > 1:
-        raise DefineError("step application accepts one Handle plus JSON keyword constants")
+        site = _call_site(_current_context(), getattr(fn, "name", getattr(fn, "__name__", type(fn).__name__)))
+        raise DefineError(
+            f"a pure/step takes one input value plus JSON keyword constants"
+            f"{_source_suffix(site.span)}; you passed {len(args)} positional handles. "
+            "fix: merge them into one record first with 'a | b' (std.merge), or reshape with a pure, "
+            "then call on the single handle."
+        )
     if _is_tool(fn):
         return _append_step(dag.StepKind.TOOL, fn.name, handle, target=fn, **kwargs)
     if _is_pure(fn):
@@ -1473,7 +1559,7 @@ def _is_pure(value: Any) -> bool:
 
 
 def _is_control_helper(value: Any) -> bool:
-    return any(value is helper for helper in (think, cond, switch, each, reschedule))
+    return any(value is helper for helper in (think, cond, switch, switch_on, each, reschedule))
 
 
 def _site_matches_ref(site: _CallSite, ref: str) -> bool:
@@ -1507,6 +1593,7 @@ __all__ = [
     "flow",
     "reschedule",
     "switch",
+    "switch_on",
     "think",
     "apply_if_authoring",
 ]

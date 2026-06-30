@@ -73,7 +73,7 @@ def rendered_user_for(reasoner: Reasoner, value: Any) -> Optional[str]:
 def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
     return Reasoner(
         name=reasoner.name, model=reasoner.model, system=system,
-        reply_schema=reasoner.reply_schema, tools=reasoner.tools,
+        reply=reasoner.reply_schema, tools=reasoner.tools,
         temperature=reasoner.temperature, max_rounds=reasoner.max_rounds,
         is_agent=reasoner.is_agent, sub_contract=reasoner.sub_contract,
         context_scope=reasoner.context_scope, system_render=None,

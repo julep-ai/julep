@@ -307,6 +307,25 @@ def test_in_flow_multi_param_subflow_single_handle_raises_define_error() -> None
             return y
 
 
+def test_pure_called_with_two_handles_gives_fix_line() -> None:
+    from composable_agents import flow, pure, tool
+    from composable_agents.define import DefineError
+
+    @tool(effect="read", idempotent=True)
+    def lk(t: str) -> dict:
+        return {"a": 1, "b": 2}
+
+    @pure("ws3_two_arg")
+    def combine(a: dict, b: dict) -> dict:  # author mistakenly expects two handles
+        return {**a, **b}
+
+    with pytest.raises(DefineError, match=r"one input value.*merge.*\|"):
+        @flow
+        def bad(t: str) -> dict:
+            hit = lk(t)
+            return combine(hit, hit)   # two positional handles -> should be a DefineError
+
+
 def test_chained_merge_assignment_name_lands_on_outermost_merge() -> None:
     @flow
     def chained(source: dict[str, Any]) -> dict[str, Any]:
@@ -481,6 +500,39 @@ def test_handle_bool_iter_and_attribute_errors_are_actionable() -> None:
         attr = "foo"
         getattr(handle, attr)
     assert not hasattr(handle, "foo")
+
+
+def test_flowdef_dot_each_gives_top_level_hint() -> None:
+    from composable_agents import flow, tool
+    from composable_agents.define import DefineError
+
+    @tool(effect="read", idempotent=True)
+    def lk(t: str) -> dict:
+        return {"x": 1}
+
+    @flow
+    def body(item: dict) -> dict:
+        return lk("x") | item if False else item
+
+    with pytest.raises(DefineError, match=r"each is a top-level helper.*each\(body, items"):
+        @flow
+        def outer(items: list) -> object:
+            return body.each(items)        # method-style fan-out -> teaching error
+
+
+def test_handle_dot_switch_gives_top_level_hint() -> None:
+    from composable_agents import flow, tool
+    from composable_agents.define import DefineError
+
+    @tool(effect="read", idempotent=True)
+    def lk(t: str) -> dict:
+        return {"x": 1}
+
+    with pytest.raises(DefineError, match=r"switch is a top-level helper"):
+        @flow
+        def outer(t: str) -> object:
+            hit = lk(t)
+            return hit.switch(cases={})    # method-style branch on a Handle -> teaching error
 
 
 def test_handle_equality_and_inequality_raise_cond_teaching_error() -> None:

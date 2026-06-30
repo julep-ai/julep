@@ -23,7 +23,8 @@ from composable_agents.agent_loop import (
     drive_agent_loop,
     state_fingerprint,
 )
-from composable_agents.dotctx import Reasoner, reasoner_to_flow, register_reasoner
+from composable_agents.dotctx import Reasoner, reasoner_to_flow
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.errors import ValidationError
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.blobstore import InMemoryBlobStore
@@ -215,11 +216,11 @@ def test_app_ctx_reaches_run_agent_app_config() -> None:
 
 
 def test_dotctx_agent_reasoner_derives_ctx_from_context_scope() -> None:
-    register_reasoner(Reasoner(
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(
         name="tr.agent.whole", model="m", is_agent=True,
         context_scope=ContextScope.WHOLE_SESSION,
     ))
-    node = reasoner_to_flow(register_reasoner(Reasoner(
+    node = reasoner_to_flow(DEFAULT_REGISTRY.register_reasoner(Reasoner(
         name="tr.agent.local", model="m", is_agent=True,
     )))
     assert "ctx" not in node.to_json()  # LOCAL agents: hash-stable, no ctx key
@@ -266,7 +267,7 @@ def _invoke(reasoner: str = "tr.reasoner", **kwargs: Any) -> Any:
 
 
 def test_legacy_two_arg_caller_still_works_without_transcript() -> None:
-    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     seen: dict[str, Any] = {}
 
     async def legacy(reasoner, value):
@@ -278,7 +279,7 @@ def test_legacy_two_arg_caller_still_works_without_transcript() -> None:
 
 
 def test_three_arg_caller_still_receives_principal() -> None:
-    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     seen: dict[str, Any] = {}
 
     async def principal_aware(reasoner, value, principal):
@@ -292,7 +293,7 @@ def test_three_arg_caller_still_receives_principal() -> None:
 
 @pytest.mark.parametrize("arity", [2, 3])
 def test_narrow_callers_reject_transcripts_loudly(arity: int) -> None:
-    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
 
     async def two(reasoner, value):
         return "ok"
@@ -309,7 +310,7 @@ def test_narrow_callers_reject_transcripts_loudly(arity: int) -> None:
 
 
 def test_four_arg_caller_is_used_unwrapped() -> None:
-    register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     seen: dict[str, Any] = {}
 
     async def canonical(reasoner, value, principal, transcript):
@@ -341,7 +342,7 @@ def _capture_ctx(**kwargs: Any) -> tuple[WorkerContext, dict[str, Any]]:
 
 
 def test_whole_session_transcript_is_hydrated_from_the_blob_store() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     store = InMemoryBlobStore()
     ref = _blob(store, "sess", {"hits": 3})
     ctx, seen = _capture_ctx(blob_store=store)
@@ -364,7 +365,7 @@ def test_whole_session_transcript_is_hydrated_from_the_blob_store() -> None:
 
 
 def test_whole_session_budget_uses_worker_tokenizer_and_marks_elision() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, seen = _capture_ctx(count_tokens=lambda text: 1)  # one token per turn
     configure(ctx)
 
@@ -382,7 +383,7 @@ def test_whole_session_budget_uses_worker_tokenizer_and_marks_elision() -> None:
 
 
 def test_transcript_without_budget_fails_fast() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, _ = _capture_ctx()
     configure(ctx)
     with pytest.raises(RuntimeError, match="no implicit default"):
@@ -394,7 +395,7 @@ def test_transcript_without_budget_fails_fast() -> None:
 
 
 def test_transcript_ref_without_blob_store_fails_fast() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, _ = _capture_ctx()
     configure(ctx)
     with pytest.raises(RuntimeError, match="blob store"):
@@ -406,7 +407,7 @@ def test_transcript_ref_without_blob_store_fails_fast() -> None:
 
 
 def test_summary_scope_without_summarizer_fails_fast() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
     ctx, _ = _capture_ctx()
     configure(ctx)
     with pytest.raises(RuntimeError, match="summarizer"):
@@ -418,8 +419,8 @@ def test_summary_scope_without_summarizer_fails_fast() -> None:
 
 
 def test_summary_scope_runs_summarizer_and_returns_envelope() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
-    register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
     ctx, seen = _capture_ctx(count_tokens=lambda text: 1)
     seen["replies"] = {"tr.sum": "folded summary", "tr.ctrl": {"output": "done"}}
     configure(ctx)
@@ -447,8 +448,8 @@ def test_summary_scope_runs_summarizer_and_returns_envelope() -> None:
 
 
 def test_summary_scope_without_elision_reuses_prior_summary_no_envelope() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
-    register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
     ctx, seen = _capture_ctx()
     configure(ctx)
 
@@ -465,8 +466,8 @@ def test_summary_scope_without_elision_reuses_prior_summary_no_envelope() -> Non
 
 
 def test_summarizer_must_reply_with_text() -> None:
-    register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
-    register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.ctrl", model="m", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.sum", model="m", system="summarize"))
     ctx, seen = _capture_ctx(count_tokens=lambda text: 1)
     seen["replies"] = {"tr.sum": ["not", "text"]}
     configure(ctx)

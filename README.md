@@ -11,7 +11,7 @@ Install the base package and run this as a normal Python script:
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, pure, think, tool
 
 
 class SupportReply(TypedDict):
@@ -32,13 +32,11 @@ def ticket_prompt(hit: dict[str, str]) -> dict[str, str]:
     return {"queue": hit["queue"], "context": hit["summary"]}
 
 
-register_reasoner(
-    Reasoner(
-        name="support_reply",
-        model="anthropic:claude-haiku-4-5-20251001",
-        system="Draft one concise support reply as JSON.",
-        reply=SupportReply,
-    )
+support_reply = Reasoner(
+    name="support_reply",
+    model="anthropic:claude-haiku-4-5-20251001",
+    system="Draft one concise support reply as JSON.",
+    reply=SupportReply,
 )
 
 
@@ -46,7 +44,7 @@ register_reasoner(
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup_ticket(ticket, retries=2, timeout_s=5)
     prompt = ticket_prompt(hit)
-    answer = think("support_reply", prompt, timeout_s=10)
+    answer = think(support_reply, prompt, timeout_s=10)
     return hit | answer
 
 
@@ -54,7 +52,7 @@ def fake_support_reply(value: dict[str, str]) -> SupportReply:
     return {"reply": f"{value['queue']}: {value['context']}"}
 
 
-deployment = deploy(triage, tools=[lookup_ticket], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup_ticket], reasoners=[support_reply])
 result = deployment.dry_run(
     "Customer was charged twice.",
     reasoners={"support_reply": fake_support_reply},
@@ -281,13 +279,15 @@ from composable_agents import (
     call,
     deploy,
     mcp,
-    register_reasoner,
     seq,
     snapshot_from_listings,
     think,
 )
+from composable_agents.registry import DEFAULT_REGISTRY
 
-register_reasoner(Reasoner(name="summarize", model="claude-...", system="Summarize."))
+# Combinator-kernel + snapshot deploy has no reasoners=[obj] collection point, so
+# register the reasoner directly and reference it by name with think("summarize").
+DEFAULT_REGISTRY.register_reasoner(Reasoner(name="summarize", model="claude-...", system="Summarize."))
 flow = seq(call(mcp("search", "web")), think("summarize"))
 snapshot = snapshot_from_listings(
     {
@@ -315,7 +315,8 @@ A worker hosts the workflow + activities:
 ```python
 from typing import Any
 
-from composable_agents import Reasoner, register_reasoner
+from composable_agents import Reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.execution.worker import run_worker
 
 
@@ -332,7 +333,7 @@ async def my_async_llm(reasoner: str, value: Any) -> Any:
     return {"reasoner": reasoner, "value": value}
 
 
-register_reasoner(Reasoner(name="summarize", model="claude-...", system="Summarize."))
+DEFAULT_REGISTRY.register_reasoner(Reasoner(name="summarize", model="claude-...", system="Summarize."))
 
 
 async def serve_worker() -> None:

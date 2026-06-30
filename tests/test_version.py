@@ -1,14 +1,10 @@
-"""The package ``__version__`` is derived from the installed distribution.
-
-Hardcoding the version in ``__init__.py`` lets it drift from the version declared
-in ``pyproject.toml`` (and therefore from what ``pip`` reports). It must instead be
-read from the installed distribution metadata so the two can never disagree.
-"""
-
 from importlib.metadata import version
 
-import composable_agents
 
+def test_version_matches_distribution_metadata() -> None:
+    import composable_agents
 
-def test_module_version_matches_distribution_metadata() -> None:
+    # __version__ must be derived from the installed distribution, never a hardcoded
+    # constant (the stale-wheel bug reported 0.1.0 against a 1.0.0rc1 distribution).
     assert composable_agents.__version__ == version("composable-agents")
+    assert composable_agents.__version__ != "0.1.0"

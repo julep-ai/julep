@@ -457,7 +457,7 @@ def deploy(
     snapshot: Optional[McpSnapshot] = None,
     *,
     tools: Optional[Sequence[Tool[Any, Any]]] = None,
-    reasoners: Optional[Sequence[str]] = None,
+    reasoners: Optional[Sequence[str | Reasoner]] = None,
     capabilities: Optional[CapabilityManifest] = None,
     extra_overrides: Optional[CapabilityOverrides] = None,
     strict: bool = True,
@@ -500,7 +500,16 @@ def deploy(
         snapshot = snapshot_from_tools(tools)
         retained_tools = tools
         if capabilities is None:
-            capabilities = _capabilities_from_tools(tools, reasoners)
+            reasoner_names: Optional[list[str]] = None
+            if reasoners is not None:
+                reasoner_names = []
+                for r in reasoners:
+                    if isinstance(r, Reasoner):
+                        DEFAULT_REGISTRY.register_reasoner(r)
+                        reasoner_names.append(r.name)
+                    else:
+                        reasoner_names.append(r)
+            capabilities = _capabilities_from_tools(tools, reasoner_names)
     assert snapshot is not None
 
     enforcement_mode = EnforcementMode.coerce(mode)

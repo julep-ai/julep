@@ -15,7 +15,8 @@ import pytest
 
 from composable_agents import Agent, tool
 from composable_agents.agent_loop import Decision, interpret_reasoner_reply
-from composable_agents.dotctx import Reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.execution.llm import (
     _split_model,
     _strip_code_fence,
@@ -180,7 +181,7 @@ _DECISION_SCHEMA: dict[str, Any] = {
 
 def test_schema_uses_native_response_format_for_standard_provider() -> None:
     rec = Recorder(_json_replies({"tool": "search", "input": "q"}))
-    reasoner = Reasoner(name="b4", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b4", model="openai:gpt-4o", system="sys", reply=_DECISION_SCHEMA)
     run(make_llm_caller(acompletion=rec)(reasoner, "x"))
 
     call = rec.calls[0]
@@ -192,7 +193,7 @@ def test_schema_uses_native_response_format_for_standard_provider() -> None:
 
 def test_fallback_provider_uses_prompt_injection_not_response_format() -> None:
     rec = Recorder(_json_replies({"tool": "search", "input": "q"}))
-    reasoner = Reasoner(name="b5", model="gemini:gemini-2.0", system="sys", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b5", model="gemini:gemini-2.0", system="sys", reply=_DECISION_SCHEMA)
     run(make_llm_caller(acompletion=rec)(reasoner, "x"))
 
     call = rec.calls[0]
@@ -214,7 +215,7 @@ def test_native_failure_retries_with_prompt_injection() -> None:
             return _completion(content=json.dumps({"output": "ok"}))
 
     flaky = Flaky()
-    reasoner = Reasoner(name="b6", model="openai:gpt-4o", system="sys", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b6", model="openai:gpt-4o", system="sys", reply=_DECISION_SCHEMA)
     reply = run(make_llm_caller(acompletion=flaky)(reasoner, "x")).reply
 
     assert reply == {"output": "ok"}
@@ -229,7 +230,7 @@ def test_native_failure_retries_with_prompt_injection() -> None:
 # --------------------------------------------------------------------------- #
 def test_reply_json_parsed_and_interpreted_as_call() -> None:
     rec = Recorder([_completion(content='```json\n{"tool": "search", "input": "q"}\n```')])
-    reasoner = Reasoner(name="b7", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b7", model="openai:gpt-4o", reply=_DECISION_SCHEMA)
     reply = run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply
 
     assert reply == {"tool": "search", "input": "q"}
@@ -240,7 +241,7 @@ def test_reply_json_parsed_and_interpreted_as_call() -> None:
 
 def test_parsed_field_preferred_over_content() -> None:
     rec = Recorder([_completion(parsed={"output": "structured"})])
-    reasoner = Reasoner(name="b8", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b8", model="openai:gpt-4o", reply=_DECISION_SCHEMA)
     assert run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply == {"output": "structured"}
 
 
@@ -252,7 +253,7 @@ def test_no_schema_returns_raw_text() -> None:
 
 def test_unparseable_json_with_schema_returns_raw_for_controller_error() -> None:
     rec = Recorder([_completion(content="not json at all")])
-    reasoner = Reasoner(name="b10", model="openai:gpt-4o", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b10", model="openai:gpt-4o", reply=_DECISION_SCHEMA)
     reply = run(make_llm_caller(acompletion=rec)(reasoner, "x")).reply
     # raw string flows through; strict interpretation flags it cleanly
     assert reply == "not json at all"
@@ -263,7 +264,7 @@ def test_unparseable_json_with_schema_returns_raw_for_controller_error() -> None
 # Facade seam: make_local_reasoner resolves the registered Reasoner by name.
 # --------------------------------------------------------------------------- #
 def test_make_local_reasoner_resolves_registered_reasoner() -> None:
-    register_reasoner(Reasoner(name="resolver_reasoner", model="openai:gpt-4o", system="resolved-system"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="resolver_reasoner", model="openai:gpt-4o", system="resolved-system"))
     rec = Recorder(_json_replies({"output": "ok"}))
     local = make_local_reasoner(acompletion=rec)
 
@@ -309,7 +310,7 @@ def test_agent_facade_drives_real_loop_through_local_reasoner() -> None:
 
 def test_complete_reasoner_direct_is_provider_agnostic() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
-    reasoner = Reasoner(name="b11", model="mistral:mistral-small", system="s", reply_schema=_DECISION_SCHEMA)
+    reasoner = Reasoner(name="b11", model="mistral:mistral-small", system="s", reply=_DECISION_SCHEMA)
     reply = run(complete_reasoner(reasoner, "v", acompletion=rec, default_provider="anthropic")).reply
     assert reply == {"output": "ok"}
     assert rec.calls[0]["provider"] == "mistral" and rec.calls[0]["model"] == "mistral-small"

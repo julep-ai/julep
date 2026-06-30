@@ -15,7 +15,7 @@ async def _yield_once(delay: float) -> None:
 
 
 def _reasoner() -> Reasoner:
-    return Reasoner(name="b", model="m", system="s", reply_schema=None)
+    return Reasoner(name="b", model="m", system="s", reply=None)
 
 
 def test_coalesce_identical_replies_vs_uncoalesced() -> None:

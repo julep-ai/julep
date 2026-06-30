@@ -27,7 +27,7 @@ def test_caller_returns_result_and_records_fallback_attempts():
     policy = ResiliencePolicy(fallbacks={"anthropic:m1": ["anthropic:m2"]})
     caller = make_resilient_llm_caller(policy=policy, acompletion=flaky)
     reasoner = Reasoner(
-        name="r", model="anthropic:m1", system="s", reply_schema=None
+        name="r", model="anthropic:m1", system="s", reply=None
     )
 
     out = asyncio.run(caller(reasoner, {"x": 1}))

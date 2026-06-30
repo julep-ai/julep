@@ -13,7 +13,8 @@ from typing import Any, Optional
 import pytest
 
 from composable_agents import arr, call, native, seq
-from composable_agents.dotctx import Reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.execution.blobstore import InMemoryBlobStore
 from composable_agents.execution.effects import (
     CallToolInput,
@@ -45,7 +46,7 @@ REASONER_OUTPUT = {"reply": "fixed", "tokens": 7}
 
 
 register_pure("detm.double", lambda v: v * 2)
-register_reasoner(Reasoner(name="detm.reasoner", model="test", system="s"))
+DEFAULT_REGISTRY.register_reasoner(Reasoner(name="detm.reasoner", model="test", system="s"))
 _REPRESENTATIVE_FLOW = seq(call(native("echo")), arr("detm.double"))
 
 

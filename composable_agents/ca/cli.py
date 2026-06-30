@@ -18,7 +18,6 @@ from composable_agents.ca.langfuse_link import trace_url
 from composable_agents.ca.lint import lint_agents
 from composable_agents.ca.listen import listen_command
 from composable_agents.ca.model import Module, build_module
-from composable_agents.ca.resolve import resolve_agent
 from composable_agents.ca.runcache import load_run, save_run
 from composable_agents.ca.runner import RunOutcome, run_agent_local
 from composable_agents.ca.select import select
@@ -149,8 +148,7 @@ def run(
         typer.echo(f"output: {_json.dumps(result, default=str)}")
         return
     rid = run_id or f"ca-{name}-local"
-    resolved = resolve_agent(cfg, name)
-    outcome = run_agent_local(resolved, parsed, run_id=rid)
+    outcome = run_agent_local(cfg, name, parsed, run_id=rid)
     if outcome.error is not None:
         typer.echo(f"error: {outcome.error}", err=True)
         save_run(str(cfg.root), run_id=rid, agent=name, status="error", events=outcome.events)

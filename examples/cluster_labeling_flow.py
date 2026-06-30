@@ -46,7 +46,6 @@ from composable_agents import (
     each,
     flow,
     pure,
-    register_reasoner,
     switch,
     think,
     tool,
@@ -256,53 +255,49 @@ TOOLS = [read_macrocluster_snapshot, write_label_snapshot]
 
 
 # --------------------------------------------------------------------------- #
-# Reasoners (the product's cluster labeling passes), addressed by name.
+# Reasoners (the product's cluster labeling passes), declared as deployable objects.
 # --------------------------------------------------------------------------- #
-register_reasoner(
-    Reasoner(
-        name=LABELER,
-        model=MODEL,
-        system=(
-            "You label macroclusters for a memory store. The user message is a "
-            "JSON object with member names and content. Produce a concise label "
-            "and a one-sentence summary of the shared theme. Reply with exactly "
-            'one JSON object: {"label": "...", "summary": "..."}.'
-        ),
-        reply_schema={
-            "type": "object",
-            "properties": {
-                "label": {"type": "string"},
-                "summary": {"type": "string"},
-            },
-            "required": ["label", "summary"],
+LABELER_R = Reasoner(
+    name=LABELER,
+    model=MODEL,
+    system=(
+        "You label macroclusters for a memory store. The user message is a "
+        "JSON object with member names and content. Produce a concise label "
+        "and a one-sentence summary of the shared theme. Reply with exactly "
+        'one JSON object: {"label": "...", "summary": "..."}.'
+    ),
+    reply={
+        "type": "object",
+        "properties": {
+            "label": {"type": "string"},
+            "summary": {"type": "string"},
         },
-        max_tokens=512,
-    )
+        "required": ["label", "summary"],
+    },
+    max_tokens=512,
 )
 
-register_reasoner(
-    Reasoner(
-        name=KEYWORDER,
-        model=MODEL,
-        system=(
-            "You extract search keywords for macrocluster labels. The user "
-            "message is a JSON object with member names and content. Return "
-            "three short keywords that would help retrieve this cluster. Reply "
-            'with exactly one JSON object: {"keywords": ["...", "...", "..."]}.'
-        ),
-        reply_schema={
-            "type": "object",
-            "properties": {
-                "keywords": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "minItems": 1,
-                }
-            },
-            "required": ["keywords"],
+KEYWORDER_R = Reasoner(
+    name=KEYWORDER,
+    model=MODEL,
+    system=(
+        "You extract search keywords for macrocluster labels. The user "
+        "message is a JSON object with member names and content. Return "
+        "three short keywords that would help retrieve this cluster. Reply "
+        'with exactly one JSON object: {"keywords": ["...", "...", "..."]}.'
+    ),
+    reply={
+        "type": "object",
+        "properties": {
+            "keywords": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 1,
+            }
         },
-        max_tokens=256,
-    )
+        "required": ["keywords"],
+    },
+    max_tokens=256,
 )
 
 
@@ -361,8 +356,8 @@ def tally_cluster_label_statuses(results: list[dict[str, Any]]) -> dict[str, Any
 def label_one(cluster: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, Any]:
     context = snapshot["context"]
     source = context | cluster
-    label = think(LABELER, source)
-    keywords = think(KEYWORDER, source)
+    label = think(LABELER_R, source)
+    keywords = think(KEYWORDER_R, source)
     labeled = source | label | keywords
     return labeled
 
@@ -424,7 +419,7 @@ def batch(store_ids: list[str]) -> dict[str, Any]:
 
 
 def build() -> Deployment:
-    return deploy(batch, tools=TOOLS, reasoners=[LABELER, KEYWORDER])
+    return deploy(batch, tools=TOOLS, reasoners=[LABELER_R, KEYWORDER_R])
 
 
 # --------------------------------------------------------------------------- #

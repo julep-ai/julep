@@ -276,10 +276,11 @@ Use this sequence when a flow will not import, compile, deploy, or run.
 ### Prerequisites
 
 - Python `>=3.12`.
-- Source checkout installed:
+- CLI installed:
 
 ```bash
-pip install -e '.[cli]'
+pip install 'composable-agents[cli]'   # from PyPI
+pip install -e '.[cli]'                 # from a source checkout (contributors)
 ```
 
 Healthy: `ca --help` and `composable-agents --help` list commands.
@@ -287,7 +288,8 @@ Healthy: `ca --help` and `composable-agents --help` list commands.
 - For failures that only appear on the durable path:
 
 ```bash
-pip install -e '.[temporal]'
+pip install 'composable-agents[temporal]'   # from PyPI
+pip install -e '.[temporal]'                 # from a source checkout (contributors)
 temporal server start-dev
 ```
 

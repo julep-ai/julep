@@ -173,7 +173,12 @@ def _freeze_agent(
 
 
 def main() -> int:
-    payload = json.loads(sys.argv[1])
+    # The parent writes the request payload to stdin (not argv) so a large
+    # ``ca run`` input cannot exceed the OS single-argument limit
+    # (MAX_ARG_STRLEN, ~128 KiB on Linux). argv[1] is honored as a fallback for
+    # any direct caller.
+    raw = sys.argv[1] if len(sys.argv) > 1 else sys.stdin.read()
+    payload = json.loads(raw)
     root: str = payload["root"]
     src: list[str] = payload["src"]
     target: str = payload["name"]
@@ -195,6 +200,56 @@ def main() -> int:
             )
         except Exception as exc:  # noqa: BLE001 - serialize child failures for the parent.
             _emit({"error": f"{type(exc).__name__}: {exc}"})
+        return 0
+
+    if action == "lint":
+        from composable_agents.validate import validate
+
+        result = _discover_agent(root, src, target)
+        if result.found is None:
+            _emit({"error": _not_found_error(target, result.import_errors)})
+            return 0
+        diagnostics = validate(result.found.to_ir())
+        _emit(
+            {
+                "diagnostics": [
+                    {"code": d.code, "severity": d.severity, "message": d.message}
+                    for d in diagnostics
+                ]
+            }
+        )
+        return 0
+
+    if action == "run":
+        import asyncio
+
+        from composable_agents.ca._echo import build_echo_env
+        from composable_agents.execution.interpreter import interpret
+
+        result = _discover_agent(root, src, target)
+        if result.found is None:
+            _emit({"error": _not_found_error(target, result.import_errors), "events": []})
+            return 0
+        node = result.found.to_ir()
+        env, projection = build_echo_env(node)
+        try:
+            outcome = asyncio.run(interpret(node, payload.get("value"), env))
+        except Exception as exc:  # noqa: BLE001 - serialize run failure for the parent.
+            _emit(
+                {
+                    "value": None,
+                    "events": [e.to_json() for e in projection.events()],
+                    "error": str(exc),
+                }
+            )
+            return 0
+        _emit(
+            {
+                "value": outcome.value,
+                "events": [e.to_json() for e in projection.events()],
+                "error": None,
+            }
+        )
         return 0
 
     result = _discover_agent(root, src, target)

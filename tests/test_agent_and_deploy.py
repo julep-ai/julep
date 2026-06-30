@@ -247,7 +247,7 @@ def _artifact_reasoner(name: str = "artifact.reasoner", *, system: str = "origin
         name=name,
         model="test-model",
         system=system,
-        reply_schema={"type": "object"},
+        reply={"type": "object"},
         tools=("srv/a",),
     )
 

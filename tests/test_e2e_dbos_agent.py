@@ -35,7 +35,6 @@ if HAVE_DBOS and DB_URL:
         freeze,
         manifest_to_json,
         mcp,
-        register_reasoner,
         seq,
     )
     from composable_agents.contracts import McpAnnotations
@@ -47,6 +46,7 @@ if HAVE_DBOS and DB_URL:
     )
     from composable_agents.execution.effects import WorkerContext, configure
     from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from composable_agents.registry import DEFAULT_REGISTRY
 
     def _snapshot() -> McpSnapshot:
         ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
@@ -227,7 +227,7 @@ def run_async() -> Iterator[Callable[[Awaitable[T]], T]]:
 @pytest.fixture(scope="module")
 def dbos_runtime(run_async: Callable[[Awaitable[Any]], Any]) -> Iterator[None]:
     for name in _CONTROLLERS:
-        register_reasoner(Reasoner(name=name, model="test", system=name))
+        DEFAULT_REGISTRY.register_reasoner(Reasoner(name=name, model="test", system=name))
     configure(
         WorkerContext(
             mcp_call=fake_mcp,

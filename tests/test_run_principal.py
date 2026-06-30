@@ -15,7 +15,8 @@ import pytest
 
 from composable_agents import call, ident, mcp, native, register_pure
 from composable_agents.continuation import continue_with
-from composable_agents.dotctx import Reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.errors import PrincipalRequired
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.effects import (
@@ -86,7 +87,7 @@ def test_new_mcp_caller_receives_principal():
 
 
 def test_legacy_and_new_llm_callers():
-    register_reasoner(Reasoner(name="principal-reasoner", model="test", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="principal-reasoner", model="test", system="s"))
     seen: dict[str, Any] = {}
 
     async def legacy(reasoner, value):
@@ -111,7 +112,7 @@ def test_legacy_and_new_llm_callers():
 
 
 def test_compile_plan_passes_principal_to_llm():
-    register_reasoner(Reasoner(name="principal-planner", model="test", system="plan"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="principal-planner", model="test", system="plan"))
     seen = {}
 
     async def planner_llm(reasoner, value, principal):

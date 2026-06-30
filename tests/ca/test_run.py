@@ -1,37 +1,44 @@
 # tests/ca/test_run.py
 from composable_agents.ca.config import load_config
-from composable_agents.ca.resolve import resolve_agent
 from composable_agents.ca.runner import RunOutcome, run_agent_local
 
 
 def test_run_triage_locally(sample_module):
     cfg = load_config(sample_module)
-    resolved = resolve_agent(cfg, "triage")
-    outcome = run_agent_local(resolved, "TICKET-1", run_id="run-test-1")
+    outcome = run_agent_local(cfg, "triage", "TICKET-1", run_id="run-test-1")
     assert isinstance(outcome, RunOutcome)
     assert outcome.run_id == "run-test-1"
     assert outcome.events, "expected projection events"
     assert outcome.error is None
 
 
-def test_run_unresolved_agent_surfaces_error():
-    from composable_agents.ca.resolve import ResolvedAgent
-
-    bad = ResolvedAgent(name="nope", ir={}, error="agent 'nope' not found")
-    outcome = run_agent_local(bad, "X", run_id="run-test-2")
+def test_run_unresolved_agent_surfaces_error(sample_module):
+    cfg = load_config(sample_module)
+    outcome = run_agent_local(cfg, "nope", "X", run_id="run-test-2")
     assert outcome.run_id == "run-test-2"
     assert outcome.error == "agent 'nope' not found"
     assert outcome.events == []
     assert outcome.value is None
 
 
-def test_run_surfaces_runtime_error_without_crashing(sample_module):
-    from composable_agents.ca.resolve import ResolvedAgent
+def test_run_surfaces_runtime_error_without_crashing(tmp_path):
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "agents.py").write_text(
+        "from composable_agents import flow, pure\n"
+        "@pure('boom')\n"
+        "def boom(x: str) -> dict:\n"
+        "    raise RuntimeError('boom')\n"
+        "@flow\n"
+        "def explode(x: str) -> dict:\n"
+        "    return boom(x)\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "pyproject.toml").write_text('[tool.ca]\nsrc = ["pkg"]\n', encoding="utf-8")
 
-    # An IR dict that cannot be deserialized into a Node must not crash the runner;
-    # it must come back as RunOutcome.error.
-    broken = ResolvedAgent(name="triage", ir={"not": "a real node"}, error=None)
-    outcome = run_agent_local(broken, "X", run_id="run-test-3")
+    cfg = load_config(tmp_path)
+    outcome = run_agent_local(cfg, "explode", "X", run_id="run-test-3")
     assert outcome.run_id == "run-test-3"
-    assert outcome.error is not None
+    assert outcome.error == "boom"
     assert outcome.value is None

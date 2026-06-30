@@ -30,7 +30,8 @@ import pytest
 
 from composable_agents import arr, call, each, mcp, native, seq, sub
 from composable_agents.continuation import continue_with
-from composable_agents.dotctx import Reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
 from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref
 from composable_agents.execution.effects import (
@@ -584,7 +585,7 @@ def test_dbos_flow_settlement_finishes_run(monkeypatch):
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_agent_captures_turns_and_child_subflow(monkeypatch):
-    register_reasoner(Reasoner(name="lcstitch.ctrl", model="test", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="lcstitch.ctrl", model="test", system="s"))
     _install_inline_dbos(monkeypatch, body=dbos_backend.agent_workflow)
 
     sink = InMemoryTrajectoryStore()
@@ -812,7 +813,7 @@ def test_dbos_flow_result_byte_identical_when_finish_step_raises(monkeypatch):
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_agent_result_byte_identical_when_sink_raises(monkeypatch):
-    register_reasoner(Reasoner(name="lcstitch.ctrl", model="test", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="lcstitch.ctrl", model="test", system="s"))
     _install_inline_dbos(monkeypatch, body=dbos_backend.agent_workflow)
     blobs = InMemoryBlobStore()
 

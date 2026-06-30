@@ -31,7 +31,8 @@ def test_resolve_agent_instance_by_name(sample_module):
 def test_run_agent_instance_end_to_end(sample_module):
     cfg = load_config(sample_module)
     resolved = resolve_agent(cfg, "support_bot")
-    outcome = run_agent_local(resolved, "TICKET-1", run_id="run-bot-1")
+    assert resolved.error is None, resolved.error
+    outcome = run_agent_local(cfg, "support_bot", "TICKET-1", run_id="run-bot-1")
     assert outcome.error is None, outcome.error
     assert outcome.run_id == "run-bot-1"
 

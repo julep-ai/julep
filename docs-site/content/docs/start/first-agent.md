@@ -39,6 +39,7 @@ print(result["trace"])
 
 `Agent.run(...)` returns `Result`, a dict subclass with attribute accessors:
 
+<!-- ca:doctest skip -->
 ```python
 result = agent.run("Customer was charged twice.")
 
@@ -99,6 +100,7 @@ The framework constrains the controller through the reply schema and the granted
 
 For a batteries-included multi-provider controller, install the `providers` extra and use `make_local_reasoner` from `composable_agents.execution.llm`. It routes a `provider:model` prefix on `reasoner=` (e.g. `"openai:gpt-4o"`, `"gemini:gemini-2.5-flash"`) through [any-llm](https://github.com/mozilla-ai/any-llm), so the same agent runs on any supported provider:
 
+<!-- ca:doctest skip -->
 ```python
 # pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic,openai]'
 from composable_agents import Agent, tool

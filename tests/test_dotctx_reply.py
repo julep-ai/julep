@@ -7,9 +7,9 @@ from typing import NotRequired, Required, TypedDict
 import pytest
 
 from composable_agents.deploy import _reasoner_identity
-from composable_agents.dotctx import Reasoner, register_reasoner
-from composable_agents.ir import canonical_json
+from composable_agents.dotctx import Reasoner
 from composable_agents.registry import DEFAULT_REGISTRY
+from composable_agents.ir import canonical_json
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ class NestedReply(TypedDict):
 def _registered_identity(reasoner: Reasoner) -> dict[str, object]:
     DEFAULT_REGISTRY.reasoners.pop(reasoner.name, None)
     try:
-        register_reasoner(reasoner)
+        DEFAULT_REGISTRY.register_reasoner(reasoner)
         return _reasoner_identity(reasoner.name)
     finally:
         DEFAULT_REGISTRY.reasoners.pop(reasoner.name, None)
@@ -73,7 +73,7 @@ def test_reply_model_serializes_identically_to_equivalent_reply_schema(
         Reasoner(name="reply.model.from_type", model="openai:gpt-4o", reply=Decision)
     )
     from_schema = _registered_identity(
-        Reasoner(name="reply.model.from_schema", model="openai:gpt-4o", reply_schema=schema)
+        Reasoner(name="reply.model.from_schema", model="openai:gpt-4o", reply=schema)
     )
 
     assert canonical_json({**from_reply, "name": "same"}) == canonical_json(
@@ -81,15 +81,13 @@ def test_reply_model_serializes_identically_to_equivalent_reply_schema(
     )
 
 
-def test_reply_and_reply_schema_are_mutually_exclusive(decision_model: type[object]) -> None:
-    Decision = decision_model
-    with pytest.raises(ValueError, match="reply.*reply_schema"):
-        Reasoner(
-            name="reply.both",
-            model="openai:gpt-4o",
-            reply=Decision,
-            reply_schema=Decision.model_json_schema(),
-        )
+def test_reply_accepts_typeddict_and_raw_schema_dict() -> None:
+    schema = {"answer": "str"}
+    from_type = Reasoner(name="reply.from_type", model="openai:gpt-4o", reply=TypedReply)
+    from_schema = Reasoner(name="reply.from_schema", model="openai:gpt-4o", reply=schema)
+
+    assert isinstance(from_type.reply_schema, dict) and from_type.reply_schema
+    assert from_schema.reply_schema == schema
 
 
 def test_reasoner_without_reply_keeps_existing_identity_bytes() -> None:

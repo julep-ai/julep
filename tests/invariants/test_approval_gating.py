@@ -16,7 +16,6 @@ from composable_agents import (
     human_gate,
     mcp,
     par,
-    register_reasoner,
     register_pure,
     seq,
     stage,
@@ -25,6 +24,7 @@ from composable_agents import (
 )
 from composable_agents.contracts import McpAnnotations, ToolContract
 from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, NativeToolSpec
+from composable_agents.registry import DEFAULT_REGISTRY
 
 
 def _pred(value):
@@ -100,7 +100,9 @@ def test_empty_subflows_denies_every_subflow_but_absent_subflows_allows() -> Non
 
 
 def test_models_gate_resolved_model_ids_independent_of_reasoner_names() -> None:
-    register_reasoner(Reasoner(name="b2b.model.reasoner", model="model-denied", system=""))
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name="b2b.model.reasoner", model="model-denied", system="")
+    )
     flow = think("b2b.model.reasoner")
 
     model_only = CapabilityManifest.from_dict({"models": ["model-allowed"]})
@@ -120,8 +122,12 @@ def test_models_gate_resolved_model_ids_independent_of_reasoner_names() -> None:
 
 
 def test_models_gate_app_controller_and_planner_reasoners() -> None:
-    register_reasoner(Reasoner(name="b2b.model.controller", model="controller-model", system=""))
-    register_reasoner(Reasoner(name="b2b.model.planner", model="planner-model", system=""))
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name="b2b.model.controller", model="controller-model", system="")
+    )
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name="b2b.model.planner", model="planner-model", system="")
+    )
     caps = CapabilityManifest.from_dict(
         {
             "reasoners": ["b2b.model.controller", "b2b.model.planner"],

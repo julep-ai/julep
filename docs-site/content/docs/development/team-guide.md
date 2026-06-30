@@ -59,8 +59,9 @@ Before pushing, run the same gates CI runs — they're listed in
 The inner loop is fully local, keyless, and deterministic — you should rarely
 need a model or a server while iterating.
 
-1. **Write** a `@flow`. Register tools with `@tool`, pure transforms with
-   `@pure`, and reasoners with `register_reasoner(...)`.
+1. **Write** a `@flow`. Declare tools with `@tool`, pure transforms with
+   `@pure`, and `Reasoner(...)` objects passed to `think(...)` and
+   `deploy(..., reasoners=[...])`.
 2. **Compile + run locally** with `deploy(...).dry_run(...)`, passing fake
    reasoners so it stays deterministic and keyless.
 3. **Read the result** — `dry_run(...)` returns the interpreter result, so read
@@ -78,7 +79,7 @@ Minimal end-to-end (this is the whole loop):
 
 ```python
 from typing import TypedDict
-from composable_agents import Reasoner, deploy, flow, pure, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, pure, think, tool
 
 
 @tool(effect="read", idempotent=True)
@@ -95,23 +96,23 @@ class SupportReply(TypedDict):
     reply: str
 
 
-register_reasoner(Reasoner(
+SUPPORT_REPLY = Reasoner(
     name="support_reply",
     model="anthropic:claude-haiku-4-5-20251001",
     system="Draft one concise support reply as JSON.",
     reply=SupportReply,
-))
+)
 
 
 @flow
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup_ticket(ticket, retries=2, timeout_s=5)   # append a tool step
     prompt = ticket_prompt(hit)                            # append a pure step
-    answer = think("support_reply", prompt, timeout_s=10)  # append a reasoner step
+    answer = think(SUPPORT_REPLY, prompt, timeout_s=10)    # append a reasoner step
     return hit | answer                                    # `|` merges records
 
 
-deployment = deploy(triage, tools=[lookup_ticket], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup_ticket], reasoners=[SUPPORT_REPLY])
 result = deployment.dry_run(
     "Customer was charged twice.",
     reasoners={"support_reply": lambda v: {"reply": f"{v['queue']}: {v['context']}"}},

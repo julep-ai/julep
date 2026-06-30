@@ -84,7 +84,7 @@ def test_registers_anthropic_provider() -> None:
 
 def test_build_request_splits_system_and_messages() -> None:
     provider = AnthropicBatchProvider(client=FakeAsyncClient())
-    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s", reply_schema=None)
+    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s", reply=None)
 
     request = provider.build_request("c1", reasoner, "hello")
 
@@ -98,7 +98,7 @@ def test_build_request_splits_system_and_messages() -> None:
 def test_build_request_injects_schema_hint_into_system() -> None:
     provider = AnthropicBatchProvider(client=FakeAsyncClient())
     schema = {"type": "object", "properties": {"x": {"type": "integer"}}}
-    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s", reply_schema=schema)
+    reasoner = Reasoner(name="b", model="anthropic:claude-x", system="s", reply=schema)
 
     request = provider.build_request("c1", reasoner, {"input": "hello"})
 
@@ -144,7 +144,7 @@ def test_results_and_parse_successful_entries() -> None:
         name="json",
         model="anthropic:claude-x",
         system="s",
-        reply_schema={"type": "object"},
+        reply={"type": "object"},
     )
     text_reasoner = Reasoner(name="text", model="anthropic:claude-x", system="s")
     batches = FakeBatches(
@@ -180,7 +180,7 @@ def test_parse_structured_entry_matches_shared_llm_parser() -> None:
         name="json",
         model="anthropic:claude-x",
         system="s",
-        reply_schema={"type": "object"},
+        reply={"type": "object"},
     )
     parsed = FakeParsed(7)
     raw = FakeMessage([FakeBlock("text", '{"x": 0}')], parsed=parsed)

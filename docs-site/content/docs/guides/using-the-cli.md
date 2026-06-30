@@ -103,6 +103,13 @@ ca run triage --input '"TICKET-42"'
 output: {"reply": "..."}
 ```
 
+> `ca run` executes with **offline echo stubs** for tools and reasoners (each
+> returns `{"output": <input>}`) so it never needs a key or network — it is for
+> seeing the **trace tree and control flow**, not realistic values. For realistic
+> local output, use `deployment.dry_run(input, reasoners={...})` with fake
+> reasoners (see [Your First Flow](/docs/start/first-flow)). Registered `@pure`
+> functions run for real in both.
+
 The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.ca/runs/` so `ca trace <run-id>` can re-render them and `result:fail` can select the failures.
 
 ## Gates

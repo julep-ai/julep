@@ -19,7 +19,8 @@ if HAVE_TEMPORAL:
     from temporalio.worker import Worker
 
     from composable_agents import Ann, freeze, manifest_to_json, think
-    from composable_agents.dotctx import Reasoner, register_reasoner
+    from composable_agents.dotctx import Reasoner
+    from composable_agents.registry import DEFAULT_REGISTRY
     from composable_agents.execution.activities import WorkerContext, configure
     from composable_agents.execution.batch_provider import BatchProvider, register_batch_provider
     import composable_agents.execution.reasoner_batch as reasoner_batch
@@ -322,7 +323,7 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
     FakeBatch.values.clear()
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fake", FakeBatch)
-    register_reasoner(Reasoner(name="echo_reasoner", model="fake:m", system="", reply_schema=None))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="echo_reasoner", model="fake:m", system="", reply=None))
 
     tq = f"ca-reasoner-batch-{uuid.uuid4()}"
     async with Worker(
@@ -381,7 +382,7 @@ async def _same_key_fresh_collectors_start_distinct_poll_workflows(
     BlockingFakeBatch.reset()
     register_batch_provider("blockingfake", BlockingFakeBatch)
     reasoner_name = f"blocking_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(Reasoner(name=reasoner_name, model="blockingfake:m", system=""))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name=reasoner_name, model="blockingfake:m", system=""))
 
     tq = f"ca-reasoner-batch-collision-{uuid.uuid4()}"
     principal = {"tenant": "same"}
@@ -496,8 +497,8 @@ def test_fetch_batch_results_emits_batch_attempt_record() -> None:
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fakeattempt", FakeBatch)
     reasoner_name = f"batch_attempt_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(
-        Reasoner(name=reasoner_name, model="fakeattempt:m", system="", reply_schema=None)
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name=reasoner_name, model="fakeattempt:m", system="", reply=None)
     )
     custom_id = "attempt-cid"
     FakeBatch.values[custom_id] = "hello"
@@ -543,7 +544,7 @@ async def _flow_reasoner_rendezvous_through_build_worker(
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fake", FakeBatch)
     reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(Reasoner(name=reasoner_name, model="fake:m", system="", reply_schema=None))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name=reasoner_name, model="fake:m", system="", reply=None))
 
     flow = think(reasoner_name, ann=Ann(batchable=True))
     frozen = freeze(flow, McpSnapshot())
@@ -612,7 +613,7 @@ async def _two_runs_do_not_misroute(env: WorkflowEnvironment) -> None:
     FakeBatch.requests_by_batch.clear()
     register_batch_provider("fake", FakeBatch)
     reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(Reasoner(name=reasoner_name, model="fake:m", system="", reply_schema=None))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name=reasoner_name, model="fake:m", system="", reply=None))
 
     flow = think(reasoner_name, ann=Ann(batchable=True))
     frozen = freeze(flow, McpSnapshot())
@@ -690,7 +691,7 @@ async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
     PendingFakeBatch.requests_by_batch.clear()
     register_batch_provider("pending", PendingFakeBatch)
     reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(Reasoner(name=reasoner_name, model="pending:m", system="", reply_schema=None))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name=reasoner_name, model="pending:m", system="", reply=None))
 
     flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
@@ -764,7 +765,7 @@ async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
     ErrorFakeBatch.requests_by_batch.clear()
     register_batch_provider("errorfake", ErrorFakeBatch)
     reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(Reasoner(name=reasoner_name, model="errorfake:m", system="", reply_schema=None))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name=reasoner_name, model="errorfake:m", system="", reply=None))
 
     flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
@@ -838,8 +839,8 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
     FailedFakeBatch.requests_by_batch.clear()
     register_batch_provider("failedfake", FailedFakeBatch)
     reasoner_name = f"batch_reasoner_{uuid.uuid4().hex}"
-    register_reasoner(
-        Reasoner(name=reasoner_name, model="failedfake:m", system="", reply_schema=None)
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name=reasoner_name, model="failedfake:m", system="", reply=None)
     )
 
     flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))

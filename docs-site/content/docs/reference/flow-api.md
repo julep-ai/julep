@@ -15,7 +15,7 @@ Related: [Authoring](/docs/guides/authoring-flows), [Concepts](/docs/concepts/mo
 
 ```python
 from typing import TypedDict
-from composable_agents import Reasoner, deploy, flow, pure, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, pure, think, tool
 
 class Reply(TypedDict):
     reply: str
@@ -25,15 +25,15 @@ def lookup(ticket: str) -> dict[str, str]:
 @pure("prompt")
 def prompt(hit: dict[str, str]) -> dict[str, str]:
     return {"queue": hit["queue"]}
-register_reasoner(Reasoner("support_reply", "anthropic:claude-haiku-4-5-20251001", reply=Reply))
+SUPPORT_REPLY = Reasoner("support_reply", "anthropic:claude-haiku-4-5-20251001", reply=Reply)
 @flow
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup(ticket, retries=2, timeout_s=5)
     request = prompt(hit)
-    answer = think("support_reply", request, timeout_s=10)
+    answer = think(SUPPORT_REPLY, request, timeout_s=10)
     return hit | answer
 
-deployment = deploy(triage, tools=[lookup], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup], reasoners=[SUPPORT_REPLY])
 result = deployment.dry_run("charged twice", reasoners={"support_reply": lambda value: {"reply": value["queue"]}})
 print(result.value)
 ```
@@ -134,8 +134,8 @@ def with_options(ticket: str) -> dict[str, str]:
 
 | Signature | Meaning | Returns | Raises | Example |
 |---|---|---|---|---|
-| `think(reasoner_or_name: str | Reasoner, value: None = None, /, **kwargs: Any) -> Node` | Outside `@flow`, build `dsl.think(name, **kwargs)`. | `Node` | Errors from `dsl.think`/`Ann` validation later. | `think("support_reply")` |
-| `think(reasoner_or_name: str | Reasoner, value: Handle, /, **kwargs: Any) -> Handle` | Inside `@flow`, append a reasoner step. | `Handle` | `DefineError` for bad handle or escaped handle. | `answer = think("support_reply", prompt)` |
+| `think(reasoner_or_name: str | Reasoner, value: None = None, /, **kwargs: Any) -> Node` | Outside `@flow`, build `dsl.think(name, **kwargs)`. | `Node` | Errors from `dsl.think`/`Ann` validation later. | `think(SUPPORT_REPLY)` |
+| `think(reasoner_or_name: str | Reasoner, value: Handle, /, **kwargs: Any) -> Handle` | Inside `@flow`, append a reasoner step. | `Handle` | `DefineError` for bad handle or escaped handle. | `answer = think(SUPPORT_REPLY, prompt)` |
 | `cond(pred: str | Any, subject: Handle, *, then: FlowDef | BoundFlow, orelse: FlowDef | BoundFlow) -> Handle` | Binary branch on registered pure predicate. Arms receive the branch subject by name. | `Handle` | `DefineError` for unregistered predicate, non-flow arms, JSON captures in arms, or arm parameter mismatch. | `cond(is_found, hit, then=found, orelse=missing)` |
 | `switch(selector: str | Any, subject: Handle, *, cases: dict[str, FlowDef | BoundFlow], default: FlowDef | BoundFlow | None = None) -> Handle` | Multiway branch on registered pure selector. | `Handle` | `DefineError` for empty cases, unregistered selector, non-flow arms, or arm parameter mismatch. | `switch(status, write, cases={"ok": ok}, default=fail)` |
 | `each(body: FlowDef | BoundFlow | Node, items: Optional[Handle] = None, *, max_parallel: Optional[int] = None, reducer: str | Any | None = None) -> Node | Handle` | Inside `@flow`, dynamic fan-out over `items`; outside, dispatches to `dsl.each` only when `body` is a `Node`. | `Handle` or `Node` | `DefineError` for missing handle items inside `@flow`, invalid body, invalid captures, bad reducer; `ValueError` later for invalid low-level bounds. | `labels = each(label_one(ctx=ctx), clusters, max_parallel=2)` |

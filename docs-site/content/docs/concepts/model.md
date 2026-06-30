@@ -183,9 +183,8 @@ The same control plane, capability/budget guards, and projection apply.
 **Temporal** (durable `SessionWorkflow`; the carrier persists via `SessionStore`
 across `continue_as_new`, `send` is a Temporal Update), and **CMA** (one
 managed-agent session per turn). `events()` yields a normalized `SessionEvent`
-(`Emit`/`Turn`/`Error`/`Closed`) and ends only on `Closed`. Full reference:
-[Sessions](/docs/guides/sessions); design rationale in
-[the session design specsuperpowers/specs/2026-06-23-upgradeable-sessions-design.md.
+(`Emit`/`Turn`/`Error`/`Closed`) and ends only on `Closed`. Full reference and
+design rationale: [the Sessions guide](/docs/guides/sessions).
 
 ## Typed authoring surface
 

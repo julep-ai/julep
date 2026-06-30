@@ -76,9 +76,9 @@ def test_parse_reuses_llm_parse_reply() -> None:
         name="t",
         model="m",
         system="s",
-        reply_schema={"type": "object"},
+        reply={"type": "object"},
     )
     assert provider.parse(_completion(json.dumps({"k": 1})), reasoner_json) == {"k": 1}
 
-    reasoner_text = Reasoner(name="t2", model="m", system="s", reply_schema=None)
+    reasoner_text = Reasoner(name="t2", model="m", system="s", reply=None)
     assert provider.parse(_completion("hello"), reasoner_text) == "hello"

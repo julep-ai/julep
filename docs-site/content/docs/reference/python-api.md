@@ -13,7 +13,7 @@ wire format directly. See the repository [README](/docs),
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, pure, think, tool
 
 class Reply(TypedDict):
     reply: str
@@ -26,20 +26,20 @@ def lookup(ticket: str) -> dict[str, str]:
 def prompt(hit: dict[str, str]) -> dict[str, str]:
     return {"queue": hit["queue"], "context": hit["summary"]}
 
-register_reasoner(Reasoner(
+SUPPORT_REPLY = Reasoner(
     name="support_reply",
     model="anthropic:claude-haiku-4-5-20251001",
     system="Return JSON.",
     reply=Reply,
-))
+)
 
 @flow
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup(ticket, retries=2, timeout_s=5)
-    answer = think("support_reply", prompt(hit), timeout_s=10)
+    answer = think(SUPPORT_REPLY, prompt(hit), timeout_s=10)
     return hit | answer
 
-deployment = deploy(triage, tools=[lookup], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup], reasoners=[SUPPORT_REPLY])
 result = deployment.dry_run(
     "TICKET-42",
     reasoners={"support_reply": lambda value: {"reply": value["context"]}},
@@ -125,8 +125,7 @@ flow parameters or JSON captures.
 | `get_pure` | `get_pure(name: str) -> PureFn` | registered pure name | callable | `KeyError` if unknown | `get_pure("prompt")({"summary": "x"})` |
 | `is_registered` | `is_registered(name: str) -> bool` | pure name | bool | none | `is_registered("prompt")` |
 | `diff_pure_hashes` | `diff_pure_hashes(pinned: dict[str,str], registered: dict[str,str]) -> list[dict[str,str|None]]` | pinned and actual hash maps | drift list | none | `diff_pure_hashes({}, {})` |
-| `Reasoner` | `Reasoner(name, model, system="", reply_schema=None, tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET)` | model-call config; `reply` accepts TypedDict or Pydantic v2 model | reasoner config | `ValueError` if `reply` and `reply_schema`; `TypeError` for unsupported `reply` | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
-| `register_reasoner` | `register_reasoner(reasoner: Reasoner) -> Reasoner` | config | same config | registry `ValueError` on conflicting name | `register_reasoner(Reasoner("r", "m"))` |
+| `Reasoner` | `Reasoner(name, model, system="", tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET)` | model-call config; `reply` accepts TypedDict, Pydantic v2 model, or raw schema dict | reasoner config | `TypeError` for unsupported `reply` | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
 | `get_reasoner` | `get_reasoner(name: str) -> Reasoner` | reasoner name | config | `KeyError` if unknown | `get_reasoner("support_reply").model` |
 | `load_dotctx` | `load_dotctx(path: str) -> Reasoner` | dotctx directory | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
 | `reasoner_from_settings` | `reasoner_from_settings(settings: dict[str, Any], *, name=None, base_dir=None) -> Reasoner` | settings mapping and optional path | registered reasoner | `ValueError` if no name | `reasoner_from_settings({"name":"r","model":"m"})` |
@@ -140,7 +139,7 @@ These names are exported at package root. For lower-level `dsl.think` and
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
-| `think` | `think(reasoner_or_name: str | Reasoner, value: Handle | None = None, /, **kwargs) -> Node | Handle` | reasoner and optional `Handle`; kwargs may include `name`, `retries`, `retry_interval_s`, `backoff_rate`, `timeout_s` | node outside `@flow`, handle inside | `DefineError` for invalid captures; `TypeError` for bad usage | `think("support_reply", prompt(hit), timeout_s=10)` |
+| `think` | `think(reasoner_or_name: str | Reasoner, value: Handle | None = None, /, **kwargs) -> Node | Handle` | reasoner and optional `Handle`; kwargs may include `name`, `retries`, `retry_interval_s`, `backoff_rate`, `timeout_s` | node outside `@flow`, handle inside | `DefineError` for invalid captures; `TypeError` for bad usage | `think(SUPPORT_REPLY, prompt(hit), timeout_s=10)` |
 | `cond` | `cond(pred: str | Any, subject: Handle, *, then: FlowDef | BoundFlow, orelse: FlowDef | BoundFlow) -> Handle` | registered pure predicate, subject, two arms | branch handle | `DefineError` for unregistered pred or bad arm binding | `cond("is_large", item, then=big, orelse=small)` |
 | `switch` | `switch(selector: str | Any, subject: Handle, *, cases: dict[str, FlowDef | BoundFlow], default=None) -> Handle` | registered selector and case arms | selected branch handle | `DefineError` for empty cases or bad arm binding | `switch("route", item, cases={"a": a_flow}, default=b_flow)` |
 | `each` | `each(body: FlowDef | BoundFlow | Node, items: Handle | None = None, *, max_parallel=None, reducer=None) -> Node | Handle` | body flow/node, list handle in `@flow`, optional reducer | dynamic fan-out | `DefineError`, `GraphDefinitionError`, `ValueError` | `each(label_one, clusters, max_parallel=8)` |
@@ -252,7 +251,7 @@ single-consumer and ends only on `Closed`.
 | `CapabilityManifest.assert_within_budget` | `assert_within_budget(*, cost=0.0, tokens=0) -> None` | current estimates | None | `CapabilityDenied` | `caps.assert_within_budget(cost=0.5)` |
 | `check_approval_gates` | `check_approval_gates(flow, manifest, capabilities=None) -> list[Diagnostic]` | frozen flow/manifest/caps | diagnostics | none | `check_approval_gates(flow, manifest, caps)` |
 | `snapshot_from_listings` | `snapshot_from_listings(listings, *, versions=None) -> McpSnapshot` | MCP tools/list-shaped dict | snapshot | none | `snapshot_from_listings({"s": {"t": {"inputSchema": {}}}})` |
-| `deploy` | `deploy(flow, snapshot=None, *, tools=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow") -> Deployment` | flow plus snapshot or native tools; capability gates; mode | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(triage, tools=[lookup], reasoners=["support_reply"])` |
+| `deploy` | `deploy(flow, snapshot=None, *, tools=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow") -> Deployment` | flow plus snapshot or native tools; capability gates; mode | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(triage, tools=[lookup], reasoners=[SUPPORT_REPLY])` |
 | `Deployment` | `Deployment(flow, manifest, diagnostics=[], capabilities=None, mode=STRICT, freeze_timing="deploy_time", ...)` | compiled artifact | deployment | none | `deployment.artifact_hash` |
 | `Deployment.refresh` | `refresh(snapshot=None) -> Deployment` | fresh snapshot or stored source | new deployment | `ValueError`, deploy errors | `deployment.refresh(new_snapshot)` |
 | `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="composable-agents", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
@@ -288,12 +287,12 @@ language.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
-| `Agent` | `Agent(reasoner: str, tools: Sequence[FlowLike | SplitCapability] = (), *, name=None, llm=None, budget_cost=None, max_rounds=24, instructions=None, mode=STRICT, langfuse_export=None)` | model slug, tool/flow/agent capabilities, local LLM seam, policy | agent facade | `ValidationError`, `TypeError` | `agent = Agent("anthropic:claude-haiku-4-5", [lookup], llm=fake)` |
+| `Agent` | `Agent(reasoner: str \| Reasoner, tools: Sequence[FlowLike | SplitCapability] = (), *, name=None, llm=None, budget_cost=None, max_rounds=24, instructions=None, mode=STRICT, langfuse_export=None)` | model slug or a `Reasoner` object (its model/system drive the controller), tool/flow/agent capabilities, local LLM seam, policy | agent facade | `ValidationError`, `TypeError` | `agent = Agent("anthropic:claude-haiku-4-5", [lookup], llm=fake)` |
 | `Agent.name` | property `str` | none | controller name | none | `agent.name` |
 | `Agent.to_ir` | `to_ir() -> Node` | none | app node | none | `agent.to_ir()` |
 | `Agent.with_tools` | `with_tools(*, add=(), remove=()) -> Agent` | add/remove capabilities | new agent | same as constructor | `agent.with_tools(add=[other_tool])` |
 | `Agent.without` | `without(*tools: FlowLike | SplitCapability | str) -> Agent` | capabilities/names | new agent | same as constructor | `agent.without("lookup")` |
-| `Agent.replace` | `replace(*, reasoner=None, budget_cost=_KEEP, max_rounds=None, instructions=_KEEP, mode=_KEEP, llm=_KEEP) -> Agent` | selected config overrides | new agent | same as constructor | `agent.replace(max_rounds=8)` |
+| `Agent.replace` | `replace(*, reasoner: str \| Reasoner \| None = None, budget_cost=_KEEP, max_rounds=None, instructions=_KEEP, mode=_KEEP, llm=_KEEP) -> Agent` | selected config overrides (a `Reasoner` object drives model/system like the constructor) | new agent | same as constructor | `agent.replace(max_rounds=8)` |
 | `Agent.arun` / `run` | `async arun(input, *, principal=None) -> Result`; `run(input, *, principal=None) -> Result` | one-shot input and optional run principal | typed run dict | `RuntimeError` if sync call inside event loop; deploy/interpreter errors | `agent.run({"task": "x"}).output` |
 | `Agent.arun_on_cma` / `run_on_cma` | `async arun_on_cma(input, *, client, environment=None) -> Result`; sync wrapper | CMA client and environment | typed run dict | `RuntimeError`, CMA/tool errors | `await agent.arun_on_cma("hi", client=cma)` |
 | `Agent.open` | `async open(*, session, backend="local", principal=None, client=None, task_queue="composable-agents", policy=None, history_threshold=None, channel_capacity=None, session_id=None, environment=None) -> SessionHandle` | session plus backend config | live handle | `ValueError`, `ValidationError`, `NotImplementedError` for Temporal sub-cap auto-wire | `await agent.open(session=chat, backend="local")` |
@@ -303,7 +302,7 @@ language.
 | `Agent.split_children` | `split_children() -> dict[str, SplitCapability]` | none | split child markers | none | `agent.split_children()` |
 | `Agent.check` | `check() -> list[Diagnostic]` | none | deploy diagnostics | freeze errors | `agent.check()` |
 | `Agent.deploy` | `async deploy(client, *, session_id, input=None, task_queue="composable-agents", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `NotImplementedError` with sub-capabilities; deploy/runtime errors | `await agent.deploy(client, session_id="run-1")` |
-| `AGENT_REPLY_SCHEMA` | JSON schema constant | closed controller vocabulary | schema dict | none | `Reasoner("agent", "m", reply_schema=AGENT_REPLY_SCHEMA)` |
+| `AGENT_REPLY_SCHEMA` | JSON schema constant | closed controller vocabulary | schema dict | none | `Reasoner("agent", "m", reply=AGENT_REPLY_SCHEMA)` |
 
 `Result` returned by `Agent.run` is a `dict` with properties `output`, `status`,
 `ok`, `trace`, `cost`, `rounds`, `reason`, and `prod_gap`.

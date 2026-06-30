@@ -3,9 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from composable_agents.ca.config import CaConfig
-from composable_agents.ca.resolve import resolve_agent
-from composable_agents.ir import Node
-from composable_agents.validate import Diagnostic, validate
+from composable_agents.ca.resolve import lint_agent
 
 _SEVERITY_ORDER = {"info": 0, "warning": 1, "error": 2}
 
@@ -24,31 +22,23 @@ def lint_agents(
     *,
     fail_severity: str,
 ) -> tuple[list[Finding], int]:
-    """Resolve agents to IR, validate them, and return findings plus an exit code."""
-    findings: list[Finding] = []
+    """Validate agents (in-child, where pures are live) and gate by severity."""
     if fail_severity not in _SEVERITY_ORDER:
         raise ValueError(
             f"unknown fail_severity {fail_severity!r}; expected one of {sorted(_SEVERITY_ORDER)}"
         )
     floor = _SEVERITY_ORDER[fail_severity]
+    findings: list[Finding] = []
     gated = False
 
     for name in names:
-        resolved = resolve_agent(cfg, name)
-        if resolved.error is not None:
-            return [Finding(name, "RESOLVE", "error", resolved.error)], 2
-
-        diagnostics: list[Diagnostic] = validate(Node.from_json(resolved.ir))
-        for diagnostic in diagnostics:
-            findings.append(
-                Finding(
-                    name,
-                    diagnostic.code,
-                    diagnostic.severity,
-                    diagnostic.message,
-                )
-            )
-            if _SEVERITY_ORDER.get(diagnostic.severity, _SEVERITY_ORDER["error"]) >= floor:
+        resolution = lint_agent(cfg, name)
+        if resolution.error is not None:
+            return [Finding(name, "RESOLVE", "error", resolution.error)], 2
+        for d in resolution.diagnostics:
+            severity = d["severity"]
+            findings.append(Finding(name, d["code"], severity, d["message"]))
+            if _SEVERITY_ORDER.get(severity, _SEVERITY_ORDER["error"]) >= floor:
                 gated = True
 
     return findings, 1 if gated else 0

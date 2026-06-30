@@ -45,8 +45,9 @@ Extras: `temporal` · `dbos` · `http` · `cma` · `dotctx` · `providers` · `o
   **keyword captures**. `cond`/`switch` arm's leftover parameter must match the
   subject handle's label; other values are keyword captures.
 
-## Registering the pieces
+## Declaring the pieces
 
+<!-- ca:doctest skip -->
 ```python
 @tool(effect="read", idempotent=True)          # effect: read | write | external | dangerous
 def lookup(ticket: str) -> dict[str, str]: ...  # schemas inferred from type hints
@@ -54,22 +55,22 @@ def lookup(ticket: str) -> dict[str, str]: ...  # schemas inferred from type hin
 @pure("ticket_prompt")                          # register by stable name; raw source is hashed
 def ticket_prompt(hit: dict) -> dict: ...
 
-register_reasoner(Reasoner(
+SUPPORT_REPLY = Reasoner(
     name="support_reply",
     model="anthropic:claude-haiku-4-5-20251001",
     system="...",
     reply=SupportReply,                         # a TypedDict reply schema
-))
-get_reasoner("support_reply")                   # recover model/system/reply at call time
+)
 ```
 
-Register the **raw** function — never a wrapper, closure, or lambda (pins are
+Decorate the **raw** function — never a wrapper, closure, or lambda (pins are
 source hashes). [Determinism contract →](/docs/guides/authoring-flows#determinism-contract)
 
 ## Compile + run a `@flow` locally
 
+<!-- ca:doctest skip -->
 ```python
-deployment = deploy(flow, tools=[...], reasoners=[...])   # -> Deployment; strict by default
+deployment = deploy(flow, tools=[...], reasoners=[SUPPORT_REPLY])   # -> Deployment; strict by default
 deployment = deploy(flow, tools=[...], mode="dev")        # warn + continue while iterating
 
 result = deployment.dry_run(input, reasoners={"name": fake_fn})   # keyless, deterministic
@@ -83,6 +84,7 @@ facade `Result` below: `.value` (produced value), `.reported_cost`, `.event_id`,
 
 ## `Agent` facade (controller loop)
 
+<!-- ca:doctest skip -->
 ```python
 agent = Agent(reasoner="claude-sonnet-4-6", tools=[...], llm=controller,
               budget_cost=8.0, max_rounds=8, instructions="...", mode="dev")

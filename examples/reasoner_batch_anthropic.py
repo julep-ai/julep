@@ -23,12 +23,13 @@ import uuid
 from temporalio.client import Client
 
 from composable_agents import Ann, freeze, manifest_to_json, think
-from composable_agents.dotctx import Reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner
 from composable_agents.execution.activities import WorkerContext
 from composable_agents.execution.harness import start_flow
 from composable_agents.execution.llm import complete_reasoner
 from composable_agents.execution.worker import build_worker
 from composable_agents.freeze import McpSnapshot
+from composable_agents.registry import DEFAULT_REGISTRY
 
 API_KEY_ENV = "ANTHROPIC_API_KEY"
 MODEL = "anthropic:claude-haiku-4-5-20251001"
@@ -89,12 +90,11 @@ async def main() -> None:
     require_api_key()
     assert len(INPUTS) == N
 
-    register_reasoner(
+    DEFAULT_REGISTRY.register_reasoner(
         Reasoner(
             name="batch_sentiment",
             model=MODEL,
             system="You are a terse classifier. Reply with one short word.",
-            reply_schema=None,
         )
     )
 

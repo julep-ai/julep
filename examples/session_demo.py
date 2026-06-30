@@ -64,13 +64,13 @@ from composable_agents import (
     par,
     recv,
     register_pure,
-    register_reasoner,
     scan,
     seq,
     think,
 )
 from composable_agents.dotctx import get_reasoner
 from composable_agents.execution.llm import complete_reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 
 MODEL = "anthropic:claude-haiku-4-5-20251001"
 REASONER = "session_demo.assistant"
@@ -94,12 +94,11 @@ SCRIPT = [
 # Registered once at import so both the local caller and the Temporal worker
 # (same process) resolve it from the global registry.
 # --------------------------------------------------------------------------- #
-register_reasoner(
+DEFAULT_REGISTRY.register_reasoner(
     Reasoner(
         name=REASONER,
         model=MODEL,
         system=SYSTEM,
-        reply_schema=None,
         max_tokens=64,
     )
 )

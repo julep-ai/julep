@@ -41,7 +41,6 @@ from composable_agents import (
     each,
     flow,
     pure,
-    register_reasoner,
     think,
     tool,
 )
@@ -155,44 +154,40 @@ TOOLS = [read_episode, write_summary_surfaces]
 
 
 # --------------------------------------------------------------------------- #
-# Reasoners (the product's two LLM passes), addressed by name from the worker.
+# Reasoners (the product's two LLM passes), declared as deployable objects.
 # --------------------------------------------------------------------------- #
-register_reasoner(
-    Reasoner(
-        name=SUMMARIZER,
-        model=MODEL,
-        system=(
-            "You summarize episodic memory records for a memory store. The user "
-            "message is a JSON object; summarize its 'text' field in 2-4 plain "
-            "sentences covering what happened, decisions made, and follow-ups. "
-            'Reply with exactly one JSON object: {"summary": "..."}.'
-        ),
-        reply_schema={
-            "type": "object",
-            "properties": {"summary": {"type": "string"}},
-            "required": ["summary"],
-        },
-        max_tokens=1024,
-    )
+SUMMARIZER_R = Reasoner(
+    name=SUMMARIZER,
+    model=MODEL,
+    system=(
+        "You summarize episodic memory records for a memory store. The user "
+        "message is a JSON object; summarize its 'text' field in 2-4 plain "
+        "sentences covering what happened, decisions made, and follow-ups. "
+        'Reply with exactly one JSON object: {"summary": "..."}.'
+    ),
+    reply={
+        "type": "object",
+        "properties": {"summary": {"type": "string"}},
+        "required": ["summary"],
+    },
+    max_tokens=1024,
 )
 
-register_reasoner(
-    Reasoner(
-        name=ONE_LINER,
-        model=MODEL,
-        system=(
-            "You write one-line abstracts. The user message is a JSON object "
-            "with a 'summary' field; compress it into a single sentence of at "
-            'most 140 characters. Reply with exactly one JSON object: '
-            '{"oneLiner": "..."}.'
-        ),
-        reply_schema={
-            "type": "object",
-            "properties": {"oneLiner": {"type": "string"}},
-            "required": ["oneLiner"],
-        },
-        max_tokens=256,
-    )
+ONE_LINER_R = Reasoner(
+    name=ONE_LINER,
+    model=MODEL,
+    system=(
+        "You write one-line abstracts. The user message is a JSON object "
+        "with a 'summary' field; compress it into a single sentence of at "
+        'most 140 characters. Reply with exactly one JSON object: '
+        '{"oneLiner": "..."}.'
+    ),
+    reply={
+        "type": "object",
+        "properties": {"oneLiner": {"type": "string"}},
+        "required": ["oneLiner"],
+    },
+    max_tokens=256,
 )
 
 
@@ -222,9 +217,9 @@ def tally_summary_statuses(results: list[dict[str, Any]]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 @flow
 def happy_path(source: dict[str, Any]) -> dict[str, Any]:
-    summary = think(SUMMARIZER, source)
+    summary = think(SUMMARIZER_R, source)
     merged = source | summary
-    liner = think(ONE_LINER, merged)
+    liner = think(ONE_LINER_R, merged)
     return write_summary_surfaces(merged | liner)
 
 
@@ -251,7 +246,7 @@ def batch(episode_ids: list[str]) -> dict[str, Any]:
 
 
 def build() -> Deployment:
-    return deploy(batch, tools=TOOLS, reasoners=[SUMMARIZER, ONE_LINER])
+    return deploy(batch, tools=TOOLS, reasoners=[SUMMARIZER_R, ONE_LINER_R])
 
 
 # --------------------------------------------------------------------------- #

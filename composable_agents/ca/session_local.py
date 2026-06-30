@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from composable_agents.ca.resolve import ResolvedAgent
-from composable_agents.ca.runner import (
+from composable_agents.ca._echo import (
     _clear_frozen_hashes,
     _echo_agents,
     _echo_reasoners,
     _echo_subs,
     _echo_tools,
 )
+from composable_agents.ca.resolve import ResolvedAgent
 from composable_agents.derived import emit, recv
 from composable_agents.dsl import arr, seq
 from composable_agents.ir import Node

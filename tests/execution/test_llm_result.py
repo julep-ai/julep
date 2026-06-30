@@ -13,7 +13,7 @@ def _fake_completion(content="hello", pt=11, ct=7):
 def test_complete_reasoner_returns_result_with_usage():
     async def fake_acompletion(**kwargs):
         return _fake_completion()
-    reasoner = Reasoner(name="r", model="anthropic:claude-x", system="s", reply_schema=None)
+    reasoner = Reasoner(name="r", model="anthropic:claude-x", system="s", reply=None)
     out = asyncio.run(llm_mod.complete_reasoner(
         reasoner, {"x": 1}, acompletion=fake_acompletion,
     ))

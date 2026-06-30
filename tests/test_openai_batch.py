@@ -145,7 +145,7 @@ def test_registers_openai_provider() -> None:
 
 def test_build_request_chat_completions_shape() -> None:
     provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
-    reasoner = Reasoner(name="b", model="openai:gpt-x", system="s", reply_schema=None)
+    reasoner = Reasoner(name="b", model="openai:gpt-x", system="s", reply=None)
 
     request = provider.build_request("c1", reasoner, "hello")
 
@@ -160,7 +160,7 @@ def test_build_request_chat_completions_shape() -> None:
 def test_build_request_injects_response_format_for_schema() -> None:
     provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
     schema = {"type": "object", "properties": {"x": {"type": "integer"}}}
-    reasoner = Reasoner(name="b", model="openai:gpt-x", system="s", reply_schema=schema)
+    reasoner = Reasoner(name="b", model="openai:gpt-x", system="s", reply=schema)
 
     request = provider.build_request("c1", reasoner, {"input": "hello"})
 
@@ -295,7 +295,7 @@ def test_results_and_parse_success_and_error() -> None:
         name="json",
         model="openai:gpt-x",
         system="s",
-        reply_schema={"type": "object"},
+        reply={"type": "object"},
     )
 
     async def collect() -> dict[str, Any]:
@@ -318,7 +318,7 @@ def test_parse_structured_entry_matches_shared_llm_parser() -> None:
         name="json",
         model="openai:gpt-x",
         system="s",
-        reply_schema={"type": "object"},
+        reply={"type": "object"},
     )
     parsed = FakeParsed(9)
     raw = {

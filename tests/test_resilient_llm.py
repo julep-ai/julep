@@ -196,7 +196,7 @@ def test_auth_error_chained_under_transient_still_fails_fast() -> None:
     caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN))
 
     with pytest.raises(HttpError, match="overloaded"):
-        run(caller(_reasoner(reply_schema=schema), "hi"))
+        run(caller(_reasoner(reply=schema), "hi"))
     assert [a.outcome for a in attempts] == ["config"]
     assert len(script.calls) == 2  # native + injected; no fallback model consulted
 
@@ -224,6 +224,6 @@ def test_model_behavior_advances_without_charging_breaker() -> None:
     ])
     caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN), breaker=breaker)
 
-    assert run(caller(_reasoner(reply_schema=schema), "hi")).reply == {"queue": "billing"}
+    assert run(caller(_reasoner(reply=schema), "hi")).reply == {"queue": "billing"}
     assert [a.outcome for a in attempts] == ["model_behavior", "ok"]
     assert breaker.state("openai") == "closed"      # answered: not an outage

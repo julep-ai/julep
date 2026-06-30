@@ -28,7 +28,7 @@ if HAVE_TEMPORAL:
     from composable_agents import (
         call, mcp, seq, think, freeze, manifest_to_json,
         arr,
-        register_reasoner, Reasoner,
+        Reasoner,
         app,
         Budget,
         CapabilityManifest,
@@ -54,6 +54,7 @@ if HAVE_TEMPORAL:
     from composable_agents.purity import PureEntry
     from composable_agents.deploy import deploy
     from composable_agents.errors import PureDriftError
+    from composable_agents.registry import DEFAULT_REGISTRY
 
 
 # --------------------------------------------------------------------------- #
@@ -106,10 +107,10 @@ def _child_registry():
 
 
 def _worker(env, *, task_queue, agents=None, llm=None, extra_reasoners=(), mcp_call=None):
-    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
-    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     for reasoner in extra_reasoners:
-        register_reasoner(reasoner)
+        DEFAULT_REGISTRY.register_reasoner(reasoner)
     ctx = WorkerContext(
         mcp_call=mcp_call or _mcp,
         llm=llm or _llm,
@@ -652,8 +653,8 @@ async def _agent_session_store(env):
     }
     store = InMemorySessionStore()
 
-    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
-    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(
         mcp_call=_mcp,
         llm=_llm,
@@ -715,8 +716,8 @@ async def _agent_session_store_fencing(env):
         llm_calls["count"] += 1
         return await _llm(reasoner, value)
 
-    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
-    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(
         mcp_call=_mcp,
         llm=counting_llm,
@@ -774,8 +775,8 @@ async def _agent_trace_fidelity(env):
     }
     blob_store = InMemoryBlobStore()
 
-    register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
-    register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="adder", model="test", system="add 10"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="ctrl", model="test", system="decide"))
     ctx = WorkerContext(
         mcp_call=_mcp,
         llm=_llm,

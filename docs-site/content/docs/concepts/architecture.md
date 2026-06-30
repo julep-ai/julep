@@ -100,7 +100,7 @@ append graph steps instead of doing runtime work.
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, think, tool
 
 
 class SupportReply(TypedDict):
@@ -112,24 +112,22 @@ def lookup_ticket(ticket: str) -> dict[str, str]:
     return {"ticket": ticket, "queue": "billing"}
 
 
-register_reasoner(
-    Reasoner(
-        name="support_reply",
-        model="anthropic:claude-haiku-4-5-20251001",
-        system="Draft one concise support reply as JSON.",
-        reply=SupportReply,
-    )
+SUPPORT_REPLY = Reasoner(
+    name="support_reply",
+    model="anthropic:claude-haiku-4-5-20251001",
+    system="Draft one concise support reply as JSON.",
+    reply=SupportReply,
 )
 
 
 @flow
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup_ticket(ticket)
-    answer = think("support_reply", hit)
+    answer = think(SUPPORT_REPLY, hit)
     return hit | answer
 
 
-deployment = deploy(triage, tools=[lookup_ticket], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup_ticket], reasoners=[SUPPORT_REPLY])
 ```
 
 `deploy(...)` accepts either a live snapshot or local `@tool` objects:
@@ -457,7 +455,7 @@ Example:
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, register_reasoner, think, tool
+from composable_agents import Reasoner, deploy, flow, pure, think, tool
 
 class SupportReply(TypedDict):
     reply: str
@@ -470,23 +468,21 @@ def lookup_ticket(ticket: str) -> dict[str, str]:
 def ticket_prompt(hit: dict[str, str]) -> dict[str, str]:
     return {"queue": hit["queue"], "context": hit["summary"]}
 
-register_reasoner(
-    Reasoner(
-        name="support_reply",
-        model="anthropic:claude-haiku-4-5-20251001",
-        system="Draft one concise support reply as JSON.",
-        reply=SupportReply,
-    )
+SUPPORT_REPLY = Reasoner(
+    name="support_reply",
+    model="anthropic:claude-haiku-4-5-20251001",
+    system="Draft one concise support reply as JSON.",
+    reply=SupportReply,
 )
 
 @flow
 def triage(ticket: str) -> dict[str, str]:
     hit = lookup_ticket(ticket, retries=2, timeout_s=5)
     prompt = ticket_prompt(hit)
-    answer = think("support_reply", prompt, timeout_s=10)
+    answer = think(SUPPORT_REPLY, prompt, timeout_s=10)
     return hit | answer
 
-deployment = deploy(triage, tools=[lookup_ticket], reasoners=["support_reply"])
+deployment = deploy(triage, tools=[lookup_ticket], reasoners=[SUPPORT_REPLY])
 ```
 
 The frontend rejects runtime-Python control over `Handle` values: truthiness,

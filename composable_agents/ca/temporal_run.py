@@ -10,7 +10,6 @@ from typing import Any
 
 from composable_agents.ca.config import CaConfig, EnvConfig
 from composable_agents.ca.ledger import read_ledger
-from composable_agents.ca.resolve import resolve_agent
 from composable_agents.ca.runner import run_agent_local
 
 __all__ = ["run_on_env"]
@@ -29,8 +28,7 @@ def run_on_env(
     """Run an agent locally or through the deployed Temporal environment."""
 
     if env.name == "local":
-        resolved = resolve_agent(cfg, name)
-        return run_agent_local(resolved, value, run_id=run_id or _local_run_id())
+        return run_agent_local(cfg, name, value, run_id=run_id or _local_run_id())
 
     # A deliberately non-local env MUST have a Temporal address; otherwise we'd
     # silently re-run live source instead of the deployed artifact (immutability

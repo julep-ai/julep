@@ -81,7 +81,10 @@ def test_spike_cluster_slice_dry_run_tallies_success_and_stale_snapshot() -> Non
     deployment = deploy(
         cluster_slice.BATCH.to_ir(),
         tools=cluster_slice.TOOLS,
-        reasoners=[cluster_slice.LABEL_REASONER, cluster_slice.KEYWORDS_REASONER],
+        reasoners=[
+            cluster_slice.LABEL_REASONER_OBJECT,
+            cluster_slice.KEYWORDS_REASONER_OBJECT,
+        ],
     )
 
     result = deployment.dry_run(

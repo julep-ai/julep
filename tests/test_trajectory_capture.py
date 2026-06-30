@@ -23,7 +23,8 @@ from typing import Any, Optional
 import pytest
 
 from composable_agents import HAVE_TEMPORAL
-from composable_agents.dotctx import Reasoner, register_reasoner
+from composable_agents.dotctx import Reasoner
+from composable_agents.registry import DEFAULT_REGISTRY
 from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref
 from composable_agents.execution.effects import (
     CallToolInput,
@@ -87,7 +88,7 @@ def _install(
 @pytest.fixture(autouse=True)
 def _isolate_capture():
     """Each test starts and ends with capture disabled (no leaked module globals)."""
-    register_reasoner(Reasoner(name="lbcap.summarizer", model="test", system="s"))
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="lbcap.summarizer", model="test", system="s"))
     set_trajectory_sink(None, None)
     yield
     set_trajectory_sink(None, None)

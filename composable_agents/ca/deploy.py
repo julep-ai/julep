@@ -110,8 +110,10 @@ def freeze_agent(cfg: CaConfig, name: str, env: str, *, publish: bool = True) ->
     )
     timeout = 120.0
     try:
+        # Payload over stdin (not argv) to stay clear of the OS single-arg limit.
         proc = subprocess.run(
-            [sys.executable, "-m", "composable_agents.ca._resolve_child", arg],
+            [sys.executable, "-m", "composable_agents.ca._resolve_child"],
+            input=arg,
             capture_output=True,
             text=True,
             timeout=timeout,

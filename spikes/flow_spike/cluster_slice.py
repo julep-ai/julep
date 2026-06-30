@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import Reasoner, pure, register_reasoner
+from composable_agents import Reasoner, pure
 from composable_agents import tool as native_tool
 
 from .core import each, flow, think
@@ -53,39 +53,35 @@ def store_labels() -> dict[str, Any]:
 
 reset_store()
 
-register_reasoner(
-    Reasoner(
-        name=LABEL_REASONER,
-        model="anthropic:claude-haiku-4-5-20251001",
-        system=(
-            "Label a memory macrocluster from representative member names. "
-            "Reply with one JSON object."
-        ),
-        reply_schema={
-            "type": "object",
-            "properties": {
-                "label": {"type": "string"},
-                "summary": {"type": "string"},
-            },
-            "required": ["label", "summary"],
+LABEL_REASONER_OBJECT = Reasoner(
+    name=LABEL_REASONER,
+    model="anthropic:claude-haiku-4-5-20251001",
+    system=(
+        "Label a memory macrocluster from representative member names. "
+        "Reply with one JSON object."
+    ),
+    reply={
+        "type": "object",
+        "properties": {
+            "label": {"type": "string"},
+            "summary": {"type": "string"},
         },
-    )
+        "required": ["label", "summary"],
+    },
 )
 
-register_reasoner(
-    Reasoner(
-        name=KEYWORDS_REASONER,
-        model="anthropic:claude-haiku-4-5-20251001",
-        system=(
-            "Extract short searchable keywords for a memory macrocluster. "
-            "Reply with one JSON object."
-        ),
-        reply_schema={
-            "type": "object",
-            "properties": {"keywords": {"type": "array", "items": {"type": "string"}}},
-            "required": ["keywords"],
-        },
-    )
+KEYWORDS_REASONER_OBJECT = Reasoner(
+    name=KEYWORDS_REASONER,
+    model="anthropic:claude-haiku-4-5-20251001",
+    system=(
+        "Extract short searchable keywords for a memory macrocluster. "
+        "Reply with one JSON object."
+    ),
+    reply={
+        "type": "object",
+        "properties": {"keywords": {"type": "array", "items": {"type": "string"}}},
+        "required": ["keywords"],
+    },
 )
 
 

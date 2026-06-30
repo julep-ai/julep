@@ -155,7 +155,6 @@ class Reasoner:
         name: str,
         model: str,
         system: str = "",
-        reply_schema: Optional[dict[str, Any]] = None,
         tools: Sequence[str] = (),
         temperature: Optional[float] = None,
         max_rounds: Optional[int] = None,
@@ -168,15 +167,17 @@ class Reasoner:
         *,
         reply: Any = _REPLY_UNSET,
     ) -> None:
-        if reply is not _REPLY_UNSET:
-            if reply_schema is not None:
-                raise ValueError("reply= and reply_schema= are mutually exclusive")
-            reply_schema = _reply_to_schema(reply)
+        if reply is _REPLY_UNSET or reply is None:
+            materialized = None
+        elif isinstance(reply, dict):
+            materialized = reply
+        else:
+            materialized = _reply_to_schema(reply)
 
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "model", model)
         object.__setattr__(self, "system", system)
-        object.__setattr__(self, "reply_schema", reply_schema)
+        object.__setattr__(self, "reply_schema", materialized)
         object.__setattr__(self, "tools", tuple(tools))
         object.__setattr__(self, "temperature", temperature)
         object.__setattr__(self, "max_rounds", max_rounds)
@@ -189,10 +190,6 @@ class Reasoner:
 
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
-
-
-def register_reasoner(reasoner: Reasoner) -> Reasoner:
-    return DEFAULT_REGISTRY.register_reasoner(reasoner)
 
 
 def get_reasoner(name: str) -> Reasoner:
@@ -252,7 +249,7 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         name=nm,
         model=settings.get("model", "claude-sonnet-4"),
         system=system,
-        reply_schema=reply_schema,
+        reply=reply_schema,
         tools=tuple(settings.get("tools", []) or []),
         temperature=settings.get("temperature"),
         max_rounds=settings.get("max_rounds") or settings.get("maxRounds"),
@@ -263,7 +260,7 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         user_render=settings.get("user_render") or settings.get("userRender"),
         max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
     )
-    return register_reasoner(reasoner)
+    return DEFAULT_REGISTRY.register_reasoner(reasoner)
 
 
 # Rich-layout markers: any of these turns the package over to dotctx_rich
