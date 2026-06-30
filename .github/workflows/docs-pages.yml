@@ -23,13 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # NOTE: this build fails until GitHub Pages is enabled for the repo with
+      # source = "GitHub Actions" (Settings → Pages). `enablement: true` is NOT
+      # used here because it requires a token other than the default GITHUB_TOKEN
+      # (a PAT with Pages-write or a GitHub App with administration:write).
       - id: pages
         uses: actions/configure-pages@v5
-        with:
-          # Create/enable the Pages site via API if it isn't already enabled, so
-          # the build doesn't hard-fail with "Get Pages site failed". Still requires
-          # the repo to allow GitHub Actions as the Pages source (Settings → Pages).
-          enablement: true
 
       - uses: actions/setup-node@v6
         with:
