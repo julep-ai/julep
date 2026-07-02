@@ -157,6 +157,33 @@ def test_build_request_chat_completions_shape() -> None:
     assert request["body"]["messages"][-1] == {"role": "user", "content": "hello"}
 
 
+def test_build_request_sends_json_object_without_schema() -> None:
+    # Declarative response_format: {type: json_object} must reach BATCH
+    # requests too, or the same reasoner is unconstrained under BATCH QoS
+    # while constrained on the sync path (codex PR #12 P2).
+    provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
+    reasoner = Reasoner(
+        name="b", model="openai:gpt-x", system="s", response_format="json_object",
+    )
+
+    body = provider.build_request("c1", reasoner, "hello")["body"]
+
+    assert body["response_format"] == {"type": "json_object"}
+
+
+def test_build_request_schema_wins_over_json_object() -> None:
+    provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
+    schema = {"type": "object", "properties": {"x": {"type": "integer"}}}
+    reasoner = Reasoner(
+        name="b", model="openai:gpt-x", system="s",
+        reply=schema, response_format="json_object",
+    )
+
+    body = provider.build_request("c1", reasoner, "hello")["body"]
+
+    assert body["response_format"]["type"] == "json_schema"
+
+
 def test_build_request_forwards_effort_and_suppresses_temperature() -> None:
     # BATCH must honor the frozen reasoner's effort like the sync path does,
     # including omitting temperature while thinking is enabled (codex PR #11).

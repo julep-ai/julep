@@ -99,6 +99,21 @@ def test_reasoner_without_reply_keeps_existing_identity_bytes() -> None:
     )
 
 
+def test_reasoner_identity_new_phase2_fields_enter_only_when_set() -> None:
+    # Omit-when-unset keeps every pre-existing deploy artifact byte-identical.
+    unset = _registered_identity(Reasoner(name="rf.unset", model="openai:gpt-4o"))
+    assert "requireToolCall" not in unset and "responseFormat" not in unset
+
+    ident = _registered_identity(
+        Reasoner(
+            name="rf.set", model="openai:gpt-4o",
+            require_tool_call=True, response_format="json_object",
+        )
+    )
+    assert ident["requireToolCall"] is True
+    assert ident["responseFormat"] == "json_object"
+
+
 def test_reply_typeddict_materializes_to_json_schema() -> None:
     reasoner = Reasoner(name="reply.typed_dict", model="openai:gpt-4o", reply=TypedReply)
 

@@ -66,6 +66,9 @@ class AnthropicBatchProvider(BatchProvider):
         _, model = _split_model(reasoner.model, "anthropic")
         schema = reasoner.reply_schema
         user_text = rendered_user_for(reasoner, value)
+        # Anthropic has no response_format param, so declarative json_object
+        # rides the prompt's own JSON instructions — the same place the sync
+        # path lands after its recorded fallback.
         messages = _messages(
             reasoner.system,
             value,

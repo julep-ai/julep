@@ -75,6 +75,10 @@ class OpenAIBatchProvider(BatchProvider):
             body["temperature"] = reasoner.temperature
         if schema is not None:
             body["response_format"] = _response_format(schema)
+        elif reasoner.response_format == "json_object":
+            # Declarative json_object (mem-mcp) reaches BATCH like the sync
+            # path; replies still parse as raw text — callers own parsing.
+            body["response_format"] = {"type": "json_object"}
         return {
             "custom_id": custom_id,
             "method": "POST",

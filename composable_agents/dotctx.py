@@ -136,7 +136,15 @@ def _reply_to_schema(reply: Any) -> dict[str, Any]:
 
 @dataclass(frozen=True, init=False)
 class Reasoner:
-    """A resolved model-call configuration, addressed by ``name``."""
+    """A resolved model-call configuration, addressed by ``name``.
+
+    ``require_tool_call`` is declarative in Phase 2: recorded here and hashed
+    into the deploy identity; agent-loop enforcement lands with native
+    tool-calling (Phase 3/4). ``response_format`` records mem-mcp's
+    ``response_format: {type: json_object}`` setting as ``"json_object"``;
+    declaring it alongside a reply schema is allowed — the schema wins at
+    call time (the provider call never carries both).
+    """
 
     name: str
     model: str
@@ -153,6 +161,8 @@ class Reasoner:
     max_tokens: Optional[int] = None      # forwarded to the provider call when set
     reasoning_effort: Optional[str] = None  # provider thinking effort (model_slugs.EFFORT_LEVELS)
     output_retries: int = 0               # re-asks when a schema'd reply fails to parse
+    require_tool_call: bool = False       # declarative; loop enforcement is Phase 3/4
+    response_format: Optional[str] = None  # "json_object"; reply_schema wins at call time
 
     def __init__(
         self,
@@ -172,6 +182,8 @@ class Reasoner:
         reply: Any = _REPLY_UNSET,
         reasoning_effort: Optional[str] = None,
         output_retries: int = 0,
+        require_tool_call: bool = False,
+        response_format: Optional[str] = None,
     ) -> None:
         if reply is _REPLY_UNSET or reply is None:
             materialized = None
@@ -195,6 +207,8 @@ class Reasoner:
         object.__setattr__(self, "max_tokens", max_tokens)
         object.__setattr__(self, "reasoning_effort", reasoning_effort)
         object.__setattr__(self, "output_retries", output_retries)
+        object.__setattr__(self, "require_tool_call", require_tool_call)
+        object.__setattr__(self, "response_format", response_format)
 
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
@@ -225,18 +239,90 @@ def _sub_from(d: Optional[dict[str, Any]]) -> Optional[SubContract]:
     return SubContract(shape=shape, summary_policy=sp)
 
 
+def _as_int(value: Any, *, key: str) -> Optional[int]:
+    """An optional int setting; numeric strings coerce — yglu ``$env.get``
+    values arrive as strings (record/execute.ctx's ``max_rounds`` is the real
+    case) — and anything else is a loud teaching error."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError(f"{key} must be an integer, got {value!r}")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            raise ValueError(
+                f"{key} must be an integer, got {value!r}; "
+                "env-sourced values must be numeric strings"
+            ) from None
+    raise ValueError(f"{key} must be an integer, got {value!r}")
+
+
+def _as_float(value: Any, *, key: str) -> Optional[float]:
+    """An optional float setting, with the same numeric-string coercion."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError(f"{key} must be a number, got {value!r}")
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.strip())
+        except ValueError:
+            raise ValueError(
+                f"{key} must be a number, got {value!r}; "
+                "env-sourced values must be numeric strings"
+            ) from None
+    raise ValueError(f"{key} must be a number, got {value!r}")
+
+
+def _require_tool_call_setting(settings: Mapping[str, Any]) -> bool:
+    value = settings.get("require_tool_call")
+    if value is None:
+        value = settings.get("requireToolCall")
+    if value is None:
+        return False
+    if not isinstance(value, bool):
+        raise ValueError(f"require_tool_call must be true or false, got {value!r}")
+    return value
+
+
+def _response_format_setting(settings: Mapping[str, Any]) -> Optional[str]:
+    """mem-mcp's ``response_format:`` key, stored as the string ``"json_object"``."""
+    value = settings.get("response_format")
+    if value is None:
+        value = settings.get("responseFormat")
+    if value is None:
+        return None
+    if value == {"type": "json_object"}:
+        return "json_object"
+    raise ValueError(
+        f"unsupported response_format {value!r}; the only supported form is "
+        "the mapping 'response_format: {type: json_object}'"
+    )
+
+
+def _setting(settings: Mapping[str, Any], primary: str, secondary: str) -> Any:
+    if primary in settings:
+        return settings[primary]
+    return settings.get(secondary)
+
+
 def _model_and_effort(settings: dict[str, Any]) -> tuple[str, Optional[str], int]:
     """Canonical model, effort (explicit key beats @suffix), output_retries."""
     slug = normalize_model_slug(str(settings.get("model", "claude-sonnet-4")))
-    effort = settings.get("reasoning_effort") or settings.get("reasoningEffort")
+    effort = _setting(settings, "reasoning_effort", "reasoningEffort")
     if effort is not None:
         effort = str(effort).strip().lower()
         if effort not in EFFORT_LEVELS:
             raise ValueError(
                 f"reasoning_effort {effort!r} is not one of {sorted(EFFORT_LEVELS)}"
             )
-    retries = int(settings.get("output_retries")
-                  or settings.get("outputRetries") or 0)
+    retries = _as_int(_setting(settings, "output_retries", "outputRetries"),
+                      key="output_retries") or 0
     if retries < 0:
         raise ValueError("output_retries must be >= 0")
     return slug.model, (effort or slug.reasoning_effort), retries
@@ -277,16 +363,20 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         system=system,
         reply=reply_schema,
         tools=tuple(settings.get("tools", []) or []),
-        temperature=settings.get("temperature"),
-        max_rounds=settings.get("max_rounds") or settings.get("maxRounds"),
+        temperature=_as_float(settings.get("temperature"), key="temperature"),
+        max_rounds=_as_int(_setting(settings, "max_rounds", "maxRounds"),
+                           key="max_rounds"),
         is_agent=bool(settings.get("agent", False)),
         sub_contract=_sub_from(settings.get("sub")),
         context_scope=scope,
         system_render=settings.get("system_render") or settings.get("systemRender"),
         user_render=settings.get("user_render") or settings.get("userRender"),
-        max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
+        max_tokens=_as_int(_setting(settings, "max_tokens", "maxTokens"),
+                           key="max_tokens"),
         reasoning_effort=effort,
         output_retries=output_retries,
+        require_tool_call=_require_tool_call_setting(settings),
+        response_format=_response_format_setting(settings),
     )
     return DEFAULT_REGISTRY.register_reasoner(reasoner)
 
@@ -302,17 +392,32 @@ def is_rich_dotctx(path: str) -> bool:
 
 
 def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reasoner:
-    """Read ``<path>/settings.yaml`` (or ``settings.yml``) into a Reasoner.
+    """Read a dotctx directory — or a single ``.ctx`` file — into a Reasoner.
 
-    The reasoner's name defaults to the directory name when ``settings.yaml`` omits
+    A directory reads ``<path>/settings.yaml`` (or ``settings.yml``); the
+    reasoner's name defaults to the directory name when ``settings.yaml`` omits
     one, so a dotctx at ``reasoners/planner/`` registers as ``planner``. Packages
     carrying rich-layout files (``prompt.j2``, ``messages/``, ``schema.pyi``,
     ``tools.pyi``) are loaded by :mod:`composable_agents.dotctx_rich`.
+
+    A *file* path is mem-mcp's single-file format (YAML frontmatter + Jinja
+    body, ``dotctx_rich.load_single_file_dotctx``); it must end in ``.ctx`` and
+    always needs the ``[dotctx]`` extra — the body is a template. The reasoner
+    name defaults to the filename stem without ``.ctx``.
 
     Settings carrying yglu expressions (``!? $env.get(...)``) are evaluated by
     :mod:`composable_agents.dotctx_yglu` against exactly ``env`` (or the
     module-level default the CLI sets) — never the ambient process environment.
     """
+    if os.path.isfile(path):
+        if not path.endswith(".ctx"):
+            raise ValueError(f"single-file dotctx must end in .ctx: {path!r}")
+        from . import dotctx_rich  # hard ImportError without the [dotctx] extra
+
+        return dotctx_rich.load_single_file_dotctx(path, env=env).reasoner
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"dotctx path does not exist: {path!r}")
+
     if is_rich_dotctx(path):
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 

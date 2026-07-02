@@ -1,0 +1,5 @@
+# AI-ANCHOR: prompt: episode summary settings
+# DBOS summary worker prompt defaults
+model: !? $env.get("SUMMARY_MODEL", "openai/gpt-5.4-nano@medium")
+temperature: 0.2
+reasoning_effort: medium

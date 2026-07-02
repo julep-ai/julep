@@ -179,6 +179,10 @@ def _reasoner_identity(name: str) -> dict[str, Any]:
         ident["reasoningEffort"] = reasoner.reasoning_effort
     if reasoner.output_retries:
         ident["outputRetries"] = reasoner.output_retries
+    if reasoner.require_tool_call:
+        ident["requireToolCall"] = True
+    if reasoner.response_format is not None:
+        ident["responseFormat"] = reasoner.response_format
     return ident
 
 

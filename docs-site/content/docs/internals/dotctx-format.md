@@ -38,15 +38,46 @@ golden corpus do not move.
 ├── settings.yaml        # name, model, temperature, max_rounds, agent, sub, context, tools
 ├── schema.pyi           # input/output models -> reply_schema (JSON Schema)
 ├── tools.pyi            # tool stubs -> granted tool keys + expected schemas
-├── prompt.j2            # single-template form, OR
+├── prompt.j2            # single-template form (optional <<< role:... >>> markers), OR
 └── messages/            # multi-message form
     ├── 00_system.yml    # role: system, Jinja2 body
     └── 01_user.yml      # role: user, Jinja2 body
-eval.py / eval.yaml      # NOT read by this package (see Non-goals)
+eval.py / eval.yaml      # never read by prompt loading (see mem-mcp compat)
 ```
 
 `load_dotctx(path)` keeps working for the existing minimal layout; the rich
 fields are detected by file presence. One loader, one format, additive.
+
+### mem-mcp compat (Phase 2, 2026-07-01)
+
+The loader reads mem-mcp's production prompts unchanged:
+
+- **Role markers.** A `prompt.j2` split by `<<< role:system >>>` /
+  `<<< role:user >>>` markers registers one renderer per role — the exact
+  shapes a `messages/` bundle accepts. Content before the first marker must
+  be whitespace, Jinja comments, or bare `#` header lines (`# AI-ANCHOR`
+  convention; dropped like mem-mcp drops all pre-marker content).
+- **Single-file `.ctx`.** A *file* path is mem-mcp's compact form: YAML
+  frontmatter between `---` lines (same settings path, same unknown-key
+  validation) plus a Jinja body with optional role markers.
+- **Settings keys.** `require_tool_call:` (declarative on the `Reasoner`;
+  loop enforcement lands in Phase 3/4) and
+  `response_format: {type: json_object}` (stored as `"json_object"`; a reply
+  schema wins at call time). Both enter deploy identity omit-when-unset.
+- **Yglu.** Settings and frontmatter may carry `!? $env.get(...)` expressions
+  (`composable-agents[yglu]`), evaluated against an explicit `env=` binding —
+  never the ambient process environment. Numeric strings arriving from env
+  coerce for `max_rounds` / `max_tokens` / `output_retries` / `temperature`.
+- **Jinja filters.** mem-mcp's pure filters (`to_json`, `as_xml`,
+  `as_codeblock`, `numbered_list`, `bulleted_list`, `dedent`, `from_json`)
+  are ported 1:1 onto the render environment; the file/token filters
+  (`import_yaml`, `import_text`, `count_tokens`, `truncate_tokens`) compile
+  but raise a teaching error at render (they need mem-mcp's
+  base_dir/tokenizer wiring).
+- **Evals.** `eval.py` (required `sample(limit)` + `score(input, output,
+  expected)`) and `eval.yaml` load only through the explicit
+  `composable_agents.dotctx_evals.load_ctx_evals` entry point — loading a
+  prompt never executes eval code. Running evals stays a consumer concern.
 
 ## Design
 
@@ -143,11 +174,9 @@ Details live in mem-mcp `specs/042-composable-agents-temporal/`.
 
 ## Non-goals
 
-- **Evals.** `eval.py`/`eval.yaml` stay a consumer-side contract (mem-mcp's
-  eval CLI keeps owning them). The loader ignores those files; it must not
-  fail on their presence.
-- **Yglu.** mem-mcp's Yglu-backed YAML preprocessing does not come along;
-  packages using Yglu features get flattened during migration.
+- **Running evals.** Prompt loading ignores `eval.py`/`eval.yaml`; Phase 2
+  loads them as data via `dotctx_evals.load_ctx_evals` (above), but the
+  runner, scoring loops, and mock-tool execution stay consumer-side.
 - **Few-shot / arbitrary-role bundles** (above).
 - **A pydantic runtime dependency.** JSON Schema in, JSON out.
 

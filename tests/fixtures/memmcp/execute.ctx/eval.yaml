@@ -1,0 +1,29 @@
+# AI-ANCHOR: eval-config: record execute agent (shape vendored from briefs/draft.ctx)
+# Samples + scoring live in eval.py.
+
+models:
+  - id: !? $env.get("RECORD_EXECUTE_MODEL", "openai/gpt-5.5@low")
+    tags: [primary]
+
+datasets:
+  - file: eval.py
+    format: py
+    tags: [all]
+
+threshold: 0.70
+concurrency: 3
+
+scoring:
+  type: expected
+
+agent:
+  max_rounds: 6
+
+profiles:
+  smoke:
+    datasets:
+      - file: eval.py
+        format: py
+        tags: [smoke]
+    threshold: 0.65
+    concurrency: 3

@@ -1,0 +1,7 @@
+# AI-ANCHOR: prompt: execute agent settings (C5 unified record agent)
+model: !? $env.get("RECORD_EXECUTE_MODEL", "openai/gpt-5.5@low")
+temperature: 0.3
+reasoning_effort: low
+require_tool_call: true
+output_retries: 1
+max_rounds: !? $env.get("RECORD_EXECUTE_MAX_ROUNDS", 12)

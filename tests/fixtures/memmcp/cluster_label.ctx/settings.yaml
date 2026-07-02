@@ -1,0 +1,7 @@
+# AI-ANCHOR: prompt: cluster label generation
+# Human-readable labels for macroclusters after a merge pass.
+model: !? $env.get("CLUSTER_LABEL_MODEL", "openai/gpt-5.4-mini@none")
+temperature: 0.2
+max_tokens: 120
+response_format:
+  type: json_object

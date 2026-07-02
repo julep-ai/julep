@@ -22,6 +22,10 @@ supports it (any-llm converts per provider); for providers any-llm cannot conver
 yet — and as a safety net when a native attempt raises — the schema is injected
 into the system prompt and the JSON reply is parsed tolerantly. The parsed value
 is exactly what ``interpret_reasoner_reply`` / ``compilePlan`` already consume.
+A schema-less reasoner declaring mem-mcp's ``response_format: {type: json_object}``
+sends that kwarg natively through the same latch; its fallback reissues *without*
+the kwarg (no prompt injection — mem-mcp prompts self-instruct JSON), recorded on
+the meta, never silent. A reply schema always wins over ``json_object``.
 
 any-llm is imported lazily, so this module loads without it. Install
 ``composable-agents[providers]`` plus your provider extra, e.g.
@@ -277,6 +281,9 @@ async def complete_reasoner(
     user_text = rendered_user_for(reasoner, value)
     provider, model = _split_model(reasoner.model, default_provider)
     schema = reasoner.reply_schema
+    # mem-mcp's declarative json_object mode claims the kwarg only when no
+    # reply schema does (the schema path wins; the call never carries both).
+    json_object = schema is None and reasoner.response_format == "json_object"
 
     async def call(*, native: bool, retry_note: Optional[str] = None) -> Any:
         if native and schema is not None:
@@ -285,6 +292,16 @@ async def complete_reasoner(
                 schema_hint=None, user_text=user_text, transcript=transcript,
             )
             kwargs: dict[str, Any] = {"response_format": _response_format(schema)}
+        elif native and json_object:
+            # No schema to inject; the prompt self-instructs JSON. The
+            # non-native reissue below simply drops the kwarg. Replies stay
+            # raw text either way — json_object constrains the provider, not
+            # CA parsing; callers own parsing (mem-mcp's use parse_llm_json).
+            messages = _messages(
+                reasoner.system, value,
+                schema_hint=None, user_text=user_text, transcript=transcript,
+            )
+            kwargs = {"response_format": {"type": "json_object"}}
         else:
             messages = _messages(
                 reasoner.system, value,
@@ -313,7 +330,8 @@ async def complete_reasoner(
 
     async def dispatch_once(retry_note: Optional[str] = None) -> Any:
         nonlocal fallback_reason, native_ok
-        if schema is not None and native_ok and provider not in _PROMPT_FALLBACK_PROVIDERS:
+        if (schema is not None or json_object) and native_ok \
+                and provider not in _PROMPT_FALLBACK_PROVIDERS:
             try:
                 return await call(native=True, retry_note=retry_note)
             except Exception as exc:
@@ -323,9 +341,10 @@ async def complete_reasoner(
                 # unsupported response_format, so it falls through; a genuine
                 # bad request fails the reissue identically and raises there.
                 # Provider/any-llm could not honor response_format; reissue with
-                # the schema injected into the prompt — recorded, never silent
-                # (G-8). The latch records the first downgrade only and stops
-                # native re-attempts on subsequent re-asks.
+                # the schema injected into the prompt (json_object mode just
+                # drops the kwarg) — recorded, never silent (G-8). The latch
+                # records the first downgrade only and stops native re-attempts
+                # on subsequent re-asks.
                 native_ok = False
                 fallback_reason = repr(exc)
                 logger.warning(
@@ -462,6 +481,8 @@ def _with_model(reasoner: Reasoner, model: str) -> Reasoner:
         reply=reasoner.reply_schema,
         reasoning_effort=reasoner.reasoning_effort,
         output_retries=reasoner.output_retries,
+        require_tool_call=reasoner.require_tool_call,
+        response_format=reasoner.response_format,
     )
 
 

@@ -1,0 +1,30 @@
+# AI-ANCHOR: prompt: cluster label generation
+<<< role:system >>>
+You label a cluster of related memories with a short topic name and a brief
+summary. The cluster may mix entities and episodes, but it should still have a
+clear dominant theme.
+
+Return exactly one JSON object. No markdown, no prose, no code fences.
+- The first character must be `{` and the last character must be `}`.
+- Output only the JSON object.
+
+Output shape:
+{
+  "label": "2-6 word topic label",
+  "summary": "One short sentence describing the cluster."
+}
+
+Examples:
+
+Members: [travel planning, flight booking, hotel shortlist]
+Good: {"label":"Travel Planning","summary":"Trip planning with flights, lodging, and itinerary details."}
+
+<<< role:user >>>
+Cluster size: {{ member_count }}
+
+Top members:
+{% for member in members %}
+- [{{ member.source_type }}] {{ member.name }}{% if member.content %}: {{ member.content }}{% endif %}
+{% endfor %}
+
+Generate a label and summary for this cluster.

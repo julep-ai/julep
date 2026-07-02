@@ -96,9 +96,9 @@ def test_renderer_names_pin_template_content() -> None:
 def test_renderers_render_from_context_only() -> None:
     rich = _rich()
     system = get_renderer(rich.renderer_names["system"])({"persona": "skeptic"})
-    assert system == "You are a careful research agent.\nPersona: skeptic"
+    assert system == "You are a careful research agent.\nPersona: skeptic\n"
     user = get_renderer(rich.renderer_names["user"])({"question": "why?"})
-    assert user == "Question: why?"
+    assert user == "Question: why?\n"
 
 
 def test_missing_context_variable_names_package_and_variable() -> None:
@@ -144,7 +144,7 @@ def test_single_template_package() -> None:
     assert b.name == "summarizer" and b.system == ""
     assert b.system_render is not None and b.user_render is None
     assert b.reply_schema is None and b.tools == () and b.max_tokens == 256
-    assert get_renderer(b.system_render)({"audience": "execs"}) == "Summarize for execs."
+    assert get_renderer(b.system_render)({"audience": "execs"}) == "Summarize for execs.\n"
 
 
 def test_load_dotctx_detects_rich_layout() -> None:
@@ -175,17 +175,360 @@ def test_rich_dotctx_reasoner_lands_in_supplied_registry(tmp_path: Path) -> None
 
 
 # --------------------------------------------------------------------------- #
+# Role-marker splitting: <<< role:... >>> in prompt.j2 (mem-mcp single-file
+# multi-message format). Real shape mirrors episode_summary.ctx/prompt.j2:
+# jinja-comment header, a system section, then a user section whose body uses
+# bare <<< / >>> heredoc delimiters that must NOT be treated as markers.
+# --------------------------------------------------------------------------- #
+_ROLE_MARKER_PROMPT = (
+    "{# AI-ANCHOR: prompt: episode summary prompt #}\n"
+    "<<< role:system >>>\n"
+    "You are an episodic summarizer.\n"
+    "Persona: {{ persona }}\n"
+    "\n"
+    "<<< role:user >>>\n"
+    "Input\n"
+    "<<<\n"
+    "{{ question }}\n"
+    ">>>\n"
+)
+
+
+def test_role_markers_split_prompt_into_system_and_user(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers.ctx", "name: markers.split\nmodel: m\n",
+        {"prompt.j2": _ROLE_MARKER_PROMPT},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    b = rich.reasoner
+    assert b.system_render is not None and b.user_render is not None
+    assert set(rich.renderer_names) == {"system", "user"}
+    # jinja comment header is preserved in the system source (hash covers it)
+    # but renders to nothing; section bodies are stripped like mem-mcp does.
+    system = get_renderer(b.system_render)({"persona": "skeptic"})
+    assert system == "You are an episodic summarizer.\nPersona: skeptic"
+    user = get_renderer(b.user_render)({"question": "why?"})
+    assert user == "Input\n<<<\nwhy?\n>>>"
+
+
+def test_role_markers_render_with_strict_undefined(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_strict.ctx", "name: markers.strict\nmodel: m\n",
+        {"prompt.j2": _ROLE_MARKER_PROMPT},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    with pytest.raises(ValueError, match=r"markers\.strict.*user template.*question"):
+        get_renderer(rich.renderer_names["user"])({"persona": "no question here"})
+
+
+def test_role_markers_tight_spacing_matches(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_tight.ctx", "name: markers.tight\nmodel: m\n",
+        {"prompt.j2": "<<<role:system>>>\nS {{ x }}\n<<<role:user>>>\nU {{ y }}\n"},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    assert get_renderer(rich.renderer_names["system"])({"x": "1"}) == "S 1"
+    assert get_renderer(rich.renderer_names["user"])({"y": "2"}) == "U 2"
+
+
+def test_role_markers_uppercase_role_matches_reference_lowering(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_upper.ctx", "name: markers.upper\nmodel: m\n",
+        {"prompt.j2": "<<< role:SYSTEM >>>\nS {{ x }}\n<<< role:USER >>>\nU {{ y }}\n"},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    assert get_renderer(rich.renderer_names["system"])({"x": "1"}) == "S 1"
+    assert get_renderer(rich.renderer_names["user"])({"y": "2"}) == "U 2"
+
+
+def test_role_markers_system_only(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_sysonly.ctx", "name: markers.sysonly\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\nJust a system prompt.\n"},
+    )
+    b = load_rich_dotctx(str(pkg)).reasoner
+    assert b.system_render is not None and b.user_render is None
+    assert get_renderer(b.system_render)({}) == "Just a system prompt."
+
+
+def test_role_markers_unknown_role_errors(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_badrole.ctx", "name: markers.badrole\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\ns\n<<< role:assistant >>>\na\n"},
+    )
+    with pytest.raises(ValueError, match=r"prompt\.j2.*'assistant'"):
+        load_rich_dotctx(str(pkg))
+
+
+def test_role_markers_duplicate_system_errors(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_dupsys.ctx", "name: markers.dupsys\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\na\n<<< role:system >>>\nb\n"},
+    )
+    with pytest.raises(ValueError, match=r"prompt\.j2.*'system'"):
+        load_rich_dotctx(str(pkg))
+
+
+def test_role_markers_user_before_system_errors(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_userfirst.ctx", "name: markers.userfirst\nmodel: m\n",
+        {"prompt.j2": "<<< role:user >>>\nu\n<<< role:system >>>\ns\n"},
+    )
+    with pytest.raises(ValueError, match=r"prompt\.j2.*'user'"):
+        load_rich_dotctx(str(pkg))
+
+
+def test_role_markers_third_section_errors(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_three.ctx", "name: markers.three\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\ns\n<<< role:user >>>\nu\n<<< role:user >>>\nu2\n"},
+    )
+    with pytest.raises(ValueError, match=r"prompt\.j2.*'user'"):
+        load_rich_dotctx(str(pkg))
+
+
+def test_role_markers_leading_noncomment_text_errors(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "markers_leading.ctx", "name: markers.leading\nmodel: m\n",
+        {"prompt.j2": "stray prose\n<<< role:system >>>\ns\n"},
+    )
+    with pytest.raises(ValueError, match=r"prompt\.j2.*before the first"):
+        load_rich_dotctx(str(pkg))
+
+
+def test_role_markers_leading_hash_comment_lines_dropped(tmp_path: Path) -> None:
+    # mem-mcp's clustering/cluster_label.ctx opens with a bare `# AI-ANCHOR`
+    # line before the first marker; mem-mcp discards pre-marker content, so
+    # such comment headers load but never render (unlike Jinja comments they
+    # would otherwise render as visible text). Real prose still errors.
+    pkg = _write_pkg(
+        tmp_path, "markers_hash.ctx", "name: markers.hash\nmodel: m\n",
+        {"prompt.j2": "# AI-ANCHOR: prompt: header\n{# kept #}\n<<< role:system >>>\nS {{ x }}\n"},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    assert get_renderer(rich.renderer_names["system"])({"x": "1"}) == "S 1"
+
+
+def test_memmcp_pure_filters_render(tmp_path: Path) -> None:
+    # mem-mcp's dotctx registers custom Jinja filters (filters.py); the pure
+    # ones are ported 1:1 — briefs/draft.ctx alone uses `to_json` 20+ times.
+    pkg = _write_pkg(
+        tmp_path, "filters.ctx", "name: markers.filters\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\n{{ data | to_json }}\n{{ items | numbered_list }}\n"
+                      "{{ note | as_xml('note') }}"},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    out = get_renderer(rich.renderer_names["system"])(
+        {"data": {"k": "v"}, "items": ["a", "b"], "note": "x < y"}
+    )
+    assert out == '{"k": "v"}\n1. a\n2. b\n<note>x &lt; y</note>'
+
+
+def test_memmcp_includes_and_file_filters_render_from_shared_root(tmp_path: Path) -> None:
+    # mem-mcp's prompt_loader pins base_dir to the shared prompts root so prompt
+    # families can include `partials/...` and import sibling YAML data.
+    partials = tmp_path / "partials"
+    partials.mkdir()
+    (partials / "project_preamble.j2").write_text("Project: {{ project }}\n")
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "facts.yaml").write_text("items:\n  - alpha\n  - beta\n")
+    pkg = _write_pkg(
+        tmp_path, "filefilters.ctx", "name: markers.filefilters\nmodel: m\n",
+        {
+            "prompt.j2": (
+                "<<< role:system >>>\n"
+                "{% include 'partials/project_preamble.j2' %}"
+                "{% set facts = 'data/facts.yaml' | import_yaml %}"
+                "{{ facts['items'] | bulleted_list }}\n"
+                "{{ 'partials/project_preamble.j2' | import_text | trim }}"
+            )
+        },
+    )
+    rich = load_rich_dotctx(str(pkg))
+    assert get_renderer(rich.renderer_names["system"])({"project": "Atlas"}) == (
+        "Project: Atlas\n- alpha\n- beta\nProject: {{ project }}"
+    )
+
+
+def test_dependency_edits_after_load_do_not_change_render(tmp_path: Path) -> None:
+    # The renderer identity hashes include/import deps at load; rendering must
+    # use that same captured snapshot, or an on-disk edit after load would
+    # change the prompt behind an unchanged hash (codex PR #12 P1).
+    partials = tmp_path / "partials"
+    partials.mkdir()
+    (partials / "preamble.j2").write_text("Project: {{ project }}\n")
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "facts.yaml").write_text("items:\n  - alpha\n")
+    pkg = _write_pkg(
+        tmp_path, "snapshot.ctx", "name: markers.snapshot\nmodel: m\n",
+        {
+            "prompt.j2": (
+                "<<< role:system >>>\n"
+                "{% include 'partials/preamble.j2' %}"
+                "{% set facts = 'data/facts.yaml' | import_yaml %}"
+                "{{ facts['items'] | bulleted_list }}"
+            )
+        },
+    )
+    rich = load_rich_dotctx(str(pkg))
+    render = get_renderer(rich.renderer_names["system"])
+    before = render({"project": "Atlas"})
+
+    (partials / "preamble.j2").write_text("EDITED {{ project }}\n")
+    (data_dir / "facts.yaml").write_text("items:\n  - edited\n")
+
+    assert render({"project": "Atlas"}) == before == "Project: Atlas\n- alpha"
+
+
+def test_dynamic_include_rejected_at_load(tmp_path: Path) -> None:
+    # A non-literal include target can't be snapshotted or hashed, so it would
+    # reopen the live-filesystem drift hole; refuse it loudly at load.
+    pkg = _write_pkg(
+        tmp_path, "dynamic.ctx", "name: markers.dynamic\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\n{% include which %}"},
+    )
+    with pytest.raises(ValueError, match="dynamic"):
+        load_rich_dotctx(str(pkg))
+
+
+def test_variable_path_import_filter_is_render_time_error(tmp_path: Path) -> None:
+    # Only literal '<path>' | import_yaml/import_text args are captured into
+    # the snapshot; a variable path must not silently read the live filesystem.
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "facts.yaml").write_text("items: []\n")
+    pkg = _write_pkg(
+        tmp_path, "varpath.ctx", "name: markers.varpath\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\n{% set p = 'data' + '/facts.yaml' %}{{ p | import_yaml }}"},
+    )
+    rich = load_rich_dotctx(str(pkg))
+    with pytest.raises(ValueError, match="captured"):
+        get_renderer(rich.renderer_names["system"])({})
+
+
+def test_included_file_changes_renderer_name_and_hash(tmp_path: Path) -> None:
+    from composable_agents.registry import Registry
+
+    partials = tmp_path / "partials"
+    partials.mkdir()
+    partial = partials / "project_preamble.j2"
+    partial.write_text("Project one\n")
+    pkg = _write_pkg(
+        tmp_path, "hashdeps.ctx", "name: markers.hashdeps\nmodel: m\n",
+        {"prompt.j2": "<<< role:system >>>\n{% include 'partials/project_preamble.j2' %}"},
+    )
+    reg1 = Registry()
+    first = load_rich_dotctx(str(pkg), registry=reg1)
+    first_name = first.renderer_names["system"]
+    first_hash = reg1.renderer_source_hash_of(first_name)
+
+    partial.write_text("Project two\n")
+    reg2 = Registry()
+    second = load_rich_dotctx(str(pkg), registry=reg2)
+    second_name = second.renderer_names["system"]
+    assert second_name != first_name
+    assert reg2.renderer_source_hash_of(second_name) != first_hash
+
+
+def test_prompt_without_role_markers_stays_whole_system_template(tmp_path: Path) -> None:
+    # Bare <<< / >>> lines (no role:) are content, not markers: the whole file
+    # remains the system template exactly as before.
+    pkg = _write_pkg(
+        tmp_path, "markers_none.ctx", "name: markers.none\nmodel: m\n",
+        {"prompt.j2": "Input\n<<<\n{{ text }}\n>>>\n"},
+    )
+    b = load_rich_dotctx(str(pkg)).reasoner
+    assert b.user_render is None
+    assert b.system_render is not None
+    assert get_renderer(b.system_render)({"text": "T"}) == "Input\n<<<\nT\n>>>\n"
+
+
+# --------------------------------------------------------------------------- #
+# require_tool_call / response_format settings + numeric-string coercion
+# (mem-mcp census: require_tool_call in 5 prompts, response_format always
+# {type: json_object}; record/execute.ctx sources max_rounds from $env).
+# --------------------------------------------------------------------------- #
+def test_require_tool_call_and_response_format_load(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "rtc.ctx",
+        "name: rich.rtc\nmodel: m\nrequire_tool_call: true\n"
+        "response_format:\n  type: json_object\n",
+        {"prompt.j2": "hello"},
+    )
+    b = load_dotctx(str(pkg))
+    assert b.require_tool_call is True
+    assert b.response_format == "json_object"
+
+
+def test_response_format_bad_shape_is_teaching_error(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "rtc_bad.ctx", "name: rich.rtcbad\nmodel: m\nresponse_format: json\n",
+        {"prompt.j2": "hello"},
+    )
+    with pytest.raises(ValueError, match=r"type: json_object"):
+        load_dotctx(str(pkg))
+
+
+def test_yglu_numeric_string_setting_coerces(tmp_path: Path) -> None:
+    pytest.importorskip("yglu")
+    pkg = _write_pkg(
+        tmp_path, "rounds.ctx",
+        'name: rich.rounds\nmodel: m\nmax_rounds: !? $env.get("MAX_ROUNDS", 12)\n',
+        {"prompt.j2": "hello"},
+    )
+    # env vars are strings; the yglu default stays an int — both land as int.
+    assert load_dotctx(str(pkg), env={"MAX_ROUNDS": "9"}).max_rounds == 9
+
+
+def test_yglu_numeric_string_default_stays_int(tmp_path: Path) -> None:
+    pytest.importorskip("yglu")
+    pkg = _write_pkg(
+        tmp_path, "rounds_def.ctx",
+        'name: rich.rounds_def\nmodel: m\nmax_rounds: !? $env.get("MAX_ROUNDS", 12)\n',
+        {"prompt.j2": "hello"},
+    )
+    assert load_dotctx(str(pkg), env={}).max_rounds == 12
+
+
+def test_non_numeric_string_setting_errors(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "rounds_bad.ctx",
+        'name: rich.rounds_bad\nmodel: m\nmax_rounds: "many"\n',
+        {"prompt.j2": "hello"},
+    )
+    with pytest.raises(ValueError, match="max_rounds"):
+        load_dotctx(str(pkg))
+
+
+def test_explicit_zero_rich_settings_do_not_fall_through_to_camel_case(tmp_path: Path) -> None:
+    pkg = _write_pkg(
+        tmp_path, "zero.ctx",
+        "name: rich.zero\nmodel: m\nmax_rounds: 0\nmaxRounds: 12\n"
+        "max_tokens: 0\nmaxTokens: 120\noutput_retries: 0\noutputRetries: 2\n"
+        "temperature: 0\n",
+        {"prompt.j2": "hello"},
+    )
+    b = load_dotctx(str(pkg))
+    assert b.max_rounds == 0
+    assert b.max_tokens == 0
+    assert b.output_retries == 0
+    assert b.temperature == 0.0
+
+
+# --------------------------------------------------------------------------- #
 # Rejections.
 # --------------------------------------------------------------------------- #
 def test_unknown_settings_keys_error(tmp_path: Path) -> None:
     pkg = _write_pkg(
         tmp_path, "weird.ctx",
-        "model: m\nrequire_tool_call: true\nresponse_format: json\n",
+        "model: m\ntop_p: 0.9\nstop: []\n",
         {"prompt.j2": "hello"},
     )
     with pytest.raises(ValueError) as ei:
         load_dotctx(str(pkg))
-    assert "require_tool_call" in str(ei.value) and "response_format" in str(ei.value)
+    assert "top_p" in str(ei.value) and "stop" in str(ei.value)
 
 
 def test_bundle_rejects_extra_roles(tmp_path: Path) -> None:
@@ -257,6 +600,22 @@ def test_reasoner_identity_adds_new_keys_only_when_present() -> None:
     DEFAULT_REGISTRY.register_reasoner(Reasoner(name="plain.norich", model="m", system="s"))
     plain = _reasoner_identity("plain.norich")
     assert "userRender" not in plain and "maxTokens" not in plain and "systemRender" not in plain
+    assert "requireToolCall" not in plain and "responseFormat" not in plain
+
+
+def test_reasoner_identity_records_require_tool_call_and_response_format(
+    tmp_path: Path,
+) -> None:
+    _write_pkg(
+        tmp_path, "rtc_ident.ctx",
+        "name: rich.rtc_ident\nmodel: m\nrequire_tool_call: true\n"
+        "response_format:\n  type: json_object\n",
+        {"prompt.j2": "hello"},
+    )
+    load_dotctx(str(tmp_path / "rtc_ident.ctx"))
+    ident = _reasoner_identity("rich.rtc_ident")
+    assert ident["requireToolCall"] is True
+    assert ident["responseFormat"] == "json_object"
 
 
 def test_renderer_source_hashes_cover_both_roles() -> None:
@@ -347,9 +706,9 @@ def test_complete_reasoner_uses_rendered_user_turn_and_max_tokens() -> None:
     assert "temperature" not in call
     msgs = call["messages"]
     assert msgs[0]["role"] == "system"
-    assert msgs[0]["content"] == "You are a careful research agent.\nPersona: skeptic"
+    assert msgs[0]["content"] == "You are a careful research agent.\nPersona: skeptic\n"
     assert msgs[1]["role"] == "user"
-    assert msgs[1]["content"] == "Question: why?"
+    assert msgs[1]["content"] == "Question: why?\n"
 
 
 def test_complete_reasoner_keeps_value_as_user_turn_without_user_render() -> None:
@@ -358,5 +717,5 @@ def test_complete_reasoner_keeps_value_as_user_turn_without_user_render() -> Non
     out = run(complete_reasoner(rich.reasoner, {"audience": "execs", "text": "T"}, acompletion=rec))
     assert out.reply == "done"
     msgs = rec.calls[0]["messages"]
-    assert msgs[0]["content"] == "Summarize for execs."
+    assert msgs[0]["content"] == "Summarize for execs.\n"
     assert msgs[1]["content"] == json.dumps({"audience": "execs", "text": "T"})
