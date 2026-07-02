@@ -74,18 +74,37 @@ class RunResolution:
     error: str | None = None
 
 
-def lint_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> LintResolution:
+def lint_agent(
+    cfg: CaConfig,
+    name: str,
+    *,
+    timeout: float = 30.0,
+    env_vars: dict[str, str] | None = None,
+) -> LintResolution:
     """Validate an agent IN the child (where pures are registered) and return diagnostics."""
-    data = _invoke_child(cfg, {"name": name, "action": "lint"}, timeout=timeout)
+    data = _invoke_child(
+        cfg, {"name": name, "action": "lint", "env_vars": env_vars}, timeout=timeout
+    )
     if "error" in data:
         return LintResolution(diagnostics=[], error=str(data["error"]))
     raw = data.get("diagnostics", [])
     return LintResolution(diagnostics=[dict(d) for d in raw], error=None)
 
 
-def run_agent(cfg: CaConfig, name: str, value: Any, *, timeout: float = 30.0) -> RunResolution:
+def run_agent(
+    cfg: CaConfig,
+    name: str,
+    value: Any,
+    *,
+    timeout: float = 30.0,
+    env_vars: dict[str, str] | None = None,
+) -> RunResolution:
     """Interpret an agent IN the child (echo env, pures live) and return value + events."""
-    data = _invoke_child(cfg, {"name": name, "action": "run", "value": value}, timeout=timeout)
+    data = _invoke_child(
+        cfg,
+        {"name": name, "action": "run", "value": value, "env_vars": env_vars},
+        timeout=timeout,
+    )
     if "error" in data and "value" not in data:
         # transport-level failure (timeout / nonzero / parse) -> no events available
         return RunResolution(value=None, events=[], error=str(data["error"]))
@@ -96,9 +115,15 @@ def run_agent(cfg: CaConfig, name: str, value: Any, *, timeout: float = 30.0) ->
     )
 
 
-def resolve_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> ResolvedAgent:
+def resolve_agent(
+    cfg: CaConfig,
+    name: str,
+    *,
+    timeout: float = 30.0,
+    env_vars: dict[str, str] | None = None,
+) -> ResolvedAgent:
     """Import the user's module in a subprocess and return the agent's serialized IR."""
-    data = _invoke_child(cfg, {"name": name}, timeout=timeout)
+    data = _invoke_child(cfg, {"name": name, "env_vars": env_vars}, timeout=timeout)
     if "error" in data:
         return ResolvedAgent(name=name, ir={}, error=str(data["error"]))
     return ResolvedAgent(name=str(data["name"]), ir=data["ir"], error=None)

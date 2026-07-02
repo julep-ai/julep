@@ -157,6 +157,48 @@ def test_build_request_chat_completions_shape() -> None:
     assert request["body"]["messages"][-1] == {"role": "user", "content": "hello"}
 
 
+def test_build_request_forwards_effort_and_suppresses_temperature() -> None:
+    # BATCH must honor the frozen reasoner's effort like the sync path does,
+    # including omitting temperature while thinking is enabled (codex PR #11).
+    provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
+    reasoner = Reasoner(
+        name="b", model="openai:gpt-x", system="s",
+        temperature=0.2, reasoning_effort="high",
+    )
+
+    body = provider.build_request("c1", reasoner, "hello")["body"]
+
+    assert body["reasoning_effort"] == "high"
+    assert "temperature" not in body
+
+
+def test_build_request_clamps_max_effort_to_xhigh() -> None:
+    # OpenAI's reasoning_effort scale tops out at xhigh; "max" is CA/anthropic
+    # vocabulary and would be rejected verbatim (codex review).
+    provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
+    reasoner = Reasoner(
+        name="b", model="openai:gpt-x", system="s", reasoning_effort="max",
+    )
+
+    body = provider.build_request("c1", reasoner, "hello")["body"]
+
+    assert body["reasoning_effort"] == "xhigh"
+
+
+def test_build_request_effort_none_keeps_temperature() -> None:
+    provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
+    reasoner = Reasoner(
+        name="b", model="openai:gpt-x", system="s",
+        temperature=0.2, reasoning_effort="none",
+    )
+
+    body = provider.build_request("c1", reasoner, "hello")["body"]
+
+    # "none" rides through like the sync path; temperature stays legal.
+    assert body["reasoning_effort"] == "none"
+    assert body["temperature"] == 0.2
+
+
 def test_build_request_injects_response_format_for_schema() -> None:
     provider = openai_batch.OpenAIBatchProvider(client=FakeOpenAIClient())
     schema = {"type": "object", "properties": {"x": {"type": "integer"}}}

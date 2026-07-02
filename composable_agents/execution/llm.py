@@ -33,6 +33,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import json
+import logging
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Optional
@@ -48,8 +49,11 @@ from ..resilience import (
     OnAttempt,
     ResiliencePolicy,
     classify_error,
+    is_auth_error,
 )
 from .llm_result import AttemptMeta, LlmCallMeta, LlmResult
+
+logger = logging.getLogger(__name__)
 
 # any-llm's ``acompletion``-shaped callable: keyword-driven, returns an
 # OpenAI-typed completion (``.choices[0].message.{content,parsed}``).
@@ -73,6 +77,17 @@ def _split_model(model: str, default_provider: str) -> tuple[str, str]:
     if sep:
         return provider, rest
     return default_provider, model
+
+
+def _effort_for_provider(effort: Optional[str], provider: str) -> Optional[str]:
+    """Clamp CA effort vocabulary to what the provider actually accepts.
+
+    OpenAI's reasoning_effort scale tops out at ``xhigh``; ``max`` is
+    CA/anthropic vocabulary and any-llm forwards it verbatim, so an
+    ``openai:...@max`` reasoner would be a 400 without this."""
+    if effort == "max" and provider == "openai":
+        return "xhigh"
+    return effort
 
 
 def _qos_request_fields(provider: str, qos: QoSTier) -> dict[str, Any]:
@@ -209,6 +224,14 @@ def _parse_reply(completion: Any, *, expect_json: bool) -> Any:
         return content
 
 
+def _add_tokens(a: int | None, b: int | None) -> int | None:
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return a + b
+
+
 def _usage_of(completion: Any) -> tuple[int | None, int | None, int | None]:
     usage = getattr(completion, "usage", None)
     if usage is None:
@@ -255,7 +278,7 @@ async def complete_reasoner(
     provider, model = _split_model(reasoner.model, default_provider)
     schema = reasoner.reply_schema
 
-    async def call(*, native: bool) -> Any:
+    async def call(*, native: bool, retry_note: Optional[str] = None) -> Any:
         if native and schema is not None:
             messages = _messages(
                 reasoner.system, value,
@@ -268,7 +291,15 @@ async def complete_reasoner(
                 schema_hint=schema, user_text=user_text, transcript=transcript,
             )
             kwargs = {}
-        if reasoner.temperature is not None:
+        if retry_note is not None:
+            messages.append({"role": "user", "content": retry_note})
+        effort = reasoner.reasoning_effort
+        if effort is not None:
+            kwargs["reasoning_effort"] = _effort_for_provider(effort, provider)
+        # Thinking modes reject or require fixed sampling params; omit
+        # temperature whenever reasoning is actually enabled (mirrors mem-mcp's
+        # get_temperature_for_reasoning, in provider-safe form).
+        if reasoner.temperature is not None and (effort is None or effort == "none"):
             kwargs["temperature"] = reasoner.temperature
         if reasoner.max_tokens is not None:
             kwargs["max_tokens"] = reasoner.max_tokens
@@ -276,23 +307,64 @@ async def complete_reasoner(
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
     started = time.time()
-    if schema is not None and provider not in _PROMPT_FALLBACK_PROVIDERS:
-        try:
-            completion = await call(native=True)
-        except Exception:
-            # Provider/any-llm could not honor response_format; reissue the round
-            # with the schema injected into the prompt instead.
-            completion = await call(native=False)
-    else:
-        completion = await call(native=False)
-    ended = time.time()
-    reply = _parse_reply(completion, expect_json=schema is not None)
+    fallback_reason: Optional[str] = None
+    native_ok = True   # latched: after one response_format failure, never retry native
+    retries_used = 0
+
+    async def dispatch_once(retry_note: Optional[str] = None) -> Any:
+        nonlocal fallback_reason, native_ok
+        if schema is not None and native_ok and provider not in _PROMPT_FALLBACK_PROVIDERS:
+            try:
+                return await call(native=True, retry_note=retry_note)
+            except Exception as exc:
+                if is_auth_error(exc):
+                    raise  # auth failure — fallback must never mask it
+                # Broader CONFIG (400/422) is exactly how providers reject an
+                # unsupported response_format, so it falls through; a genuine
+                # bad request fails the reissue identically and raises there.
+                # Provider/any-llm could not honor response_format; reissue with
+                # the schema injected into the prompt — recorded, never silent
+                # (G-8). The latch records the first downgrade only and stops
+                # native re-attempts on subsequent re-asks.
+                native_ok = False
+                fallback_reason = repr(exc)
+                logger.warning(
+                    "response_format fallback for %s (%s): retrying prompt-injected: %s",
+                    reasoner.name, provider, fallback_reason,
+                )
+        return await call(native=False, retry_note=retry_note)
+
+    completion = await dispatch_once()
+    # Usage accumulates over every attempt — re-asks cost tokens too.
     pt, ct, tt = _usage_of(completion)
+    reply = _parse_reply(completion, expect_json=schema is not None)
+    while (
+        schema is not None
+        and not isinstance(reply, dict)
+        and retries_used < reasoner.output_retries
+    ):
+        retries_used += 1
+        logger.warning(
+            "reply for %s did not parse as JSON object; re-ask %d/%d",
+            reasoner.name, retries_used, reasoner.output_retries,
+        )
+        completion = await dispatch_once(
+            retry_note=(
+                "Your previous reply was not a single valid JSON object matching "
+                "the required schema. Reply again with ONLY the JSON object."
+            )
+        )
+        apt, act, att = _usage_of(completion)
+        pt, ct, tt = _add_tokens(pt, apt), _add_tokens(ct, act), _add_tokens(tt, att)
+        reply = _parse_reply(completion, expect_json=True)
+    ended = time.time()
     meta = LlmCallMeta(
         served_model=_served_model_of(completion, model),
         provider=provider,
         input_tokens=pt, output_tokens=ct, total_tokens=tt,
         started_at=started, ended_at=ended,
+        response_format_fallback=fallback_reason,
+        output_retries_used=retries_used,
     )
     return LlmResult(reply=reply, meta=meta)
 
@@ -388,6 +460,8 @@ def _with_model(reasoner: Reasoner, model: str) -> Reasoner:
         user_render=reasoner.user_render,
         max_tokens=reasoner.max_tokens,
         reply=reasoner.reply_schema,
+        reasoning_effort=reasoner.reasoning_effort,
+        output_retries=reasoner.output_retries,
     )
 
 

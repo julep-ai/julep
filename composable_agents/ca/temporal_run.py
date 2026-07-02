@@ -28,7 +28,9 @@ def run_on_env(
     """Run an agent locally or through the deployed Temporal environment."""
 
     if env.name == "local":
-        return run_agent_local(cfg, name, value, run_id=run_id or _local_run_id())
+        return run_agent_local(
+            cfg, name, value, run_id=run_id or _local_run_id(), env_vars=env.vars
+        )
 
     # A deliberately non-local env MUST have a Temporal address; otherwise we'd
     # silently re-run live source instead of the deployed artifact (immutability

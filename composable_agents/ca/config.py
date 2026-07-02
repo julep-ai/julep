@@ -19,6 +19,9 @@ class EnvConfig:
     task_queue: str = 'composable-agents'
     cas: str | None = None
     langfuse_host: str | None = None
+    # [env.<name>.vars]: the env profile bound as the dotctx yglu default env
+    # inside the resolver/freeze child (never the ambient process environment).
+    vars: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -58,18 +61,30 @@ def _env_fields(table: object) -> dict[str, str | None]:
     return fields
 
 
+def _env_vars(table: object) -> dict[str, str]:
+    if not isinstance(table, dict):
+        return {}
+    raw = table.get('vars')
+    if not isinstance(raw, dict):
+        return {}
+    return {str(key): str(value) for key, value in raw.items()}
+
+
 def _build_envs(
     root: Path,
     pyproject_envs: object,
     ca_toml_envs: object,
 ) -> dict[str, EnvConfig]:
     env_tables: dict[str, dict[str, str | None]] = {}
+    env_vars: dict[str, dict[str, str]] = {}
     for raw_envs in (pyproject_envs, ca_toml_envs):
         if not isinstance(raw_envs, dict):
             continue
         for name, table in raw_envs.items():
             env_name = str(name)
             env_tables.setdefault(env_name, {}).update(_env_fields(table))
+            # vars merge per-key, ca.toml over pyproject (scalar-field order).
+            env_vars.setdefault(env_name, {}).update(_env_vars(table))
 
     local_defaults: dict[str, str | None] = {
         'cas': str(root / '.ca' / 'cas'),
@@ -85,6 +100,7 @@ def _build_envs(
             task_queue=fields.get('task_queue') or 'composable-agents',
             cas=fields.get('cas'),
             langfuse_host=fields.get('langfuse_host'),
+            vars=env_vars.get(name, {}),
         )
         for name, fields in env_tables.items()
     }

@@ -78,6 +78,8 @@ def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
         is_agent=reasoner.is_agent, sub_contract=reasoner.sub_contract,
         context_scope=reasoner.context_scope, system_render=None,
         user_render=reasoner.user_render, max_tokens=reasoner.max_tokens,
+        reasoning_effort=reasoner.reasoning_effort,
+        output_retries=reasoner.output_retries,
     )
 
 

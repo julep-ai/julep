@@ -32,7 +32,16 @@ app.command("chat")(chat_command)
 app.command("listen")(listen_command)
 app.command("trigger")(trigger_command)
 
-VERSION = "0.1.0"
+def _package_version() -> str:
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("composable-agents")
+    except PackageNotFoundError:  # editable/source checkout without metadata
+        return "unknown"
+
+
+VERSION = _package_version()
 
 
 class _FailSeverity(str, _enum.Enum):
@@ -148,7 +157,7 @@ def run(
         typer.echo(f"output: {_json.dumps(result, default=str)}")
         return
     rid = run_id or f"ca-{name}-local"
-    outcome = run_agent_local(cfg, name, parsed, run_id=rid)
+    outcome = run_agent_local(cfg, name, parsed, run_id=rid, env_vars=cfg.envs[env].vars)
     if outcome.error is not None:
         typer.echo(f"error: {outcome.error}", err=True)
         save_run(str(cfg.root), run_id=rid, agent=name, status="error", events=outcome.events)
@@ -218,7 +227,10 @@ def lint(
     module = build_module(cfg)
     names = [a.name for a in select(module, selector, exclude=exclude)]
     floor = fail_severity.value if fail_severity is not None else cfg.fail_severity
-    findings, code = lint_agents(cfg, names, fail_severity=floor)
+    # lint has no --env; the implicit local profile is the deterministic default.
+    findings, code = lint_agents(
+        cfg, names, fail_severity=floor, env_vars=cfg.envs["local"].vars
+    )
     for f in findings:
         typer.echo(f"{f.severity.upper():7} {f.agent}: {f.code} — {f.message}")
     if not findings:

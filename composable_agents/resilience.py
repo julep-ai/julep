@@ -82,6 +82,17 @@ def _is_auth_error(exc: BaseException) -> bool:
     return any(hint in message for hint in _AUTH_HINTS)
 
 
+def is_auth_error(exc: BaseException) -> bool:
+    """True when an auth failure sits anywhere in ``exc``'s cause/context chain.
+
+    The unambiguous subset of CONFIG: a bad key or missing permission is
+    misconfiguration no matter what a later retry died of. Callers use this
+    where the broader CONFIG class (400/404/422 bad requests) must still be
+    allowed to try a differently-shaped request.
+    """
+    return any(_is_auth_error(link) for link in _chain(exc))
+
+
 def _chain(exc: BaseException) -> list[BaseException]:
     """``exc`` plus its full ``__cause__``/``__context__`` ancestry (cycle-safe).
 
@@ -285,5 +296,6 @@ __all__ = [
     "ResiliencePolicy",
     "TRANSIENT_STATUS",
     "classify_error",
+    "is_auth_error",
     "summarize_attempts",
 ]

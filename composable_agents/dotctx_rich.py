@@ -37,7 +37,7 @@ except ImportError as e:  # pragma: no cover - exercised via sys.modules patchin
     ) from e
 
 from .capabilities import ToolGrant
-from .dotctx import Reasoner, _sub_from
+from .dotctx import Reasoner, _model_and_effort, _sub_from
 from .kinds import ContextScope
 from .registry import DEFAULT_REGISTRY, Registry, ToolSchemaExpectation
 
@@ -53,6 +53,10 @@ _ALLOWED_SETTINGS = frozenset(
         "maxRounds",
         "max_tokens",
         "maxTokens",
+        "reasoning_effort",
+        "reasoningEffort",
+        "output_retries",
+        "outputRetries",
         "agent",
         "sub",
         "context",
@@ -592,14 +596,20 @@ def parse_tools_pyi(source: str) -> tuple[Optional[str], list[ToolStub]]:
 # --------------------------------------------------------------------------- #
 # The loader.
 # --------------------------------------------------------------------------- #
-def _read_settings(path: str) -> dict[str, Any]:
-    import yaml
+def _read_settings(path: str, *, env: Optional[Mapping[str, str]] = None) -> dict[str, Any]:
+    from .dotctx_yglu import has_yglu_tags, load_settings as load_yglu_settings
 
     for fn in ("settings.yaml", "settings.yml"):
         cand = os.path.join(path, fn)
         if os.path.exists(cand):
             with open(cand, "r", encoding="utf-8") as fh:
-                loaded = yaml.safe_load(fh) or {}
+                text = fh.read()
+            if has_yglu_tags(text):
+                loaded = load_yglu_settings(text, env=env, filepath=cand)
+            else:
+                import yaml
+
+                loaded = yaml.safe_load(text) or {}
             if not isinstance(loaded, dict):
                 raise ValueError(f"dotctx settings must be a YAML mapping: {cand!r}")
             return loaded
@@ -611,9 +621,14 @@ def _default_name(path: str) -> str:
     return base[:-4] if base.endswith(".ctx") else base
 
 
-def load_rich_dotctx(path: str, *, registry: Registry = DEFAULT_REGISTRY) -> RichDotctx:
+def load_rich_dotctx(
+    path: str,
+    *,
+    registry: Registry = DEFAULT_REGISTRY,
+    env: Optional[Mapping[str, str]] = None,
+) -> RichDotctx:
     """Load a rich ``.ctx`` package: register renderers, reasoner, expectations."""
-    settings = _read_settings(path)
+    settings = _read_settings(path, env=env)
     unknown = sorted(set(settings) - _ALLOWED_SETTINGS)
     if unknown:
         raise ValueError(
@@ -659,9 +674,10 @@ def load_rich_dotctx(path: str, *, registry: Registry = DEFAULT_REGISTRY) -> Ric
     tools = tuple(dict.fromkeys([*(str(t) for t in settings_tools), *tool_keys]))
 
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
+    model, effort, output_retries = _model_and_effort(settings)
     reasoner = Reasoner(
         name=package,
-        model=settings.get("model", "claude-sonnet-4"),  # @effort suffixes pass through untouched
+        model=model,
         system="",
         reply=reply_schema,
         tools=tools,
@@ -673,6 +689,8 @@ def load_rich_dotctx(path: str, *, registry: Registry = DEFAULT_REGISTRY) -> Ric
         system_render=system_render,
         user_render=user_render,
         max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
+        reasoning_effort=effort,
+        output_retries=output_retries,
     )
     reasoner = registry.register_reasoner(reasoner)
 

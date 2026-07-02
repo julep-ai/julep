@@ -22,6 +22,18 @@ class _BatchEntryError:
     type: str
 
 
+# any-llm's anthropic translation of CA effort levels (adaptive thinking +
+# output_config effort); the batch path must match the sync path per reasoner.
+_EFFORT_TO_ANTHROPIC = {
+    "minimal": "low",
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "xhigh": "xhigh",
+    "max": "max",
+}
+
+
 class AnthropicBatchProvider(BatchProvider):
     """BatchProvider implementation backed by Anthropic Message Batches."""
 
@@ -76,7 +88,14 @@ class AnthropicBatchProvider(BatchProvider):
             "system": system_text,
             "messages": provider_messages,
         }
-        if reasoner.temperature is not None:
+        # Mirror the sync path (execution/llm.py → any-llm): enable adaptive
+        # thinking at the mapped effort and omit temperature while reasoning
+        # is actually enabled.
+        effort = reasoner.reasoning_effort
+        if effort is not None and effort != "none":
+            params["thinking"] = {"type": "adaptive"}
+            params["output_config"] = {"effort": _EFFORT_TO_ANTHROPIC[effort]}
+        if reasoner.temperature is not None and (effort is None or effort == "none"):
             params["temperature"] = reasoner.temperature
         return {"custom_id": custom_id, "params": params}
 

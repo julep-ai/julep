@@ -95,6 +95,36 @@ def test_build_request_splits_system_and_messages() -> None:
     assert request["params"]["messages"] == [{"role": "user", "content": "hello"}]
 
 
+def test_build_request_forwards_effort_and_suppresses_temperature() -> None:
+    # BATCH must honor the frozen reasoner's effort like the sync path does;
+    # the mapping mirrors any-llm's anthropic translation (codex PR #11).
+    provider = AnthropicBatchProvider(client=FakeAsyncClient())
+    reasoner = Reasoner(
+        name="b", model="anthropic:claude-x", system="s",
+        temperature=0.2, reasoning_effort="minimal",
+    )
+
+    params = provider.build_request("c1", reasoner, "hello")["params"]
+
+    assert params["thinking"] == {"type": "adaptive"}
+    assert params["output_config"] == {"effort": "low"}   # minimal → low
+    assert "temperature" not in params
+
+
+def test_build_request_effort_none_keeps_temperature() -> None:
+    provider = AnthropicBatchProvider(client=FakeAsyncClient())
+    reasoner = Reasoner(
+        name="b", model="anthropic:claude-x", system="s",
+        temperature=0.2, reasoning_effort="none",
+    )
+
+    params = provider.build_request("c1", reasoner, "hello")["params"]
+
+    assert "thinking" not in params
+    assert "output_config" not in params
+    assert params["temperature"] == 0.2
+
+
 def test_build_request_injects_schema_hint_into_system() -> None:
     provider = AnthropicBatchProvider(client=FakeAsyncClient())
     schema = {"type": "object", "properties": {"x": {"type": "integer"}}}

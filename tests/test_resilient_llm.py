@@ -187,18 +187,18 @@ def test_failures_charge_the_breaker() -> None:
     assert breaker.state("anthropic") == "closed"
 
 
-def test_auth_error_chained_under_transient_still_fails_fast() -> None:
-    # complete_reasoner reissues a failed native structured call with the schema
-    # prompt-injected; the reissue's (transient) failure implicitly chains the
-    # original auth error as __context__. The bad key must still win.
+def test_auth_error_fails_fast_without_prompt_injected_reissue() -> None:
+    # complete_reasoner classifies a failed native structured call before
+    # reissuing: a CONFIG-class error (bad key) re-raises immediately, so the
+    # prompt-injected fallback never runs and can never mask it.
     schema = {"type": "object"}
     script = Script([HttpError("invalid api key", 401), HttpError("overloaded", 503)])
     caller, attempts, _ = _caller(script, ResiliencePolicy(fallbacks=_CHAIN))
 
-    with pytest.raises(HttpError, match="overloaded"):
+    with pytest.raises(HttpError, match="invalid api key"):
         run(caller(_reasoner(reply=schema), "hi"))
     assert [a.outcome for a in attempts] == ["config"]
-    assert len(script.calls) == 2  # native + injected; no fallback model consulted
+    assert len(script.calls) == 1  # native only; no injected reissue, no fallback model
 
 
 def test_custom_classifier_overrides_default() -> None:

@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from typing import (
     Any,
     Literal,
+    Mapping,
     Optional,
     Sequence,
     Union,
@@ -41,6 +42,7 @@ from typing import NotRequired, Required  # type: ignore[attr-defined]
 from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
 from .kinds import ContextScope, Shape, SummaryPolicy
+from .model_slugs import EFFORT_LEVELS, normalize_model_slug
 from .registry import DEFAULT_REGISTRY
 
 _REPLY_UNSET = object()
@@ -149,6 +151,8 @@ class Reasoner:
     system_render: Optional[str] = None   # registered renderer name (a string); None => use `system`
     user_render: Optional[str] = None     # registered renderer name for the user turn
     max_tokens: Optional[int] = None      # forwarded to the provider call when set
+    reasoning_effort: Optional[str] = None  # provider thinking effort (model_slugs.EFFORT_LEVELS)
+    output_retries: int = 0               # re-asks when a schema'd reply fails to parse
 
     def __init__(
         self,
@@ -166,6 +170,8 @@ class Reasoner:
         max_tokens: Optional[int] = None,
         *,
         reply: Any = _REPLY_UNSET,
+        reasoning_effort: Optional[str] = None,
+        output_retries: int = 0,
     ) -> None:
         if reply is _REPLY_UNSET or reply is None:
             materialized = None
@@ -187,6 +193,8 @@ class Reasoner:
         object.__setattr__(self, "system_render", system_render)
         object.__setattr__(self, "user_render", user_render)
         object.__setattr__(self, "max_tokens", max_tokens)
+        object.__setattr__(self, "reasoning_effort", reasoning_effort)
+        object.__setattr__(self, "output_retries", output_retries)
 
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
@@ -217,6 +225,23 @@ def _sub_from(d: Optional[dict[str, Any]]) -> Optional[SubContract]:
     return SubContract(shape=shape, summary_policy=sp)
 
 
+def _model_and_effort(settings: dict[str, Any]) -> tuple[str, Optional[str], int]:
+    """Canonical model, effort (explicit key beats @suffix), output_retries."""
+    slug = normalize_model_slug(str(settings.get("model", "claude-sonnet-4")))
+    effort = settings.get("reasoning_effort") or settings.get("reasoningEffort")
+    if effort is not None:
+        effort = str(effort).strip().lower()
+        if effort not in EFFORT_LEVELS:
+            raise ValueError(
+                f"reasoning_effort {effort!r} is not one of {sorted(EFFORT_LEVELS)}"
+            )
+    retries = int(settings.get("output_retries")
+                  or settings.get("outputRetries") or 0)
+    if retries < 0:
+        raise ValueError("output_retries must be >= 0")
+    return slug.model, (effort or slug.reasoning_effort), retries
+
+
 def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
                         base_dir: Optional[str] = None) -> Reasoner:
     """Build (and register) a :class:`Reasoner` from a settings mapping.
@@ -245,9 +270,10 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
 
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
 
+    model, effort, output_retries = _model_and_effort(settings)
     reasoner = Reasoner(
         name=nm,
-        model=settings.get("model", "claude-sonnet-4"),
+        model=model,
         system=system,
         reply=reply_schema,
         tools=tuple(settings.get("tools", []) or []),
@@ -259,6 +285,8 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         system_render=settings.get("system_render") or settings.get("systemRender"),
         user_render=settings.get("user_render") or settings.get("userRender"),
         max_tokens=settings.get("max_tokens") or settings.get("maxTokens"),
+        reasoning_effort=effort,
+        output_retries=output_retries,
     )
     return DEFAULT_REGISTRY.register_reasoner(reasoner)
 
@@ -273,23 +301,22 @@ def is_rich_dotctx(path: str) -> bool:
     return any(os.path.exists(os.path.join(path, m)) for m in _RICH_MARKERS)
 
 
-def load_dotctx(path: str) -> Reasoner:
+def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reasoner:
     """Read ``<path>/settings.yaml`` (or ``settings.yml``) into a Reasoner.
 
     The reasoner's name defaults to the directory name when ``settings.yaml`` omits
     one, so a dotctx at ``reasoners/planner/`` registers as ``planner``. Packages
     carrying rich-layout files (``prompt.j2``, ``messages/``, ``schema.pyi``,
     ``tools.pyi``) are loaded by :mod:`composable_agents.dotctx_rich`.
+
+    Settings carrying yglu expressions (``!? $env.get(...)``) are evaluated by
+    :mod:`composable_agents.dotctx_yglu` against exactly ``env`` (or the
+    module-level default the CLI sets) — never the ambient process environment.
     """
     if is_rich_dotctx(path):
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 
-        return dotctx_rich.load_rich_dotctx(path).reasoner
-
-    try:
-        import yaml
-    except ModuleNotFoundError as e:  # pragma: no cover
-        raise RuntimeError("PyYAML is required to load a dotctx from disk") from e
+        return dotctx_rich.load_rich_dotctx(path, env=env).reasoner
 
     settings_path = None
     for fn in ("settings.yaml", "settings.yml"):
@@ -301,7 +328,20 @@ def load_dotctx(path: str) -> Reasoner:
         raise FileNotFoundError(f"no settings.yaml in dotctx dir: {path!r}")
 
     with open(settings_path, "r", encoding="utf-8") as fh:
-        settings = yaml.safe_load(fh) or {}
+        text = fh.read()
+
+    # dotctx_yglu imports nothing optional at module scope, so this is always safe.
+    from .dotctx_yglu import has_yglu_tags, load_settings as load_yglu_settings
+
+    if has_yglu_tags(text):
+        settings = load_yglu_settings(text, env=env, filepath=settings_path)
+    else:
+        try:
+            import yaml
+        except ModuleNotFoundError as e:  # pragma: no cover
+            raise RuntimeError("PyYAML is required to load a dotctx from disk") from e
+
+        settings = yaml.safe_load(text) or {}
     default_name = os.path.basename(os.path.normpath(path))
     return reasoner_from_settings(settings, name=settings.get("name", default_name),
                                base_dir=path)

@@ -16,8 +16,15 @@ class RunOutcome:
     error: str | None = None
 
 
-def run_agent_local(cfg: CaConfig, name: str, value: Any, *, run_id: str) -> RunOutcome:
+def run_agent_local(
+    cfg: CaConfig,
+    name: str,
+    value: Any,
+    *,
+    run_id: str,
+    env_vars: dict[str, str] | None = None,
+) -> RunOutcome:
     """Execute an agent locally by interpreting it in the resolve child (pures live)."""
-    resolution: RunResolution = run_agent(cfg, name, value)
+    resolution: RunResolution = run_agent(cfg, name, value, env_vars=env_vars)
     events = [ProjectionEvent.from_json(e) for e in resolution.events]
     return RunOutcome(run_id=run_id, value=resolution.value, events=events, error=resolution.error)

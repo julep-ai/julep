@@ -184,6 +184,16 @@ def main() -> int:
     target: str = payload["name"]
     action = payload.get("action", "resolve")
 
+    # Bind the ca env profile as the dotctx yglu default env BEFORE any user
+    # module import: user code calling load_dotctx() at import time must see
+    # exactly the declared vars (never this process's ambient environment).
+    # The child owns the binding for its lifetime and exits.
+    env_vars = payload.get("env_vars")
+    if env_vars is not None:
+        from composable_agents.dotctx_yglu import set_default_env
+
+        set_default_env({str(k): str(v) for k, v in env_vars.items()})
+
     if action in ("freeze", "freeze_check"):
         try:
             result = _discover_agent(root, src, target)

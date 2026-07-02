@@ -60,6 +60,17 @@ def test_rendered_reasoner_for_passes_plain_reasoner_through_unchanged() -> None
     assert rendered_reasoner_for(b, {"value": 1}) is b
 
 
+def test_rendered_reasoner_for_carries_effort_and_output_retries() -> None:
+    register_renderer("greet.v3", lambda ctx: f"Hello {ctx['who']}")
+    b = Reasoner(
+        name="b", model="m", system="ignored", system_render="greet.v3",
+        reasoning_effort="high", output_retries=2,
+    )
+    out = rendered_reasoner_for(b, {"who": "ada"})
+    assert out.reasoning_effort == "high"
+    assert out.output_retries == 2
+
+
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_invoke_reasoner_renders_system_before_llm() -> None:
     register_renderer("inv.sys.v1", lambda ctx: f"sys:{ctx['input']}")

@@ -175,6 +175,10 @@ def _reasoner_identity(name: str) -> dict[str, Any]:
         ident["userRender"] = reasoner.user_render
     if reasoner.max_tokens is not None:
         ident["maxTokens"] = reasoner.max_tokens
+    if reasoner.reasoning_effort is not None:
+        ident["reasoningEffort"] = reasoner.reasoning_effort
+    if reasoner.output_retries:
+        ident["outputRetries"] = reasoner.output_retries
     return ident
 
 

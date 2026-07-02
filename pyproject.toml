@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "composable-agents"
-version = "1.0.0rc3"
+version = "1.0.0rc4"
 description = "A typed, durable framework for composable serverless agents on Temporal."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -45,6 +45,9 @@ http = ["httpx>=0.24"]
 cma = ["httpx>=0.24"]
 # Rich dotctx layout (Jinja2 templates compiled into registered renderers).
 dotctx = ["jinja2>=3.1"]
+# Yglu-evaluated settings.yaml (mem-mcp .ctx compatibility). $env reads come
+# from an explicit mapping, never ambient os.environ.
+yglu = ["yglu>=1.0"]
 # Multi-provider LlmCaller via any-llm (execution/llm.py). Also install your
 # provider extras alongside it, e.g. pip install 'any-llm-sdk[anthropic,openai]'.
 # any-llm-sdk requires Python >=3.11; on 3.10 the LlmCaller raises a clear
@@ -174,4 +177,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# yglu ships no py.typed marker; the [yglu] extra is optional and imported
+# lazily inside dotctx_yglu._import_yglu only.
+module = ["yglu.*"]
 ignore_missing_imports = true
