@@ -82,6 +82,7 @@ def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
         output_retries=reasoner.output_retries,
         require_tool_call=reasoner.require_tool_call,
         response_format=reasoner.response_format,
+        prompt_cache=reasoner.prompt_cache,
     )
 
 

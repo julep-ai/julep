@@ -30,11 +30,15 @@ from ..resilience import AttemptRecord, OnAttempt
 from ..prompt import rendered_reasoner_for
 from ..staged import admit_plan
 from ..trajectory import (
+    Redactor,
     TrajectoryRun,
     TrajectorySink,
     TrajectoryStep,
     TrajectoryValue,
+    _REDACTION_DROP,
     _best_effort,
+    redact_for_capture,
+    redact_secret_shaped,
 )
 from ..transcript import (
     SUMMARY_KEY,
@@ -110,10 +114,13 @@ class WorkerContext:
     # worker startup, so the resolve* activities below read them deterministically.
     # ref -> {flowJson, manifestJson, pureSourceHashes?, bundle?}
     subflows: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # controller -> {config, grantedTools, grantedContracts, grantedSubflows}
+    # controller -> {config, grantedTools, grantedContracts, grantedSubflows, subflowQueues}
     agents: dict[str, dict[str, Any]] = field(default_factory=dict)
     trajectory_sink: Optional[TrajectorySink] = None
     trajectory_blob_store: Optional[BlobStore] = None
+    # Injectable trajectory redactor; None uses redact_secret_shaped at the
+    # capture seam before every blob put. A raising redactor fails closed.
+    redactor: Optional[Redactor] = None
 
 
 @dataclass
@@ -127,6 +134,7 @@ class VerifyPuresInput:
 _CTX = WorkerContext()
 _TRAJECTORY_SINK: Optional[TrajectorySink] = None
 _TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
+_TRAJECTORY_REDACTOR: Optional[Redactor] = None
 _DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
 _CA_META_KEY = "__ca_meta__"
 
@@ -153,15 +161,18 @@ def _with_ca_meta(value: Any, attrs: dict[str, Any]) -> Any:
 def set_trajectory_sink(
     sink: Optional[TrajectorySink],
     blob_store: Optional[BlobStore] = None,
+    redactor: Optional[Redactor] = None,
 ) -> None:
     """Install a process-wide trajectory sink (+ optional blob store for value refs).
 
     Best-effort capture only: a missing sink disables capture entirely. Mirrors
-    composable_agents.execution.dbos_backend.set_projection_sink.
+    composable_agents.execution.dbos_backend.set_projection_sink. ``redactor``
+    overrides the default secret-shaped-key scrubber for trajectory blobs.
     """
-    global _TRAJECTORY_SINK, _TRAJECTORY_BLOB_STORE
+    global _TRAJECTORY_SINK, _TRAJECTORY_BLOB_STORE, _TRAJECTORY_REDACTOR
     _TRAJECTORY_SINK = sink
     _TRAJECTORY_BLOB_STORE = blob_store
+    _TRAJECTORY_REDACTOR = redactor
 
 
 def _accepts_positional(fn: Callable[..., Any], arity: int) -> bool:
@@ -298,7 +309,11 @@ def configure(ctx: WorkerContext) -> None:
     if ctx.llm is not None:
         ctx.llm = _adapt_llm_caller(ctx.llm)
     _CTX = ctx
-    set_trajectory_sink(ctx.trajectory_sink, ctx.trajectory_blob_store or ctx.blob_store)
+    set_trajectory_sink(
+        ctx.trajectory_sink,
+        ctx.trajectory_blob_store or ctx.blob_store,
+        ctx.redactor,
+    )
 
 
 def _registry() -> Registry:
@@ -532,9 +547,13 @@ async def _capture_effect(
     async def _put_best_effort(value: Any) -> Optional[str]:
         if blob_store is None:
             return None
+        redactor = _TRAJECTORY_REDACTOR or redact_secret_shaped
+        redacted = redact_for_capture(redactor, value)
+        if redacted is _REDACTION_DROP:
+            return None
         try:
             return await blob_store.put(
-                root_run_id, json.dumps(value, sort_keys=True).encode()
+                root_run_id, json.dumps(redacted, sort_keys=True).encode()
             )
         except Exception as exc:
             # Mirror trajectory._best_effort: swallow + count + log.
@@ -621,15 +640,18 @@ async def record_marker_step(
 
     ref: Optional[str] = None
     if blob_store is not None:
-        try:
-            ref = await blob_store.put(
-                root_run_id, json.dumps(value, sort_keys=True).encode()
-            )
-        except Exception as exc:
-            def _reraise(e: BaseException = exc) -> None:
-                raise e
+        redactor = _TRAJECTORY_REDACTOR or redact_secret_shaped
+        redacted = redact_for_capture(redactor, value)
+        if redacted is not _REDACTION_DROP:
+            try:
+                ref = await blob_store.put(
+                    root_run_id, json.dumps(redacted, sort_keys=True).encode()
+                )
+            except Exception as exc:
+                def _reraise(e: BaseException = exc) -> None:
+                    raise e
 
-            _best_effort(_reraise)
+                _best_effort(_reraise)
 
     step = TrajectoryStep(
         step_id=step_id,
@@ -1166,6 +1188,7 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
         granted_subflows = sorted(_CTX.capabilities.subflows)
     else:
         granted_subflows = None
+    subflow_queues = spec.get("subflowQueues")
     capability_subflows = (
         sorted(_CTX.capabilities.subflows)
         if _CTX.capabilities is not None and _CTX.capabilities._has_subflows
@@ -1178,6 +1201,7 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
         "capabilityTools": None if capability_tools is None else list(capability_tools),
         "grantedContracts": contracts,
         "grantedSubflows": None if granted_subflows is None else list(granted_subflows),
+        "subflowQueues": None if subflow_queues is None else dict(subflow_queues),
         "capabilitySubflows": None if capability_subflows is None else list(capability_subflows),
         "toolDefs": tool_defs,
     }

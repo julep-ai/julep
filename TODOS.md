@@ -1,5 +1,30 @@
 # TODOS
 
+## mem-mcp adoption review follow-ups (deferred from the 2026-07-01 review; not Phase 3/4 scope)
+
+Captured 2026-07-03 while shipping Phase 4 (`docs/plans/2026-07-01-mem-mcp-adoption-phase3-4-agent-loop-and-preconditions.md` lists these as explicit non-goals "tracked in TODOS.md").
+
+- **Rate limiting / backoff jitter.** Provider-side 429/overload handling is retry-ladder
+  only; no client-side request pacing or jittered backoff policy knob exists.
+- **Budget-semantics unification across backends.** Cost/budget enforcement differs in
+  detail between local, Temporal, DBOS, and CMA loop paths; unify the semantics and test
+  them cross-backend.
+- **Native-downgrade latch refinement.** The native-tools fallback latch (Phase 3) is
+  coarse — once latched, a run stays downgraded; consider per-round re-probe or
+  latch-expiry.
+
+## Phase 4 minor findings (non-blocking, from review + live run)
+
+- **`subflowQueues` merge precedence** — `execution/harness.py` (~`:2042`): a registered
+  agent spec's `subflowQueues` wholesale-replaces the inline APP config dict instead of
+  merging; inconsistent with other spec-vs-inline precedence. Cosmetic today (specs and
+  inline configs are not mixed in practice).
+- **CMA ignores controller `reasoning_effort`/`temperature`/`max_tokens`.** The
+  2026-07-03 live-run fix threads all four Reasoner provider fields into agent-loop
+  controllers; CMA rejects `prompt_cache` loudly but silently no-ops the other three
+  (session creation only carries name/model/tools/system). Decide: reject loudly or wire
+  through the CMA session API.
+
 ## Trajectory plane: standing determinism gate (capture must stay additive)
 
 - **What:** Make "trajectory capture does not alter flow result or projection" a

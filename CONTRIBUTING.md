@@ -58,6 +58,20 @@ python -m tests.golden.regenerate --update
 
 Review the resulting `tests/golden/golden_hashes.json` diff as part of the format change. If a pin moves unexpectedly, stop and investigate before continuing.
 
+## Replay corpus and worker versioning
+
+`tests/replay/histories/*.json` is a Temporal replay gate over all six registered workflows. `tests/replay/test_replay_corpus.py` replays each recorded history at HEAD so nondeterministic workflow changes fail before they ship.
+
+A corpus failure means a nondeterministic workflow change. Fix it either by gating the change behind `workflow.patched("<ticket>")` and re-recording the corpus only once the deprecation window closes, or by shipping under a new Build ID with worker versioning enabled. Regenerate corpus histories only in the same PR that adds a patched gate or intentionally bumps the versioning story, never just to "fix the test".
+
+Regenerate the corpus with:
+
+```bash
+uv run python tests/replay/record_histories.py
+```
+
+Build-ID / worker versioning is opt-in and off by default because versioned task queues need Temporal server support. Workers read `CA_WORKER_BUILD_ID` and `CA_WORKER_VERSIONING=1` through `WorkerServeSettings.from_env`; when versioning is on without an explicit build id, the worker defaults to the package version.
+
 ## Testing norm
 
 The [specification](docs-site/content/docs/internals/specification.md) defines conformance in terms of tested invariants: an item is conformant only when its invariant holds in code with a test. A change is done when the behavior is implemented and the relevant tests have been added or adjusted with it.

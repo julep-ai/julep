@@ -345,6 +345,7 @@ class AgentState:
     last: Any = None
     trace: list[TraceEntry] = field(default_factory=list)
     call_counts: dict[str, int] = field(default_factory=dict)
+    controller_meta: Optional[dict[str, Any]] = None
     # Running summary of elided transcript turns (SUMMARY scope only); persists
     # across continue_as_new so a new segment never re-summarizes from blobs.
     summary: Optional[str] = None
@@ -481,6 +482,8 @@ def terminal_result(status: str, state: AgentState, output: Any = None,
         out["reason"] = reason
     if state.call_counts:
         out["callCounts"] = dict(sorted(state.call_counts.items()))
+    if state.controller_meta:
+        out["__ca_meta__"] = dict(state.controller_meta)
     return out
 
 

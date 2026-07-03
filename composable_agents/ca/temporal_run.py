@@ -6,13 +6,73 @@ import asyncio
 import inspect
 import uuid
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from composable_agents.ca.config import CaConfig, EnvConfig
-from composable_agents.ca.ledger import read_ledger
+from composable_agents.ca.ledger import DeployRecord, read_ledger
+from composable_agents.ca.queues import resolve_queue_lane
 from composable_agents.ca.runner import run_agent_local
 
-__all__ = ["run_on_env"]
+__all__ = [
+    "FlowStartArgs",
+    "build_flow_input_kwargs",
+    "build_flow_start_args",
+    "connect_temporal_client",
+    "run_on_env",
+]
+
+
+@dataclass(frozen=True)
+class FlowStartArgs:
+    flow_json: dict[str, Any]
+    manifest_json: dict[str, Any]
+    session_id: str
+    input: Any
+    task_queue: str
+    bundle: list[dict[str, Any]] | None
+    pinned_pures: dict[str, str] | None
+    queue_lanes: dict[str, str] | None = None
+
+
+def build_flow_start_args(record: DeployRecord, env: EnvConfig, input: Any) -> FlowStartArgs:
+    """Single reader of a deploy record + env into workflow-start primitives.
+
+    Used by BOTH the deployed-run seam (``run_on_env``) and ``ca schedule apply``,
+    so a scheduled run replays the deployed artifact + its pinned pures
+    byte-identically to a manual ``ca run``. ``session_id`` is a deterministic
+    base; the run path overrides it with a per-run id, the schedule path uses it
+    as the trajectory root base.
+    """
+    return FlowStartArgs(
+        flow_json=record.flow_json,
+        manifest_json=record.manifest_json,
+        session_id=f"ca:{env.name}:{record.agent}",
+        input=input,
+        task_queue=resolve_queue_lane(record.queue, env.queues, env.task_queue),
+        bundle=record.bundle_ref,
+        pinned_pures=record.pinned_pures or None,
+        queue_lanes=(env.queues or None),
+    )
+
+
+def build_flow_input_kwargs(sa: FlowStartArgs, *, session_id: str) -> dict[str, Any]:
+    """The ONE mapping from start-args to FlowInput construction kwargs.
+
+    Both the deployed-run seam (``run_on_env`` -> ``run_flow``) and ``ca schedule``
+    (``build_schedule`` -> ``build_flow_input``) construct their FlowInput from this
+    single dict, so any field added here reaches BOTH paths. ``task_queue`` is NOT
+    included: it is a workflow-start parameter, not a FlowInput field.
+    """
+    return {
+        "session_id": session_id,
+        "input": sa.input,
+        "flow_json": sa.flow_json,
+        "manifest_json": sa.manifest_json,
+        "pinned_pures": sa.pinned_pures,
+        "bundle": sa.bundle,
+        "queue_lanes": sa.queue_lanes,
+    }
 
 
 def run_on_env(
@@ -51,17 +111,13 @@ def run_on_env(
     record = records[name]
     session_id = run_id or _temporal_session_id(name, env.name)
     run_flow_callable = run_flow or _load_run_flow()
-    temporal_client = client if client is not None else _connect_temporal_client(env)
+    temporal_client = client if client is not None else connect_temporal_client(env)
 
+    sa = build_flow_start_args(record, env, value)
     result = run_flow_callable(
         temporal_client,
-        record.flow_json,
-        record.manifest_json,
-        session_id=session_id,
-        input=value,
-        task_queue=env.task_queue,
-        bundle=record.bundle_ref,
-        pinned_pures=record.pinned_pures or None,
+        task_queue=sa.task_queue,
+        **build_flow_input_kwargs(sa, session_id=session_id),
     )
     return _await_if_needed(result)
 
@@ -80,7 +136,7 @@ def _load_run_flow() -> Callable[..., Any]:
     return _run_flow
 
 
-def _connect_temporal_client(env: EnvConfig) -> Any:
+def connect_temporal_client(env: EnvConfig) -> Any:
     if env.temporal_address is None:
         raise ValueError(f"env {env.name!r} has no temporal_address")
 

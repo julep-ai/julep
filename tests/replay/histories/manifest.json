@@ -1,0 +1,9 @@
+{
+  "agent_loop": "corpus-agent",
+  "batch_collector": "batch:corpusfake:BATCH:",
+  "batch_poll": "batch:corpusfake:BATCH::p0:a6d03ce2-c1a6-4264-ac36-ce938754dbf1",
+  "debounce": "debounce:corpus-debounce",
+  "flow_par_each_sub": "corpus-flow",
+  "session_multi_turn": "corpus-session",
+  "session_store": "corpus-session-store"
+}

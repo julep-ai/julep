@@ -32,7 +32,12 @@ from .deploy import Deployment, deploy
 from .dotctx import Reasoner
 from .dsl import app, call, native
 from .errors import ValidationError
-from .execution.cma import CMAAgentEnv, CMAClient, manifest_to_custom_tools
+from .execution.cma import (
+    CMAAgentEnv,
+    CMAClient,
+    _reject_prompt_cache_on_cma,
+    manifest_to_custom_tools,
+)
 from .execution.interpreter import InMemoryEnv, interpret
 from .execution.llm_result import LlmResult
 from .freeze import McpSnapshot, NativeToolSpec
@@ -402,6 +407,10 @@ def _derive_agent_name(
     instructions: str,
     native_tools: bool = False,
     require_tool_call: bool = False,
+    prompt_cache: Optional[str] = None,
+    reasoning_effort: Optional[str] = None,
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
 ) -> str:
     name_parts: dict[str, Any] = {
         "budget_cost": budget_cost,
@@ -414,9 +423,24 @@ def _derive_agent_name(
         name_parts["native_tools"] = True
     if require_tool_call:
         name_parts["require_tool_call"] = True
+    if prompt_cache is not None:
+        name_parts["prompt_cache"] = prompt_cache
+    if reasoning_effort is not None:
+        name_parts["reasoning_effort"] = reasoning_effort
+    if temperature is not None:
+        name_parts["temperature"] = temperature
+    if max_tokens is not None:
+        name_parts["max_tokens"] = max_tokens
     payload = canonical_json(name_parts)
     digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:8]
     return f"agent-{digest}"
+
+
+def _llm_result_envelope(result: LlmResult) -> dict[str, Any]:
+    attrs = result.meta.to_attrs()
+    if not attrs:
+        return {"reply": result.reply}
+    return {"reply": result.reply, "__ca_meta__": attrs}
 
 
 class Agent(FlowLike[Any, Any]):
@@ -440,6 +464,10 @@ class Agent(FlowLike[Any, Any]):
             Callable[[Sequence[ProjectionEvent], str], None]
         ] = None,
         require_tool_call: bool = False,
+        prompt_cache: Optional[str] = None,
+        reasoning_effort: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> None:
         """Create an agent facade.
 
@@ -449,6 +477,10 @@ class Agent(FlowLike[Any, Any]):
         """
         if isinstance(reasoner, Reasoner):
             require_tool_call = reasoner.require_tool_call
+            prompt_cache = reasoner.prompt_cache
+            reasoning_effort = reasoner.reasoning_effort
+            temperature = reasoner.temperature
+            max_tokens = reasoner.max_tokens
             DEFAULT_REGISTRY.register_reasoner(reasoner)
             # Drive the controller from the object's *provider config*: its model is
             # the provider model id (not its registry name), and its system seeds
@@ -498,11 +530,19 @@ class Agent(FlowLike[Any, Any]):
                 instructions=system,
                 native_tools=native_tools,
                 require_tool_call=require_tool_call,
+                prompt_cache=prompt_cache,
+                reasoning_effort=reasoning_effort,
+                temperature=temperature,
+                max_tokens=max_tokens,
             )
         else:
             resolved_name = name
         self._name = resolved_name
         self._reasoner_model = reasoner
+        self._reasoner_prompt_cache = prompt_cache
+        self._reasoner_reasoning_effort = reasoning_effort
+        self._reasoner_temperature = temperature
+        self._reasoner_max_tokens = max_tokens
         self._caps = caps
         self._tools = tuple(tool_caps)
         self._flow_caps: dict[str, FlowLike[Any, Any]] = {
@@ -548,6 +588,10 @@ class Agent(FlowLike[Any, Any]):
                 system=system,
                 reply=AGENT_REPLY_SCHEMA,
                 tools=tool_names,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                reasoning_effort=reasoning_effort,
+                prompt_cache=prompt_cache,
                 is_agent=True,
             )
         )
@@ -559,6 +603,7 @@ class Agent(FlowLike[Any, Any]):
             max_rounds=max_rounds,
             native_tools=native_tools,
             require_tool_call=require_tool_call,
+            subflow_queues=(self.subflow_queues() or None),
         )
         self._snapshot = snapshot_from_tools(self._tools)
         self._capabilities = CapabilityManifest(
@@ -602,6 +647,10 @@ class Agent(FlowLike[Any, Any]):
             "mode": self._mode,
             "native_tools": self._native_tools,
             "require_tool_call": self._require_tool_call,
+            "prompt_cache": self._reasoner_prompt_cache,
+            "reasoning_effort": self._reasoner_reasoning_effort,
+            "temperature": self._reasoner_temperature,
+            "max_tokens": self._reasoner_max_tokens,
             "langfuse_export": self._langfuse_export,
         }
 
@@ -660,6 +709,10 @@ class Agent(FlowLike[Any, Any]):
             require_tool_call = False
             if isinstance(reasoner, Reasoner):
                 require_tool_call = reasoner.require_tool_call
+                overrides["prompt_cache"] = reasoner.prompt_cache
+                overrides["reasoning_effort"] = reasoner.reasoning_effort
+                overrides["temperature"] = reasoner.temperature
+                overrides["max_tokens"] = reasoner.max_tokens
                 DEFAULT_REGISTRY.register_reasoner(reasoner)
                 # Mirror __init__: drive the controller from the object's provider
                 # model (not its registry name) and seed instructions from its
@@ -874,7 +927,7 @@ class Agent(FlowLike[Any, Any]):
             # bare reply (interpret_reasoner_reply). The flow facade path unwraps in
             # interpreter._unwrap_ca_meta; this is its app-loop counterpart.
             if isinstance(reply, LlmResult):
-                return reply.reply
+                return _llm_result_envelope(reply)
             return reply
 
         async def call_tool(
@@ -1069,7 +1122,7 @@ class Agent(FlowLike[Any, Any]):
                 if inspect.isawaitable(reply):
                     reply = await reply
                 if isinstance(reply, LlmResult):
-                    return reply.reply
+                    return _llm_result_envelope(reply)
                 return reply
 
             async def call_tool(
@@ -1140,6 +1193,7 @@ class Agent(FlowLike[Any, Any]):
                 raise ValueError("Agent.open(backend='cma') requires client=")
             from .execution.cma_session import CMASessionHandle
 
+            _reject_prompt_cache_on_cma(self._name)
             session_deployment = self._deploy_session(session)
             max_call_limits = (
                 session_deployment.capabilities.max_call_limits()
@@ -1280,6 +1334,19 @@ class Agent(FlowLike[Any, Any]):
     def split_children(self) -> dict[str, SplitCapability]:
         """The per-component split children (ref -> marker)."""
         return dict(self._split_children)
+
+    def subflow_queues(self) -> dict[str, str]:
+        """Per-subflow lane names authored via ``child.as_sub(queue=...)``.
+
+        Omit-when-unset: children without a queue are absent. This is the piece a
+        worker-spec builder puts under ``agents[controller]["subflowQueues"]`` so a
+        durable AgentWorkflow can route SUB decisions to lanes.
+        """
+        queues: dict[str, str] = {}
+        for ref, cap in self._split_children.items():
+            if cap.queue is not None:
+                queues[ref] = cap.queue
+        return queues
 
     def sub_deployments(self) -> dict[str, "Deployment"]:
         """Compiled child deployments for this agent's sub-capabilities (ref -> Deployment).

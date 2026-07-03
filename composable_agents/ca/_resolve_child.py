@@ -14,7 +14,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from composable_agents.typed import FlowLike
@@ -103,6 +103,7 @@ def _freeze_agent(
     cas: str,
     *,
     publish: bool = True,
+    queue: Optional[str] = None,
 ) -> dict[str, Any]:
     from composable_agents.agent import Tool, snapshot_from_tools
     from composable_agents.cas import LocalDirCAS, cas_from_url
@@ -141,7 +142,7 @@ def _freeze_agent(
     # strict=False so we can surface the prod gap ourselves rather than letting
     # ValidationError abort before we can attach a human-readable summary. We
     # still REFUSE to publish/record a blocking deployment below.
-    dep = deploy(node, snapshot, strict=False)
+    dep = deploy(node, snapshot, strict=False, queue=queue)
     bad = blocking(dep.diagnostics)
     if bad:
         return {"error": dep.prod_gap_summary()}
@@ -158,6 +159,9 @@ def _freeze_agent(
         "bundle_ref": dep.bundle_ref,
         "pinned_pures": pinned_pures,
     }
+    dep_queue = getattr(dep, "queue", None)
+    if dep_queue is not None:
+        result["queue"] = dep_queue
     if not publish:
         # Read-only path (`ca status`): the artifact_hash is a cached_property of
         # artifact_components and needs no CAS mutation / S3 upload to compute.
@@ -206,6 +210,7 @@ def main() -> int:
                     result.modules,
                     str(payload["cas"]),
                     publish=action == "freeze",
+                    queue=payload.get("flow_queue"),
                 )
             )
         except Exception as exc:  # noqa: BLE001 - serialize child failures for the parent.
@@ -213,6 +218,7 @@ def main() -> int:
         return 0
 
     if action == "lint":
+        from composable_agents.ca.queues import queue_lane_diagnostics
         from composable_agents.validate import validate
 
         result = _discover_agent(root, src, target)
@@ -220,12 +226,18 @@ def main() -> int:
             _emit({"error": _not_found_error(target, result.import_errors)})
             return 0
         diagnostics = validate(result.found.to_ir())
+        extra = queue_lane_diagnostics(
+            result.found,
+            payload.get("queues") or {},
+            str(payload.get("queue_env") or "local"),
+        )
         _emit(
             {
                 "diagnostics": [
                     {"code": d.code, "severity": d.severity, "message": d.message}
                     for d in diagnostics
                 ]
+                + extra
             }
         )
         return 0

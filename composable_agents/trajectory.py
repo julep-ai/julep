@@ -32,19 +32,45 @@ inspection, while :class:`PostgresTrajectoryStore` is the dependency-free
 production seam. The host applies the SQL in
 :mod:`composable_agents.execution.trajectory_sql`; this module stays pure
 Python and importable without a database driver.
+
+Production value-level redaction for mem-mcp (hash-pointer style, covering
+memory text, checkin, and brief content) lives in the mem-mcp repo and is
+injected through ``WorkerContext(redactor=...)`` or
+``TrajectoryRecorder(redactor=...)``. The framework default
+``redact_secret_shaped`` is a secret-key floor, not a PII close.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, Iterable, Optional, Protocol, TypeVar
+from typing import Any, Callable, Iterable, Optional, Protocol, TypeVar, cast
+
+from .validate import SECRET_KEY_RE
 
 logger = logging.getLogger("composable_agents.trajectory")
 
 _BEST_EFFORT_FAILURES = 0
 T = TypeVar("T")
+Redactor = Callable[[Any], Any]
+
+REDACTED_PLACEHOLDER = "[REDACTED]"
+
+# validate.SECRET_KEY_RE governs ARR static-arg-key validation; do NOT mutate it.
+# For trajectory redaction we build a SUPERSET that also catches auth headers.
+# `authorization|bearer` are added; bare `key` is deliberately NOT matched
+# (cache_key / primary_key false positives). Substring `.search()` semantics
+# (same as validate.py) means e.g. "tokens"/"tokenRef" also match -- an accepted
+# secrets-floor false positive.
+SECRET_REDACT_KEY_RE = re.compile(
+    SECRET_KEY_RE.pattern + r"|authorization|bearer",
+    re.IGNORECASE,
+)
+
+# Sentinel: the redactor raised, so the value must be dropped (never written raw).
+_REDACTION_DROP: Any = object()
 
 
 def trajectory_best_effort_failures() -> int:
@@ -59,6 +85,49 @@ def _best_effort(fn: Callable[[], T]) -> Optional[T]:
         _BEST_EFFORT_FAILURES += 1
         logger.warning("trajectory best-effort operation failed", exc_info=True)
         return None
+
+
+def redact_secret_shaped(value: Any) -> Any:
+    """Default redactor for secret-shaped dict keys.
+
+    Recursively replaces any secret-shaped dict-key's value with
+    ``[REDACTED]``. Returns a fresh structure and never mutates input.
+
+    Non-secret payloads round-trip byte-identically under
+    ``json.dumps(..., sort_keys=True)``. This is a secrets floor (key-name only);
+    it cannot catch PII inside free-text values -- inject a value-level redactor
+    for that.
+    """
+    if isinstance(value, dict):
+        out: dict[Any, Any] = {}
+        for key, child in value.items():
+            if isinstance(key, str) and SECRET_REDACT_KEY_RE.search(key):
+                out[key] = REDACTED_PLACEHOLDER
+            else:
+                out[key] = redact_secret_shaped(child)
+        return out
+    if isinstance(value, (list, tuple)):
+        return [redact_secret_shaped(child) for child in value]
+    return value
+
+
+def redact_for_capture(redactor: Redactor, value: Any) -> Any:
+    """Fail-closed redaction applier for the capture seam.
+
+    Returns the redacted value, or ``_REDACTION_DROP`` when the redactor raised.
+    The caller must then persist nothing for this value: a broken redactor must
+    never fall back to writing raw. Increments the shared best-effort failure
+    counter and logs.
+    """
+    global _BEST_EFFORT_FAILURES
+    try:
+        return redactor(value)
+    except Exception:
+        _BEST_EFFORT_FAILURES += 1
+        logger.warning(
+            "trajectory redactor raised; dropping value (fail-closed)", exc_info=True
+        )
+        return _REDACTION_DROP
 
 
 @dataclass(frozen=True)
@@ -227,7 +296,13 @@ class TrajectorySink(Protocol):
         self, run_id: str, format: str = "supervised_turns"
     ) -> list[str]: ...
     async def export_trajectory_jsonl_hydrated(
-        self, run_id: str, blob_store: Any, format: str = "supervised_turns"
+        self,
+        run_id: str,
+        blob_store: Any,
+        format: str = "supervised_turns",
+        *,
+        redactor: Optional[Redactor] = None,
+        allow_raw: bool = False,
     ) -> list[str]: ...
 
 
@@ -349,10 +424,22 @@ class InMemoryTrajectoryStore:
         ]
 
     async def export_trajectory_jsonl_hydrated(
-        self, run_id: str, blob_store: Any, format: str = "supervised_turns"
+        self,
+        run_id: str,
+        blob_store: Any,
+        format: str = "supervised_turns",
+        *,
+        redactor: Optional[Redactor] = None,
+        allow_raw: bool = False,
     ) -> list[str]:
         if format != "supervised_turns":
             raise ValueError(f"unsupported trajectory export format: {format!r}")
+        if allow_raw:
+            logger.warning(
+                "export_trajectory_jsonl_hydrated allow_raw=True: exporting hydrated "
+                "trajectory blobs WITHOUT redaction (run_id=%s)",
+                run_id,
+            )
 
         from composable_agents.execution.blobstore import parse_ref
 
@@ -369,9 +456,15 @@ class InMemoryTrajectoryStore:
                 refs.add(value.ref)
 
         hydrated: dict[str, Any] = {}
+        resolved = redactor or redact_secret_shaped
         for ref in refs:
             tenant, _ = parse_ref(ref)
-            hydrated[ref] = json.loads(await blob_store.get(tenant, ref))
+            value = json.loads(await blob_store.get(tenant, ref))
+            if allow_raw:
+                hydrated[ref] = value
+            else:
+                redacted = redact_for_capture(resolved, value)
+                hydrated[ref] = None if redacted is _REDACTION_DROP else redacted
 
         lines: list[str] = []
         for step in steps:
@@ -565,7 +658,13 @@ class PostgresTrajectoryStore:
         return [json.dumps(step.to_json(), sort_keys=True) for step in self.list_trajectory_steps(run_id)]
 
     async def export_trajectory_jsonl_hydrated(
-        self, run_id: str, blob_store: Any, format: str = "supervised_turns"
+        self,
+        run_id: str,
+        blob_store: Any,
+        format: str = "supervised_turns",
+        *,
+        redactor: Optional[Redactor] = None,
+        allow_raw: bool = False,
     ) -> list[str]:
         store = InMemoryTrajectoryStore()
         run = self.get_trajectory_run(run_id)
@@ -573,7 +672,103 @@ class PostgresTrajectoryStore:
             store.start_run(run)
         store.append_steps(self.list_trajectory_steps(run_id))
         store.record_values(self.list_trajectory_values(run_id))
-        return await store.export_trajectory_jsonl_hydrated(run_id, blob_store, format)
+        return await store.export_trajectory_jsonl_hydrated(
+            run_id,
+            blob_store,
+            format,
+            redactor=redactor,
+            allow_raw=allow_raw,
+        )
 
     def buffer(self) -> list[Any]:
         return list(self._buffer)
+
+
+@dataclass
+class TrajectoryRecorder:
+    """Local trajectory capture recorder with an injectable redactor.
+
+    Durable backends capture through
+    :func:`composable_agents.execution.effects._capture_effect`; this is the
+    equivalent seam for in-process/local recording. ``redactor`` defaults to
+    :func:`redact_secret_shaped`. Redaction runs before every blob ``put`` and
+    fails closed: a raising redactor drops the value.
+    """
+
+    sink: TrajectorySink
+    blob_store: Any = None
+    redactor: Optional[Redactor] = None
+
+    async def _put(self, tenant: str, value: Any) -> Optional[str]:
+        if self.blob_store is None:
+            return None
+        redactor = self.redactor or redact_secret_shaped
+        redacted = redact_for_capture(redactor, value)
+        if redacted is _REDACTION_DROP:
+            return None
+        try:
+            return cast(
+                str,
+                await self.blob_store.put(
+                    tenant, json.dumps(redacted, sort_keys=True).encode()
+                ),
+            )
+        except Exception as exc:
+            def _reraise(e: BaseException = exc) -> None:
+                raise e
+
+            _best_effort(_reraise)
+            return None
+
+    async def capture(
+        self,
+        *,
+        step_id: str,
+        run_id: str,
+        root_run_id: str,
+        cid: str,
+        node_id: str,
+        op: str,
+        kind: str,
+        input_value: Any,
+        output_value: Any,
+        causes: tuple[str, ...] = (),
+    ) -> TrajectoryStep:
+        input_ref = await self._put(root_run_id, input_value)
+        output_ref = await self._put(root_run_id, output_value)
+        step = TrajectoryStep(
+            step_id=step_id,
+            run_id=run_id,
+            root_run_id=root_run_id,
+            cid=cid,
+            node_id=node_id,
+            op=op,
+            kind=kind,
+            causes=tuple(causes),
+            status="did",
+            input_ref=input_ref,
+            output_ref=output_ref,
+        )
+        _best_effort(lambda: self.sink.append_steps([step]))
+        values: list[TrajectoryValue] = []
+        if input_ref is not None:
+            values.append(
+                TrajectoryValue(
+                    ref=input_ref,
+                    root_run_id=root_run_id,
+                    step_id=step_id,
+                    kind="input",
+                )
+            )
+        if output_ref is not None:
+            values.append(
+                TrajectoryValue(
+                    ref=output_ref,
+                    root_run_id=root_run_id,
+                    step_id=step_id,
+                    kind="output",
+                )
+            )
+        if values:
+            _best_effort(lambda: self.sink.record_values(values))
+        return step

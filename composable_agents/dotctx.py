@@ -142,8 +142,9 @@ class Reasoner:
     into the deploy identity; agent-loop enforcement lands with native
     tool-calling (Phase 3/4). ``response_format`` records mem-mcp's
     ``response_format: {type: json_object}`` setting as ``"json_object"``;
-    declaring it alongside a reply schema is allowed — the schema wins at
-    call time (the provider call never carries both).
+    ``prompt_cache`` records Anthropic's ephemeral cache TTL (inert on other
+    providers); declaring a reply schema alongside ``response_format`` is
+    allowed — the schema wins at call time (the provider call never carries both).
     """
 
     name: str
@@ -163,6 +164,7 @@ class Reasoner:
     output_retries: int = 0               # re-asks when a schema'd reply fails to parse
     require_tool_call: bool = False       # declarative; loop enforcement is Phase 3/4
     response_format: Optional[str] = None  # "json_object"; reply_schema wins at call time
+    prompt_cache: Optional[str] = None
 
     def __init__(
         self,
@@ -184,6 +186,7 @@ class Reasoner:
         output_retries: int = 0,
         require_tool_call: bool = False,
         response_format: Optional[str] = None,
+        prompt_cache: Optional[str] = None,
     ) -> None:
         if reply is _REPLY_UNSET or reply is None:
             materialized = None
@@ -209,6 +212,12 @@ class Reasoner:
         object.__setattr__(self, "output_retries", output_retries)
         object.__setattr__(self, "require_tool_call", require_tool_call)
         object.__setattr__(self, "response_format", response_format)
+        if prompt_cache is not None and prompt_cache not in _PROMPT_CACHE_TTLS:
+            raise ValueError(
+                f"unsupported prompt_cache {prompt_cache!r}; "
+                "supported values are '5m' or '1h'"
+            )
+        object.__setattr__(self, "prompt_cache", prompt_cache)
 
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
@@ -305,6 +314,23 @@ def _response_format_setting(settings: Mapping[str, Any]) -> Optional[str]:
     )
 
 
+_PROMPT_CACHE_TTLS = frozenset({"5m", "1h"})
+
+
+def _prompt_cache_setting(settings: Mapping[str, Any]) -> Optional[str]:
+    """mem-mcp's Anthropic prompt-cache TTL: ``"5m"`` or ``"1h"``."""
+    value = settings.get("prompt_cache")
+    if value is None:
+        value = settings.get("promptCache")
+    if value is None:
+        return None
+    if value in _PROMPT_CACHE_TTLS:
+        return cast(str, value)
+    raise ValueError(
+        f"unsupported prompt_cache {value!r}; supported values are '5m' or '1h'"
+    )
+
+
 def _setting(settings: Mapping[str, Any], primary: str, secondary: str) -> Any:
     if primary in settings:
         return settings[primary]
@@ -377,6 +403,7 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         output_retries=output_retries,
         require_tool_call=_require_tool_call_setting(settings),
         response_format=_response_format_setting(settings),
+        prompt_cache=_prompt_cache_setting(settings),
     )
     return DEFAULT_REGISTRY.register_reasoner(reasoner)
 

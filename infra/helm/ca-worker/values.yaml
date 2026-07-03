@@ -8,10 +8,22 @@ temporal:
   namespace: default
   taskQueue: composable-agents
 
+# Queue-lane topology sketch for mem-mcp:
+#   foreground, maintenance, summary, slack, brief-refresh,
+#   record-quality, record-execute
+# Each lane maps to one worker Deployment plus one KEDA ScaledObject watching
+# that lane's Temporal task queue.
+#
+# Two-lane starter:
+#   interactive: RECORD plan/execute, checkin/recall
+#   background: sweeps, rollups, clustering, dream
+
 worker:
   gracefulShutdownSeconds: 20
   healthPort: 8080
   secretName: llm-keys
+  buildId: ""
+  useWorkerVersioning: false
 
 scaling:
   minReplicas: 0

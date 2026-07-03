@@ -22,6 +22,8 @@ def lint_agents(
     *,
     fail_severity: str,
     env_vars: dict[str, str] | None = None,
+    queues: dict[str, str] | None = None,
+    queue_env: str = "local",
 ) -> tuple[list[Finding], int]:
     """Validate agents (in-child, where pures are live) and gate by severity."""
     if fail_severity not in _SEVERITY_ORDER:
@@ -33,7 +35,13 @@ def lint_agents(
     gated = False
 
     for name in names:
-        resolution = lint_agent(cfg, name, env_vars=env_vars)
+        resolution = lint_agent(
+            cfg,
+            name,
+            env_vars=env_vars,
+            queues=queues,
+            queue_env=queue_env,
+        )
         if resolution.error is not None:
             return [Finding(name, "RESOLVE", "error", resolution.error)], 2
         for d in resolution.diagnostics:

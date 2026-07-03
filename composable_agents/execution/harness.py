@@ -404,6 +404,7 @@ class FlowInput:
     # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
     root_run_id: Optional[str] = None
     segment_seq: int = 0
+    queue_lanes: Optional[dict[str, str]] = None
 
 
 @dataclass
@@ -442,6 +443,7 @@ class SessionInput:
     event_log: Optional[list[dict[str, Any]]] = None
     event_seq: int = 0
     event_ack: int = 0
+    queue_lanes: Optional[dict[str, str]] = None
 
 
 @dataclass
@@ -464,6 +466,30 @@ class AgentInput:
     # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
     root_run_id: Optional[str] = None
     segment_seq: int = 0
+    queue_lanes: Optional[dict[str, str]] = None
+    subflow_queues: Optional[dict[str, str]] = None
+
+
+def _resolve_child_queue(
+    sub_queue: Optional[str], lanes: Optional[dict[str, str]]
+) -> Optional[str]:
+    """Resolve a subflow's authored queue against the env lane map.
+
+    None -> None (inherit parent task queue, byte-for-byte). Present + known
+    lane -> mapped concrete queue. Present + unknown -> the raw string.
+
+    mem-mcp role lanes map to one worker Deployment + KEDA ScaledObject per
+    lane. Interactive (RECORD plan/execute, checkin/recall) vs background
+    (sweeps, rollups, clustering, dream) is the two-lane starter, not the
+    ceiling.
+    """
+    if not sub_queue:
+        return None
+    if lanes and sub_queue in lanes:
+        return lanes[sub_queue]
+    return sub_queue
+
+
 
 
 # --------------------------------------------------------------------------- #
@@ -490,6 +516,7 @@ class _TemporalEnv:
         principal: Optional[dict[str, Any]] = None,
         root_run_id: Optional[str] = None,
         segment_seq: int = 0,
+        queue_lanes: Optional[dict[str, str]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -497,6 +524,7 @@ class _TemporalEnv:
         self.principal = principal
         self.root_run_id = root_run_id
         self.segment_seq = segment_seq
+        self._queue_lanes = queue_lanes
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -735,6 +763,14 @@ class _TemporalEnv:
         # inherits the parent's principal unchanged (no substitution API).
         child_id = self._child_id("sub", cid)
         bundle = await self._bundle_for_ref_child(ref)
+        sub_queue = getattr(contract, "queue", None)
+        resolved = _resolve_child_queue(sub_queue, self._queue_lanes)
+        start_kwargs: dict[str, Any] = {
+            "id": child_id,
+            "task_timeout": timedelta(seconds=self._policy.sub_task_timeout_s),
+        }
+        if resolved is not None:
+            start_kwargs["task_queue"] = resolved
         result = await workflow.execute_child_workflow(
             FlowWorkflow.run,
             FlowInput(
@@ -747,9 +783,9 @@ class _TemporalEnv:
                 principal=self.principal,
                 root_run_id=self.root_run_id,
                 bundle=bundle,
+                queue_lanes=(self._queue_lanes or None),
             ),
-            id=child_id,
-            task_timeout=timedelta(seconds=self._policy.sub_task_timeout_s),
+            **start_kwargs,
         )
         from .. import trajectory as _traj
 
@@ -809,6 +845,7 @@ class _TemporalEnv:
         granted_tools: Optional[list[str]] = None
         granted_subflows: Optional[list[str]] = None
         granted_contracts: Optional[dict[str, dict[str, Any]]] = None
+        subflow_queues: Optional[dict[str, str]] = None
         granted_tools_unconstrained = False
 
         if app_config is not None:
@@ -832,6 +869,8 @@ class _TemporalEnv:
             granted_tools = None if tools is None else list(tools)
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
+            if "subflowQueues" in app_config:
+                subflow_queues = app_config["subflowQueues"]
             if tools is not None:
                 granted_contracts = al.manifest_contracts_for_agent(
                     self.manifest,
@@ -859,10 +898,12 @@ class _TemporalEnv:
                 granted_tools_unconstrained=granted_tools_unconstrained,
                 granted_subflows=granted_subflows,
                 granted_contracts=granted_contracts,
+                subflow_queues=subflow_queues,
                 state=state_json,
                 policy=self._policy.to_json(),
                 principal=self.principal,
                 root_run_id=self.root_run_id,
+                queue_lanes=(self._queue_lanes or None),
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.agent_task_timeout_s),
@@ -1169,6 +1210,7 @@ class FlowWorkflow:
             principal=inp.principal,
             root_run_id=(inp.root_run_id or inp.session_id),
             segment_seq=inp.segment_seq,
+            queue_lanes=inp.queue_lanes,
         )
         await self._start_trajectory(inp)
 
@@ -1199,6 +1241,7 @@ class FlowWorkflow:
                     root_run_id=(inp.root_run_id or inp.session_id),
                     segment_seq=inp.segment_seq + 1,
                     bundle=bundle,
+                    queue_lanes=inp.queue_lanes,
                 )
             )
         await self._flush_structural(inp, node_ops)
@@ -1669,6 +1712,7 @@ class SessionWorkflow:
                 event_log=[dict(item) for item in self._event_log],
                 event_seq=self._event_seq,
                 event_ack=self._event_ack,
+                queue_lanes=inp.queue_lanes,
             )
         )
 
@@ -1787,6 +1831,7 @@ class SessionWorkflow:
             principal=inp.principal,
             root_run_id=(inp.root_run_id or inp.session_id),
             segment_seq=inp.segment_seq,
+            queue_lanes=inp.queue_lanes,
         )
 
         split_result = bool(flow.args and flow.args.get("split") is True)
@@ -1959,6 +2004,7 @@ class AgentWorkflow:
         config = dict(inp.config or {})
         granted = inp.granted_tools
         granted_subflows = inp.granted_subflows
+        subflow_queues = inp.subflow_queues
         contracts = dict(inp.granted_contracts or {})
         tool_defs = inp.tool_defs
         grants_supplied = inp.granted_tools is not None or inp.granted_tools_unconstrained
@@ -1993,6 +2039,9 @@ class AgentWorkflow:
                     granted_subflows = sorted(set(granted_subflows) & set(capability_subflows))
             else:
                 granted_subflows = spec_subflows
+            spec_subflow_queues = spec.get("subflowQueues")
+            if spec_subflow_queues is not None:
+                subflow_queues = dict(spec_subflow_queues)
 
         cfg = al.AgentConfig.from_json(config or {})
         if cfg.native_tools and not tool_defs:
@@ -2103,6 +2152,13 @@ class AgentWorkflow:
                 start_to_close_timeout=timedelta(seconds=policy.reasoner_timeout_s),
                 retry_policy=_reasoner_retry(policy),
             )
+            if isinstance(reply, dict) and "__ca_meta__" in reply and "reply" in reply:
+                meta = reply["__ca_meta__"]
+                state.controller_meta = (
+                    dict(meta) if isinstance(meta, dict) else {"meta": meta}
+                )
+            else:
+                state.controller_meta = None
             new_summary, reply = split_summary_reply(reply)
             reply = unwrap_reply_meta(reply)
             if new_summary is not None:
@@ -2417,6 +2473,16 @@ class AgentWorkflow:
                     bundle = resolved.get("bundle")
                     if isinstance(bundle, list):
                         child_bundle = bundle
+                resolved_queue = _resolve_child_queue(
+                    (subflow_queues or {}).get(ref),
+                    inp.queue_lanes,
+                )
+                start_kwargs: dict[str, Any] = {
+                    "id": child_id,
+                    "task_timeout": timedelta(seconds=policy.sub_task_timeout_s),
+                }
+                if resolved_queue is not None:
+                    start_kwargs["task_queue"] = resolved_queue
                 out = await workflow.execute_child_workflow(
                     FlowWorkflow.run,
                     FlowInput(
@@ -2429,9 +2495,9 @@ class AgentWorkflow:
                         principal=inp.principal,
                         root_run_id=(inp.root_run_id or inp.session_id),
                         bundle=child_bundle,
+                        queue_lanes=(inp.queue_lanes or None),
                     ),
-                    id=child_id,
-                    task_timeout=timedelta(seconds=policy.sub_task_timeout_s),
+                    **start_kwargs,
                 )
                 # Trajectory: capture the agent's sub action as a sub/flow step
                 # (parity with FlowWorkflow's SubStep and the DBOS backend).
@@ -2528,6 +2594,8 @@ class AgentWorkflow:
                             principal=inp.principal,
                             root_run_id=(inp.root_run_id or inp.session_id),
                             segment_seq=inp.segment_seq + 1,
+                            queue_lanes=inp.queue_lanes,
+                            subflow_queues=subflow_queues,
                         )
                     )
                 else:
@@ -2548,6 +2616,8 @@ class AgentWorkflow:
                             principal=inp.principal,
                             root_run_id=(inp.root_run_id or inp.session_id),
                             segment_seq=inp.segment_seq + 1,
+                            queue_lanes=inp.queue_lanes,
+                            subflow_queues=subflow_queues,
                         )
                     )
 
@@ -2555,6 +2625,40 @@ class AgentWorkflow:
 # --------------------------------------------------------------------------- #
 # Client helper.
 # --------------------------------------------------------------------------- #
+def build_flow_input(
+    *,
+    session_id: str,
+    input: Any = None,
+    flow_json: Optional[dict[str, Any]] = None,
+    manifest_json: Optional[dict[str, Any]] = None,
+    policy: Optional[ExecutionPolicy] = None,
+    pinned_pures: Optional[dict[str, str]] = None,
+    max_call_limits: Optional[dict[str, int]] = None,
+    principal: Optional[dict[str, Any]] = None,
+    root_run_id: Optional[str] = None,
+    bundle: Optional[list[dict[str, str]]] = None,
+    queue_lanes: Optional[dict[str, str]] = None,
+) -> FlowInput:
+    """Single source of truth for deployed-run FlowInput construction.
+
+    Used by run_flow AND by ca-layer ``build_flow_start_args`` consumers
+    (ca run / ca schedule) so scheduled and manual runs carry byte-identical args.
+    """
+    return FlowInput(
+        session_id=session_id,
+        input=input,
+        flow_json=flow_json,
+        manifest_json=manifest_json,
+        pinned_pures=pinned_pures,
+        max_call_limits=max_call_limits,
+        policy=(policy or ExecutionPolicy()).to_json(),
+        principal=principal,
+        root_run_id=root_run_id,
+        bundle=bundle,
+        queue_lanes=queue_lanes,
+    )
+
+
 async def run_flow(
     client,
     flow_json: dict[str, Any],
@@ -2569,6 +2673,7 @@ async def run_flow(
     principal: Optional[dict[str, Any]] = None,
     root_run_id: Optional[str] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    queue_lanes: Optional[dict[str, str]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
@@ -2581,17 +2686,18 @@ async def run_flow(
     """
     return await client.execute_workflow(
         FlowWorkflow.run,
-        FlowInput(
+        build_flow_input(
             session_id=session_id,
             input=input,
             flow_json=flow_json,
             manifest_json=manifest_json,
             pinned_pures=pinned_pures,
             max_call_limits=max_call_limits,
-            policy=(policy or ExecutionPolicy()).to_json(),
+            policy=policy,
             principal=principal,
             root_run_id=root_run_id,
             bundle=bundle,
+            queue_lanes=queue_lanes,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -2612,6 +2718,7 @@ async def start_flow(
     principal: Optional[dict[str, Any]] = None,
     root_run_id: Optional[str] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    queue_lanes: Optional[dict[str, str]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
@@ -2631,6 +2738,7 @@ async def start_flow(
             principal=principal,
             root_run_id=root_run_id,
             bundle=bundle,
+            queue_lanes=queue_lanes,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -2868,6 +2976,7 @@ __all__ = [
     "startTrajectory",
     "flushStructural",
     "runSubCapture",
+    "build_flow_input",
     "run_flow",
     "start_flow",
     "TemporalSessionHandle",

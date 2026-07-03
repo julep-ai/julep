@@ -20,6 +20,7 @@ class FrozenArtifact:
     manifest_json: dict[str, Any] = field(default_factory=dict)
     bundle_ref: list[dict[str, Any]] | None = None
     pinned_pures: dict[str, str] = field(default_factory=dict)
+    queue: str | None = None
     error: str | None = None
 
 
@@ -82,6 +83,9 @@ def _artifact_from_payload(name: str, data: dict[str, Any]) -> FrozenArtifact:
     artifact_hash = data.get("artifact_hash")
     if not isinstance(artifact_hash, str):
         raise ValueError("artifact_hash must be a string")
+    queue = data.get("queue")
+    if queue is not None and not isinstance(queue, str):
+        raise ValueError("queue must be a string or null")
     return FrozenArtifact(
         name=name,
         artifact_hash=artifact_hash,
@@ -89,6 +93,7 @@ def _artifact_from_payload(name: str, data: dict[str, Any]) -> FrozenArtifact:
         manifest_json=_dict_field(data, "manifest_json"),
         bundle_ref=_bundle_ref_field(data),
         pinned_pures=_pinned_pures_field(data),
+        queue=queue,
         error=None,
     )
 
@@ -106,6 +111,7 @@ def freeze_agent(cfg: CaConfig, name: str, env: str, *, publish: bool = True) ->
             "src": cfg.src,
             "name": name,
             "cas": cas,
+            "flow_queue": cfg.flow_queues.get(name),
             # The env profile binds the dotctx yglu default env in the child;
             # freeze and freeze_check (status drift) use the same binding so a
             # var-dependent agent does not show phantom drift.
@@ -164,6 +170,7 @@ def deploy_agents(
                 manifest_json=artifact.manifest_json,
                 bundle_ref=artifact.bundle_ref,
                 pinned_pures=artifact.pinned_pures,
+                queue=artifact.queue,
                 deployed_at=now_iso,
             )
         )

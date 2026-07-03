@@ -28,9 +28,10 @@ class DeployRecord:
     # Pinned pure source hashes captured at deploy time; passed as run_flow's
     # pinned_pures on replay so worker-side pure-registry drift is detected.
     pinned_pures: dict[str, str] = field(default_factory=dict)
+    queue: str | None = None
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        out = {
             "agent": self.agent,
             "artifact_hash": self.artifact_hash,
             "flow_json": self.flow_json,
@@ -39,6 +40,9 @@ class DeployRecord:
             "pinned_pures": self.pinned_pures,
             "deployed_at": self.deployed_at,
         }
+        if self.queue is not None:
+            out["queue"] = self.queue
+        return out
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> DeployRecord:
@@ -53,6 +57,7 @@ class DeployRecord:
             bundle_ref=_bundle_ref_field(data, "bundle_ref"),
             # Backward compatible: ledgers written before pinned_pures existed.
             pinned_pures=_pinned_pures_field(data, "pinned_pures"),
+            queue=data.get("queue"),
             deployed_at=_str_field(data, "deployed_at"),
         )
 

@@ -136,6 +136,83 @@ async def _pipeline_and_reasoner(env):
     assert out == 20, f"pipeline+reasoner expected 20, got {out}"
 
 
+async def _queue_lanes_do_not_break_subflow_inheritance(env):
+    fr = freeze(sub("child", Contract.pipeline()), _snapshot())
+    async with _worker(env, task_queue="ca-queue-lanes"):
+        out = await run_flow(
+            env.client,
+            fr.flow.to_json(),
+            manifest_to_json(fr.manifest),
+            session_id=f"queue-lanes-{uuid.uuid4()}",
+            input=5,
+            task_queue="ca-queue-lanes",
+            queue_lanes={"foreground": "ca-fg"},
+        )
+    assert out == 6, f"queue-lane subflow expected 6, got {out}"
+
+
+async def _agent_sub_routes_to_mapped_lane(env):
+    """A durable agent SUB routes the child onto a mapped lane, end-to-end.
+
+    Teeth: the lane worker's mcp returns inc(x)=x+1000 while the parent worker's
+    returns x+1. The child is ref-only, so it runs wherever it is STARTED; the
+    parent AgentWorkflow's SUB start must set task_queue=<mapped lane> for the
+    child to land on the lane worker. output==1005 proves the child ran on the
+    lane worker (inc(5)+1000); a routing regression would inherit the parent
+    queue and yield 6. This exercises the full carrier:
+    APP-node subflowQueues -> _app_config -> run_agent -> AgentInput.subflow_queues
+    -> _resolve_child_queue -> execute_child_workflow(task_queue=mapped).
+    """
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="lane_ctrl", model="test", system="decide"))
+    parent_q, lane_q = "ca-lane-parent", "ca-lane-bg"
+
+    async def lane_mcp(server, tool, value, idempotency_key):
+        assert idempotency_key
+        if tool == "inc":
+            return value + 1000
+        return await _mcp(server, tool, value, idempotency_key)
+
+    async def lane_llm(reasoner, value):
+        if reasoner.name == "lane_ctrl":
+            if not value.get("trace"):
+                return {"sub": "child", "input": value["input"]}
+            return {"done": True, "output": value["input"]}
+        return await _llm(reasoner, value)
+
+    # Hand-built APP node carrying subflowQueues (identical shape to what
+    # Agent(tools=[child.as_sub(queue="background")]) now produces).
+    parent_flow = app(
+        "lane_ctrl",
+        subflows=["child"],
+        subflow_queues={"child": "background"},
+        budget=Budget(cost=1000),
+        max_rounds=4,
+    )
+    fr = freeze(parent_flow, _snapshot())
+
+    # Both workers register "child": the parent worker resolves the ref for the
+    # bundle-child-input activity; the lane worker runs it. Only the mcp differs.
+    parent_ctx = WorkerContext(mcp_call=_mcp, llm=lane_llm, subflows=_child_registry())
+    lane_ctx = WorkerContext(mcp_call=lane_mcp, llm=lane_llm, subflows=_child_registry())
+    async with build_worker(env.client, parent_ctx, task_queue=parent_q), \
+               build_worker(env.client, lane_ctx, task_queue=lane_q):
+        out = await run_flow(
+            env.client,
+            fr.flow.to_json(),
+            manifest_to_json(fr.manifest),
+            session_id=f"lane-{uuid.uuid4()}",
+            input=5,
+            task_queue=parent_q,
+            queue_lanes={"background": lane_q},
+        )
+    assert out["status"] == "done", out
+    assert out["output"] == 1005, (
+        f"agent SUB must route the child onto the mapped lane worker "
+        f"(inc(5)+1000=1005); got {out['output']!r} - a routing regression "
+        f"would inherit the parent queue and yield 6"
+    )
+
+
 async def _principal_threading(env):
     """Dispatch-supplied principal reaches a new-style MCP caller end-to-end."""
     seen = {}
@@ -1384,6 +1461,8 @@ async def _agent_native_tools_without_tool_defs_fails(env):
 async def _run_all():
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _pipeline_and_reasoner(env)
+        await _queue_lanes_do_not_break_subflow_inheritance(env)
+        await _agent_sub_routes_to_mapped_lane(env)
         await _principal_threading(env)
         await _race(env)
         await _human_gate(env)

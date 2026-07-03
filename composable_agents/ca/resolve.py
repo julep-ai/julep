@@ -80,10 +80,20 @@ def lint_agent(
     *,
     timeout: float = 30.0,
     env_vars: dict[str, str] | None = None,
+    queues: dict[str, str] | None = None,
+    queue_env: str = "local",
 ) -> LintResolution:
     """Validate an agent IN the child (where pures are registered) and return diagnostics."""
     data = _invoke_child(
-        cfg, {"name": name, "action": "lint", "env_vars": env_vars}, timeout=timeout
+        cfg,
+        {
+            "name": name,
+            "action": "lint",
+            "env_vars": env_vars,
+            "queues": queues or {},
+            "queue_env": queue_env,
+        },
+        timeout=timeout,
     )
     if "error" in data:
         return LintResolution(diagnostics=[], error=str(data["error"]))

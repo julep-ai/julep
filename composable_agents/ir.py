@@ -286,11 +286,14 @@ class SubContract:
 
     shape: Shape
     summary_policy: Optional[SummaryPolicy] = None
+    queue: Optional[str] = None
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"shape": self.shape.value}
         if self.summary_policy is not None:
             out["summaryPolicy"] = self.summary_policy.value
+        if self.queue is not None:
+            out["queue"] = self.queue
         return out
 
     @staticmethod
@@ -300,6 +303,7 @@ class SubContract:
             summary_policy=(
                 SummaryPolicy(d["summaryPolicy"]) if d.get("summaryPolicy") else None
             ),
+            queue=d.get("queue"),
         )
 
 
@@ -463,6 +467,7 @@ class Node:
     round_note: Optional[str] = None
     native_tools: Optional[bool] = None
     require_tool_call: Optional[bool] = None
+    subflow_queues: Optional[dict[str, str]] = None
     source: Optional["SourceSpan"] = None
 
     # ----- traversal -------------------------------------------------------- #
@@ -525,6 +530,8 @@ class Node:
                 out["tools"] = self.tools
             if self.subflows is not None:
                 out["subflows"] = self.subflows
+            if self.subflow_queues:
+                out["subflowQueues"] = self.subflow_queues
             if self.budget is not None:
                 out["budget"] = _budget_to_json(self.budget)
             if self.max_rounds is not None:
@@ -588,6 +595,7 @@ class Node:
             merge=Merge.from_json(d["merge"]) if d.get("merge") else None,
             tools=d.get("tools"),
             subflows=d.get("subflows"),
+            subflow_queues=d.get("subflowQueues"),
             budget=_budget_from_json(d["budget"]) if "budget" in d else None,
             max_rounds=d.get("maxRounds", d.get("max_rounds")),
             ctx=ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None,

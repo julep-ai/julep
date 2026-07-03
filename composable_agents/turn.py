@@ -191,6 +191,13 @@ def controller_turn(
             if state.summary is not None:
                 payload["summary"] = state.summary
         reply = await invoke_controller(payload)
+        if isinstance(reply, dict) and "__ca_meta__" in reply and "reply" in reply:
+            meta = reply["__ca_meta__"]
+            state.controller_meta = (
+                dict(meta) if isinstance(meta, dict) else {"meta": meta}
+            )
+        else:
+            state.controller_meta = None
         new_summary, reply = split_summary_reply(reply)
         reply = unwrap_reply_meta(reply)
         if new_summary is not None:

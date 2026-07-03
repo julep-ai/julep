@@ -30,6 +30,7 @@ from ..agent_loop import (
     would_exceed_budget,
 )
 from ..kinds import EnforcementMode
+from ..registry import DEFAULT_REGISTRY
 
 if TYPE_CHECKING:
     from .interpreter import BranchThunk, Env
@@ -136,6 +137,22 @@ def _reject_round_note_on_cma(cfg: AgentConfig) -> None:
         )
 
 
+def _reject_prompt_cache_on_cma(controller: Optional[str]) -> None:
+    if controller is None:
+        return
+    try:
+        reasoner = DEFAULT_REGISTRY.get_reasoner(controller)
+    except KeyError:
+        return
+    if reasoner.prompt_cache is not None:
+        raise ValueError(
+            "prompt_cache is not supported on CMA because the vendor runs "
+            "the loop, so Composable Agents cannot apply provider cache "
+            "markers with complete_reasoner. Remove prompt_cache or run this "
+            "agent on the local, DBOS, or Temporal backend."
+        )
+
+
 async def drive_cma_agent_loop(
     *,
     input: Any,
@@ -145,10 +162,12 @@ async def drive_cma_agent_loop(
     granted: Optional[set[str]] = None,
     contracts: Optional[AgentContractMap] = None,
     state: Optional[AgentState] = None,
+    controller: Optional[str] = None,
     session_cid: str = "cma",
 ) -> dict[str, Any]:
     """Drive a normalized CMA session through the same gates as the local loop."""
     _reject_round_note_on_cma(cfg)
+    _reject_prompt_cache_on_cma(controller)
     mode = EnforcementMode.coerce(cfg.mode)
     prod_gap: list[str] = []
     state = state or AgentState(last=input)
@@ -334,6 +353,7 @@ class CMAAgentEnv:
     ) -> Any:
         cfg = _cfg_with_app_overrides(self._cfg, app_config)
         _reject_round_note_on_cma(cfg)
+        _reject_prompt_cache_on_cma(controller)
         agent_payload = {
             "name": controller,
             "tools": self._custom_tools
@@ -362,6 +382,7 @@ class CMAAgentEnv:
             call_tool=call_tool,
             granted=self._granted,
             contracts=self._contracts,
+            controller=controller,
             session_cid=cid,
         )
 
@@ -407,6 +428,7 @@ __all__ = [
     "CMASession",
     "CMAClient",
     "CMAAgentEnv",
+    "_reject_prompt_cache_on_cma",
     "drive_cma_agent_loop",
     "manifest_to_custom_tools",
 ]

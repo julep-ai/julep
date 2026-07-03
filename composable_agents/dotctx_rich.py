@@ -52,6 +52,7 @@ from .dotctx import (
     _as_float,
     _as_int,
     _model_and_effort,
+    _prompt_cache_setting,
     _require_tool_call_setting,
     _response_format_setting,
     _setting,
@@ -80,6 +81,8 @@ _ALLOWED_SETTINGS = frozenset(
         "requireToolCall",
         "response_format",
         "responseFormat",
+        "prompt_cache",
+        "promptCache",
         "agent",
         "sub",
         "context",
@@ -1059,6 +1062,7 @@ def _build_reasoner(
         output_retries=output_retries,
         require_tool_call=_require_tool_call_setting(settings),
         response_format=_response_format_setting(settings),
+        prompt_cache=_prompt_cache_setting(settings),
     )
 
 

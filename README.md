@@ -89,6 +89,8 @@ ca run triage --input '"TICKET-42"'    # execute locally, stream the trace tree
 ca lint +triage                        # validate an agent and everything it depends on
 ca deploy triage --env staging         # freeze → publish → record in the deploy ledger
 ca status --env staging                # what's deployed where + drift (exit 3 on drift)
+ca schedule apply --env staging        # sync [schedule.*] cron tables to Temporal Schedules
+ca schedule ls --env staging           # config vs server drift for schedules
 ```
 
 Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs-site/content/docs/guides/using-the-cli.md](docs-site/content/docs/guides/using-the-cli.md)**.
@@ -230,7 +232,7 @@ frontend.
 | `iter_up_to(max, body, until=...)` | Feedback | iterate `body` up to `max` times, optional convergence predicate |
 | `stage(planner=...)` | Staged | a reasoner emits a plan; it is compiled, admitted (§8), and run as IR |
 | `app(controller, tools=..., subflows=..., budget=..., max_rounds=...)` | Agent | open-ended controller loop (use sparingly) |
-| `sub(ref, contract=None)` | Pipeline (opaque) | an opaque child flow carrying its contract across the firewall; omitted contract defaults to `Contract.of(Shape.PIPELINE)` |
+| `sub(ref, contract=None)` | Pipeline (opaque) | an opaque child flow carrying its contract across the firewall; omitted contract defaults to `Contract.of(Shape.PIPELINE)`; `SubContract(queue=...)` routes the child to a named task-queue lane |
 
 **Leaves:** `native(name)` and `mcp(server, tool)` build tool refs; `call(ref_or_name)` invokes a tool ref or a bare native-tool name. Also: `think(reasoner)`, `reasoner_from_ctx(path)`, `ident()`, `arr(pure_name)`.
 
@@ -382,6 +384,11 @@ These are surfaced as explicit knobs rather than hidden defaults:
 - **Retry shaping** — `ExecutionPolicy` controls activity timeouts and the read-vs-write retry attempt counts and backoff.
 - **Continue-as-new cadence** — `AgentConfig.continue_as_new_after` bounds agent history; `0` disables it.
 - **Projection sink** — the in-workflow projection threads causal ids deterministically and is exposed read-only via the `projection` query; the durable sink (Postgres via `PostgresProjection`, or OTel via `execution.otel.export_spans`) is fed out-of-band from history so the workflow performs no projection IO.
+- **Prompt caching** — `Reasoner(..., prompt_cache="5m"|"1h")` emits provider-safe Anthropic `cache_control` markers (stable prefix + growing conversation) for both single-shot reasoners and agent-loop controllers; every call records `prompt_cache_requested/applied/reason` plus cache-read/creation token counts in the `llm.cache` meta attrs — inert on non-Anthropic providers, but recorded, never silently dropped.
+- **Trajectory redaction** — a `Redactor` injected via `WorkerContext(redactor=...)` / `TrajectoryRecorder(redactor=...)` runs at the capture seam, before any blob write; the default scrubs secret-shaped keys (`token/secret/password/api_key/credential/private_key/authorization/bearer`) and a raising redactor fails closed (drops the record rather than writing raw). Export (`export_trajectory_jsonl_hydrated`) re-applies redaction as defense-in-depth unless `allow_raw=True`.
+- **Worker versioning + replay gate** — `CA_WORKER_BUILD_ID` / `CA_WORKER_VERSIONING=1` (read by `WorkerServeSettings`, default off) opt a worker into Temporal Build-ID versioning; the recorded-history replay corpus in `tests/replay/` gates nondeterministic workflow changes in CI (see [CONTRIBUTING](CONTRIBUTING.md#replay-corpus-and-worker-versioning)).
+- **Queue lanes** — per-env named task queues (`[env.prod.queues] foreground = "prod-fg" ...` in ca.toml) with `deploy(..., queue="foreground")` for whole-pipeline lanes and `as_sub(queue=...)` / `SubContract(queue=...)` for per-subflow routing; lane maps travel as workflow input (`queueLanes`), so resolution is deterministic and survives continue-as-new.
+- **Cron schedules** — `[schedule.<name>]` tables in ca.toml (`cron`, `flow`, `input`, `paused`) applied idempotently to Temporal Schedules via `ca schedule apply`; a scheduled run starts the deployed artifact through the same start-args builder as `ca run` (pure pins and bundle included), with overlap policy SKIP.
 
 ---
 

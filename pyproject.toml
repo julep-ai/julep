@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "composable-agents"
-version = "1.0.0rc5"
+version = "1.0.0"
 description = "A typed, durable framework for composable serverless agents on Temporal."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -121,7 +121,10 @@ composable_agents = ["py.typed", "execution/_wasm/*.wasm"]
 testpaths = ["tests"]
 # The Temporal E2E test wraps its own asyncio loop, so no asyncio plugin mode is
 # required; pure tests are synchronous.
-addopts = "-q"
+addopts = "-q -m 'not live'"
+markers = [
+    "live: exercises a real provider over the network; excluded from the default run/CI",
+]
 
 [tool.ruff]
 target-version = "py310"

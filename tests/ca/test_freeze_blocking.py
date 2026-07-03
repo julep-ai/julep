@@ -59,7 +59,9 @@ def test_freeze_rejects_blocking_and_does_not_publish(monkeypatch, tmp_path) -> 
     blocking_diag = Diagnostic(code="E_APPROVAL", node_id="n1", message="needs gate")
     stub = _StubDeployment(diagnostics=[blocking_diag])
 
-    def _fake_deploy(node: Any, snapshot: Any, *, strict: bool = True) -> _StubDeployment:
+    def _fake_deploy(
+        node: Any, snapshot: Any, *, strict: bool = True, queue: Any = None
+    ) -> _StubDeployment:
         # ca freeze must call deploy with strict=False (so it can surface the gap
         # itself) and then reject explicitly.
         assert strict is False
@@ -80,7 +82,9 @@ def test_freeze_publishes_when_no_blocking_diagnostics(monkeypatch, tmp_path) ->
     warn = Diagnostic(code="W_PAR", node_id="n1", message="just a warning", severity="warning")
     stub = _StubDeployment(diagnostics=[warn])
 
-    def _fake_deploy(node: Any, snapshot: Any, *, strict: bool = True) -> _StubDeployment:
+    def _fake_deploy(
+        node: Any, snapshot: Any, *, strict: bool = True, queue: Any = None
+    ) -> _StubDeployment:
         return stub
 
     monkeypatch.setattr(deploy_mod, "deploy", _fake_deploy)

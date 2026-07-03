@@ -29,6 +29,14 @@ spec:
               value: {{ .Values.temporal.taskQueue | quote }}
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: {{ .Values.worker.gracefulShutdownSeconds | quote }}
+            {{- if .Values.worker.useWorkerVersioning }}
+            - name: CA_WORKER_VERSIONING
+              value: "1"
+            {{- end }}
+            {{- if .Values.worker.buildId }}
+            - name: CA_WORKER_BUILD_ID
+              value: {{ .Values.worker.buildId | quote }}
+            {{- end }}
             - name: ANTHROPIC_API_KEY
               valueFrom:
                 secretKeyRef:

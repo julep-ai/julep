@@ -8,16 +8,19 @@ and run everywhere. The lifecycle test (connect, poll, drain on shutdown) needs
 from __future__ import annotations
 
 import asyncio
+import warnings
+from typing import Any
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from composable_agents import HAVE_TEMPORAL, __version__
 from composable_agents.errors import ComposableAgentsError
 from composable_agents.execution.effects import WorkerContext
 from composable_agents.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
     WorkerServeSettings,
+    _versioning_worker_kwargs,
     load_context_factory,
     serve,
 )
@@ -43,6 +46,8 @@ def test_from_env_defaults():
     assert s.max_concurrent_activities is None
     assert s.max_concurrent_workflow_tasks is None
     assert s.health_port is None
+    assert s.build_id is None
+    assert s.use_worker_versioning is False
 
 
 def test_from_env_full_parse():
@@ -65,6 +70,16 @@ def test_from_env_full_parse():
     assert s.health_port == 8080
 
 
+def test_from_env_parses_versioning():
+    s = WorkerServeSettings.from_env({
+        "WORKER_CONTEXT_FACTORY": "m:f",
+        "CA_WORKER_BUILD_ID": "build-42",
+        "CA_WORKER_VERSIONING": "1",
+    })
+    assert s.build_id == "build-42"
+    assert s.use_worker_versioning is True
+
+
 def test_api_key_implies_tls_unless_overridden():
     base = {"WORKER_CONTEXT_FACTORY": "m:f", "TEMPORAL_API_KEY": "k"}
     assert WorkerServeSettings.from_env(base).tls is True
@@ -82,6 +97,80 @@ def test_bad_env_values_fail_loudly():
         WorkerServeSettings.from_env({**base, "WORKER_HEALTH_PORT": "eighty"})
     with pytest.raises(ValueError, match="WORKER_GRACEFUL_SHUTDOWN_S"):
         WorkerServeSettings.from_env({**base, "WORKER_GRACEFUL_SHUTDOWN_S": "soon"})
+
+
+def test_from_env_versioning_bad_bool():
+    with pytest.raises(ValueError, match="CA_WORKER_VERSIONING"):
+        WorkerServeSettings.from_env({
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "CA_WORKER_VERSIONING": "banana",
+        })
+
+
+def test_versioning_kwargs_unset_is_empty():
+    settings = WorkerServeSettings(context_factory="m:f")
+    assert _versioning_worker_kwargs(settings) == {}
+
+
+def test_versioning_kwargs_defaults_build_id_to_package_version():
+    settings = WorkerServeSettings(context_factory="m:f", use_worker_versioning=True)
+    assert _versioning_worker_kwargs(settings) == {
+        "build_id": __version__,
+        "use_worker_versioning": True,
+    }
+
+
+def test_versioning_kwargs_missing_metadata_raises(monkeypatch):
+    from importlib import import_module
+
+    serve_mod = import_module("composable_agents.execution.serve")
+
+    def _boom(_name):
+        raise serve_mod.PackageNotFoundError(_name)
+
+    monkeypatch.setattr(serve_mod, "version", _boom)
+    settings = WorkerServeSettings(context_factory="m:f", use_worker_versioning=True)
+    with pytest.raises(ComposableAgentsError, match="CA_WORKER_BUILD_ID"):
+        _versioning_worker_kwargs(settings)
+
+
+def test_versioning_kwargs_explicit_build_id_survives_missing_metadata(monkeypatch):
+    from importlib import import_module
+
+    serve_mod = import_module("composable_agents.execution.serve")
+
+    def _boom(_name):
+        raise serve_mod.PackageNotFoundError(_name)
+
+    monkeypatch.setattr(serve_mod, "version", _boom)
+    settings = WorkerServeSettings(
+        context_factory="m:f", build_id="v9", use_worker_versioning=True
+    )
+    assert _versioning_worker_kwargs(settings) == {
+        "build_id": "v9",
+        "use_worker_versioning": True,
+    }
+
+
+def test_versioning_kwargs_explicit_build_id():
+    settings = WorkerServeSettings(
+        context_factory="m:f",
+        build_id="v9",
+        use_worker_versioning=True,
+    )
+    assert _versioning_worker_kwargs(settings) == {
+        "build_id": "v9",
+        "use_worker_versioning": True,
+    }
+
+
+def test_versioning_kwargs_build_id_without_versioning():
+    settings = WorkerServeSettings(
+        context_factory="m:f",
+        build_id="v9",
+        use_worker_versioning=False,
+    )
+    assert _versioning_worker_kwargs(settings) == {"build_id": "v9"}
 
 
 # --------------------------------------------------------------------------- #
@@ -162,6 +251,91 @@ async def _health_probe_lifecycle():
 
 def test_health_server_probes():
     run(_health_probe_lifecycle())
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_build_worker_forwards_versioning_kwargs(monkeypatch):
+    from composable_agents.execution import worker as worker_mod
+    from composable_agents.execution.worker import build_worker
+
+    captured: dict[str, Any] = {}
+
+    class FakeWorker:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+
+    async def _noop_mcp(server, tool, value, idempotency_key, principal=None):
+        return value
+
+    monkeypatch.delenv("STORE_URL", raising=False)
+    monkeypatch.setattr(worker_mod, "Worker", FakeWorker)
+    with warnings.catch_warnings():
+        # The CA_WORKER_* seam intentionally maps to Temporal's deprecated
+        # Worker kwargs for now; suppress future runtime warnings around this call.
+        warnings.simplefilter("ignore", DeprecationWarning)
+        build_worker(
+            object(),
+            WorkerContext(mcp_call=_noop_mcp),
+            build_id="test-bid",
+            use_worker_versioning=True,
+        )
+
+    assert captured["kwargs"]["build_id"] == "test-bid"
+    assert captured["kwargs"]["use_worker_versioning"] is True
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
+    import composable_agents.execution.worker as worker_mod
+    from temporalio.client import Client
+
+    captured: dict[str, Any] = {}
+
+    class FakeWorker:
+        def __init__(self) -> None:
+            self._stop = asyncio.Event()
+
+        async def run(self) -> None:
+            await self._stop.wait()
+
+        async def shutdown(self) -> None:
+            self._stop.set()
+
+    def fake_build_worker(client, context, *, task_queue, **kwargs):
+        captured["task_queue"] = task_queue
+        captured["kwargs"] = kwargs
+        return FakeWorker()
+
+    async def fake_connect(target, **kwargs):
+        return object()
+
+    monkeypatch.setattr(worker_mod, "build_worker", fake_build_worker)
+    monkeypatch.setattr(Client, "connect", staticmethod(fake_connect))
+
+    settings = WorkerServeSettings(
+        context_factory=f"{__name__}:make_context",
+        build_id="serve-bid",
+        use_worker_versioning=True,
+    )
+
+    async def _drive() -> None:
+        stop = asyncio.Event()
+        task = asyncio.create_task(serve(settings, shutdown_event=stop))
+        try:
+            for _ in range(1000):
+                if "kwargs" in captured:
+                    break
+                await asyncio.sleep(0.005)
+            assert "kwargs" in captured, "serve() never called build_worker"
+        finally:
+            stop.set()
+            await asyncio.wait_for(task, timeout=10)
+
+    run(_drive())
+
+    assert captured["kwargs"]["build_id"] == "serve-bid"
+    assert captured["kwargs"]["use_worker_versioning"] is True
 
 
 # --------------------------------------------------------------------------- #

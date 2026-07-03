@@ -190,6 +190,45 @@ def test_run_call_captures_input_and_output_step():
     assert all(v.root_run_id == ROOT and v.step_id == step.step_id for v in values)
 
 
+def test_capture_seam_redacts_secret_shaped_input_by_default():
+    sink = InMemoryTrajectoryStore()
+    blobs = InMemoryBlobStore()
+
+    async def secret_caller(
+        server: str,
+        tool: str,
+        value: Any,
+        key: str,
+        principal: Any,
+    ) -> dict[str, bool]:
+        return {"ok": True}
+
+    _install(sink=sink, blob_store=blobs, mcp_call=secret_caller)
+
+    secret_value = {"api_key": "sk-live-123", "q": "hi"}
+    inp = CallToolInput(
+        tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
+        value=secret_value,
+        cid="call-secret",
+        run_id=RUN,
+        root_run_id=ROOT,
+        segment_seq=0,
+        node_id="search-node",
+        op="call",
+        kind="tool",
+        causes=("up-1",),
+    )
+    result = asyncio.run(callTool(inp))
+
+    assert result == {"ok": True}
+    assert secret_value == {"api_key": "sk-live-123", "q": "hi"}
+
+    step = sink.list_trajectory_steps(ROOT)[0]
+    assert step.input_ref is not None
+    stored = json.loads(asyncio.run(blobs.get(ROOT, step.input_ref)))
+    assert stored == {"api_key": "[REDACTED]", "q": "hi"}
+
+
 def test_invoke_reasoner_captures_input_and_output_step():
     sink = InMemoryTrajectoryStore()
     blobs = InMemoryBlobStore()

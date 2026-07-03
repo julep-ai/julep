@@ -592,6 +592,7 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
         for key in (
             "tools",
             "subflows",
+            "subflowQueues",
             "budget",
             "maxRounds",
             "ctx",

@@ -289,6 +289,98 @@ def _messages(
     return messages
 
 
+def _prompt_cache_control(prompt_cache: str) -> dict[str, Any]:
+    # "5m" => Anthropic's default ephemeral (no ttl key); "1h" => explicit ttl.
+    # Any other value is a loud teaching error (G-8): never silently coerced to
+    # the most-expensive 1h write. The object-first Reasoner constructor already
+    # validates, this is the defense-in-depth at the wire seam.
+    if prompt_cache == "5m":
+        return {"type": "ephemeral"}
+    if prompt_cache == "1h":
+        return {"type": "ephemeral", "ttl": "1h"}
+    raise ValueError(
+        f"unsupported prompt_cache {prompt_cache!r}; "
+        "supported values are '5m' or '1h'"
+    )
+
+
+def _block_text(message: dict[str, Any]) -> str:
+    content = message.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "\n".join(
+            b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"
+        )
+    return "" if content is None else json.dumps(content)
+
+
+def _apply_prompt_cache(
+    provider: str,
+    prompt_cache: Optional[str],
+    messages: list[dict[str, Any]],
+    kwargs: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Provider-safe Anthropic prompt-cache wiring (spike path a).
+
+    Anthropic only: rewrite the system prefix into content blocks carrying a
+    ``cache_control`` marker (stable prefix), and on transcript-bearing calls
+    mark the growing-conversation tail (the final user turn) with a second
+    marker. All system messages are MERGED into exactly one block-form system
+    message because any-llm's anthropic completion adapter string-concatenates
+    multiple system messages and would crash/corrupt on a list-content system
+    block otherwise (spike finding). A trailing *volatile* system message
+    (e.g. a per-round note appended after the user turn) is emitted as an
+    un-cached block AFTER the cache_control breakpoint so per-round changes
+    never invalidate the cached prefix; a cache breakpoint is placed on the
+    system block only when a stable (pre-final-turn) prefix exists, so a sole
+    trailing note carries NO cache_control. Non-anthropic providers and an
+    unset ``prompt_cache`` return the inputs unchanged (recording happens on the
+    meta, not here)."""
+    if prompt_cache is None or provider != "anthropic":
+        return messages, kwargs
+    cc = _prompt_cache_control(prompt_cache)
+    out = [dict(m) for m in messages]
+    sys_idxs = [i for i, m in enumerate(out) if m.get("role") == "system"]
+    last_non_sys = max(
+        (i for i, m in enumerate(out) if m.get("role") != "system"), default=-1
+    )
+    if sys_idxs:
+        stable = [_block_text(out[i]) for i in sys_idxs if last_non_sys == -1 or i < last_non_sys]
+        volatile = [_block_text(out[i]) for i in sys_idxs if last_non_sys != -1 and i > last_non_sys]
+        blocks: list[dict[str, Any]] = []
+        if stable:
+            blocks.append({"type": "text", "text": "\n".join(stable), "cache_control": cc})
+        blocks.extend({"type": "text", "text": t} for t in volatile)
+        first = sys_idxs[0]
+        out[first] = {"role": "system", "content": blocks}
+        drop = set(sys_idxs[1:])
+        out = [m for j, m in enumerate(out) if j not in drop]
+    # Growing-conversation tail marker: on transcript-bearing calls (>=2
+    # non-system messages) mark the final user turn.
+    non_sys = [i for i, m in enumerate(out) if m.get("role") != "system"]
+    if len(non_sys) >= 2:
+        for i in reversed(non_sys):
+            if out[i].get("role") == "user" and isinstance(out[i].get("content"), str):
+                out[i] = {
+                    **out[i],
+                    "content": [{"type": "text", "text": out[i]["content"], "cache_control": cc}],
+                }
+                break
+    return out, kwargs
+
+
+def _has_cache_marker(messages: list[dict[str, Any]]) -> bool:
+    """True when any message carries a content block with ``cache_control``."""
+    for m in messages:
+        content = m.get("content")
+        if isinstance(content, list):
+            for b in content:
+                if isinstance(b, dict) and "cache_control" in b:
+                    return True
+    return False
+
+
 def _parse_reply(completion: Any, *, expect_json: bool) -> Any:
     """Extract the reply: a parsed object if present, else (JSON) content text."""
     message = completion.choices[0].message
@@ -361,6 +453,22 @@ def _usage_of(completion: Any) -> tuple[int | None, int | None, int | None]:
     return pt, ct, tt
 
 
+def _cache_usage_of(completion: Any) -> tuple[int | None, int | None]:
+    """(cache_read, cache_creation) from either anthropic-style raw usage keys
+    or the OpenAI-normalized ``prompt_tokens_details.cached_tokens`` (the only
+    cache field any-llm surfaces on the anthropic *completion* path)."""
+    usage = getattr(completion, "usage", None)
+    if usage is None:
+        return None, None
+    read = getattr(usage, "cache_read_input_tokens", None)
+    if read is None:
+        details = getattr(usage, "prompt_tokens_details", None)
+        if details is not None:
+            read = getattr(details, "cached_tokens", None)
+    creation = getattr(usage, "cache_creation_input_tokens", None)
+    return read, creation
+
+
 def _served_model_of(completion: Any, fallback: str) -> str:
     m = getattr(completion, "model", None)
     if not isinstance(m, str) or not m:
@@ -423,7 +531,10 @@ async def complete_reasoner(
                         tool_call["tool"] = tool_name_reverse.get(tool, tool)
         return parsed
 
+    pc_marker_placed = False
+
     async def call(*, native: bool, retry_note: Optional[str] = None) -> Any:
+        nonlocal pc_marker_placed
         # Native tool rounds cannot carry response_format; keep schema guidance
         # in the prompt so FINISH replies can still parse on non-tool rounds.
         native_response_format = native and not has_tools
@@ -466,6 +577,10 @@ async def complete_reasoner(
         if reasoner.max_tokens is not None:
             kwargs["max_tokens"] = reasoner.max_tokens
         kwargs.update(_qos_request_fields(provider, dispatch.qos))
+        messages, kwargs = _apply_prompt_cache(
+            provider, reasoner.prompt_cache, messages, kwargs
+        )
+        pc_marker_placed = _has_cache_marker(messages)
         return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
 
     started = time.time()
@@ -501,6 +616,7 @@ async def complete_reasoner(
     completion = await dispatch_once()
     # Usage accumulates over every attempt — re-asks cost tokens too.
     pt, ct, tt = _usage_of(completion)
+    cache_read, cache_creation = _cache_usage_of(completion)
     reply, native_tool_calls = _parse_completion_reply(
         completion, expect_json=schema is not None
     )
@@ -523,9 +639,28 @@ async def complete_reasoner(
         )
         apt, act, att = _usage_of(completion)
         pt, ct, tt = _add_tokens(pt, apt), _add_tokens(ct, act), _add_tokens(tt, att)
+        rcr, rcc = _cache_usage_of(completion)
+        cache_read = _add_tokens(cache_read, rcr)
+        cache_creation = _add_tokens(cache_creation, rcc)
         reply, native_tool_calls = _parse_completion_reply(completion, expect_json=True)
         reply = _restore_tool_calls(reply)
     ended = time.time()
+    pc = reasoner.prompt_cache
+    pc_requested: Optional[str]
+    pc_applied: Optional[bool]
+    pc_reason: Optional[str]
+    if pc is None:
+        pc_requested = pc_reason = None
+        pc_applied = None
+    elif provider == "anthropic":
+        # applied reflects ACTUAL marker placement, not merely the provider:
+        # an anthropic call with no cacheable prefix (empty system, single turn)
+        # places no marker and must not claim caching (G-8 honesty).
+        pc_requested = pc
+        pc_applied = pc_marker_placed
+        pc_reason = None if pc_marker_placed else "no_cacheable_content"
+    else:
+        pc_requested, pc_applied, pc_reason = pc, False, "provider_inert"
     meta = LlmCallMeta(
         served_model=_served_model_of(completion, model),
         provider=provider,
@@ -534,6 +669,11 @@ async def complete_reasoner(
         response_format_fallback=fallback_reason,
         output_retries_used=retries_used,
         native_tool_calls=native_tool_calls,
+        prompt_cache_requested=pc_requested,
+        prompt_cache_applied=pc_applied,
+        prompt_cache_reason=pc_reason,
+        cache_read_tokens=cache_read,
+        cache_creation_tokens=cache_creation,
     )
     return LlmResult(reply=reply, meta=meta)
 
@@ -644,6 +784,7 @@ def _with_model(reasoner: Reasoner, model: str) -> Reasoner:
         output_retries=reasoner.output_retries,
         require_tool_call=reasoner.require_tool_call,
         response_format=reasoner.response_format,
+        prompt_cache=reasoner.prompt_cache,
     )
 
 
@@ -765,15 +906,22 @@ def make_resilient_llm_caller(
                 record = AttemptRecord(model=model, provider=provider, outcome="ok")
                 attempts.append(record)
                 _notify(record)
-                meta = dataclasses.replace(
-                    result.meta,
-                    attempts=tuple(
+                replace_kwargs: dict[str, Any] = {
+                    "attempts": tuple(
                         AttemptMeta(
                             model=a.model, provider=a.provider, outcome=a.outcome
                         )
                         for a in attempts
-                    ),
-                )
+                    )
+                }
+                orig_provider, _ = _split_model(reasoner.model, default_provider)
+                if (
+                    reasoner.prompt_cache is not None
+                    and orig_provider == "anthropic"
+                    and provider != "anthropic"
+                ):
+                    replace_kwargs["prompt_cache_reason"] = "fallback_provider"
+                meta = dataclasses.replace(result.meta, **replace_kwargs)
                 return LlmResult(reply=reply, meta=meta)
 
         raise ResilienceExhausted(attempts) from last_exc

@@ -88,6 +88,8 @@ def _parser() -> argparse.ArgumentParser:
     worker_p.add_argument("--address", help="Temporal frontend (overrides TEMPORAL_ADDRESS)")
     worker_p.add_argument("--namespace", help="Temporal namespace (overrides TEMPORAL_NAMESPACE)")
     worker_p.add_argument("--task-queue", help="task queue (overrides TEMPORAL_TASK_QUEUE)")
+    worker_p.add_argument("--queue", help="lane name or raw task queue; resolved via env queues")
+    worker_p.add_argument("--env", default="local", help="ca env for --queue lane resolution")
     worker_p.add_argument(
         "--health-port", type=int, help="probe HTTP port (overrides WORKER_HEALTH_PORT)"
     )
@@ -207,6 +209,20 @@ def _cmd_worker(args: argparse.Namespace, out: TextIO) -> int:
         env["TEMPORAL_NAMESPACE"] = args.namespace
     if args.task_queue:
         env["TEMPORAL_TASK_QUEUE"] = args.task_queue
+    if getattr(args, "queue", None):
+        from .ca.config import load_config
+        from .ca.queues import resolve_queue_lane
+
+        cfg = load_config(Path("."))
+        env_cfg = cfg.envs.get(args.env)
+        if env_cfg is None:
+            raise ValueError(
+                f"worker --queue lane resolution: unknown env {args.env!r}; "
+                f"configured envs: {sorted(cfg.envs)}"
+            )
+        env["TEMPORAL_TASK_QUEUE"] = resolve_queue_lane(
+            args.queue, env_cfg.queues, env_cfg.task_queue
+        )
     if args.health_port is not None:
         env["WORKER_HEALTH_PORT"] = str(args.health_port)
     settings = WorkerServeSettings.from_env(env)

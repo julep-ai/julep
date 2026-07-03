@@ -10,7 +10,8 @@ from pathlib import Path
 import click
 import typer
 
-from composable_agents.ca.config import load_config
+from composable_agents.ca import schedule as _schedule
+from composable_agents.ca.config import CaConfig, EnvConfig, load_config
 from composable_agents.ca.chat import chat_command
 from composable_agents.ca.deploy import deploy_agents
 from composable_agents.ca.doctor import overall_code, run_checks
@@ -28,6 +29,8 @@ from composable_agents.ca.trigger import trigger_command
 from composable_agents.projection import ProjectionEvent
 
 app = typer.Typer(add_completion=True, no_args_is_help=True, help="Developer CLI for composable-agents modules.")
+schedule_app = typer.Typer(no_args_is_help=True, help="Manage Temporal cron schedules from ca.toml.")
+app.add_typer(schedule_app, name="schedule")
 app.command("chat")(chat_command)
 app.command("listen")(listen_command)
 app.command("trigger")(trigger_command)
@@ -63,6 +66,65 @@ def _root(
 def _module(root: str | None = None) -> Module:
     cfg = load_config(Path(root or "."))
     return build_module(cfg)
+
+
+def _resolve_schedule_env(cfg: CaConfig, env: str) -> EnvConfig:
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    resolved = cfg.envs[env]
+    if resolved.temporal_address is None:
+        typer.echo(
+            f"error: env {env!r} has no temporal_address; schedules require a Temporal env",
+            err=True,
+        )
+        raise typer.Exit(2)
+    return resolved
+
+
+@schedule_app.command("apply")
+def schedule_apply(env: str = typer.Option("local", "--env", help="Environment name.")) -> None:
+    cfg = load_config(Path("."))
+    resolved = _resolve_schedule_env(cfg, env)
+    scheds = _schedule.schedules_for_env(cfg, env)
+    if not scheds:
+        typer.echo(f"no schedules configured for env {env!r}")
+        raise typer.Exit(0)
+    try:
+        results = _schedule.apply_schedules(cfg, resolved, scheds)
+    except ValueError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from None
+    for name, action in results:
+        typer.echo(f"{name}  {action}  {_schedule.schedule_id(env, name)}")
+
+
+@schedule_app.command("ls")
+def schedule_ls(env: str = typer.Option("local", "--env", help="Environment name.")) -> None:
+    cfg = load_config(Path("."))
+    resolved = _resolve_schedule_env(cfg, env)
+    scheds = _schedule.schedules_for_env(cfg, env)
+    server = _schedule.fetch_server_schedules(resolved)
+    rows = _schedule.schedule_drift(env, scheds, server)
+    for row in rows:
+        detail = f"  {row.detail}" if row.detail else ""
+        typer.echo(f"{row.name:24} {row.state:9} {row.schedule_id}{detail}")
+    if any(row.state != "in-sync" for row in rows):
+        raise typer.Exit(3)
+
+
+@schedule_app.command("rm")
+def schedule_rm(
+    name: str = typer.Argument(..., help="Schedule name."),
+    env: str = typer.Option("local", "--env", help="Environment name."),
+) -> None:
+    cfg = load_config(Path("."))
+    resolved = _resolve_schedule_env(cfg, env)
+    sid = _schedule.schedule_id(env, name)
+    if _schedule.remove_schedule(resolved, name):
+        typer.echo(f"removed {sid}")
+    else:
+        typer.echo(f"no schedule {sid}")
 
 
 def _eval_env_vars(env: str) -> dict[str, str]:
@@ -245,18 +307,28 @@ def status(
 def lint(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
     exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
+    env: str = typer.Option("local", "--env", help="Environment name (queue-lane target)."),
     fail_severity: _FailSeverity | None = typer.Option(  # noqa: B008
         None, "--fail-severity", help="error|warning|info (default: config)."
     ),
 ) -> None:
     """Lint selected agents (structural validation + severity gating)."""
     cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
     module = build_module(cfg)
     names = [a.name for a in select(module, selector, exclude=exclude)]
     floor = fail_severity.value if fail_severity is not None else cfg.fail_severity
-    # lint has no --env; the implicit local profile is the deterministic default.
+    # --env defaults to local, preserving the deterministic default target.
+    env_cfg = cfg.envs[env]
     findings, code = lint_agents(
-        cfg, names, fail_severity=floor, env_vars=cfg.envs["local"].vars
+        cfg,
+        names,
+        fail_severity=floor,
+        env_vars=env_cfg.vars,
+        queues=env_cfg.queues,
+        queue_env=env,
     )
     for f in findings:
         typer.echo(f"{f.severity.upper():7} {f.agent}: {f.code} — {f.message}")

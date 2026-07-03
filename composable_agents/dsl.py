@@ -280,6 +280,7 @@ def app(
     round_note: Optional[str] = None,
     native_tools: bool = False,
     require_tool_call: bool = False,
+    subflow_queues: Optional[dict[str, str]] = None,
 ) -> Node:
     """Open-ended controller loop (Agent — the top of the lattice; use sparingly).
 
@@ -307,6 +308,7 @@ def app(
         round_note=round_note,
         native_tools=native_tools or None,
         require_tool_call=require_tool_call or None,
+        subflow_queues=subflow_queues,
     )
 
 

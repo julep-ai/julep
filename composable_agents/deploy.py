@@ -185,6 +185,8 @@ def _reasoner_identity(name: str) -> dict[str, Any]:
         ident["requireToolCall"] = True
     if reasoner.response_format is not None:
         ident["responseFormat"] = reasoner.response_format
+    if reasoner.prompt_cache is not None:
+        ident["promptCache"] = reasoner.prompt_cache
     return ident
 
 
@@ -235,6 +237,7 @@ class Deployment:
     _overrides: CapabilityOverrides = field(default_factory=CapabilityOverrides)
     _tools: Optional[Sequence[Tool[Any, Any]]] = None
     bundle_ref: Optional[list[dict[str, str]]] = None
+    queue: Optional[str] = None
 
     @property
     def flow_json(self) -> dict[str, Any]:
@@ -373,6 +376,7 @@ class Deployment:
             snapshot_source=self._snapshot_source,
             strict=True,
             mode=self.mode,
+            queue=self.queue,
         )
         refreshed._tools = self._tools
         return refreshed
@@ -475,6 +479,7 @@ def deploy(
     freeze_timing: str = "deploy_time",
     snapshot_source: Optional[Callable[[], McpSnapshot]] = None,
     target: str = "flow",
+    queue: Optional[str] = None,
 ) -> Deployment:
     """Compile ``flow`` against ``snapshot`` into a runnable :class:`Deployment`.
 
@@ -564,6 +569,7 @@ def deploy(
         _snapshot_source=snapshot_source,
         _overrides=overrides,
         _tools=retained_tools,
+        queue=queue,
     )
     from .bundle import validate_pure_deps
 
