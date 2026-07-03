@@ -33,7 +33,7 @@ import json
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Protocol
 
 from .capabilities import Budget, CapabilityManifest
 from .contracts import (
@@ -50,6 +50,31 @@ from .staged import admit_plan, estimate_cost, validate_plan
 from .validate import Diagnostic
 
 
+# Reserved controller-payload key carrying the per-round note (Task 7).
+# Namespaced so an ordinary reasoner's business "note" field never renders
+# as a system instruction (the prompt path opts in on THIS key only).
+ROUND_NOTE_KEY = "__round_note__"
+NATIVE_TOOLS_KEY = "__native_tools__"
+REQUIRE_TOOL_CALL_REASK_MESSAGE = "require_tool_call: reply with a tool call, not text"
+REQUIRE_TOOL_CALL_NEVER_CALLED_REASON = (
+    "require_tool_call: controller never called a tool"
+)
+
+
+def coerce_round_note(note: Any) -> Optional[str]:
+    """Enforce the round_note pure's ``(ctx) -> Optional[str]`` contract.
+
+    None means "no note this round"; a str is the note. Any other type is a
+    loud teaching error (G-8: no silent fallbacks) rather than a value that
+    would be silently dropped by the prompt renderer.
+    """
+    if note is None or isinstance(note, str):
+        return note
+    raise ValueError(
+        f"round_note pure must return str | None, got {type(note).__name__}: {note!r}"
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Round decisions.
 # --------------------------------------------------------------------------- #
@@ -59,6 +84,7 @@ class Decision(str, Enum):
     FINISH = "finish"      # done: payload is the final output
     ESCALATE = "escalate"  # give up to a human/parent: payload is a reason
     CALL = "call"          # invoke a granted tool: payload is {"tool", "input"}
+    CALL_MANY = "call_many"  # invoke granted tools: payload is [{"id", "tool", "input"}, ...]
     SUB = "sub"            # invoke a registered sub-flow: payload is {"ref", "input", "shape"?}
     CONTROLLER_ERROR = "controller_error"  # malformed controller output
 
@@ -83,7 +109,20 @@ class RoundAction:
         return self.decision in (Decision.FINISH, Decision.ESCALATE, Decision.CONTROLLER_ERROR)
 
 
-def interpret_reasoner_reply(reply: Any, *, strict: bool = True) -> RoundAction:
+class ToolCaller(Protocol):
+    def __call__(
+        self,
+        name: str,
+        value: Any,
+        *,
+        call_index: Optional[int] = None,
+    ) -> Awaitable[Any]:
+        ...
+
+
+def interpret_reasoner_reply(
+    reply: Any, *, strict: bool = True, native_tools: bool = False
+) -> RoundAction:
     """Map a controller's structured reply to a :class:`RoundAction`.
 
     Accepts the small, closed action vocabulary the loop supports. In strict
@@ -100,6 +139,23 @@ def interpret_reasoner_reply(reply: Any, *, strict: bool = True) -> RoundAction:
 
     if not isinstance(reply, dict):
         return malformed()
+
+    if native_tools and "tool_calls" in reply:
+        entries = reply["tool_calls"]
+        if not isinstance(entries, list) or not entries:
+            return malformed()
+        calls: list[dict[str, Any]] = []
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("tool"), str):
+                return malformed()
+            calls.append(
+                {
+                    "id": entry.get("id"),
+                    "tool": entry["tool"],
+                    "input": entry.get("input"),
+                }
+            )
+        return RoundAction(Decision.CALL_MANY, calls)
 
     # Finish: explicit done flag, or a bare {"output": ...}.
     if reply.get("done") is True or ("output" in reply and "tool" not in reply and "sub" not in reply):
@@ -133,6 +189,8 @@ def action_cost(action: RoundAction, reported: Optional[float] = None) -> float:
         return float(reported)
     if action.decision is Decision.CALL:
         return DEFAULT_TOOL_COST
+    if action.decision is Decision.CALL_MANY:
+        return DEFAULT_TOOL_COST * len(action.payload)
     if action.decision is Decision.SUB:
         return DEFAULT_SUB_COST
     return 0.0
@@ -167,6 +225,9 @@ class AgentConfig:
     # the controller's rounds, and the named summarizer reasoner for SUMMARY scope.
     ctx: Optional[ContextPolicy] = None
     summarizer: Optional[str] = None
+    native_tools: bool = False
+    require_tool_call: bool = False
+    round_note: Optional[str] = None
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentConfig":
@@ -183,6 +244,11 @@ class AgentConfig:
             ),
             ctx=ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None,
             summarizer=d.get("summarizer"),
+            native_tools=bool(d.get("nativeTools", d.get("native_tools", False))),
+            require_tool_call=bool(
+                d.get("requireToolCall", d.get("require_tool_call", False))
+            ),
+            round_note=d.get("roundNote", d.get("round_note")),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -206,6 +272,12 @@ class AgentConfig:
             out["ctx"] = self.ctx.to_json()
         if self.summarizer is not None:
             out["summarizer"] = self.summarizer
+        if self.native_tools:
+            out["nativeTools"] = True
+        if self.require_tool_call:
+            out["requireToolCall"] = True
+        if self.round_note is not None:
+            out["roundNote"] = self.round_note
         return out
 
     @staticmethod
@@ -227,6 +299,8 @@ class TraceEntry:
     input_ref: Optional[str] = None
     output_ref: Optional[str] = None
     schema_ref: Optional[str] = None
+    call_id: Optional[str] = None
+    error: Optional[str] = None
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"decision": self.decision, "cost": self.cost}
@@ -240,6 +314,10 @@ class TraceEntry:
             out["outputRef"] = self.output_ref
         if self.schema_ref is not None:
             out["schemaRef"] = self.schema_ref
+        if self.call_id is not None:
+            out["callId"] = self.call_id
+        if self.error is not None:
+            out["error"] = self.error
         return out
 
     @staticmethod
@@ -250,6 +328,8 @@ class TraceEntry:
             input_ref=d.get("inputRef", d.get("input_ref")),
             output_ref=d.get("outputRef", d.get("output_ref")),
             schema_ref=d.get("schemaRef", d.get("schema_ref")),
+            call_id=d.get("callId", d.get("call_id")),
+            error=d.get("error"),
         )
 
 
@@ -308,6 +388,36 @@ class AgentState:
             },
             summary=d.get("summary"),
         )
+
+
+async def blob_round_output_refs(
+    state: AgentState,
+    prev_trace_len: int,
+    blob: Callable[[Any], Awaitable[str]],
+) -> None:
+    """Assign per-entry output_ref blobs to call/sub trace entries recorded this round.
+
+    A CALL_MANY round records several call entries and leaves ``state.last`` as the
+    aligned observation list. Each entry gets its own output blob. Single call/sub
+    rounds record one entry and keep the existing ``state.last`` semantics.
+    """
+    new_entries = [
+        entry
+        for entry in state.trace[prev_trace_len:]
+        if entry.decision in (Decision.CALL.value, Decision.SUB.value)
+    ]
+    if not new_entries:
+        return
+    if len(new_entries) == 1:
+        new_entries[0].output_ref = await blob(state.last)
+        return
+
+    observations = (
+        state.last if isinstance(state.last, list) else [state.last] * len(new_entries)
+    )
+    for entry, obs in zip(new_entries, observations, strict=False):
+        value = obs["output"] if isinstance(obs, dict) and "output" in obs else obs
+        entry.output_ref = await blob(value)
 
 
 def state_fingerprint(state: AgentState) -> str:
@@ -508,12 +618,13 @@ async def drive_agent_loop(
     input: Any,
     cfg: AgentConfig,
     invoke_controller: Callable[[dict[str, Any]], Awaitable[Any]],
-    call_tool: Callable[[str, Any], Awaitable[Any]],
+    call_tool: ToolCaller,
     run_subflow: Optional[Callable[[str, Any], Awaitable[Any]]] = None,
     granted: Optional[set[str]] = None,
     granted_subflows: Optional[set[str]] = None,
     contracts: Optional[AgentContractMap] = None,
     state: Optional[AgentState] = None,
+    get_pure: Optional[Callable[[str], Callable[..., Any]]] = None,
 ) -> dict[str, Any]:
     """Run the bounded agent loop locally with injected async effects."""
     from .turn import controller_turn, drive, make_finalize, pre_round
@@ -525,6 +636,7 @@ async def drive_agent_loop(
         cfg=cfg, invoke_controller=invoke_controller, call_tool=call_tool,
         run_subflow=run_subflow, granted=granted, granted_subflows=granted_subflows,
         contracts=contracts, mode=mode, prod_gap=prod_gap, run_input=input,
+        get_pure=get_pure,
     )
     return await drive(step, state, halt=pre_round(cfg), finalize=make_finalize(prod_gap))
 
@@ -604,9 +716,11 @@ __all__ = [
     "TraceEntry",
     "would_exceed_budget",
     "should_continue_as_new",
+    "blob_round_output_refs",
     "state_fingerprint",
     "terminal_result",
     "CallDenial",
+    "coerce_round_note",
     "precheck_controller",
     "contract_for_tool",
     "approval_required_for_tool",
@@ -623,4 +737,6 @@ __all__ = [
     "promote_plan",
     "estimate_cost",
     "PlanRejected",
+    "REQUIRE_TOOL_CALL_REASK_MESSAGE",
+    "REQUIRE_TOOL_CALL_NEVER_CALLED_REASON",
 ]

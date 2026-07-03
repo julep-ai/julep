@@ -277,6 +277,9 @@ def app(
     max_rounds: Optional[int] = None,
     ctx: CtxArg = None,
     summarizer: Optional[str] = None,
+    round_note: Optional[str] = None,
+    native_tools: bool = False,
+    require_tool_call: bool = False,
 ) -> Node:
     """Open-ended controller loop (Agent — the top of the lattice; use sparingly).
 
@@ -285,6 +288,11 @@ def app(
     ``ctx.max_tokens``, and ``SUMMARY`` additionally requires ``summarizer``
     (a named reasoner) — both are deploy-time blocking diagnostics, never implicit
     defaults. Omitting ``ctx`` keeps today's LOCAL behavior and wire format.
+    ``round_note`` names a registered pure ``(ctx) -> Optional[str]`` computed
+    fresh each round from loop state (``{'round','maxRounds','spent','callCounts'}``)
+    and injected as the controller payload's ``note``; unregistered names are
+    deploy-time ``UNKNOWN_PURE`` diagnostics. ``std.rounds_remaining_note``
+    reproduces mem-mcp's ``[REMAINING ROUNDS: N]``.
     """
     return _node(
         op=Op.APP,
@@ -296,6 +304,9 @@ def app(
         max_rounds=max_rounds,
         ctx=_ctx(ctx),
         summarizer=summarizer,
+        round_note=round_note,
+        native_tools=native_tools or None,
+        require_tool_call=require_tool_call or None,
     )
 
 

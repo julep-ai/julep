@@ -274,6 +274,19 @@ def test_make_local_reasoner_resolves_registered_reasoner() -> None:
     assert rec.calls[0]["messages"][0]["content"] == "resolved-system"
 
 
+def test_make_local_reasoner_preserves_business_tools_input() -> None:
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="business_tools_reasoner", model="openai:gpt-4o"))
+    rec = Recorder(_json_replies({"output": "ok"}))
+    local = make_local_reasoner(acompletion=rec)
+    payload = {"tools": ["a", "b"], "q": "x"}
+
+    run(local("business_tools_reasoner", payload))
+
+    call = rec.calls[0]
+    assert "tools" not in call
+    assert json.loads(call["messages"][-1]["content"]) == payload
+
+
 def test_agent_facade_drives_real_loop_through_local_reasoner() -> None:
     """End-to-end: a real provider caller drives the facade's local loop, proving
     both the make_local_reasoner seam and the facade passing the reasoner *name*."""

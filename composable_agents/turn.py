@@ -10,26 +10,43 @@ the design note).
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 from .agent_loop import (
     AgentConfig,
     AgentContractMap,
     AgentState,
     CallDenial,
+    DEFAULT_TOOL_COST,
+    Decision,
+    REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
+    REQUIRE_TOOL_CALL_REASK_MESSAGE,
+    ROUND_NOTE_KEY,
     TraceEntry,
+    ToolCaller,
     action_cost,
     authorize_call,
     authorize_subflow,
     charge_tool_call,
+    contract_for_tool,
+    coerce_round_note,
     interpret_reasoner_reply,
     terminal_result,
     would_exceed_budget,
 )
-from .kinds import EnforcementMode
-from .transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
+from .kinds import Effect, EnforcementMode
+from .transcript import (
+    TRANSCRIPT_SCOPES,
+    split_summary_reply,
+    transcript_for,
+    unwrap_reply_meta,
+)
+
+logger = logging.getLogger("composable_agents.turn")
 
 
 @dataclass(frozen=True)
@@ -41,6 +58,13 @@ class Halt:
     status: str
     output: Any = None
     reason: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class CallManyResult:
+    index: int
+    observation: dict[str, Any]
+    trace: TraceEntry
 
 
 StepResult = Union[AgentState, Halt]
@@ -102,7 +126,7 @@ def controller_turn(
     *,
     cfg: AgentConfig,
     invoke_controller: Callable[[dict[str, Any]], Awaitable[Any]],
-    call_tool: Callable[[str, Any], Awaitable[Any]],
+    call_tool: ToolCaller,
     run_subflow: Optional[Callable[[str, Any], Awaitable[Any]]],
     granted: Optional[set[str]],
     granted_subflows: Optional[set[str]],
@@ -110,6 +134,7 @@ def controller_turn(
     mode: EnforcementMode,
     prod_gap: list[str],
     run_input: Any = None,
+    get_pure: Optional[Callable[[str], Callable[..., Any]]] = None,
 ) -> Step:
     """One agent round, lifted verbatim from drive_agent_loop's while-body.
 
@@ -118,6 +143,14 @@ def controller_turn(
     mode = EnforcementMode.coerce(mode)
     unconstrained = granted is None
     granted_set = set(granted or [])
+    note_fn: Optional[Callable[..., Any]] = None
+    if cfg.round_note is not None:
+        if get_pure is not None:
+            note_fn = get_pure(cfg.round_note)
+        else:
+            from .registry import DEFAULT_REGISTRY
+
+            note_fn = DEFAULT_REGISTRY.get_pure(cfg.round_note)
 
     def denial_to_halt(denial: Optional[CallDenial]) -> Optional[Halt]:
         # STRICT: denial halts; DEV: warn-but-allow (record prodGap, proceed).
@@ -133,6 +166,20 @@ def controller_turn(
             "input": state.last,
             "trace": [t.to_json() for t in state.trace],
         }
+        if note_fn is not None:
+            # Fresh each round from loop state only; deterministic under Temporal
+            # replay because the function is a registered pure.
+            note = coerce_round_note(note_fn({
+                "round": state.round,
+                "maxRounds": cfg.max_rounds,
+                "spent": state.spent,
+                "callCounts": dict(state.call_counts),
+            }))
+            if note is not None:
+                # The LLM prompt path (execution/llm.py _messages) renders this
+                # reserved key as a trailing system line; namespaced so ordinary
+                # reasoner "note" business fields are never injected.
+                payload[ROUND_NOTE_KEY] = note
         if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
             # Transcript plan: deterministic, ref-bearing, computed in workflow
             # code. Hydration/budget/summarization happen in the invoke_reasoner
@@ -145,12 +192,32 @@ def controller_turn(
                 payload["summary"] = state.summary
         reply = await invoke_controller(payload)
         new_summary, reply = split_summary_reply(reply)
+        reply = unwrap_reply_meta(reply)
         if new_summary is not None:
             state.summary = new_summary
         state.charge(cfg.think_cost)
-        action = interpret_reasoner_reply(reply, strict=not cfg.permissive_controller)
+        action = interpret_reasoner_reply(
+            reply,
+            strict=not cfg.permissive_controller,
+            native_tools=cfg.native_tools,
+        )
 
         if action.decision.value == "finish":
+            if cfg.require_tool_call and not any(
+                entry.decision == "call" and entry.error is None
+                for entry in state.trace
+            ):
+                reasks = sum(1 for entry in state.trace if entry.decision == "reask")
+                if reasks >= 2:
+                    return Halt(
+                        "controller_error",
+                        reason=REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
+                    )
+                message = REQUIRE_TOOL_CALL_REASK_MESSAGE
+                state.last = {"error": message, "reply": action.payload}
+                state.record(TraceEntry(decision="reask", error=message))
+                state.round += 1
+                return state
             return Halt("done", output=action.payload)
         if action.decision.value == "escalate":
             return Halt("escalated", reason=str(action.payload))
@@ -161,7 +228,77 @@ def controller_turn(
         if would_exceed_budget(state, cost, cfg.budget):
             return Halt("over_budget")
 
-        if action.decision.value == "call":
+        if action.decision is Decision.CALL_MANY:
+            calls = cast(list[dict[str, Any]], action.payload)
+            for entry in calls:
+                tool = cast(str, entry["tool"])
+                halt = denial_to_halt(authorize_call(
+                    tool, unconstrained=unconstrained, granted_set=granted_set,
+                    contracts=contracts))
+                if halt is not None:
+                    return halt
+            for entry in calls:
+                tool = cast(str, entry["tool"])
+                denial = charge_tool_call(state, tool, contracts)
+                halt = denial_to_halt(denial)
+                if halt is not None:
+                    return halt
+                if denial is not None:
+                    state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
+
+            async def execute_entry(index: int, entry: dict[str, Any]) -> CallManyResult:
+                tool = cast(str, entry["tool"])
+                call_input = entry.get("input")
+                if call_input is None:
+                    call_input = state.last
+                error: Optional[str] = None
+                try:
+                    out = await call_tool(tool, call_input, call_index=index)
+                except Exception as exc:  # noqa: BLE001
+                    error = repr(exc)
+                    logger.warning("tool %r failed: %s", tool, error)
+                    out = {"error": error, "tool": tool}
+                return CallManyResult(
+                    index=index,
+                    observation={
+                        "id": entry.get("id"),
+                        "tool": tool,
+                        "output": out,
+                    },
+                    trace=TraceEntry(
+                        decision="call",
+                        ref=tool,
+                        cost=DEFAULT_TOOL_COST,
+                        call_id=cast(Optional[str], entry.get("id")),
+                        error=error,
+                    ),
+                )
+
+            results: list[Optional[CallManyResult]] = [None] * len(calls)
+            read_items = [
+                (index, entry)
+                for index, entry in enumerate(calls)
+                if contract_for_tool(cast(str, entry["tool"]), contracts).effect is Effect.READ
+            ]
+            if read_items:
+                read_results = await asyncio.gather(
+                    *(execute_entry(index, entry) for index, entry in read_items)
+                )
+                for result in read_results:
+                    results[result.index] = result
+            for index, entry in enumerate(calls):
+                if results[index] is None:
+                    results[index] = await execute_entry(index, entry)
+
+            ordered_results: list[CallManyResult] = []
+            for maybe_result in results:
+                assert maybe_result is not None
+                ordered_results.append(maybe_result)
+            state.charge(cost)
+            state.last = [result.observation for result in ordered_results]
+            for result in ordered_results:
+                state.record(result.trace)
+        elif action.decision.value == "call":
             tool = action.payload["tool"]
             halt = denial_to_halt(authorize_call(
                 tool, unconstrained=unconstrained, granted_set=granted_set,
@@ -177,10 +314,16 @@ def controller_turn(
             call_input = action.payload.get("input")
             if call_input is None:
                 call_input = state.last
-            out = await call_tool(tool, call_input)
+            error: Optional[str] = None
+            try:
+                out = await call_tool(tool, call_input)
+            except Exception as exc:  # noqa: BLE001
+                error = repr(exc)
+                logger.warning("tool %r failed: %s", tool, error)
+                out = {"error": error, "tool": tool}
             state.charge(cost)
             state.last = out
-            state.record(TraceEntry(decision="call", ref=tool, cost=cost))
+            state.record(TraceEntry(decision="call", ref=tool, cost=cost, error=error))
         else:  # sub
             ref = action.payload["ref"]
             halt = denial_to_halt(authorize_subflow(ref, granted_subflows=granted_subflows))
@@ -191,10 +334,24 @@ def controller_turn(
             sub_input = action.payload.get("input")
             if sub_input is None:
                 sub_input = state.last
-            out = await run_subflow(ref, sub_input)
+            error = None
+            try:
+                out = await run_subflow(ref, sub_input)
+            except Exception as exc:  # noqa: BLE001
+                error = repr(exc)
+                logger.warning("subflow %r failed: %s", ref, error)
+                out = {"error": error, "tool": ref}
             state.charge(cost)
             state.last = out
-            state.record(TraceEntry(decision="sub", ref=ref, shape=action.payload.get("shape"), cost=cost))
+            state.record(
+                TraceEntry(
+                    decision="sub",
+                    ref=ref,
+                    shape=action.payload.get("shape"),
+                    cost=cost,
+                    error=error,
+                )
+            )
 
         state.round += 1
         return state

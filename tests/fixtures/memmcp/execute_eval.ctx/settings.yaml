@@ -1,0 +1,5 @@
+# AI-ANCHOR: prompt: tool-loop eval fixture (record-agent shaped)
+model: !? $env.get("EVAL_LOOP_MODEL", "openai/gpt-eval@low")
+temperature: 0.2
+reasoning_effort: low
+max_rounds: 4

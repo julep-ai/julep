@@ -65,6 +65,33 @@ def _module(root: str | None = None) -> Module:
     return build_module(cfg)
 
 
+def _eval_env_vars(env: str) -> dict[str, str]:
+    """Env vars for ``$env`` resolution during eval.
+
+    A standalone ``.ctx`` outside any ca project resolves to ``{}`` (the default
+    ``--env local`` needs no project). Inside a project an unknown ``--env`` is a
+    loud teaching error (G-8), matching every other command; a malformed
+    ca.toml/pyproject surfaces as a config error rather than a silent ``{}``.
+    """
+    root = Path(".")
+    if not ((root / "pyproject.toml").is_file() or (root / "ca.toml").is_file()):
+        return {}
+    try:
+        cfg = load_config(root)
+    except Exception as exc:  # noqa: BLE001 - malformed project config is loud, never silent
+        typer.echo(f"error: could not load ca project config: {exc}", err=True)
+        raise typer.Exit(4) from None
+    if env in cfg.envs:
+        return dict(cfg.envs[env].vars)
+    known = ", ".join(sorted(cfg.envs)) or "local"
+    typer.echo(
+        f"error: unknown env {env!r}; define it under [env.{env}] in ca.toml or "
+        f"[tool.ca.env.{env}] in pyproject.toml (known: {known})",
+        err=True,
+    )
+    raise typer.Exit(4)
+
+
 @app.command("ls")
 def ls(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
@@ -265,6 +292,61 @@ def test_cmd(
         typer.echo(" ".join(cmd))
         raise typer.Exit(0)
     raise typer.Exit(_subprocess.run(cmd, cwd=str(cfg.root)).returncode)
+
+
+@app.command("eval")
+def eval_cmd(
+    ctx_path: str = typer.Argument(..., help="Path to a .ctx package with an eval.py."),
+    env: str = typer.Option("local", "--env", help="Environment name (for $env resolution)."),
+    limit: int = typer.Option(-1, "--limit", help="Max samples (-1 = all)."),
+    json_out: str = typer.Option("", "--json", help="Write the JSON report to this path."),
+    baseline: str = typer.Option("", "--baseline", help="Baseline report JSON to diff against."),
+) -> None:
+    """Run a .ctx package's eval suite with a threshold + baseline regression gate.
+
+    Exit codes: 0 pass, 2 below threshold, 3 regression vs --baseline, 4 broken
+    eval config / unknown --env (setup error, never a model regression).
+    """
+    from composable_agents.ca.evalrun import diff_reports, run_eval_sync
+
+    env_vars = _eval_env_vars(env)
+    try:
+        report = run_eval_sync(ctx_path, env_vars=env_vars, limit=(None if limit < 0 else limit))
+    except ValueError as exc:
+        # A broken/misconfigured eval (missing eval.py, non-.ctx dir, malformed
+        # eval.yaml, or an error from user sample()/score() code) is a SETUP
+        # failure, distinct from a model regression: exit 4, never 2 (reserved for
+        # below-threshold) or 3 (baseline regression).
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(4) from None
+
+    for s in report.scores:
+        mark = "pass" if s.passed else "FAIL"
+        typer.echo(f"  {s.id:32} {s.score:.3f} {mark}")
+    verdict = "PASS" if report.passed else "BELOW THRESHOLD"
+    typer.echo(
+        f"{report.ctx}  model={report.model}  mean={report.mean:.3f}  "
+        f"threshold={report.threshold:.3f}  {verdict}"
+    )
+    if json_out:
+        Path(json_out).write_text(_json.dumps(report.to_json(), indent=2), encoding="utf-8")
+
+    if baseline:
+        base = _json.loads(Path(baseline).read_text(encoding="utf-8"))
+        regressed, mean_regressed = diff_reports(base, report.to_json())
+        if regressed or mean_regressed:
+            typer.echo("regression vs baseline:", err=True)
+            for sid in regressed:
+                typer.echo(f"  REGRESSED {sid}", err=True)
+            if mean_regressed:
+                typer.echo(
+                    f"  mean dropped {float(base.get('mean', 0.0)):.3f} -> {report.mean:.3f}",
+                    err=True,
+                )
+            raise typer.Exit(3)
+
+    if not report.passed:
+        raise typer.Exit(2)
 
 
 @app.command("trace")

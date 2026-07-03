@@ -118,6 +118,8 @@ def _referenced_pures(flow: Node) -> list[str]:
     for node in flow.walk():
         if node.pure is not None:
             names.add(node.pure)
+        if node.round_note is not None:
+            names.add(node.round_note)
         if node.op == Op.ALT and node.select is not None:
             names.add(node.select)
         if node.merge is not None and node.merge.reducer is not None:

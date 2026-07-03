@@ -1,0 +1,7 @@
+# AI-ANCHOR: eval-config: tool-loop eval fixture
+threshold: 0.5
+concurrency: 1
+
+datasets:
+  - file: eval.py
+    format: py

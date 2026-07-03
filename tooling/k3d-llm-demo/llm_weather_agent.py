@@ -22,24 +22,18 @@ from typing import Any
 
 from composable_agents import Agent, tool
 
-MODEL = "anthropic:claude-haiku-4-5-20251001"
+MODEL = "openai:gpt-5.4-mini"
 QUESTION = "What is the weather in Tokyo right now, in Fahrenheit?"
 TOOL_PORT = 8799
 
 
-def _arg(payload: Any, key: str) -> Any:
-    """Tolerate provider habits: bare argument or a one-key named object."""
-    if isinstance(payload, dict):
-        if key in payload:
-            return payload[key]
-        return next(iter(payload.values()), payload)
-    return payload
-
-
+# Multi-param signatures on purpose: they derive a real object input_schema
+# (properties + required), which native tool-calling providers require for
+# function.parameters — and which lets the model actually fill in arguments.
 @tool(effect="read", idempotent=True)
-def get_weather(payload: Any) -> dict[str, Any]:
+def get_weather(city: str, units: str = "celsius") -> dict[str, Any]:
     """Get the current weather for a city (celsius + conditions)."""
-    city = _arg(payload, "city")
+    del units
     table = {
         "Tokyo": {"celsius": 22, "conditions": "partly cloudy"},
         "Paris": {"celsius": 18, "conditions": "sunny"},
@@ -48,9 +42,9 @@ def get_weather(payload: Any) -> dict[str, Any]:
 
 
 @tool(effect="read", idempotent=True)
-def to_fahrenheit(payload: Any) -> float:
+def to_fahrenheit(celsius: float, ndigits: int = 1) -> float:
     """Convert a Celsius temperature to Fahrenheit."""
-    return float(_arg(payload, "celsius")) * 9 / 5 + 32
+    return round(float(celsius) * 9 / 5 + 32, ndigits)
 
 
 TOOLS = [get_weather, to_fahrenheit]
@@ -58,27 +52,18 @@ TOOLS = [get_weather, to_fahrenheit]
 INSTRUCTIONS = (
     "You are a weather agent. Goal: report a city's current temperature "
     "in Fahrenheit.\n"
-    "Each turn you receive a JSON object with two keys:\n"
-    "  - 'input': the result of your last action (initially the user's "
-    "question).\n"
-    "  - 'trace': the tools you have already called this run, in order.\n"
-    "Reply with EXACTLY one JSON object and nothing else:\n"
-    "  - {\"tool\": <name>, \"input\": <arg>} to call a tool, or\n"
-    "  - {\"output\": <one-sentence answer including the Fahrenheit "
-    "value>} when finished.\n"
-    "Procedure (do each step once; never call a tool already shown in "
-    "'trace'):\n"
-    "  1. trace empty -> call get_weather with the city name, e.g. "
-    "{\"tool\": \"get_weather\", \"input\": \"Tokyo\"}.\n"
-    "  2. trace has get_weather but not to_fahrenheit -> 'input' now holds "
-    "{\"celsius\": n, ...}; call {\"tool\": \"to_fahrenheit\", \"input\": "
-    "n}.\n"
-    "  3. trace has to_fahrenheit -> 'input' is the Fahrenheit number; "
-    "reply with {\"output\": \"...\"}."
+    "Call the provided tools to look up the weather (celsius) and convert "
+    "it; call each tool at most once.\n"
+    "When you have the Fahrenheit value, reply with EXACTLY one JSON "
+    "object and nothing else: {\"output\": <one-sentence answer including "
+    "the Fahrenheit value>}."
 )
 
 # Module-level so a bare import registers the reasoner under a stable name in
 # whichever process imports this (worker pod or host driver).
+# native_tools=True: phase-3 native provider tool-calling — the model emits
+# provider tool_calls (not the JSON controller protocol), the loop executes
+# them effect-fenced, and the transcript replays in provider grammar.
 AGENT = Agent(
     MODEL,
     tools=TOOLS,
@@ -86,6 +71,7 @@ AGENT = Agent(
     instructions=INSTRUCTIONS,
     budget_cost=30.0,
     max_rounds=8,
+    native_tools=True,
 )
 
 
@@ -121,6 +107,7 @@ def _start_tool_server(port: int) -> ThreadingHTTPServer:
 
 def make_context() -> Any:
     """WORKER_CONTEXT_FACTORY entrypoint for the pod replica."""
+    from composable_agents.agent import provider_tool_defs
     from composable_agents.execution.effects import WorkerContext
     from composable_agents.execution.llm import make_llm_caller
 
@@ -129,4 +116,8 @@ def make_context() -> Any:
         tool_urls={t.name: f"http://127.0.0.1:{TOOL_PORT}/{t.name}" for t in TOOLS},
         llm=make_llm_caller(),
         capabilities=AGENT.deployment().capabilities,
+        # native_tools on a durable backend requires provider tool definitions
+        # at spec-resolution time (resolveAgentSpec); grants/contracts still
+        # come from capabilities.
+        agents={"k3d_llm_weather_agent": {"toolDefs": provider_tool_defs(TOOLS)}},
     )

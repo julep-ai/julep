@@ -15,7 +15,7 @@ import logging
 import os
 import hashlib
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional, cast
 
 from .. import agent_loop as al
 from ..capabilities import CapabilityManifest, ToolGrant
@@ -351,6 +351,7 @@ class InvokeReasonerInput:
     ctx: Optional[dict[str, Any]] = None         # ContextPolicy JSON (scope + maxTokens)
     summarizer: Optional[str] = None             # named summarizer reasoner (SUMMARY scope)
     summary: Optional[str] = None                # running summary from AgentState
+    tools: Optional[list[dict[str, Any]]] = None
     run_id: Optional[str] = None
     root_run_id: Optional[str] = None
     segment_seq: Optional[int] = None
@@ -859,7 +860,17 @@ async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
     if tier is QoSTier.BATCH:
         tier = QoSTier.STANDARD
     dispatch = ReasonerDispatch(qos=tier)
-    raw = await _CTX.llm(reasoner, inp.value, inp.principal, transcript, dispatch)
+    if inp.tools:
+        raw = await cast(Any, _CTX.llm)(
+            reasoner,
+            inp.value,
+            inp.principal,
+            transcript,
+            dispatch,
+            tools=inp.tools,
+        )
+    else:
+        raw = await _CTX.llm(reasoner, inp.value, inp.principal, transcript, dispatch)
     reply, llm_attrs = _unwrap_llm(raw)
     if new_summary is not None:
         # Envelope so the workflow can persist the running summary in
@@ -1122,6 +1133,33 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
         }
     )
 
+    if "toolDefs" in spec:
+        tool_defs = spec.get("toolDefs")
+    elif config.get("nativeTools", config.get("native_tools")) and isinstance(granted, list):
+        registry = _registry()
+        tool_defs = []
+        for key in granted:
+            exp = registry.get_tool_expectation(key)
+            if exp is None:
+                raise RuntimeError(
+                    "native_tools on a durable backend needs provider tool definitions. "
+                    f"Tool {key!r} has no registered tool schema expectation; supply "
+                    'a spec-level "toolDefs" list or register a ToolSchemaExpectation '
+                    "for this granted tool."
+                )
+            tool_defs.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": key,
+                        "description": "",
+                        "parameters": exp.input_schema,
+                    },
+                }
+            )
+    else:
+        tool_defs = None
+
     if "grantedSubflows" in spec:
         granted_subflows = spec.get("grantedSubflows")
     elif _CTX.capabilities is not None and _CTX.capabilities._has_subflows:
@@ -1141,6 +1179,7 @@ async def resolveAgentSpec(controller: str) -> dict[str, Any]:
         "grantedContracts": contracts,
         "grantedSubflows": None if granted_subflows is None else list(granted_subflows),
         "capabilitySubflows": None if capability_subflows is None else list(capability_subflows),
+        "toolDefs": tool_defs,
     }
 
 

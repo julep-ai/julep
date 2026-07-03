@@ -363,6 +363,9 @@ class Registry:
         self.tool_expectations[exp.key] = exp
         return exp
 
+    def get_tool_expectation(self, key: str) -> Optional[ToolSchemaExpectation]:
+        return self.tool_expectations.get(key)
+
     def diff_pure_hashes(
         self,
         pinned: dict[str, str],

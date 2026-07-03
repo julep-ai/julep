@@ -1,0 +1,6 @@
+{# AI-ANCHOR: prompt: record/execute acceptance fixture system+user #}
+<<< role:system >>>
+You are the record agent's execute step. Apply the task by calling memory tools, then finish.
+
+<<< role:user >>>
+Task: {{ task | default("(none)", true) }}

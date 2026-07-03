@@ -126,6 +126,16 @@ def manifest_to_custom_tools(
 # --------------------------------------------------------------------------- #
 # Inverted CMA agent loop.
 # --------------------------------------------------------------------------- #
+def _reject_round_note_on_cma(cfg: AgentConfig) -> None:
+    if cfg.round_note is not None:
+        raise ValueError(
+            "round_note is not supported on the CMA backend: the vendor runs the "
+            "agent loop, so per-round notes cannot be injected into the controller "
+            "prompt. Remove round_note or run this agent on the local, DBOS, or "
+            "Temporal backend."
+        )
+
+
 async def drive_cma_agent_loop(
     *,
     input: Any,
@@ -138,6 +148,7 @@ async def drive_cma_agent_loop(
     session_cid: str = "cma",
 ) -> dict[str, Any]:
     """Drive a normalized CMA session through the same gates as the local loop."""
+    _reject_round_note_on_cma(cfg)
     mode = EnforcementMode.coerce(cfg.mode)
     prod_gap: list[str] = []
     state = state or AgentState(last=input)
@@ -322,6 +333,7 @@ class CMAAgentEnv:
         app_config: Optional[dict[str, Any]] = None,
     ) -> Any:
         cfg = _cfg_with_app_overrides(self._cfg, app_config)
+        _reject_round_note_on_cma(cfg)
         agent_payload = {
             "name": controller,
             "tools": self._custom_tools
@@ -380,13 +392,13 @@ def _cfg_with_app_overrides(
     cfg: AgentConfig,
     app_config: Optional[dict[str, Any]],
 ) -> AgentConfig:
-    if not app_config or ("budget" not in app_config and "maxRounds" not in app_config):
+    override_keys = ("budget", "maxRounds", "roundNote")
+    if not app_config or not any(key in app_config for key in override_keys):
         return cfg
     data = cfg.to_json()
-    if "budget" in app_config:
-        data["budget"] = app_config["budget"]
-    if "maxRounds" in app_config:
-        data["maxRounds"] = app_config["maxRounds"]
+    for key in override_keys:
+        if key in app_config:
+            data[key] = app_config[key]
     return AgentConfig.from_json(data)
 
 

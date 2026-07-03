@@ -194,6 +194,7 @@ async def invokeReasonerStep(inp: dict) -> Any:
                 ctx=inp.get("ctx"),
                 summarizer=inp.get("summarizer"),
                 summary=inp.get("summary"),
+                tools=inp.get("tools"),
                 run_id=inp.get("run_id"),
                 root_run_id=inp.get("root_run_id"),
                 segment_seq=inp.get("segment_seq"),
@@ -576,6 +577,12 @@ class DbosEnv:
                 config["ctx"] = app_config["ctx"]
             if "summarizer" in app_config:
                 config["summarizer"] = app_config["summarizer"]
+            if "roundNote" in app_config:
+                config["roundNote"] = app_config["roundNote"]
+            if "nativeTools" in app_config:
+                config["nativeTools"] = app_config["nativeTools"]
+            if "requireToolCall" in app_config:
+                config["requireToolCall"] = app_config["requireToolCall"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -745,6 +752,7 @@ async def agent_workflow(inp: dict) -> Any:
     granted = inp.get("grantedTools")
     granted_subflows = inp.get("grantedSubflows")
     contracts = dict(inp.get("grantedContracts") or {})
+    tool_defs = inp.get("toolDefs")
     grants_supplied = (
         inp.get("grantedTools") is not None or bool(inp.get("grantedToolsUnconstrained"))
     )
@@ -752,6 +760,8 @@ async def agent_workflow(inp: dict) -> Any:
 
     if inp.get("resolveSpec", True):
         spec = await resolveAgentSpecStep(inp["controller"])
+        spec_tool_defs = spec.get("toolDefs")
+        tool_defs = spec_tool_defs if spec_tool_defs is not None else tool_defs
         merged_config = dict(spec.get("config") or {})
         merged_config.update(config)
         config = merged_config
@@ -778,6 +788,12 @@ async def agent_workflow(inp: dict) -> Any:
             granted_subflows = spec_subflows
 
     cfg = al.AgentConfig.from_json(config or {})
+    if cfg.native_tools and not tool_defs:
+        raise RuntimeError(
+            "native_tools on a durable backend needs provider tool definitions; "
+            'supply "toolDefs" in the DBOS agent payload, a spec-level "toolDefs" '
+            "list, or registered tool schema expectations for all granted tools."
+        )
     unconstrained = bool(inp.get("grantedToolsUnconstrained")) or granted is None
     granted_set = set(granted or [])
     state = (
@@ -812,7 +828,7 @@ async def agent_workflow(inp: dict) -> Any:
 
     async def _invoke(payload: dict) -> Any:
         value = {k: v for k, v in payload.items() if k not in _transcript_keys}
-        out = await invokeReasonerStep({
+        step_input = {
             "reasoner": inp["controller"], "value": value,
             "cid": f"{session}-round-{state.round}",
             "principal": principal,
@@ -825,10 +841,18 @@ async def agent_workflow(inp: dict) -> Any:
             "segment_seq": segment_seq,
             "op": "think",
             "kind": "reasoner",
-        })
+        }
+        if cfg.native_tools:
+            step_input["tools"] = tool_defs
+        out = await invokeReasonerStep(step_input)
         return decode_policy_error(out)
 
-    async def _call(tool: str, value: Any) -> Any:
+    async def _call(
+        tool: str,
+        value: Any,
+        *,
+        call_index: Optional[int] = None,
+    ) -> Any:
         contract = al.contract_for_tool(tool, contracts)
         attempts = (
             al.retry_max_attempts_for_contract(
@@ -840,9 +864,12 @@ async def agent_workflow(inp: dict) -> Any:
             else 1
         )
         step = callToolIdempotent if max(1, attempts) > 1 else callToolNoRetry
+        cid = f"{session}-call-{state.round}"
+        if call_index is not None:
+            cid = f"{cid}-{call_index}"
         out = await step({
             "tool_ref": toolref_json_from_key(tool), "value": value,
-            "cid": f"{session}-call-{state.round}", "cache": None,
+            "cid": cid, "cache": None,
             "principal": principal,
             "run_id": session,
             "root_run_id": root_run_id,
@@ -889,15 +916,18 @@ async def agent_workflow(inp: dict) -> Any:
             return finalize(
                 al.terminal_result(pre.status, state, output=pre.output, reason=pre.reason)
             )
+        prev_trace_len = len(state.trace)
         result = await step(state)
         if isinstance(result, Halt):
             return finalize(
                 al.terminal_result(result.status, state, output=result.output, reason=result.reason)
             )
         state = result
-        if policy.trace_content_refs and state.trace:
-            state.trace[-1].output_ref = await putBlobStep(
-                {"tenant": session, "value": state.last}
+        if policy.trace_content_refs:
+            await al.blob_round_output_refs(
+                state,
+                prev_trace_len,
+                lambda value: putBlobStep({"tenant": session, "value": value}),
             )
         # §6 seam, POST-action exactly like the Temporal harness: a top-of-loop
         # check would re-fire forever once round >= continueAsNewAfter.
@@ -911,6 +941,7 @@ async def agent_workflow(inp: dict) -> Any:
                 "grantedToolsUnconstrained": unconstrained,
                 "grantedSubflows": granted_subflows,
                 "grantedContracts": contracts,
+                "toolDefs": tool_defs,
                 "state": state.to_json(),
                 "policy": policy.to_json(),
                 "resolveSpec": False,
@@ -1092,6 +1123,7 @@ async def run_agent_dbos(
     granted_tools_unconstrained: bool = False,
     granted_subflows: Optional[list[str]] = None,
     granted_contracts: Optional[dict[str, dict[str, Any]]] = None,
+    tool_defs: Optional[list[dict[str, Any]]] = None,
     policy: Optional[ExecutionPolicy] = None,
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
@@ -1117,6 +1149,7 @@ async def run_agent_dbos(
         "grantedToolsUnconstrained": granted_tools_unconstrained,
         "grantedSubflows": granted_subflows,
         "grantedContracts": granted_contracts,
+        "toolDefs": tool_defs,
         "state": None,
         "policy": (policy or ExecutionPolicy()).to_json(),
         "resolveSpec": resolve_spec,

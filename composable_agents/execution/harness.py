@@ -48,7 +48,7 @@ from typing import Any, AsyncIterator, Awaitable, Callable, Optional, Sequence
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 from temporalio.client import WorkflowFailureError, WorkflowUpdateFailedError
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError
 
 # Best-effort swallow paths log via stdlib logging: it never raises, works
 # outside a live workflow runtime (so the helpers stay unit-testable by direct
@@ -67,12 +67,6 @@ if not getattr(WorkflowUpdateFailedError, "_ca_repr_includes_cause", False):
 
     WorkflowUpdateFailedError.__repr__ = _workflow_update_failed_repr  # type: ignore[method-assign]
     WorkflowUpdateFailedError._ca_repr_includes_cause = True  # type: ignore[attr-defined]
-
-
-def _unwrap_reply(value: Any) -> Any:
-    if isinstance(value, dict) and "__ca_meta__" in value and "reply" in value:
-        return value["reply"]
-    return value
 
 
 def _batch_error_reason(result: Any) -> Optional[str]:
@@ -99,13 +93,18 @@ with workflow.unsafe.imports_passed_through():
     from ..contracts import ToolContract, contract_allows_retry, manifest_from_json
     from ..errors import ComposableAgentsError, SessionTurnError
     from ..ir import Ann, CallStep, EMIT_TOOL, NativeTool, Node, RECV_TOOL
-    from ..kinds import Op
+    from ..kinds import Effect, Op
     from ..projection import InMemoryProjection, ProjectionEmitter
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
     from ..qos import QoSTier
     from ..registry import DEFAULT_REGISTRY as _DEFAULT_REGISTRY
-    from ..transcript import TRANSCRIPT_SCOPES, split_summary_reply, transcript_for
+    from ..transcript import (
+        TRANSCRIPT_SCOPES,
+        split_summary_reply,
+        transcript_for,
+        unwrap_reply_meta,
+    )
     from .llm import _split_model
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
@@ -455,6 +454,7 @@ class AgentInput:
     granted_tools_unconstrained: bool = False
     granted_subflows: Optional[list[str]] = None
     granted_contracts: Optional[dict[str, dict[str, Any]]] = None
+    tool_defs: Optional[list[dict[str, Any]]] = None
     state: Optional[dict[str, Any]] = None      # set on continue-as-new
     state_cursor: Optional[int] = None          # set on continue-as-new under the store path
     use_session_store: bool = False             # opt-in: route state through loadState/commitState
@@ -662,7 +662,7 @@ class _TemporalEnv:
                         "promoted": True,
                         "reason": "batch_timeout",
                     },
-                    "reply": _unwrap_reply(reply),
+                    "reply": unwrap_reply_meta(reply),
                 }
             err_reason = _batch_error_reason(result)
             if err_reason is not None:
@@ -675,7 +675,7 @@ class _TemporalEnv:
                         "promoted": True,
                         "reason": err_reason,
                     },
-                    "reply": _unwrap_reply(reply),
+                    "reply": unwrap_reply_meta(reply),
                 }
             return result
 
@@ -821,6 +821,12 @@ class _TemporalEnv:
                 config["ctx"] = app_config["ctx"]
             if "summarizer" in app_config:
                 config["summarizer"] = app_config["summarizer"]
+            if "roundNote" in app_config:
+                config["roundNote"] = app_config["roundNote"]
+            if "nativeTools" in app_config:
+                config["nativeTools"] = app_config["nativeTools"]
+            if "requireToolCall" in app_config:
+                config["requireToolCall"] = app_config["requireToolCall"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -1954,6 +1960,7 @@ class AgentWorkflow:
         granted = inp.granted_tools
         granted_subflows = inp.granted_subflows
         contracts = dict(inp.granted_contracts or {})
+        tool_defs = inp.tool_defs
         grants_supplied = inp.granted_tools is not None or inp.granted_tools_unconstrained
         subflows_supplied = inp.granted_subflows is not None
 
@@ -1964,6 +1971,8 @@ class AgentWorkflow:
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE),
             )
+            spec_tool_defs = spec.get("toolDefs")
+            tool_defs = spec_tool_defs if spec_tool_defs is not None else tool_defs
             merged_config = dict(spec.get("config") or {})
             merged_config.update(config)
             config = merged_config
@@ -1986,6 +1995,14 @@ class AgentWorkflow:
                 granted_subflows = spec_subflows
 
         cfg = al.AgentConfig.from_json(config or {})
+        if cfg.native_tools and not tool_defs:
+            raise ApplicationError(
+                "native_tools on a durable backend needs provider tool definitions; "
+                'supply AgentInput.tool_defs, a spec-level "toolDefs" list, or '
+                "registered tool schema expectations for all granted tools.",
+                type="ValidationError",
+                non_retryable=True,
+            )
         unconstrained = inp.granted_tools_unconstrained or granted is None
         granted_set = set(granted or [])
 
@@ -2010,6 +2027,10 @@ class AgentWorkflow:
         baseline_round = state.round
 
         await self._start_trajectory(inp)
+
+        note_fn: Optional[Callable[..., Any]] = None
+        if cfg.round_note is not None:
+            note_fn = _get_pure_from_registry(cfg.round_note)
 
         while True:
             if state.round >= cfg.max_rounds:
@@ -2041,11 +2062,27 @@ class AgentWorkflow:
             if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
                 transcript_plan = transcript_for(state, cfg.ctx, input=inp.input)
 
+            controller_value: dict[str, Any] = {
+                "input": state.last,
+                "trace": [t.to_json() for t in state.trace],
+            }
+            if note_fn is not None:
+                # Fresh each round from loop state only; deterministic under
+                # Temporal replay because the function is a registered pure.
+                note = al.coerce_round_note(note_fn({
+                    "round": state.round,
+                    "maxRounds": cfg.max_rounds,
+                    "spent": state.spent,
+                    "callCounts": dict(state.call_counts),
+                }))
+                if note is not None:
+                    controller_value[al.ROUND_NOTE_KEY] = note
+
             reply = await workflow.execute_activity(
                 invokeReasoner,
                 InvokeReasonerInput(
                     reasoner=inp.controller,
-                    value={"input": state.last, "trace": [t.to_json() for t in state.trace]},
+                    value=controller_value,
                     cid=f"{inp.session_id}-round-{state.round}",
                     principal=inp.principal,
                     transcript=transcript_plan,
@@ -2056,6 +2093,7 @@ class AgentWorkflow:
                     ),
                     summarizer=cfg.summarizer if transcript_plan is not None else None,
                     summary=state.summary if transcript_plan is not None else None,
+                    tools=tool_defs if cfg.native_tools else None,
                     run_id=inp.session_id,
                     root_run_id=(inp.root_run_id or inp.session_id),
                     segment_seq=inp.segment_seq,
@@ -2066,13 +2104,46 @@ class AgentWorkflow:
                 retry_policy=_reasoner_retry(policy),
             )
             new_summary, reply = split_summary_reply(reply)
+            reply = unwrap_reply_meta(reply)
             if new_summary is not None:
                 state.summary = new_summary
             state.charge(cfg.think_cost)
-            action = al.interpret_reasoner_reply(reply, strict=not cfg.permissive_controller)
+            action = al.interpret_reasoner_reply(
+                reply,
+                strict=not cfg.permissive_controller,
+                native_tools=cfg.native_tools,
+            )
 
             # 2) Terminal decisions end the loop.
             if action.decision is al.Decision.FINISH:
+                if cfg.require_tool_call and not any(
+                    entry.decision == "call" and entry.error is None
+                    for entry in state.trace
+                ):
+                    reasks = sum(1 for entry in state.trace if entry.decision == "reask")
+                    if reasks >= 2:
+                        terminal = al.terminal_result(
+                            "controller_error",
+                            state,
+                            reason=al.REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
+                        )
+                        await self._finish_trajectory(
+                            inp.session_id,
+                            terminal,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            segment_seq=inp.segment_seq,
+                        )
+                        return terminal
+                    state.last = {
+                        "error": al.REQUIRE_TOOL_CALL_REASK_MESSAGE,
+                        "reply": action.payload,
+                    }
+                    state.record(al.TraceEntry(
+                        decision="reask",
+                        error=al.REQUIRE_TOOL_CALL_REASK_MESSAGE,
+                    ))
+                    state.round += 1
+                    continue
                 terminal = al.terminal_result("done", state, output=action.payload)
                 await self._finish_trajectory(
                     inp.session_id,
@@ -2117,7 +2188,127 @@ class AgentWorkflow:
             # 4) Bounded action: one granted tool call, or one sub-flow. When the
             # controller omits an explicit input, the action operates on the
             # current value (state.last) rather than passing None downstream.
-            if action.decision is al.Decision.CALL:
+            if action.decision is al.Decision.CALL_MANY:
+                calls = list(action.payload)
+                for entry in calls:
+                    tool = entry["tool"]
+                    denial = al.authorize_call(
+                        tool,
+                        unconstrained=unconstrained,
+                        granted_set=granted_set,
+                        contracts=contracts,
+                    )
+                    if denial is not None:
+                        terminal = al.terminal_result("denied", state, reason=denial.reason)
+                        await self._finish_trajectory(
+                            inp.session_id,
+                            terminal,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            segment_seq=inp.segment_seq,
+                        )
+                        return terminal
+                for entry in calls:
+                    tool = entry["tool"]
+                    denial = al.charge_tool_call(state, tool, contracts)
+                    if denial is not None:
+                        terminal = al.terminal_result("denied", state, reason=denial.reason)
+                        await self._finish_trajectory(
+                            inp.session_id,
+                            terminal,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            segment_seq=inp.segment_seq,
+                        )
+                        return terminal
+
+                async def execute_entry(
+                    index: int,
+                    entry: dict[str, Any],
+                ) -> tuple[int, dict[str, Any], al.TraceEntry]:
+                    tool = entry["tool"]
+                    call_input = entry.get("input")
+                    if call_input is None:
+                        call_input = state.last
+                    contract = al.contract_for_tool(tool, contracts)
+                    error: Optional[str] = None
+                    try:
+                        out = await workflow.execute_activity(
+                            callTool,
+                            CallToolInput(
+                                tool_ref=_toolref_json_from_key(tool),
+                                value=call_input,
+                                cid=f"{inp.session_id}-call-{state.round}-{index}",
+                                principal=inp.principal,
+                                run_id=inp.session_id,
+                                root_run_id=(inp.root_run_id or inp.session_id),
+                                segment_seq=inp.segment_seq,
+                                op="call",
+                                kind="tool",
+                            ),
+                            start_to_close_timeout=timedelta(seconds=policy.tool_timeout_s),
+                            retry_policy=_retry_policy_for(contract, policy),
+                        )
+                    except ActivityError as exc:
+                        error = repr(exc)
+                        out = {"error": error, "tool": tool}
+                    output_ref: Optional[str] = None
+                    if policy.trace_content_refs:
+                        output_ref = await workflow.execute_activity(
+                            putBlob,
+                            PutBlobInput(tenant=inp.session_id, value=out),
+                            start_to_close_timeout=timedelta(seconds=30),
+                            retry_policy=RetryPolicy(
+                                maximum_attempts=3,
+                                non_retryable_error_types=_NON_RETRYABLE,
+                            ),
+                        )
+                    return (
+                        index,
+                        {
+                            "id": entry.get("id"),
+                            "tool": tool,
+                            "output": out,
+                        },
+                        al.TraceEntry(
+                            decision="call",
+                            ref=tool,
+                            cost=al.DEFAULT_TOOL_COST,
+                            call_id=entry.get("id"),
+                            output_ref=output_ref,
+                            error=error,
+                        ),
+                    )
+
+                results: list[Optional[tuple[int, dict[str, Any], al.TraceEntry]]] = [
+                    None
+                ] * len(calls)
+                read_items = [
+                    (index, entry)
+                    for index, entry in enumerate(calls)
+                    if al.contract_for_tool(entry["tool"], contracts).effect is Effect.READ
+                ]
+                if read_items:
+                    read_results = await asyncio.gather(
+                        *(execute_entry(index, entry) for index, entry in read_items)
+                    )
+                    for result in read_results:
+                        results[result[0]] = result
+                for index, entry in enumerate(calls):
+                    if results[index] is None:
+                        results[index] = await execute_entry(index, entry)
+
+                observations: list[dict[str, Any]] = []
+                traces: list[al.TraceEntry] = []
+                for maybe_result in results:
+                    assert maybe_result is not None
+                    _, observation, trace = maybe_result
+                    observations.append(observation)
+                    traces.append(trace)
+                state.charge(cost)
+                state.last = observations
+                for trace in traces:
+                    state.record(trace)
+
+            elif action.decision is al.Decision.CALL:
                 tool = action.payload["tool"]
                 denial = al.authorize_call(
                     tool,
@@ -2148,22 +2339,27 @@ class AgentWorkflow:
                 if call_input is None:
                     call_input = state.last
                 contract = al.contract_for_tool(tool, contracts)
-                out = await workflow.execute_activity(
-                    callTool,
-                    CallToolInput(
-                        tool_ref=_toolref_json_from_key(tool),
-                        value=call_input,
-                        cid=f"{inp.session_id}-call-{state.round}",
-                        principal=inp.principal,
-                        run_id=inp.session_id,
-                        root_run_id=(inp.root_run_id or inp.session_id),
-                        segment_seq=inp.segment_seq,
-                        op="call",
-                        kind="tool",
-                    ),
-                    start_to_close_timeout=timedelta(seconds=policy.tool_timeout_s),
-                    retry_policy=_retry_policy_for(contract, policy),
-                )
+                error: Optional[str] = None
+                try:
+                    out = await workflow.execute_activity(
+                        callTool,
+                        CallToolInput(
+                            tool_ref=_toolref_json_from_key(tool),
+                            value=call_input,
+                            cid=f"{inp.session_id}-call-{state.round}",
+                            principal=inp.principal,
+                            run_id=inp.session_id,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            segment_seq=inp.segment_seq,
+                            op="call",
+                            kind="tool",
+                        ),
+                        start_to_close_timeout=timedelta(seconds=policy.tool_timeout_s),
+                        retry_policy=_retry_policy_for(contract, policy),
+                    )
+                except ActivityError as exc:
+                    error = repr(exc)
+                    out = {"error": error, "tool": tool}
                 state.charge(cost)
                 state.last = out
                 output_ref: Optional[str] = None
@@ -2177,7 +2373,13 @@ class AgentWorkflow:
                         ),
                     )
                 state.record(
-                    al.TraceEntry(decision="call", ref=tool, cost=cost, output_ref=output_ref)
+                    al.TraceEntry(
+                        decision="call",
+                        ref=tool,
+                        cost=cost,
+                        output_ref=output_ref,
+                        error=error,
+                    )
                 )
 
             else:  # Decision.SUB
@@ -2317,6 +2519,7 @@ class AgentWorkflow:
                             granted_tools_unconstrained=unconstrained,
                             granted_subflows=granted_subflows,
                             granted_contracts=contracts,
+                            tool_defs=tool_defs,
                             state=None,
                             state_cursor=cursor,
                             use_session_store=True,
@@ -2338,6 +2541,7 @@ class AgentWorkflow:
                             granted_tools_unconstrained=unconstrained,
                             granted_subflows=granted_subflows,
                             granted_contracts=contracts,
+                            tool_defs=tool_defs,
                             state=state.to_json(),
                             policy=policy.to_json(),
                             resolve_spec=False,

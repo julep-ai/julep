@@ -15,4 +15,5 @@ def test_graph_respects_selector(sample_module, capsys, monkeypatch):
     monkeypatch.chdir(sample_module)
     code = cli.main(["graph", "triage"])
     out = capsys.readouterr().out
+    assert code == 0
     assert '"triage"' in out and "support_bot" not in out

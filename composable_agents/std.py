@@ -188,6 +188,17 @@ def std_continue_with(value: Any) -> dict[str, Any]:
     return {"__continue__": value}
 
 
+def std_rounds_remaining_note(value: Any) -> str:
+    """Wire-format-stable std.rounds_remaining_note; body frozen once referenced.
+
+    Builds the controller note used by the mem-mcp port mapping:
+    record/execute.ctx's ``[REMAINING ROUNDS: N]`` maps to
+    ``round_note="std.rounds_remaining_note"``. Deliberate behavior changes
+    require registering a new std name.
+    """
+    return f"[REMAINING ROUNDS: {value['maxRounds'] - value['round']}]"
+
+
 DEFAULT_REGISTRY.register_pure("std.merge", std_merge)
 DEFAULT_REGISTRY.register_pure("std.pluck", std_pluck)
 DEFAULT_REGISTRY.register_pure("std.init", std_init)
@@ -200,3 +211,4 @@ DEFAULT_REGISTRY.register_pure("std.each_pack", std_each_pack)
 DEFAULT_REGISTRY.register_pure("std.branch_predicate", std_branch_predicate)
 DEFAULT_REGISTRY.register_pure("std.branch_selector", std_branch_selector)
 DEFAULT_REGISTRY.register_pure("std.continue_with", std_continue_with)
+DEFAULT_REGISTRY.register_pure("std.rounds_remaining_note", std_rounds_remaining_note)

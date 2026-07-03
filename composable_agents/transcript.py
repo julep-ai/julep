@@ -30,11 +30,15 @@ class _TurnRole(TypedDict):
 class Turn(_TurnRole, total=False):
     """One neutral transcript turn. ``ref`` names the action a turn describes
     (tool-ref JSON for calls, ``{"kind": "sub", "ref": ...}`` for sub-flows);
-    a plan carries ``content_ref`` (a blob ref), a hydrated turn ``content``."""
+    a plan carries ``content_ref`` (a blob ref), a hydrated turn ``content``.
+    Native tool round-trips may carry ``tool_call_id`` and assistant
+    ``tool_calls`` for provider message reconstruction."""
 
     ref: dict[str, str]
     content: Any
     content_ref: str
+    tool_call_id: str
+    tool_calls: list[dict[str, Any]]
 
 
 Transcript = list[Turn]
@@ -47,6 +51,7 @@ TRANSCRIPT_SCOPES = (ContextScope.WHOLE_SESSION, ContextScope.SUMMARY)
 # Envelope key invokeReasoner uses to tool a freshly produced running summary back
 # to the workflow (see split_summary_reply). Reserved; never a controller key.
 SUMMARY_KEY = "__ca_summary__"
+_CA_META_KEY = "__ca_meta__"
 
 
 class TraceEntryView(Protocol):
@@ -56,6 +61,8 @@ class TraceEntryView(Protocol):
     def decision(self) -> str: ...
     @property
     def ref(self) -> Optional[str]: ...
+    @property
+    def call_id(self) -> Optional[str]: ...
     @property
     def input_ref(self) -> Optional[str]: ...
     @property
@@ -98,10 +105,21 @@ def transcript_for(
             continue
         ref = action_ref(entry.decision, entry.ref)
         action: Turn = {"role": "assistant", "ref": ref}
+        if entry.call_id is not None:
+            action["tool_call_id"] = entry.call_id
+            action["tool_calls"] = [
+                {
+                    "id": entry.call_id,
+                    "type": "function",
+                    "function": {"name": entry.ref or "", "arguments": ""},
+                }
+            ]
         if entry.input_ref is not None:
             action["content_ref"] = entry.input_ref
         turns.append(action)
         result: Turn = {"role": "tool", "ref": ref}
+        if entry.call_id is not None:
+            result["tool_call_id"] = entry.call_id
         if entry.output_ref is not None:
             result["content_ref"] = entry.output_ref
         turns.append(result)
@@ -129,7 +147,8 @@ def split_to_budget(
     Keeps the *newest* turns whose cumulative count fits ``max_tokens``;
     everything older is elided. The bound is hard: if even the newest turn
     exceeds it, everything is elided (and the marker says so) — there is no
-    silent overshoot.
+    silent overshoot. Tool-result turns with ids are elided atomically with
+    their assistant tool-call turns so providers never see orphan tool results.
     """
     kept_rev: list[Turn] = []
     total = 0
@@ -142,6 +161,8 @@ def split_to_budget(
         kept_rev.append(turn)
     kept = list(reversed(kept_rev))
     elided = ordered[: len(ordered) - len(kept)]
+    while kept and kept[0].get("role") == "tool" and "tool_call_id" in kept[0]:
+        elided.append(kept.pop(0))
     return elided, kept
 
 
@@ -179,6 +200,13 @@ def split_summary_reply(reply: Any) -> tuple[Optional[str], Any]:
     return None, reply
 
 
+def unwrap_reply_meta(reply: Any) -> Any:
+    """Unwrap the ``invokeReasoner`` LLM metadata envelope, if present."""
+    if isinstance(reply, dict) and _CA_META_KEY in reply and "reply" in reply:
+        return reply["reply"]
+    return reply
+
+
 __all__ = [
     "Turn",
     "Transcript",
@@ -196,4 +224,5 @@ __all__ = [
     "summary_turn",
     "bounded_transcript",
     "split_summary_reply",
+    "unwrap_reply_meta",
 ]

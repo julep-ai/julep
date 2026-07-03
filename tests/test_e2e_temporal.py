@@ -43,12 +43,17 @@ if HAVE_TEMPORAL:
     from composable_agents.execution.harness import (
         run_flow, start_flow, AgentWorkflow, AgentInput, ExecutionPolicy,
     )
+    from composable_agents.agent_loop import (
+        REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
+        REQUIRE_TOOL_CALL_REASK_MESSAGE,
+    )
     from composable_agents.execution.worker import build_worker, WORKFLOWS, ACTIVITIES
     from composable_agents.execution.activities import (
         WorkerContext, configure,
     )
     from composable_agents.execution.session_store import InMemorySessionStore
     from composable_agents.execution.blobstore import InMemoryBlobStore
+    from composable_agents.execution.llm_result import LlmCallMeta, LlmResult
     from temporalio.worker import Worker
     from composable_agents import purity
     from composable_agents.purity import PureEntry
@@ -847,6 +852,183 @@ async def _agent_trace_fidelity(env):
     assert all("outputRef" not in t for t in res_off["trace"]), res_off
 
 
+async def _agent_require_tool_call_reasks_then_calls(env):
+    agents = {
+        "require_ctrl": {
+            "config": {
+                "requireToolCall": True,
+                "maxRounds": 6,
+                "budget": {"cost": 1000},
+            },
+            "grantedTools": ["srv/double"],
+        }
+    }
+    calls = {"count": 0}
+
+    async def scripted(reasoner, value):  # noqa: ANN001
+        if reasoner.name != "require_ctrl":
+            return await _llm(reasoner, value)
+        calls["count"] += 1
+        if calls["count"] == 1:
+            return {"output": "premature text"}
+        if calls["count"] == 2:
+            assert value["input"] == {
+                "error": REQUIRE_TOOL_CALL_REASK_MESSAGE,
+                "reply": "premature text",
+            }
+            assert any(
+                entry["decision"] == "reask"
+                and entry["error"] == REQUIRE_TOOL_CALL_REASK_MESSAGE
+                for entry in value["trace"]
+            )
+            return {"tool": "srv/double", "input": 5}
+        return {"done": True, "output": value["input"]}
+
+    async with _worker(
+        env,
+        task_queue="ca-agent-require-tool-call",
+        agents=agents,
+        llm=scripted,
+        extra_reasoners=(Reasoner(name="require_ctrl", model="test", system="decide"),),
+    ):
+        sid = f"require-tool-call-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="require_ctrl",
+                session_id=sid,
+                input={"task": "go"},
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-require-tool-call",
+        )
+
+    assert res["status"] == "done", res
+    assert res["output"] == 10, res
+    reasks = [entry for entry in res["trace"] if entry["decision"] == "reask"]
+    assert reasks == [
+        {
+            "decision": "reask",
+            "cost": 0.0,
+            "error": REQUIRE_TOOL_CALL_REASK_MESSAGE,
+        }
+    ]
+    assert len(res["trace"]) == 2, res
+    call_entry = res["trace"][1]
+    assert call_entry["decision"] == "call"
+    assert call_entry["ref"] == "srv/double"
+    assert "error" not in call_entry
+
+
+async def _agent_require_tool_call_halts(env):
+    agents = {
+        "require_ctrl2": {
+            "config": {
+                "requireToolCall": True,
+                "maxRounds": 6,
+                "budget": {"cost": 1000},
+            },
+            "grantedTools": ["srv/double"],
+        }
+    }
+
+    async def scripted(reasoner, value):  # noqa: ANN001
+        if reasoner.name == "require_ctrl2":
+            return {"output": "text"}
+        return await _llm(reasoner, value)
+
+    async with _worker(
+        env,
+        task_queue="ca-agent-require-tool-call-halt",
+        agents=agents,
+        llm=scripted,
+        extra_reasoners=(Reasoner(name="require_ctrl2", model="test", system="decide"),),
+    ):
+        sid = f"require-tool-call-halt-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="require_ctrl2",
+                session_id=sid,
+                input={"task": "go"},
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-require-tool-call-halt",
+        )
+
+    assert res["status"] == "controller_error", res
+    assert res["reason"] == REQUIRE_TOOL_CALL_NEVER_CALLED_REASON
+    reasks = [entry for entry in res["trace"] if entry["decision"] == "reask"]
+    assert len(reasks) == 2, res
+    assert all(entry["error"] == REQUIRE_TOOL_CALL_REASK_MESSAGE for entry in reasks)
+
+
+async def _agent_tool_error_persisted_for_transcript(env):
+    agents = {
+        "err_ctrl": {
+            "config": {"maxRounds": 4, "budget": {"cost": 1000}},
+            "grantedTools": ["srv/fail"],
+        }
+    }
+    blob_store = InMemoryBlobStore()
+    calls = {"count": 0}
+
+    async def scripted(reasoner, value):  # noqa: ANN001
+        if reasoner.name != "err_ctrl":
+            return await _llm(reasoner, value)
+        calls["count"] += 1
+        if calls["count"] == 1:
+            return {"tool": "srv/fail", "input": 5}
+        return {"done": True, "output": value["input"]}
+
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="err_ctrl", model="test", system="decide"))
+    ctx = WorkerContext(
+        mcp_call=_mcp,
+        llm=scripted,
+        subflows=_child_registry(),
+        agents=agents,
+        blob_store=blob_store,
+    )
+    configure(ctx)
+    worker = Worker(
+        env.client,
+        task_queue="ca-agent-tool-error-blob",
+        workflows=WORKFLOWS,
+        activities=ACTIVITIES,
+    )
+    async with worker:
+        sid = f"agent-tool-error-blob-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="err_ctrl",
+                session_id=sid,
+                input={"task": "go"},
+                policy=ExecutionPolicy(
+                    trace_content_refs=True,
+                    idempotent_max_attempts=1,
+                ).to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-tool-error-blob",
+        )
+
+    assert res["status"] == "done", res
+    calls_trace = [entry for entry in res["trace"] if entry["decision"] == "call"]
+    assert len(calls_trace) == 1, res
+    call_entry = calls_trace[0]
+    assert call_entry["ref"] == "srv/fail"
+    assert call_entry.get("error")
+    output_ref = call_entry.get("outputRef")
+    assert output_ref, f"call entry missing outputRef: {call_entry}"
+
+    resolved = json.loads(await blob_store.get(sid, output_ref))
+    assert resolved["tool"] == "srv/fail"
+    assert resolved["error"]
+
+
 async def _pure_drift_fails_before_effect(env):
     effects = {"count": 0}
 
@@ -880,6 +1062,325 @@ async def _pure_drift_fails_before_effect(env):
     assert effects["count"] == 0
 
 
+async def _agent_native_tools_call_many(env):
+    tool_defs = [
+        {
+            "type": "function",
+            "function": {
+                "name": "srv/double",
+                "description": "",
+                "parameters": {"type": "number"},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "srv/inc",
+                "description": "",
+                "parameters": {"type": "number"},
+            },
+        },
+    ]
+    agents = {
+        "native_multi_ctrl": {
+            "config": {
+                "nativeTools": True,
+                "maxRounds": 4,
+                "budget": {"cost": 1000},
+            },
+            "grantedTools": ["srv/double", "srv/inc"],
+            "grantedContracts": {
+                "srv/double": {"effect": "read", "idempotency": "native"},
+                "srv/inc": {"effect": "read", "idempotency": "native"},
+            },
+            "toolDefs": tool_defs,
+        }
+    }
+    seen_values = []
+    effects = []
+
+    async def native_llm(reasoner, value, principal, transcript, dispatch, *, tools=None):  # noqa: ANN001
+        del principal, transcript, dispatch
+        assert reasoner.name == "native_multi_ctrl"
+        assert tools == tool_defs
+        seen_values.append(value)
+        if len(seen_values) == 1:
+            return {
+                "tool_calls": [
+                    {"id": "a", "tool": "srv/double", "input": 2},
+                    {"id": "b", "tool": "srv/inc", "input": 4},
+                ]
+            }
+        assert value["input"] == [
+            {"id": "a", "tool": "srv/double", "output": 4},
+            {"id": "b", "tool": "srv/inc", "output": 5},
+        ]
+        return {"done": True, "output": value["input"]}
+
+    async def counted_mcp(server, tool, value, idempotency_key):  # noqa: ANN001
+        effects.append((server, tool, value, idempotency_key))
+        return await _mcp(server, tool, value, idempotency_key)
+
+    async with _worker(
+        env,
+        task_queue="ca-agent-native-tools",
+        agents=agents,
+        llm=native_llm,
+        mcp_call=counted_mcp,
+        extra_reasoners=(Reasoner(name="native_multi_ctrl", model="test", system="native"),),
+    ):
+        sid = f"native-tools-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="native_multi_ctrl",
+                session_id=sid,
+                input={"task": "go"},
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-native-tools",
+        )
+
+    assert res["status"] == "done", res
+    assert res["rounds"] == 1, res
+    assert res["output"] == [
+        {"id": "a", "tool": "srv/double", "output": 4},
+        {"id": "b", "tool": "srv/inc", "output": 5},
+    ]
+    assert [(t["decision"], t["ref"], t["callId"]) for t in res["trace"]] == [
+        ("call", "srv/double", "a"),
+        ("call", "srv/inc", "b"),
+    ]
+    # Both calls are READ-effect and run concurrently, so activity arrival
+    # order is nondeterministic; assert the sibling cids, not their order.
+    assert sorted(item[3] for item in effects) == [
+        f"{sid}-call-0-0",
+        f"{sid}-call-0-1",
+    ]
+    assert seen_values[1]["input"] == res["output"]
+
+
+async def _agent_native_tools_llm_result_meta_unwrap(env):
+    tool_defs = [
+        {
+            "type": "function",
+            "function": {
+                "name": "srv/double",
+                "description": "",
+                "parameters": {"type": "number"},
+            },
+        },
+    ]
+    agents = {
+        "native_llm_result_ctrl": {
+            "config": {
+                "nativeTools": True,
+                "maxRounds": 4,
+                "budget": {"cost": 1000},
+            },
+            "grantedTools": ["srv/double"],
+            "grantedContracts": {
+                "srv/double": {"effect": "read", "idempotency": "native"},
+            },
+            "toolDefs": tool_defs,
+        }
+    }
+    seen_values = []
+    effects = []
+
+    def meta() -> LlmCallMeta:
+        return LlmCallMeta(served_model="gpt-test", provider="openai")
+
+    async def native_llm(reasoner, value, principal, transcript, dispatch, *, tools=None):  # noqa: ANN001
+        del principal, transcript, dispatch
+        assert reasoner.name == "native_llm_result_ctrl"
+        assert tools == tool_defs
+        seen_values.append(value)
+        if len(seen_values) == 1:
+            return LlmResult(
+                reply={
+                    "tool_calls": [
+                        {"id": "a", "tool": "srv/double", "input": 2},
+                    ],
+                },
+                meta=meta(),
+            )
+        assert value["input"] == [{"id": "a", "tool": "srv/double", "output": 4}]
+        return LlmResult(reply={"done": True, "output": "done"}, meta=meta())
+
+    async def counted_mcp(server, tool, value, idempotency_key):  # noqa: ANN001
+        effects.append((server, tool, value, idempotency_key))
+        return await _mcp(server, tool, value, idempotency_key)
+
+    async with _worker(
+        env,
+        task_queue="ca-agent-native-tools-llm-result",
+        agents=agents,
+        llm=native_llm,
+        mcp_call=counted_mcp,
+        extra_reasoners=(Reasoner(name="native_llm_result_ctrl", model="test", system="native"),),
+    ):
+        sid = f"native-tools-llm-result-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="native_llm_result_ctrl",
+                session_id=sid,
+                input={"task": "go"},
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-native-tools-llm-result",
+        )
+
+    assert res["status"] == "done", res
+    assert res["rounds"] == 1, res
+    assert res["output"] == "done"
+    assert [(t["decision"], t["ref"], t["callId"]) for t in res["trace"]] == [
+        ("call", "srv/double", "a"),
+    ]
+    assert effects == [("srv", "double", 2, f"{sid}-call-0-0")]
+
+
+async def _agent_call_many_tool_error_folds_to_observation(env):
+    tool_defs = [
+        {
+            "type": "function",
+            "function": {
+                "name": "srv/double",
+                "description": "",
+                "parameters": {"type": "number"},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "srv/fail",
+                "description": "",
+                "parameters": {"type": "number"},
+            },
+        },
+    ]
+    agents = {
+        "native_error_ctrl": {
+            "config": {
+                "nativeTools": True,
+                "maxRounds": 4,
+                "budget": {"cost": 1000},
+            },
+            "grantedTools": ["srv/double", "srv/fail"],
+            "grantedContracts": {
+                "srv/double": {"effect": "read", "idempotency": "native"},
+                "srv/fail": {"effect": "read", "idempotency": "native"},
+            },
+            "toolDefs": tool_defs,
+        }
+    }
+    seen_values = []
+
+    async def native_llm(reasoner, value, principal, transcript, dispatch, *, tools=None):  # noqa: ANN001
+        del principal, transcript, dispatch
+        assert reasoner.name == "native_error_ctrl"
+        assert tools == tool_defs
+        seen_values.append(value)
+        if len(seen_values) == 1:
+            return {
+                "tool_calls": [
+                    {"id": "ok", "tool": "srv/double", "input": 3},
+                    {"id": "bad", "tool": "srv/fail", "input": 1},
+                ]
+            }
+        observations = value["input"]
+        assert observations[0] == {"id": "ok", "tool": "srv/double", "output": 6}
+        failed = observations[1]
+        assert failed["id"] == "bad"
+        assert failed["tool"] == "srv/fail"
+        failed_output = failed["output"]
+        assert isinstance(failed_output, dict)
+        assert failed_output["tool"] == "srv/fail"
+        assert failed_output["error"]
+        return {"done": True, "output": observations}
+
+    async with _worker(
+        env,
+        task_queue="ca-agent-call-many-tool-error",
+        agents=agents,
+        llm=native_llm,
+        extra_reasoners=(Reasoner(name="native_error_ctrl", model="test", system="native"),),
+    ):
+        sid = f"native-tools-error-{uuid.uuid4()}"
+        res = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="native_error_ctrl",
+                session_id=sid,
+                input={"task": "go"},
+                policy=ExecutionPolicy().to_json(),
+            ),
+            id=sid,
+            task_queue="ca-agent-call-many-tool-error",
+        )
+
+    assert res["status"] == "done", res
+    assert res["output"][0] == {"id": "ok", "tool": "srv/double", "output": 6}
+    failed = res["output"][1]
+    assert failed["id"] == "bad"
+    assert failed["tool"] == "srv/fail"
+    failed_output = failed["output"]
+    assert isinstance(failed_output, dict)
+    assert failed_output["tool"] == "srv/fail"
+    assert failed_output["error"]
+
+    calls = [t for t in res["trace"] if t["decision"] == "call"]
+    assert [(t["ref"], t["callId"]) for t in calls] == [
+        ("srv/double", "ok"),
+        ("srv/fail", "bad"),
+    ]
+    assert "error" not in calls[0]
+    assert calls[1].get("error")
+    assert seen_values[1]["input"] == res["output"]
+
+
+async def _agent_native_tools_without_tool_defs_fails(env):
+    async with _worker(
+        env,
+        task_queue="ca-agent-native-tools-missing",
+        extra_reasoners=(
+            Reasoner(name="native_missing_defs_ctrl", model="test", system="native"),
+        ),
+    ):
+        sid = f"native-tools-missing-{uuid.uuid4()}"
+        with pytest.raises(WorkflowFailureError) as raised:
+            await env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="native_missing_defs_ctrl",
+                    session_id=sid,
+                    input={"task": "go"},
+                    config={
+                        "nativeTools": True,
+                        "maxRounds": 1,
+                        "budget": {"cost": 1000},
+                    },
+                    granted_tools=["srv/double"],
+                    policy=ExecutionPolicy().to_json(),
+                    resolve_spec=False,
+                ),
+                id=sid,
+                task_queue="ca-agent-native-tools-missing",
+            )
+
+    cause = raised.value.__cause__
+    while cause is not None and not (
+        isinstance(cause, ApplicationError) and cause.type == "ValidationError"
+    ):
+        cause = cause.__cause__
+
+    assert isinstance(cause, ApplicationError)
+    assert "native_tools on a durable backend needs provider tool definitions" in str(cause)
+
+
 async def _run_all():
     async with await WorkflowEnvironment.start_time_skipping() as env:
         await _pipeline_and_reasoner(env)
@@ -895,7 +1396,14 @@ async def _run_all():
         await _agent_session_store(env)
         await _agent_session_store_fencing(env)
         await _agent_trace_fidelity(env)
+        await _agent_require_tool_call_reasks_then_calls(env)
+        await _agent_require_tool_call_halts(env)
+        await _agent_tool_error_persisted_for_transcript(env)
         await _pure_drift_fails_before_effect(env)
+        await _agent_native_tools_call_many(env)
+        await _agent_native_tools_llm_result_meta_unwrap(env)
+        await _agent_call_many_tool_error_folds_to_observation(env)
+        await _agent_native_tools_without_tool_defs_fails(env)
 
 
 def test_temporal_end_to_end():

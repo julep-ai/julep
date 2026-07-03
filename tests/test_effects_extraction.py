@@ -6,6 +6,7 @@ import asyncio
 import pytest
 import subprocess
 import sys
+from typing import Any
 
 from composable_agents import HAVE_TEMPORAL
 
@@ -333,3 +334,156 @@ def test_invoke_reasoner_default_qos_is_standard():
 
     assert result == "ok"
     assert captured["dispatch"].qos is QoSTier.STANDARD
+
+
+def test_resolve_agent_spec_builds_tool_defs_from_registered_expectations():
+    from conftest import run
+
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import WorkerContext
+    from composable_agents.registry import Registry, ToolSchemaExpectation
+
+    schema = {"type": "object", "properties": {"q": {"type": "string"}}}
+    registry = Registry()
+    registry.register_tool_expectation(
+        ToolSchemaExpectation(key="search", input_schema=schema, ctx_path="tools.pyi")
+    )
+    prev = _configure_restoring(
+        WorkerContext(
+            registry=registry,
+            agents={
+                "ctrl": {
+                    "config": {"nativeTools": True},
+                    "grantedTools": ["search"],
+                }
+            },
+        )
+    )
+    try:
+        spec = run(effects.resolveAgentSpec("ctrl"))
+    finally:
+        _restore_ctx(prev)
+
+    assert spec["toolDefs"] == [
+        {
+            "type": "function",
+            "function": {
+                "name": "search",
+                "description": "",
+                "parameters": schema,
+            },
+        }
+    ]
+
+
+def test_resolve_agent_spec_passes_through_spec_level_tool_defs():
+    from conftest import run
+
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import WorkerContext
+    from composable_agents.registry import Registry
+
+    tool_defs = [
+        {
+            "type": "function",
+            "function": {
+                "name": "lookup",
+                "description": "Lookup",
+                "parameters": {"type": "object"},
+            },
+        }
+    ]
+    prev = _configure_restoring(
+        WorkerContext(
+            registry=Registry(),
+            agents={
+                "ctrl": {
+                    "config": {"nativeTools": True},
+                    "grantedTools": ["lookup"],
+                    "toolDefs": tool_defs,
+                }
+            },
+        )
+    )
+    try:
+        spec = run(effects.resolveAgentSpec("ctrl"))
+    finally:
+        _restore_ctx(prev)
+
+    assert spec["toolDefs"] is tool_defs
+
+
+def test_resolve_agent_spec_native_tools_without_expectation_errors():
+    from conftest import run
+
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import WorkerContext
+    from composable_agents.registry import Registry
+
+    prev = _configure_restoring(
+        WorkerContext(
+            registry=Registry(),
+            agents={
+                "ctrl": {
+                    "config": {"nativeTools": True},
+                    "grantedTools": ["missing"],
+                }
+            },
+        )
+    )
+    try:
+        with pytest.raises(RuntimeError, match="Tool 'missing'.*ToolSchemaExpectation"):
+            run(effects.resolveAgentSpec("ctrl"))
+    finally:
+        _restore_ctx(prev)
+
+
+def test_invoke_reasoner_forwards_tools_keyword_only_when_present():
+    from conftest import run
+
+    from composable_agents.dotctx import Reasoner
+    from composable_agents.execution import effects
+    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
+    from composable_agents.registry import Registry
+
+    registry = Registry()
+    registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
+    captured: dict[str, Any] = {}
+    tool_defs = [{"type": "function", "function": {"name": "lookup"}}]
+
+    async def fake_llm(reasoner, value, principal, transcript, dispatch, *, tools=None):
+        captured["tools"] = tools
+        return "ok"
+
+    prev = _configure_restoring(WorkerContext(llm=fake_llm, registry=registry))
+    try:
+        result = run(
+            effects.invokeReasoner(
+                InvokeReasonerInput(
+                    reasoner="b",
+                    value="hi",
+                    cid="think@1",
+                    tools=tool_defs,
+                )
+            )
+        )
+    finally:
+        _restore_ctx(prev)
+
+    assert result == "ok"
+    assert captured["tools"] == tool_defs
+
+    async def no_kwargs_llm(reasoner, value, principal, transcript, dispatch):
+        return "legacy-ok"
+
+    prev = _configure_restoring(WorkerContext(llm=no_kwargs_llm, registry=registry))
+    try:
+        result = run(
+            effects.invokeReasoner(
+                InvokeReasonerInput(reasoner="b", value="hi", cid="think@2")
+            )
+        )
+    finally:
+        _restore_ctx(prev)
+
+    assert result == "legacy-ok"

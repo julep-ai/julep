@@ -33,7 +33,7 @@ import json
 import os
 import re
 import textwrap
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Sequence, cast
 
@@ -116,6 +116,7 @@ class RichDotctx:
     renderer_names: Mapping[str, str]  # role -> registered renderer name
     tool_grants: tuple[ToolGrant, ...]
     expected_tool_schemas: Mapping[str, dict[str, Any]]
+    expected_tool_descriptions: Mapping[str, str] = field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------- #
@@ -1160,6 +1161,7 @@ def load_rich_dotctx(
 
     tool_keys: list[str] = []
     expectations: dict[str, dict[str, Any]] = {}
+    descriptions: dict[str, str] = {}
     tools_path = os.path.join(path, "tools.pyi")
     if os.path.exists(tools_path):
         with open(tools_path, "r", encoding="utf-8") as fh:
@@ -1168,6 +1170,7 @@ def load_rich_dotctx(
             key = f"{server}/{stub.name}" if server else stub.name
             tool_keys.append(key)
             expectations[key] = stub.input_schema
+            descriptions[key] = stub.description
             registry.register_tool_expectation(
                 ToolSchemaExpectation(key=key, input_schema=stub.input_schema, ctx_path=path)
             )
@@ -1192,6 +1195,7 @@ def load_rich_dotctx(
         renderer_names=renderer_names,
         tool_grants=tuple(ToolGrant(name=key) for key in tool_keys),
         expected_tool_schemas=expectations,
+        expected_tool_descriptions=descriptions,
     )
 
 

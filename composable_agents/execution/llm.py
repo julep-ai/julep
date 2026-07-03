@@ -38,10 +38,12 @@ import asyncio
 import dataclasses
 import json
 import logging
+import re
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from typing import Any, Optional
 
+from ..agent_loop import NATIVE_TOOLS_KEY, ROUND_NOTE_KEY
 from ..dotctx import Reasoner, get_reasoner
 from ..errors import ResilienceExhausted
 from ..prompt import rendered_reasoner_for, rendered_user_for
@@ -70,6 +72,7 @@ DEFAULT_PROVIDER = "anthropic"
 # (mozilla-ai/any-llm issues #541 gemini, #542 xai.)
 _PROMPT_FALLBACK_PROVIDERS = frozenset({"gemini", "xai"})
 _DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
+_PROVIDER_SAFE_RE = re.compile(r"[^A-Za-z0-9_-]")
 
 
 # --------------------------------------------------------------------------- #
@@ -115,6 +118,52 @@ def _qos_request_fields(provider: str, qos: QoSTier) -> dict[str, Any]:
     return {}
 
 
+def provider_safe_tool_name(name: str) -> str:
+    """Provider-safe function name for OpenAI-compatible native tool APIs."""
+    safe = _PROVIDER_SAFE_RE.sub("_", name)
+    return safe[:64] if len(safe) > 64 else safe
+
+
+def _provider_safe_collision_name(base: str, n: int) -> str:
+    suffix = f"_{n}"
+    return f"{base[: 64 - len(suffix)]}{suffix}"
+
+
+def provider_safe_tool_defs(
+    tools: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    """Rewrite tool function names to provider-safe aliases.
+
+    Returns ``(safe_tools, reverse)`` where ``reverse`` maps provider aliases
+    back to the original tool keys. If no rewrite is needed, preserves the
+    original list identity and returns an empty reverse map.
+    """
+    needs_rewrite = False
+    reverse: dict[str, str] = {}
+    used: set[str] = set()
+    safe_tools: list[dict[str, Any]] = []
+    for tool_def in tools:
+        fn = tool_def.get("function", {}) if isinstance(tool_def, dict) else {}
+        original = fn.get("name", "")
+        safe = provider_safe_tool_name(original)
+        if safe != original:
+            needs_rewrite = True
+        base = safe
+        n = 2
+        while safe in used and reverse.get(safe) != original:
+            safe = _provider_safe_collision_name(base, n)
+            n += 1
+            needs_rewrite = True
+        used.add(safe)
+        if safe != original:
+            reverse[safe] = original
+        new_fn = {**fn, "name": safe}
+        safe_tools.append({**tool_def, "function": new_fn})
+    if not needs_rewrite:
+        return tools, {}
+    return safe_tools, reverse
+
+
 def _strip_code_fence(text: str) -> str:
     """Drop a leading ```` ```json ```` / ```` ``` ```` fence and its closer."""
     stripped = text.strip()
@@ -149,9 +198,10 @@ def _ref_label(ref: Optional[dict[str, Any]]) -> str:
 def _transcript_messages(transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Map neutral transcript turns to provider messages (reference mapping).
 
-    Assistant action turns render as assistant text and tool results as
-    user-visible text — replayed turns carry no provider tool-call ids, so
-    the OpenAI-style ``tool`` role cannot be used. System turns (the elision
+    Assistant action turns with provider tool-call ids round-trip as native
+    tool calls, and matching tool results use the OpenAI-style ``tool`` role.
+    Id-less assistant action turns still render as assistant text, and id-less
+    tool results still render as user-visible text. System turns (the elision
     marker / running summary) pass through as system messages.
     """
     out: list[dict[str, Any]] = []
@@ -160,7 +210,27 @@ def _transcript_messages(transcript: list[dict[str, Any]]) -> list[dict[str, Any
         content = turn.get("content")
         text = content if isinstance(content, str) else json.dumps(content, sort_keys=True)
         label = _ref_label(turn.get("ref"))
-        if role == "assistant" and label:
+        if role == "assistant" and turn.get("tool_calls"):
+            calls: list[dict[str, Any]] = []
+            for call in turn["tool_calls"]:
+                copied = dict(call)
+                function = dict(copied.get("function", {}))
+                if not function.get("arguments"):
+                    function["arguments"] = (
+                        json.dumps(content, sort_keys=True) if content is not None else "{}"
+                    )
+                copied["function"] = function
+                calls.append(copied)
+            out.append({"role": "assistant", "content": None, "tool_calls": calls})
+        elif role == "tool" and "tool_call_id" in turn:
+            out.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": turn["tool_call_id"],
+                    "content": text,
+                }
+            )
+        elif role == "assistant" and label:
             text = f"[called {label}]" if content is None else f"[called {label}] {text}"
             out.append({"role": "assistant", "content": text})
         elif role == "tool":
@@ -183,7 +253,9 @@ def _messages(
 ) -> list[dict[str, Any]]:
     """System (optionally with an injected schema block), the materialized
     transcript turns when given, then the user turn: a rendered ``user_text``
-    when given, else the value as a user turn."""
+    when given, else the value as a user turn. A mapping value with a non-empty
+    string under the reserved ``ROUND_NOTE_KEY`` renders that note as a
+    trailing system line and omits the reserved key from the user turn."""
     system_text = system or ""
     if schema_hint is not None:
         block = (
@@ -197,11 +269,23 @@ def _messages(
         messages.append({"role": "system", "content": system_text})
     if transcript:
         messages.extend(_transcript_messages(transcript))
+    round_note: Optional[str] = None
+    if isinstance(value, Mapping):
+        candidate = value.get(ROUND_NOTE_KEY)
+        if isinstance(candidate, str) and candidate:
+            round_note = candidate
+
     if user_text is not None:
         user = user_text
+    elif isinstance(value, Mapping) and ROUND_NOTE_KEY in value:
+        # Strip the reserved round-note key from the model-facing user JSON;
+        # it is delivered as the trailing system line below, never as content.
+        user = json.dumps({k: v for k, v in value.items() if k != ROUND_NOTE_KEY})
     else:
         user = value if isinstance(value, str) else json.dumps(value)
     messages.append({"role": "user", "content": user})
+    if round_note is not None:
+        messages.append({"role": "system", "content": round_note})
     return messages
 
 
@@ -226,6 +310,35 @@ def _parse_reply(completion: Any, *, expect_json: bool) -> Any:
         # Tool the raw text back; interpret_reasoner_reply(strict) turns a
         # non-conforming reply into a clean controller_error.
         return content
+
+
+def _parse_tool_call_arguments(arguments: Any) -> Any:
+    if not isinstance(arguments, str):
+        return arguments
+    try:
+        return json.loads(arguments)
+    except (json.JSONDecodeError, ValueError):
+        return arguments
+
+
+def _parse_completion_reply(completion: Any, *, expect_json: bool) -> tuple[Any, int]:
+    """Extract native tool-call replies before falling back to text/JSON."""
+    message = completion.choices[0].message
+    tool_calls = getattr(message, "tool_calls", None)
+    if tool_calls:
+        return {
+            "tool_calls": [
+                {
+                    "id": getattr(tool_call, "id", None),
+                    "tool": getattr(getattr(tool_call, "function", None), "name", None),
+                    "input": _parse_tool_call_arguments(
+                        getattr(getattr(tool_call, "function", None), "arguments", "")
+                    ),
+                }
+                for tool_call in tool_calls
+            ]
+        }, len(tool_calls)
+    return _parse_reply(completion, expect_json=expect_json), 0
 
 
 def _add_tokens(a: int | None, b: int | None) -> int | None:
@@ -266,33 +379,61 @@ async def complete_reasoner(
     default_provider: str = DEFAULT_PROVIDER,
     transcript: Optional[list[dict[str, Any]]] = None,
     dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+    tools: Optional[list[dict[str, Any]]] = None,
+    parallel_tool_calls: Optional[bool] = None,
 ) -> LlmResult:
     """One model call for ``reasoner`` against ``value``, returning its parsed reply.
 
     ``transcript`` is the materialized neutral turn list for transcript-scoped
     app rounds (agent-transcripts design); it renders as provider messages
-    between the system prompt and the user turn."""
+    between the system prompt and the user turn.
+
+    ``tools`` and ``parallel_tool_calls`` pass native provider tool definitions
+    through to any-llm. When tools are present, schema guidance remains prompt-
+    injected and ``response_format`` is omitted from that request."""
     if dispatch.qos == QoSTier.BATCH:
         raise ValueError("BATCH must not reach complete_reasoner")
 
     # Render named system/user templates here so both seams (activity + facade)
     # see the same strings; already-rendered reasoners pass through unchanged.
-    reasoner = rendered_reasoner_for(reasoner, value)
-    user_text = rendered_user_for(reasoner, value)
+    render_value = (
+        {k: v for k, v in value.items() if k != ROUND_NOTE_KEY}
+        if isinstance(value, Mapping)
+        else value
+    )
+    reasoner = rendered_reasoner_for(reasoner, render_value)
+    user_text = rendered_user_for(reasoner, render_value)
     provider, model = _split_model(reasoner.model, default_provider)
     schema = reasoner.reply_schema
     # mem-mcp's declarative json_object mode claims the kwarg only when no
     # reply schema does (the schema path wins; the call never carries both).
     json_object = schema is None and reasoner.response_format == "json_object"
+    has_tools = bool(tools)
+    safe_tools, tool_name_reverse = (
+        provider_safe_tool_defs(tools) if tools else (tools, {})
+    )
+
+    def _restore_tool_calls(parsed: Any) -> Any:
+        if tool_name_reverse and isinstance(parsed, dict):
+            calls = parsed.get("tool_calls")
+            if isinstance(calls, list):
+                for tool_call in calls:
+                    if isinstance(tool_call, dict):
+                        tool = tool_call.get("tool")
+                        tool_call["tool"] = tool_name_reverse.get(tool, tool)
+        return parsed
 
     async def call(*, native: bool, retry_note: Optional[str] = None) -> Any:
-        if native and schema is not None:
+        # Native tool rounds cannot carry response_format; keep schema guidance
+        # in the prompt so FINISH replies can still parse on non-tool rounds.
+        native_response_format = native and not has_tools
+        if native_response_format and schema is not None:
             messages = _messages(
                 reasoner.system, value,
                 schema_hint=None, user_text=user_text, transcript=transcript,
             )
             kwargs: dict[str, Any] = {"response_format": _response_format(schema)}
-        elif native and json_object:
+        elif native_response_format and json_object:
             # No schema to inject; the prompt self-instructs JSON. The
             # non-native reissue below simply drops the kwarg. Replies stay
             # raw text either way — json_object constrains the provider, not
@@ -308,6 +449,10 @@ async def complete_reasoner(
                 schema_hint=schema, user_text=user_text, transcript=transcript,
             )
             kwargs = {}
+        if has_tools:
+            kwargs["tools"] = safe_tools
+            if parallel_tool_calls is not None:
+                kwargs["parallel_tool_calls"] = parallel_tool_calls
         if retry_note is not None:
             messages.append({"role": "user", "content": retry_note})
         effort = reasoner.reasoning_effort
@@ -330,7 +475,7 @@ async def complete_reasoner(
 
     async def dispatch_once(retry_note: Optional[str] = None) -> Any:
         nonlocal fallback_reason, native_ok
-        if (schema is not None or json_object) and native_ok \
+        if not has_tools and (schema is not None or json_object) and native_ok \
                 and provider not in _PROMPT_FALLBACK_PROVIDERS:
             try:
                 return await call(native=True, retry_note=retry_note)
@@ -356,7 +501,10 @@ async def complete_reasoner(
     completion = await dispatch_once()
     # Usage accumulates over every attempt — re-asks cost tokens too.
     pt, ct, tt = _usage_of(completion)
-    reply = _parse_reply(completion, expect_json=schema is not None)
+    reply, native_tool_calls = _parse_completion_reply(
+        completion, expect_json=schema is not None
+    )
+    reply = _restore_tool_calls(reply)
     while (
         schema is not None
         and not isinstance(reply, dict)
@@ -375,7 +523,8 @@ async def complete_reasoner(
         )
         apt, act, att = _usage_of(completion)
         pt, ct, tt = _add_tokens(pt, apt), _add_tokens(ct, act), _add_tokens(tt, att)
-        reply = _parse_reply(completion, expect_json=True)
+        reply, native_tool_calls = _parse_completion_reply(completion, expect_json=True)
+        reply = _restore_tool_calls(reply)
     ended = time.time()
     meta = LlmCallMeta(
         served_model=_served_model_of(completion, model),
@@ -384,6 +533,7 @@ async def complete_reasoner(
         started_at=started, ended_at=ended,
         response_format_fallback=fallback_reason,
         output_retries_used=retries_used,
+        native_tool_calls=native_tool_calls,
     )
     return LlmResult(reply=reply, meta=meta)
 
@@ -424,6 +574,9 @@ def make_llm_caller(
         principal: Optional[dict[str, Any]] = None,
         transcript: Optional[list[dict[str, Any]]] = None,
         dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+        *,
+        tools: Optional[list[dict[str, Any]]] = None,
+        parallel_tool_calls: Optional[bool] = None,
     ) -> Any:
         return await complete_reasoner(
             reasoner, value,
@@ -431,6 +584,8 @@ def make_llm_caller(
             default_provider=default_provider,
             transcript=transcript,
             dispatch=dispatch,
+            tools=tools,
+            parallel_tool_calls=parallel_tool_calls,
         )
 
     return caller
@@ -448,11 +603,17 @@ def make_local_reasoner(
     """
 
     async def caller(reasoner_name: str, payload: Any) -> Any:
+        tools = None
+        value = payload
+        if isinstance(payload, dict) and NATIVE_TOOLS_KEY in payload:
+            tools = payload[NATIVE_TOOLS_KEY]
+            value = {key: val for key, val in payload.items() if key != NATIVE_TOOLS_KEY}
         return await complete_reasoner(
             get_reasoner(reasoner_name),
-            payload,
+            value,
             acompletion=_resolve_acompletion(acompletion),
             default_provider=default_provider,
+            tools=tools,
         )
 
     return caller
@@ -533,6 +694,9 @@ def make_resilient_llm_caller(
         principal: Optional[dict[str, Any]] = None,
         transcript: Optional[list[dict[str, Any]]] = None,
         dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+        *,
+        tools: Optional[list[dict[str, Any]]] = None,
+        parallel_tool_calls: Optional[bool] = None,
     ) -> Any:
         resolved = _resolve_acompletion(acompletion)
         attempts: list[AttemptRecord] = []
@@ -560,6 +724,8 @@ def make_resilient_llm_caller(
                         acompletion=resolved, default_provider=default_provider,
                         transcript=transcript,
                         dispatch=dispatch,
+                        tools=tools,
+                        parallel_tool_calls=parallel_tool_calls,
                     )
                     reply = result.reply
                 except Exception as exc:
@@ -622,4 +788,6 @@ __all__ = [
     "make_llm_caller",
     "make_local_reasoner",
     "make_resilient_llm_caller",
+    "provider_safe_tool_defs",
+    "provider_safe_tool_name",
 ]

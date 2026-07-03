@@ -33,6 +33,7 @@ class LlmCallMeta:
     cost: float | None = None
     response_format_fallback: str | None = None
     output_retries_used: int = 0
+    native_tool_calls: int = 0
 
     def to_attrs(self) -> dict[str, Any]:
         out: dict[str, Any] = {"llm.model": self.served_model, "llm.provider": self.provider}
@@ -52,6 +53,8 @@ class LlmCallMeta:
             out["llm.response_format_fallback"] = self.response_format_fallback
         if self.output_retries_used:
             out["llm.output_retries"] = self.output_retries_used
+        if self.native_tool_calls:
+            out["llm.tool_calls"] = self.native_tool_calls
         if self.attempts:
             out["llm.attempts"] = [
                 {"model": a.model, "provider": a.provider, "outcome": a.outcome,

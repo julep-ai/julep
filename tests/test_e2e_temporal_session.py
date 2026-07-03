@@ -41,12 +41,11 @@ if HAVE_TEMPORAL:
         seq,
     )
     from composable_agents.contracts import McpAnnotations
-    from composable_agents.derived import emit as emit_leaf
     from composable_agents.derived import recv as recv_leaf
     from composable_agents.errors import ValidationError
     from composable_agents.errors import ComposableAgentsError, SessionTurnError
     from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
-    from composable_agents.session import SessionEvent, loop, scan
+    from composable_agents.session import SessionEvent, scan
     from composable_agents.execution.activities import WorkerContext, configure
     from composable_agents.execution.harness import (
         ExecutionPolicy,
@@ -55,7 +54,6 @@ if HAVE_TEMPORAL:
         SessionWorkflow,
         SessionInput,
         TemporalSessionHandle,
-        run_flow,
     )
     from composable_agents.execution.session_store import InMemorySessionStore
     from composable_agents.execution.worker import ACTIVITIES, WORKFLOWS
@@ -354,7 +352,7 @@ async def _carrier_survives_continue_as_new(env):
     async with worker:
         sid = f"session-can-{uuid.uuid4()}"
         # history_threshold=1 forces continue-as-new after each completed turn.
-        handle = await env.client.start_workflow(
+        await env.client.start_workflow(
             SessionWorkflow.run,
             SessionInput(
                 session_id=sid,
@@ -387,7 +385,7 @@ async def _carrier_survives_continue_as_new(env):
             chain = env.client.get_workflow_handle(sid)
             await chain.execute_update("send", {"channel": "in", "value": word})
 
-            async def _committed():
+            async def _committed(index=index):
                 return _committed_count() >= index
 
             await _wait_for(_committed, attempts=400)
@@ -807,7 +805,7 @@ async def _facade_carried_event_log_is_deterministic(env):
             chain = env.client.get_workflow_handle(sid)
             await chain.execute_update("send", {"channel": "in", "value": word})
 
-            async def _committed():
+            async def _committed(index=index):
                 return _committed_count() >= index
 
             await _wait_for(_committed, attempts=400)

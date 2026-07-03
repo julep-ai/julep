@@ -189,13 +189,18 @@ def test_local_session_turn_error_surfaces_error_event_no_unretrieved() -> None:
 
         error = await _next_event(agen)
         assert error.is_error
-        assert error.fatal is True
+        assert error.fatal is False
         assert "boom" in (error.reason or "")
 
-        closed = await _next_event(agen)
-        assert closed.is_closed
+        done = await _next_event(agen)
+        assert done == SessionEvent.turn_done()
 
-        await handle.close()
+        snap = await handle.state()
+        assert snap["closed"] is False
+
+        await handle.close("done")
+        closed = await _next_event(agen)
+        assert closed == SessionEvent.closed("done")
 
     run(main())
 

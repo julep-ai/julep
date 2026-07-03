@@ -261,6 +261,8 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
     if op == Op.APP:
         if n.controller is None:
             err("APP_NO_CONTROLLER", "app requires a controller ref")
+        if n.round_note is not None and not is_registered(n.round_note):
+            err("UNKNOWN_PURE", f"round note not registered: {n.round_note!r}")
         # Transcript scopes (agent-transcripts design): no implicit budget, no
         # implicit summarizer model — declaring either without its requirement
         # is a blocking diagnostic, never a silent fallback.

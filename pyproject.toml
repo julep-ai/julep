@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "composable-agents"
-version = "1.0.0rc4"
+version = "1.0.0rc5"
 description = "A typed, durable framework for composable serverless agents on Temporal."
 readme = "README.md"
 requires-python = ">=3.12"

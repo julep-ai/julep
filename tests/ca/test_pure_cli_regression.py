@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -71,11 +73,6 @@ def test_run_large_input_not_limited_by_argv(pure_module: Path) -> None:
     outcome = run_agent_local(cfg, "triage", big, run_id="t-big")
     assert outcome.error is None, f"run failed: {outcome.error}"
     assert isinstance(outcome.value, dict) and "seen" in outcome.value
-
-
-import subprocess
-import sys
-
 
 def test_cli_lint_and_run_end_to_end(pure_module: Path) -> None:
     base = [sys.executable, "-m", "composable_agents.ca.cli"]

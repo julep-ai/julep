@@ -230,7 +230,7 @@ def test_session_sugar_rejects_nested_capture_of_carried_local() -> None:
             while True:
                 msg = await s.recv()
 
-                def reply() -> list[Any]:
+                def reply(seen=seen) -> list[Any]:
                     return seen
 
                 await s.emit(reply())

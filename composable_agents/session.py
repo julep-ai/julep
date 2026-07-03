@@ -960,12 +960,14 @@ class LocalSessionHandle:
         env: _LiveLocalEnv,
         *,
         max_turns: int,
+        max_consecutive_turn_errors: int = 3,
         reason: Optional[str] = None,
     ) -> None:
         self._session = session
         self._env = env
         self._events: asyncio.Queue[SessionEvent] = env._event_queue
         self._max_turns = max_turns
+        self._max_consecutive_turn_errors = max_consecutive_turn_errors
         self._carrier = session.init
         self._closed = False
         self._close_reason = reason
@@ -990,6 +992,7 @@ class LocalSessionHandle:
         mode: EnforcementMode | str = EnforcementMode.STRICT,
         principal: Optional[dict[str, Any]] = None,
         max_turns: int = 100000,
+        max_consecutive_turn_errors: int = 3,
         channel_capacity: Optional[int] = None,
         env: Optional[_LiveLocalEnv] = None,
         manifest: Optional[Any] = None,
@@ -1009,7 +1012,12 @@ class LocalSessionHandle:
                 event_queue=asyncio.Queue(),
                 channel_capacity=channel_capacity,
             )
-        return cls(session, env, max_turns=max_turns)
+        return cls(
+            session,
+            env,
+            max_turns=max_turns,
+            max_consecutive_turn_errors=max_consecutive_turn_errors,
+        )
 
     async def _drive(self) -> None:
         reason: Optional[str] = None
@@ -1017,6 +1025,7 @@ class LocalSessionHandle:
         split_result = bool(
             self._session.body.args and self._session.body.args.get("split") is True
         )
+        consecutive_turn_errors = 0
         try:
             if turn_body is None:
                 raise ComposableAgentsError("session LOOP missing body")
@@ -1028,6 +1037,17 @@ class LocalSessionHandle:
                 except SessionTurnError as exc:
                     if exc.fatal:
                         raise
+                    consecutive_turn_errors += 1
+                    if consecutive_turn_errors >= self._max_consecutive_turn_errors:
+                        raise
+                    await self._events.put(SessionEvent.error(str(exc), fatal=False))
+                    if self._env.take_turn_started():
+                        await self._events.put(SessionEvent.turn_done())
+                    continue
+                except Exception as exc:
+                    consecutive_turn_errors += 1
+                    if consecutive_turn_errors >= self._max_consecutive_turn_errors:
+                        raise
                     await self._events.put(SessionEvent.error(str(exc), fatal=False))
                     if self._env.take_turn_started():
                         await self._events.put(SessionEvent.turn_done())
@@ -1037,6 +1057,7 @@ class LocalSessionHandle:
                     await self._env.emit(self._session.out_channel, output, result.event_id or "")
                 else:
                     self._carrier = result.value
+                consecutive_turn_errors = 0
                 if self._env.take_turn_started():
                     await self._events.put(SessionEvent.turn_done())
             else:

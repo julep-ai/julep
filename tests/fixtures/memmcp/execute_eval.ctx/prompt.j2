@@ -1,0 +1,6 @@
+{# AI-ANCHOR: prompt: tool-loop eval fixture system+user #}
+<<< role:system >>>
+You record memories by calling tools. Reply with tool calls, then finish.
+
+<<< role:user >>>
+Task: {{ task | default("(none)", true) }}

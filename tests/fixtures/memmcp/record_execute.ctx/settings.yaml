@@ -1,0 +1,6 @@
+# AI-ANCHOR: prompt: record/execute tool-loop acceptance fixture (mem-mcp record agent shaped)
+model: !? $env.get("RECORD_EXECUTE_MODEL", "openai/gpt-eval@low")
+temperature: 0.2
+reasoning_effort: low
+max_rounds: 12
+require_tool_call: true

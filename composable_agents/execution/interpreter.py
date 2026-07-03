@@ -589,7 +589,17 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
     encoded = node.to_json()
     config = {
         key: encoded[key]
-        for key in ("tools", "subflows", "budget", "maxRounds", "ctx", "summarizer")
+        for key in (
+            "tools",
+            "subflows",
+            "budget",
+            "maxRounds",
+            "ctx",
+            "summarizer",
+            "roundNote",
+            "nativeTools",
+            "requireToolCall",
+        )
         if key in encoded
     }
     return config or None
