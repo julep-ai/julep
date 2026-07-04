@@ -1,0 +1,1401 @@
+"""Small facade helpers for native Python-callable tools and agents."""
+
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import inspect
+import types
+import uuid
+import warnings
+from collections.abc import Mapping as AbcMapping
+from collections.abc import Sequence as AbcSequence
+from dataclasses import dataclass
+from typing import (
+    Any,
+    Callable,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    overload,
+)
+
+from .agent_loop import AgentConfig, NATIVE_TOOLS_KEY, drive_agent_loop
+from .capabilities import Budget, CapabilityManifest, ToolGrant
+from .contracts import ToolContract
+from .deploy import Deployment, deploy
+from .dotctx import Reasoner
+from .dsl import app, call, native
+from .errors import ValidationError
+from .execution.cma import (
+    CMAAgentEnv,
+    CMAClient,
+    _reject_prompt_cache_on_cma,
+    manifest_to_custom_tools,
+)
+from .execution.interpreter import InMemoryEnv, interpret
+from .execution.llm_result import LlmResult
+from .freeze import McpSnapshot, NativeToolSpec
+from .session import LocalSessionHandle, Session, SessionHandle
+from .typed import Flow, FlowLike, SplitCapability
+from .flow_registry import register_flow
+from .ir import HUMAN_GATE_TOOL, JSONSchema, Node, canonical_json, toolref_key
+from .kinds import Effect, EnforcementMode, Idempotency
+from .projection import InMemoryProjection, ProjectionEmitter, ProjectionEvent
+from .registry import DEFAULT_REGISTRY
+from .result import Result
+from .validate import Diagnostic, blocking
+
+_OBJECT_SCHEMA: JSONSchema = {"type": "object"}
+_ALLOWED_EFFECTS = ("read", "write", "external", "dangerous")
+_NONE_TYPE = type(None)
+In = TypeVar("In")
+Out = TypeVar("Out")
+
+AGENT_REPLY_SCHEMA: JSONSchema = {
+    "oneOf": [
+        {
+            "type": "object",
+            "required": ["tool"],
+            "properties": {
+                "tool": {"type": "string"},
+                "input": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["sub"],
+            "properties": {
+                "sub": {"type": "string"},
+                "input": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["output"],
+            "properties": {
+                "output": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["done"],
+            "properties": {
+                "done": {"const": True},
+                "output": {},
+            },
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "required": ["escalate"],
+            "properties": {
+                "escalate": {"type": "string"},
+            },
+            "additionalProperties": False,
+        },
+    ]
+}
+
+_DEFAULT_LOCAL_REASONER_WARNING = (
+    "Agent llm=None: no model configured; returning input unprocessed. "
+    "Pass llm= for real behavior."
+)
+_default_local_reasoner_warned = False
+_KEEP: Any = object()
+
+
+def default_local_reasoner(_reasoner_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Keyless demo reasoner: terminal, explicit, and never silently intelligent."""
+    global _default_local_reasoner_warned
+    if not _default_local_reasoner_warned:
+        warnings.warn(_DEFAULT_LOCAL_REASONER_WARNING, RuntimeWarning, stacklevel=2)
+        _default_local_reasoner_warned = True
+    return {
+        "output": {
+            "note": (
+                "no model configured (llm=None); returning input unprocessed "
+                "- pass llm= for real behavior"
+            ),
+            "input": payload.get("input"),
+        }
+    }
+
+
+def _copy_schema(schema: JSONSchema) -> JSONSchema:
+    return dict(schema)
+
+
+def python_type_to_schema(tp: object) -> JSONSchema:
+    """Map a small, total subset of Python types to JSON Schema."""
+    if tp is Any or tp is inspect.Signature.empty:
+        return _copy_schema(_OBJECT_SCHEMA)
+    if tp is str:
+        return {"type": "string"}
+    if tp is bool:
+        return {"type": "boolean"}
+    if tp is int:
+        return {"type": "integer"}
+    if tp is float:
+        return {"type": "number"}
+    if tp is dict or tp is AbcMapping:
+        return _copy_schema(_OBJECT_SCHEMA)
+
+    origin = get_origin(tp)
+    args = get_args(tp)
+
+    if origin in {Union, types.UnionType}:
+        non_none = tuple(arg for arg in args if arg is not _NONE_TYPE)
+        if len(non_none) == 1:
+            return python_type_to_schema(non_none[0])
+        return _copy_schema(_OBJECT_SCHEMA)
+
+    if origin in {dict, AbcMapping}:
+        return _copy_schema(_OBJECT_SCHEMA)
+
+    if origin in {list, AbcSequence}:
+        if not args:
+            return {"type": "array"}
+        return {"type": "array", "items": python_type_to_schema(args[0])}
+
+    return _copy_schema(_OBJECT_SCHEMA)
+
+
+def _effect_from_string(effect: str) -> Effect:
+    try:
+        return Effect(effect)
+    except ValueError as exc:
+        allowed = ", ".join(_ALLOWED_EFFECTS)
+        raise ValueError(f"invalid effect {effect!r}; allowed values: {allowed}") from exc
+
+
+def _schema_from_hints(fn: Callable[..., Any]) -> tuple[JSONSchema, JSONSchema, tuple[str, ...]]:
+    try:
+        hints = get_type_hints(fn)
+    except Exception:
+        hints = {}
+
+    signature = inspect.signature(fn)
+    positional = [
+        parameter
+        for parameter in signature.parameters.values()
+        if parameter.kind
+        in {
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        }
+    ]
+    output_type = hints.get("return", signature.return_annotation)
+    output_schema = python_type_to_schema(output_type)
+
+    if len(positional) <= 1:
+        if positional:
+            parameter = positional[0]
+            input_type = hints.get(parameter.name, parameter.annotation)
+        else:
+            input_type = inspect.Signature.empty
+        input_schema = python_type_to_schema(input_type)
+    else:
+        properties = {
+            parameter.name: python_type_to_schema(hints.get(parameter.name, parameter.annotation))
+            for parameter in positional
+        }
+        required = [
+            parameter.name
+            for parameter in positional
+            if parameter.default is inspect.Parameter.empty
+        ]
+        input_schema = {
+            "type": "object",
+            "properties": properties,
+            "required": required,
+            "additionalProperties": False,
+        }
+
+    param_names = tuple(parameter.name for parameter in positional)
+    return input_schema, output_schema, param_names
+
+
+@dataclass(frozen=True)
+class Tool(FlowLike[In, Out]):
+    name: str
+    fn: Callable[..., Out]
+    contract: ToolContract
+    input_schema: JSONSchema
+    output_schema: JSONSchema
+    param_names: tuple[str, ...] = ()
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        from .define import apply_if_authoring
+
+        authored = apply_if_authoring(self, args, kwargs)
+        if authored is not NotImplemented:
+            return authored
+        return self.fn(*args, **kwargs)
+
+    def to_ir(self) -> Node:
+        return call(native(self.name))
+
+    @property
+    def bound_tool(self) -> Callable[[Any], Any]:
+        """Tool wrapper for the single threaded value: positional-only params are
+        passed positionally (declared order), the rest by keyword."""
+        if len(self.param_names) <= 1:
+            return self.fn
+        fn = self.fn
+        positional_only = tuple(
+            parameter.name
+            for parameter in inspect.signature(fn).parameters.values()
+            if parameter.kind is inspect.Parameter.POSITIONAL_ONLY
+        )
+
+        def _tool(value: Any) -> Any:
+            args = [value[name] for name in positional_only if name in value]
+            kwargs = {key: item for key, item in value.items() if key not in positional_only}
+            return fn(*args, **kwargs)
+
+        return _tool
+
+    @property
+    def native_spec(self) -> NativeToolSpec:
+        return NativeToolSpec(
+            input_schema=self.input_schema,
+            contract=self.contract,
+            output_schema=self.output_schema,
+        )
+
+
+def _build_tool(
+    fn: Callable[..., Any],
+    *,
+    effect: Effect,
+    idempotent: bool,
+    name: Optional[str],
+) -> Tool[Any, Any]:
+    input_schema, output_schema, param_names = _schema_from_hints(fn)
+    return Tool(
+        name=name or fn.__name__,
+        fn=fn,
+        contract=ToolContract(
+            effect=effect,
+            idempotency=Idempotency.NATIVE if idempotent else Idempotency.NONE,
+        ),
+        input_schema=input_schema,
+        output_schema=output_schema,
+        param_names=param_names,
+    )
+
+
+def cma_tool_binding(native_tool: Tool[Any, Any]) -> tuple[JSONSchema, Callable[[Any], Any]]:
+    """Bridge one native tool to the CMA custom-tool calling convention.
+
+    CMA requires every custom tool's ``input_schema`` to be a JSON object and the
+    hosted model emits a named-argument object (e.g. ``{"city": "Tokyo"}``). The
+    framework's native model threads a single value, so a single scalar-arg tool
+    has a non-object schema and a tool expecting the bare value. This returns the
+    CMA-valid object schema plus a tool that translates the model's argument
+    object back to the framework's threaded value. Multi-arg / already-object
+    tools pass through unchanged (``bound_tool`` already unpacks the object).
+    """
+    schema = native_tool.input_schema
+    bound = native_tool.bound_tool
+
+    if not native_tool.param_names:
+        # Zero-argument tool: CMA still requires an object schema and emits an
+        # object (typically {}); the tool takes no value, so ignore the input.
+        zero_fn = native_tool.fn
+        zero_schema: JSONSchema = (
+            schema if isinstance(schema, dict) and schema.get("type") == "object" else _OBJECT_SCHEMA
+        )
+
+        def adapt_zero(_value: Any) -> Any:
+            return zero_fn()
+
+        return zero_schema, adapt_zero
+
+    if isinstance(schema, dict) and schema.get("type") == "object":
+        return schema, bound
+
+    param_name = native_tool.param_names[0]
+    wrapped: JSONSchema = {
+        "type": "object",
+        "properties": {param_name: schema},
+        "required": [param_name],
+        "additionalProperties": False,
+    }
+
+    def adapt(value: Any) -> Any:
+        if isinstance(value, AbcMapping) and param_name in value:
+            return bound(value[param_name])
+        return bound(value)
+
+    return wrapped, adapt
+
+
+@overload
+def tool(fn: Callable[[In], Out], /) -> Tool[In, Out]:
+    ...
+
+
+@overload
+def tool(fn: Callable[..., Out], /) -> Tool[Any, Out]:
+    ...
+
+
+@overload
+def tool(
+    fn: None = None,
+    /,
+    *,
+    effect: str = "write",
+    idempotent: bool = False,
+    name: Optional[str] = None,
+) -> Callable[[Callable[..., Out]], Tool[Any, Out]]:
+    ...
+
+
+def tool(
+    fn: Optional[Callable[..., Any]] = None,
+    /,
+    *,
+    effect: str = "write",
+    idempotent: bool = False,
+    name: Optional[str] = None,
+) -> Tool[Any, Any] | Callable[[Callable[..., Any]], Tool[Any, Any]]:
+    mapped_effect = _effect_from_string(effect)
+
+    def decorate(inner: Callable[..., Any]) -> Tool[Any, Any]:
+        return _build_tool(inner, effect=mapped_effect, idempotent=idempotent, name=name)
+
+    if fn is not None:
+        return decorate(fn)
+    return decorate
+
+
+def snapshot_from_tools(tools: Sequence[Tool[Any, Any]]) -> McpSnapshot:
+    return McpSnapshot(native={native_tool.name: native_tool.native_spec for native_tool in tools})
+
+
+def provider_tool_defs(tools: Sequence[Tool[Any, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": native_tool.name,
+                "description": (native_tool.fn.__doc__ or "").strip(),
+                "parameters": native_tool.input_schema,
+            },
+        }
+        for native_tool in tools
+    ]
+
+
+def _derive_agent_name(
+    *,
+    model: str,
+    tool_names: tuple[str, ...],
+    budget_cost: Optional[float],
+    max_rounds: int,
+    instructions: str,
+    native_tools: bool = False,
+    require_tool_call: bool = False,
+    prompt_cache: Optional[str] = None,
+    reasoning_effort: Optional[str] = None,
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
+) -> str:
+    name_parts: dict[str, Any] = {
+        "budget_cost": budget_cost,
+        "instructions": instructions,
+        "max_rounds": max_rounds,
+        "model": model,
+        "tools": list(tool_names),
+    }
+    if native_tools:
+        name_parts["native_tools"] = True
+    if require_tool_call:
+        name_parts["require_tool_call"] = True
+    if prompt_cache is not None:
+        name_parts["prompt_cache"] = prompt_cache
+    if reasoning_effort is not None:
+        name_parts["reasoning_effort"] = reasoning_effort
+    if temperature is not None:
+        name_parts["temperature"] = temperature
+    if max_tokens is not None:
+        name_parts["max_tokens"] = max_tokens
+    payload = canonical_json(name_parts)
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:8]
+    return f"agent-{digest}"
+
+
+def _llm_result_envelope(result: LlmResult) -> dict[str, Any]:
+    attrs = result.meta.to_attrs()
+    if not attrs:
+        return {"reply": result.reply}
+    return {"reply": result.reply, "__ca_meta__": attrs}
+
+
+class Agent(FlowLike[Any, Any]):
+    """Thin facade over the existing APP IR, local interpreter, and deployment."""
+
+    _name: str
+
+    def __init__(
+        self,
+        reasoner: str | Reasoner,
+        tools: Sequence[FlowLike[Any, Any] | SplitCapability] = (),
+        *,
+        name: Optional[str] = None,
+        llm: Optional[Callable[[str, Any], Any]] = None,
+        budget_cost: Optional[float] = None,
+        max_rounds: int = 24,
+        instructions: Optional[str] = None,
+        mode: EnforcementMode | str = EnforcementMode.STRICT,
+        native_tools: bool = False,
+        langfuse_export: Optional[
+            Callable[[Sequence[ProjectionEvent], str], None]
+        ] = None,
+        require_tool_call: bool = False,
+        prompt_cache: Optional[str] = None,
+        reasoning_effort: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+    ) -> None:
+        """Create an agent facade.
+
+        When ``name`` is omitted, the controller name is derived from the agent
+        config. An explicit ``name`` is used unchanged and must be unique per
+        distinct agent config in the current process.
+        """
+        if isinstance(reasoner, Reasoner):
+            require_tool_call = reasoner.require_tool_call
+            prompt_cache = reasoner.prompt_cache
+            reasoning_effort = reasoner.reasoning_effort
+            temperature = reasoner.temperature
+            max_tokens = reasoner.max_tokens
+            DEFAULT_REGISTRY.register_reasoner(reasoner)
+            # Drive the controller from the object's *provider config*: its model is
+            # the provider model id (not its registry name), and its system seeds
+            # the controller unless an explicit instructions= overrides it.
+            if instructions is None and reasoner.system:
+                instructions = reasoner.system
+            reasoner = reasoner.model
+
+        caps = tuple(tools)
+        tool_caps: list[Tool[Any, Any]] = []
+        flow_cap_pairs: list[tuple[str, FlowLike[Any, Any]]] = []
+        split_children: dict[str, SplitCapability] = {}
+        for cap in caps:
+            if isinstance(cap, SplitCapability):
+                flow_cap_pairs.append((cap.ref, cap.target))
+                split_children[cap.ref] = cap
+            elif isinstance(cap, Tool):
+                tool_caps.append(cap)
+            elif isinstance(cap, Agent):
+                flow_cap_pairs.append((cap._name, cap))
+            elif isinstance(cap, Flow):
+                if cap.name is None:
+                    raise ValidationError(
+                        [
+                            Diagnostic(
+                                "CAP_APP_FLOW_UNNAMED",
+                                "app",
+                                "a flow used as an agent capability must be .named(ref)",
+                            )
+                        ]
+                    )
+                flow_cap_pairs.append((cap.name, cap))
+            else:
+                raise TypeError(
+                    "agent capability must be a Tool, Flow, or Agent; "
+                    f"got {type(cap).__name__}"
+                )
+        tool_names = tuple(native_tool.name for native_tool in tool_caps)
+        sub_refs = tuple(ref for ref, _ in flow_cap_pairs)
+        system = instructions or ""
+        if name is None:
+            resolved_name = _derive_agent_name(
+                model=reasoner,
+                tool_names=tool_names,
+                budget_cost=budget_cost,
+                max_rounds=max_rounds,
+                instructions=system,
+                native_tools=native_tools,
+                require_tool_call=require_tool_call,
+                prompt_cache=prompt_cache,
+                reasoning_effort=reasoning_effort,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        else:
+            resolved_name = name
+        self._name = resolved_name
+        self._reasoner_model = reasoner
+        self._reasoner_prompt_cache = prompt_cache
+        self._reasoner_reasoning_effort = reasoning_effort
+        self._reasoner_temperature = temperature
+        self._reasoner_max_tokens = max_tokens
+        self._caps = caps
+        self._tools = tuple(tool_caps)
+        self._flow_caps: dict[str, FlowLike[Any, Any]] = {
+            ref: cap for ref, cap in flow_cap_pairs
+        }
+        self._split_children: dict[str, SplitCapability] = dict(split_children)
+        self._tool_names = tool_names
+        self._sub_refs = sub_refs
+        self._llm = llm
+        self._budget_cost = budget_cost
+        self._max_rounds = max_rounds
+        self._instructions = instructions
+        self._reasoner_fn = llm or default_local_reasoner
+        self._langfuse_export = langfuse_export
+        self._native_tools = native_tools
+        self._require_tool_call = require_tool_call
+        self._budget = Budget(cost=budget_cost) if budget_cost is not None else None
+        self._mode = EnforcementMode.coerce(mode)
+        self._cfg = AgentConfig(
+            max_rounds=max_rounds,
+            budget=self._budget,
+            mode=self._mode,
+            native_tools=native_tools,
+            require_tool_call=require_tool_call,
+        )
+        self._granted = {native_tool.name for native_tool in self._tools}
+        self._contracts = {
+            native_tool.name: {
+                "effect": native_tool.contract.effect.value,
+                "idempotency": native_tool.contract.idempotency.value,
+            }
+            for native_tool in self._tools
+        }
+
+        for ref, cap in flow_cap_pairs:
+            if isinstance(cap, Flow):
+                register_flow(ref, cap)
+
+        DEFAULT_REGISTRY.register_reasoner(
+            Reasoner(
+                name=resolved_name,
+                model=reasoner,
+                system=system,
+                reply=AGENT_REPLY_SCHEMA,
+                tools=tool_names,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                reasoning_effort=reasoning_effort,
+                prompt_cache=prompt_cache,
+                is_agent=True,
+            )
+        )
+        self._flow = app(
+            resolved_name,
+            tools=list(tool_names),
+            subflows=(list(sub_refs) or None),
+            budget=self._budget,
+            max_rounds=max_rounds,
+            native_tools=native_tools,
+            require_tool_call=require_tool_call,
+            subflow_queues=(self.subflow_queues() or None),
+        )
+        self._snapshot = snapshot_from_tools(self._tools)
+        self._capabilities = CapabilityManifest(
+            tools={
+                native_tool.name: ToolGrant(
+                    name=native_tool.name,
+                    effect=native_tool.contract.effect,
+                    idempotency=native_tool.contract.idempotency,
+                )
+                for native_tool in self._tools
+            },
+            budget=self._budget,
+            subflows=set(sub_refs),
+            _has_tools=True,
+            _has_subflows=bool(sub_refs),
+        )
+        self._deployment_cache: Optional[Deployment] = None
+        self._deployment_base_diagnostics: list[Diagnostic] = []
+        self._plain_flow_deployment_cache: dict[str, Deployment] = {}
+        self._eager_capability_checks()
+
+    def to_ir(self) -> Node:
+        return self._flow
+
+    @property
+    def name(self) -> str:
+        """The agent's controller name (explicit ``name=`` or derived)."""
+        return self._name
+
+    def _durable_ref(self) -> Optional[str]:
+        return self._name
+
+    def _params(self) -> dict[str, Any]:
+        return {
+            "reasoner": self._reasoner_model,
+            "tools": list(self._caps),
+            "llm": self._llm,
+            "budget_cost": self._budget_cost,
+            "max_rounds": self._max_rounds,
+            "instructions": self._instructions,
+            "mode": self._mode,
+            "native_tools": self._native_tools,
+            "require_tool_call": self._require_tool_call,
+            "prompt_cache": self._reasoner_prompt_cache,
+            "reasoning_effort": self._reasoner_reasoning_effort,
+            "temperature": self._reasoner_temperature,
+            "max_tokens": self._reasoner_max_tokens,
+            "langfuse_export": self._langfuse_export,
+        }
+
+    def _reconstruct(self, **overrides: Any) -> "Agent":
+        params = self._params()
+        params.update(overrides)
+        reasoner = params.pop("reasoner")
+        return Agent(reasoner, name=None, **params)
+
+    @staticmethod
+    def _cap_name(cap: FlowLike[Any, Any] | SplitCapability) -> Optional[str]:
+        if isinstance(cap, SplitCapability):
+            return cap.ref
+        if isinstance(cap, Tool):
+            return cap.name
+        if isinstance(cap, Agent):
+            return cap._name
+        if isinstance(cap, Flow):
+            return cap.name
+        return None
+
+    def with_tools(
+        self,
+        *,
+        add: Sequence[FlowLike[Any, Any] | SplitCapability] = (),
+        remove: Sequence[FlowLike[Any, Any] | SplitCapability | str] = (),
+    ) -> "Agent":
+        removed = {
+            cap if isinstance(cap, str) else self._cap_name(cap)
+            for cap in remove
+        }
+        kept = [cap for cap in self._caps if self._cap_name(cap) not in removed]
+        return self._reconstruct(tools=[*kept, *add])
+
+    def without(self, *tools: FlowLike[Any, Any] | SplitCapability | str) -> "Agent":
+        names = {
+            cap if isinstance(cap, str) else self._cap_name(cap)
+            for cap in tools
+        }
+        return self._reconstruct(
+            tools=[cap for cap in self._caps if self._cap_name(cap) not in names]
+        )
+
+    def replace(
+        self,
+        *,
+        reasoner: Optional[str | Reasoner] = None,
+        budget_cost: Any = _KEEP,
+        max_rounds: Optional[int] = None,
+        instructions: Any = _KEEP,
+        mode: Any = _KEEP,
+        llm: Any = _KEEP,
+    ) -> "Agent":
+        overrides: dict[str, Any] = {}
+        if reasoner is not None:
+            require_tool_call = False
+            if isinstance(reasoner, Reasoner):
+                require_tool_call = reasoner.require_tool_call
+                overrides["prompt_cache"] = reasoner.prompt_cache
+                overrides["reasoning_effort"] = reasoner.reasoning_effort
+                overrides["temperature"] = reasoner.temperature
+                overrides["max_tokens"] = reasoner.max_tokens
+                DEFAULT_REGISTRY.register_reasoner(reasoner)
+                # Mirror __init__: drive the controller from the object's provider
+                # model (not its registry name) and seed instructions from its
+                # system unless instructions are being explicitly overridden here.
+                if instructions is _KEEP and reasoner.system:
+                    instructions = reasoner.system
+                reasoner = reasoner.model
+            overrides["reasoner"] = reasoner
+            overrides["require_tool_call"] = require_tool_call
+        if max_rounds is not None:
+            overrides["max_rounds"] = max_rounds
+        if budget_cost is not _KEEP:
+            overrides["budget_cost"] = budget_cost
+        if instructions is not _KEEP:
+            overrides["instructions"] = instructions
+        if mode is not _KEEP:
+            overrides["mode"] = mode
+        if llm is not _KEEP:
+            overrides["llm"] = llm
+        return self._reconstruct(**overrides)
+
+    def _plain_flow_cap_deployments(self, *, strict: bool) -> dict[str, Deployment]:
+        deployments: dict[str, Deployment] = {}
+        strict_bad: list[Diagnostic] = []
+        for ref, cap in self._flow_caps.items():
+            if isinstance(cap, Agent):
+                continue
+            cached = self._plain_flow_deployment_cache.get(ref)
+            if cached is None:
+                cached = deploy(
+                    cap.to_ir(),
+                    self._snapshot,
+                    capabilities=self._capabilities,
+                    strict=strict,
+                    mode=self._mode,
+                )
+                self._plain_flow_deployment_cache[ref] = cached
+            deployments[ref] = cached
+            if strict and self._mode is EnforcementMode.STRICT:
+                strict_bad.extend(blocking(cached.diagnostics))
+        if strict_bad:
+            raise ValidationError(strict_bad)
+        return deployments
+
+    def _deploy(self, *, strict: bool = True) -> Deployment:
+        if self._deployment_cache is None:
+            self._deployment_cache = deploy(
+                self._flow,
+                self._snapshot,
+                capabilities=self._capabilities,
+                strict=strict,
+                mode=self._mode,
+            )
+            self._deployment_base_diagnostics = list(self._deployment_cache.diagnostics)
+        elif strict and self._mode is EnforcementMode.STRICT:
+            bad = blocking(self._deployment_base_diagnostics)
+            if bad:
+                raise ValidationError(bad)
+        cap_deployments = self._plain_flow_cap_deployments(strict=strict)
+        cap_diagnostics = [
+            diagnostic
+            for cap_deployment in cap_deployments.values()
+            for diagnostic in cap_deployment.diagnostics
+        ]
+        self._deployment_cache.diagnostics = [
+            *self._deployment_base_diagnostics,
+            *cap_diagnostics,
+        ]
+        return self._deployment_cache
+
+    def _deploy_session(self, session: Session[Any, Any]) -> Deployment:
+        # Fail loud rather than diverge silently: the facade does not yet
+        # auto-wire sub-capability child deployments into the session worker's
+        # registry, so a SUB decision would resolve via WorkerContext.subflows
+        # (possibly stale/missing). Tool-only agents open sessions normally.
+        if self._flow_caps:
+            raise NotImplementedError(
+                "Agent.open(backend='temporal') does not yet auto-wire "
+                "sub-capability deployments into the session worker (a documented "
+                "seam). This agent has sub-capabilities "
+                f"{sorted(self._flow_caps)}; their compiled child deployments are "
+                "available via agent.sub_deployments() — register them on your "
+                "worker (WorkerContext.subflows), then open the parent session. "
+                "Tool-only agents open sessions normally."
+            )
+        return deploy(
+            session.body,
+            self._snapshot,
+            capabilities=self._capabilities,
+            target="session",
+            mode=self._mode,
+        )
+
+    def _facade_result(self, value: dict[str, Any]) -> "Result[Any]":
+        trace = value.get("trace", [])
+        trace_entries = trace if isinstance(trace, list) else []
+        has_successful_tool_call = any(
+            isinstance(entry, dict)
+            and entry.get("decision") == "call"
+            and not entry.get("error")
+            for entry in trace_entries
+        )
+        if (
+            self._cfg.require_tool_call
+            and value.get("status") == "max_rounds"
+            and has_successful_tool_call
+        ):
+            return Result(
+                {
+                    **value,
+                    "status": "done",
+                    "output": None,
+                    "reason": "max_rounds",
+                }
+            )
+        return Result(value)
+
+    def _eager_capability_checks(self) -> None:
+        tool_names = list(self._tool_names)
+        sub_refs = list(self._sub_refs)
+        dup_tools = {name for name in tool_names if tool_names.count(name) > 1}
+        dup_subs = {ref for ref in sub_refs if sub_refs.count(ref) > 1}
+        overlap = set(tool_names) & set(sub_refs)
+        collisions = sorted(dup_tools | dup_subs | overlap)
+        if collisions:
+            raise ValidationError(
+                [
+                    Diagnostic(
+                        "CAP_APP_TOOL_COLLISION",
+                        self._flow.id,
+                        f"capability name {name!r} collides: tool and subflow names "
+                        "must be unique within an agent",
+                    )
+                    for name in collisions
+                ]
+            )
+        if self._mode is EnforcementMode.STRICT:
+            dangerous = [
+                native_tool.name
+                for native_tool in self._tools
+                if native_tool.contract.effect == Effect.DANGEROUS
+            ]
+            if dangerous:
+                raise ValidationError(
+                    [
+                        Diagnostic(
+                            "CAP_APP_APPROVAL_TOOL",
+                            self._flow.id,
+                            f"app inline tool {name!r} requires approval and cannot "
+                            "be called by an agent",
+                        )
+                        for name in dangerous
+                    ]
+                )
+        granted = set(self._tool_names)
+        for ref, cap in self._flow_caps.items():
+            if isinstance(cap, Agent):
+                continue
+            for tref in cap.to_ir().tool_refs():
+                key = toolref_key(tref)
+                if key == HUMAN_GATE_TOOL:
+                    continue
+                if key not in granted:
+                    raise ValidationError(
+                        [
+                            Diagnostic(
+                                "CAP_APP_FLOW_UNGRANTED_TOOL",
+                                self._flow.id,
+                                f"plain Flow capability {ref!r} calls tool {key!r} which "
+                                "the agent does not grant; a plain Flow capability may "
+                                "only call the agent's own granted tools - for a "
+                                "capability with its own tools, pass an Agent",
+                            )
+                        ]
+                    )
+
+    async def arun(
+        self, input: Any, *, principal: Optional[dict[str, Any]] = None
+    ) -> "Result[Any]":
+        deployment = self._deploy()
+        plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
+        projection = InMemoryProjection()
+        emitter = ProjectionEmitter(projection)
+        tool_fns = {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
+        native_tool_defs = provider_tool_defs(self._tools) if self._cfg.native_tools else None
+        max_call_limits = (
+            deployment.capabilities.max_call_limits()
+            if deployment.capabilities is not None
+            else {}
+        )
+        contracts: dict[str, dict[str, Any]] = {
+            name: dict(contract) for name, contract in self._contracts.items()
+        }
+        for tool_name, limit in max_call_limits.items():
+            contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+        async def invoke_controller(payload: dict[str, Any]) -> Any:
+            # Pass the reasoner *name* (not the model string): it is the registry key
+            # a real llm caller resolves to recover system + reply_schema, and it
+            # matches the long-documented ``_reasoner_name`` parameter. Scripted
+            # callers ignore it, so this is behaviour-preserving for them.
+            controller_payload = (
+                {**payload, NATIVE_TOOLS_KEY: native_tool_defs}
+                if native_tool_defs is not None
+                else payload
+            )
+            reply = self._reasoner_fn(self._name, controller_payload)
+            if inspect.isawaitable(reply):
+                reply = await reply
+            # A provider llm seam (make_local_reasoner) returns an LlmResult so the
+            # engine path can capture usage; the facade controller loop consumes a
+            # bare reply (interpret_reasoner_reply). The flow facade path unwraps in
+            # interpreter._unwrap_ca_meta; this is its app-loop counterpart.
+            if isinstance(reply, LlmResult):
+                return _llm_result_envelope(reply)
+            return reply
+
+        async def call_tool(
+            name: str,
+            value: Any,
+            *,
+            call_index: Optional[int] = None,
+        ) -> Any:
+            del call_index
+            if name not in tool_fns:
+                return {
+                    "error": f"tool {name!r} unavailable (dev mode: not a registered tool of this agent)"
+                }
+            result = tool_fns[name](value)
+            if inspect.isawaitable(result):
+                return await result
+            return result
+
+        run_subflow = None
+        granted_subflows = None
+        if self._flow_caps:
+            granted_subflows = set(self._flow_caps)
+
+            async def run_subflow(ref: str, value: Any) -> Any:
+                cap = self._flow_caps.get(ref)
+                if cap is None:
+                    return {"error": f"subflow {ref!r} unavailable"}
+                if isinstance(cap, Agent):
+                    return await cap.arun(value)
+                sub_deployment = plain_flow_deployments[ref]
+                sub_env = InMemoryEnv(
+                    sub_deployment.manifest,
+                    emitter,
+                    tools=tool_fns,
+                    mode=self._mode,
+                )
+                sub_result = await interpret(sub_deployment.flow, value, sub_env)
+                return sub_result.value
+
+        env = InMemoryEnv(
+            deployment.manifest,
+            emitter,
+            tools=tool_fns,
+            agents={
+                self._name: lambda value: drive_agent_loop(
+                    input=value,
+                    cfg=self._cfg,
+                    invoke_controller=invoke_controller,
+                    call_tool=call_tool,
+                    run_subflow=run_subflow,
+                    granted=self._granted,
+                    granted_subflows=granted_subflows,
+                    contracts=contracts,
+                    get_pure=env.get_pure,
+                )
+            },
+            max_calls=max_call_limits,
+            mode=self._mode,
+            principal=principal,
+        )
+        result = await interpret(deployment.flow, input, env)
+        if self._langfuse_export is not None:
+            self._langfuse_export(projection.events(), self._name)
+        return self._facade_result(cast("dict[str, Any]", result.value))
+
+    async def arun_on_cma(
+        self,
+        input: Any,
+        *,
+        client: CMAClient,
+        environment: Any = None,
+    ) -> "Result[Any]":
+        deployment = self._deploy()
+        emitter = ProjectionEmitter(InMemoryProjection())
+        tool_fns = {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
+        max_call_limits = (
+            deployment.capabilities.max_call_limits()
+            if deployment.capabilities is not None
+            else {}
+        )
+        contracts: dict[str, dict[str, Any]] = {
+            name: dict(contract) for name, contract in self._contracts.items()
+        }
+        for tool_name, limit in max_call_limits.items():
+            contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+        # CMA needs object input schemas + named-argument objects; bind each tool
+        # to that calling convention (and adapt its tool to translate back).
+        cma_schemas: dict[str, JSONSchema] = {}
+        cma_tools: dict[str, Callable[[Any], Any]] = {}
+        for native_tool in self._tools:
+            schema, tool = cma_tool_binding(native_tool)
+            cma_schemas[native_tool.name] = schema
+            cma_tools[native_tool.name] = tool
+
+        custom_tools = manifest_to_custom_tools(
+            self._tool_names,
+            input_schemas=cma_schemas,
+            descriptions={native_tool.name: native_tool.fn.__doc__ or "" for native_tool in self._tools},
+        )
+        inner = InMemoryEnv(
+            deployment.manifest,
+            emitter,
+            tools=tool_fns,
+            mode=self._mode,
+        )
+        cma_env = CMAAgentEnv(
+            inner,
+            client=client,
+            environment=environment,
+            tools=cma_tools,
+            cfg=self._cfg,
+            granted=self._granted,
+            contracts=contracts,
+            custom_tools=custom_tools,
+        )
+        result = await interpret(deployment.flow, input, cma_env)
+        return self._facade_result(cast("dict[str, Any]", result.value))
+
+    def run(
+        self, input: Any, *, principal: Optional[dict[str, Any]] = None
+    ) -> "Result[Any]":
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.arun(input, principal=principal))
+        raise RuntimeError("Agent.run() cannot be called inside a running event loop; use await Agent.arun(...)")
+
+    def run_on_cma(
+        self,
+        input: Any,
+        *,
+        client: CMAClient,
+        environment: Any = None,
+    ) -> "Result[Any]":
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.arun_on_cma(input, client=client, environment=environment))
+        raise RuntimeError(
+            "Agent.run_on_cma() cannot be called inside a running event loop; "
+            "use await Agent.arun_on_cma(...)"
+        )
+
+    async def open(
+        self,
+        *,
+        session: Session[Any, Any],
+        backend: str = "local",
+        principal: Optional[dict[str, Any]] = None,
+        client: Any = None,
+        task_queue: str = "julep",
+        policy: Any = None,
+        history_threshold: Optional[int] = None,
+        channel_capacity: Optional[int] = None,
+        max_consecutive_turn_errors: int = 3,
+        session_id: Optional[str] = None,
+        environment: Any = None,
+    ) -> SessionHandle:
+        if backend == "local":
+            session_deployment = deploy(
+                session.body,
+                self._snapshot,
+                capabilities=self._capabilities,
+                target="session",
+                mode=self._mode,
+            )
+            plain_flow_deployments = self._plain_flow_cap_deployments(strict=True)
+            tool_fns = {
+                native_tool.name: native_tool.bound_tool
+                for native_tool in self._tools
+            }
+            native_tool_defs = provider_tool_defs(self._tools) if self._cfg.native_tools else None
+            max_call_limits = (
+                session_deployment.capabilities.max_call_limits()
+                if session_deployment.capabilities is not None
+                else {}
+            )
+            contracts: dict[str, dict[str, Any]] = {
+                name: dict(contract) for name, contract in self._contracts.items()
+            }
+            for tool_name, limit in max_call_limits.items():
+                contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+            async def invoke_controller(payload: dict[str, Any]) -> Any:
+                controller_payload = (
+                    {**payload, NATIVE_TOOLS_KEY: native_tool_defs}
+                    if native_tool_defs is not None
+                    else payload
+                )
+                reply = self._reasoner_fn(self._name, controller_payload)
+                if inspect.isawaitable(reply):
+                    reply = await reply
+                if isinstance(reply, LlmResult):
+                    return _llm_result_envelope(reply)
+                return reply
+
+            async def call_tool(
+                name: str,
+                value: Any,
+                *,
+                call_index: Optional[int] = None,
+            ) -> Any:
+                del call_index
+                if name not in tool_fns:
+                    return {
+                        "error": (
+                            f"tool {name!r} unavailable "
+                            "(dev mode: not a registered tool of this agent)"
+                        )
+                    }
+                result = tool_fns[name](value)
+                if inspect.isawaitable(result):
+                    return await result
+                return result
+
+            run_subflow = None
+            granted_subflows = None
+            if self._flow_caps:
+                granted_subflows = set(self._flow_caps)
+
+                async def run_subflow(ref: str, value: Any) -> Any:
+                    cap = self._flow_caps.get(ref)
+                    if cap is None:
+                        return {"error": f"subflow {ref!r} unavailable"}
+                    if isinstance(cap, Agent):
+                        return await cap.arun(value)
+                    sub_deployment = plain_flow_deployments[ref]
+                    sub_env = InMemoryEnv(
+                        sub_deployment.manifest,
+                        ProjectionEmitter(InMemoryProjection()),
+                        tools=tool_fns,
+                        mode=self._mode,
+                    )
+                    sub_result = await interpret(sub_deployment.flow, value, sub_env)
+                    return sub_result.value
+
+            return await LocalSessionHandle.open(
+                session,
+                tools=tool_fns,
+                agents={
+                    self._name: lambda value: drive_agent_loop(
+                        input=value,
+                        cfg=self._cfg,
+                        invoke_controller=invoke_controller,
+                        call_tool=call_tool,
+                        run_subflow=run_subflow,
+                        granted=self._granted,
+                        granted_subflows=granted_subflows,
+                        contracts=contracts,
+                    )
+                },
+                max_calls=max_call_limits,
+                mode=self._mode,
+                principal=principal,
+                channel_capacity=channel_capacity,
+                max_consecutive_turn_errors=max_consecutive_turn_errors,
+                manifest=session_deployment.manifest,
+            )
+
+        if backend == "cma":
+            if client is None:
+                raise ValueError("Agent.open(backend='cma') requires client=")
+            from .execution.cma_session import CMASessionHandle
+
+            _reject_prompt_cache_on_cma(self._name)
+            session_deployment = self._deploy_session(session)
+            max_call_limits = (
+                session_deployment.capabilities.max_call_limits()
+                if session_deployment.capabilities is not None
+                else {}
+            )
+            cma_contracts: dict[str, dict[str, Any]] = {
+                name: dict(contract) for name, contract in self._contracts.items()
+            }
+            for tool_name, limit in max_call_limits.items():
+                cma_contracts.setdefault(tool_name, {})["maxCalls"] = limit
+
+            cma_schemas: dict[str, JSONSchema] = {}
+            cma_tools: dict[str, Callable[[Any], Any]] = {}
+            for native_tool in self._tools:
+                schema, cma_tool = cma_tool_binding(native_tool)
+                cma_schemas[native_tool.name] = schema
+                cma_tools[native_tool.name] = cma_tool
+
+            custom_tools = manifest_to_custom_tools(
+                self._tool_names,
+                input_schemas=cma_schemas,
+                descriptions={
+                    native_tool.name: native_tool.fn.__doc__ or ""
+                    for native_tool in self._tools
+                },
+            )
+            return await CMASessionHandle.open(
+                client=client,
+                tools=cma_tools,
+                agent={"name": self._name, "tools": custom_tools},
+                environment=environment,
+                in_channel=session.in_channel,
+                out_channel=session.out_channel,
+                cfg=self._cfg,
+                granted=self._granted,
+                contracts=cma_contracts,
+            )
+
+        if backend == "temporal":
+            if client is None:
+                raise ValueError("Agent.open(backend='temporal') requires client=")
+            from .execution.harness import TemporalSessionHandle, _start_session
+
+            sid = session_id or f"session-{uuid.uuid4()}"
+            deployment = self._deploy_session(session)
+            budget = None
+            if deployment.capabilities is not None and deployment.capabilities.budget is not None:
+                cap_budget = deployment.capabilities.budget
+                if cap_budget.tokens is not None or cap_budget.wall_seconds is not None:
+                    raise ValidationError(
+                        [
+                            Diagnostic(
+                                "SESSION_TEMPORAL_BUDGET_DIMENSION",
+                                deployment.flow.id,
+                                "Temporal session backend enforces only the `cost` budget "
+                                "dimension and cannot enforce tokens/wallSeconds",
+                            )
+                        ]
+                    )
+                if cap_budget.cost is not None:
+                    budget = {"cost": cap_budget.cost}
+            wfhandle = await _start_session(
+                client,
+                deployment.flow.to_json(),
+                deployment.manifest_json,
+                session_id=sid,
+                init=session.init,
+                in_channel=session.in_channel,
+                out_channel=session.out_channel,
+                task_queue=task_queue,
+                policy=policy,
+                principal=principal,
+                history_threshold=history_threshold,
+                channel_capacity=channel_capacity,
+                max_call_limits=(
+                    deployment.capabilities.max_call_limits()
+                    if deployment.capabilities is not None
+                    else None
+                ),
+                pinned_pures=deployment.artifact_components["pureSourceHashes"],
+                budget=budget,
+                bundle=deployment.bundle_ref,
+            )
+            return TemporalSessionHandle(
+                wfhandle,
+                in_channel=session.in_channel,
+                out_channel=session.out_channel,
+            )
+
+        raise ValueError(f"unknown session backend {backend!r}")
+
+    def open_session(
+        self,
+        *,
+        session: Session[Any, Any],
+        backend: str = "local",
+        principal: Optional[dict[str, Any]] = None,
+        client: Any = None,
+        task_queue: str = "julep",
+        policy: Any = None,
+        history_threshold: Optional[int] = None,
+        channel_capacity: Optional[int] = None,
+        session_id: Optional[str] = None,
+        environment: Any = None,
+    ) -> SessionHandle:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            if backend == "local":
+                raise RuntimeError(
+                    "Agent.open_session(backend='local') is unsupported because the live "
+                    "handle is bound to the event loop; use `await "
+                    "Agent.open(session=..., backend='local')` instead."
+                ) from None
+            return asyncio.run(
+                self.open(
+                    session=session,
+                    backend=backend,
+                    principal=principal,
+                    client=client,
+                    task_queue=task_queue,
+                    policy=policy,
+                    history_threshold=history_threshold,
+                    channel_capacity=channel_capacity,
+                    session_id=session_id,
+                    environment=environment,
+                )
+            )
+        raise RuntimeError(
+            "Agent.open_session() cannot be called inside a running event loop; "
+            "use await Agent.open(...)"
+        )
+
+    def deployment(self) -> Deployment:
+        return self._deploy()
+
+    def split_children(self) -> dict[str, SplitCapability]:
+        """The per-component split children (ref -> marker)."""
+        return dict(self._split_children)
+
+    def subflow_queues(self) -> dict[str, str]:
+        """Per-subflow lane names authored via ``child.as_sub(queue=...)``.
+
+        Omit-when-unset: children without a queue are absent. This is the piece a
+        worker-spec builder puts under ``agents[controller]["subflowQueues"]`` so a
+        durable AgentWorkflow can route SUB decisions to lanes.
+        """
+        queues: dict[str, str] = {}
+        for ref, cap in self._split_children.items():
+            if cap.queue is not None:
+                queues[ref] = cap.queue
+        return queues
+
+    def sub_deployments(self) -> dict[str, "Deployment"]:
+        """Compiled child deployments for this agent's sub-capabilities (ref -> Deployment).
+
+        Plain-`Flow` capabilities are compiled through the deploy gates here;
+        sub-`Agent` capabilities expose their own :meth:`deployment`. A worker
+        hosting this agent on Temporal MUST be configured with these (its
+        ``WorkerContext.subflows``) so a ``SUB`` decision resolves to the
+        validated/frozen child artifact rather than a stale/missing one.
+        (Auto-wiring this into :meth:`deploy` is a documented follow-on seam.)
+        """
+        out: dict[str, Deployment] = dict(self._plain_flow_cap_deployments(strict=False))
+        for ref, cap in self._flow_caps.items():
+            if isinstance(cap, Agent):
+                out[ref] = cap.deployment()
+        return out
+
+    def check(self) -> list[Diagnostic]:
+        """Force full freeze validation without executing and return diagnostics."""
+        return self._deploy(strict=False).diagnostics
+
+    async def deploy(
+        self,
+        client: Any,
+        *,
+        session_id: str,
+        input: Any = None,
+        task_queue: str = "julep",
+        policy: Any = None,
+        principal: Optional[dict[str, Any]] = None,
+    ) -> Any:
+        # Fail loud rather than diverge silently: the facade does not yet
+        # auto-wire sub-capability child deployments into the Temporal worker's
+        # registry, so a SUB decision would resolve via WorkerContext.subflows
+        # (possibly stale/missing). Tool-only agents deploy normally.
+        if self._flow_caps:
+            raise NotImplementedError(
+                "Agent.deploy() to Temporal does not yet auto-wire sub-capability "
+                f"deployments into the worker (a documented seam). This agent has "
+                f"sub-capabilities {sorted(self._flow_caps)}; their compiled child "
+                "deployments are available via agent.sub_deployments() — register "
+                "them on your worker (WorkerContext.subflows), then run the parent "
+                "via agent.deployment().run(...). Tool-only agents deploy normally."
+            )
+        return await self._deploy().run(
+            client,
+            session_id=session_id,
+            input=input,
+            task_queue=task_queue,
+            policy=policy,
+            principal=principal,
+        )

@@ -15,9 +15,9 @@ jobs:
       - name: Install dev tools
         run: python -m pip install -e '.[dev]'
       - name: Ruff
-        run: ruff check composable_agents
+        run: ruff check julep
       - name: Mypy
-        run: python -m mypy --no-incremental --cache-dir=/dev/null composable_agents
+        run: python -m mypy --no-incremental --cache-dir=/dev/null julep
 
   # Bare install with NO optional extras. Guards against a core module growing an
   # unconditional import of an optional dependency (temporalio, wasmtime,
@@ -33,7 +33,7 @@ jobs:
       - name: Install base package only
         run: python -m pip install -e .
       - name: Public package import must not require any optional extra
-        run: python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is False"
+        run: python -c "import julep as c; assert c.HAVE_TEMPORAL is False"
 
   test:
     runs-on: ubuntu-latest
@@ -52,12 +52,12 @@ jobs:
         run: python -m pip install -e '.[test-no-temporal]'
       - name: Assert Temporal is absent
         if: matrix.temporal == 'off'
-        run: python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is False"
+        run: python -c "import julep as c; assert c.HAVE_TEMPORAL is False"
       - name: Install package with dev extras
         if: matrix.temporal == 'on'
         run: python -m pip install -e '.[dev]'
       - name: Assert Temporal is present
         if: matrix.temporal == 'on'
-        run: python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is True"
+        run: python -c "import julep as c; assert c.HAVE_TEMPORAL is True"
       - name: Pytest
         run: python -m pytest -q

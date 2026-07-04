@@ -1,0 +1,434 @@
+"""Pure Claude Managed Agents execution-layer adapter.
+
+This module contains only the normalized CMA event loop and a structural
+``Env`` wrapper for the interpreter's ``run_agent`` seam. Vendor SDK and
+network translation belongs in a separate adapter that produces ``CMAEvent``
+values and implements the protocols below.
+"""
+
+from __future__ import annotations
+
+import inspect
+import logging
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Optional, Protocol
+
+from ..agent_loop import (
+    AgentConfig,
+    AgentContractMap,
+    AgentState,
+    CallDenial,
+    Decision,
+    RoundAction,
+    TraceEntry,
+    action_cost,
+    authorize_call,
+    charge_tool_call,
+    precheck_controller,
+    terminal_result,
+    would_exceed_budget,
+)
+from ..kinds import EnforcementMode
+from ..registry import DEFAULT_REGISTRY
+
+if TYPE_CHECKING:
+    from .interpreter import BranchThunk, Env
+    from ..ir import Node, SubContract
+else:
+    Env = Any
+
+logger = logging.getLogger(__name__)
+
+
+# --------------------------------------------------------------------------- #
+# Normalized CMA events and protocols.
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class CMAEvent:
+    """A normalized session event the driver consumes.
+
+    The CMA-specific correlation (agent.custom_tool_use +
+    session.status_idle/requires_action + event IDs, end_turn, session.error) is
+    the adapter's job; by the time an event reaches the driver it is one of
+    three normalized kinds.
+    """
+
+    kind: str
+    tool: Optional[str] = None
+    input: Any = None
+    call_id: Optional[str] = None
+    output: Any = None
+    reason: Optional[str] = None
+    usage: Optional[dict[str, Any]] = None
+
+    @property
+    def is_custom_tool_use(self) -> bool:
+        return self.kind == "custom_tool_use"
+
+    @property
+    def is_terminal(self) -> bool:
+        return self.kind == "terminal"
+
+    @property
+    def is_error(self) -> bool:
+        return self.kind == "error"
+
+
+class CMASession(Protocol):
+    """One running managed-agent session. Async-iterable normalized events."""
+
+    def events(self) -> AsyncIterator[CMAEvent]: ...
+    async def tool_result(self, call_id: str, result: Any) -> None: ...
+    async def tool_error(self, call_id: str, reason: str) -> None: ...
+    async def cancel(self) -> None: ...
+
+
+class CMAClient(Protocol):
+    async def create_session(
+        self,
+        *,
+        agent: dict[str, Any],
+        environment: Any,
+        session_cid: str,
+        input: Any = None,
+    ) -> CMASession: ...
+
+
+# --------------------------------------------------------------------------- #
+# Manifest projection.
+# --------------------------------------------------------------------------- #
+def manifest_to_custom_tools(
+    tool_names: Iterable[str],
+    *,
+    input_schemas: Optional[Mapping[str, dict[str, Any]]] = None,
+    descriptions: Optional[Mapping[str, str]] = None,
+) -> list[dict[str, Any]]:
+    """Project granted tools into CMA custom-tool definitions.
+
+    This intentionally emits only manifest-named custom tools and never includes
+    the built-in ``agent_toolset_20260401``. SPEC §7 is deny-by-default: the
+    hosted model must see only the already-granted surface.
+    """
+    schemas = input_schemas or {}
+    descs = descriptions or {}
+    return [
+        {
+            "type": "custom",
+            "name": name,
+            "description": descs.get(name, ""),
+            "input_schema": schemas.get(name, {"type": "object"}),
+        }
+        for name in tool_names
+        if name != "agent_toolset_20260401"
+    ]
+
+
+# --------------------------------------------------------------------------- #
+# Inverted CMA agent loop.
+# --------------------------------------------------------------------------- #
+def _reject_round_note_on_cma(cfg: AgentConfig) -> None:
+    if cfg.round_note is not None:
+        raise ValueError(
+            "round_note is not supported on the CMA backend: the vendor runs the "
+            "agent loop, so per-round notes cannot be injected into the controller "
+            "prompt. Remove round_note or run this agent on the local, DBOS, or "
+            "Temporal backend."
+        )
+
+
+def _reject_prompt_cache_on_cma(controller: Optional[str]) -> None:
+    if controller is None:
+        return
+    try:
+        reasoner = DEFAULT_REGISTRY.get_reasoner(controller)
+    except KeyError:
+        return
+    if reasoner.prompt_cache is not None:
+        raise ValueError(
+            "prompt_cache is not supported on CMA because the vendor runs "
+            "the loop, so Julep cannot apply provider cache "
+            "markers with complete_reasoner. Remove prompt_cache or run this "
+            "agent on the local, DBOS, or Temporal backend."
+        )
+
+
+async def drive_cma_agent_loop(
+    *,
+    input: Any,
+    cfg: AgentConfig,
+    session: CMASession,
+    call_tool: Callable[[str, Any, str], Awaitable[Any]],
+    granted: Optional[set[str]] = None,
+    contracts: Optional[AgentContractMap] = None,
+    state: Optional[AgentState] = None,
+    controller: Optional[str] = None,
+    session_cid: str = "cma",
+) -> dict[str, Any]:
+    """Drive a normalized CMA session through the same gates as the local loop."""
+    _reject_round_note_on_cma(cfg)
+    _reject_prompt_cache_on_cma(controller)
+    mode = EnforcementMode.coerce(cfg.mode)
+    prod_gap: list[str] = []
+    state = state or AgentState(last=input)
+    unconstrained = granted is None
+    granted_set = set(granted or [])
+
+    def finish(status: str, output: Any = None, reason: Optional[str] = None) -> dict[str, Any]:
+        result = terminal_result(status, state, output=output, reason=reason)
+        if prod_gap:
+            result["prodGap"] = list(prod_gap)
+        return result
+
+    async def strict_denial_or_dev_gap(ev: CMAEvent, denial: Optional[CallDenial]) -> bool:
+        if denial is None:
+            return False
+        if mode is EnforcementMode.DEV:
+            prod_gap.append(denial.reason)
+            return False
+        try:
+            await session.tool_error(_event_call_id(ev), denial.reason)
+        except Exception:
+            logger.warning("failed to deliver CMA tool error notification", exc_info=True)
+        return True
+
+    try:
+        async for ev in session.events():
+            if ev.is_error:
+                return finish("controller_error", reason=ev.reason or "session error")
+
+            if ev.is_terminal:
+                if state.round >= cfg.max_rounds:
+                    return finish("max_rounds")
+
+                controller_precheck = precheck_controller(state, cfg)
+                if controller_precheck is not None:
+                    if prod_gap:
+                        controller_precheck["prodGap"] = list(prod_gap)
+                    return controller_precheck
+
+                state.charge(cfg.think_cost)
+                return finish("done", output=ev.output)
+
+            if not ev.is_custom_tool_use:
+                continue
+
+            if state.round >= cfg.max_rounds:
+                return finish("max_rounds")
+
+            controller_precheck = precheck_controller(state, cfg)
+            if controller_precheck is not None:
+                if prod_gap:
+                    controller_precheck["prodGap"] = list(prod_gap)
+                return controller_precheck
+
+            state.charge(cfg.think_cost)
+            tool = _event_tool(ev)
+            action = RoundAction(Decision.CALL, {"tool": tool, "input": ev.input})
+            cost = action_cost(action)
+            if would_exceed_budget(state, cost, cfg.budget):
+                return finish("over_budget")
+
+            denial = authorize_call(
+                tool,
+                unconstrained=unconstrained,
+                granted_set=granted_set,
+                contracts=contracts,
+            )
+            if await strict_denial_or_dev_gap(ev, denial):
+                return finish("denied", reason=denial.reason if denial is not None else None)
+
+            denial = charge_tool_call(state, tool, contracts)
+            if await strict_denial_or_dev_gap(ev, denial):
+                return finish("denied", reason=denial.reason if denial is not None else None)
+            if denial is not None:
+                state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
+
+            call_input = ev.input if ev.input is not None else state.last
+            call_cid = f"{session_cid}-call-{state.round}"
+            out = await call_tool(tool, call_input, call_cid)
+            state.charge(cost)
+            state.last = out
+            state.record(TraceEntry(decision="call", ref=tool, cost=cost))
+            state.round += 1
+            try:
+                await session.tool_result(_event_call_id(ev), out)
+            except Exception as exc:
+                logger.warning("failed to deliver CMA tool result", exc_info=True)
+                return finish(
+                    "controller_error",
+                    reason=f"failed to deliver tool result: {exc}",
+                )
+
+        return finish("controller_error", reason="session ended without terminal output")
+    finally:
+        await session.cancel()
+
+
+def _event_tool(ev: CMAEvent) -> str:
+    if ev.tool is None:
+        raise ValueError("custom_tool_use event missing tool")
+    return ev.tool
+
+
+def _event_call_id(ev: CMAEvent) -> str:
+    if ev.call_id is None:
+        raise ValueError("custom_tool_use event missing call_id")
+    return ev.call_id
+
+
+# --------------------------------------------------------------------------- #
+# Env wrapper for the app-node run_agent seam.
+# --------------------------------------------------------------------------- #
+class CMAAgentEnv:
+    """An ``Env`` wrapper that replaces only ``run_agent`` with CMA execution."""
+
+    def __init__(
+        self,
+        inner: Env,
+        *,
+        client: CMAClient,
+        environment: Any = None,
+        tools: Mapping[str, Callable[[Any], Any]],
+        cfg: AgentConfig,
+        granted: Optional[set[str]] = None,
+        contracts: Optional[AgentContractMap] = None,
+        custom_tools: Optional[list[dict[str, Any]]] = None,
+    ) -> None:
+        self._inner = inner
+        self.manifest = inner.manifest
+        self.emitter = inner.emitter
+        self.native_call_retries = getattr(inner, "native_call_retries", False)
+        self.principal = getattr(inner, "principal", None)
+        # Run identity for the trajectory plane mirrors the inner env exactly,
+        # like ``principal``: the interpreter never reads it; engine envs stamp it.
+        self.root_run_id = getattr(inner, "root_run_id", None)
+        self.segment_seq = getattr(inner, "segment_seq", 0)
+        self._client = client
+        self._environment = environment
+        self._tools = tools
+        self._cfg = cfg
+        self._granted = granted
+        self._contracts = contracts
+        self._custom_tools = custom_tools
+
+    def next_cid(self, node_id: str) -> str:
+        return self._inner.next_cid(node_id)
+
+    def get_pure(self, name: str) -> Callable[[Any], Any]:
+        return self._inner.get_pure(name)
+
+    def charge_call(self, tool_key: str) -> None:
+        return self._inner.charge_call(tool_key)
+
+    async def run_call(self, node: Node, value: Any, cid: str) -> Any:
+        return await self._inner.run_call(node, value, cid)
+
+    async def invoke_reasoner(
+        self,
+        reasoner: str,
+        value: Any,
+        cid: str,
+        timeout_s: Optional[int],
+        batchable: bool = False,
+    ) -> Any:
+        return await self._inner.invoke_reasoner(reasoner, value, cid, timeout_s, batchable)
+
+    async def run_sub(
+        self,
+        ref: str,
+        contract: SubContract,
+        value: Any,
+        cid: str,
+        node_id: Optional[str] = None,
+    ) -> Any:
+        return await self._inner.run_sub(ref, contract, value, cid, node_id)
+
+    async def run_agent(
+        self,
+        controller: str,
+        value: Any,
+        cid: str,
+        app_config: Optional[dict[str, Any]] = None,
+    ) -> Any:
+        cfg = _cfg_with_app_overrides(self._cfg, app_config)
+        _reject_round_note_on_cma(cfg)
+        _reject_prompt_cache_on_cma(controller)
+        agent_payload = {
+            "name": controller,
+            "tools": self._custom_tools
+            or manifest_to_custom_tools(
+                self._granted if self._granted is not None else self._tools.keys()
+            ),
+        }
+        session = await self._client.create_session(
+            agent=agent_payload,
+            environment=self._environment,
+            session_cid=cid,
+            input=value,
+        )
+
+        async def call_tool(tool: str, v: Any, _call_cid: str) -> Any:
+            fn = self._tools.get(tool)
+            if fn is None:
+                return {"error": f"tool {tool!r} unavailable"}
+            result = fn(v)
+            return await result if inspect.isawaitable(result) else result
+
+        return await drive_cma_agent_loop(
+            input=value,
+            cfg=cfg,
+            session=session,
+            call_tool=call_tool,
+            granted=self._granted,
+            contracts=self._contracts,
+            controller=controller,
+            session_cid=cid,
+        )
+
+    async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
+        return await self._inner.compile_plan(planner, value, cid)
+
+    async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
+        return await self._inner.human_gate(value, cid, timeout_s)
+
+    async def sleep(self, seconds: float, cid: str) -> None:
+        await self._inner.sleep(seconds, cid)
+
+    async def gather(self, coros: Sequence[Awaitable[Any]]) -> list[Any]:
+        return await self._inner.gather(coros)
+
+    async def race_first(
+        self,
+        branches: Sequence[BranchThunk],
+        *,
+        kind: str,
+        m: int,
+        hedge_ms: Optional[int],
+    ) -> Any:
+        return await self._inner.race_first(branches, kind=kind, m=m, hedge_ms=hedge_ms)
+
+
+def _cfg_with_app_overrides(
+    cfg: AgentConfig,
+    app_config: Optional[dict[str, Any]],
+) -> AgentConfig:
+    override_keys = ("budget", "maxRounds", "roundNote")
+    if not app_config or not any(key in app_config for key in override_keys):
+        return cfg
+    data = cfg.to_json()
+    for key in override_keys:
+        if key in app_config:
+            data[key] = app_config[key]
+    return AgentConfig.from_json(data)
+
+
+__all__ = [
+    "CMAEvent",
+    "CMASession",
+    "CMAClient",
+    "CMAAgentEnv",
+    "_reject_prompt_cache_on_cma",
+    "drive_cma_agent_loop",
+    "manifest_to_custom_tools",
+]
