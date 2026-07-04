@@ -88,8 +88,9 @@ SDK on PyPI sees only bot-level traffic (~10–30 downloads/day).
 - Yank all 155 old SDK releases. PyPI has no official bulk-yank API — it is per-release via
   the web UI (a scriptable-but-unofficial endpoint exists). Fallback if bulk is painful:
   yank the 2.x releases pip would actually resolve; same effect on resolution.
-- PyPI `composable-agents`: yank 1.0.0 and 1.1.0, update the project description to a
-  pointer. No tombstone release — zero users.
+- PyPI `composable-agents`: yank 1.0.0 and 1.1.0. No tombstone release and no description
+  update (changing the description would itself require an upload); the archived GitHub
+  repo is the pointer. Zero users.
 
 ## 4. README + docs-site overhaul
 
