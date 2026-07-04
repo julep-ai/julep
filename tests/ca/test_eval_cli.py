@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -13,7 +14,9 @@ pytest.importorskip("yglu")  # the vendored .ctx settings carry `!?` env express
 
 from composable_agents.ca import cli
 from composable_agents.ca.evalrun import (
+    EvalOutput,
     EvalReport,
+    SampleScore,
     _provider_tool_defs,
     _run_tool_loop,
     diff_reports,
@@ -24,6 +27,7 @@ from composable_agents.dotctx import load_dotctx
 from composable_agents.dotctx_evals import (
     MockToolConfig,
     Sample,
+    extract_llm_content,
     stop_after_turns,
     stop_when_non_tool,
     stop_when_terminal_tool,
@@ -98,6 +102,102 @@ def _write_eval_ctx(tmp_path: Path, eval_py: str) -> Path:
     )
     (ctx / "eval.py").write_text(eval_py, encoding="utf-8")
     return ctx
+
+
+def _write_tool_eval_ctx(tmp_path: Path, eval_py: str) -> Path:
+    """Copy the vendored tool-loop fixture, swapping in a custom eval.py."""
+    ctx = tmp_path / "tool_case.ctx"
+    shutil.copytree(FIXTURES / "execute_eval.ctx", ctx)
+    (ctx / "eval.py").write_text(eval_py, encoding="utf-8")
+    return ctx
+
+
+# Scores exactly the way real mem-mcp agent-loop suites do (record/execute,
+# slack/bootstrap, ...): getattr(output, "_tool_calls", []) + "_rounds".
+META_SCORER_EVAL = '''\
+from typing import Any
+
+from dotctx.eval_types import Sample, stop_after_turns
+
+
+def sample(limit: int = -1) -> list[Sample]:
+    samples = [
+        Sample(
+            name="meta_ok",
+            input={"task": "store a memory"},
+            expected=None,
+            mock_tools={"record_memory": {"ok": True}},
+            stop_on=stop_after_turns(4),
+        ),
+    ]
+    return samples if limit is None or limit < 0 else samples[:limit]
+
+
+def score(_input: dict[str, Any], output: Any, expected: Any) -> float:
+    calls = getattr(output, "_tool_calls", [])
+    rounds = getattr(output, "_rounds", None)
+    if not calls or not isinstance(rounds, int) or rounds < 1:
+        return 0.0
+    if any(set(c) != {"id", "name", "args"} for c in calls):
+        return 0.0
+    if [c["name"] for c in calls] != ["record_memory"]:
+        return 0.0
+    if calls[0]["args"] != {"content": "hi"}:
+        return 0.0
+    if not isinstance(output, dict) or getattr(output, "content", None) is not None:
+        return 0.0
+    return 1.0
+'''
+
+
+TUPLE_SCORER_EVAL = '''\
+from typing import Any
+
+from dotctx.eval_types import Sample
+
+
+def sample(limit: int = -1) -> list[Sample]:
+    return [Sample(name="t", input={"task": "x"}, expected=None)]
+
+
+def score(_input: dict[str, Any], output: Any, expected: Any) -> Any:
+    return 0.75, {"keywords": 3}
+'''
+
+
+BAD_SCORER_TEMPLATE = '''\
+from typing import Any
+
+from dotctx.eval_types import Sample
+
+
+def sample(limit: int = -1) -> list[Sample]:
+    return [Sample(name="t", input={{"task": "x"}}, expected=None)]
+
+
+def score(_input: dict[str, Any], output: Any, expected: Any) -> Any:
+    return {ret}
+'''
+
+
+TAGGED_EVAL = '''\
+from typing import Any
+
+from dotctx.eval_types import Sample
+
+
+def sample(limit: int = -1) -> list[Sample]:
+    samples = [
+        Sample(name="a", input={"task": "a"}, expected=None, tags=["prod"]),
+        Sample(name="b", input={"task": "b"}, expected=None, tags=["smoke"]),
+        Sample(name="c", input={"task": "c"}, expected=None, tags=["prod", "smoke"]),
+    ]
+    return samples if limit is None or limit < 0 else samples[:limit]
+
+
+def score(_input: dict[str, Any], output: Any, expected: Any) -> float:
+    return 1.0
+'''
 
 
 def _good_summary_json() -> str:
@@ -243,6 +343,103 @@ def test_single_shot_below_threshold() -> None:
     assert report.passed is False
 
 
+def test_score_tuple_carries_metrics(tmp_path: Path) -> None:
+    ctx = _write_eval_ctx(tmp_path, TUPLE_SCORER_EVAL)
+    report = run(run_eval(str(ctx), acompletion=SingleShotFake("whatever")))
+    s = report.scores[0]
+    assert (s.score, s.passed, s.metrics) == (0.75, True, {"keywords": 3})
+    data = report.to_json()
+    assert data["scores"][0]["metrics"] == {"keywords": 3}
+    assert EvalReport.from_json(data).to_json() == data
+
+
+@pytest.mark.parametrize(
+    "ret",
+    [
+        "(0.5,)",  # 1-tuple
+        "(0.5, 3)",  # metrics not a dict
+        '"high"',  # not a number
+        "1.5",  # out of 0..1 range
+        '{"score": 1.0, "reason": "dict returns are not the contract"}',
+        '(0.5, {"seen": {"a", "b"}})',  # metrics not JSON-serializable
+    ],
+)
+def test_bad_score_returns_are_setup_errors(tmp_path: Path, ret: str) -> None:
+    ctx = _write_eval_ctx(tmp_path, BAD_SCORER_TEMPLATE.format(ret=ret))
+    with pytest.raises(ValueError, match=r"eval score\(\) failed"):
+        run(run_eval(str(ctx), acompletion=SingleShotFake("whatever")))
+
+
+def test_sample_score_json_backcompat_without_metrics() -> None:
+    s = SampleScore.from_json({"id": "a", "score": 1.0, "passed": True})
+    assert s.metrics is None
+    assert s.to_json() == {"id": "a", "score": 1.0, "passed": True}
+
+
+def test_tag_filter_any_match(tmp_path: Path) -> None:
+    ctx = _write_eval_ctx(tmp_path, TAGGED_EVAL)
+    report = run(run_eval(str(ctx), acompletion=SingleShotFake("x"), tags=["prod"]))
+    assert [s.id for s in report.scores] == ["a", "c"]
+    assert report.samples == 2
+
+
+def test_tag_filter_applies_before_limit(tmp_path: Path) -> None:
+    # A naive sample(limit=1) would only see "a" (tagged prod) and return
+    # nothing for smoke; filtering must happen on sample(-1) first.
+    ctx = _write_eval_ctx(tmp_path, TAGGED_EVAL)
+    report = run(
+        run_eval(str(ctx), acompletion=SingleShotFake("x"), tags=["smoke"], limit=1)
+    )
+    assert [s.id for s in report.scores] == ["b"]
+
+
+def test_sample_name_filter_and_missing_name(tmp_path: Path) -> None:
+    ctx = _write_eval_ctx(tmp_path, TAGGED_EVAL)
+    report = run(run_eval(str(ctx), acompletion=SingleShotFake("x"), sample_names=["b"]))
+    assert [s.id for s in report.scores] == ["b"]
+    with pytest.raises(ValueError, match="zzz"):
+        run(run_eval(str(ctx), acompletion=SingleShotFake("x"), sample_names=["zzz"]))
+
+
+def test_no_matching_tag_is_setup_error(tmp_path: Path) -> None:
+    ctx = _write_eval_ctx(tmp_path, TAGGED_EVAL)
+    with pytest.raises(ValueError, match="no samples"):
+        run(run_eval(str(ctx), acompletion=SingleShotFake("x"), tags=["nope"]))
+    # --limit 0 on a filtered run must not slip through as a zero-sample report
+    with pytest.raises(ValueError, match="no samples"):
+        run(run_eval(str(ctx), acompletion=SingleShotFake("x"), tags=["prod"], limit=0))
+
+
+def test_eval_cmd_passes_filters(monkeypatch: pytest.MonkeyPatch) -> None:
+    from typer.testing import CliRunner
+
+    import composable_agents.ca.evalrun as evalrun
+
+    captured: dict[str, Any] = {}
+
+    def fake_run_eval_sync(ctx_path: str, **kwargs: Any) -> EvalReport:
+        captured.update(kwargs, ctx_path=ctx_path)
+        return EvalReport(
+            ctx="x",
+            model="m",
+            samples=0,
+            scores=(),
+            mean=1.0,
+            threshold=0.5,
+            passed=True,
+        )
+
+    monkeypatch.setattr(evalrun, "run_eval_sync", fake_run_eval_sync)
+    monkeypatch.setattr(cli, "_eval_env_vars", lambda env: {})
+    result = CliRunner().invoke(
+        cli.app,
+        ["eval", "some.ctx", "--tag", "prod", "--tag", "smoke", "--sample-name", "a"],
+    )
+    assert result.exit_code == 0, result.output
+    assert captured["tags"] == ["prod", "smoke"]
+    assert captured["sample_names"] == ["a"]
+
+
 def test_tool_loop_scores_trace_derived_output() -> None:
     report = run(
         run_eval(
@@ -258,6 +455,57 @@ def test_tool_loop_scores_trace_derived_output() -> None:
     assert report.scores[0].id == "records_ok"
     assert report.scores[0].score == 1.0
     assert report.scores[0].passed is True
+
+
+def test_eval_output_is_dict_with_memmcp_metadata() -> None:
+    out = EvalOutput({"trace": [1]}, [{"id": "c1", "name": "t", "args": {}}], 2)
+    assert isinstance(out, dict)
+    assert out.get("trace") == [1]
+    assert out["trace"] == [1]
+    assert out._tool_calls == [{"id": "c1", "name": "t", "args": {}}]
+    assert out._rounds == 2
+    assert getattr(out, "content", None) is None
+
+
+def test_tool_loop_empty_args_normalized_to_dict() -> None:
+    """mem-mcp parity: tool-call ``args`` is ALWAYS a dict, so a scorer doing
+    ``call.get("args", {}).get(...)`` never raises on empty/malformed arguments."""
+    rich = load_rich_dotctx(str(FIXTURES / "execute_eval.ctx"), env={})
+    sample = Sample(
+        name="empty_args",
+        input={"task": "store"},
+        expected=None,
+        mock_tools={"record_memory": {"ok": True}},
+        stop_on=stop_after_turns(3),
+    )
+    out = run(_run_tool_loop(rich, sample, ToolLoopFake("record_memory", "")))
+    assert out._tool_calls
+    assert all(isinstance(call["args"], dict) for call in out._tool_calls)
+    # The real mem-mcp scorer access pattern must not raise on empty args.
+    assert out._tool_calls[0]["args"].get("content") is None
+
+
+def test_extract_llm_content_reaches_tool_loop_final_text() -> None:
+    """mem-mcp OutputWithMetadata parity: extract_llm_content(output) returns the
+    tool loop's final assistant text via the ``__dict__['output']`` hop (not None),
+    while ``getattr(output, "content")`` stays None as it does in mem-mcp."""
+    out = EvalOutput(
+        {"status": "done", "output": {"content": "final text"}, "trace": []},
+        [{"id": "c1", "name": "t", "args": {}}],
+        2,
+    )
+    assert extract_llm_content(out) == "final text"
+    assert getattr(out, "content", None) is None
+
+
+def test_tool_loop_output_carries_memmcp_metadata(tmp_path: Path) -> None:
+    ctx = _write_tool_eval_ctx(tmp_path, META_SCORER_EVAL)
+    report = run(
+        run_eval(str(ctx), acompletion=ToolLoopFake("record_memory", '{"content": "hi"}'))
+    )
+    assert report.scores[0].id == "meta_ok"
+    assert report.scores[0].score == 1.0
+    assert report.passed is True
 
 
 def test_tool_loop_unmocked_tool_scored_failure() -> None:

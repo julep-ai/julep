@@ -32,13 +32,23 @@ class SampleScore:
     id: str
     score: float
     passed: bool
+    metrics: Optional[dict[str, Any]] = None
 
     def to_json(self) -> dict[str, Any]:
-        return {"id": self.id, "score": self.score, "passed": self.passed}
+        d: dict[str, Any] = {"id": self.id, "score": self.score, "passed": self.passed}
+        if self.metrics:
+            d["metrics"] = self.metrics
+        return d
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "SampleScore":
-        return SampleScore(id=str(d["id"]), score=float(d["score"]), passed=bool(d["passed"]))
+        m = d.get("metrics")
+        return SampleScore(
+            id=str(d["id"]),
+            score=float(d["score"]),
+            passed=bool(d["passed"]),
+            metrics=dict(m) if isinstance(m, dict) else None,
+        )
 
 
 @dataclass(frozen=True)
@@ -73,6 +83,56 @@ class EvalReport:
             threshold=float(d["threshold"]),
             passed=bool(d["passed"]),
         )
+
+
+class EvalOutput(dict[str, Any]):
+    """Terminal agent-loop dict + mem-mcp ``OutputWithMetadata`` metadata.
+
+    Real mem-mcp agent-loop scorers read ``getattr(output, "_tool_calls", [])``
+    and ``getattr(output, "_rounds", None)`` (record/execute, slack/bootstrap,
+    threads/merge_evaluator, classification_reviewer, linear/ingest). On a
+    plain dict those getattr defaults fire and the suite silently scores as
+    "no tools called". Subclassing dict keeps every dict consumer
+    (``isinstance(output, dict)``, ``.get``, ``[...]``, ``str()``) unchanged.
+    """
+
+    def __init__(
+        self,
+        output: Mapping[str, Any],
+        tool_calls: list[dict[str, Any]],
+        rounds: int,
+    ) -> None:
+        super().__init__(output)
+        self._tool_calls = tool_calls
+        self._rounds = rounds
+        # mem-mcp OutputWithMetadata parity: extract_llm_content()/scorers that
+        # read the final assistant text walk ``__dict__["output"]`` (llm_utils
+        # extract_llm_content). The terminal harness dict nests the final reply
+        # at output["output"] (e.g. {"content": ...}); expose it as the ``output``
+        # attribute so extract_llm_content(EvalOutput) returns that text instead
+        # of None. ``getattr(output, "content")`` stays None, matching mem-mcp
+        # (a litellm response object has no top-level ``.content`` attribute).
+        self.output = output.get("output") if isinstance(output, Mapping) else None
+
+
+def _normalize_tool_args(value: Any) -> Any:
+    """mem-mcp parity: an agent-loop tool call's ``args`` is ALWAYS a dict.
+
+    mem-mcp's ``_extract_tool_calls_from_response`` yields ``{"_raw": args_str}``
+    when the provider arguments don't JSON-decode and defaults missing arguments
+    to ``{}``. Native tool-call parsing here (execution/llm._parse_tool_call_arguments)
+    instead returns the raw string on a decode failure and ``None`` for absent
+    arguments, so a ported scorer doing ``call.get("args", {}).get(...)`` would hit
+    ``''`` / ``None`` and raise AttributeError, aborting the whole eval as a setup
+    error (exit 4). Coerce to the shape mem-mcp guarantees.
+    """
+    if isinstance(value, dict):
+        return value
+    if value is None:
+        return {}
+    if isinstance(value, str):
+        return {"_raw": value}
+    return value
 
 
 def _provider_tool_defs(
@@ -130,6 +190,41 @@ def _unique_sample_ids(samples: Sequence[Sample]) -> list[str]:
             counts[base] = n + 1
             ids.append(f"{base}#{counts[base]}")
     return ids
+
+
+def _coerce_score(value: Any) -> tuple[float, dict[str, Any]]:
+    """The mem-mcp score() contract: a 0..1 number, or a (number, metrics_dict)
+    2-tuple (record/plan and record/execute return metrics for reporters).
+
+    Anything else — e.g. propose_template's dict return — is invalid in
+    mem-mcp's runner too; here it surfaces as a setup error (exit 4) instead
+    of mem-mcp's silent per-sample 0.0-with-error."""
+    metrics: dict[str, Any] = {}
+    if isinstance(value, tuple):
+        if len(value) != 2:
+            raise ValueError(
+                f"score returned a tuple; expected (score, metrics) with 2 elements, got {len(value)}"
+            )
+        value, metrics = value
+        if not isinstance(metrics, dict):
+            raise ValueError(
+                "score returned (score, metrics) but metrics must be a dict, "
+                f"got {type(metrics).__name__}"
+            )
+        try:
+            json.dumps(metrics)
+        except (TypeError, ValueError) as exc:
+            # Catch non-serializable metrics HERE (setup error, exit 4) so
+            # `ca eval --json` doesn't crash at report-write time (exit 1).
+            raise ValueError(f"score metrics must be JSON-serializable: {exc}") from exc
+    if not isinstance(value, (int, float)):
+        # bool passes on purpose: mem-mcp's runner accepts it (bool is an int
+        # subclass there too), so True -> 1.0 is parity, not an accident.
+        raise ValueError(f"score must be a number, got {type(value).__name__}")
+    score = float(value)
+    if not 0.0 <= score <= 1.0:
+        raise ValueError(f"score must be 0.0-1.0, got {score}")
+    return score, metrics
 
 
 def _resolve_mock(
@@ -260,6 +355,12 @@ async def _run_tool_loop(
     # This round's provider tool_call ids, positionally aligned with the loop's
     # call_index, so each tool observation attaches to the right assistant call.
     round_call_ids: list[Optional[str]] = []
+    # mem-mcp OutputWithMetadata parity: every native tool call the MODEL EMITS,
+    # in the {"id", "name", "args"} shape real mem-mcp scorers consume. Recorded
+    # at emission (pre-execution), matching mem-mcp exactly — its runner parses
+    # tool_calls out of the LLM response, so a denied/failed call appears there
+    # too; scorers that care about execution read the trace/error instead.
+    collected_calls: list[dict[str, Any]] = []
 
     async def call_tool(
         name: str,
@@ -314,6 +415,15 @@ async def _run_tool_loop(
             round_call_ids = [
                 (tc.get("id") if isinstance(tc, dict) else None) for tc in tool_calls
             ]
+            for tc in tool_calls:
+                if isinstance(tc, dict):
+                    collected_calls.append(
+                        {
+                            "id": tc.get("id") or "",
+                            "name": tc.get("tool") or "",
+                            "args": _normalize_tool_args(tc.get("input")),
+                        }
+                    )
         else:
             round_call_ids = []
             # A content-only (natural-language) final reply: normalize to the
@@ -324,7 +434,7 @@ async def _run_tool_loop(
                 return {"output": {"content": reply}}
         return reply
 
-    return await drive_agent_loop(
+    result = await drive_agent_loop(
         input=sample.input,
         cfg=cfg,
         invoke_controller=invoke_controller,
@@ -332,6 +442,7 @@ async def _run_tool_loop(
         granted=granted,
         contracts=None,
     )
+    return EvalOutput(result, collected_calls, turn_index)
 
 
 async def run_eval(
@@ -339,6 +450,8 @@ async def run_eval(
     *,
     env_vars: Optional[Mapping[str, str]] = None,
     limit: Optional[int] = None,
+    tags: Optional[Sequence[str]] = None,
+    sample_names: Optional[Sequence[str]] = None,
     acompletion: Optional[AnyCompletion] = None,
     registry: Registry = DEFAULT_REGISTRY,
 ) -> EvalReport:
@@ -358,12 +471,40 @@ async def run_eval(
     reasoner = rich.reasoner
     resolved = _resolve_acompletion(acompletion)
 
+    filtered = bool(tags) or bool(sample_names)
     try:
-        raw = module.sample(-1 if limit is None else limit)
+        raw = module.sample(-1 if (limit is None or filtered) else limit)
         loaded_samples = await raw if inspect.isawaitable(raw) else raw
     except Exception as exc:  # noqa: BLE001 - user eval.py sample() code -> setup error (exit 4)
         raise ValueError(f"eval sample() failed: {exc!r}") from exc
     samples = _validate_samples(loaded_samples)
+    if tags:
+        # mem-mcp semantics (run_prompt_eval.py): any-match set intersection.
+        tag_set = set(tags)
+        samples = [s for s in samples if tag_set.intersection(s.tags or ())]
+    if sample_names:
+        # Checked AFTER tag filtering, matching mem-mcp (run_prompt_eval.py):
+        # a name excluded by --tag reports as missing there too.
+        name_set = set(sample_names)
+        selected = [s for s in samples if s.name in name_set]
+        missing = sorted(name_set - {s.name for s in selected})
+        if missing:
+            where = f"{ctx!r} (after --tag filtering)" if tags else repr(ctx)
+            raise ValueError(
+                f"sample names not found in {where}: {', '.join(missing)} "
+                "(names come from Sample(name=...))"
+            )
+        samples = selected
+    if filtered:
+        if limit is not None:
+            samples = samples[: max(0, limit)]
+        if not samples:
+            # Covers both no-tag-match and --limit 0: never emit a silent
+            # zero-sample report (exit 2) when the user asked for a subset.
+            raise ValueError(
+                f"no samples in {ctx!r} match --tag/--sample-name/--limit "
+                "(tag filtering is any-match on Sample.tags)"
+            )
     sids = _unique_sample_ids(samples)
 
     is_tool_loop = bool(reasoner.tools)
@@ -378,11 +519,11 @@ async def run_eval(
             try:
                 raw_score = module.score(sample.input, output, sample.expected)
                 value = await raw_score if inspect.isawaitable(raw_score) else raw_score
-                s = float(value)
+                s, metrics = _coerce_score(value)
             except Exception as exc:  # noqa: BLE001 - user eval.py score() code -> setup error (exit 4)
                 raise ValueError(f"eval score() failed: {exc!r}") from exc
             sid = sids[index]
-            return SampleScore(id=sid, score=s, passed=s >= threshold)
+            return SampleScore(id=sid, score=s, passed=s >= threshold, metrics=metrics or None)
 
     results = await asyncio.gather(*(score_one(i, s) for i, s in enumerate(samples)))
     mean = sum(r.score for r in results) / len(results) if results else 0.0
@@ -402,9 +543,20 @@ def run_eval_sync(
     *,
     env_vars: Optional[Mapping[str, str]] = None,
     limit: Optional[int] = None,
+    tags: Optional[Sequence[str]] = None,
+    sample_names: Optional[Sequence[str]] = None,
     acompletion: Optional[AnyCompletion] = None,
 ) -> EvalReport:
-    return asyncio.run(run_eval(ctx_path, env_vars=env_vars, limit=limit, acompletion=acompletion))
+    return asyncio.run(
+        run_eval(
+            ctx_path,
+            env_vars=env_vars,
+            limit=limit,
+            tags=tags,
+            sample_names=sample_names,
+            acompletion=acompletion,
+        )
+    )
 
 
 def diff_reports(
@@ -436,6 +588,7 @@ def diff_reports(
 
 
 __all__ = [
+    "EvalOutput",
     "EvalReport",
     "SampleScore",
     "diff_reports",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import json
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -286,7 +287,18 @@ def test_temporal_agent_workflow_resolves_controller_reasoner_from_registry(
     assert reasoner_payloads[0].reasoner == agent.name
 
 
-def test_agent_deploy_identity_changes_with_prompt_cache_and_unset_pin() -> None:
+def test_agent_deploy_identity_changes_with_prompt_cache_and_unset_pin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The artifact hash embeds frameworkVersion, so a raw golden breaks on
+    # every release (and on stale local .venv metadata). Pin the version so
+    # the golden guards the OTHER identity inputs against unintended drift.
+    # (import_module: the package's `deploy` FUNCTION shadows the submodule.)
+    deploy_mod = importlib.import_module("composable_agents.deploy")
+
+    monkeypatch.setattr(
+        deploy_mod, "_framework_version", lambda: "pinned-for-identity-golden"
+    )
     unset = Agent(
         "anthropic:claude-x",
         name="agent_provider_fields_identity_unset",
@@ -303,7 +315,7 @@ def test_agent_deploy_identity_changes_with_prompt_cache_and_unset_pin() -> None
     )
 
     assert unset.deployment().artifact_hash == (
-        "sha256:642f8d39b85419898c0327f4d1404c9524a88d292d9c72b504b9267ae9e51d6d"
+        "sha256:fad89f6f97f80b718d89d613122526c905a196568b763c37aa56d54e9a9e1284"
     )
     assert cached.deployment().artifact_hash != unset.deployment().artifact_hash
 

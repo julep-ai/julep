@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, Shape, tool
+from composable_agents import HAVE_TEMPORAL, Agent, Shape, tool
 from composable_agents.ca.config import CaConfig, EnvConfig, load_config
 from composable_agents.ca.deploy import deploy_agents
 from composable_agents.ca.ledger import DeployRecord, read_ledger, upsert_records
@@ -16,13 +16,19 @@ from composable_agents.ca.queues import queue_lane_diagnostics, resolve_queue_la
 from composable_agents.ca.temporal_run import build_flow_start_args, run_on_env
 from composable_agents.dsl import app
 from composable_agents.execution.interpreter import _app_config
-from composable_agents.execution.harness import (
-    AgentInput,
-    FlowInput,
-    _resolve_child_queue,
-)
 from composable_agents.ir import Node, Op, SubContract, SubStep
 from composable_agents.typed import as_flow
+
+# execution.harness imports temporalio at module level; the CI temporal=off
+# job must still collect this file (config/lint/deploy tests are pure).
+if HAVE_TEMPORAL:
+    from composable_agents.execution.harness import (
+        AgentInput,
+        FlowInput,
+        _resolve_child_queue,
+    )
+
+requires_temporal = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 
 def _record(*, queue: str | None = None) -> DeployRecord:
@@ -117,6 +123,7 @@ def test_ca_run_resolves_lane_and_carries_lane_map(tmp_path: Path) -> None:
     assert sa.queue_lanes == {"foreground": "prod-fg"}
 
 
+@requires_temporal
 def test_child_start_resolution_matrix() -> None:
     assert _resolve_child_queue(None, {"fg": "prod-fg"}) is None
     assert _resolve_child_queue("fg", {"fg": "prod-fg"}) == "prod-fg"
@@ -124,6 +131,7 @@ def test_child_start_resolution_matrix() -> None:
     assert _resolve_child_queue("fg", None) == "fg"
 
 
+@requires_temporal
 def test_queue_lanes_transitive_propagation_and_can_preservation() -> None:
     lanes = {"foreground": "ca-fg"}
     parent = FlowInput(session_id="p", flow_json={}, queue_lanes=lanes)
@@ -172,6 +180,7 @@ def test_queue_lanes_transitive_propagation_and_can_preservation() -> None:
     assert agent_can.subflow_queues == {"child": "foreground"}
 
 
+@requires_temporal
 def test_agent_as_sub_queue_carrier_reaches_app_config() -> None:
     @tool(effect="read", idempotent=True, name="carrier_tool")
     def t(v: str) -> str:

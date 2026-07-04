@@ -35,6 +35,16 @@ app.command("chat")(chat_command)
 app.command("listen")(listen_command)
 app.command("trigger")(trigger_command)
 
+_EVAL_TAG_OPTION = typer.Option(
+    [], "--tag", help="Run only samples carrying this tag (repeatable; any-match)."
+)
+_EVAL_SAMPLE_NAME_OPTION = typer.Option(
+    [],
+    "--sample-name",
+    help="Run only samples with this exact name (repeatable; unknown names exit 4).",
+)
+
+
 def _package_version() -> str:
     from importlib.metadata import PackageNotFoundError, version
 
@@ -371,6 +381,8 @@ def eval_cmd(
     ctx_path: str = typer.Argument(..., help="Path to a .ctx package with an eval.py."),
     env: str = typer.Option("local", "--env", help="Environment name (for $env resolution)."),
     limit: int = typer.Option(-1, "--limit", help="Max samples (-1 = all)."),
+    tag: list[str] = _EVAL_TAG_OPTION,
+    sample_name: list[str] = _EVAL_SAMPLE_NAME_OPTION,
     json_out: str = typer.Option("", "--json", help="Write the JSON report to this path."),
     baseline: str = typer.Option("", "--baseline", help="Baseline report JSON to diff against."),
 ) -> None:
@@ -383,7 +395,13 @@ def eval_cmd(
 
     env_vars = _eval_env_vars(env)
     try:
-        report = run_eval_sync(ctx_path, env_vars=env_vars, limit=(None if limit < 0 else limit))
+        report = run_eval_sync(
+            ctx_path,
+            env_vars=env_vars,
+            limit=(None if limit < 0 else limit),
+            tags=(tag or None),
+            sample_names=(sample_name or None),
+        )
     except ValueError as exc:
         # A broken/misconfigured eval (missing eval.py, non-.ctx dir, malformed
         # eval.yaml, or an error from user sample()/score() code) is a SETUP
