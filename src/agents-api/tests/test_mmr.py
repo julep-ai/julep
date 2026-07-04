@@ -2,8 +2,12 @@ from uuid import UUID
 
 import numpy as np
 from agents_api.autogen.Docs import DocOwner, DocReference, Snippet
-from agents_api.common.utils.mmr import apply_mmr_to_docs
-from ward import test
+from agents_api.common.utils.mmr import (
+    _cosine_similarity,
+    apply_mmr_to_docs,
+    maximal_marginal_relevance,
+)
+from ward import raises, test
 
 
 def create_test_doc(doc_id, embedding=None):
@@ -116,3 +120,84 @@ def _():
     # Will return the top limit docs without MMR since no embeddings are present
     result = apply_mmr_to_docs(docs_no_embeddings, query_embedding, limit=1, mmr_strength=0.5)
     assert len(result) == 1
+
+
+@test("utility: cosine similarity of identical, orthogonal, and opposite vectors")
+def _():
+    identical = _cosine_similarity([[1.0, 0.0, 0.0]], [[1.0, 0.0, 0.0]])
+    orthogonal = _cosine_similarity([[1.0, 0.0]], [[0.0, 1.0]])
+    opposite = _cosine_similarity([[1.0, 0.0]], [[-1.0, 0.0]])
+
+    assert np.isclose(identical[0][0], 1.0)
+    assert np.isclose(orthogonal[0][0], 0.0)
+    assert np.isclose(opposite[0][0], -1.0)
+
+
+@test("utility: cosine similarity output shape and empty inputs")
+def _():
+    result = _cosine_similarity(
+        [[1.0, 0.0], [0.0, 1.0]],
+        [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]],
+    )
+    # (n rows of X, k rows of Y)
+    assert result.shape == (2, 3)
+
+    assert len(_cosine_similarity([], [[1.0, 0.0]])) == 0
+    assert len(_cosine_similarity([[1.0, 0.0]], [])) == 0
+
+
+@test("utility: cosine similarity raises when column counts differ")
+def _():
+    with raises(ValueError):
+        _cosine_similarity([[1.0, 0.0]], [[1.0, 0.0, 0.0]])
+
+
+@test("utility: maximal marginal relevance returns empty for non-positive k or empty list")
+def _():
+    query = np.array([1.0, 0.0, 0.0])
+    embeddings = [np.array([0.9, 0.1, 0.0]), np.array([0.8, 0.1, 0.0])]
+
+    assert maximal_marginal_relevance(query, embeddings, k=0) == []
+    assert maximal_marginal_relevance(query, [], k=3) == []
+
+
+@test("utility: maximal marginal relevance ranks purely by relevance when lambda_mult=1")
+def _():
+    query = np.array([1.0, 0.0, 0.0])
+    embeddings = [
+        np.array([0.9, 0.1, 0.0]),
+        np.array([0.8, 0.1, 0.0]),
+        np.array([0.1, 0.9, 0.0]),
+        np.array([0.1, 0.0, 0.9]),
+    ]
+    # lambda_mult=1 removes the diversity term, so indices come back in
+    # descending order of similarity to the query.
+    assert maximal_marginal_relevance(query, embeddings, lambda_mult=1.0, k=3) == [0, 1, 2]
+
+
+@test(
+    "utility: maximal marginal relevance selects the most similar first and returns distinct indices"
+)
+def _():
+    query = np.array([1.0, 0.0, 0.0])
+    embeddings = [
+        np.array([0.9, 0.1, 0.0]),
+        np.array([0.8, 0.1, 0.0]),
+        np.array([0.1, 0.9, 0.0]),
+        np.array([0.1, 0.0, 0.9]),
+    ]
+    selected = maximal_marginal_relevance(query, embeddings, lambda_mult=0.5, k=4)
+
+    assert selected[0] == 0  # most similar to the query
+    assert len(selected) == 4
+    assert len(set(selected)) == 4  # every index is distinct
+    assert all(0 <= i < len(embeddings) for i in selected)
+
+
+@test("utility: maximal marginal relevance handles a 1-D query embedding")
+def _():
+    query = np.array([1.0, 0.0, 0.0])  # 1-D input is expanded internally
+    embeddings = [np.array([0.9, 0.1, 0.0]), np.array([0.1, 0.9, 0.0])]
+
+    result = maximal_marginal_relevance(query, embeddings, k=2)
+    assert sorted(result) == [0, 1]
