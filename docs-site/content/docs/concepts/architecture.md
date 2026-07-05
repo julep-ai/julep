@@ -1,13 +1,13 @@
 ---
 title: "Architecture"
-description: "How the framework, the @flow compiler, the sessions runtime, and the ca CLI fit together."
+description: "How the framework, the @flow compiler, the sessions runtime, and the julep CLI fit together."
 ---
 
-How the framework fits together, viewed from four angles: the whole system, the `@flow` compiler, the sessions runtime, and the `ca` CLI. For the design rationale behind these, see [Internals](/docs/internals/specification).
+How the framework fits together, viewed from four angles: the whole system, the `@flow` compiler, the sessions runtime, and the `julep` CLI. For the design rationale behind these, see [Internals](/docs/internals/specification).
 
 ## The system
 
-Composable Agents turns agents into frozen, capability-bounded dataflows. You
+Julep turns agents into frozen, capability-bounded dataflows. You
 author Python, compile it into a content-hashed IR plus manifest, then run the
 same artifact locally, on Temporal, or on DBOS. A model may choose control flow
 at run time, but it cannot discover new tools, widen authority, or bypass the
@@ -77,10 +77,10 @@ for `app`-style agent execution and sessions.
 #### Public API Boundary
 
 The package API is defined in
-[`composable_agents/__init__.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/__init__.py).
+[`julep/__init__.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/__init__.py).
 `_BASE_EXPORTS` are always exported. `_TEMPORAL_EXPORTS` are added to `__all__`
 only when `HAVE_TEMPORAL` is true, and are loaded lazily through `__getattr__`.
-DBOS exports are guarded in `composable_agents.execution` by `HAVE_DBOS`.
+DBOS exports are guarded in `julep.execution` by `HAVE_DBOS`.
 
 The core language lives in `kinds.py`, `ir.py`, `shapes.py`, `dsl.py`,
 `define.py`, `typed.py`, `agent.py`, and `session.py`. The compile pipeline is
@@ -100,7 +100,7 @@ append graph steps instead of doing runtime work.
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, think, tool
+from julep import Reasoner, deploy, flow, think, tool
 
 
 class SupportReply(TypedDict):
@@ -171,7 +171,7 @@ result = await deployment.run(
     client,
     session_id="ticket-run-1",
     input="TICKET-42",
-    task_queue="composable-agents",
+    task_queue="julep",
     principal={"tenant": "tenant-a", "tokenRef": "vault://support/token"},
 )
 ```
@@ -181,8 +181,8 @@ A Temporal worker installs environment-specific capability once:
 ```python
 from temporalio.client import Client
 
-from composable_agents.execution import WorkerContext
-from composable_agents.execution.worker import DEFAULT_TASK_QUEUE, build_worker
+from julep.execution import WorkerContext
+from julep.execution.worker import DEFAULT_TASK_QUEUE, build_worker
 
 client = await Client.connect("localhost:7233")
 context = WorkerContext(
@@ -200,11 +200,11 @@ await worker.run()
 The container entrypoint is the artifact CLI:
 
 ```bash
-composable-agents worker \
+python -m julep.cli worker \
   --context-factory app.worker:context \
   --address localhost:7233 \
   --namespace default \
-  --task-queue composable-agents \
+  --task-queue julep \
   --health-port 8080
 ```
 
@@ -266,7 +266,7 @@ registries. `human_gate(...)` becomes `submitHuman` on Temporal or
 `PostgresProjection`, tee sinks, or OTel span export via `to_otel_spans(...)`.
 `TrajectoryRun`, `TrajectoryStep`, and `TrajectoryValue` stitch root runs, child
 runs, and segment chains into exportable history; capture is best-effort, and
-`composable_agents.execution.trajectory_sql.TRAJECTORY_DDL` is host-applied.
+`julep.execution.trajectory_sql.TRAJECTORY_DDL` is host-applied.
 
 Provider dispatch hangs off `WorkerContext.llm`, whose canonical shape is
 `(reasoner, value, principal, transcript, dispatch) -> result`.
@@ -279,40 +279,40 @@ or `BATCH`; non-batchable batch requests clamp to `FLEX`.
 
 #### CLI Surfaces
 
-`composable-agents` operates on JSON artifacts and workers:
+`julep` operates on JSON artifacts and workers:
 
 ```bash
-composable-agents validate flow.json --manifest manifest.json
-composable-agents freeze flow.json snapshot.json --caps caps.yaml
-composable-agents inspect flow.json --manifest manifest.json --caps caps.yaml
-composable-agents run-local flow.json input.json --mode dev
-composable-agents graph flow.json
-composable-agents worker --context-factory app.worker:context
+python -m julep.cli validate flow.json --manifest manifest.json
+python -m julep.cli freeze flow.json snapshot.json --caps caps.yaml
+python -m julep.cli inspect flow.json --manifest manifest.json --caps caps.yaml
+python -m julep.cli run-local flow.json input.json --mode dev
+python -m julep.cli graph flow.json
+python -m julep.cli worker --context-factory app.worker:context
 ```
 
-`ca` operates on Python source modules and adds no runtime:
+`julep` operates on Python source modules and adds no runtime:
 
 ```bash
-ca ls
-ca graph
-ca run triage --input '"TICKET-42"'
-ca lint +triage --fail-severity error
-ca deploy triage --env staging
-ca status --env staging
+julep ls
+julep graph
+julep run triage --input '"TICKET-42"'
+julep lint +triage --fail-severity error
+julep deploy triage --env staging
+julep status --env staging
 ```
 
-The console scripts are declared in `pyproject.toml`:
-`composable-agents = "composable_agents.cli:main"` and
-`ca = "composable_agents.ca.cli:main"`.
+A single console script is declared in `pyproject.toml`:
+`julep = "julep.ca.cli:main"`. The lower-level artifact/worker plumbing
+CLI is reachable as `python -m julep.cli`.
 
 Install only the runtime you need:
 
 ```bash
-pip install composable-agents
-pip install 'composable-agents[temporal]'
-pip install 'composable-agents[dbos]'
-pip install 'composable-agents[providers]'
-pip install 'composable-agents[cma]'
+pip install --pre julep
+pip install --pre 'julep[temporal]'
+pip install --pre 'julep[dbos]'
+pip install --pre 'julep[providers]'
+pip install --pre 'julep[cma]'
 ```
 
 #### Key Decisions And Trade-Offs
@@ -331,7 +331,7 @@ pip install 'composable-agents[cma]'
   projection do not leak into the parent.
 - DBOS as a constrained backend: it reuses the same IR and effects but rejects
   shapes that need cancellation semantics it does not provide.
-- `ca` as porcelain: module discovery, selection, run, lint, publish, and deploy
+- `julep` as porcelain: module discovery, selection, run, lint, publish, and deploy
   ledger live outside the runtime semantics.
 
 #### See Also
@@ -342,7 +342,7 @@ pip install 'composable-agents[cma]'
 - [Capabilities and safety](/docs/guides/capabilities-and-safety)
 - [Deploy to Temporal](/docs/deploy/temporal)
 - [Deploy on DBOS](/docs/deploy/dbos)
-- [`ca` developer CLI](/docs/guides/using-the-cli)
+- [`julep` developer CLI](/docs/guides/using-the-cli)
 - [Provider resilience](/docs/guides/providers-and-resilience)
 - [Specification](/docs/internals/specification)
 
@@ -351,20 +351,20 @@ pip install 'composable-agents[cma]'
 The `@flow` frontend is a construction pass. Your Python function runs once at
 definition time with `Handle` placeholders; registered tools, registered pures,
 reasoner calls, branches, fan-out, and reschedules append a single-assignment
-DAG. `composable_agents.dag.compile(...)` then lowers that DAG to the same
+DAG. `julep.dag.compile(...)` then lowers that DAG to the same
 frozen `Node` IR used by the raw combinator DSL.
 
 Ground-truth modules:
 
-- [`define.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/define.py): define-by-construction `@flow`.
-- [`typed.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/typed.py): authoring-only `Flow[In, Out]`.
-- [`dag.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/dag.py): effect-fenced DAG compiler.
-- [`ir.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/ir.py): frozen wire-format IR.
-- [`dsl.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/dsl.py): raw `Node` combinators.
-- [`derived.py`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/derived.py): race-family and reserved leaves.
+- [`define.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/define.py): define-by-construction `@flow`.
+- [`typed.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/typed.py): authoring-only `Flow[In, Out]`.
+- [`dag.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/dag.py): effect-fenced DAG compiler.
+- [`ir.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/ir.py): frozen wire-format IR.
+- [`dsl.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/dsl.py): raw `Node` combinators.
+- [`derived.py`](https://github.com/julep-ai/julep-v2/blob/main/julep/derived.py): race-family and reserved leaves.
 
 Related docs: [Authoring Guide](/docs/guides/authoring-flows), [Concepts](/docs/concepts/model),
-and [Typed Composable Flow](/docs/internals/typed-flow-calculus).
+and [Typed Flow](/docs/internals/typed-flow-calculus).
 
 #### Context and Goals
 
@@ -413,7 +413,7 @@ flowchart TD
 There are three authoring fronts over one IR:
 
 - `@flow` in `define.py`, the primary surface.
-- `composable_agents.typed.Flow`, an authoring-only typed wrapper over `Node`.
+- `julep.typed.Flow`, an authoring-only typed wrapper over `Node`.
 - `dsl.py` and `derived.py`, the combinator kernel.
 
 After deployment, execution sees only `Node`, `ToolManifest`, registered pure
@@ -455,7 +455,7 @@ Example:
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, think, tool
+from julep import Reasoner, deploy, flow, pure, think, tool
 
 class SupportReply(TypedDict):
     reply: str
@@ -629,7 +629,7 @@ Strict mode raises on blocking diagnostics. Dev mode keeps diagnostics on the
 
 `Deployment.dry_run(value, *, reasoners=None)` runs locally through
 `InMemoryEnv`. `Deployment.run(client, *, session_id, input=None,
-task_queue="composable-agents", policy=None, principal=None)` runs on Temporal
+task_queue="julep", policy=None, principal=None)` runs on Temporal
 through `run_flow(...)`.
 
 The deterministic interpreter in `execution/interpreter.py` walks frozen IR and
@@ -751,7 +751,7 @@ The key split is cata-inside, ana-outside:
 
 #### Public Surface
 
-The facade is defined in `composable_agents/session.py`.
+The facade is defined in `julep/session.py`.
 
 `SessionHandle` is the common live API: `events()`, `send(value, *,
 channel=None, idempotency_key=None)`, `state()`, `open_receives()`, and
@@ -787,7 +787,7 @@ The turn body returns `(next_carrier, output)`; the runtime stores
 ```python
 from typing import Any
 
-from composable_agents import arr, recv, register_pure, scan, seq
+from julep import arr, recv, register_pure, scan, seq
 
 
 def append_with_reply(value: dict[str, Any]) -> tuple[list[Any], dict[str, Any]]:
@@ -831,7 +831,7 @@ flow, and no nested capture of carried locals. Otherwise it raises
 
 #### IR And Validation
 
-`composable_agents/ir.py` adds `ChannelRef` and `Op.LOOP`:
+`julep/ir.py` adds `ChannelRef` and `Op.LOOP`:
 
 - `Node.state_schema`: optional carrier schema;
 - `Node.channels`: declared channel ports;
@@ -839,7 +839,7 @@ flow, and no nested capture of carried locals. Otherwise it raises
 - `Node.args`: `{"split": True}` for `scan`.
 
 `recv(channel, timeout_s=None)` and `emit(channel, value=None)` in
-`composable_agents/derived.py` lower to reserved native calls:
+`julep/derived.py` lower to reserved native calls:
 
 - `RECV_TOOL = "__recv__"`;
 - `EMIT_TOOL = "__emit__"`;
@@ -847,7 +847,7 @@ flow, and no nested capture of carried locals. Otherwise it raises
 - `recv` timeout rides on `Ann.timeout`;
 - literal emit values ride on `node.args == {"value": value}`.
 
-`composable_agents/execution/interpreter.py` routes those reserved tools to the
+`julep/execution/interpreter.py` routes those reserved tools to the
 environment:
 
 - `__recv__` calls `env.recv(channel, cid, timeout_s)` and returns
@@ -916,8 +916,8 @@ returns `(carrier, outputs)`.
 `target="session"`, checks capabilities, rejects token and wall-clock budget
 dimensions, starts `SessionWorkflow.run`, and returns `TemporalSessionHandle`.
 
-`SessionWorkflow` lives in `composable_agents/execution/harness.py` and is
-registered by `composable_agents/execution/worker.py` in `WORKFLOWS`.
+`SessionWorkflow` lives in `julep/execution/harness.py` and is
+registered by `julep/execution/worker.py` in `WORKFLOWS`.
 `commitValue`, `loadValue`, and the other effect activities are registered in
 `ACTIVITIES`.
 
@@ -939,7 +939,7 @@ remain in workflow state for redelivery.
 
 #### SessionStore
 
-`SessionStore` in `composable_agents/execution/session_store.py` is the durable
+`SessionStore` in `julep/execution/session_store.py` is the durable
 JSON carrier contract. It is not a lock manager; Temporal supplies mutual
 exclusion through one running workflow per `session_id`.
 
@@ -992,7 +992,7 @@ reads `WorkerServeSettings` from environment variables such as
 `WORKER_CONTEXT_FACTORY`, `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, and
 `TEMPORAL_TASK_QUEUE`.
 
-DBOS: `composable_agents/execution/dbos_backend.py` provides `run_flow_dbos(...)`
+DBOS: `julep/execution/dbos_backend.py` provides `run_flow_dbos(...)`
 and `run_agent_dbos(...)` for frozen flows and agents. The session facade has no
 `backend="dbos"` path; `Agent.open(...)` accepts only `local`, `temporal`, and
 `cma`.
@@ -1027,22 +1027,22 @@ CMA turn is a fresh hosted session, so framework carrier state is not preserved.
 
 #### Source Map
 
-Primary files: `composable_agents/session.py`, `ir.py`, `derived.py`,
+Primary files: `julep/session.py`, `ir.py`, `derived.py`,
 `validate.py`, `execution/interpreter.py`, `execution/harness.py`,
 `execution/session_store.py`, `execution/worker.py`, `execution/serve.py`,
-`execution/cma_session.py`, `ca/session_local.py`, and
+`execution/cma_session.py`, `julep/session_local.py`, and
 `examples/session_demo.py`.
 
-## The ca CLI
+## The julep CLI
 
-`ca` is source-level porcelain over the existing composable-agents runtime. Fast
+`julep` is source-level porcelain over the existing julep runtime. Fast
 commands build a module graph without importing user code; execution commands
 resolve one selected agent in a subprocess, lower it to frozen IR, and reuse the
 same interpreter, validator, deploy, projection, and Temporal harness as the
 rest of the framework.
 
 User-facing reference: [Using The Cli](/docs/guides/using-the-cli). This document describes the
-implementation boundaries in `composable_agents/ca/`.
+implementation boundaries in `julep/ca/`.
 
 #### Context And Goals
 
@@ -1052,7 +1052,7 @@ gate, test, deploy, and compare subsets of that graph.
 
 Design constraints:
 
-- Do not add a second runtime. `ca` feeds the frozen-IR runtime.
+- Do not add a second runtime. `julep` feeds the frozen-IR runtime.
 - Do not import user modules for list/graph/select operations.
 - Import user code only when runnable IR or a deploy artifact is required.
 - Treat non-local `--env` runs as immutable artifact replays, not source runs.
@@ -1064,10 +1064,10 @@ The console entry point is:
 
 ```toml
 [project.scripts]
-ca = "composable_agents.ca.cli:main"
+julep = "julep.ca.cli:main"
 ```
 
-`composable_agents.ca.cli.main(argv: list[str] | None = None) -> int` wraps the
+`julep.ca.cli.main(argv: list[str] | None = None) -> int` wraps the
 Typer app and returns a process exit code. It converts Typer/Click usage errors
 to exit code `2` instead of leaking tracebacks.
 
@@ -1075,7 +1075,7 @@ to exit code `2` instead of leaking tracebacks.
 
 ```mermaid
 flowchart TD
-    entry["ca = composable_agents.ca.cli:main"]
+    entry["julep = julep.ca.cli:main"]
     cfg["config.load_config(Path('.'))"]
     module["model.build_module(cfg)"]
     scan["discover.scan_agents(cfg)\nAST only"]
@@ -1113,32 +1113,32 @@ Source-verified commands and flags:
 
 | Command | Implementation | Interface |
 |---|---|---|
-| `ca ls [selector]` | `cli.ls` | `selector`, `--exclude`. |
-| `ca show <name>` | `cli.show` | Exits `2` when missing. |
-| `ca graph [selector]` | `cli.graph` | `selector`, `--exclude`; emits Graphviz DOT. |
-| `ca run <name>` | `cli.run` | `--input`, `--run-id`, `--env`; default env is `local`. |
-| `ca deploy [selector]` | `cli.deploy` | `--exclude`, `--env`. |
-| `ca status [selector]` | `cli.status` | `--exclude`, `--env`; exit `3` on drift/error. |
-| `ca lint [selector]` | `cli.lint` | `--exclude`, `--fail-severity error|warning|info`. |
-| `ca test [selector]` | `cli.test_cmd` | `--exclude`, `--dry-run`; selected names become pytest `-k`. |
-| `ca trace <run_id>` | `cli.trace` | Reads `.ca/runs/<run_id>.json`; missing cache exits `2`. |
-| `ca doctor` | `cli.doctor` | Discovery, git, Langfuse, Temporal preflight. |
-| `ca chat <name>` | `chat.chat_command` | `--env`; only `local` is supported. |
-| `ca trigger <name> <event>` | `trigger.trigger_command` | `--channel`; only `"in"` is supported. |
-| `ca listen <name>` | `listen.listen_command` | Requires `--forward-to URL`. |
+| `julep ls [selector]` | `cli.ls` | `selector`, `--exclude`. |
+| `julep show <name>` | `cli.show` | Exits `2` when missing. |
+| `julep graph [selector]` | `cli.graph` | `selector`, `--exclude`; emits Graphviz DOT. |
+| `julep run <name>` | `cli.run` | `--input`, `--run-id`, `--env`; default env is `local`. |
+| `julep deploy [selector]` | `cli.deploy` | `--exclude`, `--env`. |
+| `julep status [selector]` | `cli.status` | `--exclude`, `--env`; exit `3` on drift/error. |
+| `julep lint [selector]` | `cli.lint` | `--exclude`, `--fail-severity error|warning|info`. |
+| `julep test [selector]` | `cli.test_cmd` | `--exclude`, `--dry-run`; selected names become pytest `-k`. |
+| `julep trace <run_id>` | `cli.trace` | Reads `.ca/runs/<run_id>.json`; missing cache exits `2`. |
+| `julep doctor` | `cli.doctor` | Discovery, git, Langfuse, Temporal preflight. |
+| `julep chat <name>` | `chat.chat_command` | `--env`; only `local` is supported. |
+| `julep trigger <name> <event>` | `trigger.trigger_command` | `--channel`; only `"in"` is supported. |
+| `julep listen <name>` | `listen.listen_command` | Requires `--forward-to URL`. |
 
 Examples using only verified flags:
 
 ```bash
-ca ls tag:support --exclude result:fail
-ca graph +triage
-ca run triage --input '"TICKET-42"' --run-id ticket-42
-ca lint +triage --fail-severity warning
-ca test state:modified --dry-run
-ca deploy triage --env staging
-ca status triage --env staging
-ca run triage --env staging --input '{"ticket":"TICKET-42"}'
-ca trace ticket-42
+julep ls tag:support --exclude result:fail
+julep graph +triage
+julep run triage --input '"TICKET-42"' --run-id ticket-42
+julep lint +triage --fail-severity warning
+julep test state:modified --dry-run
+julep deploy triage --env staging
+julep status triage --env staging
+julep run triage --env staging --input '{"ticket":"TICKET-42"}'
+julep trace ticket-42
 ```
 
 #### Discovery And Selection
@@ -1180,7 +1180,7 @@ Commands that need runnable IR call:
 resolve_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> ResolvedAgent
 ```
 
-The parent process runs `python -m composable_agents.ca._resolve_child <json>`.
+The parent process runs `python -m julep.ca._resolve_child <json>`.
 The child computes importable module names relative to each `src` entry, inserts
 the repo root and each import root on `sys.path`, imports modules, and finds a
 `FlowLike` whose `.name` or `._name` matches the target.
@@ -1199,7 +1199,7 @@ child errors become `ResolvedAgent.error`.
 
 #### Local Run, Trace, Lint, And Test
 
-`ca run <name> --env local` resolves the agent and calls:
+`julep run <name> --env local` resolves the agent and calls:
 
 ```python
 run_agent_local(resolved: ResolvedAgent, value: Any, *, run_id: str) -> RunOutcome
@@ -1219,23 +1219,23 @@ become `RunOutcome.error`. Successful local runs render
 `.ca/runs/<run_id>.json`. Failed runs write the same cache shape with status
 `error`.
 
-`ca trace <run_id>` loads that cache, rehydrates events through
+`julep trace <run_id>` loads that cache, rehydrates events through
 `ProjectionEvent.from_json(...)`, renders the tree, and optionally prints
 `langfuse_link.trace_url(run_id)`. Missing cache exits `2` even if
 `LANGFUSE_HOST` is configured.
 
-`ca lint` resolves selected agents, deserializes `Node.from_json(...)`, and calls
+`julep lint` resolves selected agents, deserializes `Node.from_json(...)`, and calls
 `validate(...)`. Severity order is `info < warning < error`; exit `1` means at
 least one finding meets `--fail-severity`, and exit `2` means resolve error.
 
-`ca test` builds `[sys.executable, "-m", "pytest", "-q"]` and, when names are
+`julep test` builds `[sys.executable, "-m", "pytest", "-q"]` and, when names are
 selected, appends `["-k", " or ".join(names)]`. Pytest `-k` is substring
 matching. An explicit selector that matches no agents prints `no agents matched`
 and exits `0` instead of running the whole suite.
 
 #### Deploy, Status, And Ledger
 
-`ca deploy` freezes selected agents one at a time:
+`julep deploy` freezes selected agents one at a time:
 
 ```python
 freeze_agent(cfg: CaConfig, name: str, env: str, *, publish: bool = True) -> FrozenArtifact
@@ -1261,7 +1261,7 @@ The deploy ledger is `.ca/deploys/<env>.json`. Each `DeployRecord` embeds
 `deployed_at`, and `pinned_pures`. `upsert_records(...)` merges selected agents
 into the per-env ledger and writes sorted, pretty JSON.
 
-`ca status --env <env>` reads the ledger and current source graph. It reports
+`julep status --env <env>` reads the ledger and current source graph. It reports
 `undeployed`, `clean`, `drift`, or `error`. Drift checks call
 `freeze_agent(..., publish=False)`, which computes the same hash without
 creating CAS objects or uploading to S3. `status_exit_code(...)` returns `3`
@@ -1298,13 +1298,13 @@ The default remote session id is `ca-<name>-<env>-<12 hex chars>`. An explicit
 `--run-id` is passed through; the CLI does not fabricate a fixed local-looking id
 for cloud envs.
 
-The framework also has `composable_agents.execution.dbos_backend.run_flow_dbos`,
-documented in [Dbos](/docs/deploy/dbos). The current `ca
+The framework also has `julep.execution.dbos_backend.run_flow_dbos`,
+documented in [Dbos](/docs/deploy/dbos). The current `julep
 --env` dispatcher is Temporal-specific for non-local envs.
 
 #### Sessions, Projection, And Links
 
-`ca chat`, `ca trigger`, and `ca listen` are local session commands. They resolve
+`julep chat`, `julep trigger`, and `julep listen` are local session commands. They resolve
 an agent, then `session_local.build_session(resolved)` wraps it as:
 
 ```python
@@ -1345,8 +1345,8 @@ workflow history; DBOS durability remains DBOS workflow state. See
 - Status is read-only: `publish=False` must not mutate CAS or S3.
 - The ledger duplicates artifact data intentionally so `run --env` does not need
   a fresh source import.
-- DBOS is a framework backend, but not currently a `ca --env` target.
-- `ca test` stays thin: selected names become a pytest `-k` expression.
+- DBOS is a framework backend, but not currently a `julep --env` target.
+- `julep test` stays thin: selected names become a pytest `-k` expression.
 
 #### Configuration And Failure Model
 
@@ -1372,7 +1372,7 @@ Common exit codes:
 
 #### Integration Summary
 
-The full path is: Python source defines `@flow` or `Agent(...)`; `ca` discovers
+The full path is: Python source defines `@flow` or `Agent(...)`; `julep` discovers
 top-level definitions with AST; commands that need IR call `FlowLike.to_ir()` in
 `_resolve_child`; local run executes `Node` IR through `interpret(...)` and
 `InMemoryEnv`; lint calls `validate(...)`; deploy calls `deploy(node, snapshot,
@@ -1380,7 +1380,7 @@ strict=False)`, publishes the admitted bundle, and records a `DeployRecord`;
 remote run loads that record and calls Temporal `run_flow(...)` with
 `flow_json`, `manifest_json`, `bundle`, and `pinned_pures`.
 
-`ca` is a repo-oriented control plane for the framework, not a new execution
+`julep` is a repo-oriented control plane for the framework, not a new execution
 substrate.
 
 <!-- ported-by ca-docs-site: concepts/architecture -->

@@ -1,6 +1,6 @@
 ---
 title: "Next Steps"
-description: "A signpost through the composable-agents ladder, from a keyless local agent to the capstone swarm example."
+description: "A signpost through the julep ladder, from a keyless local agent to the capstone swarm example."
 ---
 
 The examples below form a ladder. Each rung teaches one concept and is runnable on its own.
@@ -120,7 +120,7 @@ uv run --extra dev --extra providers python examples/session_demo.py temporal
 
 - [Examples overview](/docs/guides/examples) — all examples in one place
 - [Provider resilience](/docs/guides/providers-and-resilience) — retry, fallback, and hedging
-- [Using the CLI](/docs/guides/using-the-cli) — the `ca` developer CLI
+- [Using the CLI](/docs/guides/using-the-cli) — the `julep` developer CLI
 - [Gotchas](/docs/guides/gotchas) — common pitfalls
 - [Contributing](/docs/development/contributing) — repository workflow and contribution rules
 

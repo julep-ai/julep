@@ -192,7 +192,7 @@ no controller server, no loop.
 
 ## Open questions
 
-- **Home.** New `composable_agents/loop.py` (shared by the agent loop and a
+- **Home.** New `julep/loop.py` (shared by the agent loop and a
   possible future CMA adoption), or fold into `agent_loop.py`?
 - **CMA driver shape.** `drive_cma_agent_loop` is event-driven; does one `drive`
   cover both, or does the CMA `step` need an event argument that the local `step`

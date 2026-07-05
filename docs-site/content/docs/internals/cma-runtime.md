@@ -19,7 +19,7 @@ A third `run_agent` backend, built as a control-flow inversion of the local
 `drive_agent_loop` and proven equivalent to it by a parity test
 (`assert cma == local` over the same scenario):
 
-- **`composable_agents/execution/cma.py`** (pure; no `temporalio`/`anthropic`/
+- **`julep/execution/cma.py`** (pure; no `temporalio`/`anthropic`/
   `httpx` import):
   - `CMAEvent` / `CMASession` / `CMAClient` — a normalized event surface. The
     CMA-specific correlation (`agent.custom_tool_use` → `session.status_idle`
@@ -39,7 +39,7 @@ A third `run_agent` backend, built as a control-flow inversion of the local
 - **`Agent.run_on_cma(...)` / `arun_on_cma(...)`** (`agent.py`) — a third run
   surface beside `.run()` (local) and `.deploy()` (Temporal), reusing the
   facade's existing grants/contracts/budget/manifest.
-- **`composable_agents/execution/cma_anthropic.py`** — an *experimental* HTTP
+- **`julep/execution/cma_anthropic.py`** — an *experimental* HTTP
   client (`AnthropicCMAClient`) for the managed-agents beta
   (`anthropic-beta: managed-agents-2026-04-01`), behind the optional `cma` extra.
   The installed `anthropic` SDK (0.79.0) does not yet expose managed agents, so

@@ -39,7 +39,7 @@ compute.
 The **native tier** exists only for bundle pures whose declared dependencies are
 off the curated WASI-wheel set. The worker executes the bundle-shipped source as
 a real OS subprocess in a `uv`-managed venv
-(`composable_agents/execution/native_venv_executor.py`) with the declared deps
+(`julep/execution/native_venv_executor.py`) with the declared deps
 installed. This is outside the wasm sandbox. `CA_PURE_NATIVE_DEPS` is therefore
 the operator trust boundary: adding a pure name to that allowlist means trusting
 that bundle's source to run as native code on the worker.
@@ -54,19 +54,19 @@ and [§6.6](/docs/internals/specification#66-bundle-manifest--detached-signature
 ## Worker requirements
 
 - Install the `wasm` extra so `wasmtime` is importable in the worker image:
-  `pip install 'composable-agents[wasm]'` (wasmtime `>=45,<46`). Without it,
+  `pip install --pre 'julep[wasm]'` (wasmtime `>=45,<46`). Without it,
   resolving a bundle pure fails fast **at resolution** (worker init / fresh
   activation) with a `BundleResolutionError` carrying install guidance — before
   any work is accepted — not later with a raw `ModuleNotFoundError` at the first
   pure lookup inside workflow code.
 - The vendored portable component ships at
-  `composable_agents/execution/_wasm/executor.wasm` (committed). A compiled
+  `julep/execution/_wasm/executor.wasm` (committed). A compiled
   module cache (`.cwasm`) is built lazily at runtime (~0.9s one-time) into
   `COMPOSABLE_WASM_CACHE_DIR` (default: the OS temp dir) and is **not** committed
   (it is wasmtime-version/platform specific). Mounting a writable, node-local
   cache dir avoids paying the one-time compile on every pod start.
 - On the Temporal path the worker passes `wasmtime` through the workflow sandbox
-  (`SandboxedWorkflowRunner.with_passthrough_modules("composable_agents",
+  (`SandboxedWorkflowRunner.with_passthrough_modules("julep",
   "wasmtime")`) so the workflow-side wasm call shares the process-global engine
   and compiled component instead of re-importing wasmtime inside the sandbox.
 
@@ -179,7 +179,7 @@ Unsigned bundles and signatures from unknown public keys fail closed.
 Bundles are content-addressed and immutable. CAS exposes no public delete API:
 a `bundleHash` plus optional signature digest is a stable, replay-safe pointer.
 Garbage collection is the narrow private mark-sweep exception, implemented for
-local stores in `composable_agents/gc.py` (P5-S1, shipped commit `ed6ffb1`).
+local stores in `julep/gc.py` (P5-S1, shipped commit `ed6ffb1`).
 
 **Do not garbage-collect** a bundle while any worker may resolve it. On the
 Temporal path a worker re-resolves the bundle from `FlowInput.bundle` on every
@@ -228,7 +228,7 @@ EKS acceptance run** — a real cluster, S3-backed CAS (`STORE_URL=s3://...`), K
 scale-from-zero, and a worker image built with the `wasm` extra — requires
 cluster/S3/credentials not available in CI and remains a **manual ops step**:
 
-1. Build and push the worker image with `composable-agents[wasm]`.
+1. Build and push the worker image with `julep[wasm]`.
 2. Publish the signed bundle to the S3 CAS; record `CA_BUNDLES` and the signer
    public key.
 3. Set `STORE_URL`, `CA_BUNDLES`, `CA_BUNDLE_ALLOWED_SIGNERS` on the worker

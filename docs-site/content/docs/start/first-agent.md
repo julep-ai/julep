@@ -1,12 +1,12 @@
 ---
 title: "Your First Agent"
-description: "Build and run a local composable-agents Agent in minutes — no API key required."
+description: "Build and run a local julep Agent in minutes — no API key required."
 ---
 
 Save and run this as a normal Python script:
 
 ```python
-from composable_agents import Agent, tool
+from julep import Agent, tool
 
 
 @tool(effect="read", idempotent=True)
@@ -60,7 +60,7 @@ The core fields are `.output`, `.status`, `.ok`, `.trace`, `.cost`, `.rounds`, `
 If you omit `llm=`, the facade does not call a model. It uses a keyless default reasoner that emits a `RuntimeWarning` once and returns the input unprocessed:
 
 ```python
-from composable_agents import Agent
+from julep import Agent
 
 agent = Agent(reasoner="claude-sonnet-4-6")
 result = agent.run({"task": "classify this later"})
@@ -74,7 +74,7 @@ For a real model, pass an async callable with the same reply contract:
 # Real LLM variant: wire the provider client inside this function.
 from typing import Any
 
-from composable_agents import Agent, tool
+from julep import Agent, tool
 
 
 @tool(effect="read", idempotent=True)
@@ -98,13 +98,13 @@ agent = Agent(
 
 The framework constrains the controller through the reply schema and the granted tool set; it does not prescribe the model client.
 
-For a batteries-included multi-provider controller, install the `providers` extra and use `make_local_reasoner` from `composable_agents.execution.llm`. It routes a `provider:model` prefix on `reasoner=` (e.g. `"openai:gpt-4o"`, `"gemini:gemini-2.5-flash"`) through [any-llm](https://github.com/mozilla-ai/any-llm), so the same agent runs on any supported provider:
+For a batteries-included multi-provider controller, install the `providers` extra and use `make_local_reasoner` from `julep.execution.llm`. It routes a `provider:model` prefix on `reasoner=` (e.g. `"openai:gpt-4o"`, `"gemini:gemini-2.5-flash"`) through [any-llm](https://github.com/mozilla-ai/any-llm), so the same agent runs on any supported provider:
 
 <!-- ca:doctest skip -->
 ```python
-# pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic,openai]'
-from composable_agents import Agent, tool
-from composable_agents.execution.llm import make_local_reasoner
+# pip install --pre 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
+from julep import Agent, tool
+from julep.execution.llm import make_local_reasoner
 
 agent = Agent(reasoner="openai:gpt-4o", tools=[search_kb], llm=make_local_reasoner())
 ```
@@ -116,7 +116,7 @@ A bare model string (no `provider:` prefix) falls back to the default provider (
 Strict mode is the default. `Agent(..., mode="dev")` and `deploy(..., mode="dev")` keep compiling or running locally while retaining the diagnostics that production would block on.
 
 ```python
-from composable_agents import Agent, tool
+from julep import Agent, tool
 
 
 @tool(effect="dangerous", idempotent=False)

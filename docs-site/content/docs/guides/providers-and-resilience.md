@@ -5,11 +5,11 @@ description: "How to configure multi-provider LLM routing, fallback chains, and 
 
 ## Installing provider support
 
-The base `composable-agents` install does not include a live LLM client. To use
+The base `julep` install does not include a live LLM client. To use
 real models, install the `providers` extra and any provider SDK you need:
 
 ```bash
-pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic,openai]'
+pip install --pre 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
 ```
 
 Other supported extras: `[temporal]`, `[temporal,http,otel]`. See
@@ -32,13 +32,13 @@ A bare model string (no `provider:` prefix) falls back to the default provider
 
 ## make_local_reasoner
 
-`make_local_reasoner` from `composable_agents.execution.llm` returns a
+`make_local_reasoner` from `julep.execution.llm` returns a
 batteries-included async `llm=` callable. Pass it directly to `Agent(...)`:
 
 ```python
-# pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic,openai]'
-from composable_agents import Agent, tool
-from composable_agents.execution.llm import make_local_reasoner
+# pip install --pre 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
+from julep import Agent, tool
+from julep.execution.llm import make_local_reasoner
 
 agent = Agent(reasoner="openai:gpt-4o", tools=[search_kb], llm=make_local_reasoner())
 ```
@@ -56,14 +56,14 @@ LLM providers go down. The framework's answer is a worker-side resilience layer
 at the `LlmCaller` seam: a **deterministic fallback chain** per model, an
 **error taxonomy** that decides retry vs. advance vs. fail-fast, and a
 per-provider **circuit breaker**. Policy lives in the pure core
-(`composable_agents.resilience`); the mechanism is `make_resilient_llm_caller`
-in `composable_agents.execution.llm`.
+(`julep.resilience`); the mechanism is `make_resilient_llm_caller`
+in `julep.execution.llm`.
 
 ### Wiring
 
 ```python
-from composable_agents import CircuitBreaker, ResiliencePolicy
-from composable_agents.execution.llm import make_resilient_llm_caller
+from julep import CircuitBreaker, ResiliencePolicy
+from julep.execution.llm import make_resilient_llm_caller
 
 policy = ResiliencePolicy(
     fallbacks={

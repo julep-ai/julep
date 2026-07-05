@@ -3,7 +3,7 @@ title: "The Model"
 description: "The core model: typed flows, the frozen IR, shape analysis, capabilities, and projection."
 ---
 
-This is the conceptual reference for composable-agents. It expands the mental
+This is the conceptual reference for julep. It expands the mental
 model in the [README](/docs) and points to [the Specification](/docs/internals/specification) for
 normative rules. The spec is the source of truth; this page explains the shape
 of the system rather than restating every MUST.
@@ -74,7 +74,7 @@ validation diagnostics, and surface/closed shapes. See
 ## The shape lattice
 
 Every flow has an inferred `Shape`, ordered from cheapest to costliest in
-`composable_agents.kinds.Shape`:
+`julep.kinds.Shape`:
 
 ```text
 Shape.PIPELINE < Shape.DATAFLOW < Shape.BRANCHING < Shape.FEEDBACK < Shape.STAGED < Shape.AGENT
@@ -188,7 +188,7 @@ design rationale: [the Sessions guide](/docs/guides/sessions).
 
 ## Typed authoring surface
 
-The `composable_agents.typed` layer is a typed authoring surface over the same
+The `julep.typed` layer is a typed authoring surface over the same
 IR. `Flow[In, Out]`, typed tools, `>>`, typed combinators, adapters such as
 `as_type` / `expect`, and the `Agent` facade carry Python types while authoring,
 then elaborate to the identical `Node` tree before freeze. Types do not enter

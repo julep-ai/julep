@@ -3,9 +3,9 @@ import Link from 'next/link';
 export default function HomePage() {
   return (
     <div className="flex flex-col justify-center text-center flex-1 px-6">
-      <h1 className="text-4xl font-bold mb-4">Composable Agents</h1>
+      <h1 className="text-4xl font-bold mb-4">Julep</h1>
       <p className="text-fd-muted-foreground max-w-2xl mx-auto">
-        Build agents as composable, durable dataflows — flows that crash and resume, retry safely,
+        Durable AI agents — flows that crash and resume, retry safely,
         explain every step through a derived projection, and deny any tool the model was not
         granted. Author with <code>@flow</code>; ship the same frozen IR to Temporal, Kubernetes,
         or DBOS.

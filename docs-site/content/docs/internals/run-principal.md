@@ -7,7 +7,7 @@ description: "Identity and authority for a running flow."
 > adoption sketch: principal-by-reference threaded through workflow input;
 > rejected: per-run client factories, tenant-in-payload envelopes). Companion
 > to `docs/dispatch-boundary.md` (who may start a run) and
-> `composable_agents/execution/effects.py` (the caller seams this extends).
+> `julep/execution/effects.py` (the caller seams this extends).
 
 ## Thesis
 

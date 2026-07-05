@@ -4,7 +4,7 @@ description: "Internal orientation for engineers authoring agents and flows."
 ---
 
 The practical guide for engineers on the team building agents and flows with
-`composable_agents`. It covers how we set up, the day-to-day authoring loop, and
+`julep`. It covers how we set up, the day-to-day authoring loop, and
 where to go for depth. It links out rather than restating; the deep docs are the
 source of truth.
 
@@ -16,7 +16,7 @@ source of truth.
 
 ## What this is, in one breath
 
-We build agents as **composable, durable dataflows** instead of ad-hoc loops. You
+We build agents as **durable dataflows** instead of ad-hoc loops. You
 author with `@flow`: an ordinary Python function whose body wires graph steps.
 Registered tools, pures, and reasoners compile to a frozen, content-hashed IR
 that can crash and resume, retry safely, explain every step, and **deny any tool
@@ -49,7 +49,7 @@ python examples/episode_summary_flow.py
 
 Before pushing, run the same gates CI runs — they're listed in
 [Contributing](/docs/development/contributing#running-the-checks). The short version:
-`ruff check composable_agents`, `python -m mypy composable_agents`, and
+`ruff check julep`, `python -m mypy julep`, and
 `python -m pytest -q`. ([gotcha: use `python -m pytest`, not bare `pytest`](/docs/guides/gotchas#verify-gates))
 
 ---
@@ -79,7 +79,7 @@ Minimal end-to-end (this is the whole loop):
 
 ```python
 from typing import TypedDict
-from composable_agents import Reasoner, deploy, flow, pure, think, tool
+from julep import Reasoner, deploy, flow, pure, think, tool
 
 
 @tool(effect="read", idempotent=True)
@@ -134,7 +134,7 @@ Pick the highest-level surface that fits; drop down only when you need control.
 |---|---|---|
 | A pipeline over tools/reasoners (**the default**) | `@flow` | [Authoring Guide](/docs/guides/authoring-flows) |
 | An open-ended controller loop over granted tools | `Agent` facade | [Getting Started](/docs/start/first-agent) |
-| Typed, type-checkable composition | `composable_agents.typed` (`as_flow`, `>>`) | [Typed Flow](/docs/internals/typed-flow-calculus) |
+| Typed, type-checkable composition | `julep.typed` (`as_flow`, `>>`) | [Typed Flow](/docs/internals/typed-flow-calculus) |
 | Exact structural control / a new frontend | combinator kernel (`seq`, `par`, `alt`, `each`, `iter_up_to`, `stage`, `app`, `sub`) | [Concepts](/docs/concepts/model) |
 
 All four compile to the **same frozen IR**. `@flow` is primary; the kernel is the
@@ -168,9 +168,9 @@ Full version: [Concepts](/docs/concepts/model) · [Capabilities & Safety](/docs/
 
 ## Where things live
 
-- **`composable_agents/`** — the package. Module map is in the
+- **`julep/`** — the package. Module map is in the
   [README](/docs#module-map); the pure core never imports `temporalio`
-  (only `composable_agents/execution/` may).
+  (only `julep/execution/` may).
 - **`examples/`** — a ladder of runnable references, smallest first. Five run
   keyless and deterministic; see [Examples](/docs/guides/examples).
 - **`docs/`** — guides (this folder); [Documentation](/docs) is the index.

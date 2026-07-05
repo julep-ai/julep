@@ -1,7 +1,8 @@
 {
-  "title": "Composable Agents",
+  "title": "Julep",
   "pages": [
     "index",
+    "coming-from-v1",
     "start",
     "guides",
     "deploy",

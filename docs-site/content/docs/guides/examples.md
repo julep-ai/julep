@@ -114,7 +114,7 @@ What it teaches: running a facade `Agent` on Anthropic's hosted Claude Managed A
 
 Rung: hosted execution path (the one example that talks to a live service).
 
-Key APIs: `Agent`, `@tool`, `Agent.run_on_cma(...)`, `AnthropicCMAClient` (the `composable-agents[cma]` extra), the granted tool surface projected as CMA custom tools, `cost`, `trace`.
+Key APIs: `Agent`, `@tool`, `Agent.run_on_cma(...)`, `AnthropicCMAClient` (the `julep[cma]` extra), the granted tool surface projected as CMA custom tools, `cost`, `trace`.
 
 Set `ANTHROPIC_API_KEY` first, then run
 `python examples/cma_managed_agent.py`.

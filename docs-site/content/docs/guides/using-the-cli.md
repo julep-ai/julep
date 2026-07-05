@@ -1,23 +1,23 @@
 ---
-title: "Using the ca CLI"
+title: "Using the julep CLI"
 description: "Discover, run, lint, test, deploy, and trace a whole module of agents with one selection grammar."
 ---
 
-`ca` is the developer-facing CLI for a **module of agents**. Where `composable-agents` (the plumbing CLI) operates on frozen JSON artifacts, `ca` operates on your **Python source**: point it at a directory and it discovers every `@flow` and `Agent(...)`, treats each as a node in a cross-agent dependency graph, and gives you one selection grammar to inspect, run, gate, and deploy any slice — "dbt for agents, terminal-native, local-first."
+`julep` is the developer-facing CLI for a **module of agents**. Where the lower-level plumbing CLI (`python -m julep.cli`) operates on frozen JSON artifacts, `julep` operates on your **Python source**: point it at a directory and it discovers every `@flow` and `Agent(...)`, treats each as a node in a cross-agent dependency graph, and gives you one selection grammar to inspect, run, gate, and deploy any slice — "dbt for agents, terminal-native, local-first."
 
-`ca` is porcelain over the existing APIs (`deploy`, the in-memory interpreter, `validate`, the projection→Langfuse export); it adds no new runtime.
+`julep` is porcelain over the existing APIs (`deploy`, the in-memory interpreter, `validate`, the projection→Langfuse export); it adds no new runtime.
 
 ## Install
 
 ```bash
-pip install 'composable-agents[cli]'        # the `ca` command (pulls Typer; core stays PyYAML-only)
+pip install --pre julep        # the `julep` command ships with the base install
 ```
 
-Run `ca` from a directory that contains your agents. With no config it auto-discovers; everything else is optional.
+Run `julep` from a directory that contains your agents. With no config it auto-discovers; everything else is optional.
 
 ## The module
 
-An **agent** is a top-level `@flow`-decorated function or an `Agent(...)` instance. `ca` finds them two ways:
+An **agent** is a top-level `@flow`-decorated function or an `Agent(...)` instance. `julep` finds them two ways:
 
 - **AST scan (no import):** finds `@flow`/`Agent(...)` and the cross-`@flow` call edges for `ls`/`show`/`graph`/selection — fast, no side effects.
 - **Subprocess resolve (on demand):** imports your module in an isolated process to produce the runnable IR only when a verb needs it (`run`, `lint`, `deploy`).
@@ -35,7 +35,7 @@ exclude = ["examples/scratch_*.py"]
 triage = ["support"]
 
 [tool.ca.gates]
-fail_severity = "error"                # default gate threshold for `ca lint`
+fail_severity = "error"                # default gate threshold for `julep lint`
 
 [tool.ca.env.staging]                  # deploy/run targets (see "Outer loop")
 temporal_address   = "temporal.example:7233"
@@ -51,19 +51,19 @@ A `local` environment always exists implicitly (LocalDirCAS at `.ca/cas`, no Tem
 
 | Command | What it does |
 |---|---|
-| `ca ls [SEL]` | List agents (name · kind · tags). |
-| `ca show <agent>` | One agent: kind, source location, tags, cross-agent calls. |
-| `ca graph [SEL]` | The cross-agent dependency DAG as Graphviz DOT. |
-| `ca run <agent> [--input JSON] [--env]` | Execute locally and stream the terminal trace tree (or run against an env). |
-| `ca lint [SEL] [--fail-severity]` | Structural validation; named diagnostics with severity gating. |
-| `ca test [SEL] [--dry-run]` | Run `pytest` for the selected agents (matched by name via `-k`). |
-| `ca trace <run-id>` | Render a cached run's trace tree and print its Langfuse deep link. |
-| `ca doctor` | Preflight: discovery, git, Langfuse, Temporal. |
-| `ca deploy [SEL] --env <name>` | Freeze → publish bundle to the env CAS → record in the deploy ledger. |
-| `ca status [SEL] --env <name>` | Show what's deployed where + drift (exit 3 on drift). |
-| `ca chat <agent>` | Open a **local session** REPL: type a line, stream `Turn`/`Emit` events back, exit on `Closed`. |
-| `ca trigger <agent> <event> [--channel]` | Send one event into a session and render the resulting emits. |
-| `ca listen <agent> --forward-to URL` | Open a session and forward each emitted event to `URL` (HTTP POST). |
+| `julep ls [SEL]` | List agents (name · kind · tags). |
+| `julep show <agent>` | One agent: kind, source location, tags, cross-agent calls. |
+| `julep graph [SEL]` | The cross-agent dependency DAG as Graphviz DOT. |
+| `julep run <agent> [--input JSON] [--env]` | Execute locally and stream the terminal trace tree (or run against an env). |
+| `julep lint [SEL] [--fail-severity]` | Structural validation; named diagnostics with severity gating. |
+| `julep test [SEL] [--dry-run]` | Run `pytest` for the selected agents (matched by name via `-k`). |
+| `julep trace <run-id>` | Render a cached run's trace tree and print its Langfuse deep link. |
+| `julep doctor` | Preflight: discovery, git, Langfuse, Temporal. |
+| `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env CAS → record in the deploy ledger. |
+| `julep status [SEL] --env <name>` | Show what's deployed where + drift (exit 3 on drift). |
+| `julep chat <agent>` | Open a **local session** REPL: type a line, stream `Turn`/`Emit` events back, exit on `Closed`. |
+| `julep trigger <agent> <event> [--channel]` | Send one event into a session and render the resulting emits. |
+| `julep listen <agent> --forward-to URL` | Open a session and forward each emitted event to `URL` (HTTP POST). |
 
 Every `[SEL]` accepts the selection grammar below.
 
@@ -87,12 +87,12 @@ The same grammar drives every verb:
 | `2+triage` / `triage+2` | depth-bounded upstream / downstream |
 | `@triage` | `triage`, its downstream closure, and the upstream of that closure |
 
-Graph operators compose with any base, e.g. `+tag:support` (upstream of every `support` agent) and `ca test state:modified` (Slim-CI: test only what changed).
+Graph operators compose with any base, e.g. `+tag:support` (upstream of every `support` agent) and `julep test state:modified` (Slim-CI: test only what changed).
 
 ## Inner loop — local
 
 ```bash
-ca run triage --input '"TICKET-42"'
+julep run triage --input '"TICKET-42"'
 ```
 ```
 └─ seq#12 [ok]
@@ -103,44 +103,44 @@ ca run triage --input '"TICKET-42"'
 output: {"reply": "..."}
 ```
 
-> `ca run` executes with **offline echo stubs** for tools and reasoners (each
+> `julep run` executes with **offline echo stubs** for tools and reasoners (each
 > returns `{"output": <input>}`) so it never needs a key or network — it is for
 > seeing the **trace tree and control flow**, not realistic values. For realistic
 > local output, use `deployment.dry_run(input, reasoners={...})` with fake
 > reasoners (see [Your First Flow](/docs/start/first-flow)). Registered `@pure`
 > functions run for real in both.
 
-The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.ca/runs/` so `ca trace <run-id>` can re-render them and `result:fail` can select the failures.
+The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.ca/runs/` so `julep trace <run-id>` can re-render them and `result:fail` can select the failures.
 
 ## Gates
 
-`ca lint` lowers each selected agent to IR and runs the structural validator, reporting named diagnostics (`CYCLE`, `UNFROZEN_CALL`, `UNKNOWN_PURE`, …) at `error`/`warning`. `--fail-severity` decouples *what is reported* from *what fails the build*:
+`julep lint` lowers each selected agent to IR and runs the structural validator, reporting named diagnostics (`CYCLE`, `UNFROZEN_CALL`, `UNKNOWN_PURE`, …) at `error`/`warning`. `--fail-severity` decouples *what is reported* from *what fails the build*:
 
 - exit `0` — clean (or all findings below the threshold)
 - exit `1` — findings at/above `--fail-severity`
 - exit `2` — usage/resolve error
 
-`ca test` runs `pytest` scoped to the selected agents (`-k`), so `ca test +triage` exercises an agent and its dependencies.
+`julep test` runs `pytest` scoped to the selected agents (`-k`), so `julep test +triage` exercises an agent and its dependencies.
 
 ## Outer loop — deploy / status / run --env
 
-`ca` adds a **deploy ledger** over the existing freeze/publish plumbing — the record of what is deployed where, which does not otherwise exist.
+`julep` adds a **deploy ledger** over the existing freeze/publish plumbing — the record of what is deployed where, which does not otherwise exist.
 
 ```bash
-ca deploy triage --env staging
+julep deploy triage --env staging
 ```
 - freezes the agent (`deploy(..., strict=False)`, minting a content-addressed `artifact_hash`),
 - publishes the bundle (frozen flow + manifest + pure sources) to the env's CAS (`LocalDirCAS` locally, `S3CAS` for `s3://`),
 - appends a record to the **committed** ledger `.ca/deploys/<env>.json` (artifact hash + frozen IR + timestamp — self-describing).
 
 ```bash
-ca status --env staging        # triage  clean   sha256:3f14bac…     (exit 0)
+julep status --env staging        # triage  clean   sha256:3f14bac…     (exit 0)
                                # triage  drift   sha256:…            (exit 3, after a source change)
 ```
 Drift = re-freeze the current source and compare its `artifact_hash` to the ledger.
 
 ```bash
-ca run triage --env staging --input '"TICKET-42"'
+julep run triage --env staging --input '"TICKET-42"'
 ```
 replays the **deployed** artifact (never re-freezes drifted source): connects to the env's Temporal and runs the frozen flow on its task queue via `run_flow`.
 
@@ -153,22 +153,22 @@ The ledger lives in git (`.ca/deploys/` is tracked); `.ca/runs/` and `.ca/cas/` 
 These verbs open a **session** (a long-lived, keep-messaging agent) on the local backend over a selected agent:
 
 ```bash
-ca chat support-agent                       # REPL: each line is a message; Turn/Emit events stream back
-ca trigger support-agent '{"text": "hi"}'   # one-shot: send one event, render the reply, close
-ca listen support-agent --forward-to https://example.com/hook   # forward emitted events to a URL
+julep chat support-agent                       # REPL: each line is a message; Turn/Emit events stream back
+julep trigger support-agent '{"text": "hi"}'   # one-shot: send one event, render the reply, close
+julep listen support-agent --forward-to https://example.com/hook   # forward emitted events to a URL
 ```
 
-`ca chat`/`ca listen` read stdin off the event loop so events stream concurrently; `ca trigger --channel` validates the channel against the session's input channel up front. Full session model (authoring, the `SessionEvent` stream, and the Temporal/CMA backends): **[Sessions](/docs/guides/sessions)**.
+`julep chat`/`julep listen` read stdin off the event loop so events stream concurrently; `julep trigger --channel` validates the channel against the session's input channel up front. Full session model (authoring, the `SessionEvent` stream, and the Temporal/CMA backends): **[Sessions](/docs/guides/sessions)**.
 
 ## See also
 
 - [Sessions](/docs/guides/sessions) — long-lived agents the `chat`/`trigger`/`listen` verbs drive.
-- [Cheat-sheet](/docs/reference/cheatsheet) — the authoring surfaces `ca` operates on.
+- [Cheat-sheet](/docs/reference/cheatsheet) — the authoring surfaces `julep` operates on.
 - [Deploy to Temporal](/docs/deploy/temporal) / [Kubernetes](/docs/deploy/kubernetes) — the worker that executes deployed flows.
 
 ## See also
 
-- [`ca` CLI reference](/docs/reference/ca-cli) — every subcommand, flag, and the full selection grammar.
+- [`julep` CLI reference](/docs/reference/ca-cli) — every subcommand, flag, and the full selection grammar.
 - [Operations](/docs/deploy/operations) — operational runbooks for deploy, status/drift, and tracing a failing run in production.
 
 <!-- ported-by ca-docs-site: guides/using-the-cli -->

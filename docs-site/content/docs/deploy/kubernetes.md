@@ -10,7 +10,7 @@ a Deployment of worker pods, autoscaled by [Temporal](/docs/deploy/temporal).
 ## The container entrypoint
 
 ```bash
-composable-agents worker
+python -m julep.cli worker
 ```
 
 reads its configuration from the environment:
@@ -20,7 +20,7 @@ reads its configuration from the environment:
 | `WORKER_CONTEXT_FACTORY` | **required** | `module:attr` of a zero-arg callable (sync or async) returning the `WorkerContext` |
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Temporal frontend `host:port` |
 | `TEMPORAL_NAMESPACE` | `default` | Temporal namespace |
-| `TEMPORAL_TASK_QUEUE` | `composable-agents` | task queue this replica polls (one queue per lane) |
+| `TEMPORAL_TASK_QUEUE` | `julep` | task queue this replica polls (one queue per lane) |
 | `TEMPORAL_API_KEY` | unset | Temporal Cloud API key; setting it defaults TLS on |
 | `TEMPORAL_TLS` | true iff API key set | force TLS on/off |
 | `WORKER_GRACEFUL_SHUTDOWN_S` | `30` | drain window for in-flight activities after SIGTERM |
@@ -35,7 +35,7 @@ mode, not a deployment. Ship a factory in your image:
 
 ```python
 # yourapp/worker.py
-from composable_agents.execution.effects import WorkerContext
+from julep.execution.effects import WorkerContext
 
 def make_context() -> WorkerContext:  # async def also works
     return WorkerContext(
@@ -47,7 +47,7 @@ def make_context() -> WorkerContext:  # async def also works
 ```
 
 and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`. Flags override
-the environment for local runs: `composable-agents worker --task-queue
+the environment for local runs: `python -m julep.cli worker --task-queue
 lane-embeddings --address localhost:7233`.
 
 Lifecycle per replica: the probe listener starts first (liveness is green while
@@ -62,12 +62,12 @@ pod restarts.
 
 ```dockerfile
 FROM python:3.12-slim
-RUN pip install --no-cache-dir 'composable-agents[temporal]'
+RUN pip install --no-cache-dir --pre 'julep[temporal]'
 COPY yourapp /app/yourapp
 ENV PYTHONPATH=/app \
     WORKER_CONTEXT_FACTORY=yourapp.worker:make_context \
     WORKER_HEALTH_PORT=8080
-ENTRYPOINT ["composable-agents", "worker"]
+ENTRYPOINT ["julep", "worker"]
 ```
 
 ## Deployment
@@ -95,7 +95,7 @@ spec:
             - name: TEMPORAL_ADDRESS
               value: temporal-frontend.temporal.svc:7233
             - name: TEMPORAL_TASK_QUEUE
-              value: composable-agents
+              value: julep
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: "30"
           ports:
@@ -134,7 +134,7 @@ spec:
       metadata:
         endpoint: temporal-frontend.temporal.svc:7233
         namespace: default
-        taskQueue: composable-agents
+        taskQueue: julep
         queueTypes: "workflow,activity"   # default is workflow only
         targetQueueSize: "5"              # backlog per replica
         activationTargetQueueSize: "0"    # any backlog wakes a 0-replica lane
@@ -175,7 +175,7 @@ spec:
       metadata:
         endpoint: <ns>.<account>.tmprl.cloud:7233
         namespace: <ns>.<account>
-        taskQueue: composable-agents
+        taskQueue: julep
       authenticationRef:
         name: temporal-cloud-auth
 ```

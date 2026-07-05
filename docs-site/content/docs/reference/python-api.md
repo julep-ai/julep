@@ -1,10 +1,10 @@
 ---
 title: "Python API"
-description: "The full composable_agents public API surface, grouped by purpose."
+description: "The full julep public API surface, grouped by purpose."
 ---
 
 Start with `@flow`, `@tool` or `@pure`, `Reasoner`, and `deploy(...).dry_run(...)`.
-That is the stable authoring loop for composable, durable agent dataflows; the
+That is the stable authoring loop for durable agent dataflows; the
 lower-level IR/combinator APIs exist when you need to construct or inspect the
 wire format directly. See the repository [README](/docs),
 [docs index](/docs), [concepts](/docs/concepts/model), and
@@ -13,7 +13,7 @@ wire format directly. See the repository [README](/docs),
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, think, tool
+from julep import Reasoner, deploy, flow, pure, think, tool
 
 class Reply(TypedDict):
     reply: str
@@ -55,17 +55,16 @@ report optional runtime availability.
 
 | Extra | Installs | Example |
 |---|---|---|
-| base | authoring, compile, pure interpreter, `ca`/`composable-agents` scripts | `pip install composable-agents` |
-| `temporal` | Temporal workflows, activities, worker helpers | `pip install 'composable-agents[temporal]'` |
-| `dbos` | DBOS backend on `dbos>=2.18` | `pip install 'composable-agents[dbos]'` |
-| `http` | native HTTP tool calls from `callTool` | `pip install 'composable-agents[http]'` |
-| `cma` | Claude Managed Agents HTTP adapter | `pip install 'composable-agents[cma]'` |
-| `dotctx` | rich dotctx prompt packages with Jinja2 | `pip install 'composable-agents[dotctx]'` |
-| `providers` | `any-llm` provider caller | `pip install 'composable-agents[providers]'` |
-| `otel`, `langfuse` | projection span export | `pip install 'composable-agents[otel]'` |
-| `store` | CAS bundle storage/signing helpers | `pip install 'composable-agents[store]'` |
-| `wasm` | wasm-tier bundle-sourced pures | `pip install 'composable-agents[wasm]'` |
-| `cli` | no-op alias kept for the Typer `ca` script | `pip install 'composable-agents[cli]'` |
+| base | authoring, compile, pure interpreter, the `julep` console script | `pip install --pre julep` |
+| `temporal` | Temporal workflows, activities, worker helpers | `pip install --pre 'julep[temporal]'` |
+| `dbos` | DBOS backend on `dbos>=2.18` | `pip install --pre 'julep[dbos]'` |
+| `http` | native HTTP tool calls from `callTool` | `pip install --pre 'julep[http]'` |
+| `cma` | Claude Managed Agents HTTP adapter | `pip install --pre 'julep[cma]'` |
+| `dotctx` | rich dotctx prompt packages with Jinja2 | `pip install --pre 'julep[dotctx]'` |
+| `providers` | `any-llm` provider caller | `pip install --pre 'julep[providers]'` |
+| `otel`, `langfuse` | projection span export | `pip install --pre 'julep[otel]'` |
+| `store` | CAS bundle storage/signing helpers | `pip install --pre 'julep[store]'` |
+| `wasm` | wasm-tier bundle-sourced pures | `pip install --pre 'julep[wasm]'` |
 
 ## Core enums and constants
 
@@ -135,7 +134,7 @@ flow parameters or JSON captures.
 ## `@flow` control helpers
 
 These names are exported at package root. For lower-level `dsl.think` and
-`dsl.each`, import from `composable_agents.dsl`.
+`dsl.each`, import from `julep.dsl`.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
@@ -191,7 +190,7 @@ All functions return `Node` unless noted. They do no IO; `freeze(...)`,
 | `continue_with` | `continue_with(value: Any) -> dict[str, Any]` | next segment input | sentinel dict | none | `continue_with({"cursor": 1})` |
 | `is_continuation` | `is_continuation(value: Any) -> bool` | value | bool | none | `is_continuation(continue_with(1))` |
 | `continuation_value` | `continuation_value(value: dict[str, Any]) -> Any` | sentinel dict | wrapped value | `KeyError` if missing key | `continuation_value(continue_with(1))` |
-| `run_chained` | `async run_chained(run_segment, input, *, max_segments=1000) -> Any` | async segment runner and initial input | final non-continuation value | `ComposableAgentsError` when max segments exhausted | `await run_chained(lambda x: one_segment(x), 0)` |
+| `run_chained` | `async run_chained(run_segment, input, *, max_segments=1000) -> Any` | async segment runner and initial input | final non-continuation value | `JulepError` when max segments exhausted | `await run_chained(lambda x: one_segment(x), 0)` |
 
 ## Sessions
 
@@ -211,7 +210,7 @@ single-consumer and ends only on `Closed`.
 | `scan` | `scan(step_flow: Node, init: object, *, in_channel="in", out_channel="out", state_schema=None) -> Session[Any, Any]` | turn flow returning `(carrier, output)` | session | `SessionValidationError` | `chat = scan(turn_flow, init=[])` |
 | `loop` | `loop(body: Node, *, init: object, in_channel="in", out_channel="out", state_schema=None) -> Session[Any, Any]` | body value becomes next carrier | session | `SessionValidationError` | `loop(seq(recv("in"), emit("out")), init=None)` |
 | `session` | `session(func=None, *, in_channel="in", out_channel="out", state_schema=None)` | straight-line async coroutine sugar | `Session` or decorator | `SessionCompileError` | `@session\nasync def chat(s): ...` |
-| `drive_session` | `async drive_session(session, *, inputs, max_turns=1000, env=None) -> tuple[object, list[O]]` | session, input iterable, local env | final carrier and emissions | `ComposableAgentsError` for overrun; interpreter errors | `await drive_session(chat, inputs=["hi"])` |
+| `drive_session` | `async drive_session(session, *, inputs, max_turns=1000, env=None) -> tuple[object, list[O]]` | session, input iterable, local env | final carrier and emissions | `JulepError` for overrun; interpreter errors | `await drive_session(chat, inputs=["hi"])` |
 | `LocalSessionHandle.open` | `async open(session, *, tools=None, reasoners=None, subs=None, agents=None, planners=None, max_calls=None, mode=STRICT, principal=None, max_turns=100000, channel_capacity=None, env=None, manifest=None) -> LocalSessionHandle` | local effect maps and limits | live local handle | interpreter/session errors | `await LocalSessionHandle.open(chat, reasoners={})` |
 
 ## Contracts, freeze, validate, and deploy
@@ -254,7 +253,7 @@ single-consumer and ends only on `Closed`.
 | `deploy` | `deploy(flow, snapshot=None, *, tools=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow") -> Deployment` | flow plus snapshot or native tools; capability gates; mode | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(triage, tools=[lookup], reasoners=[SUPPORT_REPLY])` |
 | `Deployment` | `Deployment(flow, manifest, diagnostics=[], capabilities=None, mode=STRICT, freeze_timing="deploy_time", ...)` | compiled artifact | deployment | none | `deployment.artifact_hash` |
 | `Deployment.refresh` | `refresh(snapshot=None) -> Deployment` | fresh snapshot or stored source | new deployment | `ValueError`, deploy errors | `deployment.refresh(new_snapshot)` |
-| `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="composable-agents", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
+| `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="julep", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
 | `Deployment.adry_run` / `dry_run` | `adry_run(value, *, reasoners=None) -> Result`; `dry_run(value, *, reasoners=None) -> Result` | local value and fake reasoners | interpreter result | `ValueError` if not built with `tools=` | `deployment.dry_run("TICKET-42", reasoners={...})` |
 | `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | CAS store/url and optional signing key | bundle record | bundle/CAS/signing errors | `deployment.publish(".ca/cas")` |
 
@@ -295,13 +294,13 @@ language.
 | `Agent.replace` | `replace(*, reasoner: str \| Reasoner \| None = None, budget_cost=_KEEP, max_rounds=None, instructions=_KEEP, mode=_KEEP, llm=_KEEP) -> Agent` | selected config overrides (a `Reasoner` object drives model/system like the constructor) | new agent | same as constructor | `agent.replace(max_rounds=8)` |
 | `Agent.arun` / `run` | `async arun(input, *, principal=None) -> Result`; `run(input, *, principal=None) -> Result` | one-shot input and optional run principal | typed run dict | `RuntimeError` if sync call inside event loop; deploy/interpreter errors | `agent.run({"task": "x"}).output` |
 | `Agent.arun_on_cma` / `run_on_cma` | `async arun_on_cma(input, *, client, environment=None) -> Result`; sync wrapper | CMA client and environment | typed run dict | `RuntimeError`, CMA/tool errors | `await agent.arun_on_cma("hi", client=cma)` |
-| `Agent.open` | `async open(*, session, backend="local", principal=None, client=None, task_queue="composable-agents", policy=None, history_threshold=None, channel_capacity=None, session_id=None, environment=None) -> SessionHandle` | session plus backend config | live handle | `ValueError`, `ValidationError`, `NotImplementedError` for Temporal sub-cap auto-wire | `await agent.open(session=chat, backend="local")` |
+| `Agent.open` | `async open(*, session, backend="local", principal=None, client=None, task_queue="julep", policy=None, history_threshold=None, channel_capacity=None, session_id=None, environment=None) -> SessionHandle` | session plus backend config | live handle | `ValueError`, `ValidationError`, `NotImplementedError` for Temporal sub-cap auto-wire | `await agent.open(session=chat, backend="local")` |
 | `Agent.open_session` | sync wrapper for non-local backends | same as `open` | `SessionHandle` | `RuntimeError` for local or running loop | `agent.open_session(session=chat, backend="temporal", client=client)` |
 | `Agent.deployment` | `deployment() -> Deployment` | none | compiled deployment | deploy errors | `agent.deployment().artifact_hash` |
 | `Agent.sub_deployments` | `sub_deployments() -> dict[str, Deployment]` | none | child artifacts | deploy errors | `agent.sub_deployments()` |
 | `Agent.split_children` | `split_children() -> dict[str, SplitCapability]` | none | split child markers | none | `agent.split_children()` |
 | `Agent.check` | `check() -> list[Diagnostic]` | none | deploy diagnostics | freeze errors | `agent.check()` |
-| `Agent.deploy` | `async deploy(client, *, session_id, input=None, task_queue="composable-agents", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `NotImplementedError` with sub-capabilities; deploy/runtime errors | `await agent.deploy(client, session_id="run-1")` |
+| `Agent.deploy` | `async deploy(client, *, session_id, input=None, task_queue="julep", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `NotImplementedError` with sub-capabilities; deploy/runtime errors | `await agent.deploy(client, session_id="run-1")` |
 | `AGENT_REPLY_SCHEMA` | JSON schema constant | closed controller vocabulary | schema dict | none | `Reasoner("agent", "m", reply=AGENT_REPLY_SCHEMA)` |
 
 `Result` returned by `Agent.run` is a `dict` with properties `output`, `status`,
@@ -310,7 +309,7 @@ language.
 ## Typed and DAG escape hatches
 
 The package root exports `as_flow`; the full typed wrapper lives in
-`composable_agents.typed`.
+`julep.typed`.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
@@ -352,13 +351,13 @@ Top-level Temporal exports exist only when `HAVE_TEMPORAL` is true:
 | `FlowInput` | `FlowInput(session_id, input=None, flow_json=None, manifest_json=None, pinned_pures=None, max_call_limits=None, call_counts=None, ref=None, policy=None, principal=None, bundle=None, root_run_id=None, segment_seq=0)` | Temporal flow workflow input | dataclass | none | `FlowInput("run-1", flow_json=deployment.flow_json)` |
 | `SessionInput` | `SessionInput(session_id, flow_json, manifest_json, init, max_call_limits=None, call_counts=None, pinned_pures=None, budget=None, spent=0.0, bundle=None, in_channel="in", out_channel="out", policy=None, principal=None, root_run_id=None, segment_seq=0, history_threshold=None, channel_capacity=None, ...)` | Temporal session workflow input | dataclass | none | created by `Agent.open(..., backend="temporal")` |
 | `AgentInput` | `AgentInput(controller, session_id, input=None, config=None, granted_tools=None, granted_tools_unconstrained=False, granted_subflows=None, granted_contracts=None, state=None, state_cursor=None, use_session_store=False, policy=None, resolve_spec=True, principal=None, root_run_id=None, segment_seq=0)` | Temporal agent workflow input | dataclass | none | created by runtime |
-| `run_flow` | `async run_flow(client, flow_json, manifest_json, *, session_id, input=None, task_queue="composable-agents", policy=None, pinned_pures=None, max_call_limits=None, principal=None, root_run_id=None, bundle=None) -> Any` | connected Temporal client and frozen artifact | workflow result | Temporal/runtime errors | `await run_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
+| `run_flow` | `async run_flow(client, flow_json, manifest_json, *, session_id, input=None, task_queue="julep", policy=None, pinned_pures=None, max_call_limits=None, principal=None, root_run_id=None, bundle=None) -> Any` | connected Temporal client and frozen artifact | workflow result | Temporal/runtime errors | `await run_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
 | `start_flow` | same params as `run_flow` | connected client and artifact | workflow handle | Temporal errors | `handle = await start_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
 | `TemporalSessionHandle` | `TemporalSessionHandle(wfhandle, *, in_channel="in", out_channel="out", poll_s=0.02)` | workflow handle and channels | session handle | backend errors | returned by `Agent.open(..., backend="temporal")` |
 | `build_worker` | `build_worker(client, context, *, task_queue=DEFAULT_TASK_QUEUE, min_batch_window_s=0.0, **worker_kwargs) -> Worker` | Temporal client, `WorkerContext`, queue, SDK kwargs | worker | Temporal/import/config errors | `build_worker(client, WorkerContext(llm=llm))` |
 | `run_worker` | `async run_worker(*, target_host="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, tool_urls=None, mcp_call=None, llm=None, capabilities=None, subflows=None, agents=None, blob_store=None, session_store=None, trajectory_sink=None, trajectory_blob_store=None, on_attempt=None, http_timeout_s=30.0, **worker_kwargs) -> None` | standalone worker config | never until cancelled | Temporal/runtime errors | `await run_worker(llm=llm)` |
 | `WorkerServeSettings` | `WorkerServeSettings(context_factory, address="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, api_key=None, tls=False, graceful_shutdown_s=30.0, max_concurrent_activities=None, max_concurrent_workflow_tasks=None, health_port=None)` | container worker settings | settings | none | `WorkerServeSettings.from_env(env)` |
-| `serve` | `async serve(settings: WorkerServeSettings, *, shutdown_event=None) -> None` | settings and optional test shutdown event | None | `ComposableAgentsError` without `temporalio`, factory errors | `await serve(WorkerServeSettings.from_env())` |
+| `serve` | `async serve(settings: WorkerServeSettings, *, shutdown_event=None) -> None` | settings and optional test shutdown event | None | `JulepError` without `temporalio`, factory errors | `await serve(WorkerServeSettings.from_env())` |
 | `HealthServer` | `HealthServer(port: int, *, host="0.0.0.0")` | probe listener | server with `/healthz`, `/readyz` | `RuntimeError` if `port` before start | `await HealthServer(8080).start()` |
 | `load_context_factory` | `load_context_factory(spec: str) -> Callable[[], Any]` | `module:attr` spec | callable | `ValueError` | `load_context_factory("app.worker:make_context")` |
 | Activity inputs | `CallToolInput`, `InvokeReasonerInput`, `ResolveQoSInput`, `CompilePlanInput`, `LoadStateInput`, `CommitStateInput`, `LoadValueInput`, `CommitValueInput`, `PutBlobInput` | dataclass payloads for activity wrappers | payload | none | `CallToolInput({"kind":"native","name":"t"}, {}, "cid")` |
@@ -370,7 +369,7 @@ Top-level Temporal exports exist only when `HAVE_TEMPORAL` is true:
 | `drive_cma_agent_loop` | `async drive_cma_agent_loop(*, input, cfg, session, call_tool, granted=None, contracts=None, state=None, session_cid="cma") -> dict[str, Any]` | CMA session and same gates as local loop | terminal result | CMA/tool errors | `await drive_cma_agent_loop(input=x, cfg=cfg, session=s, call_tool=fn)` |
 | `CMAAgentEnv` | `CMAAgentEnv(inner, *, client, environment=None, tools, cfg, granted=None, contracts=None, custom_tools=None)` | wraps an `Env`, replacing only `run_agent` | env | backend errors | `CMAAgentEnv(inner, client=c, tools={}, cfg=cfg)` |
 
-DBOS exports are available from `composable_agents.execution` only when
+DBOS exports are available from `julep.execution` only when
 `HAVE_DBOS` is true; they are not re-exported by the package root.
 
 ## Projection and observability
@@ -415,7 +414,7 @@ durability.
 
 | Exception | Constructor | Raised by | Example |
 |---|---|---|---|
-| `ComposableAgentsError` | `ComposableAgentsError(*args)` | base framework error | `except ComposableAgentsError:` |
+| `JulepError` | `JulepError(*args)` | base framework error | `except JulepError:` |
 | `ValidationError` | `ValidationError(diagnostics: list[Diagnostic])` | strict `deploy`, facade checks | `exc.diagnostics` |
 | `FreezeError` | `FreezeError(*args)` | `freeze`, manifest binding | unresolved tool |
 | `AdmissionError` | `AdmissionError(*args)` | race admission callers | illegal race branch |
@@ -436,40 +435,40 @@ Console scripts in `pyproject.toml`:
 
 | Script | Entry point | Scope |
 |---|---|---|
-| `composable-agents` | `composable_agents.cli:main` | JSON artifact plumbing plus worker host |
-| `ca` | `composable_agents.ca.cli:main` | module-level developer CLI over Python source |
+| `julep` | `julep.ca.cli:main` | module-level developer CLI over Python source |
+| `python -m julep.cli` | `julep.cli:main` | JSON artifact plumbing plus worker host (no console script) |
 
-`composable-agents` commands and flags:
-
-| Command | Verified signature |
-|---|---|
-| `validate` | `composable-agents validate <flow_json> [--manifest <path>]` |
-| `freeze` | `composable-agents freeze <flow_json> <snapshot_json> [--caps <path>]` |
-| `inspect` | `composable-agents inspect <flow_json> [--manifest <path>] [--caps <path>]` |
-| `run-local` | `composable-agents run-local <flow_json> <input_json> [--mode strict|dev]` |
-| `graph` | `composable-agents graph <flow_json>` |
-| `worker` | `composable-agents worker [--context-factory module:attr] [--address host:port] [--namespace ns] [--task-queue queue] [--health-port port]` |
-
-`ca` commands and flags:
+`julep` commands and flags:
 
 | Command | Verified signature |
 |---|---|
-| root | `ca [--version]` |
-| `ls` | `ca ls [selector] [--exclude expr]` |
-| `show` | `ca show <name>` |
-| `graph` | `ca graph [selector] [--exclude expr]` |
-| `run` | `ca run <name> [--input JSON] [--run-id id] [--env name]` |
-| `deploy` | `ca deploy [selector] [--exclude expr] [--env name]` |
-| `status` | `ca status [selector] [--exclude expr] [--env name]` |
-| `lint` | `ca lint [selector] [--exclude expr] [--fail-severity error|warning|info]` |
-| `test` | `ca test [selector] [--exclude expr] [--dry-run]` |
-| `trace` | `ca trace <run_id>` |
-| `doctor` | `ca doctor` |
-| `chat` | `ca chat <name> [--env local]` |
-| `trigger` | `ca trigger <name> <event> [--channel name]` |
-| `listen` | `ca listen <name> --forward-to URL` |
+| `validate` | `python -m julep.cli validate <flow_json> [--manifest <path>]` |
+| `freeze` | `python -m julep.cli freeze <flow_json> <snapshot_json> [--caps <path>]` |
+| `inspect` | `python -m julep.cli inspect <flow_json> [--manifest <path>] [--caps <path>]` |
+| `run-local` | `python -m julep.cli run-local <flow_json> <input_json> [--mode strict|dev]` |
+| `graph` | `python -m julep.cli graph <flow_json>` |
+| `worker` | `python -m julep.cli worker [--context-factory module:attr] [--address host:port] [--namespace ns] [--task-queue queue] [--health-port port]` |
 
-Selection forms accepted by `ca` are documented in [CLI](/docs/guides/using-the-cli).
+`julep` commands and flags:
+
+| Command | Verified signature |
+|---|---|
+| root | `julep [--version]` |
+| `ls` | `julep ls [selector] [--exclude expr]` |
+| `show` | `julep show <name>` |
+| `graph` | `julep graph [selector] [--exclude expr]` |
+| `run` | `julep run <name> [--input JSON] [--run-id id] [--env name]` |
+| `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
+| `status` | `julep status [selector] [--exclude expr] [--env name]` |
+| `lint` | `julep lint [selector] [--exclude expr] [--fail-severity error|warning|info]` |
+| `test` | `julep test [selector] [--exclude expr] [--dry-run]` |
+| `trace` | `julep trace <run_id>` |
+| `doctor` | `julep doctor` |
+| `chat` | `julep chat <name> [--env local]` |
+| `trigger` | `julep trigger <name> <event> [--channel name]` |
+| `listen` | `julep listen <name> --forward-to URL` |
+
+Selection forms accepted by `julep` are documented in [CLI](/docs/guides/using-the-cli).
 
 Environment knobs verified in source:
 
@@ -479,7 +478,7 @@ Environment knobs verified in source:
 | `WORKER_CONTEXT_FACTORY` | `WorkerServeSettings.from_env` | required `module:attr` factory returning `WorkerContext` |
 | `TEMPORAL_ADDRESS` | worker host | Temporal frontend, default `localhost:7233` |
 | `TEMPORAL_NAMESPACE` | worker host | namespace, default `default` |
-| `TEMPORAL_TASK_QUEUE` | worker host | task queue, default `composable-agents` |
+| `TEMPORAL_TASK_QUEUE` | worker host | task queue, default `julep` |
 | `TEMPORAL_API_KEY` | worker host | Temporal Cloud API key; setting it defaults TLS on |
 | `TEMPORAL_TLS` | worker host | boolean TLS override |
 | `WORKER_GRACEFUL_SHUTDOWN_S` | worker host | SIGTERM drain window, default `30` |
@@ -498,7 +497,7 @@ Environment knobs verified in source:
 | `ANTHROPIC_API_KEY` | Anthropic CMA client | fallback API key |
 | `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | Langfuse exporter | OTLP endpoint credentials |
 | `LANGFUSE_CAPTURE_IO` | Langfuse exporter | `1`/`true` captures IO |
-| `LANGFUSE_PROJECT_ID` | `ca trace` deep links | optional project deep-link component |
-<!-- generated by ca-docs-matrix: composable-agents/reference -->
+| `LANGFUSE_PROJECT_ID` | `julep trace` deep links | optional project deep-link component |
+<!-- generated by ca-docs-matrix: julep/reference -->
 
 <!-- ported-by ca-docs-site: reference/python-api -->

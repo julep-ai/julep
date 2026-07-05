@@ -3,13 +3,13 @@ title: "Deploy on DBOS"
 description: "Durable flows and agent loops on Postgres via dbos-transact."
 ---
 
-The DBOS backend (`composable_agents.execution.dbos_backend`) runs frozen
+The DBOS backend (`julep.execution.dbos_backend`) runs frozen
 flows on [dbos-transacthttps://docs.dbos.dev -- durable workflows
 checkpointed in your existing Postgres, no extra cluster.
 
 ## Install
 
-    pip install 'composable-agents[dbos]'    # dbos>=2.18, Python >= 3.11
+    pip install --pre 'julep[dbos]'    # dbos>=2.18, Python >= 3.11
 
 ## Worker wiring
 
@@ -19,8 +19,8 @@ Effects are configured exactly like the Temporal worker -- one process-global
 
 ```python
 from dbos import DBOS, DBOSConfig
-from composable_agents.execution.effects import WorkerContext, configure
-import composable_agents.execution.dbos_backend as ca_dbos
+from julep.execution.effects import WorkerContext, configure
+import julep.execution.dbos_backend as ca_dbos
 
 configure(WorkerContext(mcp_call=my_mcp_caller, llm=my_llm_caller))
 ca_dbos.set_projection_sink(my_logfire_sink)   # optional ProjectionSink
@@ -32,7 +32,7 @@ DBOS.launch()
 ## Running a flow
 
 ```python
-from composable_agents.execution.dbos_backend import run_flow_dbos
+from julep.execution.dbos_backend import run_flow_dbos
 
 result = await run_flow_dbos(
     flow_json, manifest_json,
@@ -55,7 +55,7 @@ standalone with `run_agent_dbos` (the counterpart of starting Temporal's
 automatically through the env.
 
 ```python
-from composable_agents.execution.dbos_backend import run_agent_dbos
+from julep.execution.dbos_backend import run_agent_dbos
 
 result = await run_agent_dbos(
     "triage_controller",                 # registered agent spec / reasoner

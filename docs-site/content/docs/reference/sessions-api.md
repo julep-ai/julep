@@ -6,7 +6,7 @@ description: "The sessions API: scan/loop/@session, handles, events, and the dur
 Open a session once, keep sending messages, and stream `SessionEvent`s until `Closed`. A session is a root `Op.LOOP`: one turn blocks on `recv`, runs ordinary IR, emits outputs, and threads a carrier to the next turn. For the user guide, see [Sessions](/docs/guides/sessions).
 
 ```python
-from composable_agents import Agent, arr, recv, register_pure, scan, seq
+from julep import Agent, arr, recv, register_pure, scan, seq
 
 def turn(value: dict) -> tuple[list[str], dict[str, object]]:
     history = [*(value["carrier"] or []), str(value["msg"])]
@@ -21,20 +21,20 @@ await handle.send("hi", idempotency_key="turn-1")
 ## Imports
 
 ```python
-from composable_agents import (
+from julep import (
     Channel, HUMAN_CHANNEL, LocalSessionHandle, Session, SessionCompileError,
     SessionEvent, SessionHandle, drive_session, emit, human_gate, loop, recv,
     scan, session,
 )
-from composable_agents.execution.cma_session import CMASessionHandle
-from composable_agents.execution.session_store import InMemorySessionStore, SessionStore
+from julep.execution.cma_session import CMASessionHandle
+from julep.execution.session_store import InMemorySessionStore, SessionStore
 ```
 
 Temporal symbols are lazy exports and require `temporalio`:
 
 ```python
-from composable_agents import HAVE_TEMPORAL
-from composable_agents.execution import SessionInput, SessionWorkflow, TemporalSessionHandle
+from julep import HAVE_TEMPORAL
+from julep.execution import SessionInput, SessionWorkflow, TemporalSessionHandle
 ```
 
 ## Authoring
@@ -171,7 +171,7 @@ Runs a session over finite in-memory inputs and returns the final carrier plus e
 
 Parameters: `session` is the session to interpret; `inputs` are queued on `session.in_channel`; `max_turns` caps consumed messages; `env` optionally supplies effect handlers.
 Returns: `tuple[object, list[O]]`.
-Raises: `ComposableAgentsError` if more than `max_turns` messages are supplied; interpreter errors from the turn body.
+Raises: `JulepError` if more than `max_turns` messages are supplied; interpreter errors from the turn body.
 Example: `carrier, outputs = await drive_session(counter, inputs=["a", "b"])`.
 
 ## Values And Events
@@ -276,7 +276,7 @@ class SessionHandle(Protocol):
 Backend-neutral live facade. `events()` is single-consumer. `send(...)` returns `{"seq": int, "channel": str}` and deduplicates same-key/same-payload sends. `open_receives()` returns `{"channel": str, "seq": int}` records.
 
 Returns: see method signatures.
-Raises: `ComposableAgentsError` for duplicate event consumers, idempotency conflicts, and local capacity errors; backend `SessionClosed` when sending after close; Temporal update failures for workflow-side validation.
+Raises: `JulepError` for duplicate event consumers, idempotency conflicts, and local capacity errors; backend `SessionClosed` when sending after close; Temporal update failures for workflow-side validation.
 Example: `ack = await handle.send("a", idempotency_key="a"); await handle.close("done")`.
 
 ## Opening And Handles
@@ -287,7 +287,7 @@ Example: `ack = await handle.send("a", idempotency_key="a"); await handle.close(
 async def open(
     self, *, session: Session[Any, Any], backend: str = "local",
     principal: Optional[dict[str, Any]] = None, client: Any = None,
-    task_queue: str = "composable-agents", policy: Any = None,
+    task_queue: str = "julep", policy: Any = None,
     history_threshold: Optional[int] = None, channel_capacity: Optional[int] = None,
     session_id: Optional[str] = None, environment: Any = None,
 ) -> SessionHandle
@@ -306,7 +306,7 @@ Example: `handle = await agent.open(session=counter, backend="temporal", client=
 def open_session(
     self, *, session: Session[Any, Any], backend: str = "local",
     principal: Optional[dict[str, Any]] = None, client: Any = None,
-    task_queue: str = "composable-agents", policy: Any = None,
+    task_queue: str = "julep", policy: Any = None,
     history_threshold: Optional[int] = None, channel_capacity: Optional[int] = None,
     session_id: Optional[str] = None, environment: Any = None,
 ) -> SessionHandle
@@ -340,7 +340,7 @@ class LocalSessionHandle:
 Direct in-memory handle opener. Prefer `Agent.open(..., backend="local")` for deployment and capability checks.
 
 Returns: `LocalSessionHandle`.
-Raises: `ComposableAgentsError` for max-turn exhaustion, duplicate `events()`, `ChannelFull`, or idempotency conflicts. Fatal turn exceptions emit fatal error then closed.
+Raises: `JulepError` for max-turn exhaustion, duplicate `events()`, `ChannelFull`, or idempotency conflicts. Fatal turn exceptions emit fatal error then closed.
 Example: `handle = await LocalSessionHandle.open(counter, channel_capacity=10)`.
 
 ### `TemporalSessionHandle`
@@ -360,7 +360,7 @@ class TemporalSessionHandle:
 Methods match `SessionHandle`: `send`, `state`, `open_receives`, `close`, and `events`. `send` executes update `"send"`. `events()` polls query `"events"` and acks with update `"ack_events"` after yielding.
 
 Returns: `TemporalSessionHandle`.
-Raises: `ComposableAgentsError` for duplicate event consumers; `TimeoutError` if `close()` does not quiesce within 30 seconds; Temporal workflow/update failures for workflow-side errors.
+Raises: `JulepError` for duplicate event consumers; `TimeoutError` if `close()` does not quiesce within 30 seconds; Temporal workflow/update failures for workflow-side errors.
 Example: `public = TemporalSessionHandle(client.get_workflow_handle("support-session-1"))`.
 
 ### `CMASessionHandle`
@@ -380,7 +380,7 @@ class CMASessionHandle:
 Handle backed by one hosted CMA session per accepted inbound turn. It does not thread the framework carrier; resend transcript yourself if the hosted model needs memory.
 
 Returns: `CMASessionHandle`.
-Raises: `ComposableAgentsError` for unsupported send channels, duplicate `events()`, idempotency conflicts, missing custom-tool fields, or policy failures surfaced as fatal events.
+Raises: `JulepError` for unsupported send channels, duplicate `events()`, idempotency conflicts, missing custom-tool fields, or policy failures surfaced as fatal events.
 Example: `handle = await CMASessionHandle.open(client=client, tools={}, agent={"name": "support", "tools": []})`.
 
 ## Temporal Workflow Surface
@@ -473,12 +473,12 @@ Example: `cursor = await store.commit_value("s1", 0, {"turn": 1}, value_fingerpr
 
 | Error | Import | Meaning |
 |---|---|---|
-| `SessionCompileError` | `from composable_agents import SessionCompileError` | `@session` cannot be lifted. |
-| `SessionValidationError` | `from composable_agents.session import SessionValidationError` | `scan` / `loop` found blocking diagnostics. |
-| `SessionTurnError` | `from composable_agents.errors import SessionTurnError` | Turn body intentionally signals a session error. |
-| `ComposableAgentsError` | `from composable_agents import ComposableAgentsError` | Base framework error, including duplicate event consumers and idempotency conflicts. |
-| `ValidationError` | `from composable_agents import ValidationError` | Deploy/open-time validation or capability failure. |
-| `SessionStoreError`, `CursorConflict` | `from composable_agents.execution.session_store import ...` | Durable store errors. |
+| `SessionCompileError` | `from julep import SessionCompileError` | `@session` cannot be lifted. |
+| `SessionValidationError` | `from julep.session import SessionValidationError` | `scan` / `loop` found blocking diagnostics. |
+| `SessionTurnError` | `from julep.errors import SessionTurnError` | Turn body intentionally signals a session error. |
+| `JulepError` | `from julep import JulepError` | Base framework error, including duplicate event consumers and idempotency conflicts. |
+| `ValidationError` | `from julep import ValidationError` | Deploy/open-time validation or capability failure. |
+| `SessionStoreError`, `CursorConflict` | `from julep.execution.session_store import ...` | Durable store errors. |
 
 Example: `raise SessionTurnError("try again", fatal=False)` emits an error event and continues without advancing the carrier.
 
@@ -493,13 +493,13 @@ worker = build_worker(client, ctx, task_queue=DEFAULT_TASK_QUEUE)
 
 `WorkerServeSettings.from_env(...)` reads `WORKER_CONTEXT_FACTORY`, `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, `TEMPORAL_API_KEY`, `TEMPORAL_TLS`, `WORKER_GRACEFUL_SHUTDOWN_S`, `WORKER_MAX_CONCURRENT_ACTIVITIES`, `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS`, and `WORKER_HEALTH_PORT`. Worker CLI flags are exactly `--context-factory`, `--address`, `--namespace`, `--task-queue`, and `--health-port`.
 
-Local `ca` session commands:
+Local `julep` session commands:
 
 | Command | Signature | Notes |
 |---|---|---|
-| `ca chat` | `ca chat NAME [--env local]` | stdin REPL; only local env is supported. |
-| `ca trigger` | `ca trigger NAME EVENT [--channel in]` | sends one JSON-or-raw event; only `in` is accepted. |
-| `ca listen` | `ca listen NAME --forward-to URL` | POSTs emitted event JSON to `URL`. |
+| `julep chat` | `julep chat NAME [--env local]` | stdin REPL; only local env is supported. |
+| `julep trigger` | `julep trigger NAME EVENT [--channel in]` | sends one JSON-or-raw event; only `in` is accepted. |
+| `julep listen` | `julep listen NAME --forward-to URL` | POSTs emitted event JSON to `URL`. |
 <!-- generated by ca-docs-matrix: sessions/reference -->
 
 <!-- ported-by ca-docs-site: reference/sessions-api -->

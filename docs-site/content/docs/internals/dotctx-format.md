@@ -15,7 +15,7 @@ description: "The rich .ctx reasoner-definition format."
 
 ## Thesis
 
-This repo's dotctx adapter (`composable_agents/dotctx.py`) reads a minimal
+This repo's dotctx adapter (`julep/dotctx.py`) reads a minimal
 layout — `settings.yaml`, inline/`system_file` prompt, optional
 `schema_file` — into a `Reasoner`, and its `max_rounds` lowering to IR shape is
 the part worth keeping exactly as is. mem-mcp's production dotctx is the same
@@ -65,7 +65,7 @@ The loader reads mem-mcp's production prompts unchanged:
   `response_format: {type: json_object}` (stored as `"json_object"`; a reply
   schema wins at call time). Both enter deploy identity omit-when-unset.
 - **Yglu.** Settings and frontmatter may carry `!? $env.get(...)` expressions
-  (`composable-agents[yglu]`), evaluated against an explicit `env=` binding —
+  (`julep[yglu]`), evaluated against an explicit `env=` binding —
   never the ambient process environment. Numeric strings arriving from env
   coerce for `max_rounds` / `max_tokens` / `output_retries` / `temperature`.
 - **Jinja filters.** mem-mcp's pure filters (`to_json`, `as_xml`,
@@ -76,16 +76,16 @@ The loader reads mem-mcp's production prompts unchanged:
   base_dir/tokenizer wiring).
 - **Evals.** `eval.py` (required `sample(limit)` + `score(input, output,
   expected)`) and `eval.yaml` load only through the explicit
-  `composable_agents.dotctx_evals.load_ctx_evals` entry point — loading a
+  `julep.dotctx_evals.load_ctx_evals` entry point — loading a
   prompt never executes eval code. Running evals stays a consumer concern.
 
 ## Design
 
 ### Packaging
 
-New optional extra: `composable-agents[dotctx]` → `jinja2` (PyYAML is already
+New optional extra: `julep[dotctx]` → `jinja2` (PyYAML is already
 required for any disk loading). The rich loader lives in
-`composable_agents/dotctx_rich.py`; importing it without the extra raises
+`julep/dotctx_rich.py`; importing it without the extra raises
 immediately (no degraded parse — G-8 discipline: a package that *has* a
 `prompt.j2` and a loader that can't render it is a hard error, not a
 plain-string fallback).
@@ -170,7 +170,7 @@ rewrites) load as bounded reasoners with no edits beyond settings-key renames;
 the tool-using packages (`record/execute`, brief pipeline) additionally rely
 on `tools.pyi` grants + freeze verification; provider-transform logic in
 mem-mcp's dotctx package is **deleted**, superseded by the `LlmCaller`.
-Details live in mem-mcp `specs/042-composable-agents-temporal/`.
+Details live in mem-mcp `specs/042-julep-temporal/`.
 
 ## Non-goals
 
@@ -184,12 +184,12 @@ Details live in mem-mcp `specs/042-composable-agents-temporal/`.
 
 | File | Change |
 |---|---|
-| `composable_agents/dotctx.py` | `user_render`, `max_tokens` on `Reasoner`; rich-layout detection delegating to `dotctx_rich` |
-| `composable_agents/dotctx_rich.py` | create: Jinja2 compile + renderer registration, message-bundle parse, `.pyi` schema/tool compilers, manifest-fragment emission |
-| `composable_agents/prompt.py` | `rendered_reasoner_for` covers `user_render` |
-| `composable_agents/execution/llm.py` | user turn from rendered user string; forward `max_tokens` |
-| `composable_agents/freeze.py` | `TOOL_SCHEMA_DRIFT` check against recorded expected schemas |
-| `composable_agents/ir.py` / codec | conditional-key inclusion for new Reasoner fields (hash-stable) |
+| `julep/dotctx.py` | `user_render`, `max_tokens` on `Reasoner`; rich-layout detection delegating to `dotctx_rich` |
+| `julep/dotctx_rich.py` | create: Jinja2 compile + renderer registration, message-bundle parse, `.pyi` schema/tool compilers, manifest-fragment emission |
+| `julep/prompt.py` | `rendered_reasoner_for` covers `user_render` |
+| `julep/execution/llm.py` | user turn from rendered user string; forward `max_tokens` |
+| `julep/freeze.py` | `TOOL_SCHEMA_DRIFT` check against recorded expected schemas |
+| `julep/ir.py` / codec | conditional-key inclusion for new Reasoner fields (hash-stable) |
 | `pyproject.toml` | `dotctx` extra |
 | `docs/SPEC.md` | rich layout, renderer naming/hashing, drift diagnostic |
 | tests | minimal-layout regression; rich load of a fixture `.ctx`; renderer drift; bundle rejection cases; schema-drift diagnostic; golden corpus unmoved |

@@ -1,6 +1,6 @@
 ---
 title: "Prompt Fragments"
-description: "Composable prompt fragments and how they assemble."
+description: "Prompt fragments and how they assemble."
 ---
 
 **Status: proposed (design).** Let a `Reasoner`'s system prompt be computed by a

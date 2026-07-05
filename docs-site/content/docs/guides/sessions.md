@@ -14,7 +14,7 @@ The script below needs no provider key, no Temporal server, and no CLI config. I
 Install the package:
 
 ```bash
-python -m pip install composable-agents
+python -m pip install --pre julep
 ```
 
 From a repository checkout, use the editable form instead:
@@ -32,7 +32,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents import Agent, SessionEvent, arr, recv, register_pure, scan, seq
+from julep import Agent, SessionEvent, arr, recv, register_pure, scan, seq
 
 
 def step(value: dict[str, Any]) -> tuple[list[str], dict[str, Any]]:
@@ -121,7 +121,7 @@ Three surfaces, all compiling to the same `Op.LOOP` IR.
 `scan(step, init)` where the step is a flow `(carrier, msg) → (carrier', output)`:
 
 ```python
-from composable_agents import arr, recv, scan, seq
+from julep import arr, recv, scan, seq
 
 chat = scan(
     seq(recv("in"), arr("my_module.turn_step")),
@@ -143,7 +143,7 @@ chat = scan(
 Write the loop as a normal `async` function; it is AST-lifted into the same `Op.LOOP`:
 
 ```python
-from composable_agents import session
+from julep import session
 
 @session
 async def chat(s):
@@ -192,7 +192,7 @@ await handle.close(reason="done")            # terminal; events() ends on Closed
 For lower-level test code, open the local backend directly:
 
 ```python
-from composable_agents import LocalSessionHandle
+from julep import LocalSessionHandle
 
 handle = await LocalSessionHandle.open(chat, channel_capacity=100)
 ```
@@ -255,7 +255,7 @@ handle = await agent.open(
 Install the Temporal extra:
 
 ```bash
-python -m pip install 'composable-agents[temporal]'
+python -m pip install --pre 'julep[temporal]'
 ```
 
 Open through the facade with a connected Temporal client and a worker polling the same task queue:
@@ -280,9 +280,9 @@ handle = await agent.open(
 Run a worker with a `WorkerContext` that includes a session store. `InMemorySessionStore` is process-local and useful for development/tests; replace it with a durable `SessionStore` implementation for production:
 
 ```python
-from composable_agents.execution.activities import WorkerContext
-from composable_agents.execution.session_store import InMemorySessionStore
-from composable_agents.execution.worker import run_worker
+from julep.execution.activities import WorkerContext
+from julep.execution.session_store import InMemorySessionStore
+from julep.execution.worker import run_worker
 
 
 async def serve() -> None:
@@ -297,7 +297,7 @@ async def serve() -> None:
 For a container entrypoint, expose a `WORKER_CONTEXT_FACTORY=module:attr` factory that returns `WorkerContext` and run:
 
 ```bash
-composable-agents worker \
+python -m julep.cli worker \
   --address localhost:7233 \
   --namespace default \
   --task-queue support-sessions \
@@ -311,7 +311,7 @@ Temporal sessions enforce capability grants, `maxCalls`, pure pins, and cost bud
 Install the CMA extra:
 
 ```bash
-python -m pip install 'composable-agents[cma]'
+python -m pip install --pre 'julep[cma]'
 ```
 
 Open through the same facade:
@@ -330,23 +330,23 @@ handle = await agent.open(
 
 ## From the CLI
 
-The `ca` verbs open a local `SessionHandle` over a selected agent:
+The `julep` verbs open a local `SessionHandle` over a selected agent:
 
 ```bash
-ca chat support-agent                       # REPL: type a line, stream Turn/Emit back, exit on Closed
-ca trigger support-agent '{"text": "hi"}'   # one-shot: send one event, render the reply
-ca trigger support-agent '{"text": "hi"}' --channel in
-ca listen support-agent --forward-to https://example.com/hook   # forward emitted events to a URL
+julep chat support-agent                       # REPL: type a line, stream Turn/Emit back, exit on Closed
+julep trigger support-agent '{"text": "hi"}'   # one-shot: send one event, render the reply
+julep trigger support-agent '{"text": "hi"}' --channel in
+julep listen support-agent --forward-to https://example.com/hook   # forward emitted events to a URL
 ```
 
-`ca chat` and `ca listen` currently support `--env local`. `ca trigger` accepts only the `in` channel. See [using the CLI](/docs/guides/using-the-cli).
+`julep chat` and `julep listen` currently support `--env local`. `julep trigger` accepts only the `in` channel. See [using the CLI](/docs/guides/using-the-cli).
 
 ## Testing without a live handle
 
 Use `drive_session(...)` when you want a bounded, in-memory fold over known inputs:
 
 ```python
-from composable_agents import drive_session
+from julep import drive_session
 
 carrier, outputs = await drive_session(chat, inputs=["a", "b"], max_turns=2)
 ```

@@ -1,6 +1,6 @@
 ---
 title: "Gotchas & Troubleshooting"
-description: "Recurring traps in composable-agents authoring — define-time vs runtime, determinism, capability denials, dev vs strict, and failure triage."
+description: "Recurring traps in julep authoring — define-time vs runtime, determinism, capability denials, dev vs strict, and failure triage."
 ---
 
 Most errors surface as a define-time diagnostic with a `fix:` line — read that
@@ -63,7 +63,7 @@ explicit escape hatch (REPL/`exec` contexts fall back to generated names).
 
 ```python
 from typing import Any
-from composable_agents import cond, flow, pure
+from julep import cond, flow, pure
 
 @pure("ticket.is_large")
 def is_large(ticket: dict[str, Any]) -> bool:
@@ -241,14 +241,14 @@ Run the same checks CI runs before pushing
 ([CONTRIBUTING](https://github.com/julep-ai/julep-v2/blob/main/CONTRIBUTING.md#running-the-checks)):
 
 ```bash
-ruff check composable_agents
-python -m mypy composable_agents
+ruff check julep
+python -m mypy julep
 python -m pytest -q
 ```
 
 - Use **`python -m pytest`**, not bare `pytest`, so it runs against the project's
   interpreter and resolves the package correctly.
-- The pure core must stay free of `temporalio`; only `composable_agents/execution/`
+- The pure core must stay free of `temporalio`; only `julep/execution/`
   may import it. `mypy` and `ruff` must be clean and public APIs stay typed.
 - Tests run both with Temporal **absent** and **present** — `HAVE_TEMPORAL`
   gates the runtime, and the authoring path must pass either way.
@@ -276,19 +276,19 @@ Use this sequence when a flow will not import, compile, deploy, or run.
 ### Prerequisites
 
 - Python `>=3.12`.
-- CLI installed:
+- CLI installed (ships with the base install):
 
 ```bash
-pip install 'composable-agents[cli]'   # from PyPI
-pip install -e '.[cli]'                 # from a source checkout (contributors)
+pip install --pre julep   # from PyPI
+pip install -e .          # from a source checkout (contributors)
 ```
 
-Healthy: `ca --help` and `composable-agents --help` list commands.
+Healthy: `julep --help` lists commands.
 
 - For failures that only appear on the durable path:
 
 ```bash
-pip install 'composable-agents[temporal]'   # from PyPI
+pip install --pre 'julep[temporal]'   # from PyPI
 pip install -e '.[temporal]'                 # from a source checkout (contributors)
 temporal server start-dev
 ```
@@ -321,7 +321,7 @@ Replace `FLOW`, `TOOLS`, and the capabilities file with the affected objects:
 
 ```bash
 python - <<'PY'
-from composable_agents import CapabilityManifest, deploy, explain
+from julep import CapabilityManifest, deploy, explain
 from your_agents_module import FLOW, TOOLS
 
 caps = CapabilityManifest.from_file("capabilities.yaml")
@@ -340,17 +340,17 @@ Healthy: `No diagnostics.`, `no prod gap`, expected shape, and an artifact hash.
 If you already have frozen artifacts, inspect them without importing source:
 
 ```bash
-composable-agents validate flow.json --manifest manifest.json
-composable-agents inspect flow.json --manifest manifest.json --caps capabilities.yaml
-composable-agents graph flow.json
+python -m julep.cli validate flow.json --manifest manifest.json
+python -m julep.cli inspect flow.json --manifest manifest.json --caps capabilities.yaml
+python -m julep.cli graph flow.json
 ```
 
 Healthy: `validate` prints `No diagnostics.` and exits `0`.
 
-### Step 4 — Lint via ca
+### Step 4 — Lint via julep
 
 ```bash
-ca lint +triage --fail-severity error
+julep lint +triage --fail-severity error
 ```
 
 Healthy: exit `0`. Exit `1` means findings at/above threshold. Exit `2` means
@@ -373,14 +373,14 @@ discovery or resolve failed.
 ### Step 6 — Re-run and re-freeze
 
 ```bash
-ca lint +triage --fail-severity error
-ca run triage --input '"TICKET-42"'
+julep lint +triage --fail-severity error
+julep run triage --input '"TICKET-42"'
 ```
 
 Healthy: lint exits `0`; run streams a trace tree and prints `output:`.
 
 ```bash
-composable-agents freeze flow.json snapshot.json --caps capabilities.yaml
+python -m julep.cli freeze flow.json snapshot.json --caps capabilities.yaml
 ```
 
 Healthy: output includes `frozen_flow`, `manifest`, `diagnostics:`, and
@@ -392,8 +392,8 @@ Healthy: output includes `frozen_flow`, `manifest`, `diagnostics:`, and
   `Deployment` without raising `ValidationError`.
 - Local execution: `deployment.dry_run(input, reasoners={...})` returns the
   expected `.value` with deterministic fake reasoners.
-- CLI: `ca lint <selector> --fail-severity error` exits `0`.
-- Artifact: `composable-agents validate flow.json --manifest manifest.json`
+- CLI: `julep lint <selector> --fail-severity error` exits `0`.
+- Artifact: `python -m julep.cli validate flow.json --manifest manifest.json`
   prints `No diagnostics.`.
 - Temporal: the worker is ready, the workflow terminates, and `projection` has
   expected `events`, `costByShape`, and `pending`.
@@ -405,7 +405,7 @@ Healthy: output includes `frozen_flow`, `manifest`, `diagnostics:`, and
 2. Check whether current source drifted from the deployed artifact:
 
 ```bash
-ca status triage --env staging
+julep status triage --env staging
 ```
 
 Healthy deployed state: `clean` and exit `0`. Drift exits `3`.
@@ -414,12 +414,12 @@ Healthy deployed state: `clean` and exit `0`. Drift exits `3`.
    instead of re-freezing drifted source:
 
 ```bash
-ca run triage --env staging --input '"TICKET-42"'
+julep run triage --env staging --input '"TICKET-42"'
 ```
 
 4. For CAS/ledger deployments, rollback is selecting the previous immutable
    `artifact_hash` from the deploy ledger or CAS record. After the pointer swap,
-   rerun `ca status triage --env staging` and a representative `ca run`.
+   rerun `julep status triage --env staging` and a representative `julep run`.
 
 ### Escalation
 
@@ -429,8 +429,8 @@ Capture before escalating:
   `explain(deployment.diagnostics)` and `deployment.prod_gap_summary()`.
 - `deployment.artifact_hash`, `deployment.flow_json`, `deployment.manifest_json`,
   redacted capability manifest, and `surface_shape` / `closed_shape`.
-- `ca doctor`, `ca lint +triage --fail-severity error`,
-  `ca status triage --env staging`, and `ca trace <run-id>` for failed local runs.
+- `julep doctor`, `julep lint +triage --fail-severity error`,
+  `julep status triage --env staging`, and `julep trace <run-id>` for failed local runs.
 - Temporal worker logs, workflow history, `openGates`, and `projection`; in local
   dev, inspect Temporal Web at `http://localhost:8233`.
 - Kubernetes worker env (`WORKER_CONTEXT_FACTORY`, `TEMPORAL_ADDRESS`,

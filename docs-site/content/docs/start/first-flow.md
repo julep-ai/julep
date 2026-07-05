@@ -12,10 +12,10 @@ You need Python 3.12 or newer. No API key. No running infrastructure.
 ## Install
 
 ```bash
-pip install composable-agents
+pip install --pre julep
 ```
 
-`composable_agents.HAVE_TEMPORAL` tells you at runtime whether the durable execution layer is also available. The package compiles and runs flows either way.
+`julep.HAVE_TEMPORAL` tells you at runtime whether the durable execution layer is also available. The package compiles and runs flows either way.
 
 ## The complete example
 
@@ -25,7 +25,7 @@ Save this as `quickstart_flow.py` and run it with `python quickstart_flow.py`.
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, think, tool
+from julep import Reasoner, deploy, flow, pure, think, tool
 
 
 class SupportReply(TypedDict):
@@ -193,7 +193,7 @@ Every flow has an inferred shape on the lattice `Pipeline < Dataflow < Branching
 - [Authoring guide](/docs/guides/authoring-flows) — the full determinism contract, branching, fan-out, captures, and define-time error reference.
 - [Concepts](/docs/concepts/model) — frozen IR, the shape lattice, capabilities, and the projection plane.
 - [Capabilities and safety](/docs/guides/capabilities-and-safety) — grants, approval gates, and race admission in detail.
-- [Using the CLI](/docs/guides/using-the-cli) — `ca run`, `ca lint`, `ca deploy`, and the cross-agent graph.
+- [Using the CLI](/docs/guides/using-the-cli) — `julep run`, `julep lint`, `julep deploy`, and the cross-agent graph.
 - [Deploy to Temporal](/docs/deploy/temporal) — durable execution and worker setup.
 - Larger examples: [`examples/episode_summary_flow.py`](https://github.com/julep-ai/julep-v2/blob/main/examples/episode_summary_flow.py) and [`examples/cluster_labeling_flow.py`](https://github.com/julep-ai/julep-v2/blob/main/examples/cluster_labeling_flow.py).
 

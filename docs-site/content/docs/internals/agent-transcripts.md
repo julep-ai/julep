@@ -9,7 +9,7 @@ description: "The transcript model and how traces are recorded."
 > ships on). Builds on `docs/design/agent-loop-as-turn.md` (the reified
 > `Step`), `docs/design/durable-session-store.md` (claim-check codec,
 > `trace_content_refs`, blob durability contract), and `ContextPolicy`
-> (`composable_agents/ir.py`).
+> (`julep/ir.py`).
 
 ## Thesis
 
@@ -43,7 +43,7 @@ resolve outside workflow history. Workflow payloads keep carrying refs; the
 claim-check limits work stays intact.
 
 ```python
-# composable_agents/transcript.py (pure core, strict mypy)
+# julep/transcript.py (pure core, strict mypy)
 def transcript_for(state: AgentStateView, policy: ContextPolicy) -> list[Turn]
 # Turn = {"role": "assistant"|"tool", "ref": ToolRefJson|None, "content_ref"|"content": ...}
 ```
@@ -143,11 +143,11 @@ argument for C1, not against the stopgap.
 
 | File | Change |
 |---|---|
-| `composable_agents/transcript.py` | create: `Turn`, `transcript_for` (pure, strict) |
-| `composable_agents/agent_loop.py` | `AgentState.summary`; transcript plan in the turn body (via `turn.py` step) |
-| `composable_agents/ir.py` / `dsl.py` | optional `ctx: ContextPolicy` on `app()` and the APP node codec (conditional-key, hash-stable) |
-| `composable_agents/execution/effects.py` | `InvokeReasonerInput.transcript`; hydration + budget + summarizer in `invoke_reasoner`; `LlmCaller` widening |
-| `composable_agents/execution/harness.py` / `dbos_backend.py` | thread the plan into `InvokeReasonerInput` for `app` rounds |
+| `julep/transcript.py` | create: `Turn`, `transcript_for` (pure, strict) |
+| `julep/agent_loop.py` | `AgentState.summary`; transcript plan in the turn body (via `turn.py` step) |
+| `julep/ir.py` / `dsl.py` | optional `ctx: ContextPolicy` on `app()` and the APP node codec (conditional-key, hash-stable) |
+| `julep/execution/effects.py` | `InvokeReasonerInput.transcript`; hydration + budget + summarizer in `invoke_reasoner`; `LlmCaller` widening |
+| `julep/execution/harness.py` / `dbos_backend.py` | thread the plan into `InvokeReasonerInput` for `app` rounds |
 | `validate.py` / deploy pipeline | blocking diagnostics: `SUMMARY` without `summarizer`; `WHOLE_SESSION`/`SUMMARY` on an `app` without `max_tokens` |
 | `docs/SPEC.md` | transcript semantics per scope; elision marker; summarizer requirement |
 | tests | `transcript_for` determinism + budget edge cases; elision marker; summary persistence across `continue_as_new`; deploy diagnostic; golden corpus unmoved |

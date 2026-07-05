@@ -3,7 +3,7 @@ title: "Operations"
 description: "Runbooks for operating workers and sessions in production, plus reaching the Temporal UI."
 ---
 
-Operational runbooks for running composable-agents in production. Each section is self-contained; the shared prerequisite is a deployed worker (see [Deploy on Temporal](/docs/deploy/temporal) or [Deploy on Kubernetes](/docs/deploy/kubernetes)).
+Operational runbooks for running julep in production. Each section is self-contained; the shared prerequisite is a deployed worker (see [Deploy on Temporal](/docs/deploy/temporal) or [Deploy on Kubernetes](/docs/deploy/kubernetes)).
 
 ## Operating workers
 
@@ -16,29 +16,29 @@ Related docs: [docs index](/docs), [concepts](/docs/concepts/model), [spec](/doc
 
 #### When To Use
 
-Use this when production composable-agents workers need deploy, scale, drain,
+Use this when production Julep workers need deploy, scale, drain,
 rollback, or wedged-flow triage. This is the Temporal/Kubernetes path:
-`FlowWorkflow`, `AgentWorkflow`, `SessionWorkflow`, `composable-agents worker`,
+`FlowWorkflow`, `AgentWorkflow`, `SessionWorkflow`, `python -m julep.cli worker`,
 and KEDA's `temporal` scaler on task-queue backlog.
 
-Do not use it for DBOS operations. DBOS runs through `composable_agents.execution.dbos_backend`, rejects `race`/`hedge`/`quorum`, and uses DBOS queues/workflows instead of Temporal polling.
+Do not use it for DBOS operations. DBOS runs through `julep.execution.dbos_backend`, rejects `race`/`hedge`/`quorum`, and uses DBOS queues/workflows instead of Temporal polling.
 
 #### Prerequisites
 
 Install the runtime extras your image needs:
 
 ```bash
-python -m pip install 'composable-agents[temporal]'
-python -m pip install 'composable-agents[providers,http,otel]'
-python -m pip install 'composable-agents[store,wasm]'
+python -m pip install --pre 'julep[temporal]'
+python -m pip install --pre 'julep[providers,http,otel]'
+python -m pip install --pre 'julep[store,wasm]'
 ```
 
 You need Temporal address/namespace/task queue, Kubernetes rights for
 Deployments/Secrets/HPAs/KEDA `ScaledObject`s, an image that runs
-`composable-agents worker`, provider/tool credentials as Secrets, and one
+`python -m julep.cli worker`, provider/tool credentials as Secrets, and one
 `WorkerContext` factory. Use `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`
 for an app-specific image, or
-`WORKER_CONTEXT_FACTORY=composable_agents.execution.bundle_worker:make_context`
+`WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
 plus `STORE_URL`, `CA_BUNDLES`, and `CA_BUNDLE_ALLOWED_SIGNERS` for the generic
 signed-bundle worker.
 
@@ -49,9 +49,9 @@ signed-bundle worker.
    ```bash
    export CA_ENV=prod
    export AGENT=triage
-   export NS=composable-agents-prod
+   export NS=julep-prod
    export WORKER_DEPLOY=ca-worker
-   export TASK_QUEUE=composable-agents
+   export TASK_QUEUE=julep
    export TEMPORAL_ADDRESS=temporal-frontend.temporal.svc.cluster.local:7233
    export TEMPORAL_NAMESPACE=default
    export IMAGE=registry.example.com/ca-worker:2026-06-25
@@ -62,15 +62,15 @@ signed-bundle worker.
 2. Preflight source and publish the frozen artifact.
 
    ```bash
-   ca doctor
-   ca lint "$AGENT"
-   ca deploy "$AGENT" --env "$CA_ENV"
-   ca status "$AGENT" --env "$CA_ENV"
+   julep doctor
+   julep lint "$AGENT"
+   julep deploy "$AGENT" --env "$CA_ENV"
+   julep status "$AGENT" --env "$CA_ENV"
    ```
 
    Healthy result: discovery is `ok`, lint prints `clean`, deploy prints an
    agent plus `sha256:` artifact prefix, and status is `clean` with exit `0`.
-   `ca status` exit `3` means drift or freeze error.
+   `julep status` exit `3` means drift or freeze error.
 
 3. Create namespace and runtime Secret.
 
@@ -183,10 +183,10 @@ signed-bundle worker.
 
    ```bash
    kubectl get deployment "$WORKER_DEPLOY" -n "$NS" -w
-   ca run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
+   julep run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
    ```
 
-   Healthy result: `ca run` prints `output: ...`; the Deployment scales up when
+   Healthy result: `julep run` prints `output: ...`; the Deployment scales up when
    backlog appears and scales down after `cooldownPeriod`. Temporal UI shows
    `FlowWorkflow`, `AgentWorkflow`, or `SessionWorkflow`.
 
@@ -208,14 +208,14 @@ signed-bundle worker.
 Run after every deploy, scale change, and rollback:
 
 ```bash
-ca status "$AGENT" --env "$CA_ENV"
-ca run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
+julep status "$AGENT" --env "$CA_ENV"
+julep run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
 kubectl rollout status deployment/"$WORKER_DEPLOY" -n "$NS" --timeout=180s
 kubectl get scaledobject "${WORKER_DEPLOY}-temporal" -n "$NS"
 kubectl logs -n "$NS" deployment/"$WORKER_DEPLOY" --since=30m
 ```
 
-Healthy result: `ca status` is `clean`; `ca run` returns expected output from
+Healthy result: `julep status` is `clean`; `julep run` returns expected output from
 the deployed artifact; the worker has replicas when backlog exists; the
 `ScaledObject` is ready; logs do not show repeated `PureDriftError`,
 `CapabilityDenied`, `PlanRejected`, `ValidationError`, `FreezeError`,
@@ -254,8 +254,8 @@ from the release artifact or source-control history. Do not re-freeze current
 source as rollback. Then run:
 
 ```bash
-ca status "$AGENT" --env "$CA_ENV"
-ca run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
+julep status "$AGENT" --env "$CA_ENV"
+julep run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
 ```
 
 Bad scale setting:
@@ -296,7 +296,7 @@ Start with the failing seam.
   best-effort; they are not durability.
 
 Before escalating, attach `RUN_ID`, workflow type, task queue, Temporal
-namespace, `ca status` output, deploy ledger entry, worker image digest, worker
+namespace, `julep status` output, deploy ledger entry, worker image digest, worker
 env excluding secrets, KEDA YAML, HPA status, worker logs, and `openGates` /
 `projection` query output if available.
 
@@ -309,7 +309,7 @@ Sessions are root `Op.LOOP` artifacts guarded by `recv(...)`. The production dur
 #### Prerequisites
 
 - Python `>=3.12`.
-- For Temporal production: `pip install 'composable-agents[temporal,providers]'`
+- For Temporal production: `pip install --pre 'julep[temporal,providers]'`
   or the source-checkout equivalent:
 
 ```bash
@@ -324,15 +324,15 @@ export ANTHROPIC_API_KEY=...
 ```
 
 - Temporal access: frontend address, namespace, task queue, and credentials.
-  `composable-agents worker` reads `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`,
+  `python -m julep.cli worker` reads `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`,
   `TEMPORAL_TASK_QUEUE`, `TEMPORAL_API_KEY`, and `TEMPORAL_TLS`.
 - Worker context: `WORKER_CONTEXT_FACTORY=module:attr` must resolve to a
-  callable returning `composable_agents.execution.effects.WorkerContext`.
+  callable returning `julep.execution.effects.WorkerContext`.
 - Production storage: if you run multi-replica workers or enable
   `history_threshold`, use shared implementations for `WorkerContext.session_store`
   and `WorkerContext.blob_store`. `InMemorySessionStore` is only process-local.
 - Operator access: worker logs, Temporal Web/Cloud for the workflow id, and the
-  ability to run `ca doctor` in the application checkout.
+  ability to run `julep doctor` in the application checkout.
 
 #### Known-good smoke
 
@@ -358,14 +358,14 @@ missing. Run the CMA command only when the CMA beta is enabled for the key.
 export WORKER_CONTEXT_FACTORY=yourapp.worker:make_context
 export TEMPORAL_ADDRESS=localhost:7233
 export TEMPORAL_NAMESPACE=default
-export TEMPORAL_TASK_QUEUE=composable-agents
-composable-agents worker --task-queue composable-agents --health-port 8080
+export TEMPORAL_TASK_QUEUE=julep
+python -m julep.cli worker --task-queue julep --health-port 8080
 ```
 
 Healthy result: stdout starts with
-`worker: address=... namespace=... task_queue=composable-agents health_port=8080`.
+`worker: address=... namespace=... task_queue=julep health_port=8080`.
 The worker registers `FlowWorkflow`, `SessionWorkflow`, `AgentWorkflow`, and the
-activities from `composable_agents.execution.worker.WORKFLOWS` and `ACTIVITIES`.
+activities from `julep.execution.worker.WORKFLOWS` and `ACTIVITIES`.
 
 2. Check readiness before accepting traffic.
 
@@ -390,14 +390,14 @@ from temporalio.client import Client
 client = await Client.connect("localhost:7233", namespace="default")
 handle = await agent.open(
     session=chat, backend="temporal", client=client,
-    session_id="support-session-123", task_queue="composable-agents",
+    session_id="support-session-123", task_queue="julep",
     history_threshold=10000, channel_capacity=100,
 )
 ```
 
 ```python
 # CMA: hosted per-turn session; resend transcript if you need memory.
-from composable_agents.execution.cma_anthropic import AnthropicCMAClient
+from julep.execution.cma_anthropic import AnthropicCMAClient
 
 cma_client = AnthropicCMAClient(
     model="claude-haiku-4-5-20251001",
@@ -417,7 +417,7 @@ agen = handle.events()
 ```
 
 Healthy result: no event is yielded until the session receives input. Calling
-`handle.events()` a second time on the same handle raises `ComposableAgentsError`
+`handle.events()` a second time on the same handle raises `JulepError`
 with `single-consumer` in the message.
 
 5. Send one message with an idempotency key.
@@ -491,7 +491,7 @@ within its client-side deadline.
 9. Resume a durable Temporal session after a consumer crash.
 
 ```python
-from composable_agents.execution.harness import TemporalSessionHandle
+from julep.execution.harness import TemporalSessionHandle
 from temporalio.client import Client
 
 client = await Client.connect("localhost:7233", namespace="default")
@@ -513,10 +513,10 @@ other application state in the next message if memory is required.
 
 #### Verification
 
-Run `ca doctor` in the app checkout:
+Run `julep doctor` in the app checkout:
 
 ```bash
-ca doctor
+julep doctor
 ```
 
 Healthy result includes `[ok ] discovery: ...` and `[ok ] temporal: temporalio
@@ -589,8 +589,8 @@ Before escalating, capture:
 - Worker logs covering the stuck turn, plus the Temporal workflow history or
   Temporal Web link for `SessionWorkflow`.
 - Any projection or trajectory sink records configured on `WorkerContext`; if
-  the session was driven through `ca`, include `ca trace <run-id>` output.
-- `ca doctor` output from the same checkout and environment.
+  the session was driven through `julep`, include `julep trace <run-id>` output.
+- `julep doctor` output from the same checkout and environment.
 - For CMA, the Anthropic model slug, whether `environment` was a string id,
   dict, or omitted, and whether the driver resent the transcript.
 

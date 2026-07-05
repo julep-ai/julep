@@ -1,0 +1,44 @@
+---
+title: "Coming from Julep v1"
+description: "Julep 3 is a ground-up rewrite. Here is how it relates to Julep v1, where v1 lives now, and why there is no migration path."
+---
+
+If you are arriving from **Julep v1**, read this first: Julep 3 is not a new
+version of the same product. It is a ground-up rewrite with different goals, a
+different surface, and a different deployment story.
+
+## Two different products
+
+- **Julep v1** was a *hosted agents-API platform*: a managed service with a REST
+  API, sessions, memory, and tasks that you called from your application. You
+  provisioned agents through the API and Julep ran them for you.
+- **Julep 3** (this project) is an *open-source, durable-agents framework* you
+  install and run yourself. You author agents as define-by-construction `@flow`
+  dataflows in Python, compile them to a frozen, capability-bounded IR, and
+  execute that same artifact locally, on Temporal, or on DBOS. Nothing is hosted
+  for you; you own the runtime.
+
+## There is no migration path
+
+The two products do not share a data model, an API, or an execution model, so
+there is **no automated migration** from v1 to v3 and no compatibility shim.
+Julep 3 is a fresh start, not an upgrade. If you have a v1 application, it keeps
+working against v1 unchanged — v3 does not replace it in place.
+
+## Where Julep v1 lives now
+
+- **Code:** Julep v1 is preserved on the [`v1` branch](https://github.com/julep-ai/julep/tree/v1)
+  of `julep-ai/julep`. It is frozen there, read-only for reference.
+- **Docs:** the v1 documentation stays available at
+  [v1.docs.julep.ai](https://v1.docs.julep.ai).
+
+## Why the reset
+
+Julep v1 grew as a hosted platform, and the assumptions baked into that
+model — a managed control plane, an opaque runtime, an API-shaped surface — got
+in the way of the thing people actually wanted: agents they could inspect,
+replay, bound, and run on their own infrastructure. Rather than bolt durability
+and portability onto the hosted design, Julep 3 rebuilds from the primitive up:
+agents are durable dataflows, effects are authorized statically, and every run
+is a frozen artifact you can review and re-run. That is a clean break, and it is
+an honest one — hence the separate branch, the separate docs, and this page.

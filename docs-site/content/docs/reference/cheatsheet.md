@@ -10,16 +10,16 @@ normative contract see [SPEC](/docs/internals/specification).
 ## Install & extras
 
 ```bash
-pip install composable-agents                 # authoring + compile + local run (no key)
-pip install 'composable-agents[temporal]'     # durable execution on Temporal
-pip install 'composable-agents[dbos]'         # durable execution on Postgres/DBOS
-pip install 'composable-agents[providers]'    # multi-provider LLM (any-llm)
-pip install 'composable-agents[http,otel]'    # native HTTP tools + OTel export
+pip install --pre julep                 # authoring + compile + local run (no key)
+pip install --pre 'julep[temporal]'     # durable execution on Temporal
+pip install --pre 'julep[dbos]'         # durable execution on Postgres/DBOS
+pip install --pre 'julep[providers]'    # multi-provider LLM (any-llm)
+pip install --pre 'julep[http,otel]'    # native HTTP tools + OTel export
 pip install -e '.[dev]'                        # contributing: tests + lint + types
 ```
 
 Extras: `temporal` · `dbos` · `http` · `cma` · `dotctx` · `providers` · `otel`
-· `store` · `wasm` · `dev`. Runtime flags: `composable_agents.HAVE_TEMPORAL`,
+· `store` · `wasm` · `dev`. Runtime flags: `julep.HAVE_TEMPORAL`,
 `HAVE_DBOS`. Python **3.12+**.
 
 ## `@flow` surfaces
@@ -109,8 +109,8 @@ access (`result.status` **or** `result["status"]`):
   tool, `{"output": v}` to finish.
 - Omit `llm` → keyless default reasoner: emits one `RuntimeWarning` and returns
   input unprocessed. ([why](/docs/guides/gotchas#keyless-default-reasoner))
-- Multi-provider: `pip install 'composable-agents[providers]'`, then
-  `llm=make_local_reasoner()` (from `composable_agents.execution.llm`) and
+- Multi-provider: `pip install --pre 'julep[providers]'`, then
+  `llm=make_local_reasoner()` (from `julep.execution.llm`) and
   `reasoner="openai:gpt-4o"` / `"gemini:gemini-2.5-flash"` / etc.
 - Durable: `agent.deploy(client, session_id=..., input=...)`.
 
@@ -118,7 +118,7 @@ access (`result.status` **or** `result["status"]`):
 
 - Author a turn loop: `scan(step, init)` (step `(carrier, msg) -> (carrier', output)`), `loop(body, ...)`, or `@session` straight-line sugar. `recv`/`emit` are the channel leaves.
 - Open + drive: `handle = await agent.open(session=chat, backend="local"|"temporal"|"cma")`; then `await handle.send(msg)`, `async for ev in handle.events()` (`Emit`/`Turn`/`Error`/`Closed`), `await handle.state()`, `await handle.close()`.
-- CLI: `ca chat <agent>` / `ca trigger <agent> <event>` / `ca listen <agent> --forward-to URL`.
+- CLI: `julep chat <agent>` / `julep trigger <agent> <event>` / `julep listen <agent> --forward-to URL`.
 - Full guide: [Sessions](/docs/guides/sessions).
 
 ## Combinator kernel (drop-down)
@@ -143,10 +143,10 @@ Derived (lower to an analyzable race chain): `race(...)`, `hedge(..., hedge_ms=)
 `delay(...)`. Leaves accept `ctx=` (`ContextPolicy`) and `ann=` (`Ann`: `cost_usd`,
 caching, effects, `timeout_s`).
 
-Typed escape hatch (`composable_agents.typed`): `as_flow(t).named("x.v1")`,
+Typed escape hatch (`julep.typed`): `as_flow(t).named("x.v1")`,
 compose with `>>`; elaborates to the same IR and disappears before freeze.
 
-## CLI (`composable-agents`)
+## CLI (`julep`)
 
 | Command | Purpose |
 |---|---|
@@ -162,7 +162,7 @@ compose with `>>`; elaborates to the same IR and disappears before freeze.
 `CapabilityDenied` · `PlanRejected` · `ValidationError` · `FreezeError` ·
 `PureDriftError` · `AdmissionError` · `BudgetExceeded` · `RaceAllFailed` ·
 `ResilienceExhausted` · `UnsupportedShapeError` · `PrincipalRequired` (all under
-`ComposableAgentsError`). Define-time rewrites and what triggers them:
+`JulepError`). Define-time rewrites and what triggers them:
 [Gotchas](/docs/guides/gotchas) · [Authoring Guide](/docs/guides/authoring-flows#define-time-errors).
 
 <!-- ported-by ca-docs-site: reference/cheatsheet -->

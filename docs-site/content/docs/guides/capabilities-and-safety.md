@@ -3,7 +3,7 @@ title: "Capabilities & Safety"
 description: "Deny-by-default tool grants, approval gates, race admission, and bounded authority."
 ---
 
-Composable Agents treats authority as data. A flow is not allowed to discover a
+Julep treats authority as data. A flow is not allowed to discover a
 tool at runtime, infer a model from a planner reply, or inherit a child agent's
 tools. The compile pipeline freezes the IR, validates it, applies the capability
 manifest, checks approval dominance, and admits races before the artifact can run

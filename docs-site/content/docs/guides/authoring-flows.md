@@ -3,10 +3,10 @@ title: "Authoring Flows"
 description: "How to use @flow to build define-by-construction DAGs: surfaces, determinism contract, branching, fan-out, and diagnostics."
 ---
 
-`@flow` is the primary authoring surface for composable-agents. It is
+`@flow` is the primary authoring surface for julep. It is
 define-by-construction: you write ordinary Python, but registered tools, pures,
 reasoners, branches, fan-out, and retry/timeout policy build a single-assignment
-DAG at definition time. That DAG compiles through `composable_agents.dag`,
+DAG at definition time. That DAG compiles through `julep.dag`,
 respects effect fences, then freezes to the same finite `Node` IR used by the
 lower-level combinator DSL and durable runtimes.
 
@@ -25,7 +25,7 @@ python -m pip install -e .
 From PyPI:
 
 ```bash
-python -m pip install composable-agents
+python -m pip install --pre julep
 ```
 
 Create `quickstart_flow.py`:
@@ -34,7 +34,7 @@ Create `quickstart_flow.py`:
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, think, tool
+from julep import Reasoner, deploy, flow, pure, think, tool
 
 
 class SupportReply(TypedDict):
@@ -130,8 +130,8 @@ the returned handle becomes the flow output.
 
 Inside `@flow`, direct calls are allowed only for registered objects:
 
-- `@tool(...)` functions from `composable_agents.tool`
-- `@pure(...)` functions from `composable_agents.pure`
+- `@tool(...)` functions from `julep.tool`
+- `@pure(...)` functions from `julep.pure`
 - other `@flow` definitions
 - `think(...)`, `cond(...)`, `switch(...)`, `each(...)`, and `reschedule(...)`
 
@@ -205,7 +205,7 @@ input. JSON constants in branch arms should be wrapped in a one-parameter arm;
 
 <!-- ca:doctest expect-output -->
 ```python
-from composable_agents import deploy, flow, pure, switch, switch_on
+from julep import deploy, flow, pure, switch, switch_on
 
 
 @pure("authoring_action_selector")
@@ -340,7 +340,7 @@ published artifact remain byte-identical to a pre-deps-as-data deployment.
 ### Dependency tiers
 
 The supported WASI-wheel set is exactly `pydantic-core` and `regex`
-([`composable_agents/execution/env_builder.py::SUPPORTED_WASI_WHEELS`](https://github.com/julep-ai/julep-v2/blob/main/composable_agents/execution/env_builder.py)). If every
+([`julep/execution/env_builder.py::SUPPORTED_WASI_WHEELS`](https://github.com/julep-ai/julep-v2/blob/main/julep/execution/env_builder.py)). If every
 declared dependency is in that set, the pure resolves to the wasm tier: publish
 builds a pre-initialized wasm environment component, content-addresses it as
 `envComponent`, records the corresponding `envHash`, and the worker resolves
@@ -420,7 +420,7 @@ race admission.
 ## Frozen IR
 
 The frozen program is a finite `Node` tree. Core operators live in
-`composable_agents.kinds.Op`:
+`julep.kinds.Op`:
 
 ```text
 prim ident arr seq par each alt iter_up_to eval_plan app loop
@@ -459,8 +459,8 @@ Python type parameters while you build, then disappears before freeze.
 
 <!-- ca:doctest skip -->
 ```python
-from composable_agents import tool
-from composable_agents.typed import Flow, as_flow, par, seq
+from julep import tool
+from julep.typed import Flow, as_flow, par, seq
 
 
 @tool(effect="read", idempotent=True)
@@ -493,7 +493,7 @@ Verified typed APIs include `FlowLike.to_ir() -> Node`, `left >> right`,
 reducer=None)`, `.named(ref)`, `.renamed(ref)`, `.as_sub(queue=None)`, and
 `.local_name`.
 
-`composable_agents.flow_adapters` exposes explicit `Any` boundary helpers:
+`julep.flow_adapters` exposes explicit `Any` boundary helpers:
 `as_type(T)` lowers to `ident()`, `expect(flow, T)` lowers to
 `seq(flow, ident())`, and `any_edges(flow)` reports structural `app`,
 `eval_plan`, and `think` boundaries visible in the IR.
@@ -524,7 +524,7 @@ when source is available and are intended to tell you how to rewrite the flow.
 The combinator kernel (`seq`, `par`, `alt`, `each`, `iter_up_to`, `stage`,
 `app`, `sub`, and derived race-family helpers) is what `@flow` compiles to and
 remains the wire-format ground truth. The typed facade lives in
-`composable_agents.typed`; use it when typed composition is the clearer escape
+`julep.typed`; use it when typed composition is the clearer escape
 hatch.
 
 For a long-lived, keep-messaging agent (open once, send many messages, stream

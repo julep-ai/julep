@@ -6,7 +6,7 @@ description: "The algebraic model behind the typed authoring surface."
 **Status:** implemented. Every phase was JSON-equality-gated; the golden corpus
 never moved; the typed authoring layer sits entirely above the unchanged `Node`
 IR.
-**Scope:** a typed, composable *authoring* surface that unifies the `Agent`
+**Scope:** a typed *authoring* surface that unifies the `Agent`
 facade and the combinator algebra, without changing the IR.
 
 > **As-built (2026-06-04).** Modules: `typed.py` (`Flow`/`FlowLike`, `>>`, typed
@@ -24,7 +24,7 @@ facade and the combinator algebra, without changing the IR.
 > **sub-Agent** is the independent-authority/attenuation boundary; the Temporal
 > cross-worker execution of `.as_sub(queue=…)` is a documented seam (the `queue`
 > is carried for the durable layer; local run is unchanged). The new run-result
-> lives at `composable_agents.result.Result` (the top-level `Result` stays the
+> lives at `julep.result.Result` (the top-level `Result` stays the
 > execution interpret-result).
 
 ---
@@ -38,13 +38,13 @@ Two authoring tiers exist today and neither is what we want:
   `seq`/`par`/`sub` an `Agent`, nest it, or have one agent use another. It's a
   "hunky" create-and-run object.
 - **The combinators** (`seq/par/alt/iter_up_to/stage/app/sub`, `race/hedge/
-  quorum/human_gate`) *are* the composable algebra, but they reference reasoners/
+  quorum/human_gate`) *are* the algebra, but they reference reasoners/
   tools/sub-flows by **string name**, losing the two things the OOP style gives:
   import resolution (jump-to-def, find-refs, rename-safety) and static type
   checking.
 
-**Goal.** One currency that is *both* composable and typed/import-resolved.
-Components should be **intermixable, composable, and decomposable**: recombine in
+**Goal.** One currency that is *both* recombinable and typed/import-resolved.
+Components should be **intermixable and separable**: recombine in
 new ways, scale parts independently, and borrow parts across agents.
 
 ## 2. North star (and the one hard rule)
@@ -286,7 +286,7 @@ The typed surface is backed by a small algebraic model. The full sketch follows 
 
 ```haskell
 {-# LANGUAGE GADTs #-}
--- Composable, Algebraic Agents — revised cut (v2; pseudo-Haskell, illustrative, not meant to compile)
+-- Algebraic Agents — revised cut (v2; pseudo-Haskell, illustrative, not meant to compile)
 --
 -- THESIS (sharpened): agents and workflows differ by WHO OWNS THE CONTINUATION.
 --   workflow         : the continuation lives in the static control graph

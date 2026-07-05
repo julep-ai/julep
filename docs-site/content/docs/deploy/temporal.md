@@ -22,7 +22,7 @@ temporal server start-dev
 Install the Temporal extra:
 
 ```bash
-pip install 'composable-agents[temporal]'
+pip install --pre 'julep[temporal]'
 ```
 
 From a source checkout, use the editable equivalent if you are running examples
@@ -38,7 +38,7 @@ Raw flows deploy through `deploy(...)`:
 
 ```python
 from temporalio.client import Client
-from composable_agents import deploy
+from julep import deploy
 
 deployment = deploy(flow, snapshot, capabilities=caps)
 client = await Client.connect("localhost:7233")
@@ -66,8 +66,8 @@ the deterministic workflows. Use `build_worker(...)` when you own the
 
 ```python
 from temporalio.client import Client
-from composable_agents.execution.activities import WorkerContext
-from composable_agents.execution.worker import DEFAULT_TASK_QUEUE, build_worker
+from julep.execution.activities import WorkerContext
+from julep.execution.worker import DEFAULT_TASK_QUEUE, build_worker
 
 client = await Client.connect("localhost:7233")
 context = WorkerContext(
@@ -87,14 +87,14 @@ maps native tool names to HTTP URLs; `mcp_call` is async
 `(server, tool, value, idempotency_key) -> result`; `llm` is async
 `(reasoner, value) -> result`; `capabilities` is the active
 `CapabilityManifest`. It also carries `registry`, `http_timeout_s`, `subflows`,
-and `agents`. `DEFAULT_TASK_QUEUE` is `"composable-agents"`.
+and `agents`. `DEFAULT_TASK_QUEUE` is `"julep"`.
 
 `worker.py` registers `FlowWorkflow`, `AgentWorkflow`, and seven activity
 functions. The six boundary/resolution activities are below; the seventh,
 `resolveRuntimeCapabilities`, supplies deterministic run-time policy such as
 `maxCalls`.
 
-For containers there is a third entry point: `composable-agents worker` reads
+For containers there is a third entry point: `python -m julep.cli worker` reads
 the connection and tuning knobs from the environment, resolves the
 `WorkerContext` from a `WORKER_CONTEXT_FACTORY=module:attr` factory, drains
 gracefully on SIGTERM, and serves `/healthz` + `/readyz` probes. That is the
@@ -195,12 +195,12 @@ stdout prints the terminal status, output, and trace.
 
 ## Debounced batch dispatch
 
-`composable_agents.execution.debounce` collapses a burst of single-item
+`julep.execution.debounce` collapses a burst of single-item
 submissions into one batched flow run — the Temporal counterpart of
 `dbos.Debouncer`, living at the [dispatch boundary](/docs/concepts/dispatch-boundary):
 
 ```python
-from composable_agents.execution.debounce import submit_debounced
+from julep.execution.debounce import submit_debounced
 
 # Each call contributes one item; the collector for `key` fires after 30s of
 # quiet, or at 50 items, or 5 minutes after the batch opened.

@@ -10,7 +10,7 @@ description: "The design of the durable message and state store for sessions."
 > `commitState` / `putBlob` activities and the `AgentWorkflow` `state_cursor` seam;
 > default-off context fidelity via `trace_content_refs`). Step 2 is assessed below
 > (see "Step 2 — event-count assessment"). Companion to `algebra.hs` (the `Session`
-> abstraction) and the Temporal harness (`composable_agents/execution/harness.py`).
+> abstraction) and the Temporal harness (`julep/execution/harness.py`).
 > The raw review findings are reproduced in the appendix.
 
 ## Thesis (revised)

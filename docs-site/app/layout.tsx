@@ -10,10 +10,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'Composable Agents',
-    template: '%s | Composable Agents',
+    default: 'Julep',
+    template: '%s | Julep',
   },
-  description: 'Build agents as composable, durable dataflows.',
+  description: 'Julep — durable AI agents. Flows that crash and resume, retry safely, and explain every step.',
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {

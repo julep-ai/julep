@@ -14,7 +14,7 @@ one-line `@flow`.
 
 <!-- ca:doctest expect-output -->
 ```python
-from composable_agents import deploy, flow, tool
+from julep import deploy, flow, tool
 
 
 @tool(effect="read", idempotent=True)
@@ -47,7 +47,7 @@ field from the record handle, and `hit | decision` merges records.
 
 <!-- ca:doctest expect-output -->
 ```python
-from composable_agents import deploy, flow, pure, tool
+from julep import deploy, flow, pure, tool
 
 
 @tool(effect="read", idempotent=True)
@@ -90,7 +90,7 @@ a fake reasoner in `dry_run(...)` for keyless local execution.
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, think, tool
+from julep import Reasoner, deploy, flow, pure, think, tool
 
 
 class ReturnDecision(TypedDict):
@@ -153,7 +153,7 @@ field. It is sugar over `switch`; case names match `str(subject["action"])`.
 
 <!-- ca:doctest expect-output -->
 ```python
-from composable_agents import deploy, flow, pure, switch_on
+from julep import deploy, flow, pure, switch_on
 
 
 @pure("ladder_mark_review")
@@ -198,7 +198,7 @@ parameter is positional; enclosing values are explicit captures.
 
 <!-- ca:doctest expect-output -->
 ```python
-from composable_agents import deploy, each, flow, pure
+from julep import deploy, each, flow, pure
 
 
 @pure("ladder_label_return")
@@ -243,7 +243,7 @@ summary, and the same keyless `dry_run(...)` path used above.
 ```python
 from typing import TypedDict
 
-from composable_agents import Reasoner, deploy, flow, pure, switch_on, think, tool
+from julep import Reasoner, deploy, flow, pure, switch_on, think, tool
 
 
 class ReturnDecision(TypedDict):

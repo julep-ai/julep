@@ -3,7 +3,7 @@ title: "Specification"
 description: "The normative specification and conformance contract."
 ---
 
-> **Canonical implementation:** Python (`composable_agents`).
+> **Canonical implementation:** Python (`julep`).
 > The IR is **language-neutral JSON**. Python is the reference frontend; other
 > frontends MAY emit the same JSON later. This document defines the invariants
 > every implementation MUST satisfy. Where the current code diverges, see
@@ -335,7 +335,7 @@ MUST NOT be mutated in place — add `.v2`.
   requirement strings, the pinned Python major.minor parsed from
   `requires-python` (or `null` when omitted, so the hash is reproducible on any
   worker regardless of its interpreter), and the sha256 of the vendored base wasm component
-  (`composable_agents/execution/_wasm/executor.wasm`). It is emitted into a
+  (`julep/execution/_wasm/executor.wasm`). It is emitted into a
   pure's runtime ref only when that pure declares PEP 723 inline-script-metadata
   dependencies; for a pure with no declared deps, `envHash` is ABSENT (key
   omitted) and the no-dep deployment remains byte-identical to before
@@ -845,8 +845,8 @@ so a refactor that changes the IR or the hashing is caught immediately.
 One loader, one format. `load_dotctx(path)` reads the minimal layout
 (settings-only, inline/`system_file` prompt, optional `schema_file`) unchanged.
 A package carrying any of `prompt.j2`, `messages/`, `schema.pyi`, `tools.pyi`
-is **rich** and is loaded by `composable_agents.dotctx_rich`, which requires
-the `composable-agents[dotctx]` extra (jinja2). Importing the rich loader
+is **rich** and is loaded by `julep.dotctx_rich`, which requires
+the `julep[dotctx]` extra (jinja2). Importing the rich loader
 without jinja2 MUST raise — a package with a template and a loader that cannot
 render it never degrades to a plain-string prompt.
 
