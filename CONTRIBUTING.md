@@ -2,22 +2,22 @@
 
 ## Project layout
 
-`composable-agents` is a Python package for authoring typed, durable, capability-bounded agent flows that compile to a frozen JSON IR. Use the [README module map](README.md#module-map) for the package layout and [docs-site/content/docs/concepts/model.md](docs-site/content/docs/concepts/model.md) for the conceptual model.
+`julep` is a Python package for authoring typed, durable, capability-bounded agent flows that compile to a frozen JSON IR. Use the [README module map](README.md#module-map) for the package layout and [docs-site/content/docs/concepts/model.md](docs-site/content/docs/concepts/model.md) for the conceptual model.
 
 ## Dev setup
 
 ```bash
-git clone https://github.com/julep-ai/julep-v2
-cd julep-v2
+git clone https://github.com/julep-ai/julep
+cd julep
 python -m pip install -e '.[dev]'
 ```
 
 The package requires Python 3.12 or newer (see `pyproject.toml`). CI tests Python 3.12.
 
-The published package name is `composable-agents`. The console entry point is:
+The published package name is `julep`. The console entry point is:
 
 ```bash
-composable-agents
+julep
 ```
 
 ## Running the checks
@@ -26,15 +26,15 @@ CI runs lint and type checks on Python 3.12:
 
 ```bash
 python -m pip install -e '.[dev]'
-ruff check composable_agents
-python -m mypy --no-incremental --cache-dir=/dev/null composable_agents
+ruff check julep
+python -m mypy --no-incremental --cache-dir=/dev/null julep
 ```
 
 CI runs tests on Python 3.12 with Temporal absent:
 
 ```bash
 python -m pip install -e . pytest
-python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is False"
+python -c "import julep as c; assert c.HAVE_TEMPORAL is False"
 python -m pytest -q
 ```
 
@@ -42,7 +42,7 @@ CI also runs tests on Python 3.12 with Temporal present:
 
 ```bash
 python -m pip install -e '.[dev]'
-python -c "import composable_agents as c; assert c.HAVE_TEMPORAL is True"
+python -c "import julep as c; assert c.HAVE_TEMPORAL is True"
 python -m pytest -q
 ```
 
@@ -78,7 +78,7 @@ The [specification](docs-site/content/docs/internals/specification.md) defines c
 
 ## Style
 
-`ruff` and `mypy` must be clean. Match the surrounding code and keep public APIs typed. The pure core must stay free of any `temporalio` import; only modules under `composable_agents/execution/` may import it.
+`ruff` and `mypy` must be clean. Match the surrounding code and keep public APIs typed. The pure core must stay free of any `temporalio` import; only modules under `julep/execution/` may import it.
 
 ## Pull requests
 
