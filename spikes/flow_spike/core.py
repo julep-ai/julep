@@ -8,11 +8,11 @@ import textwrap
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Sequence
 
-from composable_agents import dsl
-from composable_agents.agent import Tool
-from composable_agents.flow import FlowLike
-from composable_agents.ir import Node
-from composable_agents.purity import Pure, is_registered, pure
+from julep import dsl
+from julep.agent import Tool
+from julep.flow import FlowLike
+from julep.ir import Node
+from julep.purity import Pure, is_registered, pure
 
 
 def _split_pair(value: Any) -> tuple[dict[str, Any], Any]:

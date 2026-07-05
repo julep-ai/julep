@@ -6,7 +6,7 @@ image:
 temporal:
   address: temporal-frontend.temporal.svc.cluster.local:7233
   namespace: default
-  taskQueue: composable-agents
+  taskQueue: julep
 
 # Queue-lane topology sketch for mem-mcp:
 #   foreground, maintenance, summary, slack, brief-refresh,

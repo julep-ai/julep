@@ -8,19 +8,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-cad-worker
+  name: julep-cad-worker
 spec:
   replicas: 1
   selector:
-    matchLabels: {app: ca-cad-worker}
+    matchLabels: {app: julep-cad-worker}
   template:
     metadata:
-      labels: {app: ca-cad-worker}
+      labels: {app: julep-cad-worker}
     spec:
       terminationGracePeriodSeconds: 20
       containers:
         - name: worker
-          image: ca-worker:cad-demo
+          image: julep-worker:cad-demo
           imagePullPolicy: Never   # imported via `k3d image import`
           env:
             - name: TEMPORAL_ADDRESS

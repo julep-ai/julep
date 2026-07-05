@@ -25,9 +25,9 @@ import session_demo  # noqa: E402,F401  (registers reasoner + pures at import)
 
 def make_context() -> Any:
     """WORKER_CONTEXT_FACTORY entrypoint for the session-demo pod replica."""
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.execution.llm import make_llm_caller
-    from composable_agents.execution.session_store import InMemorySessionStore
+    from julep.execution.effects import WorkerContext
+    from julep.execution.llm import make_llm_caller
+    from julep.execution.session_store import InMemorySessionStore
 
     return WorkerContext(
         session_store=InMemorySessionStore(empty_value=[]),

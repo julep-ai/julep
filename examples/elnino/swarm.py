@@ -2,7 +2,7 @@
 El Niño 2026 — Regional Agricultural Capacity-Planning Swarm
 ============================================================
 
-A worked example built *on* the ``composable_agents`` framework (the canonical
+A worked example built *on* the ``julep`` framework (the canonical
 Python implementation). It does not implement the framework; it imagines the
 framework, the tools, and the reasoners all exist and composes them.
 
@@ -52,8 +52,8 @@ Pipeline
 
 from __future__ import annotations
 
-# DSL + lifecycle surface, per the composable_agents public API.
-from composable_agents import (
+# DSL + lifecycle surface, per the julep public API.
+from julep import (
     Ann,
     Reasoner,
     Budget,
@@ -86,7 +86,7 @@ from composable_agents import (
     sub,
     think,
 )
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep.registry import DEFAULT_REGISTRY
 
 
 ZONE_FANOUT = 12
@@ -708,7 +708,7 @@ def build_deployment(snapshot: McpSnapshot | None = None, *, verbose: bool = Fal
 #     deployment's responsibility and is elided here.
 # --------------------------------------------------------------------------- #
 async def run_season(client, snapshot, *, basin: str):
-    from composable_agents import start_flow
+    from julep import start_flow
 
     deployment = build_deployment(snapshot)
 

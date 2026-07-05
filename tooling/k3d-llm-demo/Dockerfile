@@ -5,4 +5,4 @@ COPY llm_weather_agent.py /app/llm_weather_agent.py
 ENV PYTHONPATH=/app \
     WORKER_CONTEXT_FACTORY=llm_weather_agent:make_context \
     WORKER_HEALTH_PORT=8080
-ENTRYPOINT ["composable-agents", "worker"]
+ENTRYPOINT ["julep", "worker"]

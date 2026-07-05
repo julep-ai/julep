@@ -85,12 +85,12 @@ Real envelope JSON from the run:
 
 ## B1 Confirmation: Artifact Envelope Join
 
-`composable_agents/deploy.py:229-249` builds `Deployment.artifact_components`. It includes
+`julep/deploy.py:229-249` builds `Deployment.artifact_components`. It includes
 `flowJson`, `manifestJson`, `pureSourceHashes`, `reasoners`, `capabilities`, `executionPolicy`, and
 `frameworkVersion`. `rendererSourceHashes` is the existing absent-when-unset precedent:
 `deploy.py:246-248` computes renderer hashes and only adds the key when the dict is non-empty.
 
-`composable_agents/deploy.py:251-255` hashes the envelope with:
+`julep/deploy.py:251-255` hashes the envelope with:
 
 ```python
 payload = canonical_json(self.artifact_components)
@@ -122,7 +122,7 @@ and it changes identity when present.
 
 ## Registration From Source Finding
 
-`composable_agents/registry.py:50-52` defines registry hashes as `pure:` plus the first 16 hex chars
+`julep/registry.py:50-52` defines registry hashes as `pure:` plus the first 16 hex chars
 of sha256 over text. `registry.py:55-61` calls `inspect.getsource(fn)` and silently falls back to
 `f"{fn.__module__}.{fn.__qualname__}"` on `OSError` or `TypeError`. That fallback is dangerous for
 bundled code: functions created by plain `exec(source)` usually do not have inspectable source, so
@@ -158,9 +158,9 @@ Semantics:
   error. This matches the plan rule: baked-vs-bundled hashes must agree; error, not precedence.
 - Return the installed or existing `PureEntry`.
 
-The shim entry point today is `composable_agents/purity.py:87-88`, which forwards to
+The shim entry point today is `julep/purity.py:87-88`, which forwards to
 `DEFAULT_REGISTRY.register_pure`. The underlying collision behavior is
-`composable_agents/registry.py:88-93`: same name with a different function object is rejected
+`julep/registry.py:88-93`: same name with a different function object is rejected
 before comparing source hashes, so P2 needs a source-aware method rather than reusing that method
 unchanged for bundled pures.
 
@@ -226,22 +226,22 @@ present in `sys.modules` before registration and again after interpretation.
 
 ## P2 Integration Points
 
-- `composable_agents/deploy.py:229-249`: add `pureRuntimeRefs` to
+- `julep/deploy.py:229-249`: add `pureRuntimeRefs` to
   `Deployment.artifact_components` using the same absent-when-unset pattern as
   `rendererSourceHashes`.
-- `composable_agents/deploy.py:251-255`: artifact identity is SHA-256 over
+- `julep/deploy.py:251-255`: artifact identity is SHA-256 over
   `canonical_json(self.artifact_components)`, so no separate hash path is needed after the join.
-- `composable_agents/registry.py:55-61`: current `_source_hash` inspect fallback can silently hash
+- `julep/registry.py:55-61`: current `_source_hash` inspect fallback can silently hash
   module/qualname for exec-created functions; P2 should avoid this for source bundles.
-- `composable_agents/registry.py:88-93`: current `register_pure` rejects same-name/different-fn
+- `julep/registry.py:88-93`: current `register_pure` rejects same-name/different-fn
   before comparing hashes; P2 needs source-aware collision behavior.
-- `composable_agents/purity.py:87-88`: add a shim forwarding to the new registry API, for example
+- `julep/purity.py:87-88`: add a shim forwarding to the new registry API, for example
   `register_pure_from_source(name: str, source: str) -> PureEntry`.
-- `composable_agents/execution/harness.py:159-174`: add bundle reference data to `FlowInput`
+- `julep/execution/harness.py:159-174`: add bundle reference data to `FlowInput`
   alongside `flow_json`, `manifest_json`, and `pinned_pures`.
-- `composable_agents/execution/harness.py:565-576`: carry the bundle reference through
+- `julep/execution/harness.py:565-576`: carry the bundle reference through
   `FlowWorkflow` `continue_as_new`.
-- `composable_agents/execution/harness.py:842-858` and `harness.py:861-875`: carry the bundle
+- `julep/execution/harness.py:842-858` and `harness.py:861-875`: carry the bundle
   reference through both `AgentWorkflow` `continue_as_new` sites.
-- `composable_agents/execution/effects.py:467-481`: `resolveSubflow` currently returns only
+- `julep/execution/effects.py:467-481`: `resolveSubflow` currently returns only
   `flowJson`, `manifestJson`, and `pinnedPures`; P2 should return the bundle reference there too.

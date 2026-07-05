@@ -18,7 +18,7 @@ import asyncio
 import json
 from typing import Any
 
-from composable_agents import Deployment, deploy, each, flow, pure
+from julep import Deployment, deploy, each, flow, pure
 
 # A small inbox with mixed case and duplicate addresses so canonical
 # lowercasing, dedupe, and sorting all affect the final output.

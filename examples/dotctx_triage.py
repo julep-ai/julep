@@ -15,7 +15,7 @@ structured classification.
 
 Prereqs:
 
-    pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic]'
+    pip install 'julep[providers]' 'any-llm-sdk[anthropic]'
     export ANTHROPIC_API_KEY=sk-ant-...   # or the key for whatever provider the
                                           # settings.yaml ``model:`` names
 
@@ -32,8 +32,8 @@ from __future__ import annotations
 import asyncio
 import os
 
-from composable_agents.dotctx import Reasoner, reasoner_to_flow, load_dotctx
-from composable_agents.execution.llm import DEFAULT_PROVIDER, make_llm_caller
+from julep.dotctx import Reasoner, reasoner_to_flow, load_dotctx
+from julep.execution.llm import DEFAULT_PROVIDER, make_llm_caller
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DOTCTX_DIR = os.path.join(HERE, "dotctx", "ticket_triage")

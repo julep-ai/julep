@@ -3,7 +3,7 @@
 Unlike the keyless cookbook examples (which script the reasoner in-process) and the
 Anthropic-only CMA example (which runs the loop on Anthropic's hosted service),
 here a real provider model drives the local think -> call -> observe loop through
-the any-llm-backed ``LlmCaller`` (``composable_agents.execution.llm``), while the
+the any-llm-backed ``LlmCaller`` (``julep.execution.llm``), while the
 framework stays the capability and budget authority: it grants only the declared
 ``@tool`` surface, dispatches each requested call locally, and charges the same
 cost model / trace as every other backend.
@@ -13,7 +13,7 @@ slug would fall back to the default provider (anthropic).
 
 Prereqs:
 
-    pip install 'composable-agents[providers]' 'any-llm-sdk[anthropic,openai]'
+    pip install 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
     export ANTHROPIC_API_KEY=sk-ant-...   # for the anthropic:... model
     export OPENAI_API_KEY=sk-...          # for the openai:... model
 
@@ -33,8 +33,8 @@ import os
 import re
 from typing import Any
 
-from composable_agents import Agent, tool
-from composable_agents.execution.llm import make_local_reasoner
+from julep import Agent, tool
+from julep.execution.llm import make_local_reasoner
 
 QUESTION = "What is the weather in Tokyo right now, in Fahrenheit?"
 

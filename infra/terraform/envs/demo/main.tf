@@ -12,7 +12,7 @@ locals {
   temporal_db_secret_name = "temporal-db"
   temporal_namespace      = "temporal"
   worker_namespace        = "julep-demo"
-  worker_task_queue       = "composable-agents"
+  worker_task_queue       = "julep"
   worker_image            = "${aws_ecr_repository.worker.repository_url}:${var.worker_image_tag}"
 }
 
@@ -355,8 +355,8 @@ resource "helm_release" "temporal" {
 }
 
 resource "helm_release" "worker" {
-  name      = "ca-worker"
-  chart     = "${path.module}/../../../helm/ca-worker"
+  name      = "julep-worker"
+  chart     = "${path.module}/../../../helm/julep-worker"
   namespace = kubernetes_namespace_v1.worker.metadata[0].name
 
   values = [

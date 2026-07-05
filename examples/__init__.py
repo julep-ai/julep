@@ -1,1 +1,1 @@
-"""Runnable examples for composable_agents."""
+"""Runnable examples for julep."""

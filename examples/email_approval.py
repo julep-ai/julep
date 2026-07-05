@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents import (
+from julep import (
     CapabilityManifest,
     Deployment,
     Effect,
@@ -28,7 +28,7 @@ from composable_agents import (
     interpret,
     seq,
 )
-from composable_agents.freeze import McpSnapshot
+from julep.freeze import McpSnapshot
 
 
 TOOL_DRAFT_EMAIL = "draft_email"

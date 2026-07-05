@@ -28,9 +28,9 @@ from typing import Any
 
 from temporalio.client import Client
 
-from composable_agents import Agent, tool
-from composable_agents.execution.activities import WorkerContext
-from composable_agents.execution.worker import DEFAULT_TASK_QUEUE, build_worker
+from julep import Agent, tool
+from julep.execution.activities import WorkerContext
+from julep.execution.worker import DEFAULT_TASK_QUEUE, build_worker
 
 TOOL_PORT = 8799
 TEMPORAL_HOST = "localhost:7233"

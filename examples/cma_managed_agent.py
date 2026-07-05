@@ -10,7 +10,7 @@ the same cost model / trace as ``.run()`` and ``.deploy()``.
 Prereqs:
 
     export ANTHROPIC_API_KEY=sk-ant-...      # required; without it this no-ops
-    pip install 'composable-agents[cma]'      # the httpx-based CMA adapter
+    pip install 'julep[cma]'      # the httpx-based CMA adapter
 
 Then:
 
@@ -26,8 +26,8 @@ import json
 import os
 from typing import Any, Optional
 
-from composable_agents import Agent, tool
-from composable_agents.execution.cma import CMAClient
+from julep import Agent, tool
+from julep.execution.cma import CMAClient
 
 MODEL = "claude-haiku-4-5-20251001"
 QUESTION = "What is the weather in Tokyo right now, in Fahrenheit?"
@@ -74,7 +74,7 @@ def run_demo(*, client: Optional[CMAClient] = None) -> Optional[dict[str, Any]]:
         if not os.environ.get("ANTHROPIC_API_KEY"):
             return None
         # Imported lazily so the module stays import-safe without the cma extra.
-        from composable_agents.execution.cma_anthropic import AnthropicCMAClient
+        from julep.execution.cma_anthropic import AnthropicCMAClient
 
         client = AnthropicCMAClient(model=MODEL)
     return dict(build().run_on_cma(QUESTION, client=client))
@@ -83,7 +83,7 @@ def run_demo(*, client: Optional[CMAClient] = None) -> Optional[dict[str, Any]]:
 def main() -> None:
     result = run_demo()
     if result is None:
-        print("Set ANTHROPIC_API_KEY (and install composable-agents[cma]) to run this example.")
+        print("Set ANTHROPIC_API_KEY (and install julep[cma]) to run this example.")
         return
 
     print("=== live CMA run result ===")

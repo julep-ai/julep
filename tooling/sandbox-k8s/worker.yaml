@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-worker
+  name: julep-worker
 spec:
   replicas: 0                      # KEDA owns the count
   selector:
-    matchLabels: {app: ca-worker}
+    matchLabels: {app: julep-worker}
   template:
     metadata:
-      labels: {app: ca-worker}
+      labels: {app: julep-worker}
     spec:
       terminationGracePeriodSeconds: 20
       containers:
         - name: worker
-          image: ca-worker:demo
+          image: julep-worker:demo
           imagePullPolicy: Never   # image lives in the host dockerd
           env:
             - name: TEMPORAL_ADDRESS
               value: 10.42.0.1:7233
             - name: TEMPORAL_TASK_QUEUE
-              value: composable-agents
+              value: julep
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: "10"
             - name: WORKER_MAX_CONCURRENT_ACTIVITIES
@@ -52,10 +52,10 @@ spec:
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: ca-worker
+  name: julep-worker
 spec:
   scaleTargetRef:
-    name: ca-worker
+    name: julep-worker
   minReplicaCount: 0
   maxReplicaCount: 4
   pollingInterval: 5
@@ -65,7 +65,7 @@ spec:
       metadata:
         endpoint: 10.42.0.1:7233
         namespace: default
-        taskQueue: composable-agents
+        taskQueue: julep
         queueTypes: "workflow,activity"
         targetQueueSize: "2"
         activationTargetQueueSize: "0"

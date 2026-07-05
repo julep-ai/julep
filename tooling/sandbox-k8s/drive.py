@@ -1,14 +1,14 @@
-"""Start a burst of flows on the composable-agents queue, then await results."""
+"""Start a burst of flows on the julep queue, then await results."""
 
 import asyncio
 import sys
 
 from temporalio.client import Client
 
-from composable_agents import call, freeze, manifest_to_json, mcp
-from composable_agents.contracts import McpAnnotations
-from composable_agents.execution.harness import start_flow
-from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep import call, freeze, manifest_to_json, mcp
+from julep.contracts import McpAnnotations
+from julep.execution.harness import start_flow
+from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 12
 
@@ -26,7 +26,7 @@ async def main() -> None:
     for i in range(N):
         handles.append(await start_flow(
             client, flow_json, manifest_json,
-            session_id=f"k8s-demo-{i}", input=i, task_queue="composable-agents",
+            session_id=f"k8s-demo-{i}", input=i, task_queue="julep",
         ))
     print(f"started {N} workflows; awaiting results...", flush=True)
     results = await asyncio.gather(*(h.result() for h in handles))

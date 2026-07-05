@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import Reasoner, pure
-from composable_agents import tool as native_tool
+from julep import Reasoner, pure
+from julep import tool as native_tool
 
 from .core import each, flow, think
 from .core import tool as flow_tool

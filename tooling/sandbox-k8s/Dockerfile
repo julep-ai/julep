@@ -9,4 +9,4 @@ COPY demo_worker.py /app/demo_worker.py
 ENV PYTHONPATH=/app \
     WORKER_CONTEXT_FACTORY=demo_worker:make_context \
     WORKER_HEALTH_PORT=8080
-ENTRYPOINT ["composable-agents", "worker"]
+ENTRYPOINT ["julep", "worker"]

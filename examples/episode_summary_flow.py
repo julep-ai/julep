@@ -33,7 +33,7 @@ import hashlib
 import json
 from typing import Any
 
-from composable_agents import (
+from julep import (
     Reasoner,
     Deployment,
     cond,

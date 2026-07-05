@@ -16,8 +16,8 @@ The generic runtime image is defined once at `tooling/runtime-image/Dockerfile`;
 - `publish.py` builds the deployment and publishes a **signed** CAS bundle
   (manifest + `flowJson` + pure source + detached ed25519 signature) into a CAS
   dir the k3d node bind-mounts at `/cas`.
-- The worker runs the stock `composable-agents worker` with
-  `WORKER_CONTEXT_FACTORY=composable_agents.execution.bundle_worker:make_context`.
+- The worker runs the stock `julep worker` with
+  `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`.
   At startup it resolves `CA_BUNDLES`, verifies the signature against
   `CA_BUNDLE_ALLOWED_SIGNERS` (fail-closed), and registers the bundle's pures —
   before accepting any task.

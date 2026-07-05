@@ -26,11 +26,11 @@ from bundle import (  # noqa: E402
     make_pure_runtime_refs,
 )
 from cas import LocalDirCas  # noqa: E402
-from composable_agents import McpSnapshot, deploy  # noqa: E402
-from composable_agents.execution.interpreter import InMemoryEnv, interpret  # noqa: E402
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter  # noqa: E402
-from composable_agents.purity import source_hash_of  # noqa: E402
-from composable_agents.registry import DEFAULT_REGISTRY  # noqa: E402
+from julep import McpSnapshot, deploy  # noqa: E402
+from julep.execution.interpreter import InMemoryEnv, interpret  # noqa: E402
+from julep.projection import InMemoryProjection, ProjectionEmitter  # noqa: E402
+from julep.purity import source_hash_of  # noqa: E402
+from julep.registry import DEFAULT_REGISTRY  # noqa: E402
 
 
 async def baked_run(deployment: Any) -> Any:

@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import Any
 
 from cas import LocalDirCas
-from composable_agents.contracts import manifest_from_json
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.ir import Node, canonical_json
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.purity import source_hash_of
+from julep.contracts import manifest_from_json
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.ir import Node, canonical_json
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.purity import source_hash_of
 from source_registration import assert_authoring_flow_not_loaded, register_pure_source_linecache
 
 

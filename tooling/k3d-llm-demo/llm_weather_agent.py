@@ -3,7 +3,7 @@
 Imported by BOTH processes so the reasoner/pure registries line up by name:
 
 * the worker pods (via ``WORKER_CONTEXT_FACTORY=llm_weather_agent:make_context``)
-  — the main worker on ``composable-agents`` and the lane worker on
+  — the main worker on ``julep`` and the lane worker on
   ``phase4-lane-b`` run the same image/factory, only ``TEMPORAL_TASK_QUEUE``
   differs;
 * the host drivers, which compile deployments and start workflows.
@@ -24,7 +24,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-from composable_agents import (
+from julep import (
     Agent,
     Reasoner,
     arr,
@@ -33,7 +33,7 @@ from composable_agents import (
     register_pure,
     tool,
 )
-from composable_agents.freeze import McpSnapshot
+from julep.freeze import McpSnapshot
 
 # Sonnet's minimum cacheable prefix is 1024 tokens; the manual below is padded
 # well past it so the cache_control breakpoint actually creates a cache entry.
@@ -177,9 +177,9 @@ def _start_tool_server(port: int) -> ThreadingHTTPServer:
 
 def make_context() -> Any:
     """WORKER_CONTEXT_FACTORY entrypoint for the pod replicas (both queues)."""
-    from composable_agents.agent import provider_tool_defs
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.execution.llm import make_llm_caller
+    from julep.agent import provider_tool_defs
+    from julep.execution.effects import WorkerContext
+    from julep.execution.llm import make_llm_caller
 
     _start_tool_server(TOOL_PORT)
     return WorkerContext(

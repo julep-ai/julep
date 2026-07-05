@@ -41,14 +41,14 @@ Captured 2026-07-03 while shipping Phase 4 (`docs/plans/2026-07-01-mem-mcp-adopt
   identical terminal result AND identical projection event stream (canonical JSON
   bytes). Capture lives in the backend-neutral effect layer + a process-global
   `TrajectorySink` (mirroring `_PROJECTION_SINK`), so the OFF case = no sink
-  installed. See `composable_agents/projection.py`,
-  `composable_agents/execution/effects.py`.
+  installed. See `julep/projection.py`,
+  `julep/execution/effects.py`.
 - **Depends on:** Trajectory plane v1 (A-prime, boundary-aware capture) landed.
 
 ## bundle_runner: harden the FlowInput decode-swallow (fail-closed follow-up)
 
 - **What:** `_resolve_activation_bundles` wraps the `from_payloads([...], [FlowInput])`
-  decode in `except Exception: continue` (`composable_agents/execution/bundle_runner.py`).
+  decode in `except Exception: continue` (`julep/execution/bundle_runner.py`).
   A `FlowWorkflow` activation whose payload can't decode as `FlowInput` silently
   skips bundle resolution and runs against ambient/stale registry state.
 - **Why:** Same fail-open class as the (now-fixed) `_bundle_entries` silent-skip.
@@ -78,7 +78,7 @@ in the source.
   private symbols (`_PyLong_AsByteArray`, `_PyLong_NumBits`). Rebuilt `regex==2024.11.6`
   against componentize-py 0.24.0's EXACT interpreter — dicej/cpython `v3.14.0-wasi-sdk-30`
   + wasi-sdk 33 (clang 22.1.0-wasi-sdk) — and vendored it into
-  `composable_agents/execution/_wasm/wasi_wheels/regex/`. (2) **`--stub-wasi` stat trap** —
+  `julep/execution/_wasm/wasi_wheels/regex/`. (2) **`--stub-wasi` stat trap** —
   the env component now imports each declared dep at MODULE TOP LEVEL (generated
   `env_component.py`), so componentize's pre-init snapshot bakes the module into
   `sys.modules`; the pure body's runtime `import regex` then resolves with no fs stat.
@@ -136,7 +136,7 @@ section of `docs/plans/2026-06-11-code-as-data-distribution.md`.
 - **FIXME(P5-1) major — GC vs publish TOCTOU.** `gc.gc()` can sweep a bundle that is
   mid-publish (blobs written, lease not yet acquired) as an orphan. Publish must acquire the
   lease within/before the publish transaction, or GC must honor a grace window for recently
-  written objects. (`composable_agents/gc.py` + `deploy.py` publish path.)
+  written objects. (`julep/gc.py` + `deploy.py` publish path.)
 - **FIXME(P5-2) major — lease signature_digest optional (fail-open).** `gc.Lease` allows a
   null `signature_digest`, but the detached ed25519 signature is a hard replay dependency; a
   lease without it lets the signature blob be collected. Require it / always fold it in.
@@ -161,7 +161,7 @@ section of `docs/plans/2026-06-11-code-as-data-distribution.md`.
   wasm tier is the one that closes this gate.)
 - **FIXME — env-component compile blocks the health event loop.** The worker cold-compiles a
   dep'd-pure bundle's wasm env component (cranelift) synchronously at startup/first-resolution,
-  which blocks the asyncio loop in `composable_agents/execution/serve.py` so `/healthz` times
+  which blocks the asyncio loop in `julep/execution/serve.py` so `/healthz` times
   out → liveness SIGTERMs the pod mid-compile (only surfaced on a small/constrained node;
   no-dep bundles compile nothing extra). Worked around in `tooling/eks-cad-demo/worker.yaml`
   with a startupProbe + CPU burst headroom. Real fix: run the wasm `Component` compile off the

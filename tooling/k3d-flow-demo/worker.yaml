@@ -13,7 +13,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: worker
-          image: ca-worker:flow-demo
+          image: julep-worker:flow-demo
           imagePullPolicy: Never   # imported via `k3d image import`
           env:
             - name: TEMPORAL_ADDRESS

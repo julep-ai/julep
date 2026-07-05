@@ -72,17 +72,17 @@ rm -rf "$BUILD" && mkdir -p "$BUILD"
 git -C "$REPO_ROOT" archive HEAD --prefix=julep-v2/ | tar -x -C "$BUILD"
 cp "$HERE/Dockerfile" "$HERE/demo_worker.py" "$BUILD/"
 cp /etc/ssl/certs/ca-certificates.crt "$BUILD/ca-bundle.crt"
-docker build -t ca-worker:demo "$BUILD"
+docker build -t julep-worker:demo "$BUILD"
 
 # --- 7. Deploy + scaler ------------------------------------------------------ #
 kubectl apply -f "$HERE/worker.yaml"
-kubectl get scaledobject ca-worker
+kubectl get scaledobject julep-worker
 
 cat <<'EOF'
 
 Ready. Drive a burst and watch KEDA scale 0 -> N -> 0:
 
   export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-  kubectl get deploy ca-worker -w &
+  kubectl get deploy julep-worker -w &
   python3 tooling/sandbox-k8s/drive.py 12
 EOF

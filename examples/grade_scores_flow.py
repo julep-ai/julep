@@ -18,7 +18,7 @@ import asyncio
 import json
 from typing import Any
 
-from composable_agents import Deployment, deploy, each, flow, pure
+from julep import Deployment, deploy, each, flow, pure
 
 # A small roster with a deliberately messy row (whitespace + string score) so the
 # normalize pure earns its place.

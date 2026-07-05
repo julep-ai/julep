@@ -5,7 +5,7 @@ image used by the demos.
 
 ## What this image is
 
-- A flow-agnostic `composable-agents worker` runtime.
+- A flow-agnostic `julep worker` runtime.
 - Built once at framework cadence, then reused for every flow.
 - Contains the installed framework with `temporal`, `store`, and `wasm` extras.
 - Contains `uv` for the opt-in native dependency tier.
@@ -18,7 +18,7 @@ image used by the demos.
 
 The flow and its custom pures arrive as a signed CAS bundle. The worker resolves
 that bundle from `STORE_URL` at startup using
-`WORKER_CONTEXT_FACTORY=composable_agents.execution.bundle_worker:make_context`
+`WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
 and the `CA_BUNDLES` / `CA_BUNDLE_ALLOWED_SIGNERS` environment block.
 
 ## Build context shape
@@ -48,7 +48,7 @@ RUN pip install --no-cache-dir uv \
 
 The image presets:
 
-- `WORKER_CONTEXT_FACTORY=composable_agents.execution.bundle_worker:make_context`
+- `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
 - `WORKER_HEALTH_PORT=8080`
 
 Operators provide:
@@ -69,7 +69,7 @@ Operators provide:
 names allowed to use the uv-managed native venv tier. Empty or unset means no
 native grant, so bundle-sourced pures run wasm-only.
 
-The `composable-agents worker` entrypoint exposes `GET /healthz` for liveness
+The `julep worker` entrypoint exposes `GET /healthz` for liveness
 and `GET /readyz` for readiness, and drains gracefully on SIGTERM.
 
 ## Execution tiers

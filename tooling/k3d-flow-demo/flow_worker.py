@@ -53,8 +53,8 @@ def _start_tool_server(port: int) -> ThreadingHTTPServer:
 
 def make_context() -> Any:
     """WORKER_CONTEXT_FACTORY entrypoint for the pod replica."""
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.execution.llm import make_llm_caller
+    from julep.execution.effects import WorkerContext
+    from julep.execution.llm import make_llm_caller
 
     _start_tool_server(TOOL_PORT)
     return WorkerContext(

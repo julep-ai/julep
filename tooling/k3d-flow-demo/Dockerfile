@@ -6,4 +6,4 @@ COPY flow_worker.py /app/flow_worker.py
 ENV PYTHONPATH=/app \
     WORKER_CONTEXT_FACTORY=flow_worker:make_context \
     WORKER_HEALTH_PORT=8080
-ENTRYPOINT ["composable-agents", "worker"]
+ENTRYPOINT ["julep", "worker"]

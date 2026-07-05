@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from composable_agents.ir import canonical_json
+from julep.ir import canonical_json
 
 ABI_PYTHON_SOURCE_JSON_V1 = "python-source/json-v1"
 

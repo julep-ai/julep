@@ -22,14 +22,14 @@ import uuid
 
 from temporalio.client import Client
 
-from composable_agents import Ann, freeze, manifest_to_json, think
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.activities import WorkerContext
-from composable_agents.execution.harness import start_flow
-from composable_agents.execution.llm import complete_reasoner
-from composable_agents.execution.worker import build_worker
-from composable_agents.freeze import McpSnapshot
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep import Ann, freeze, manifest_to_json, think
+from julep.dotctx import Reasoner
+from julep.execution.activities import WorkerContext
+from julep.execution.harness import start_flow
+from julep.execution.llm import complete_reasoner
+from julep.execution.worker import build_worker
+from julep.freeze import McpSnapshot
+from julep.registry import DEFAULT_REGISTRY
 
 API_KEY_ENV = "OPENAI_API_KEY"
 MODEL = "openai:gpt-4o-mini"
@@ -109,7 +109,7 @@ async def main() -> None:
 
     print(f"Starting Temporal worker on {TEMPORAL_HOST}; watch {UI}")
     async with worker:
-        from composable_agents.execution.reasoner_batch import (
+        from julep.execution.reasoner_batch import (
             BatchDispatchContext,
             get_batch_dispatch_context,
             install_batch_dispatch_context,

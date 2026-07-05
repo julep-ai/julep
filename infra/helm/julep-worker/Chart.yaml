@@ -1,0 +1,6 @@
+apiVersion: v2
+name: julep-worker
+description: Julep Temporal worker with KEDA Temporal autoscaling
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

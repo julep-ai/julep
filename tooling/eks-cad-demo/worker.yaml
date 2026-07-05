@@ -12,16 +12,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-cad-worker
+  name: julep-cad-worker
   namespace: julep-demo
-  labels: {app: ca-cad-worker}
+  labels: {app: julep-cad-worker}
 spec:
   replicas: 0          # KEDA owns the replica count (scale-from-zero)
   selector:
-    matchLabels: {app: ca-cad-worker}
+    matchLabels: {app: julep-cad-worker}
   template:
     metadata:
-      labels: {app: ca-cad-worker}
+      labels: {app: julep-cad-worker}
     spec:
       terminationGracePeriodSeconds: 20
       containers:
@@ -82,11 +82,11 @@ spec:
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: ca-cad-worker
+  name: julep-cad-worker
   namespace: julep-demo
 spec:
   scaleTargetRef:
-    name: ca-cad-worker
+    name: julep-cad-worker
   minReplicaCount: 0
   maxReplicaCount: 4
   pollingInterval: 5

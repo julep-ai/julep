@@ -6,7 +6,7 @@ starts produces a visible task-queue backlog for KEDA to scale on.
 
 import asyncio
 
-from composable_agents.execution.effects import WorkerContext
+from julep.execution.effects import WorkerContext
 
 
 async def _mcp(server, tool, value, idempotency_key):

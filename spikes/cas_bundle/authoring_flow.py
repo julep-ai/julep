@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from composable_agents import arr, pure, seq
+from julep import arr, pure, seq
 
 PURE_NAMES = ("cas.normalize_input.v1", "cas.render_summary.v1")
 AUTHORING_INPUT = {

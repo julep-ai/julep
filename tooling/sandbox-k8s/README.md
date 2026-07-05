@@ -1,7 +1,7 @@
 # sandbox-k8s — k3s + KEDA in a Claude Code sandbox VM
 
 Run the [deploy-kubernetes.md](../../docs-site/content/docs/deploy/kubernetes.md) stack — k3s,
-KEDA's `temporal` scaler, a Temporal dev server, and the `composable-agents
+KEDA's `temporal` scaler, a Temporal dev server, and the `julep
 worker` container — inside a Claude Code sandbox VM, for live testing of the
 autoscaling path. Verified 2026-06: a 12-workflow burst scales the worker
 Deployment 0 → 4 (ready in ~10s), all flows complete, and the cooldown returns
@@ -10,7 +10,7 @@ it to 0.
 ```bash
 sudo bash tooling/sandbox-k8s/setup.sh
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-python3 tooling/sandbox-k8s/drive.py 12   # burst; watch `kubectl get deploy ca-worker -w`
+python3 tooling/sandbox-k8s/drive.py 12   # burst; watch `kubectl get deploy julep-worker -w`
 ```
 
 **Sandbox-only.** The setup edits `/etc/docker/daemon.json` and assumes a

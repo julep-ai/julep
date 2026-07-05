@@ -17,7 +17,7 @@ import asyncio
 import json
 from typing import Any
 
-from composable_agents import Deployment, deploy, each, flow, pure
+from julep import Deployment, deploy, each, flow, pure
 
 ROWS: list[dict[str, Any]] = [
     {"id": "r1", "scores": [4, 8, 15, 16]},

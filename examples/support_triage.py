@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import Agent, tool
+from julep import Agent, tool
 
 
 TICKET = "Customer was charged twice and says renewal access is blocked."

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import Agent, tool
+from julep import Agent, tool
 
 
 QUESTION = "How should we keep a queue worker from double-processing jobs?"

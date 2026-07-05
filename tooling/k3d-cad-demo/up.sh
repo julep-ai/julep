@@ -14,7 +14,7 @@ REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 
 CLUSTER="${CLUSTER:-ca-cad-demo}"
 CAS_DIR="${CAS_DIR:-/tmp/ca-cad-cas}"
-IMAGE="${IMAGE:-ca-worker:cad-demo}"
+IMAGE="${IMAGE:-julep-worker:cad-demo}"
 ENV_OUT="${ENV_OUT:-/tmp/ca-cad-env.json}"
 
 K3D="${K3D:-$(command -v k3d 2>/dev/null || true)}"
@@ -64,11 +64,11 @@ CA_BUNDLES="$(python3 -c "import json;print(json.load(open('$ENV_OUT'))['CA_BUND
 SIGNER="$(python3 -c "import json;print(json.load(open('$ENV_OUT'))['CA_BUNDLE_ALLOWED_SIGNERS'])")"
 
 # --- 5. Deploy the generic worker pointed at the bundle -------------------- #
-RENDERED=/tmp/ca-cad-worker.yaml
+RENDERED=/tmp/julep-cad-worker.yaml
 sed -e "s|__CA_BUNDLES__|$CA_BUNDLES|" -e "s|__SIGNER__|$SIGNER|" "$HERE/worker.yaml" > "$RENDERED"
 kubectl apply -f "$RENDERED"
 echo "waiting for worker rollout ..."
-kubectl rollout status deploy/ca-cad-worker --timeout=120s
+kubectl rollout status deploy/julep-cad-worker --timeout=120s
 
 cat <<EOF
 
@@ -76,6 +76,6 @@ Ready. The generic worker resolved the bundle at startup. Now submit the flow:
 
   TEMPORAL_ADDRESS=localhost:7233 uv run python $HERE/drive.py
 
-Worker logs:   KUBECONFIG=$KUBECONFIG kubectl logs deploy/ca-cad-worker
+Worker logs:   KUBECONFIG=$KUBECONFIG kubectl logs deploy/julep-cad-worker
 Bundle env:    $ENV_OUT
 EOF

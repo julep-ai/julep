@@ -7,8 +7,8 @@ import hashlib
 import sys
 from types import ModuleType
 
-from composable_agents import pure
-from composable_agents.purity import source_hash_of
+from julep import pure
+from julep.purity import source_hash_of
 
 
 def registry_text_hash(source: str) -> str:

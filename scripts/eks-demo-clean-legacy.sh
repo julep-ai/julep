@@ -3,7 +3,7 @@ set -euo pipefail
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-julep-v2-auto-20260610}"
-ECR_REPO="${ECR_REPO:-ca-worker-llm-demo}"
+ECR_REPO="${ECR_REPO:-julep-worker-llm-demo}"
 CLUSTER_ROLE="${CLUSTER_ROLE:-JulepV2EksAutoClusterRole}"
 NODE_ROLE="${NODE_ROLE:-JulepV2EksAutoNodeRole}"
 

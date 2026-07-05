@@ -16,10 +16,10 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: ca-cad-worker
+  name: julep-cad-worker
 spec:
   scaleTargetRef:
-    name: ca-cad-worker
+    name: julep-cad-worker
   minReplicaCount: 0
   maxReplicaCount: 4
   pollingInterval: 5

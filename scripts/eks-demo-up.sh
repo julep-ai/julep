@@ -34,7 +34,7 @@ mkdir -p "$BUILD_CTX/julep-v2"
 rsync -a "$ROOT_DIR/pyproject.toml" "$BUILD_CTX/julep-v2/"
 rsync -a "$ROOT_DIR/README.md" "$BUILD_CTX/julep-v2/"
 rsync -a "$ROOT_DIR/LICENSE" "$BUILD_CTX/julep-v2/"
-rsync -a --exclude='__pycache__' "$ROOT_DIR/composable_agents" "$BUILD_CTX/julep-v2/"
+rsync -a --exclude='__pycache__' "$ROOT_DIR/julep" "$BUILD_CTX/julep-v2/"
 mkdir -p "$BUILD_CTX/julep-v2/tooling/k3d-llm-demo"
 rsync -a "$ROOT_DIR/tooling/k3d-llm-demo/Dockerfile" "$BUILD_CTX/julep-v2/tooling/k3d-llm-demo/"
 

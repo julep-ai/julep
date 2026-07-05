@@ -55,7 +55,7 @@ import sys
 import uuid
 from typing import Any
 
-from composable_agents import (
+from julep import (
     Agent,
     Reasoner,
     SessionEvent,
@@ -68,9 +68,9 @@ from composable_agents import (
     seq,
     think,
 )
-from composable_agents.dotctx import get_reasoner
-from composable_agents.execution.llm import complete_reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep.dotctx import get_reasoner
+from julep.execution.llm import complete_reasoner
+from julep.registry import DEFAULT_REGISTRY
 
 MODEL = "anthropic:claude-haiku-4-5-20251001"
 REASONER = "session_demo.assistant"
@@ -243,7 +243,7 @@ async def _drive(handle, *, send_full_transcript: bool) -> None:
 # Backends.
 # --------------------------------------------------------------------------- #
 async def run_local() -> None:
-    from composable_agents.session import LocalSessionHandle
+    from julep.session import LocalSessionHandle
 
     print("=== backend: local (in-memory live session, REAL anthropic think) ===")
     session = build_session()
@@ -262,11 +262,11 @@ async def run_temporal() -> None:
         SandboxRestrictions,
     )
 
-    from composable_agents.execution.activities import WorkerContext, configure
-    from composable_agents.execution.harness import SessionWorkflow  # noqa: F401
-    from composable_agents.execution.llm import make_llm_caller
-    from composable_agents.execution.session_store import InMemorySessionStore
-    from composable_agents.execution.worker import ACTIVITIES, WORKFLOWS
+    from julep.execution.activities import WorkerContext, configure
+    from julep.execution.harness import SessionWorkflow  # noqa: F401
+    from julep.execution.llm import make_llm_caller
+    from julep.execution.session_store import InMemorySessionStore
+    from julep.execution.worker import ACTIVITIES, WORKFLOWS
 
     print("=== backend: temporal (durable SessionWorkflow + REAL LlmCaller) ===")
     print("    (using WorkflowEnvironment.start_time_skipping(); real Anthropic")
@@ -288,7 +288,7 @@ async def run_temporal() -> None:
             activities=ACTIVITIES,
             workflow_runner=SandboxedWorkflowRunner(
                 restrictions=SandboxRestrictions.default.with_passthrough_modules(
-                    "composable_agents"
+                    "julep"
                 )
             ),
         )
@@ -308,8 +308,8 @@ async def run_temporal() -> None:
 
 
 async def run_cma() -> None:
-    from composable_agents.execution.cma_anthropic import AnthropicCMAClient
-    from composable_agents.execution.cma_session import CMASessionHandle
+    from julep.execution.cma_anthropic import AnthropicCMAClient
+    from julep.execution.cma_session import CMASessionHandle
 
     print("=== backend: cma (Anthropic Claude Managed Agents beta, hosted model) ===")
     print("    NOTE: CMASessionHandle creates a fresh hosted session per turn and")
