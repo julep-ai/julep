@@ -5,7 +5,7 @@ def test_version(capsys):
     code = cli.main(["--version"])
     out = capsys.readouterr().out
     assert code == 0
-    assert "ca" in out
+    assert "julep" in out
 
 
 def test_unknown_command_returns_2_no_traceback():
@@ -14,7 +14,7 @@ def test_unknown_command_returns_2_no_traceback():
 
 
 def test_no_args_returns_cleanly():
-    # `ca` with no args triggers no-args-is-help; must not raise.
+    # `julep` with no args triggers no-args-is-help; must not raise.
     code = cli.main([])
     assert isinstance(code, int)
 

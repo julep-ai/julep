@@ -66,10 +66,10 @@ class _FailSeverity(str, _enum.Enum):
 @app.callback(invoke_without_command=True)
 def _root(
     ctx: typer.Context,
-    version: bool = typer.Option(False, "--version", help="Print ca version and exit."),
+    version: bool = typer.Option(False, "--version", help="Print julep version and exit."),
 ) -> None:
     if version:
-        typer.echo(f"ca {VERSION}")
+        typer.echo(f"julep {VERSION}")
         raise typer.Exit(0)
 
 
