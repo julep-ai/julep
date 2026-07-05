@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents.agent_loop import (
+from julep.agent_loop import (
     AgentState,
     TraceEntry,
     blob_round_output_refs,

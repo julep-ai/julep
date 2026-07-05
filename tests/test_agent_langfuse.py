@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents import Agent
+from julep import Agent
 
 
 def test_agent_calls_langfuse_export_hook() -> None:

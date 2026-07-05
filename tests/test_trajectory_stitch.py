@@ -28,23 +28,23 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents import arr, call, each, mcp, native, seq, sub
-from composable_agents.continuation import continue_with
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
-from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref
-from composable_agents.execution.effects import (
+from julep import arr, call, each, mcp, native, seq, sub
+from julep.continuation import continue_with
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.execution import HAVE_DBOS, HAVE_TEMPORAL
+from julep.execution.blobstore import InMemoryBlobStore, parse_ref
+from julep.execution.effects import (
     CallToolInput,
     WorkerContext,
     callTool,
     configure,
     set_trajectory_sink,
 )
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.purity import register_pure
-from composable_agents.trajectory import (
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.purity import register_pure
+from julep.trajectory import (
     InMemoryTrajectoryStore,
     TrajectoryRun,
     TrajectoryStep,
@@ -180,15 +180,15 @@ def test_interpret_installs_run_identity_onto_env():
 # the root. All without a server (engine primitives monkeypatched).
 # --------------------------------------------------------------------------- #
 if HAVE_TEMPORAL:
-    from composable_agents.execution import harness
-    from composable_agents.execution.harness import (
+    from julep.execution import harness
+    from julep.execution.harness import (
         AgentInput,
         AgentWorkflow,
         FlowInput,
         FlowWorkflow,
         _TemporalEnv,
     )
-    from composable_agents.execution.policy import ExecutionPolicy
+    from julep.execution.policy import ExecutionPolicy
 
 
 class _Stop(Exception):
@@ -471,8 +471,8 @@ def test_agent_continue_as_new_keeps_root_and_increments_segment(monkeypatch):
 # terminal finish marker fires once at settlement and is best-effort. No server.
 # --------------------------------------------------------------------------- #
 if HAVE_DBOS:
-    from composable_agents.execution import dbos_backend
-    from composable_agents.execution.dbos_backend import run_agent_dbos, run_flow_dbos
+    from julep.execution import dbos_backend
+    from julep.execution.dbos_backend import run_agent_dbos, run_flow_dbos
 
 
 class _NoopSetWorkflowID:

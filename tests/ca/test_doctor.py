@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from composable_agents.ca.config import load_config
-from composable_agents.ca.doctor import run_checks
+from julep.ca.config import load_config
+from julep.ca.doctor import run_checks
 
 
 def test_checks_report_discovery(sample_module):

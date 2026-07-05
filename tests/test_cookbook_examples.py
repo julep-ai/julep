@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import blocking, call, check_approval_gates, deploy, seq
-from composable_agents.errors import ValidationError
+from julep import blocking, call, check_approval_gates, deploy, seq
+from julep.errors import ValidationError
 from conftest import run
 
 from examples import (

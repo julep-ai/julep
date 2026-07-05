@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from composable_agents import (
+from julep import (
     CapabilityManifest,
     Contract,
     Effect,
@@ -22,10 +22,10 @@ from composable_agents import (
     stage,
     sub,
 )
-from composable_agents.contracts import ToolContract
-from composable_agents.deploy import Deployment, snapshot_from_listings
-from composable_agents.freeze import McpSnapshot, NativeToolSpec
-from composable_agents.ir import Node
+from julep.contracts import ToolContract
+from julep.deploy import Deployment, snapshot_from_listings
+from julep.freeze import McpSnapshot, NativeToolSpec
+from julep.ir import Node
 
 
 @dataclass(frozen=True)

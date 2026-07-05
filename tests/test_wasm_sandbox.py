@@ -6,7 +6,7 @@ backtrace-dumping ``WasmtimeError``.
 The wasm tier builds the CPython component with ``--stub-wasi`` (no WASI imports),
 so any host-capability syscall executes a wasm ``unreachable`` and traps at the
 host boundary. The host (``WasmExecutor.run``) classifies that trap into a
-:class:`~composable_agents.errors.PureExecutionError` whose ``error_type`` is a
+:class:`~julep.errors.PureExecutionError` whose ``error_type`` is a
 stable, greppable tag (``WasmSandboxTrap`` / ``WasmFuelExhausted`` /
 ``WasmDeadlineExceeded``) and whose message names the offending pure and points
 the operator at the runbook — matching the house convention that a failure carries
@@ -24,8 +24,8 @@ import pytest
 
 pytest.importorskip("wasmtime")
 
-from composable_agents.errors import ComposableAgentsError, PureExecutionError
-from composable_agents.execution.wasm_executor import WasmExecutor
+from julep.errors import JulepError, PureExecutionError
+from julep.execution.wasm_executor import WasmExecutor
 
 # Each probe is a bundle-shippable pure (the @pure(name) shim is replicated in the
 # wasm component) that attempts a forbidden host capability and must trap.
@@ -107,10 +107,10 @@ def test_capability_probe_fails_closed_with_structured_diagnostic(
 
     err = excinfo.value
 
-    # House style: it is a ComposableAgentsError (the framework's own hierarchy),
+    # House style: it is a JulepError (the framework's own hierarchy),
     # NOT a leaked wasmtime engine error.
-    assert isinstance(err, ComposableAgentsError)
-    assert type(err).__module__.startswith("composable_agents")
+    assert isinstance(err, JulepError)
+    assert type(err).__module__.startswith("julep")
 
     # Structured, greppable classification — NOT a bare WasmtimeError tag.
     assert err.error_type == "WasmSandboxTrap", err.error_type
@@ -204,8 +204,8 @@ import os
 os.environ["COMPOSABLE_WASM_EPOCH_MS"] = "10"
 os.environ["COMPOSABLE_WASM_FUEL"] = str(20_000_000_000)  # huge: epoch trips, not fuel
 
-from composable_agents.errors import PureExecutionError
-from composable_agents.execution.wasm_executor import WasmExecutor
+from julep.errors import PureExecutionError
+from julep.execution.wasm_executor import WasmExecutor
 
 spin = (
     \'@pure("probe.spin.epoch")\\n\'
@@ -276,16 +276,16 @@ def test_cross_call_module_state_has_no_observable_effect(executor: WasmExecutor
 def test_sandbox_trap_diagnostic_reaches_the_projection_failed_event() -> None:
     """A wasm sandbox trap must surface its STRUCTURED diagnostic on the
     projection/emitter FAILED event (and thus the span), not the bare literal
-    'framework-error'. PureExecutionError is a ComposableAgentsError, so without
+    'framework-error'. PureExecutionError is a JulepError, so without
     special-casing it the interpreter would record 'framework-error' and drop the
     actionable error_type/message the host so carefully built.
     """
     import asyncio
 
-    from composable_agents import arr
-    from composable_agents.execution.interpreter import InMemoryEnv, interpret
-    from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-    from composable_agents.registry import Registry
+    from julep import arr
+    from julep.execution.interpreter import InMemoryEnv, interpret
+    from julep.projection import InMemoryProjection, ProjectionEmitter
+    from julep.registry import Registry
 
     # A bundle-sourced (wasm-tier) pure that reaches for the clock and traps.
     reg = Registry()

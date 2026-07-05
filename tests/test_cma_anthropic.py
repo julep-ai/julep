@@ -11,8 +11,8 @@ pytest.importorskip("httpx")
 
 import httpx
 
-from composable_agents.execution.cma import CMAEvent
-from composable_agents.execution.cma_anthropic import (
+from julep.execution.cma import CMAEvent
+from julep.execution.cma_anthropic import (
     AnthropicCMAClient,
     _Normalizer,
     _parse_sse_data_line,
@@ -120,7 +120,7 @@ def test_normalizer_logs_unknown_requires_action_event_id(
 ) -> None:
     normalizer = _Normalizer()
 
-    with caplog.at_level(logging.WARNING, logger="composable_agents.execution.cma_anthropic"):
+    with caplog.at_level(logging.WARNING, logger="julep.execution.cma_anthropic"):
         emitted = normalizer.feed(
             {
                 "type": "session.status_idle",
@@ -293,7 +293,7 @@ def test_create_session_lazily_creates_and_reuses_one_environment() -> None:
     run(scenario())
 
     # Exactly one environment created, named from the default, then reused.
-    assert env_creates == [{"name": "composable-agents"}]
+    assert env_creates == [{"name": "julep"}]
     assert [body["environment_id"] for body in session_bodies] == ["env_lazy", "env_lazy"]
     assert session_bodies[0]["agent"] == {"type": "agent", "id": "agnt_1"}
 

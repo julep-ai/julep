@@ -6,12 +6,12 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, Shape, ValidationError, deploy, get_reasoner, snapshot_from_tools, tool
-from composable_agents.capabilities import Budget, CapabilityManifest, ToolGrant
-from composable_agents.dsl import app
-from composable_agents.freeze import McpSnapshot, NativeToolSpec, freeze
-from composable_agents.ir import Op, toolref_key
-from composable_agents.kinds import Effect, Idempotency
+from julep import Agent, Shape, ValidationError, deploy, get_reasoner, snapshot_from_tools, tool
+from julep.capabilities import Budget, CapabilityManifest, ToolGrant
+from julep.dsl import app
+from julep.freeze import McpSnapshot, NativeToolSpec, freeze
+from julep.ir import Op, toolref_key
+from julep.kinds import Effect, Idempotency
 
 
 @tool(effect="read", idempotent=True)
@@ -160,7 +160,7 @@ def test_freeze_binds_raw_app_inline_tools_to_manifest() -> None:
 
 
 def test_deployed_agent_contract_derivation_reads_manifest_contracts() -> None:
-    from composable_agents.agent_loop import manifest_contracts_for_agent
+    from julep.agent_loop import manifest_contracts_for_agent
 
     agent = Agent("m", tools=[a_read_tool], name="agent_temporal_contract")
     deployment = agent.deployment()
@@ -274,7 +274,7 @@ def test_deploy_forwards_to_deployment_run(monkeypatch: pytest.MonkeyPatch) -> N
         *,
         session_id: str,
         input: Any = None,
-        task_queue: str = "composable-agents",
+        task_queue: str = "julep",
         policy: Any = None,
         principal: Any = None,
     ) -> dict[str, Any]:

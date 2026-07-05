@@ -21,16 +21,16 @@ from typing import Any
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
     from temporalio.testing import ActivityEnvironment
 
-    from composable_agents import agent_loop as al
-    from composable_agents.execution import activities
-    from composable_agents.execution.activities import (
+    from julep import agent_loop as al
+    from julep.execution import activities
+    from julep.execution.activities import (
         CommitStateInput,
         LoadStateInput,
         PutBlobInput,
@@ -39,8 +39,8 @@ if HAVE_TEMPORAL:
         loadState,
         putBlob,
     )
-    from composable_agents.execution.blobstore import InMemoryBlobStore
-    from composable_agents.execution.session_store import InMemorySessionStore
+    from julep.execution.blobstore import InMemoryBlobStore
+    from julep.execution.session_store import InMemorySessionStore
 
 
 def _run(coro: Any) -> Any:

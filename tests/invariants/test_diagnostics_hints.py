@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from composable_agents.diagnostics import HINTS, explain, hint_for
-from composable_agents.validate import Diagnostic
+from julep.diagnostics import HINTS, explain, hint_for
+from julep.validate import Diagnostic
 
 
 def test_explain_renders_fix_for_known_diagnostic_code() -> None:

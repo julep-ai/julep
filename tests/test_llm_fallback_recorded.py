@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.llm import complete_reasoner
+from julep.dotctx import Reasoner
+from julep.execution.llm import complete_reasoner
 
 SCHEMA = {"type": "object", "properties": {"x": {"type": "integer"}}}
 
@@ -28,7 +28,7 @@ def test_fallback_recorded_and_logged(caplog: pytest.LogCaptureFixture) -> None:
         return _completion('{"x": 1}')
 
     r = Reasoner(name="t", model="openai:gpt-4o", reply=SCHEMA)
-    with caplog.at_level(logging.WARNING, "composable_agents.execution.llm"):
+    with caplog.at_level(logging.WARNING, "julep.execution.llm"):
         result = asyncio.run(complete_reasoner(r, "hi", acompletion=flaky))
 
     assert result.reply == {"x": 1}

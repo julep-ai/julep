@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import (
+from julep import (
     CapabilityManifest,
     ContextScope,
     Shape,
@@ -21,16 +21,16 @@ from composable_agents import (
     think,
     validate,
 )
-from composable_agents.contracts import McpAnnotations
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
-from composable_agents.ir import Node
-from composable_agents.kinds import Op
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.shapes import closed_shape, surface_shape
-from composable_agents.staged import validate_plan
-from composable_agents.transforms import normalize_ids
+from julep.contracts import McpAnnotations
+from julep.errors import JulepError
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep.ir import Node
+from julep.kinds import Op
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.shapes import closed_shape, surface_shape
+from julep.staged import validate_plan
+from julep.transforms import normalize_ids
 from conftest import read_snapshot, run
 
 TOOLS = {
@@ -134,7 +134,7 @@ def test_each_applies_reducer():
 
 def test_each_rejects_non_list_input():
     fr, env = _env(each(call(mcp("srv", "inc"))), tools=TOOLS)
-    with pytest.raises(ComposableAgentsError, match="must be a list"):
+    with pytest.raises(JulepError, match="must be a list"):
         run(interpret(fr.flow, {"not": "a list"}, env))
 
 

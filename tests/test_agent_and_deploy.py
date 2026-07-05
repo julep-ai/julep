@@ -4,23 +4,23 @@ from __future__ import annotations
 
 import pytest
 
-import composable_agents
-from composable_agents import (
+import julep
+from julep import (
     AgentConfig, AgentState, Decision, interpret_reasoner_reply,
     generalize_trace_to_plan, extract_plan, promote_plan,
     CapabilityManifest, Budget, Reasoner,
     deploy, snapshot_from_listings,
     alt, app, arr, call, iter_up_to, mcp, par, seq, stage, think,
 )
-from composable_agents import dotctx, purity
-from composable_agents.agent_loop import (
+from julep import dotctx, purity
+from julep.agent_loop import (
     TraceEntry, action_cost, would_exceed_budget, should_continue_as_new,
     terminal_result, RoundAction,
 )
-from composable_agents.ir import Merge, _budget_from_json
-from composable_agents.purity import PureEntry
-from composable_agents.errors import PlanRejected, ValidationError
-from composable_agents.derived import race
+from julep.ir import Merge, _budget_from_json
+from julep.purity import PureEntry
+from julep.errors import PlanRejected, ValidationError
+from julep.derived import race
 from conftest import read_snapshot, mixed_snapshot
 
 
@@ -334,7 +334,7 @@ def test_deployment_artifact_hash_changes_with_framework_version(monkeypatch):
 
     first = deploy(flow, snap)
 
-    monkeypatch.setattr(composable_agents, "__version__", "artifact-test-version")
+    monkeypatch.setattr(julep, "__version__", "artifact-test-version")
     second = deploy(flow, snap)
 
     assert first.artifact_hash != second.artifact_hash

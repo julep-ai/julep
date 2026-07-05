@@ -4,14 +4,14 @@ import asyncio
 
 import pytest
 
-from composable_agents.continuation import (
+from julep.continuation import (
     CONTINUATION_KEY,
     continuation_value,
     continue_with,
     is_continuation,
     run_chained,
 )
-from composable_agents.errors import ComposableAgentsError
+from julep.errors import JulepError
 
 
 def test_sentinel_roundtrip():
@@ -39,5 +39,5 @@ def test_run_chained_bounds_segments():
     async def forever(value):
         return continue_with(value)
 
-    with pytest.raises(ComposableAgentsError, match="did not settle"):
+    with pytest.raises(JulepError, match="did not settle"):
         asyncio.run(run_chained(forever, {}, max_segments=5))

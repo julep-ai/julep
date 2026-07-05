@@ -8,15 +8,15 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents import Agent, HAVE_TEMPORAL, Reasoner, get_reasoner, tool
-from composable_agents.execution.llm import make_local_reasoner
-from composable_agents.execution.llm_result import LlmCallMeta, LlmResult
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep import Agent, HAVE_TEMPORAL, Reasoner, get_reasoner, tool
+from julep.execution.llm import make_local_reasoner
+from julep.execution.llm_result import LlmCallMeta, LlmResult
+from julep.registry import DEFAULT_REGISTRY
 from conftest import run
 
 if HAVE_TEMPORAL:
-    from composable_agents.execution import harness
-    from composable_agents.execution.harness import AgentInput, AgentWorkflow
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
 
 
 @dataclass
@@ -294,7 +294,7 @@ def test_agent_deploy_identity_changes_with_prompt_cache_and_unset_pin(
     # every release (and on stale local .venv metadata). Pin the version so
     # the golden guards the OTHER identity inputs against unintended drift.
     # (import_module: the package's `deploy` FUNCTION shadows the submodule.)
-    deploy_mod = importlib.import_module("composable_agents.deploy")
+    deploy_mod = importlib.import_module("julep.deploy")
 
     monkeypatch.setattr(
         deploy_mod, "_framework_version", lambda: "pinned-for-identity-golden"
@@ -339,8 +339,8 @@ def test_cma_rejects_prompt_cache_on_controller_reasoner() -> None:
 
 
 def test_cma_loop_rejects_prompt_cache_on_registry_reasoner() -> None:
-    from composable_agents.agent_loop import AgentConfig
-    from composable_agents.execution.cma import CMAEvent, drive_cma_agent_loop
+    from julep.agent_loop import AgentConfig
+    from julep.execution.cma import CMAEvent, drive_cma_agent_loop
     from cma_fakes import FakeCMASession
 
     DEFAULT_REGISTRY.register_reasoner(

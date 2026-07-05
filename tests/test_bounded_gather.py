@@ -4,7 +4,7 @@ import asyncio
 
 
 def test_gather_bounded_caps_concurrency():
-    from composable_agents.execution.interpreter import gather_bounded
+    from julep.execution.interpreter import gather_bounded
 
     state = {"now": 0, "peak": 0}
 
@@ -22,7 +22,7 @@ def test_gather_bounded_caps_concurrency():
 
 
 def test_gather_bounded_none_is_unbounded():
-    from composable_agents.execution.interpreter import gather_bounded
+    from julep.execution.interpreter import gather_bounded
 
     async def job(i):
         return i * 2
@@ -32,7 +32,7 @@ def test_gather_bounded_none_is_unbounded():
 
 
 def test_policy_roundtrips_max_parallel():
-    from composable_agents.execution.policy import ExecutionPolicy
+    from julep.execution.policy import ExecutionPolicy
 
     p = ExecutionPolicy(max_parallel=4)
     assert ExecutionPolicy.from_json(p.to_json()).max_parallel == 4
@@ -40,8 +40,8 @@ def test_policy_roundtrips_max_parallel():
 
 
 def test_inmemory_env_accepts_max_parallel():
-    from composable_agents.execution.interpreter import InMemoryEnv
-    from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+    from julep.execution.interpreter import InMemoryEnv
+    from julep.projection import InMemoryProjection, ProjectionEmitter
 
     env = InMemoryEnv({}, ProjectionEmitter(InMemoryProjection()), max_parallel=3)
     assert env.max_parallel == 3

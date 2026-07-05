@@ -1,6 +1,6 @@
 # tests/ca/test_langfuse_link.py
-from composable_agents.ca.langfuse_link import trace_url
-from composable_agents.execution.langfuse import trace_id_for
+from julep.ca.langfuse_link import trace_url
+from julep.execution.langfuse import trace_id_for
 
 
 def test_url_uses_stable_trace_id(monkeypatch):

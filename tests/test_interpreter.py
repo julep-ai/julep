@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import (
+from julep import (
     Ann, ContextScope,
     arr, call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
     HAVE_TEMPORAL,
 )
-from composable_agents.errors import CapabilityDenied
-from composable_agents.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
+from julep.errors import CapabilityDenied
+from julep.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
 if HAVE_TEMPORAL:
-    from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
-from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
+    from julep.execution.harness import ExecutionPolicy, _TemporalEnv
+from julep.projection import EventType, InMemoryProjection, ProjectionEmitter
 from conftest import mixed_snapshot, read_snapshot, run
 
 
@@ -377,9 +377,9 @@ def test_temporal_env_inherits_call_counts_for_child_flows() -> None:
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
-    from composable_agents.execution import harness
-    from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
-    from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+    from julep.execution import harness
+    from julep.execution.harness import ExecutionPolicy, _TemporalEnv
+    from julep.projection import InMemoryProjection, ProjectionEmitter
 
     async def gate_waiter(value, cid, timeout_s):  # noqa: ANN001
         return value

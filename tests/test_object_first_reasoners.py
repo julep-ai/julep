@@ -3,7 +3,7 @@ from typing import TypedDict
 
 import pytest
 
-from composable_agents import Reasoner
+from julep import Reasoner
 
 
 class Reply(TypedDict):
@@ -30,7 +30,7 @@ def test_reply_schema_kwarg_is_gone() -> None:
 
 
 def test_deploy_registers_reasoner_object_and_wire_is_identical() -> None:
-    from composable_agents import Reasoner, deploy, flow, pure, think, tool
+    from julep import Reasoner, deploy, flow, pure, think, tool
 
     @tool(effect="read", idempotent=True)
     def lookup(t: str) -> dict:
@@ -57,7 +57,7 @@ def test_deploy_registers_reasoner_object_and_wire_is_identical() -> None:
 
 
 def test_agent_accepts_reasoner_object() -> None:
-    from composable_agents import Agent, Reasoner
+    from julep import Agent, Reasoner
 
     r = Reasoner(name="ws5_ctrl", model="anthropic:claude-haiku-4-5-20251001", reply={"out": "str"})
     agent = Agent(reasoner=r)                 # object, not a string, no prior registration
@@ -69,8 +69,8 @@ def test_agent_object_preserves_model_and_system() -> None:
     # Agent(reasoner=obj) must build a controller that USES the object's model and
     # system, not the object's *name*. Regression for the object-first path sending
     # `r.name` to the provider as if it were the model id (Codex PR#9, P1).
-    from composable_agents import Agent, Reasoner
-    from composable_agents.dotctx import get_reasoner
+    from julep import Agent, Reasoner
+    from julep.dotctx import get_reasoner
 
     r = Reasoner(
         name="ws5_ctrl_modelsys",
@@ -88,8 +88,8 @@ def test_agent_replace_reasoner_object_preserves_model_and_system() -> None:
     # Agent.replace(reasoner=obj) must mirror __init__: use the object's model and
     # system, not its name. Regression for the second object-first conversion site
     # missed by the initial fix (Codex re-review of PR#9, P2).
-    from composable_agents import Agent, Reasoner
-    from composable_agents.dotctx import get_reasoner
+    from julep import Agent, Reasoner
+    from julep.dotctx import get_reasoner
 
     base = Agent(reasoner="anthropic:old-model", instructions="old")
     r2 = Reasoner(
@@ -110,8 +110,8 @@ def test_capability_models_enforced_for_object_reasoner() -> None:
     # unregistered object reasoner made CAP_MODEL_ID_DENIED silently skip
     # (Codex PR#9, P1). deploy() forbids reasoners= with capabilities=, so the
     # object can only become resolvable via think(obj).
-    from composable_agents import CapabilityManifest, Reasoner, deploy, flow, think, tool
-    from composable_agents.errors import ValidationError
+    from julep import CapabilityManifest, Reasoner, deploy, flow, think, tool
+    from julep.errors import ValidationError
 
     @tool(effect="read", idempotent=True)
     def lk(t: str) -> dict:
@@ -139,14 +139,14 @@ def test_capability_models_enforced_for_object_reasoner() -> None:
 
 
 def test_register_reasoner_not_public() -> None:
-    import composable_agents
+    import julep
 
-    assert not hasattr(composable_agents, "register_reasoner")
-    assert "register_reasoner" not in composable_agents.__all__
+    assert not hasattr(julep, "register_reasoner")
+    assert "register_reasoner" not in julep.__all__
 
 
 def test_think_accepts_object_at_authoring_time() -> None:
-    from composable_agents import Reasoner, flow, pure, think, tool
+    from julep import Reasoner, flow, pure, think, tool
 
     @tool(effect="read", idempotent=True)
     def lk(t: str) -> dict:
@@ -171,7 +171,7 @@ def test_no_public_register_reasoner_or_reply_schema_left() -> None:
     # user-facing README/CONTRIBUTING (the PyPI landing page included).
     out = subprocess.run(
         ["grep", "-rn", "register_reasoner\\|reply_schema=",
-         "composable_agents", "examples", "docs-site/content", "README.md", "CONTRIBUTING.md"],
+         "julep", "examples", "docs-site/content", "README.md", "CONTRIBUTING.md"],
         capture_output=True, text=True,
     ).stdout
     # Allowed hits are the internal Registry method: its definition and method

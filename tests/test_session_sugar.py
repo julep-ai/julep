@@ -6,16 +6,16 @@ from typing import Any
 
 import pytest
 
-from composable_agents import arr, recv, register_pure, seq
-from composable_agents.kinds import Op
-from composable_agents.purity import _REGISTRY, register_pure_with_source
-from composable_agents.session import (
+from julep import arr, recv, register_pure, seq
+from julep.kinds import Op
+from julep.purity import _REGISTRY, register_pure_with_source
+from julep.session import (
     SessionCompileError,
     drive_session,
     scan,
     session,
 )
-from composable_agents.transforms import normalize_ids
+from julep.transforms import normalize_ids
 from conftest import run
 
 

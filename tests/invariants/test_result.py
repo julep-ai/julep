@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from composable_agents import Agent, tool
-from composable_agents.result import Result
+from julep import Agent, tool
+from julep.result import Result
 
 
 def test_result_dual_attribute_and_dict_access() -> None:

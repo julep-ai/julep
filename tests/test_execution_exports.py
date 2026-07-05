@@ -1,4 +1,4 @@
-"""T9 — public exports on the ``composable_agents.execution`` package.
+"""T9 — public exports on the ``julep.execution`` package.
 
 The pure blob/session symbols (no ``temporalio`` dependency) are importable and
 listed in ``__all__`` unconditionally. The Temporal-gated durable-session
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-import composable_agents.execution as ex
+import julep.execution as ex
 
 PURE_SYMBOLS = [
     "BlobStore",
@@ -44,12 +44,12 @@ def test_pure_symbols_importable() -> None:
 
 
 def test_pure_symbols_resolve_to_real_objects() -> None:
-    from composable_agents.execution.blobstore import (
+    from julep.execution.blobstore import (
         BlobStore,
         InMemoryBlobStore,
         content_ref,
     )
-    from composable_agents.execution.session_store import (
+    from julep.execution.session_store import (
         Cursor,
         InMemorySessionStore,
         SessionStore,
@@ -74,7 +74,7 @@ def test_temporal_gated_symbols_listed_when_temporal_present() -> None:
 def test_temporal_gated_symbols_lazy_resolve() -> None:
     assert ex.HAVE_TEMPORAL is True
 
-    from composable_agents.execution.activities import (
+    from julep.execution.activities import (
         CommitStateInput,
         LoadStateInput,
         PutBlobInput,
@@ -82,8 +82,8 @@ def test_temporal_gated_symbols_lazy_resolve() -> None:
         loadState,
         putBlob,
     )
-    from composable_agents.execution.codec import ClaimCheckCodec
-    from composable_agents.execution.worker import claim_check_converter
+    from julep.execution.codec import ClaimCheckCodec
+    from julep.execution.worker import claim_check_converter
 
     assert ex.ClaimCheckCodec is ClaimCheckCodec
     assert ex.claim_check_converter is claim_check_converter

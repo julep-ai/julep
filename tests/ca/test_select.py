@@ -1,7 +1,7 @@
 # tests/ca/test_select.py
-from composable_agents.ca.config import load_config
-from composable_agents.ca.model import build_module
-from composable_agents.ca.select import select
+from julep.ca.config import load_config
+from julep.ca.model import build_module
+from julep.ca.select import select
 
 
 def names(agents):

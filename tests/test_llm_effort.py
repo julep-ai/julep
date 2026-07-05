@@ -2,8 +2,8 @@ import asyncio
 from types import SimpleNamespace
 from typing import Any
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.llm import complete_reasoner
+from julep.dotctx import Reasoner
+from julep.execution.llm import complete_reasoner
 
 
 def _completion(content: str = "ok") -> Any:

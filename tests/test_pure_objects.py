@@ -3,12 +3,12 @@ from __future__ import annotations
 import hashlib
 import inspect
 
-from composable_agents import Pure
-from composable_agents import dsl
-from composable_agents.typed import alt, as_flow, each, par
-from composable_agents.ir import Node, canonical_json
-from composable_agents.purity import get_pure, pure, source_hash_of
-from composable_agents.transforms import normalize_ids
+from julep import Pure
+from julep import dsl
+from julep.typed import alt, as_flow, each, par
+from julep.ir import Node, canonical_json
+from julep.purity import get_pure, pure, source_hash_of
+from julep.transforms import normalize_ids
 
 
 def _canonical_ir(node: Node) -> str:

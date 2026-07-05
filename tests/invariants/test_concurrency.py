@@ -6,10 +6,10 @@ import asyncio
 
 import pytest
 
-from composable_agents import call, freeze, hedge, mcp, quorum, race
-from composable_agents.errors import RaceAllFailed
-from composable_agents.execution.interpreter import interpret, race_first_from_thunks
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep import call, freeze, hedge, mcp, quorum, race
+from julep.errors import RaceAllFailed
+from julep.execution.interpreter import interpret, race_first_from_thunks
+from julep.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 from tests.invariants.helpers import AsyncInMemoryEnv, fast_fail, slow_ok
 

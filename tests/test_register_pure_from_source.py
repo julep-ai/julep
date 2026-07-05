@@ -4,10 +4,10 @@ import hashlib
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.purity import register_pure_from_source
-from composable_agents.registry import (
+from julep import HAVE_TEMPORAL
+from julep.errors import JulepError
+from julep.purity import register_pure_from_source
+from julep.registry import (
     DEFAULT_REGISTRY,
     PureEntry,
     Registry,
@@ -217,8 +217,8 @@ def test_registry_executor_of_reports_source_tiers_and_unknowns() -> None:
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_temporal_env_blocks_native_venv_pures_but_allows_wasm_lookup() -> None:
-    from composable_agents.execution.harness import ExecutionPolicy, _TemporalEnv
-    from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+    from julep.execution.harness import ExecutionPolicy, _TemporalEnv
+    from julep.projection import InMemoryProjection, ProjectionEmitter
 
     wasm_name = "cas.temporal.wasm.source"
     native_name = "cas.temporal.native_venv.source"
@@ -251,7 +251,7 @@ def test_temporal_env_blocks_native_venv_pures_but_allows_wasm_lookup() -> None:
         )
 
         assert callable(env.get_pure(wasm_name))
-        with pytest.raises(ComposableAgentsError, match="native-tier"):
+        with pytest.raises(JulepError, match="native-tier"):
             env.get_pure(native_name)
     finally:
         DEFAULT_REGISTRY.pures.pop(wasm_name, None)

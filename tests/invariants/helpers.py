@@ -12,8 +12,8 @@ import inspect
 from dataclasses import dataclass
 from typing import Any, Callable, MutableSequence
 
-from composable_agents.execution.interpreter import InMemoryEnv, call_ref_key
-from composable_agents.ir import Node
+from julep.execution.interpreter import InMemoryEnv, call_ref_key
+from julep.ir import Node
 
 
 @dataclass(frozen=True)

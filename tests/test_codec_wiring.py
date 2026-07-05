@@ -16,15 +16,15 @@ pytest.importorskip("temporalio")
 
 from temporalio.converter import DataConverter
 
-from composable_agents.execution import worker as worker_mod
-from composable_agents.execution.activities import (
+from julep.execution import worker as worker_mod
+from julep.execution.activities import (
     commitState,
     loadState,
     putBlob,
 )
-from composable_agents.execution.blobstore import InMemoryBlobStore
-from composable_agents.execution.codec import ClaimCheckCodec
-from composable_agents.execution.worker import claim_check_converter
+from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.codec import ClaimCheckCodec
+from julep.execution.worker import claim_check_converter
 
 
 def test_durable_activities_registered() -> None:

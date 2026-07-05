@@ -1,7 +1,7 @@
 # tests/ca/test_run_cmd.py
 import json
 
-from composable_agents.ca import cli
+from julep.ca import cli
 
 
 def test_run_prints_tree_and_caches(sample_module, capsys, monkeypatch):

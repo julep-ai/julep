@@ -1,5 +1,5 @@
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.llm import _with_model
+from julep.dotctx import Reasoner
+from julep.execution.llm import _with_model
 
 
 def test_fields_default() -> None:
@@ -18,8 +18,8 @@ def test_with_model_carries_new_fields() -> None:
 
 
 def test_reasoner_identity_stable_on_defaults_and_moves_on_values() -> None:
-    from composable_agents.deploy import _reasoner_identity
-    from composable_agents.dotctx import DEFAULT_REGISTRY
+    from julep.deploy import _reasoner_identity
+    from julep.dotctx import DEFAULT_REGISTRY
 
     DEFAULT_REGISTRY.register_reasoner(Reasoner(name="ident-a", model="m"))
     DEFAULT_REGISTRY.register_reasoner(

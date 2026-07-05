@@ -8,13 +8,13 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, AgentConfig, Budget, EnforcementMode, tool
-from composable_agents.derived import emit, recv
-from composable_agents.dsl import seq
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.execution.cma import CMAEvent
-from composable_agents.execution.cma_session import CMASessionHandle
-from composable_agents.session import SessionEvent, loop
+from julep import Agent, AgentConfig, Budget, EnforcementMode, tool
+from julep.derived import emit, recv
+from julep.dsl import seq
+from julep.errors import JulepError
+from julep.execution.cma import CMAEvent
+from julep.execution.cma_session import CMASessionHandle
+from julep.session import SessionEvent, loop
 from cma_fakes import FakeCMASession
 from conftest import run
 
@@ -372,7 +372,7 @@ def test_send_idempotency_dedups_and_rejects_payload_mismatch() -> None:
         ack2 = await handle.send({"msg": "a"}, idempotency_key="k")
         assert ack1 == {"seq": 1, "channel": "in"}
         assert ack2 == ack1
-        with pytest.raises(ComposableAgentsError, match="different payload"):
+        with pytest.raises(JulepError, match="different payload"):
             await handle.send({"msg": "b"}, idempotency_key="k")
 
         events = [_event_to_tuple(await _next_event(agen)) for _ in range(3)]
@@ -396,7 +396,7 @@ def test_send_rejects_unsupported_channel() -> None:
             tools={},
             agent={"name": "controller", "tools": []},
         )
-        with pytest.raises(ComposableAgentsError, match="unsupported channel"):
+        with pytest.raises(JulepError, match="unsupported channel"):
             await handle.send("x", channel="side")
         state = await handle.state()
         assert state["pending"] == {"in": 0}

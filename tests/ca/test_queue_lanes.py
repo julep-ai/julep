@@ -7,22 +7,22 @@ from typing import Any
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL, Agent, Shape, tool
-from composable_agents.ca.config import CaConfig, EnvConfig, load_config
-from composable_agents.ca.deploy import deploy_agents
-from composable_agents.ca.ledger import DeployRecord, read_ledger, upsert_records
-from composable_agents.ca.lint import lint_agents
-from composable_agents.ca.queues import queue_lane_diagnostics, resolve_queue_lane
-from composable_agents.ca.temporal_run import build_flow_start_args, run_on_env
-from composable_agents.dsl import app
-from composable_agents.execution.interpreter import _app_config
-from composable_agents.ir import Node, Op, SubContract, SubStep
-from composable_agents.typed import as_flow
+from julep import HAVE_TEMPORAL, Agent, Shape, tool
+from julep.ca.config import CaConfig, EnvConfig, load_config
+from julep.ca.deploy import deploy_agents
+from julep.ca.ledger import DeployRecord, read_ledger, upsert_records
+from julep.ca.lint import lint_agents
+from julep.ca.queues import queue_lane_diagnostics, resolve_queue_lane
+from julep.ca.temporal_run import build_flow_start_args, run_on_env
+from julep.dsl import app
+from julep.execution.interpreter import _app_config
+from julep.ir import Node, Op, SubContract, SubStep
+from julep.typed import as_flow
 
 # execution.harness imports temporalio at module level; the CI temporal=off
 # job must still collect this file (config/lint/deploy tests are pure).
 if HAVE_TEMPORAL:
-    from composable_agents.execution.harness import (
+    from julep.execution.harness import (
         AgentInput,
         FlowInput,
         _resolve_child_queue,
@@ -209,7 +209,7 @@ def test_ca_deploy_records_flow_queue_and_run_resolves_lane(tmp_path: Path) -> N
     pkg.mkdir()
     (pkg / "__init__.py").write_text("", encoding="utf-8")
     (pkg / "agents.py").write_text(
-        "from composable_agents import flow\n"
+        "from julep import flow\n"
         "\n"
         "@flow\n"
         "def support_bot(ticket: str) -> str:\n"
@@ -243,7 +243,7 @@ def test_lint_env_selects_target_queue_map(
     pkg.mkdir()
     (pkg / "__init__.py").write_text("", encoding="utf-8")
     (pkg / "agents.py").write_text(
-        "from composable_agents import Agent, tool\n"
+        "from julep import Agent, tool\n"
         "\n"
         '@tool(effect="read", idempotent=True, name="lint_env_tool")\n'
         "def child_tool(value: str) -> str:\n"
@@ -288,9 +288,9 @@ def test_worker_queue_cli_resolves_lanes_and_raw_strings(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import composable_agents.cli as cli
+    import julep.cli as cli
 
-    serve_mod = import_module("composable_agents.execution.serve")
+    serve_mod = import_module("julep.execution.serve")
 
     (tmp_path / "ca.toml").write_text(
         "[env.prod]\n"
@@ -325,9 +325,9 @@ def test_worker_queue_unknown_env_is_loud(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import composable_agents.cli as cli
+    import julep.cli as cli
 
-    serve_mod = import_module("composable_agents.execution.serve")
+    serve_mod = import_module("julep.execution.serve")
 
     (tmp_path / "ca.toml").write_text(
         "[env.prod]\n"
@@ -418,8 +418,8 @@ def test_queue_lane_diagnostics_catches_app_node_subflow_queues() -> None:
 def test_resolve_agent_spec_subflow_queues_passthrough() -> None:
     from conftest import run
 
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import WorkerContext, configure
+    from julep.execution import effects
+    from julep.execution.effects import WorkerContext, configure
 
     prev = effects._CTX
     configure(

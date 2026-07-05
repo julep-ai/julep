@@ -3,11 +3,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents.agent_loop import AgentConfig, AgentState
-from composable_agents.ir import ContextPolicy
-from composable_agents.kinds import ContextScope, EnforcementMode
-from composable_agents.transcript import SUMMARY_KEY
-from composable_agents.turn import Halt, controller_turn, drive, pre_round
+from julep.agent_loop import AgentConfig, AgentState
+from julep.ir import ContextPolicy
+from julep.kinds import ContextScope, EnforcementMode
+from julep.transcript import SUMMARY_KEY
+from julep.turn import Halt, controller_turn, drive, pre_round
 
 
 def _step(

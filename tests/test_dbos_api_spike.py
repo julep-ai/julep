@@ -1,6 +1,6 @@
 """dbos>=2.18 API conformance: every dbos API the backend uses, exercised raw.
 
-Needs: ``pip install 'composable-agents[dbos]'`` and a Postgres reachable via
+Needs: ``pip install 'julep[dbos]'`` and a Postgres reachable via
 ``DBOS_TEST_DATABASE_URL``. Local one-liner:
 ``docker run -d --name ca-dbos-pg -e POSTGRES_PASSWORD=ca -p 5433:5432 postgres:16``.
 Skipped otherwise. If this file fails after a dbos upgrade, fix
@@ -30,7 +30,7 @@ from typing import TypeVar
 
 import pytest
 
-from composable_agents.execution import HAVE_DBOS
+from julep.execution import HAVE_DBOS
 
 DB_URL = os.environ.get("DBOS_TEST_DATABASE_URL")
 T = TypeVar("T")

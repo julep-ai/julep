@@ -1,5 +1,5 @@
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.ca.tracetree import render_tree
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.ca.tracetree import render_tree
 
 
 def test_renders_parent_child(capsys):

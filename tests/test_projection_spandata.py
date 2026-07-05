@@ -1,4 +1,4 @@
-from composable_agents.projection import ProjectionEvent, EventType, to_otel_spans
+from julep.projection import ProjectionEvent, EventType, to_otel_spans
 
 def _ev(**kw):
     base = dict(event_id="e0", type=EventType.PLANNED, node="n", cid="c0", ts=0.0)

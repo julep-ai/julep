@@ -9,11 +9,11 @@ from typing import Any
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
-from composable_agents.ca import cli
-from composable_agents.ca.config import CaConfig, EnvConfig, ScheduleConfig, load_config
-from composable_agents.ca.ledger import DeployRecord, upsert_records
-from composable_agents.ca.schedule import (
+from julep import HAVE_TEMPORAL
+from julep.ca import cli
+from julep.ca.config import CaConfig, EnvConfig, ScheduleConfig, load_config
+from julep.ca.ledger import DeployRecord, upsert_records
+from julep.ca.schedule import (
     apply_schedules,
     build_schedule,
     fetch_server_schedules,
@@ -21,7 +21,7 @@ from composable_agents.ca.schedule import (
     schedule_drift,
     schedule_id,
 )
-from composable_agents.ca.temporal_run import build_flow_start_args, run_on_env
+from julep.ca.temporal_run import build_flow_start_args, run_on_env
 
 
 def _cloud_env(tmp_path: Path) -> EnvConfig:

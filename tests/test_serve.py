@@ -13,10 +13,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL, __version__
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.execution.effects import WorkerContext
-from composable_agents.execution.serve import (
+from julep import HAVE_TEMPORAL, __version__
+from julep.errors import JulepError
+from julep.execution.effects import WorkerContext
+from julep.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
     WorkerServeSettings,
@@ -40,7 +40,7 @@ def test_from_env_defaults():
     assert s.context_factory == "m:f"
     assert s.address == "localhost:7233"
     assert s.namespace == "default"
-    assert s.task_queue == DEFAULT_TASK_QUEUE == "composable-agents"
+    assert s.task_queue == DEFAULT_TASK_QUEUE == "julep"
     assert s.api_key is None and s.tls is False
     assert s.graceful_shutdown_s == 30.0
     assert s.max_concurrent_activities is None
@@ -123,21 +123,21 @@ def test_versioning_kwargs_defaults_build_id_to_package_version():
 def test_versioning_kwargs_missing_metadata_raises(monkeypatch):
     from importlib import import_module
 
-    serve_mod = import_module("composable_agents.execution.serve")
+    serve_mod = import_module("julep.execution.serve")
 
     def _boom(_name):
         raise serve_mod.PackageNotFoundError(_name)
 
     monkeypatch.setattr(serve_mod, "version", _boom)
     settings = WorkerServeSettings(context_factory="m:f", use_worker_versioning=True)
-    with pytest.raises(ComposableAgentsError, match="CA_WORKER_BUILD_ID"):
+    with pytest.raises(JulepError, match="CA_WORKER_BUILD_ID"):
         _versioning_worker_kwargs(settings)
 
 
 def test_versioning_kwargs_explicit_build_id_survives_missing_metadata(monkeypatch):
     from importlib import import_module
 
-    serve_mod = import_module("composable_agents.execution.serve")
+    serve_mod = import_module("julep.execution.serve")
 
     def _boom(_name):
         raise serve_mod.PackageNotFoundError(_name)
@@ -212,10 +212,10 @@ def test_load_context_factory_rejects_bad_specs():
 def test_serve_rejects_factory_returning_wrong_type():
     settings = WorkerServeSettings(context_factory=f"{__name__}:not_a_factory")
     if not HAVE_TEMPORAL:
-        with pytest.raises(ComposableAgentsError, match="temporal"):
+        with pytest.raises(JulepError, match="temporal"):
             run(serve(settings))
         return
-    with pytest.raises(ComposableAgentsError, match="must return a WorkerContext"):
+    with pytest.raises(JulepError, match="must return a WorkerContext"):
         run(serve(settings))
 
 
@@ -255,8 +255,8 @@ def test_health_server_probes():
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_build_worker_forwards_versioning_kwargs(monkeypatch):
-    from composable_agents.execution import worker as worker_mod
-    from composable_agents.execution.worker import build_worker
+    from julep.execution import worker as worker_mod
+    from julep.execution.worker import build_worker
 
     captured: dict[str, Any] = {}
 
@@ -287,7 +287,7 @@ def test_build_worker_forwards_versioning_kwargs(monkeypatch):
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
-    import composable_agents.execution.worker as worker_mod
+    import julep.execution.worker as worker_mod
     from temporalio.client import Client
 
     captured: dict[str, Any] = {}
@@ -344,10 +344,10 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
 async def _serve_lifecycle():
     from temporalio.testing import WorkflowEnvironment
 
-    from composable_agents import call, freeze, manifest_to_json, mcp
-    from composable_agents.contracts import McpAnnotations
-    from composable_agents.execution.harness import run_flow
-    from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from julep import call, freeze, manifest_to_json, mcp
+    from julep.contracts import McpAnnotations
+    from julep.execution.harness import run_flow
+    from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
     ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)
     snapshot = McpSnapshot(servers={"srv": McpServerSnapshot(server="srv", version="1", tools={
@@ -383,5 +383,5 @@ def test_serve_lifecycle_end_to_end():
 @pytest.mark.skipif(HAVE_TEMPORAL, reason="exercises the missing-extra error")
 def test_serve_without_temporalio_fails_explicitly():
     settings = WorkerServeSettings(context_factory=f"{__name__}:make_context")
-    with pytest.raises(ComposableAgentsError, match="composable-agents\\[temporal\\]"):
+    with pytest.raises(JulepError, match="julep\\[temporal\\]"):
         run(serve(settings))

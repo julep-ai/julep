@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import composable_agents
-from composable_agents import arr, call, deploy, mcp, seq
-from composable_agents import purity
-from composable_agents.ir import canonical_json
-from composable_agents.purity import PureEntry
+import julep
+from julep import arr, call, deploy, mcp, seq
+from julep import purity
+from julep.ir import canonical_json
+from julep.purity import PureEntry
 from conftest import read_snapshot
 
 
@@ -20,7 +20,7 @@ def _deployment(monkeypatch):
         "runtime.ref.identity",
         PureEntry("runtime.ref.identity", _pure_runtime_ref_fn, "pure:stable"),
     )
-    monkeypatch.setattr(composable_agents, "__version__", "runtime-ref-test-version")
+    monkeypatch.setattr(julep, "__version__", "runtime-ref-test-version")
     return deploy(seq(arr("runtime.ref.identity"), call(mcp("srv", "a"))), read_snapshot("a"))
 
 

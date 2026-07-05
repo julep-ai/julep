@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from composable_agents.cas import (
+from julep.cas import (
     CASDigestError,
     CASIntegrityError,
     CASNotFound,
@@ -144,7 +144,7 @@ def test_cas_from_url_file_and_s3(monkeypatch, tmp_path) -> None:
     assert file_store.root == tmp_path
 
     fake_client = _FakeS3Client()
-    monkeypatch.setattr("composable_agents.cas._make_default_client", lambda: fake_client)
+    monkeypatch.setattr("julep.cas._make_default_client", lambda: fake_client)
     s3_store = cas_from_url("s3://bundle-bucket/path/to/cas")
     assert isinstance(s3_store, S3CAS)
     assert s3_store.bucket == "bundle-bucket"
@@ -158,5 +158,5 @@ def test_cas_from_url_unknown_scheme_lists_supported_schemes() -> None:
 
 def test_s3_cas_missing_boto3_error_is_actionable(monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "boto3", None)
-    with pytest.raises(RuntimeError, match=r"composable-agents\[store\]"):
+    with pytest.raises(RuntimeError, match=r"julep\[store\]"):
         S3CAS("bucket")

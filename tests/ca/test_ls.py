@@ -1,5 +1,5 @@
 # tests/ca/test_ls.py
-from composable_agents.ca import cli
+from julep.ca import cli
 
 
 def test_ls_lists_all(sample_module, capsys, monkeypatch):

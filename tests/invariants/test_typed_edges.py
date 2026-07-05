@@ -14,12 +14,12 @@ else:
         def assert_type(val, typ, /):
             return val
 
-from composable_agents import dsl
-from composable_agents.agent import tool
-from composable_agents.dsl import call, native
-from composable_agents.typed import Flow
-from composable_agents.ir import Node
-from composable_agents.transforms import normalize_ids
+from julep import dsl
+from julep.agent import tool
+from julep.dsl import call, native
+from julep.typed import Flow
+from julep.ir import Node
+from julep.transforms import normalize_ids
 
 
 @dataclass(frozen=True)

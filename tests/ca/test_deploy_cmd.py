@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from composable_agents.ca import cli
+from julep.ca import cli
 
 _MUTATED_AGENTS = '''
-from composable_agents import flow, think, tool, Agent
+from julep import flow, think, tool, Agent
 
 @tool(effect="read", idempotent=True)
 def lookup(ticket: str) -> dict:

@@ -1,16 +1,16 @@
 import asyncio
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution import effects
-from composable_agents.execution.effects import (
+from julep.dotctx import Reasoner
+from julep.execution import effects
+from julep.execution.effects import (
     InvokeReasonerInput,
     WorkerContext,
     _unwrap_llm,
     configure,
 )
-from composable_agents.execution.interpreter import _unwrap_ca_meta
-from composable_agents.execution.llm_result import LlmCallMeta, LlmResult
-from composable_agents.registry import Registry
+from julep.execution.interpreter import _unwrap_ca_meta
+from julep.execution.llm_result import LlmCallMeta, LlmResult
+from julep.registry import Registry
 
 
 def _configure_restoring(ctx):

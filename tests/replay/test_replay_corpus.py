@@ -4,14 +4,14 @@ import json
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
     from temporalio.client import WorkflowHistory
 
-    import composable_agents.execution.harness as harness
+    import julep.execution.harness as harness
     from conftest import run
     from record_histories import CORPUS, HISTORIES_DIR, make_replayer, setup_registries
 

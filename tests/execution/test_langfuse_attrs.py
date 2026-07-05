@@ -1,5 +1,5 @@
-from composable_agents.projection import SpanData
-from composable_agents.execution.langfuse import span_attributes
+from julep.projection import SpanData
+from julep.execution.langfuse import span_attributes
 
 def _gen_span():
     return SpanData(

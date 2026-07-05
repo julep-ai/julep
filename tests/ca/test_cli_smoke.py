@@ -1,4 +1,4 @@
-from composable_agents.ca import cli
+from julep.ca import cli
 
 
 def test_version(capsys):

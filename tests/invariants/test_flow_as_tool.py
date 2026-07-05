@@ -4,10 +4,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, ValidationError, call, ident, native, tool
-from composable_agents.derived import race
-from composable_agents.typed import as_flow, seq
-from composable_agents.flow_registry import get_flow
+from julep import Agent, ValidationError, call, ident, native, tool
+from julep.derived import race
+from julep.typed import as_flow, seq
+from julep.flow_registry import get_flow
 
 
 @tool(effect="read", idempotent=True, name="tf6_read_toolonly")

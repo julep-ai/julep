@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.anthropic_batch import AnthropicBatchProvider
-from composable_agents.execution.batch_provider import select_batch_provider
-from composable_agents.execution.llm import _parse_reply
+from julep.dotctx import Reasoner
+from julep.execution.anthropic_batch import AnthropicBatchProvider
+from julep.execution.batch_provider import select_batch_provider
+from julep.execution.llm import _parse_reply
 from conftest import run
 from test_llm import FakeChoice, FakeCompletion, FakeMessage as SyncFakeMessage
 

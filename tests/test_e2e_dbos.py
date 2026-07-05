@@ -17,7 +17,7 @@ from typing import Any, TypeVar
 
 import pytest
 
-from composable_agents.execution import HAVE_DBOS
+from julep.execution import HAVE_DBOS
 
 DB_URL = os.environ.get("DBOS_TEST_DATABASE_URL")
 T = TypeVar("T")
@@ -29,14 +29,14 @@ pytestmark = pytest.mark.skipif(
 if HAVE_DBOS and DB_URL:
     from dbos import DBOS, DBOSConfig
 
-    from composable_agents import arr, call, freeze, mcp, register_pure, seq
-    from composable_agents.continuation import continue_with
-    from composable_agents.derived import delay, human_gate
-    from composable_agents.dsl import par
-    from composable_agents.execution.dbos_backend import run_flow_dbos, submit_human_dbos
-    from composable_agents.execution.effects import WorkerContext, configure
-    from composable_agents.execution.policy import ExecutionPolicy
-    from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from julep import arr, call, freeze, mcp, register_pure, seq
+    from julep.continuation import continue_with
+    from julep.derived import delay, human_gate
+    from julep.dsl import par
+    from julep.execution.dbos_backend import run_flow_dbos, submit_human_dbos
+    from julep.execution.effects import WorkerContext, configure
+    from julep.execution.policy import ExecutionPolicy
+    from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
     SNAPSHOT = McpSnapshot(
         servers={

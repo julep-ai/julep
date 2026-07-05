@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 
-from composable_agents import Diagnostic, arr, ident, register_pure, seq
-from composable_agents import explain as explain_diagnostics
-from composable_agents import cli
+from julep import Diagnostic, arr, ident, register_pure, seq
+from julep import explain as explain_diagnostics
+from julep import cli
 
 
 def _write_json(path, payload) -> None:

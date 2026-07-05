@@ -1,5 +1,5 @@
 import base64
-from composable_agents.execution.langfuse import LangfuseConfig
+from julep.execution.langfuse import LangfuseConfig
 
 def test_endpoint_and_headers():
     cfg = LangfuseConfig(host="https://lf.example.com/", public_key="pk", secret_key="sk")

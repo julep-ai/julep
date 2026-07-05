@@ -17,16 +17,16 @@ pytest.importorskip("wasmtime")
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import arr, deploy
-from composable_agents.bundle import PureDepsUnbuildableError, publish_bundle
-from composable_agents.cas import LocalDirCAS
-from composable_agents.deps import base_component_hash, env_hash, parse_pep723
-from composable_agents.errors import PureExecutionError
-from composable_agents.execution import env_builder
-from composable_agents.execution.wasm_executor import WasmExecutor, get_wasm_executor
-from composable_agents.ir import canonical_json
-from composable_agents.registry import DEFAULT_REGISTRY, Registry
-from composable_agents.worker_store import BundleResolutionError, resolve_and_register
+from julep import arr, deploy
+from julep.bundle import PureDepsUnbuildableError, publish_bundle
+from julep.cas import LocalDirCAS
+from julep.deps import base_component_hash, env_hash, parse_pep723
+from julep.errors import PureExecutionError
+from julep.execution import env_builder
+from julep.execution.wasm_executor import WasmExecutor, get_wasm_executor
+from julep.ir import canonical_json
+from julep.registry import DEFAULT_REGISTRY, Registry
+from julep.worker_store import BundleResolutionError, resolve_and_register
 from conftest import read_snapshot
 
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from composable_agents.ca.ledger import (
+from julep.ca.ledger import (
     DeployRecord,
     deployed_hashes,
     ledger_path,

@@ -1,6 +1,6 @@
 # tests/ca/test_runcache.py
-from composable_agents.ca.runcache import failed_agents, load_run, save_run
-from composable_agents.projection import (
+from julep.ca.runcache import failed_agents, load_run, save_run
+from julep.projection import (
     InMemoryProjection,
     ProjectionEmitter,
     ProjectionEvent,

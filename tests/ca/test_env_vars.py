@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents.ca.config import load_config
+from julep.ca.config import load_config
 
 
 def test_env_vars_parsed(tmp_path: Path) -> None:
@@ -65,8 +65,8 @@ _SETTINGS = 'model: !? $env.get("SUMMARY_MODEL", "openai:gpt-4o")\n'
 # profile is not bound there, the yglu default wins and the import fails.
 _MODULE = (
     "import os\n"
-    "from composable_agents import flow, think\n"
-    "from composable_agents.dotctx import load_dotctx\n"
+    "from julep import flow, think\n"
+    "from julep.dotctx import load_dotctx\n"
     "R = load_dotctx(os.path.join(os.path.dirname(__file__), 'summary.ctx'))\n"
     "assert R.model == 'anthropic:claude-sonnet-4-6', f'model={R.model}'\n"
     "assert R.reasoning_effort == 'high', f'effort={R.reasoning_effort}'\n"
@@ -92,7 +92,7 @@ def _project(tmp_path: Path) -> Path:
 
 def test_run_binds_env_vars_in_resolver_child(tmp_path: Path) -> None:
     pytest.importorskip("yglu")
-    from composable_agents.ca.runner import run_agent_local
+    from julep.ca.runner import run_agent_local
 
     cfg = load_config(_project(tmp_path))
     outcome = run_agent_local(
@@ -105,7 +105,7 @@ def test_run_binds_env_vars_in_resolver_child(tmp_path: Path) -> None:
 
 def test_resolver_child_without_env_vars_sees_defaults(tmp_path: Path) -> None:
     pytest.importorskip("yglu")
-    from composable_agents.ca.resolve import resolve_agent
+    from julep.ca.resolve import resolve_agent
 
     cfg = load_config(_project(tmp_path))
     resolved = resolve_agent(cfg, "summary")
@@ -118,8 +118,8 @@ def test_freeze_payload_carries_env_vars(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """`ca deploy --env prod` freezes in a child; the payload must carry the vars."""
-    from composable_agents.ca import deploy as deploy_mod
-    from composable_agents.ca._resolve_child import _BEGIN, _END
+    from julep.ca import deploy as deploy_mod
+    from julep.ca._resolve_child import _BEGIN, _END
 
     captured: dict[str, Any] = {}
 

@@ -15,31 +15,31 @@ from typing import Any
 
 import pytest
 
-from composable_agents import app, deploy
-from composable_agents.agent_loop import (
+from julep import app, deploy
+from julep.agent_loop import (
     AgentConfig,
     AgentState,
     TraceEntry,
     drive_agent_loop,
     state_fingerprint,
 )
-from composable_agents.dotctx import Reasoner, reasoner_to_flow
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.errors import ValidationError
-from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
-from composable_agents.execution.blobstore import InMemoryBlobStore
-from composable_agents.execution.effects import (
+from julep.dotctx import Reasoner, reasoner_to_flow
+from julep.registry import DEFAULT_REGISTRY
+from julep.errors import ValidationError
+from julep.execution import HAVE_DBOS, HAVE_TEMPORAL
+from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.effects import (
     InvokeReasonerInput,
     WorkerContext,
     configure,
     invokeReasoner,
 )
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.freeze import McpSnapshot
-from composable_agents.ir import ContextPolicy, Node
-from composable_agents.kinds import ContextScope, EnforcementMode
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.transcript import (
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.freeze import McpSnapshot
+from julep.ir import ContextPolicy, Node
+from julep.kinds import ContextScope, EnforcementMode
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.transcript import (
     SUMMARY_KEY,
     Turn,
     approx_token_count,
@@ -51,8 +51,8 @@ from composable_agents.transcript import (
     transcript_for,
     turn_text,
 )
-from composable_agents.turn import controller_turn
-from composable_agents.validate import blocking, validate
+from julep.turn import controller_turn
+from julep.validate import blocking, validate
 
 WHOLE = ContextPolicy(scope=ContextScope.WHOLE_SESSION, max_tokens=1000)
 SUMMARY = ContextPolicy(scope=ContextScope.SUMMARY, max_tokens=1000)
@@ -549,8 +549,8 @@ def test_drive_agent_loop_threads_transcript_for_summary_scope() -> None:
 # Temporal harness: plan in workflow code, summary across continue-as-new.
 # --------------------------------------------------------------------------- #
 if HAVE_TEMPORAL:
-    from composable_agents.execution import harness
-    from composable_agents.execution.harness import AgentInput, AgentWorkflow
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
 
 
 class _Stop(Exception):
@@ -650,8 +650,8 @@ def test_summary_survives_temporal_continue_as_new(monkeypatch) -> None:
 # DBOS backend: step payload split + summary in the continuation envelope.
 # --------------------------------------------------------------------------- #
 if HAVE_DBOS:
-    from composable_agents.continuation import CONTINUATION_KEY
-    from composable_agents.execution import dbos_backend
+    from julep.continuation import CONTINUATION_KEY
+    from julep.execution import dbos_backend
 
 
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")

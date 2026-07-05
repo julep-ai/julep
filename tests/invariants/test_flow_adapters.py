@@ -11,13 +11,13 @@ else:
         def assert_type(val, typ, /):
             return val
 
-from composable_agents import dsl
-from composable_agents.dsl import native
-from composable_agents.typed import Flow, as_flow
-from composable_agents.flow_adapters import AnyEdge, any_edges, as_type, expect
-from composable_agents.ir import Node
-from composable_agents.kinds import Op
-from composable_agents.transforms import normalize_ids
+from julep import dsl
+from julep.dsl import native
+from julep.typed import Flow, as_flow
+from julep.flow_adapters import AnyEdge, any_edges, as_type, expect
+from julep.ir import Node
+from julep.kinds import Op
+from julep.transforms import normalize_ids
 
 
 def _canonical(node: Node) -> str:

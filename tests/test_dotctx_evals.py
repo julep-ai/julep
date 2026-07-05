@@ -1,4 +1,4 @@
-"""Task 4: the mem-mcp eval data surface (composable_agents/dotctx_evals.py).
+"""Task 4: the mem-mcp eval data surface (julep/dotctx_evals.py).
 
 eval.py / eval.yaml load only through the explicit entry points
 (``load_ctx_evals`` / ``load_eval_module`` / ``load_eval_config``) — never
@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents.dotctx_evals import (
+from julep.dotctx_evals import (
     CtxEvals,
     DatasetSpec,
     EvalConfig,
@@ -326,7 +326,7 @@ def test_eval_config_yglu_env_binding(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 def test_prompt_load_never_execs_eval_but_load_ctx_evals_does(tmp_path: Path) -> None:
     pytest.importorskip("jinja2")
-    from composable_agents.dotctx_rich import load_rich_dotctx
+    from julep.dotctx_rich import load_rich_dotctx
 
     pkg = tmp_path / "evals-probe.ctx"
     pkg.mkdir()

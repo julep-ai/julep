@@ -5,15 +5,15 @@ import sys
 
 import pytest
 
-import composable_agents.typed as _typed
-from composable_agents import deploy
-from composable_agents import dsl
-from composable_agents.ir import Node, canonical_json
-from composable_agents.transforms import normalize_ids
+import julep.typed as _typed
+from julep import deploy
+from julep import dsl
+from julep.ir import Node, canonical_json
+from julep.transforms import normalize_ids
 
 # spikes/ is frozen reference code that still imports the pre-rename typed
-# module path; alias it to composable_agents.typed for these tests only.
-sys.modules.setdefault("composable_agents." + "flow", _typed)
+# module path; alias it to julep.typed for these tests only.
+sys.modules.setdefault("julep." + "flow", _typed)
 
 cluster_slice = importlib.import_module("spikes.flow_spike.cluster_slice")
 _spike_core = importlib.import_module("spikes.flow_spike.core")

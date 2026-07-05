@@ -6,16 +6,16 @@ from typing import Any
 
 import pytest
 
-from composable_agents import AgentConfig, Budget, EnforcementMode, app
-from composable_agents.agent_loop import drive_agent_loop
-from composable_agents.execution.cma import (
+from julep import AgentConfig, Budget, EnforcementMode, app
+from julep.agent_loop import drive_agent_loop
+from julep.execution.cma import (
     CMAAgentEnv,
     CMAEvent,
     drive_cma_agent_loop,
     manifest_to_custom_tools,
 )
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
 from cma_fakes import FakeCMAClient, FakeCMASession
 from conftest import run
 

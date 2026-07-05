@@ -12,11 +12,11 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents import arr, call, native, seq
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.execution.blobstore import InMemoryBlobStore
-from composable_agents.execution.effects import (
+from julep import arr, call, native, seq
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.effects import (
     CallToolInput,
     InvokeReasonerInput,
     WorkerContext,
@@ -25,10 +25,10 @@ from composable_agents.execution.effects import (
     invokeReasoner,
     set_trajectory_sink,
 )
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.purity import register_pure
-from composable_agents.trajectory import (
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.purity import register_pure
+from julep.trajectory import (
     InMemoryTrajectoryStore,
     TrajectoryRun,
     TrajectoryStep,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from composable_agents.agent import tool
+from julep.agent import tool
 
 
 def test_multiarg_tool_uses_object_schema_and_bound_tool_packs_kwargs() -> None:

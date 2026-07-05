@@ -7,10 +7,10 @@ from typing import Any
 
 import pytest
 
-import composable_agents.execution.openai_batch as openai_batch
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.batch_provider import select_batch_provider
-from composable_agents.execution.llm import _parse_reply
+import julep.execution.openai_batch as openai_batch
+from julep.dotctx import Reasoner
+from julep.execution.batch_provider import select_batch_provider
+from julep.execution.llm import _parse_reply
 from conftest import run
 from test_llm import FakeChoice, FakeCompletion, FakeMessage
 

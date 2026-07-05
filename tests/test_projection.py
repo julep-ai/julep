@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from composable_agents.projection import (
+from julep.projection import (
     EventType, InMemoryProjection, ProjectionEmitter, ValueStore,
 )
-from composable_agents.execution.otel import spans_to_dicts
+from julep.execution.otel import spans_to_dicts
 
 
 def test_value_store_dedups_identical_values():

@@ -1,5 +1,5 @@
 # tests/ca/test_test_cmd.py
-from composable_agents.ca import cli
+from julep.ca import cli
 
 
 def test_test_runs_pytest_for_selection(sample_module, capsys, monkeypatch):

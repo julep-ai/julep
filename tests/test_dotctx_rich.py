@@ -1,4 +1,4 @@
-"""Tests for the rich dotctx layout (composable_agents/dotctx_rich.py).
+"""Tests for the rich dotctx layout (julep/dotctx_rich.py).
 
 The fixture packages under ``tests/fixtures/`` mirror mem-mcp's production
 layout: a system+user message bundle with schema.pyi/tools.pyi (researcher.ctx)
@@ -21,16 +21,16 @@ import yaml
 
 pytest.importorskip("jinja2")
 
-from composable_agents.capabilities import ToolGrant
-from composable_agents.deploy import _reasoner_identity, _renderer_source_hashes, snapshot_from_listings
-from composable_agents.dotctx import load_dotctx
-from composable_agents.dotctx_rich import RichDotctx, load_rich_dotctx
-from composable_agents.dsl import think
-from composable_agents.errors import FreezeError
-from composable_agents.execution.llm import complete_reasoner
-from composable_agents.freeze import freeze
-from composable_agents.prompt import get_renderer
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep.capabilities import ToolGrant
+from julep.deploy import _reasoner_identity, _renderer_source_hashes, snapshot_from_listings
+from julep.dotctx import load_dotctx
+from julep.dotctx_rich import RichDotctx, load_rich_dotctx
+from julep.dsl import think
+from julep.errors import FreezeError
+from julep.execution.llm import complete_reasoner
+from julep.freeze import freeze
+from julep.prompt import get_renderer
+from julep.registry import DEFAULT_REGISTRY
 from conftest import run
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -157,7 +157,7 @@ def test_rich_dotctx_reasoner_lands_in_supplied_registry(tmp_path: Path) -> None
     # tool expectations. Regression for the WS5 migration that hardcoded
     # DEFAULT_REGISTRY.register_reasoner here, splitting the reasoner away from
     # the renderer names it points at (Codex PR#9, P2).
-    from composable_agents.registry import Registry
+    from julep.registry import Registry
 
     pkg = _write_pkg(
         tmp_path, "iso.ctx", "name: iso.reasoner\nmodel: iso-model\n",
@@ -409,7 +409,7 @@ def test_variable_path_import_filter_is_render_time_error(tmp_path: Path) -> Non
 
 
 def test_included_file_changes_renderer_name_and_hash(tmp_path: Path) -> None:
-    from composable_agents.registry import Registry
+    from julep.registry import Registry
 
     partials = tmp_path / "partials"
     partials.mkdir()
@@ -567,9 +567,9 @@ def test_both_prompt_forms_rejected(tmp_path: Path) -> None:
 
 def test_missing_jinja2_is_a_hard_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "jinja2", None)  # makes `import jinja2` raise
-    monkeypatch.delitem(sys.modules, "composable_agents.dotctx_rich", raising=False)
-    with pytest.raises(ImportError, match=r"composable-agents\[dotctx\]"):
-        importlib.import_module("composable_agents.dotctx_rich")
+    monkeypatch.delitem(sys.modules, "julep.dotctx_rich", raising=False)
+    with pytest.raises(ImportError, match=r"julep\[dotctx\]"):
+        importlib.import_module("julep.dotctx_rich")
 
 
 # --------------------------------------------------------------------------- #
@@ -596,7 +596,7 @@ def test_reasoner_identity_adds_new_keys_only_when_present() -> None:
     assert ident["userRender"] == rich.reasoner.user_render
     assert ident["maxTokens"] == 800
 
-    from composable_agents.dotctx import Reasoner
+    from julep.dotctx import Reasoner
     DEFAULT_REGISTRY.register_reasoner(Reasoner(name="plain.norich", model="m", system="s"))
     plain = _reasoner_identity("plain.norich")
     assert "userRender" not in plain and "maxTokens" not in plain and "systemRender" not in plain

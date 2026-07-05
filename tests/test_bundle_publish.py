@@ -14,11 +14,11 @@ pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import HAVE_TEMPORAL, arr, deploy, pure, seq
-from composable_agents.bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, publish_bundle
-from composable_agents.cas import LocalDirCAS
-from composable_agents.ir import canonical_json
-from composable_agents.registry import PureEntry, Registry
+from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
+from julep.bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, publish_bundle
+from julep.cas import LocalDirCAS
+from julep.ir import canonical_json
+from julep.registry import PureEntry, Registry
 from conftest import read_snapshot
 
 
@@ -136,7 +136,7 @@ def test_deployment_run_forwards_bundle_ref(monkeypatch: pytest.MonkeyPatch) -> 
         captured.update(kwargs)
         return {"ok": True}
 
-    from composable_agents.execution import harness
+    from julep.execution import harness
 
     monkeypatch.setattr(harness, "run_flow", fake_run_flow)
     out = asyncio.run(deployment.run(object(), session_id="sess", input={"x": 1}))

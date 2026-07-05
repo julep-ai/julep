@@ -4,13 +4,13 @@
 
 from __future__ import annotations
 
-from composable_agents.agent_loop import (
+from julep.agent_loop import (
     manifest_contracts_for_agent,
     max_call_limits_from_contracts,
 )
-from composable_agents.contracts import FrozenTool, ToolContract, ToolManifest
-from composable_agents.ir import McpTool
-from composable_agents.kinds import Effect, Idempotency
+from julep.contracts import FrozenTool, ToolContract, ToolManifest
+from julep.ir import McpTool
+from julep.kinds import Effect, Idempotency
 
 
 def _manifest() -> ToolManifest:

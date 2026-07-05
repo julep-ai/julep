@@ -16,7 +16,7 @@ import uuid
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL, register_pure
+from julep import HAVE_TEMPORAL, register_pure
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
@@ -30,7 +30,7 @@ if HAVE_TEMPORAL:
         SandboxRestrictions,
     )
 
-    from composable_agents import (
+    from julep import (
         Agent,
         CapabilityManifest,
         arr,
@@ -40,14 +40,14 @@ if HAVE_TEMPORAL:
         mcp,
         seq,
     )
-    from composable_agents.contracts import McpAnnotations
-    from composable_agents.derived import recv as recv_leaf
-    from composable_agents.errors import ValidationError
-    from composable_agents.errors import ComposableAgentsError, SessionTurnError
-    from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
-    from composable_agents.session import SessionEvent, scan
-    from composable_agents.execution.activities import WorkerContext, configure
-    from composable_agents.execution.harness import (
+    from julep.contracts import McpAnnotations
+    from julep.derived import recv as recv_leaf
+    from julep.errors import ValidationError
+    from julep.errors import JulepError, SessionTurnError
+    from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from julep.session import SessionEvent, scan
+    from julep.execution.activities import WorkerContext, configure
+    from julep.execution.harness import (
         ExecutionPolicy,
         FlowWorkflow,
         FlowInput,
@@ -55,8 +55,8 @@ if HAVE_TEMPORAL:
         SessionInput,
         TemporalSessionHandle,
     )
-    from composable_agents.execution.session_store import InMemorySessionStore
-    from composable_agents.execution.worker import ACTIVITIES, WORKFLOWS
+    from julep.execution.session_store import InMemorySessionStore
+    from julep.execution.worker import ACTIVITIES, WORKFLOWS
 
 
 # --------------------------------------------------------------------------- #
@@ -238,7 +238,7 @@ def _build_worker(env, task_queue, store, *, mcp_call=None):
         activities=ACTIVITIES,
         workflow_runner=SandboxedWorkflowRunner(
             restrictions=SandboxRestrictions.default.with_passthrough_modules(
-                "composable_agents"
+                "julep"
             )
         ),
     )
@@ -724,7 +724,7 @@ async def _facade_events_single_consumer(env):
             task_queue=tq,
         )
         handle.events()
-        with pytest.raises(ComposableAgentsError, match="single-consumer"):
+        with pytest.raises(JulepError, match="single-consumer"):
             handle.events()
         await handle.close("done")
 

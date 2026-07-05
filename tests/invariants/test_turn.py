@@ -1,9 +1,9 @@
 import asyncio
 from typing import Any
 
-from composable_agents.agent_loop import AgentConfig, AgentState
-from composable_agents.kinds import EnforcementMode
-from composable_agents.turn import Halt, controller_turn, drive, pre_round, with_retry
+from julep.agent_loop import AgentConfig, AgentState
+from julep.kinds import EnforcementMode
+from julep.turn import Halt, controller_turn, drive, pre_round, with_retry
 
 
 def test_drive_accumulates_then_halts() -> None:

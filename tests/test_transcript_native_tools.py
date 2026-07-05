@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 
-from composable_agents.agent_loop import AgentState, TraceEntry
-from composable_agents.execution.llm import _transcript_messages
-from composable_agents.ir import ContextPolicy
-from composable_agents.kinds import ContextScope
-from composable_agents.transcript import Turn, split_to_budget, transcript_for
+from julep.agent_loop import AgentState, TraceEntry
+from julep.execution.llm import _transcript_messages
+from julep.ir import ContextPolicy
+from julep.kinds import ContextScope
+from julep.transcript import Turn, split_to_budget, transcript_for
 
 WHOLE = ContextPolicy(scope=ContextScope.WHOLE_SESSION, max_tokens=1000)
 

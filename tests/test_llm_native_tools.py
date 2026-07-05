@@ -12,16 +12,16 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.llm import (
+from julep.dotctx import Reasoner
+from julep.execution.llm import (
     complete_reasoner,
     make_llm_caller,
     make_resilient_llm_caller,
     provider_safe_tool_defs,
     provider_safe_tool_name,
 )
-from composable_agents.execution.llm_result import LlmCallMeta
-from composable_agents.resilience import ResiliencePolicy
+from julep.execution.llm_result import LlmCallMeta
+from julep.resilience import ResiliencePolicy
 from conftest import run
 
 

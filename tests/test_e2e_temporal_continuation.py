@@ -6,20 +6,20 @@ import uuid
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL, register_pure
-from composable_agents.continuation import continue_with
+from julep import HAVE_TEMPORAL, register_pure
+from julep.continuation import continue_with
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
     from temporalio.testing import WorkflowEnvironment
 
-    from composable_agents import arr, freeze, manifest_to_json, seq
-    from composable_agents.derived import delay
-    from composable_agents.execution.activities import WorkerContext
-    from composable_agents.execution.harness import run_flow
-    from composable_agents.execution.worker import build_worker
-    from composable_agents.freeze import McpSnapshot
+    from julep import arr, freeze, manifest_to_json, seq
+    from julep.derived import delay
+    from julep.execution.activities import WorkerContext
+    from julep.execution.harness import run_flow
+    from julep.execution.worker import build_worker
+    from julep.freeze import McpSnapshot
 
 
 def _bump_or_finish(value):

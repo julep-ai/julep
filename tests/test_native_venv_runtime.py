@@ -7,10 +7,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents.errors import PureExecutionError
-from composable_agents.execution import native_venv_executor
-from composable_agents.execution.native_venv_executor import NativeVenvExecutor
-from composable_agents.registry import Registry
+from julep.errors import PureExecutionError
+from julep.execution import native_venv_executor
+from julep.execution.native_venv_executor import NativeVenvExecutor
+from julep.registry import Registry
 
 pytestmark = pytest.mark.skipif(
     shutil.which("uv") is None,

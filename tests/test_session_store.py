@@ -15,12 +15,12 @@ import json
 
 import pytest
 
-from composable_agents import agent_loop as al
-from composable_agents.execution.blobstore import (
+from julep import agent_loop as al
+from julep.execution.blobstore import (
     BlobIntegrityError,
     InMemoryBlobStore,
 )
-from composable_agents.execution.session_store import (
+from julep.execution.session_store import (
     CursorConflict,
     InMemorySessionStore,
     SessionStoreError,

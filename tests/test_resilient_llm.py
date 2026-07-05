@@ -12,10 +12,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.errors import ResilienceExhausted
-from composable_agents.execution.llm import make_resilient_llm_caller
-from composable_agents.resilience import AttemptRecord, CircuitBreaker, ResiliencePolicy
+from julep.dotctx import Reasoner
+from julep.errors import ResilienceExhausted
+from julep.execution.llm import make_resilient_llm_caller
+from julep.resilience import AttemptRecord, CircuitBreaker, ResiliencePolicy
 from conftest import run
 
 
@@ -202,7 +202,7 @@ def test_auth_error_fails_fast_without_prompt_injected_reissue() -> None:
 
 
 def test_custom_classifier_overrides_default() -> None:
-    from composable_agents.resilience import ErrorClass
+    from julep.resilience import ErrorClass
 
     script = Script([RuntimeError("sdk-wrapped quota error"), _reply("rescued")])
     policy = ResiliencePolicy(fallbacks=_CHAIN, timeout_attempts=1)

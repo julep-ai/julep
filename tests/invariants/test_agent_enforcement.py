@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from composable_agents import Budget, Effect, Idempotency, ToolContract
-from composable_agents.agent_loop import (
+from julep import Budget, Effect, Idempotency, ToolContract
+from julep.agent_loop import (
     AgentConfig,
     AgentState,
     Decision,

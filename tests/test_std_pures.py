@@ -4,10 +4,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents import arr, freeze, is_registered
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.purity import source_hash_of
+from julep import arr, freeze, is_registered
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.purity import source_hash_of
 from conftest import read_snapshot, run
 
 

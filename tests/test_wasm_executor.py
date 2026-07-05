@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("wasmtime")
 
-from composable_agents.errors import PureExecutionError
-from composable_agents.execution.wasm_executor import WasmExecutor, get_wasm_executor
+from julep.errors import PureExecutionError
+from julep.execution.wasm_executor import WasmExecutor, get_wasm_executor
 
 
 def test_trivial_pure_runs() -> None:

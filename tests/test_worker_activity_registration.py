@@ -16,7 +16,7 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from composable_agents.execution import harness, worker  # noqa: E402
+from julep.execution import harness, worker  # noqa: E402
 
 
 def _activity_callables(module: object) -> list[object]:

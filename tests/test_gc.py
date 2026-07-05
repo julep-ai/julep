@@ -6,10 +6,10 @@ from dataclasses import dataclass
 
 import pytest
 
-from composable_agents import arr, deploy
-from composable_agents.cas import CASStore, LocalDirCAS
-from composable_agents.gc import GCError, Lease, LeaseStore, gc, reachable_closure
-from composable_agents.ir import canonical_json
+from julep import arr, deploy
+from julep.cas import CASStore, LocalDirCAS
+from julep.gc import GCError, Lease, LeaseStore, gc, reachable_closure
+from julep.ir import canonical_json
 from conftest import read_snapshot
 
 

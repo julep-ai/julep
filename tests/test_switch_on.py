@@ -1,5 +1,5 @@
-from composable_agents import deploy, flow, pure, switch_on
-from composable_agents.purity import is_registered
+from julep import deploy, flow, pure, switch_on
+from julep.purity import is_registered
 
 
 @pure("ws4_mark_review")

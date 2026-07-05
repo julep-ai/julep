@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import Agent, ValidationError, call, native, tool
-from composable_agents.typed import Flow, as_flow, seq
-from composable_agents.ir import Op
+from julep import Agent, ValidationError, call, native, tool
+from julep.typed import Flow, as_flow, seq
+from julep.ir import Op
 
 
 @tool(effect="read", idempotent=True)

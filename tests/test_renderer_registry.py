@@ -1,6 +1,6 @@
 # tests/test_renderer_registry.py
 import pytest
-from composable_agents.registry import Registry
+from julep.registry import Registry
 
 
 def _r(ctx):  # a renderer: Context -> str

@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents import (
+from julep import (
     Agent,
     CapabilityManifest,
     HAVE_TEMPORAL,
@@ -22,16 +22,16 @@ from composable_agents import (
     seq,
     validate,
 )
-from composable_agents.contracts import McpAnnotations
-from composable_agents.errors import (
-    ComposableAgentsError,
+from julep.contracts import McpAnnotations
+from julep.errors import (
+    JulepError,
     SessionTurnError,
     ValidationError,
 )
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
-from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
-from composable_agents.validate import blocking
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep.projection import EventType, InMemoryProjection, ProjectionEmitter
+from julep.validate import blocking
 from conftest import run
 
 
@@ -290,7 +290,7 @@ def test_local_events_is_single_consumer() -> None:
         agent = Agent("test-model", llm=None)
         handle = await agent.open(session=_session(), backend="local")
         handle.events()
-        with pytest.raises(ComposableAgentsError, match="single-consumer"):
+        with pytest.raises(JulepError, match="single-consumer"):
             handle.events()
         await handle.close()
 
@@ -353,7 +353,7 @@ def test_local_send_idempotency_key_dedups_and_conflicts() -> None:
         assert ack1 == {"seq": 1, "channel": "in"}
         assert ack2 == ack1
 
-        with pytest.raises(ComposableAgentsError, match="different payload"):
+        with pytest.raises(JulepError, match="different payload"):
             await handle.send("DIFFERENT", idempotency_key="k1")
 
         agen = handle.events()

@@ -1,8 +1,8 @@
 import io
 
-from composable_agents.ca import cli
-from composable_agents.ca.chat import render_event
-from composable_agents.session import SessionEvent
+from julep.ca import cli
+from julep.ca.chat import render_event
+from julep.session import SessionEvent
 
 
 def test_chat_streams_events_and_exits_clean(sample_module, capsys, monkeypatch):

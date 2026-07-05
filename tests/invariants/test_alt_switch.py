@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import (
-    ComposableAgentsError,
+from julep import (
+    JulepError,
     InMemoryProjection,
     ProjectionEmitter,
     arr,
@@ -15,10 +15,10 @@ from composable_agents import (
     seq,
     validate,
 )
-from composable_agents.dsl import alt
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.ir import Node
-from composable_agents.kinds import Op
+from julep.dsl import alt
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.ir import Node
+from julep.kinds import Op
 from conftest import read_snapshot, run
 
 
@@ -94,7 +94,7 @@ def test_alt_switch_uses_default_for_missing_key_and_raises_without_default():
 
     without_default = alt(select="a2.default_key", cases={"a": arr("a2.to_a")})
     fr2, env2 = _env(without_default)
-    with pytest.raises(ComposableAgentsError, match="alt: no case for key 'missing'"):
+    with pytest.raises(JulepError, match="alt: no case for key 'missing'"):
         run(interpret(fr2.flow, {"case": "missing", "value": 3}, env2))
 
 

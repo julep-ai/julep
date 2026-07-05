@@ -1,8 +1,8 @@
 import asyncio
 from types import SimpleNamespace
-from composable_agents.execution.llm_result import LlmResult, LlmCallMeta
-from composable_agents.execution import llm as llm_mod
-from composable_agents.dotctx import Reasoner
+from julep.execution.llm_result import LlmResult, LlmCallMeta
+from julep.execution import llm as llm_mod
+from julep.dotctx import Reasoner
 
 def _fake_completion(content="hello", pt=11, ct=7):
     msg = SimpleNamespace(content=content, parsed=None)

@@ -3,13 +3,13 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from composable_agents import dsl
-from composable_agents.agent import Tool, tool
-from composable_agents.derived import map_n
-from composable_agents.dsl import call, native
-from composable_agents.typed import Flow, alt, as_flow, par, seq
-from composable_agents.ir import Node
-from composable_agents.transforms import normalize_ids
+from julep import dsl
+from julep.agent import Tool, tool
+from julep.derived import map_n
+from julep.dsl import call, native
+from julep.typed import Flow, alt, as_flow, par, seq
+from julep.ir import Node
+from julep.transforms import normalize_ids
 
 
 def _canonical(node: Node) -> str:

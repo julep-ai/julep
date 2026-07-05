@@ -1,7 +1,7 @@
 # tests/ca/test_trace.py
 import json
 
-from composable_agents.ca import cli
+from julep.ca import cli
 
 
 def test_trace_renders_cached_run(sample_module, capsys, monkeypatch):
@@ -45,7 +45,7 @@ def test_trace_unknown_run_returns_2_even_with_langfuse(sample_module, capsys, m
 def test_trace_error_run_surfaces_status(sample_module, capsys, monkeypatch):
     monkeypatch.chdir(sample_module)
     monkeypatch.delenv("LANGFUSE_HOST", raising=False)
-    from composable_agents.ca.runcache import save_run
+    from julep.ca.runcache import save_run
 
     save_run(str(sample_module), run_id="r-err", agent="triage", status="error", events=[])
     code = cli.main(["trace", "r-err"])

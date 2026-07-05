@@ -8,14 +8,14 @@ from typing import Any
 
 import pytest
 
-from composable_agents import arr, deploy, pure, seq
-from composable_agents.bundle import publish_bundle
-from composable_agents.cas import LocalDirCAS
-from composable_agents import deps
-from composable_agents.deps import base_component_hash, env_hash, parse_pep723
-from composable_agents.execution import env_builder
-from composable_agents.ir import canonical_json
-from composable_agents.registry import DEFAULT_REGISTRY, Registry
+from julep import arr, deploy, pure, seq
+from julep.bundle import publish_bundle
+from julep.cas import LocalDirCAS
+from julep import deps
+from julep.deps import base_component_hash, env_hash, parse_pep723
+from julep.execution import env_builder
+from julep.ir import canonical_json
+from julep.registry import DEFAULT_REGISTRY, Registry
 from conftest import read_snapshot
 
 

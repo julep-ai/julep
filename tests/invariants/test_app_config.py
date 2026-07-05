@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 
-from composable_agents import Budget, app
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.ir import Node
+from julep import Budget, app
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.ir import Node
 
 
 def test_bare_app_json_is_unchanged():

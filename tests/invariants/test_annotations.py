@@ -7,11 +7,11 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from composable_agents import Ann, CacheHint, call, freeze, mcp, think
-from composable_agents.execution import harness
-from composable_agents.execution.interpreter import interpret
-from composable_agents.execution.timeouts import activity_timeout
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep import Ann, CacheHint, call, freeze, mcp, think
+from julep.execution import harness
+from julep.execution.interpreter import interpret
+from julep.execution.timeouts import activity_timeout
+from julep.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 
 

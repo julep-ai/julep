@@ -1,10 +1,10 @@
 import asyncio
 from types import SimpleNamespace
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.llm import make_resilient_llm_caller
-from composable_agents.execution.llm_result import LlmResult
-from composable_agents.resilience import ResiliencePolicy
+from julep.dotctx import Reasoner
+from julep.execution.llm import make_resilient_llm_caller
+from julep.execution.llm_result import LlmResult
+from julep.resilience import ResiliencePolicy
 
 
 def _completion(pt=5, ct=3):

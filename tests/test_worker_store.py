@@ -11,18 +11,18 @@ pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import HAVE_TEMPORAL, arr, deploy, pure, seq
-from composable_agents.bundle import ABI_PYTHON_SOURCE_JSON_V1
-from composable_agents.cas import CASIntegrityError, LocalDirCAS
-from composable_agents.contracts import manifest_from_json
-from composable_agents.errors import PureDriftError
-from composable_agents.execution import effects
-from composable_agents.execution.effects import VerifyPuresInput, WorkerContext, configure, verifyPures
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.ir import Node, canonical_json
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.registry import PureEntry, Registry, _text_hash
-from composable_agents.worker_store import (
+from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
+from julep.bundle import ABI_PYTHON_SOURCE_JSON_V1
+from julep.cas import CASIntegrityError, LocalDirCAS
+from julep.contracts import manifest_from_json
+from julep.errors import PureDriftError
+from julep.execution import effects
+from julep.execution.effects import VerifyPuresInput, WorkerContext, configure, verifyPures
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.ir import Node, canonical_json
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.registry import PureEntry, Registry, _text_hash
+from julep.worker_store import (
     BundleResolutionError,
     bundle_ref_entries,
     load_bundles_from_env,
@@ -38,11 +38,11 @@ if HAVE_TEMPORAL:
     from temporalio.worker import WorkflowInstance, WorkflowRunner
     from temporalio.worker._workflow_instance import WorkflowInstanceDetails
 
-    from composable_agents.execution.bundle_runner import (
+    from julep.execution.bundle_runner import (
         BundleResolvingWorkflowRunner,
         _BundleResolvingInstance,
     )
-    from composable_agents.execution.harness import FlowInput
+    from julep.execution.harness import FlowInput
 
 
 SEED_A = "11" * 32
@@ -325,17 +325,17 @@ def test_missing_wasm_extra_fails_fast_at_resolution_not_at_lookup(
 
     # Simulate the absence of the `wasm` extra: importing the wasm executor (which
     # imports wasmtime at module top) raises ModuleNotFoundError.
-    import composable_agents.execution.wasm_executor as wasm_mod
+    import julep.execution.wasm_executor as wasm_mod
 
     monkeypatch.delitem(
         __import__("sys").modules,
-        "composable_agents.execution.wasm_executor",
+        "julep.execution.wasm_executor",
         raising=False,
     )
     real_import = builtins.__import__
 
     def _fake_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "composable_agents.execution.wasm_executor" or name == "wasmtime":
+        if name == "julep.execution.wasm_executor" or name == "wasmtime":
             raise ModuleNotFoundError("No module named 'wasmtime'")
         return real_import(name, *args, **kwargs)
 
@@ -346,7 +346,7 @@ def test_missing_wasm_extra_fails_fast_at_resolution_not_at_lookup(
 
     message = str(excinfo.value)
     assert "wasm" in message
-    assert "composable-agents[wasm]" in message
+    assert "julep[wasm]" in message
     # The wasm pures must NOT have been registered before the fast failure.
     assert not fresh.pures
     # Sanity: the real module is still importable after the test (monkeypatch undo).

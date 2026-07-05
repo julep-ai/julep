@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents.errors import ResilienceExhausted
-from composable_agents.resilience import (
+from julep.errors import ResilienceExhausted
+from julep.resilience import (
     AttemptRecord,
     CircuitBreaker,
     ErrorClass,
@@ -234,7 +234,7 @@ def test_resilience_exhausted_carries_attempts() -> None:
 # ExecutionPolicy knob
 # --------------------------------------------------------------------------- #
 def test_execution_policy_roundtrips_reasoner_max_attempts() -> None:
-    from composable_agents.execution.policy import ExecutionPolicy
+    from julep.execution.policy import ExecutionPolicy
 
     policy = ExecutionPolicy(reasoner_max_attempts=1)
     assert ExecutionPolicy.from_json(policy.to_json()).reasoner_max_attempts == 1

@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents.execution import HAVE_DBOS
+from julep.execution import HAVE_DBOS
 
 pytestmark = pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 
 if HAVE_DBOS:
-    from composable_agents import call, seq, think
-    from composable_agents.derived import delay, race
-    from composable_agents.dsl import app
-    from composable_agents.errors import CapabilityDenied, UnsupportedShapeError
-    from composable_agents.execution.dbos_backend import (
+    from julep import call, seq, think
+    from julep.derived import delay, race
+    from julep.dsl import app
+    from julep.errors import CapabilityDenied, UnsupportedShapeError
+    from julep.execution.dbos_backend import (
         assert_dbos_executable,
         callToolIdempotent,
         callToolNoRetry,

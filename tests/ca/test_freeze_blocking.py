@@ -14,12 +14,12 @@ from __future__ import annotations
 import importlib
 from typing import Any
 
-from composable_agents.ca import _resolve_child
-from composable_agents.validate import Diagnostic
+from julep.ca import _resolve_child
+from julep.validate import Diagnostic
 
-# ``composable_agents.deploy`` the NAME is rebound to the deploy() function in the
+# ``julep.deploy`` the NAME is rebound to the deploy() function in the
 # package __init__, so import the underlying module object explicitly to patch it.
-deploy_mod = importlib.import_module("composable_agents.deploy")
+deploy_mod = importlib.import_module("julep.deploy")
 
 
 class _StubFlow:
@@ -91,7 +91,7 @@ def test_freeze_publishes_when_no_blocking_diagnostics(monkeypatch, tmp_path) ->
     # Make snapshot_from_tools a no-op so we never touch the real CAS machinery
     # beyond the stub publish.
     monkeypatch.setattr(
-        "composable_agents.agent.snapshot_from_tools", lambda tools: object()
+        "julep.agent.snapshot_from_tools", lambda tools: object()
     )
     # publish=False keeps this purely in-process (no real CAS write).
     result = _resolve_child._freeze_agent(

@@ -8,8 +8,8 @@ import os
 
 import pytest
 
-from composable_agents.dotctx import load_dotctx
-from composable_agents.dotctx_yglu import has_yglu_tags, load_settings
+from julep.dotctx import load_dotctx
+from julep.dotctx_yglu import has_yglu_tags, load_settings
 
 SETTINGS = 'model: !? $env.get("SUMMARY_MODEL", "openai/gpt-5.4-nano@medium")\n'
 
@@ -71,11 +71,11 @@ def test_load_dotctx_end_to_end(tmp_path) -> None:
 
 
 def test_tagged_settings_without_yglu_is_hard_error(tmp_path, monkeypatch) -> None:
-    import composable_agents.dotctx_yglu as dy
+    import julep.dotctx_yglu as dy
     monkeypatch.setattr(dy, "_import_yglu", lambda: (_ for _ in ()).throw(
         ImportError("no yglu")))
     d = tmp_path / "t.ctx"
     d.mkdir()
     (d / "settings.yaml").write_text(SETTINGS)
-    with pytest.raises(ImportError, match=r"composable-agents\[yglu\]"):
+    with pytest.raises(ImportError, match=r"julep\[yglu\]"):
         load_dotctx(str(d))

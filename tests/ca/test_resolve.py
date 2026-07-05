@@ -1,7 +1,7 @@
 # tests/ca/test_resolve.py
-from composable_agents.ca.config import load_config
-from composable_agents.ca.resolve import resolve_agent
-from composable_agents.ca.runner import run_agent_local
+from julep.ca.config import load_config
+from julep.ca.resolve import resolve_agent
+from julep.ca.runner import run_agent_local
 
 
 def test_resolve_flow_returns_ir_json(sample_module):
@@ -65,7 +65,7 @@ def test_resolve_src_layout_with_intrapackage_import(tmp_path):
     (app / "__init__.py").write_text("", encoding="utf-8")
     (app / "helper.py").write_text("PREFIX = 'hi'\n", encoding="utf-8")
     (app / "agents.py").write_text(
-        "from composable_agents import flow, think\n"
+        "from julep import flow, think\n"
         "from myapp.helper import PREFIX\n"
         "@flow\n"
         "def greet(x: str) -> dict:\n"
@@ -75,8 +75,8 @@ def test_resolve_src_layout_with_intrapackage_import(tmp_path):
     (tmp_path / "pyproject.toml").write_text(
         '[tool.ca]\nsrc = ["src"]\n', encoding="utf-8"
     )
-    from composable_agents.ca.config import load_config
-    from composable_agents.ca.resolve import resolve_agent
+    from julep.ca.config import load_config
+    from julep.ca.resolve import resolve_agent
 
     cfg = load_config(tmp_path)
     resolved = resolve_agent(cfg, "greet")
@@ -94,7 +94,7 @@ def test_resolve_tolerates_user_stdout_noise(tmp_path):
         "print('banner line from user code')\n"
         "import atexit\n"
         "atexit.register(lambda: print('trailing atexit line'))\n"
-        "from composable_agents import flow, think\n"
+        "from julep import flow, think\n"
         "@flow\n"
         "def chatty(x: str) -> dict:\n"
         "    return think('r', x)\n",
@@ -103,8 +103,8 @@ def test_resolve_tolerates_user_stdout_noise(tmp_path):
     (tmp_path / "pyproject.toml").write_text(
         '[tool.ca]\nsrc = ["pkg"]\n', encoding="utf-8"
     )
-    from composable_agents.ca.config import load_config
-    from composable_agents.ca.resolve import resolve_agent
+    from julep.ca.config import load_config
+    from julep.ca.resolve import resolve_agent
 
     cfg = load_config(tmp_path)
     resolved = resolve_agent(cfg, "chatty")

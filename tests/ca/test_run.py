@@ -1,6 +1,6 @@
 # tests/ca/test_run.py
-from composable_agents.ca.config import load_config
-from composable_agents.ca.runner import RunOutcome, run_agent_local
+from julep.ca.config import load_config
+from julep.ca.runner import RunOutcome, run_agent_local
 
 
 def test_run_triage_locally(sample_module):
@@ -26,7 +26,7 @@ def test_run_surfaces_runtime_error_without_crashing(tmp_path):
     pkg.mkdir()
     (pkg / "__init__.py").write_text("", encoding="utf-8")
     (pkg / "agents.py").write_text(
-        "from composable_agents import flow, pure\n"
+        "from julep import flow, pure\n"
         "@pure('boom')\n"
         "def boom(x: str) -> dict:\n"
         "    raise RuntimeError('boom')\n"

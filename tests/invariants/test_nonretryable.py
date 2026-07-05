@@ -4,18 +4,18 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from composable_agents import Ann
-from composable_agents.contracts import ToolContract
-from composable_agents.errors import (
+from julep import Ann
+from julep.contracts import ToolContract
+from julep.errors import (
     CapabilityDenied,
-    ComposableAgentsError,
+    JulepError,
     FreezeError,
     PlanRejected,
     PrincipalRequired,
     ValidationError,
 )
-from composable_agents.execution import harness
-from composable_agents.kinds import Effect, Idempotency
+from julep.execution import harness
+from julep.kinds import Effect, Idempotency
 
 
 def test_policy_errors_are_framework_errors_and_temporal_non_retryable() -> None:
@@ -29,7 +29,7 @@ def test_policy_errors_are_framework_errors_and_temporal_non_retryable() -> None
     expected_names = {cls.__name__ for cls in policy_errors}
 
     for cls in policy_errors:
-        assert issubclass(cls, ComposableAgentsError)
+        assert issubclass(cls, JulepError)
 
     assert expected_names.issubset(set(harness._NON_RETRYABLE))
 

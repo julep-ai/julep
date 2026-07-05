@@ -5,10 +5,10 @@ import asyncio
 
 import pytest
 
-from composable_agents.derived import delay
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.ir import CallStep, NativeTool, SLEEP_TOOL
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep.derived import delay
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.ir import CallStep, NativeTool, SLEEP_TOOL
+from julep.projection import InMemoryProjection, ProjectionEmitter
 
 
 def _env(**kwargs):
@@ -46,7 +46,7 @@ def test_inmemory_env_custom_sleeper():
 
 
 def test_freeze_resolves_sleep_without_snapshot():
-    from composable_agents.freeze import McpSnapshot, freeze
+    from julep.freeze import McpSnapshot, freeze
 
     frozen = freeze(delay(seconds=5), McpSnapshot())
     [tool] = list(frozen.manifest.values())

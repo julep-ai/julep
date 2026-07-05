@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable
 from typing import Any, Optional
 
-from composable_agents.execution.cma import CMAEvent
+from julep.execution.cma import CMAEvent
 
 
 class FakeCMASession:

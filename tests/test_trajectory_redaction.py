@@ -9,9 +9,9 @@ from typing import Any, Callable, Optional
 
 import pytest
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.blobstore import InMemoryBlobStore
-from composable_agents.execution.effects import (
+from julep.dotctx import Reasoner
+from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.effects import (
     CallToolInput,
     InvokeReasonerInput,
     WorkerContext,
@@ -21,8 +21,8 @@ from composable_agents.execution.effects import (
     record_marker_step,
     set_trajectory_sink,
 )
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.trajectory import (
+from julep.registry import DEFAULT_REGISTRY
+from julep.trajectory import (
     REDACTED_PLACEHOLDER,
     InMemoryTrajectoryStore,
     TrajectoryRecorder,
@@ -403,7 +403,7 @@ def test_export_hydrated_allow_raw_warns_and_returns_unredacted(caplog: pytest.L
             )
         ])
 
-        caplog.set_level(logging.WARNING, logger="composable_agents.trajectory")
+        caplog.set_level(logging.WARNING, logger="julep.trajectory")
         lines = await store.export_trajectory_jsonl_hydrated(
             ROOT,
             blobs,

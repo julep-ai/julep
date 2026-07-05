@@ -26,12 +26,12 @@ import pytest
 pytest.importorskip("jinja2")
 pytest.importorskip("yglu")  # the fixture settings carry a `!?` env expression
 
-from composable_agents.agent_loop import ROUND_NOTE_KEY, AgentConfig, drive_agent_loop
-from composable_agents.ca import cli
-from composable_agents.ca.evalrun import _run_tool_loop, diff_reports, run_eval
-from composable_agents.dotctx import load_dotctx
-from composable_agents.dotctx_evals import Sample, stop_after_turns
-from composable_agents.dotctx_rich import load_rich_dotctx
+from julep.agent_loop import ROUND_NOTE_KEY, AgentConfig, drive_agent_loop
+from julep.ca import cli
+from julep.ca.evalrun import _run_tool_loop, diff_reports, run_eval
+from julep.dotctx import load_dotctx
+from julep.dotctx_evals import Sample, stop_after_turns
+from julep.dotctx_rich import load_rich_dotctx
 from conftest import run
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "memmcp" / "record_execute.ctx"
@@ -311,7 +311,7 @@ def test_acceptance_ca_eval_threshold_pass(monkeypatch: pytest.MonkeyPatch) -> N
     assert all(s.passed for s in report.scores)
 
     monkeypatch.setattr(
-        "composable_agents.ca.evalrun._resolve_acompletion",
+        "julep.ca.evalrun._resolve_acompletion",
         lambda _a: GoodRecordExecuteFake(),
     )
     assert cli.main(["eval", str(FIXTURE)]) == 0
@@ -337,7 +337,7 @@ def test_acceptance_ca_eval_below_threshold_and_baseline_regression(
     baseline.write_text(json.dumps(good.to_json()), encoding="utf-8")
 
     monkeypatch.setattr(
-        "composable_agents.ca.evalrun._resolve_acompletion",
+        "julep.ca.evalrun._resolve_acompletion",
         lambda _a: SilentBadFake(),
     )
     assert cli.main(["eval", str(FIXTURE)]) == 2

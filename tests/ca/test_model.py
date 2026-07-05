@@ -1,6 +1,6 @@
 # tests/ca/test_model.py
-from composable_agents.ca.config import load_config
-from composable_agents.ca.model import build_module
+from julep.ca.config import load_config
+from julep.ca.model import build_module
 
 
 def test_build_module_merges_tags(sample_module):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from composable_agents.projection import (
+from julep.projection import (
     InMemoryProjection,
     ProjectionEmitter,
     ProjectionEvent,

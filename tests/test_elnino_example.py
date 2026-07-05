@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import (
+from julep import (
     Ann,
     CapabilityDenied,
     CapabilityManifest,
@@ -22,7 +22,7 @@ from composable_agents import (
     interpret,
     seq,
 )
-from composable_agents.shapes import surface_shape
+from julep.shapes import surface_shape
 from conftest import run
 from examples.elnino import swarm
 

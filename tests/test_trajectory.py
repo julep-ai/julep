@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from composable_agents.execution.blobstore import InMemoryBlobStore, content_ref
-from composable_agents.trajectory import (
+from julep.execution.blobstore import InMemoryBlobStore, content_ref
+from julep.trajectory import (
     InMemoryTrajectoryStore,
     PostgresTrajectoryStore,
     TrajectoryRun,

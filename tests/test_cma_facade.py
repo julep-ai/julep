@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import Agent, tool
-from composable_agents.agent import cma_tool_binding
-from composable_agents.execution.cma import CMAAgentEnv as RealCMAAgentEnv
-from composable_agents.execution.cma import CMAEvent
+from julep import Agent, tool
+from julep.agent import cma_tool_binding
+from julep.execution.cma import CMAAgentEnv as RealCMAAgentEnv
+from julep.execution.cma import CMAEvent
 from cma_fakes import FakeCMAClient, FakeCMASession
 
 
@@ -152,7 +152,7 @@ def test_agent_run_on_cma_passes_same_grants_and_contract_keys(monkeypatch: Any)
     def cma_facade_contract_tool(query: str) -> str:
         return query
 
-    import composable_agents.agent as agent_module
+    import julep.agent as agent_module
 
     monkeypatch.setattr(agent_module, "CMAAgentEnv", RecordingCMAAgentEnv)
     session = FakeCMASession([

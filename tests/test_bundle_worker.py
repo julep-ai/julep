@@ -10,11 +10,11 @@ pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import arr, deploy, pure, seq
-from composable_agents.cas import LocalDirCAS
-from composable_agents.execution.bundle_worker import make_context
-from composable_agents.execution.effects import WorkerContext
-from composable_agents.registry import Registry
+from julep import arr, deploy, pure, seq
+from julep.cas import LocalDirCAS
+from julep.execution.bundle_worker import make_context
+from julep.execution.effects import WorkerContext
+from julep.registry import Registry
 from conftest import read_snapshot
 
 SEED = "33" * 32

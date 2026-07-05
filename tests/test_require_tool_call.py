@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents import Agent, tool
-from composable_agents.agent_loop import AgentConfig, drive_agent_loop
-from composable_agents.dotctx import Reasoner
+from julep import Agent, tool
+from julep.agent_loop import AgentConfig, drive_agent_loop
+from julep.dotctx import Reasoner
 
 REQUIRE_TOOL_CALL_ERROR = "require_tool_call: reply with a tool call, not text"
 REQUIRE_TOOL_CALL_REASON = "require_tool_call: controller never called a tool"

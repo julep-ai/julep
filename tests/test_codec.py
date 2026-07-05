@@ -15,7 +15,7 @@ import json
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
@@ -23,11 +23,11 @@ if HAVE_TEMPORAL:
     from temporalio.api.common.v1 import Payload
     from temporalio.converter import DefaultPayloadConverter
 
-    from composable_agents.execution.blobstore import (
+    from julep.execution.blobstore import (
         BlobIntegrityError,
         InMemoryBlobStore,
     )
-    from composable_agents.execution.codec import REMOTE_ENCODING, ClaimCheckCodec
+    from julep.execution.codec import REMOTE_ENCODING, ClaimCheckCodec
 
 
 THRESHOLD = 131072

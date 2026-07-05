@@ -1,6 +1,6 @@
 import asyncio
-from composable_agents.execution.langfuse import export_temporal_run
-from composable_agents.projection import ProjectionEvent, EventType
+from julep.execution.langfuse import export_temporal_run
+from julep.projection import ProjectionEvent, EventType
 from tests.execution.test_langfuse_export import _Tracer
 
 class _FakeHandleObj:

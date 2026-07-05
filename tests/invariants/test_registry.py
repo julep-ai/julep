@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents.dotctx import Reasoner, get_reasoner
-from composable_agents.dsl import alt, arr
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.purity import get_pure, pure
-from composable_agents.registry import DEFAULT_REGISTRY, Registry
+from julep.dotctx import Reasoner, get_reasoner
+from julep.dsl import alt, arr
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.purity import get_pure, pure
+from julep.registry import DEFAULT_REGISTRY, Registry
 from conftest import run
 
 

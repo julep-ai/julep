@@ -4,10 +4,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, call, native, tool
-from composable_agents.typed import as_flow
-from composable_agents.ir import Node
-from composable_agents.transforms import normalize_ids
+from julep import Agent, call, native, tool
+from julep.typed import as_flow
+from julep.ir import Node
+from julep.transforms import normalize_ids
 
 
 def _normalized_json(agent: Agent) -> dict[str, Any]:

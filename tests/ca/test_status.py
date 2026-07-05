@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from composable_agents.ca.config import load_config
-from composable_agents.ca.deploy import deploy_agents
-from composable_agents.ca.status import AgentStatus, status_exit_code, status_for_env
+from julep.ca.config import load_config
+from julep.ca.deploy import deploy_agents
+from julep.ca.status import AgentStatus, status_exit_code, status_for_env
 
 _NOW = "2026-06-23T00:00:00Z"
 
 _MUTATED_AGENTS = '''
-from composable_agents import flow, think, tool, Agent
+from julep import flow, think, tool, Agent
 
 @tool(effect="read", idempotent=True)
 def lookup(ticket: str) -> dict:

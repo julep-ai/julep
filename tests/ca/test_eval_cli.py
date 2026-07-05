@@ -12,8 +12,8 @@ import pytest
 pytest.importorskip("jinja2")
 pytest.importorskip("yglu")  # the vendored .ctx settings carry `!?` env expressions
 
-from composable_agents.ca import cli
-from composable_agents.ca.evalrun import (
+from julep.ca import cli
+from julep.ca.evalrun import (
     EvalOutput,
     EvalReport,
     SampleScore,
@@ -23,8 +23,8 @@ from composable_agents.ca.evalrun import (
     run_eval,
     run_eval_sync,
 )
-from composable_agents.dotctx import load_dotctx
-from composable_agents.dotctx_evals import (
+from julep.dotctx import load_dotctx
+from julep.dotctx_evals import (
     MockToolConfig,
     Sample,
     extract_llm_content,
@@ -32,7 +32,7 @@ from composable_agents.dotctx_evals import (
     stop_when_non_tool,
     stop_when_terminal_tool,
 )
-from composable_agents.dotctx_rich import load_rich_dotctx
+from julep.dotctx_rich import load_rich_dotctx
 from conftest import run
 
 
@@ -413,7 +413,7 @@ def test_no_matching_tag_is_setup_error(tmp_path: Path) -> None:
 def test_eval_cmd_passes_filters(monkeypatch: pytest.MonkeyPatch) -> None:
     from typer.testing import CliRunner
 
-    import composable_agents.ca.evalrun as evalrun
+    import julep.ca.evalrun as evalrun
 
     captured: dict[str, Any] = {}
 
@@ -647,7 +647,7 @@ def test_concurrency_bounded(tmp_path: Path) -> None:
 
 def test_cli_exit_codes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
-        "composable_agents.ca.evalrun._resolve_acompletion",
+        "julep.ca.evalrun._resolve_acompletion",
         lambda a: SingleShotFake(_good_summary_json()),
     )
     assert cli.main(["eval", str(FIXTURES / "episode_summary.ctx")]) == 0
@@ -674,7 +674,7 @@ def test_cli_exit_codes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     baseline_path.write_text(json.dumps(good.to_json()), encoding="utf-8")
 
     monkeypatch.setattr(
-        "composable_agents.ca.evalrun._resolve_acompletion",
+        "julep.ca.evalrun._resolve_acompletion",
         lambda a: SingleShotFake("not json"),
     )
     assert cli.main(["eval", str(FIXTURES / "episode_summary.ctx")]) == 2
@@ -879,7 +879,7 @@ def test_tool_loop_finishes_on_natural_language_reply() -> None:
 def test_resolve_mock_default_beats_responses_when_match_defined() -> None:
     # finding #2: when `match` is defined but nothing matches, the documented
     # `default` wins — `responses` is used ONLY when no `match` is defined.
-    from composable_agents.ca.evalrun import _resolve_mock
+    from julep.ca.evalrun import _resolve_mock
 
     counters: dict[str, int] = {}
     cfg = MockToolConfig(
@@ -922,7 +922,7 @@ def test_cli_user_score_error_is_exit_4(
         encoding="utf-8",
     )
     monkeypatch.setattr(
-        "composable_agents.ca.evalrun._resolve_acompletion",
+        "julep.ca.evalrun._resolve_acompletion",
         lambda a: SingleShotFake('{"x": 1}'),
     )
     assert cli.main(["eval", str(ctx)]) == 4

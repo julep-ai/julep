@@ -1,11 +1,11 @@
 import json
 from typing import Any
 
-from composable_agents import dsl
-from composable_agents.dsl import call, mcp, native
-from composable_agents.typed import Flow, as_flow, seq
-from composable_agents.ir import Node
-from composable_agents.transforms import normalize_ids
+from julep import dsl
+from julep.dsl import call, mcp, native
+from julep.typed import Flow, as_flow, seq
+from julep.ir import Node
+from julep.transforms import normalize_ids
 
 
 def _canonical(node: Node) -> str:

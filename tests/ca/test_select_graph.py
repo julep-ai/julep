@@ -8,8 +8,8 @@ These tests build ``Module``/``Agent`` objects by hand (no discovery) so the
 graph is fully under our control.
 """
 
-from composable_agents.ca.model import Agent, Module
-from composable_agents.ca.select import select
+from julep.ca.model import Agent, Module
+from julep.ca.select import select
 
 
 def names(agents):

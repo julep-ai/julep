@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
-from composable_agents.agent_loop import (
+from julep.agent_loop import (
     STATE_SCHEMA_VERSION,
     AgentConfig,
     AgentState,
@@ -31,7 +31,7 @@ def test_sync_tool_error_becomes_observation_and_warning(caplog) -> None:
         assert value == {"n": 1}
         raise exc
 
-    with caplog.at_level(logging.WARNING, logger="composable_agents.turn"):
+    with caplog.at_level(logging.WARNING, logger="julep.turn"):
         out = asyncio.run(
             drive_agent_loop(
                 input={"task": "go"},
@@ -51,7 +51,7 @@ def test_sync_tool_error_becomes_observation_and_warning(caplog) -> None:
         {"decision": "call", "cost": 1.0, "ref": tool, "error": expected_error}
     ]
     assert any(
-        record.name == "composable_agents.turn" and record.levelno == logging.WARNING
+        record.name == "julep.turn" and record.levelno == logging.WARNING
         for record in caplog.records
     )
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents import Budget, AgentConfig, app, freeze
-from composable_agents.agent_loop import drive_agent_loop
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep import Budget, AgentConfig, app, freeze
+from julep.agent_loop import drive_agent_loop
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot
 
 

@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.coalesce import SyncCoalescer
-from composable_agents.qos import ReasonerDispatch, QoSTier
+from julep.dotctx import Reasoner
+from julep.execution.coalesce import SyncCoalescer
+from julep.qos import ReasonerDispatch, QoSTier
 from conftest import run
 
 

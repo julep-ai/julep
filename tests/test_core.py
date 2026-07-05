@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import (
+from julep import (
     Shape, Effect, Idempotency, Contract,
     Ann,
     arr,
@@ -15,12 +15,12 @@ from composable_agents import (
     McpServerSnapshot, McpSnapshot, McpToolSpec,
     estimate_cost, admit_plan, check_race_admission,
 )
-from composable_agents.contracts import FrozenTool, McpAnnotations, definition_hash, execution_hash
-from composable_agents.errors import FreezeError, PlanRejected
-from composable_agents.ir import Node, canonical_json
-from composable_agents.kinds import Op
-from composable_agents.transforms import normalize_ids
-from composable_agents.shapes import surface_shape, closed_shape
+from julep.contracts import FrozenTool, McpAnnotations, definition_hash, execution_hash
+from julep.errors import FreezeError, PlanRejected
+from julep.ir import Node, canonical_json
+from julep.kinds import Op
+from julep.transforms import normalize_ids
+from julep.shapes import surface_shape, closed_shape
 from conftest import read_snapshot, mixed_snapshot
 
 
@@ -310,7 +310,7 @@ def test_race_admission_blocks_write_branch():
 def test_race_admission_allows_asserted_idempotent_branches():
     # MCP hints are untrusted, so a race needs *asserted* contracts; assert both
     # branches read/required via capability overrides at freeze.
-    from composable_agents import CapabilityOverrides
+    from julep import CapabilityOverrides
 
     ov = CapabilityOverrides(contracts={
         "srv/a": ToolContract(Effect.READ, Idempotency.REQUIRED),

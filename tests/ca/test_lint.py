@@ -1,6 +1,6 @@
 # tests/ca/test_lint.py
-from composable_agents.ca.config import load_config
-from composable_agents.ca.lint import lint_agents
+from julep.ca.config import load_config
+from julep.ca.lint import lint_agents
 
 
 def test_lint_clean_module_passes(sample_module):

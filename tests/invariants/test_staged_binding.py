@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from composable_agents import (
+from julep import (
     Reasoner,
     CapabilityManifest,
     Effect,
@@ -14,19 +14,19 @@ from composable_agents import (
     call,
     mcp,
 )
-from composable_agents.agent_loop import TraceEntry
-from composable_agents.contracts import CONSERVATIVE_DEFAULT, manifest_to_json
-from composable_agents.errors import PlanRejected
-from composable_agents.execution.activities import (
+from julep.agent_loop import TraceEntry
+from julep.contracts import CONSERVATIVE_DEFAULT, manifest_to_json
+from julep.errors import PlanRejected
+from julep.execution.activities import (
     CompilePlanInput,
     WorkerContext,
     compilePlan,
     configure,
 )
-from composable_agents.execution.interpreter import call_contract
-from composable_agents.ir import CallStep, Node
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.staged import bind_plan_to_manifest, validate_plan, admit_plan
+from julep.execution.interpreter import call_contract
+from julep.ir import CallStep, Node
+from julep.registry import DEFAULT_REGISTRY
+from julep.staged import bind_plan_to_manifest, validate_plan, admit_plan
 from conftest import run
 
 

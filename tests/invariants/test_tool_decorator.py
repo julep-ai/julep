@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents import (
+from julep import (
     Effect,
     Idempotency,
     ToolContract,
@@ -15,7 +15,7 @@ from composable_agents import (
     tool,
     validate,
 )
-from composable_agents.derived import check_race_admission
+from julep.derived import check_race_admission
 
 
 def test_tool_contract_mapping() -> None:

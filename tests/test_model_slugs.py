@@ -1,6 +1,6 @@
 import pytest
 
-from composable_agents.model_slugs import ModelSlug, normalize_model_slug
+from julep.model_slugs import ModelSlug, normalize_model_slug
 
 
 @pytest.mark.parametrize(

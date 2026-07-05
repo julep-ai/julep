@@ -6,12 +6,12 @@ from typing import Any
 
 import pytest
 
-from composable_agents import Agent, AgentConfig, call, freeze, mcp, seq, tool
-from composable_agents.errors import CapabilityDenied, ValidationError
-from composable_agents.agent_loop import drive_agent_loop
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.kinds import EnforcementMode
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep import Agent, AgentConfig, call, freeze, mcp, seq, tool
+from julep.errors import CapabilityDenied, ValidationError
+from julep.agent_loop import drive_agent_loop
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.kinds import EnforcementMode
+from julep.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 
 

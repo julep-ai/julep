@@ -7,7 +7,7 @@ import pytest
 # A flow that uses a @pure. The pure body is echo-tolerant: it reads only
 # dict.keys(), so it never KeyErrors under ca run's {"output": value} echo stubs.
 PURE_SAMPLE = '''
-from composable_agents import flow, pure, think, tool
+from julep import flow, pure, think, tool
 
 @tool(effect="read", idempotent=True)
 def lookup(ticket: str) -> dict:
@@ -38,8 +38,8 @@ def pure_module(tmp_path: Path) -> Path:
 
 
 def test_lint_resolves_pures_no_unknown_pure(pure_module: Path) -> None:
-    from composable_agents.ca.config import load_config
-    from composable_agents.ca.lint import lint_agents
+    from julep.ca.config import load_config
+    from julep.ca.lint import lint_agents
 
     cfg = load_config(pure_module)
     findings, exit_code = lint_agents(cfg, ["triage"], fail_severity="error")
@@ -50,8 +50,8 @@ def test_lint_resolves_pures_no_unknown_pure(pure_module: Path) -> None:
 
 
 def test_run_executes_pures_no_unknown_pure(pure_module: Path) -> None:
-    from composable_agents.ca.config import load_config
-    from composable_agents.ca.runner import run_agent_local
+    from julep.ca.config import load_config
+    from julep.ca.runner import run_agent_local
 
     cfg = load_config(pure_module)
     outcome = run_agent_local(cfg, "triage", "TICKET-42", run_id="t-pure")
@@ -65,8 +65,8 @@ def test_run_large_input_not_limited_by_argv(pure_module: Path) -> None:
     # (MAX_ARG_STRLEN, ~128 KiB on Linux). The child payload travels over stdin,
     # not argv. Regression for ca run serializing the input into one argv string
     # (Codex PR#9, P2 / WS1).
-    from composable_agents.ca.config import load_config
-    from composable_agents.ca.runner import run_agent_local
+    from julep.ca.config import load_config
+    from julep.ca.runner import run_agent_local
 
     cfg = load_config(pure_module)
     big = "X" * 300_000  # comfortably past MAX_ARG_STRLEN
@@ -75,7 +75,7 @@ def test_run_large_input_not_limited_by_argv(pure_module: Path) -> None:
     assert isinstance(outcome.value, dict) and "seen" in outcome.value
 
 def test_cli_lint_and_run_end_to_end(pure_module: Path) -> None:
-    base = [sys.executable, "-m", "composable_agents.ca.cli"]
+    base = [sys.executable, "-m", "julep.ca.cli"]
     lint = subprocess.run(
         base + ["lint", "triage"], cwd=pure_module, capture_output=True, text=True
     )

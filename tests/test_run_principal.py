@@ -13,13 +13,13 @@ from typing import Any
 
 import pytest
 
-from composable_agents import call, ident, mcp, native, register_pure
-from composable_agents.continuation import continue_with
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.errors import PrincipalRequired
-from composable_agents.execution import HAVE_DBOS, HAVE_TEMPORAL
-from composable_agents.execution.effects import (
+from julep import call, ident, mcp, native, register_pure
+from julep.continuation import continue_with
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.errors import PrincipalRequired
+from julep.execution import HAVE_DBOS, HAVE_TEMPORAL
+from julep.execution.effects import (
     CallToolInput,
     CompilePlanInput,
     InvokeReasonerInput,
@@ -32,8 +32,8 @@ from composable_agents.execution.effects import (
     invokeReasoner,
     resolveSubflow,
 )
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
 
 PRINCIPAL = {"storeId": 413, "tokenRef": "cred_abc"}
 BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
@@ -281,15 +281,15 @@ def test_resolve_subflow_returns_bundle_metadata():
 # by children, and carried across continue-as-new in both workflows.
 # --------------------------------------------------------------------------- #
 if HAVE_TEMPORAL:
-    from composable_agents.execution import harness
-    from composable_agents.execution.harness import (
+    from julep.execution import harness
+    from julep.execution.harness import (
         AgentInput,
         AgentWorkflow,
         FlowInput,
         FlowWorkflow,
         _TemporalEnv,
     )
-    from composable_agents.execution.policy import ExecutionPolicy
+    from julep.execution.policy import ExecutionPolicy
 
 
 class _Stop(Exception):
@@ -460,7 +460,7 @@ def test_flow_workflow_continue_as_new_carries_principal(monkeypatch):
 
     monkeypatch.setattr(harness.workflow, "continue_as_new", fake_continue_as_new)
 
-    from composable_agents import arr
+    from julep import arr
 
     inp = FlowInput(
         session_id="sess",
@@ -563,15 +563,15 @@ def test_agent_workflow_continue_as_new_carries_principal(monkeypatch):
 # continuation envelope and the chaining runner carry it across segments.
 # --------------------------------------------------------------------------- #
 if HAVE_DBOS:
-    from composable_agents.continuation import CONTINUATION_KEY
-    from composable_agents.execution import dbos_backend
-    from composable_agents.execution.dbos_backend import (
+    from julep.continuation import CONTINUATION_KEY
+    from julep.execution import dbos_backend
+    from julep.execution.dbos_backend import (
         DbosEnv,
         decode_policy_error,
         encode_policy_error,
         run_flow_dbos,
     )
-    from composable_agents.execution.policy import ExecutionPolicy as _Policy
+    from julep.execution.policy import ExecutionPolicy as _Policy
 
 
 def _patch_dbos_steps(monkeypatch, payloads, *, reasoner_reply=None, plan_reply=None):

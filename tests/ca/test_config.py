@@ -1,4 +1,4 @@
-from composable_agents.ca.config import load_config
+from julep.ca.config import load_config
 
 
 def test_defaults_when_no_config(tmp_path):

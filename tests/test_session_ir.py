@@ -7,10 +7,10 @@ from typing import Any
 import pytest
 
 from conftest import run
-from composable_agents import arr, call, emit, human_gate, register_pure, recv, seq
-from composable_agents.derived import HUMAN_CHANNEL
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.ir import (
+from julep import arr, call, emit, human_gate, register_pure, recv, seq
+from julep.derived import HUMAN_CHANNEL
+from julep.errors import JulepError
+from julep.ir import (
     EMIT_TOOL,
     HUMAN_GATE_TOOL,
     RECV_TOOL,
@@ -21,10 +21,10 @@ from composable_agents.ir import (
     canonical_json,
     channelref_key,
 )
-from composable_agents.kinds import Op, Shape
-from composable_agents.session import Channel, drive_session, scan
-from composable_agents.shapes import closed_shape, surface_shape
-from composable_agents.transforms import normalize_ids
+from julep.kinds import Op, Shape
+from julep.session import Channel, drive_session, scan
+from julep.shapes import closed_shape, surface_shape
+from julep.transforms import normalize_ids
 
 
 def _turn_msg(value: dict[str, Any]) -> Any:
@@ -132,7 +132,7 @@ def test_scan_and_drive_session_thread_carrier_and_outputs() -> None:
 def test_drive_session_runs_real_body_through_interpret(monkeypatch: pytest.MonkeyPatch) -> None:
     import importlib
 
-    session_mod = importlib.import_module("composable_agents.session")
+    session_mod = importlib.import_module("julep.session")
 
     session = scan(seq(recv("in"), arr("tests.session_ir.turn_msg"), emit("out")), init="seed")
     real_interpret = session_mod.interpret
@@ -157,7 +157,7 @@ def test_drive_session_runs_real_body_through_interpret(monkeypatch: pytest.Monk
 def test_drive_session_raises_when_max_turns_exceeded() -> None:
     session = scan(seq(recv("in"), arr("tests.session_ir.sum_turn"), emit("out")), init=0)
 
-    with pytest.raises(ComposableAgentsError, match="session consumed more than 2 messages"):
+    with pytest.raises(JulepError, match="session consumed more than 2 messages"):
         run(drive_session(session, inputs=[1, 2, 3], max_turns=2))
 
 
@@ -197,7 +197,7 @@ def test_different_channels_and_values_hash_differently() -> None:
 
 
 def test_session_flow_freezes_with_recv_emit() -> None:
-    from composable_agents.freeze import McpSnapshot, freeze
+    from julep.freeze import McpSnapshot, freeze
 
     session = scan(seq(recv("in"), emit("out", value="ack")), init={})
     frozen = freeze(session.body, McpSnapshot(servers={}))

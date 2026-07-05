@@ -8,18 +8,18 @@ from typing import Any
 
 import pytest
 
-from composable_agents import AgentConfig, app, deploy
-from composable_agents.agent_loop import ROUND_NOTE_KEY, AgentState, drive_agent_loop
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution.cma import (
+from julep import AgentConfig, app, deploy
+from julep.agent_loop import ROUND_NOTE_KEY, AgentState, drive_agent_loop
+from julep.dotctx import Reasoner
+from julep.execution.cma import (
     _cfg_with_app_overrides,
     _reject_round_note_on_cma,
     drive_cma_agent_loop,
 )
-from composable_agents.execution.llm import complete_reasoner
-from composable_agents.ir import Node
-from composable_agents.prompt import register_renderer
-from composable_agents.registry import DEFAULT_REGISTRY, PureEntry, RendererEntry
+from julep.execution.llm import complete_reasoner
+from julep.ir import Node
+from julep.prompt import register_renderer
+from julep.registry import DEFAULT_REGISTRY, PureEntry, RendererEntry
 from cma_fakes import FakeCMASession
 from conftest import read_snapshot
 

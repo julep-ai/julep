@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from composable_agents import (
+from julep import (
     CapabilityManifest,
     EnforcementMode,
     blocking,
@@ -12,7 +12,7 @@ from composable_agents import (
     deploy,
     mcp,
 )
-from composable_agents.errors import ValidationError
+from julep.errors import ValidationError
 from conftest import read_snapshot
 
 

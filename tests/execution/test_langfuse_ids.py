@@ -1,4 +1,4 @@
-from composable_agents.execution.langfuse import trace_id_for, span_id_for
+from julep.execution.langfuse import trace_id_for, span_id_for
 
 def test_ids_are_stable_and_sized():
     assert trace_id_for("run-1") == trace_id_for("run-1")

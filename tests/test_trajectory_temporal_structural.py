@@ -7,13 +7,13 @@ from typing import Any
 
 import pytest
 
-from composable_agents import arr, each, par, race, seq
-from composable_agents.continuation import continue_with
-from composable_agents.execution import HAVE_TEMPORAL
-from composable_agents.execution.blobstore import InMemoryBlobStore
-from composable_agents.execution.effects import WorkerContext, configure, set_trajectory_sink
-from composable_agents.purity import register_pure
-from composable_agents.trajectory import (
+from julep import arr, each, par, race, seq
+from julep.continuation import continue_with
+from julep.execution import HAVE_TEMPORAL
+from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.effects import WorkerContext, configure, set_trajectory_sink
+from julep.purity import register_pure
+from julep.trajectory import (
     InMemoryTrajectoryStore,
     TrajectoryRun,
     TrajectoryStep,
@@ -22,8 +22,8 @@ from composable_agents.trajectory import (
 )
 
 if HAVE_TEMPORAL:
-    from composable_agents.execution import harness
-    from composable_agents.execution.harness import FlowInput, FlowWorkflow
+    from julep.execution import harness
+    from julep.execution.harness import FlowInput, FlowWorkflow
 
 
 ROOT = "tstruct-root"

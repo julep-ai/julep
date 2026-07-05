@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from composable_agents.purity import diff_pure_hashes
+from julep.purity import diff_pure_hashes
 
 
 def test_diff_pure_hashes_reports_changed_and_missing() -> None:

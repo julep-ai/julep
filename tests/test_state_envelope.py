@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from composable_agents.agent_loop import (
+from julep.agent_loop import (
     STATE_SCHEMA_VERSION,
     AgentState,
     TraceEntry,

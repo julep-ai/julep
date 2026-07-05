@@ -1,4 +1,4 @@
-from composable_agents.ca.config import EnvConfig, load_config
+from julep.ca.config import EnvConfig, load_config
 
 
 def test_implicit_local_env_present_by_default(tmp_path):
@@ -15,7 +15,7 @@ def test_implicit_local_env_present_by_default(tmp_path):
     assert local.temporal_address is None
     # canonical defaults
     assert local.temporal_namespace == "default"
-    assert local.task_queue == "composable-agents"
+    assert local.task_queue == "julep"
     assert local.langfuse_host is None
 
 
@@ -65,7 +65,7 @@ def test_env_table_uses_canonical_defaults_for_missing_fields(tmp_path):
     prod = cfg.envs["prod"]
     assert prod.temporal_address == "temporal.prod:7233"
     assert prod.temporal_namespace == "default"
-    assert prod.task_queue == "composable-agents"
+    assert prod.task_queue == "julep"
     assert prod.cas is None
     assert prod.langfuse_host is None
 

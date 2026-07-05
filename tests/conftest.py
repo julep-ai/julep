@@ -10,8 +10,8 @@ import asyncio
 from collections.abc import Coroutine
 from typing import Any
 
-from composable_agents.contracts import McpAnnotations
-from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep.contracts import McpAnnotations
+from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
 
 def run(coro: Coroutine[Any, Any, Any]) -> Any:

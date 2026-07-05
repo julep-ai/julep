@@ -12,13 +12,13 @@ pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import arr, deploy
-from composable_agents.bundle import PureDepsUnbuildableError, publish_bundle
-from composable_agents.cas import LocalDirCAS
-from composable_agents.deps import base_component_hash, env_hash
-from composable_agents.execution import env_builder
-from composable_agents.registry import DEFAULT_REGISTRY, Registry
-from composable_agents.worker_store import BundleResolutionError, resolve_and_register
+from julep import arr, deploy
+from julep.bundle import PureDepsUnbuildableError, publish_bundle
+from julep.cas import LocalDirCAS
+from julep.deps import base_component_hash, env_hash
+from julep.execution import env_builder
+from julep.registry import DEFAULT_REGISTRY, Registry
+from julep.worker_store import BundleResolutionError, resolve_and_register
 from conftest import read_snapshot
 
 

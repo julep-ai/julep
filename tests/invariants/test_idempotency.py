@@ -7,8 +7,8 @@ import pytest
 pytest.importorskip("temporalio")
 pytest.importorskip("httpx")
 
-from composable_agents import mcp
-from composable_agents.execution.activities import CallToolInput, WorkerContext, callTool, configure
+from julep import mcp
+from julep.execution.activities import CallToolInput, WorkerContext, callTool, configure
 from conftest import run
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from composable_agents import (
+from julep import (
     CapabilityManifest,
     as_flow,
     cond,
@@ -16,8 +16,8 @@ from composable_agents import (
     think,
     tool,
 )
-from composable_agents.ir import SLEEP_TOOL, CallStep, NativeTool, Node, canonical_json
-from composable_agents.transforms import normalize_ids
+from julep.ir import SLEEP_TOOL, CallStep, NativeTool, Node, canonical_json
+from julep.transforms import normalize_ids
 from examples import episode_summary_flow as episode
 
 

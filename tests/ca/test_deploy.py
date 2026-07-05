@@ -14,9 +14,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from composable_agents.ca.config import load_config
-from composable_agents.ca.deploy import deploy_agents, freeze_agent
-from composable_agents.ca.ledger import read_ledger
+from julep.ca.config import load_config
+from julep.ca.deploy import deploy_agents, freeze_agent
+from julep.ca.ledger import read_ledger
 
 _NOW = "2026-06-23T00:00:00Z"
 

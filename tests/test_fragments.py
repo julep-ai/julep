@@ -1,5 +1,5 @@
 # tests/test_fragments.py
-from composable_agents.prompt import Lift, Ask, Concat, Under, Map, fragments
+from julep.prompt import Lift, Ask, Concat, Under, Map, fragments
 
 
 def test_lift_is_constant() -> None:

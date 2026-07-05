@@ -30,9 +30,9 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents.deploy import _reasoner_identity
-from composable_agents.dotctx import Reasoner, reasoner_from_settings
-from composable_agents.execution.llm import (
+from julep.deploy import _reasoner_identity
+from julep.dotctx import Reasoner, reasoner_from_settings
+from julep.execution.llm import (
     _apply_prompt_cache,
     _has_cache_marker,
     _messages,
@@ -40,9 +40,9 @@ from composable_agents.execution.llm import (
     complete_reasoner,
     make_resilient_llm_caller,
 )
-from composable_agents.execution.llm_result import LlmCallMeta
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.resilience import ErrorClass, ResiliencePolicy
+from julep.execution.llm_result import LlmCallMeta
+from julep.registry import DEFAULT_REGISTRY
+from julep.resilience import ErrorClass, ResiliencePolicy
 from conftest import run
 
 

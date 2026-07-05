@@ -3,10 +3,10 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from composable_agents import Agent
-from composable_agents import app, arr, recv, register_pure, scan, seq
-from composable_agents import tool
-from composable_agents.agent_loop import (
+from julep import Agent
+from julep import app, arr, recv, register_pure, scan, seq
+from julep import tool
+from julep.agent_loop import (
     DEFAULT_THINK_COST,
     DEFAULT_TOOL_COST,
     AgentConfig,
@@ -18,8 +18,8 @@ from composable_agents.agent_loop import (
     drive_agent_loop,
     interpret_reasoner_reply,
 )
-from composable_agents.execution.interpreter import _app_config
-from composable_agents.ir import Node
+from julep.execution.interpreter import _app_config
+from julep.ir import Node
 
 
 def test_interpret_reasoner_reply_native_tool_calls() -> None:
@@ -460,7 +460,7 @@ def test_call_many_one_failing_tool_only_errors_that_observation() -> None:
 
 
 def test_provider_tool_defs_uses_tool_schema_and_docstring() -> None:
-    from composable_agents.agent import provider_tool_defs
+    from julep.agent import provider_tool_defs
 
     @tool(effect="read", idempotent=True)
     def lookup_weather(city: str, days: int) -> dict[str, Any]:
@@ -480,7 +480,7 @@ def test_provider_tool_defs_uses_tool_schema_and_docstring() -> None:
 
 
 def test_agent_facade_passes_provider_tool_defs_only_when_native_tools_enabled() -> None:
-    from composable_agents.agent import provider_tool_defs
+    from julep.agent import provider_tool_defs
 
     @tool(effect="read", idempotent=True, name="native_facade_lookup")
     def lookup_weather(city: str) -> dict[str, str]:
@@ -529,7 +529,7 @@ def test_agent_facade_passes_provider_tool_defs_only_when_native_tools_enabled()
 
 
 def test_agent_open_local_session_passes_provider_tool_defs_for_native_tools() -> None:
-    from composable_agents.agent import provider_tool_defs
+    from julep.agent import provider_tool_defs
     from conftest import run
 
     @tool(effect="read", idempotent=True, name="native_session_left")

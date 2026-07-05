@@ -4,13 +4,13 @@ from typing import Any
 
 import pytest
 
-import composable_agents as ca
-from composable_agents import as_flow, cond, delay, deploy, dsl, each, flow, pure, reschedule, switch, think, tool
-from composable_agents.define import DefineError, Handle
-from composable_agents.ir import Node, SLEEP_TOOL, CallStep, NativeTool, ThinkStep, canonical_json
-from composable_agents.kinds import Op
-from composable_agents.validate import SECRET_KEY_RE
-from composable_agents.transforms import normalize_ids
+import julep as ca
+from julep import as_flow, cond, delay, deploy, dsl, each, flow, pure, reschedule, switch, think, tool
+from julep.define import DefineError, Handle
+from julep.ir import Node, SLEEP_TOOL, CallStep, NativeTool, ThinkStep, canonical_json
+from julep.kinds import Op
+from julep.validate import SECRET_KEY_RE
+from julep.transforms import normalize_ids
 
 
 def _canonical_ir(node: Node) -> str:
@@ -200,7 +200,7 @@ def test_flow_decorator_calls_body_once_and_builds_graph() -> None:
 
     assert calls == 1
 
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph(input_name="source")
     graph.add_step(StepKind.THINK, "p51.summarizer", output="summary")
@@ -308,8 +308,8 @@ def test_in_flow_multi_param_subflow_single_handle_raises_define_error() -> None
 
 
 def test_pure_called_with_two_handles_gives_fix_line() -> None:
-    from composable_agents import flow, pure, tool
-    from composable_agents.define import DefineError
+    from julep import flow, pure, tool
+    from julep.define import DefineError
 
     @tool(effect="read", idempotent=True)
     def lk(t: str) -> dict:
@@ -503,8 +503,8 @@ def test_handle_bool_iter_and_attribute_errors_are_actionable() -> None:
 
 
 def test_flowdef_dot_each_gives_top_level_hint() -> None:
-    from composable_agents import flow, tool
-    from composable_agents.define import DefineError
+    from julep import flow, tool
+    from julep.define import DefineError
 
     @tool(effect="read", idempotent=True)
     def lk(t: str) -> dict:
@@ -521,8 +521,8 @@ def test_flowdef_dot_each_gives_top_level_hint() -> None:
 
 
 def test_handle_dot_switch_gives_top_level_hint() -> None:
-    from composable_agents import flow, tool
-    from composable_agents.define import DefineError
+    from julep import flow, tool
+    from julep.define import DefineError
 
     @tool(effect="read", idempotent=True)
     def lk(t: str) -> dict:
@@ -963,7 +963,7 @@ def test_saturated_multi_handle_flow_call_teaches_merge_before_inline() -> None:
 
 
 def test_frontend_cond_subject_shaped_predicate_works_unmodified() -> None:
-    from composable_agents import cond
+    from julep import cond
 
     @flow
     def found(source: dict[str, Any]) -> dict[str, Any]:
@@ -987,8 +987,8 @@ def test_frontend_cond_subject_shaped_predicate_works_unmodified() -> None:
 
 
 def test_qualified_and_aliased_control_helpers_are_allowed_by_identity() -> None:
-    from composable_agents import cond as c
-    from composable_agents import each as e
+    from julep import cond as c
+    from julep import each as e
 
     @flow
     def found(source: dict[str, Any]) -> dict[str, Any]:
@@ -1131,7 +1131,7 @@ def test_frontend_switch_on_cas_status_golden_and_all_arms() -> None:
 
 
 def test_frontend_multiple_cond_switch_labels_are_unique() -> None:
-    from composable_agents import cond
+    from julep import cond
 
     @flow
     def yes(source: dict[str, Any]) -> dict[str, Any]:
@@ -1499,7 +1499,7 @@ def test_each_rejects_non_handle_items_inside_flow_with_span_and_hint() -> None:
         match=(
             r"each\(body, items, \.\.\.\) needs a Handle items argument inside @flow "
             r"at .*test_define_frontend.py:\d+.*"
-            r"outside @flow use dsl.each\(Node, \.\.\.\) or composable_agents.typed.each\(FlowLike, \.\.\.\)"
+            r"outside @flow use dsl.each\(Node, \.\.\.\) or julep.typed.each\(FlowLike, \.\.\.\)"
         ),
     ):
 

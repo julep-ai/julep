@@ -7,10 +7,10 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from composable_agents import CapabilityManifest, ToolGrant, manifest_to_json, validate
-from composable_agents.ir import Node
-from composable_agents.shapes import closed_shape, surface_shape
-from composable_agents.validate import Diagnostic
+from julep import CapabilityManifest, ToolGrant, manifest_to_json, validate
+from julep.ir import Node
+from julep.shapes import closed_shape, surface_shape
+from julep.validate import Diagnostic
 
 from .fixtures import GoldenFixture
 

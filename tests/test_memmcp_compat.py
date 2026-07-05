@@ -25,11 +25,11 @@ import pytest
 pytest.importorskip("jinja2")
 pytest.importorskip("yglu")  # the vendored settings carry `!?` env expressions
 
-from composable_agents.dotctx import load_dotctx
-from composable_agents.dotctx_evals import Sample, load_ctx_evals
-from composable_agents.dotctx_rich import load_rich_dotctx
-from composable_agents.prompt import get_renderer
-from composable_agents.registry import Registry
+from julep.dotctx import load_dotctx
+from julep.dotctx_evals import Sample, load_ctx_evals
+from julep.dotctx_rich import load_rich_dotctx
+from julep.prompt import get_renderer
+from julep.registry import Registry
 
 FIXTURES = Path(__file__).parent / "fixtures" / "memmcp"
 

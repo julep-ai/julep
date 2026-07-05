@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from composable_agents.execution.anthropic_batch import AnthropicBatchProvider
-from composable_agents.execution.openai_batch import OpenAIBatchProvider
+from julep.execution.anthropic_batch import AnthropicBatchProvider
+from julep.execution.openai_batch import OpenAIBatchProvider
 
 
 def test_openai_batch_parse_surfaces_usage():

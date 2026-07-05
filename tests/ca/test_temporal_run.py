@@ -1,4 +1,4 @@
-"""Tests for `ca run --env` routing (composable_agents.ca.temporal_run).
+"""Tests for `ca run --env` routing (julep.ca.temporal_run).
 
 Two paths:
 
@@ -24,10 +24,10 @@ from typing import Any
 
 import pytest
 
-from composable_agents.ca.config import CaConfig, EnvConfig, load_config
-from composable_agents.ca.ledger import DeployRecord, upsert_records
-from composable_agents.ca.runner import RunOutcome
-from composable_agents.ca.temporal_run import run_on_env
+from julep.ca.config import CaConfig, EnvConfig, load_config
+from julep.ca.ledger import DeployRecord, upsert_records
+from julep.ca.runner import RunOutcome
+from julep.ca.temporal_run import run_on_env
 
 
 # --------------------------------------------------------------------------- #

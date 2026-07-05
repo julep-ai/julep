@@ -15,9 +15,9 @@ import pytest
 
 pytest.importorskip("jinja2")
 
-from composable_agents.dotctx import load_dotctx
-from composable_agents.dotctx_rich import load_single_file_dotctx
-from composable_agents.prompt import get_renderer
+from julep.dotctx import load_dotctx
+from julep.dotctx_rich import load_single_file_dotctx
+from julep.prompt import get_renderer
 
 # Mirrors mem-mcp's single-file format: frontmatter + comment header + markers.
 _SINGLE_FILE = (

@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from typing import Any
 
-from composable_agents import (
+from julep import (
     Agent,
     LocalSessionHandle,
     SessionEvent,
@@ -16,8 +16,8 @@ from composable_agents import (
     scan,
     seq,
 )
-from composable_agents.errors import SessionTurnError
-from composable_agents.execution.interpreter import SessionClosed
+from julep.errors import SessionTurnError
+from julep.execution.interpreter import SessionClosed
 from conftest import run
 
 

@@ -5,13 +5,13 @@ from typing import Any
 
 import pytest
 
-from composable_agents import dsl, pure
-from composable_agents.contracts import ToolContract
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.ir import Node, SourceSpan, canonical_json
-from composable_agents.kinds import Effect, Idempotency, Op
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.transforms import normalize_ids
+from julep import dsl, pure
+from julep.contracts import ToolContract
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.ir import Node, SourceSpan, canonical_json
+from julep.kinds import Effect, Idempotency, Op
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.transforms import normalize_ids
 from conftest import run
 
 
@@ -170,7 +170,7 @@ def dag_tally_cluster_statuses(statuses: list[dict[str, Any]]) -> dict[str, int]
 
 
 def test_linear_chain_compiles_without_env_record_shims() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -187,7 +187,7 @@ def test_linear_chain_compiles_without_env_record_shims() -> None:
 
 
 def test_diamond_fan_in_compiles_to_minimal_parallel_env_flow() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -220,7 +220,7 @@ def test_diamond_fan_in_compiles_to_minimal_parallel_env_flow() -> None:
 
 
 def test_authored_std_merge_multi_input_collapses_to_env_projection_only() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "produce_a", output="a", contract=READ_CONTRACT)
@@ -261,7 +261,7 @@ def test_authored_std_merge_multi_input_collapses_to_env_projection_only() -> No
 
 
 def test_nested_binary_merge_chain_compiles_as_declared_and_runs() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "produce_a", output="a", contract=READ_CONTRACT)
@@ -322,7 +322,7 @@ def test_nested_binary_merge_chain_compiles_as_declared_and_runs() -> None:
 
 
 def test_write_barrier_keeps_later_read_sequential() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_before", output="source", contract=READ_CONTRACT)
@@ -354,7 +354,7 @@ def test_write_barrier_keeps_later_read_sequential() -> None:
 
 
 def test_compiled_diamond_runs_end_to_end() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -403,7 +403,7 @@ def test_compiled_diamond_runs_end_to_end() -> None:
 
 
 def test_graph_rejects_output_name_collisions_at_definition_time() -> None:
-    from composable_agents.dag import Graph, GraphDefinitionError, StepKind
+    from julep.dag import Graph, GraphDefinitionError, StepKind
 
     graph = Graph()
     graph.add_step(StepKind.PURE, "one", output="value")
@@ -413,7 +413,7 @@ def test_graph_rejects_output_name_collisions_at_definition_time() -> None:
 
 
 def test_graph_explicit_output_name_is_not_clobbered_by_add_step() -> None:
-    from composable_agents.dag import Graph, StepKind
+    from julep.dag import Graph, StepKind
 
     graph = Graph(output_name="first")
     graph.add_step(StepKind.PURE, "one", output="first")
@@ -423,7 +423,7 @@ def test_graph_explicit_output_name_is_not_clobbered_by_add_step() -> None:
 
 
 def test_compile_rejects_cycles_and_names_cycle_members() -> None:
-    from composable_agents.dag import Graph, GraphDefinitionError, StepKind, compile
+    from julep.dag import Graph, GraphDefinitionError, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.PURE, "first", inputs=["second"], output="first")
@@ -434,7 +434,7 @@ def test_compile_rejects_cycles_and_names_cycle_members() -> None:
 
 
 def test_compile_rejects_explicit_unknown_output_name_before_runtime() -> None:
-    from composable_agents.dag import Graph, GraphDefinitionError, StepKind, compile
+    from julep.dag import Graph, GraphDefinitionError, StepKind, compile
 
     span = SourceSpan("flow.py", 12, "build", "return typo")
     graph = Graph(output_name="typo", source=span)
@@ -452,7 +452,7 @@ def test_compile_rejects_explicit_unknown_output_name_before_runtime() -> None:
 
 
 def test_user_input_edge_rename_is_rejected_at_definition_time() -> None:
-    from composable_agents.dag import Graph, GraphDefinitionError, InputEdge, StepKind
+    from julep.dag import Graph, GraphDefinitionError, InputEdge, StepKind
 
     span = SourceSpan("flow.py", 22, "build", "renamed = consume(source)")
     graph = Graph()
@@ -475,7 +475,7 @@ def test_user_input_edge_rename_is_rejected_at_definition_time() -> None:
 
 
 def test_add_each_internal_items_edge_is_still_allowed_after_rename_rejection() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="cluster", output_name="copied")
     body.add_step(StepKind.PURE, "dag.branch_from_input", output="copied")
@@ -488,7 +488,7 @@ def test_add_each_internal_items_edge_is_still_allowed_after_rename_rejection() 
 
 
 def test_compile_rejects_forward_referenced_edges_across_write_barriers() -> None:
-    from composable_agents.dag import Graph, GraphDefinitionError, StepKind, compile
+    from julep.dag import Graph, GraphDefinitionError, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.PURE, "dag.input_identity", inputs=["late_read"], output="pure_result")
@@ -551,7 +551,7 @@ def test_compile_rejects_forward_referenced_edges_across_write_barriers() -> Non
 
 
 def test_singleton_first_layer_preserves_raw_input_for_later_declared_consumer() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -593,7 +593,7 @@ def test_singleton_first_layer_preserves_raw_input_for_later_declared_consumer()
 
 
 def test_singleton_first_layer_preserves_raw_input_for_later_implicit_consumer() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -635,7 +635,7 @@ def test_singleton_first_layer_preserves_raw_input_for_later_implicit_consumer()
 
 
 def test_raw_input_survives_write_fence_and_fence_free_mid_graph_combine() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     fenced = Graph()
     fenced.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -686,7 +686,7 @@ def test_raw_input_survives_write_fence_and_fence_free_mid_graph_combine() -> No
 
 
 def test_liveness_keeps_raw_input_for_implicit_consumer_after_write() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_a", output="a", contract=READ_CONTRACT)
@@ -743,7 +743,7 @@ def test_cond_arm_with_no_declared_inputs_receives_raw_input(
     found: bool,
     expected: dict[str, Any],
 ) -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="then_result")
     then_arm.add_step(
@@ -779,7 +779,7 @@ def test_cond_arm_with_no_declared_inputs_receives_raw_input(
 
 @pytest.mark.parametrize("found", [True, False])
 def test_lone_cond_bootstraps_env_for_raw_input_arms(found: bool) -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="then_result")
     then_arm.add_step(StepKind.PURE, "dag.branch_from_input", output="then_result")
@@ -808,7 +808,7 @@ def test_lone_cond_bootstraps_env_for_raw_input_arms(found: bool) -> None:
 
 @pytest.mark.parametrize("found", [True, False])
 def test_lone_cond_arms_can_declare_raw_input_edges(found: bool) -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="then_result")
     then_arm.add_step(
@@ -846,7 +846,7 @@ def test_lone_cond_arms_can_declare_raw_input_edges(found: bool) -> None:
 
 
 def test_each_body_no_input_step_does_not_become_handle_capture() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="item", output_name="copied")
     body.add_step(StepKind.PURE, "dag.branch_from_input", output="copied")
@@ -877,7 +877,7 @@ def test_each_body_no_input_step_does_not_become_handle_capture() -> None:
 
 
 def test_raw_input_is_pruned_after_last_consumer() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph()
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -901,7 +901,7 @@ def test_raw_input_is_pruned_after_last_consumer() -> None:
 
 
 def test_cond_branch_compiles_to_manual_alt_with_pruned_arm_envs() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="write_result")
     then_arm.add_step(
@@ -952,7 +952,7 @@ def test_cond_branch_compiles_to_manual_alt_with_pruned_arm_envs() -> None:
 
 
 def test_switch_branch_compiles_to_select_cases_alt() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     def case_arm(pure_name: str, output: str) -> Graph:
         arm = Graph(output_name=output)
@@ -1005,7 +1005,7 @@ def test_switch_branch_compiles_to_select_cases_alt() -> None:
 
 
 def test_mid_flow_cond_result_feeds_later_step_and_prunes_source() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="write_result")
     then_arm.add_step(
@@ -1059,7 +1059,7 @@ def test_mid_flow_cond_result_feeds_later_step_and_prunes_source() -> None:
 
 
 def test_two_branches_in_one_flow_have_unique_deterministic_outputs() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     def missing_arm(output: str) -> Graph:
         arm = Graph(output_name=output)
@@ -1093,7 +1093,7 @@ def test_two_branches_in_one_flow_have_unique_deterministic_outputs() -> None:
 
 
 def test_return_any_handle_projects_that_value_not_whole_env() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     graph = Graph(output_name="summary")
     graph.add_step(StepKind.TOOL, "read_episode", output="source", contract=READ_CONTRACT)
@@ -1135,7 +1135,7 @@ def test_return_any_handle_projects_that_value_not_whole_env() -> None:
     ],
 )
 def test_compiled_cond_runs_every_arm(found: bool, expected: dict[str, Any]) -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="write_result")
     then_arm.add_step(
@@ -1185,7 +1185,7 @@ def test_compiled_cond_runs_every_arm(found: bool, expected: dict[str, Any]) -> 
     ],
 )
 def test_compiled_switch_runs_every_case_and_default(status: str, expected: str) -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     def case_arm(pure_name: str, output: str) -> Graph:
         arm = Graph(output_name=output)
@@ -1221,7 +1221,7 @@ def test_compiled_switch_runs_every_case_and_default(status: str, expected: str)
 
 
 def test_branch_arm_liveness_prunes_fields_per_arm() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     then_arm = Graph(output_name="then_result")
     then_arm.add_step(StepKind.PURE, "dag.case_success", inputs=["status"], output="then_result")
@@ -1252,7 +1252,7 @@ def test_branch_arm_liveness_prunes_fields_per_arm() -> None:
 
 
 def test_each_with_handle_capture_compiles_to_pre_each_env_projection() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="cluster", output_name="label")
     body.add_step(
@@ -1317,7 +1317,7 @@ def test_each_with_handle_capture_compiles_to_pre_each_env_projection() -> None:
 
 
 def test_each_that_captures_its_items_source_uses_env_path() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="cluster", output_name="labeled")
     body.add_step(
@@ -1368,7 +1368,7 @@ def test_each_that_captures_its_items_source_uses_env_path() -> None:
 
 
 def test_each_with_const_captures_only_pins_consts_in_body_pack() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="cluster", output_name="labeled")
     body.add_step(
@@ -1414,7 +1414,7 @@ def test_each_with_const_captures_only_pins_consts_in_body_pack() -> None:
 
 
 def test_each_with_reducer_lowers_to_dsl_each_reducer() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="cluster", output_name="labeled")
     body.add_step(
@@ -1453,7 +1453,7 @@ def test_cluster_labeling_skeleton_each_runs_success_and_stale(
     stale: bool,
     expected: dict[str, int],
 ) -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     body = Graph(input_name="cluster", output_name="write_status")
     body.add_step(
@@ -1521,7 +1521,7 @@ def test_cluster_labeling_skeleton_each_runs_success_and_stale(
 
 
 def test_each_capture_policy_rejects_foreign_body_handles_and_non_json_consts() -> None:
-    from composable_agents.dag import Graph, GraphDefinitionError, StepKind
+    from julep.dag import Graph, GraphDefinitionError, StepKind
 
     body = Graph(input_name="cluster")
     body.add_step(StepKind.PURE, "std.merge", inputs=["cluster", "missing_context"], output="label")
@@ -1536,7 +1536,7 @@ def test_each_capture_policy_rejects_foreign_body_handles_and_non_json_consts() 
 
 
 def test_each_const_capture_warns_only_when_canonical_json_exceeds_threshold() -> None:
-    from composable_agents.dag import CAPTURE_SIZE_WARNING_BYTES, Graph, StepKind
+    from julep.dag import CAPTURE_SIZE_WARNING_BYTES, Graph, StepKind
 
     def build_graph_with_capture(capture: dict[str, Any]) -> None:
         body = Graph(input_name="cluster", output_name="labeled")
@@ -1568,7 +1568,7 @@ def test_each_const_capture_warns_only_when_canonical_json_exceeds_threshold() -
 
 
 def test_source_spans_propagate_to_each_and_shims_without_wire_bytes() -> None:
-    from composable_agents.dag import Graph, StepKind, compile
+    from julep.dag import Graph, StepKind, compile
 
     parent_span = SourceSpan("flow.py", 10, "build", "labels = each(...)")
     body_span = SourceSpan("flow.py", 6, "label_one", "label = make(...)")

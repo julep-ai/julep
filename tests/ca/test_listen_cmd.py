@@ -1,8 +1,8 @@
 import io
 from typing import Any
 
-from composable_agents.ca import cli
-from composable_agents.ca import listen as listen_mod
+from julep.ca import cli
+from julep.ca import listen as listen_mod
 
 
 def test_listen_forwards_emits(sample_module, capsys, monkeypatch):

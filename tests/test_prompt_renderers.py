@@ -2,13 +2,13 @@ import asyncio
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
-from composable_agents.dotctx import Reasoner, reasoner_from_settings
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep import HAVE_TEMPORAL
+from julep.dotctx import Reasoner, reasoner_from_settings
+from julep.registry import DEFAULT_REGISTRY
 
 if HAVE_TEMPORAL:
-    from composable_agents.execution import activities as act
-from composable_agents.prompt import (
+    from julep.execution import activities as act
+from julep.prompt import (
     Ask,
     fragments,
     project_context,

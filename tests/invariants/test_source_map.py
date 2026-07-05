@@ -4,11 +4,11 @@ import inspect
 
 import pytest
 
-from composable_agents import CapabilityManifest, call, deploy, mcp
-from composable_agents.diagnostics import explain
-from composable_agents.dsl import set_source_capture
-from composable_agents.freeze import freeze
-from composable_agents.ir import SourceSpan, canonical_json
+from julep import CapabilityManifest, call, deploy, mcp
+from julep.diagnostics import explain
+from julep.dsl import set_source_capture
+from julep.freeze import freeze
+from julep.ir import SourceSpan, canonical_json
 from conftest import read_snapshot
 
 

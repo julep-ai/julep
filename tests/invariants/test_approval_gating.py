@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from composable_agents import (
+from julep import (
     Reasoner,
     CapabilityManifest,
     Contract,
@@ -22,9 +22,9 @@ from composable_agents import (
     sub,
     think,
 )
-from composable_agents.contracts import McpAnnotations, ToolContract
-from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, NativeToolSpec
-from composable_agents.registry import DEFAULT_REGISTRY
+from julep.contracts import McpAnnotations, ToolContract
+from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, NativeToolSpec
+from julep.registry import DEFAULT_REGISTRY
 
 
 def _pred(value):

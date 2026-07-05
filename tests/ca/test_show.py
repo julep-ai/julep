@@ -1,5 +1,5 @@
 # tests/ca/test_show.py
-from composable_agents.ca import cli
+from julep.ca import cli
 
 
 def test_show_one_agent(sample_module, capsys, monkeypatch):

@@ -1,7 +1,7 @@
 """Lane B (Capture): the effect layer feeds the trajectory plane.
 
 Trajectory capture lives only in the shared, backend-neutral effect functions
-(:func:`composable_agents.execution.effects.callTool` / ``invokeReasoner`` /
+(:func:`julep.execution.effects.callTool` / ``invokeReasoner`` /
 ``runSub``), so BOTH the Temporal and DBOS backends — which both call these
 effect bodies — get capture for free.
 
@@ -22,11 +22,11 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.execution.blobstore import InMemoryBlobStore, parse_ref
-from composable_agents.execution.effects import (
+from julep import HAVE_TEMPORAL
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.execution.blobstore import InMemoryBlobStore, parse_ref
+from julep.execution.effects import (
     CallToolInput,
     InvokeReasonerInput,
     RunSubInput,
@@ -38,7 +38,7 @@ from composable_agents.execution.effects import (
     runSub,
     set_trajectory_sink,
 )
-from composable_agents.trajectory import (
+from julep.trajectory import (
     InMemoryTrajectoryStore,
     TrajectoryStep,
     TrajectoryValue,
@@ -325,7 +325,7 @@ def test_record_marker_step_root_and_final():
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_finish_trajectory_creates_run_before_finishing_child_without_effects():
-    from composable_agents.execution.harness import finishTrajectory
+    from julep.execution.harness import finishTrajectory
 
     sink = InMemoryTrajectoryStore()
     blobs = InMemoryBlobStore()

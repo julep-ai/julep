@@ -22,8 +22,8 @@ from typing import Any
 
 import pytest
 
-from composable_agents.registry import DEFAULT_REGISTRY, Registry
-from composable_agents.std import std_merge
+from julep.registry import DEFAULT_REGISTRY, Registry
+from julep.std import std_merge
 
 # The full std library — every one of these MUST stay native (baked), forever.
 STD_PURE_NAMES = (
@@ -111,7 +111,7 @@ def test_bundle_sourced_pure_is_wasm_tier() -> None:
 def test_bundle_cannot_ship_a_std_pure() -> None:
     """Resolution refuses a bundle that ships a ``std.*`` pure, so std can never be
     downgraded into the sandbox — it always stays native/baked."""
-    from composable_agents.worker_store import BundleResolutionError, _manifest_pures
+    from julep.worker_store import BundleResolutionError, _manifest_pures
 
     with pytest.raises(BundleResolutionError, match=r"std\.\*"):
         _manifest_pures(

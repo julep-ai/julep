@@ -1,6 +1,6 @@
 # tests/ca/test_discover.py
-from composable_agents.ca.config import load_config
-from composable_agents.ca.discover import scan_agents
+from julep.ca.config import load_config
+from julep.ca.discover import scan_agents
 
 
 def test_finds_flow_and_agent(sample_module):

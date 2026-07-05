@@ -6,10 +6,10 @@ from typing import NotRequired, Required, TypedDict
 
 import pytest
 
-from composable_agents.deploy import _reasoner_identity
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.ir import canonical_json
+from julep.deploy import _reasoner_identity
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.ir import canonical_json
 
 
 @pytest.fixture

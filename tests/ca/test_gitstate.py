@@ -1,7 +1,7 @@
 # tests/ca/test_gitstate.py
 import subprocess
 
-from composable_agents.ca.gitstate import modified_agent_files
+from julep.ca.gitstate import modified_agent_files
 
 
 def _git(root, *args):

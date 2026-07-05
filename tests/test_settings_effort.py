@@ -1,6 +1,6 @@
 import pytest
 
-from composable_agents.dotctx import reasoner_from_settings
+from julep.dotctx import reasoner_from_settings
 
 
 def test_suffix_extracted_and_model_canonicalized() -> None:

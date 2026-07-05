@@ -15,7 +15,7 @@ from typing import Any, TypeVar
 
 import pytest
 
-from composable_agents.execution import HAVE_DBOS
+from julep.execution import HAVE_DBOS
 
 DB_URL = os.environ.get("DBOS_TEST_DATABASE_URL")
 T = TypeVar("T")
@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skipif(
 if HAVE_DBOS and DB_URL:
     from dbos import DBOS, DBOSConfig
 
-    from composable_agents import (
+    from julep import (
         Reasoner,
         Budget,
         app,
@@ -37,16 +37,16 @@ if HAVE_DBOS and DB_URL:
         mcp,
         seq,
     )
-    from composable_agents.contracts import McpAnnotations
-    from composable_agents.derived import human_gate
-    from composable_agents.execution.dbos_backend import (
+    from julep.contracts import McpAnnotations
+    from julep.derived import human_gate
+    from julep.execution.dbos_backend import (
         run_agent_dbos,
         run_flow_dbos,
         submit_human_dbos,
     )
-    from composable_agents.execution.effects import WorkerContext, configure
-    from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
-    from composable_agents.registry import DEFAULT_REGISTRY
+    from julep.execution.effects import WorkerContext, configure
+    from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from julep.registry import DEFAULT_REGISTRY
 
     def _snapshot() -> McpSnapshot:
         ann = McpAnnotations(read_only_hint=True, idempotent_hint=True)

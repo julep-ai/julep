@@ -22,9 +22,9 @@ from __future__ import annotations
 import asyncio
 import inspect
 
-from composable_agents.execution.interpreter import InMemoryEnv, interpret
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.registry import DEFAULT_REGISTRY, Registry
+from julep.execution.interpreter import InMemoryEnv, interpret
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.registry import DEFAULT_REGISTRY, Registry
 from examples import grade_scores_flow
 
 # The three leaf pures the grade-scores flow composes; all bundle-shippable.

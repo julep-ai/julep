@@ -1,5 +1,5 @@
-from composable_agents.projection import SpanData
-from composable_agents.execution.langfuse import build_tree, span_id_for
+from julep.projection import SpanData
+from julep.execution.langfuse import build_tree, span_id_for
 
 def _s(cid, parents=()):
     return SpanData(name=cid, cid=cid, node=cid, start_ts=0.0, end_ts=1.0,

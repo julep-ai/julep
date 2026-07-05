@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from composable_agents.execution import env_builder
+from julep.execution import env_builder
 
 
 def _write_dist_info(site_packages: Path, name: str, version: str) -> None:

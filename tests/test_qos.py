@@ -8,21 +8,21 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution import reasoner_batch, effects
-from composable_agents.execution.reasoner_batch import (
+from julep.dotctx import Reasoner
+from julep.execution import reasoner_batch, effects
+from julep.execution.reasoner_batch import (
     BatchDispatchContext,
     install_batch_dispatch_context,
 )
-from composable_agents.execution.effects import (
+from julep.execution.effects import (
     ResolveQoSInput,
     WorkerContext,
     configure,
     resolveQoS,
 )
-from composable_agents.ir import Ann
-from composable_agents.qos import QoSTier, default_resolve_qos
-from composable_agents.registry import Registry
+from julep.ir import Ann
+from julep.qos import QoSTier, default_resolve_qos
+from julep.registry import Registry
 
 
 def test_qos_tier_is_str_enum_with_expected_values() -> None:

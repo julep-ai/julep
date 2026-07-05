@@ -9,7 +9,7 @@ from typing import Any, Callable, ClassVar
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
@@ -18,13 +18,13 @@ if HAVE_TEMPORAL:
     from temporalio.testing import WorkflowEnvironment
     from temporalio.worker import Worker
 
-    from composable_agents import Ann, freeze, manifest_to_json, think
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.registry import DEFAULT_REGISTRY
-    from composable_agents.execution.activities import WorkerContext, configure
-    from composable_agents.execution.batch_provider import BatchProvider, register_batch_provider
-    import composable_agents.execution.reasoner_batch as reasoner_batch
-    from composable_agents.execution.reasoner_batch import (
+    from julep import Ann, freeze, manifest_to_json, think
+    from julep.dotctx import Reasoner
+    from julep.registry import DEFAULT_REGISTRY
+    from julep.execution.activities import WorkerContext, configure
+    from julep.execution.batch_provider import BatchProvider, register_batch_provider
+    import julep.execution.reasoner_batch as reasoner_batch
+    from julep.execution.reasoner_batch import (
         BatchCollector,
         BatchDispatchContext,
         BatchPoll,
@@ -40,11 +40,11 @@ if HAVE_TEMPORAL:
         SubmitReasonerBatchInput,
         _principal_key,
     )
-    from composable_agents.execution.harness import start_flow
-    from composable_agents.execution.worker import build_worker
-    from composable_agents.freeze import McpSnapshot
-    from composable_agents.qos import QoSTier
-    from composable_agents.resilience import AttemptRecord
+    from julep.execution.harness import start_flow
+    from julep.execution.worker import build_worker
+    from julep.freeze import McpSnapshot
+    from julep.qos import QoSTier
+    from julep.resilience import AttemptRecord
     from test_llm import FakeChoice, FakeCompletion, FakeMessage
 
     _PROVIDER_CUSTOM_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
@@ -257,7 +257,7 @@ def test_submit_reasoner_batch_signal_with_starts_keyed_collector() -> None:
     assert captured["kwargs"]["start_signal"] == "submit"
     _assert_provider_custom_id(custom_id)
     assert captured["kwargs"]["start_signal_args"][0].custom_id == custom_id
-    assert captured["kwargs"]["task_queue"] == "composable-agents"
+    assert captured["kwargs"]["task_queue"] == "julep"
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

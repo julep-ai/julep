@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents import (
+from julep import (
     CapabilityManifest,
     alt,
     arr,

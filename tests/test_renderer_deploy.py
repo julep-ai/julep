@@ -1,8 +1,8 @@
-from composable_agents.deploy import _reasoner_identity, _renderer_source_hashes
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.prompt import register_renderer
-from composable_agents.dsl import think
+from julep.deploy import _reasoner_identity, _renderer_source_hashes
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.prompt import register_renderer
+from julep.dsl import think
 
 
 def test_reasoner_identity_omits_system_render_when_absent() -> None:

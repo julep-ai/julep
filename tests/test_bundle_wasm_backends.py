@@ -32,11 +32,11 @@ pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from composable_agents import HAVE_TEMPORAL, arr, deploy, pure, seq
-from composable_agents.cas import LocalDirCAS
-from composable_agents.execution import HAVE_DBOS
-from composable_agents.projection import InMemoryProjection, ProjectionEmitter
-from composable_agents.registry import Registry, _wasm_source_only
+from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
+from julep.cas import LocalDirCAS
+from julep.execution import HAVE_DBOS
+from julep.projection import InMemoryProjection, ProjectionEmitter
+from julep.registry import Registry, _wasm_source_only
 
 # A bundle-shippable source: the SAME text runs natively and in wasm because the
 # component replicates the @pure(...) registry shim (see executor_component.py).
@@ -123,7 +123,7 @@ def test_grade_scores_demo_baked_vs_wasm_parity() -> None:
     target) produce identical values baked (native) and bundle-sourced (wasm)."""
     import inspect
 
-    from composable_agents.registry import DEFAULT_REGISTRY
+    from julep.registry import DEFAULT_REGISTRY
     from examples import grade_scores_flow  # noqa: F401  (import registers the pures)
 
     names = [
@@ -162,10 +162,10 @@ def test_grade_scores_demo_baked_vs_wasm_parity() -> None:
 # --------------------------------------------------------------------------- #
 @pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
 def test_dbos_env_runs_bundle_pure_via_wasm() -> None:
-    from composable_agents.execution.dbos_backend import DbosEnv
-    from composable_agents.execution.policy import ExecutionPolicy
-    from composable_agents.purity import register_pure_from_source
-    from composable_agents.registry import DEFAULT_REGISTRY
+    from julep.execution.dbos_backend import DbosEnv
+    from julep.execution.policy import ExecutionPolicy
+    from julep.purity import register_pure_from_source
+    from julep.registry import DEFAULT_REGISTRY
 
     # DbosEnv.get_pure routes through purity.get_pure -> DEFAULT_REGISTRY, so the
     # bundle pure must live in the process-global registry for this backend.
@@ -195,9 +195,9 @@ def test_dbos_env_runs_bundle_pure_via_wasm() -> None:
 # CMA backend: CMAAgentEnv.get_pure delegates to the inner env (registry).
 # --------------------------------------------------------------------------- #
 def test_cma_env_runs_bundle_pure_via_wasm() -> None:
-    from composable_agents import AgentConfig
-    from composable_agents.execution.cma import CMAAgentEnv
-    from composable_agents.execution.interpreter import InMemoryEnv
+    from julep import AgentConfig
+    from julep.execution.cma import CMAAgentEnv
+    from julep.execution.interpreter import InMemoryEnv
 
     # InMemoryEnv.get_pure resolves from a registry; point it at one holding the
     # bundle-sourced (wasm-tier) pure, and CMAAgentEnv delegates unchanged.
@@ -226,9 +226,9 @@ def test_cma_env_runs_bundle_pure_via_wasm() -> None:
 def test_build_worker_passes_wasmtime_through_sandbox(monkeypatch: pytest.MonkeyPatch) -> None:
     from temporalio.worker.workflow_sandbox import SandboxRestrictions
 
-    import composable_agents.execution.worker as worker_mod
-    from composable_agents.execution.activities import WorkerContext
-    from composable_agents.execution.bundle_runner import BundleResolvingWorkflowRunner
+    import julep.execution.worker as worker_mod
+    from julep.execution.activities import WorkerContext
+    from julep.execution.bundle_runner import BundleResolvingWorkflowRunner
 
     # Capture the workflow_runner build_worker constructs without standing up a
     # real Worker (which needs a live client). Worker is patched to record kwargs
@@ -253,7 +253,7 @@ def test_build_worker_passes_wasmtime_through_sandbox(monkeypatch: pytest.Monkey
     # shares the process-global engine/component (else it re-imports wasmtime).
     passthrough = runner.inner.restrictions.passthrough_modules
     assert "wasmtime" in passthrough
-    assert "composable_agents" in passthrough
+    assert "julep" in passthrough
     # Sanity: stock Temporal defaults do NOT pass wasmtime through; our wiring does.
     assert "wasmtime" not in SandboxRestrictions.default.passthrough_modules
 
@@ -276,10 +276,10 @@ def test_temporal_flow_runs_bundle_pure_via_wasm(
 
     from temporalio.testing import WorkflowEnvironment
 
-    from composable_agents.execution.activities import WorkerContext
-    from composable_agents.execution.harness import run_flow
-    from composable_agents.execution.worker import build_worker
-    from composable_agents.registry import DEFAULT_REGISTRY
+    from julep.execution.activities import WorkerContext
+    from julep.execution.harness import run_flow
+    from julep.execution.worker import build_worker
+    from julep.registry import DEFAULT_REGISTRY
 
     name = E2E_DOUBLE_NAME
     # The module-level @pure(name) baked this into DEFAULT_REGISTRY at import so

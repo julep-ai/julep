@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from composable_agents import (
+from julep import (
     arr,
     drive_session,
     emit,
@@ -15,10 +15,10 @@ from composable_agents import (
     scan,
     seq,
 )
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.execution.interpreter import InMemoryEnv, SessionClosed, interpret
-from composable_agents.ir import Node
-from composable_agents.projection import EventType, InMemoryProjection, ProjectionEmitter
+from julep.errors import JulepError
+from julep.execution.interpreter import InMemoryEnv, SessionClosed, interpret
+from julep.ir import Node
+from julep.projection import EventType, InMemoryProjection, ProjectionEmitter
 from conftest import run
 
 
@@ -163,7 +163,7 @@ def test_drive_session_raises_when_message_bound_exceeded() -> None:
             yield value
 
     with pytest.raises(
-        ComposableAgentsError,
+        JulepError,
         match="session consumed more than 2 messages",
     ):
         run(drive_session(session, inputs=inputs(), max_turns=2))

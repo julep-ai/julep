@@ -8,7 +8,7 @@ import subprocess
 import sys
 from typing import Any
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 
 def test_effects_importable_without_temporalio():
@@ -20,8 +20,8 @@ def test_effects_importable_without_temporalio():
         "        raise ImportError('temporalio blocked by test')\n"
         "    return real_import(name, *a, **k)\n"
         "builtins.__import__ = block\n"
-        "import composable_agents.execution.effects\n"
-        "import composable_agents.execution.policy\n"
+        "import julep.execution.effects\n"
+        "import julep.execution.policy\n"
         "print('ok')\n"
     )
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
@@ -30,7 +30,7 @@ def test_effects_importable_without_temporalio():
 
 
 def test_run_call_effect_routes_mcp():
-    from composable_agents.execution.effects import (
+    from julep.execution.effects import (
         CallToolInput, WorkerContext, callTool, configure,
     )
 
@@ -51,15 +51,15 @@ def test_run_call_effect_routes_mcp():
 
 
 def test_toolref_json_roundtrip():
-    from composable_agents.execution.effects import toolref_json_from_key
+    from julep.execution.effects import toolref_json_from_key
 
     assert toolref_json_from_key("kb/search") == {"kind": "mcp", "server": "kb", "tool": "search"}
     assert toolref_json_from_key("fetch") == {"kind": "native", "name": "fetch"}
 
 
 def test_worker_context_defaults_to_default_resolve_qos():
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.qos import default_resolve_qos
+    from julep.execution.effects import WorkerContext
+    from julep.qos import default_resolve_qos
 
     assert WorkerContext().resolve_qos is default_resolve_qos
 
@@ -71,8 +71,8 @@ def _configure_restoring(ctx):
     process-global _CTX they would leak that registry into later tests that
     rely on DEFAULT_REGISTRY (e.g. test_prompt_renderers).
     """
-    from composable_agents.execution import effects as _effects
-    from composable_agents.execution.effects import configure
+    from julep.execution import effects as _effects
+    from julep.execution.effects import configure
 
     prev = _effects._CTX
     configure(ctx)
@@ -80,18 +80,18 @@ def _configure_restoring(ctx):
 
 
 def _restore_ctx(prev):
-    from composable_agents.execution import effects as _effects
+    from julep.execution import effects as _effects
 
     _effects._CTX = prev
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_resolve_qos_activity_clamps_non_batchable_batch_request():
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution.effects import (
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import (
         ResolveQoSInput, WorkerContext, resolveQoS,
     )
-    from composable_agents.registry import Registry
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
@@ -109,11 +109,11 @@ def test_resolve_qos_activity_clamps_non_batchable_batch_request():
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_resolve_qos_activity_allows_batch_for_batchable_node():
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution.effects import (
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import (
         ResolveQoSInput, WorkerContext, resolveQoS,
     )
-    from composable_agents.registry import Registry
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
@@ -131,12 +131,12 @@ def test_resolve_qos_activity_allows_batch_for_batchable_node():
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_resolve_qos_activity_honors_worker_context_resolver_override():
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution.effects import (
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import (
         ResolveQoSInput, WorkerContext, resolveQoS,
     )
-    from composable_agents.qos import QoSTier
-    from composable_agents.registry import Registry
+    from julep.qos import QoSTier
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
@@ -161,8 +161,8 @@ def test_resolve_qos_activity_honors_worker_context_resolver_override():
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_activities_reexport_worker_context():
     # Backward compat: existing imports from .activities keep working.
-    from composable_agents.execution.activities import WorkerContext as A
-    from composable_agents.execution.effects import WorkerContext as E
+    from julep.execution.activities import WorkerContext as A
+    from julep.execution.effects import WorkerContext as E
 
     assert A is E
 
@@ -170,7 +170,7 @@ def test_activities_reexport_worker_context():
 def test_reasoner_dispatch_defaults():
     import dataclasses
 
-    from composable_agents.qos import ReasonerDispatch, QoSTier
+    from julep.qos import ReasonerDispatch, QoSTier
 
     d = ReasonerDispatch()
     assert d.qos is QoSTier.STANDARD
@@ -182,9 +182,9 @@ def test_reasoner_dispatch_defaults():
 def test_adapt_llm_caller_legacy_2_3_4_arg_get_default_dispatch():
     from conftest import run
 
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution.effects import _adapt_llm_caller
-    from composable_agents.qos import ReasonerDispatch, QoSTier
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import _adapt_llm_caller
+    from julep.qos import ReasonerDispatch, QoSTier
 
     sentinel_2 = object()
     sentinel_3 = object()
@@ -223,9 +223,9 @@ def test_adapt_llm_caller_legacy_2_3_4_arg_get_default_dispatch():
 def test_adapt_llm_caller_5arg_receives_dispatch():
     from conftest import run
 
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution.effects import _adapt_llm_caller
-    from composable_agents.qos import ReasonerDispatch, QoSTier
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import _adapt_llm_caller
+    from julep.qos import ReasonerDispatch, QoSTier
 
     async def fake_5(reasoner, value, principal, transcript, dispatch):
         return dispatch.qos
@@ -246,11 +246,11 @@ def test_adapt_llm_caller_5arg_receives_dispatch():
 def test_invoke_reasoner_passes_dispatch_qos_to_llm():
     from conftest import run
 
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
-    from composable_agents.qos import ReasonerDispatch, QoSTier
-    from composable_agents.registry import Registry
+    from julep.dotctx import Reasoner
+    from julep.execution import effects
+    from julep.execution.effects import InvokeReasonerInput, WorkerContext
+    from julep.qos import ReasonerDispatch, QoSTier
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
@@ -277,11 +277,11 @@ def test_invoke_reasoner_passes_dispatch_qos_to_llm():
 def test_invoke_reasoner_clamps_batch_qos_to_standard():
     from conftest import run
 
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
-    from composable_agents.qos import ReasonerDispatch, QoSTier
-    from composable_agents.registry import Registry
+    from julep.dotctx import Reasoner
+    from julep.execution import effects
+    from julep.execution.effects import InvokeReasonerInput, WorkerContext
+    from julep.qos import ReasonerDispatch, QoSTier
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
@@ -308,11 +308,11 @@ def test_invoke_reasoner_clamps_batch_qos_to_standard():
 def test_invoke_reasoner_default_qos_is_standard():
     from conftest import run
 
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
-    from composable_agents.qos import ReasonerDispatch, QoSTier
-    from composable_agents.registry import Registry
+    from julep.dotctx import Reasoner
+    from julep.execution import effects
+    from julep.execution.effects import InvokeReasonerInput, WorkerContext
+    from julep.qos import ReasonerDispatch, QoSTier
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))
@@ -339,9 +339,9 @@ def test_invoke_reasoner_default_qos_is_standard():
 def test_resolve_agent_spec_builds_tool_defs_from_registered_expectations():
     from conftest import run
 
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.registry import Registry, ToolSchemaExpectation
+    from julep.execution import effects
+    from julep.execution.effects import WorkerContext
+    from julep.registry import Registry, ToolSchemaExpectation
 
     schema = {"type": "object", "properties": {"q": {"type": "string"}}}
     registry = Registry()
@@ -379,9 +379,9 @@ def test_resolve_agent_spec_builds_tool_defs_from_registered_expectations():
 def test_resolve_agent_spec_passes_through_spec_level_tool_defs():
     from conftest import run
 
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.registry import Registry
+    from julep.execution import effects
+    from julep.execution.effects import WorkerContext
+    from julep.registry import Registry
 
     tool_defs = [
         {
@@ -416,9 +416,9 @@ def test_resolve_agent_spec_passes_through_spec_level_tool_defs():
 def test_resolve_agent_spec_native_tools_without_expectation_errors():
     from conftest import run
 
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import WorkerContext
-    from composable_agents.registry import Registry
+    from julep.execution import effects
+    from julep.execution.effects import WorkerContext
+    from julep.registry import Registry
 
     prev = _configure_restoring(
         WorkerContext(
@@ -441,10 +441,10 @@ def test_resolve_agent_spec_native_tools_without_expectation_errors():
 def test_invoke_reasoner_forwards_tools_keyword_only_when_present():
     from conftest import run
 
-    from composable_agents.dotctx import Reasoner
-    from composable_agents.execution import effects
-    from composable_agents.execution.effects import InvokeReasonerInput, WorkerContext
-    from composable_agents.registry import Registry
+    from julep.dotctx import Reasoner
+    from julep.execution import effects
+    from julep.execution.effects import InvokeReasonerInput, WorkerContext
+    from julep.registry import Registry
 
     registry = Registry()
     registry.register_reasoner(Reasoner(name="b", model="test", system="s"))

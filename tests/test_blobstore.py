@@ -11,7 +11,7 @@ import hashlib
 
 import pytest
 
-from composable_agents.execution.blobstore import (
+from julep.execution.blobstore import (
     HASH_ALGO,
     BlobImmutabilityError,
     BlobIntegrityError,

@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 SAMPLE = '''
-from composable_agents import flow, think, tool, Agent
+from julep import flow, think, tool, Agent
 
 @tool(effect="read", idempotent=True)
 def lookup(ticket: str) -> dict:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from composable_agents.execution.interpreter import _unwrap_ca_meta
+from julep.execution.interpreter import _unwrap_ca_meta
 
 
 def test_unwrap_ca_meta_extracts_reply_and_attrs() -> None:

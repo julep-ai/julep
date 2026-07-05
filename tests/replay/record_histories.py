@@ -25,7 +25,7 @@ from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Replayer, Worker
 from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
 
-from composable_agents import (
+from julep import (
     DEFAULT_REGISTRY,
     Reasoner,
     arr,
@@ -39,13 +39,13 @@ from composable_agents import (
     seq,
     sub,
 )
-from composable_agents.contracts import McpAnnotations
-from composable_agents.derived import recv as recv_leaf
-from composable_agents.execution.activities import WorkerContext, configure
-from composable_agents.execution.batch_provider import BatchProvider, register_batch_provider
-from composable_agents.execution.bundle_runner import BundleResolvingWorkflowRunner
-from composable_agents.execution.debounce import submit_debounced
-from composable_agents.execution.harness import (
+from julep.contracts import McpAnnotations
+from julep.derived import recv as recv_leaf
+from julep.execution.activities import WorkerContext, configure
+from julep.execution.batch_provider import BatchProvider, register_batch_provider
+from julep.execution.bundle_runner import BundleResolvingWorkflowRunner
+from julep.execution.debounce import submit_debounced
+from julep.execution.harness import (
     AgentInput,
     AgentWorkflow,
     ExecutionPolicy,
@@ -53,17 +53,17 @@ from composable_agents.execution.harness import (
     SessionWorkflow,
     start_flow,
 )
-from composable_agents.execution.reasoner_batch import (
+from julep.execution.reasoner_batch import (
     BatchDispatchContext,
     ReasonerCall,
     install_batch_dispatch_context,
     provider_safe_custom_id,
     submit_reasoner_batch,
 )
-from composable_agents.execution.session_store import InMemorySessionStore
-from composable_agents.execution.worker import ACTIVITIES, WORKFLOWS, build_worker
-from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
-from composable_agents.session import scan
+from julep.execution.session_store import InMemorySessionStore
+from julep.execution.worker import ACTIVITIES, WORKFLOWS, build_worker
+from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep.session import scan
 
 HISTORIES_DIR = pathlib.Path(__file__).parent / "histories"
 CORPUS: list[str] = [
@@ -207,7 +207,7 @@ def _shared_runner() -> BundleResolvingWorkflowRunner:
     return BundleResolvingWorkflowRunner(
         inner=SandboxedWorkflowRunner(
             restrictions=SandboxRestrictions.default.with_passthrough_modules(
-                "composable_agents",
+                "julep",
                 "wasmtime",
             )
         ),

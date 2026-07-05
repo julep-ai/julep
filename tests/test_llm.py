@@ -13,18 +13,18 @@ from typing import Any, Optional
 
 import pytest
 
-from composable_agents import Agent, tool
-from composable_agents.agent_loop import Decision, interpret_reasoner_reply
-from composable_agents.dotctx import Reasoner
-from composable_agents.registry import DEFAULT_REGISTRY
-from composable_agents.execution.llm import (
+from julep import Agent, tool
+from julep.agent_loop import Decision, interpret_reasoner_reply
+from julep.dotctx import Reasoner
+from julep.registry import DEFAULT_REGISTRY
+from julep.execution.llm import (
     _split_model,
     _strip_code_fence,
     complete_reasoner,
     make_llm_caller,
     make_local_reasoner,
 )
-from composable_agents.qos import ReasonerDispatch, QoSTier
+from julep.qos import ReasonerDispatch, QoSTier
 from conftest import run
 
 

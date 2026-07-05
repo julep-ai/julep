@@ -1,5 +1,5 @@
-from composable_agents.execution.langfuse import export_run_to_langfuse
-from composable_agents.projection import ProjectionEvent, EventType
+from julep.execution.langfuse import export_run_to_langfuse
+from julep.projection import ProjectionEvent, EventType
 
 def _planned(node, cid, eid, causes=()):
     return ProjectionEvent(event_id=eid, type=EventType.PLANNED, node=node, cid=cid, ts=0.0, causes=causes)

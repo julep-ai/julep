@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 
-from composable_agents.dotctx import Reasoner
-from composable_agents.execution import batch_provider
-from composable_agents.execution.batch_provider import (
+from julep.dotctx import Reasoner
+from julep.execution import batch_provider
+from julep.execution.batch_provider import (
     BatchProvider,
     register_batch_provider,
     select_batch_provider,

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from composable_agents.derived import emit, hedge, human_gate, quorum, race, recv
-from composable_agents.dsl import alt, each, ident, iter_up_to, par, seq, stage, think
-from composable_agents.errors import ComposableAgentsError
-from composable_agents.ir import ChannelRef, Node
-from composable_agents.kinds import Op
-from composable_agents.session import scan
-from composable_agents.validate import blocking, validate
+from julep.derived import emit, hedge, human_gate, quorum, race, recv
+from julep.dsl import alt, each, ident, iter_up_to, par, seq, stage, think
+from julep.errors import JulepError
+from julep.ir import ChannelRef, Node
+from julep.kinds import Op
+from julep.session import scan
+from julep.validate import blocking, validate
 
 
 def raw_loop(body: Node, **kwargs: object) -> Node:
@@ -216,7 +216,7 @@ def test_multiple_recv_on_loop_body_path_is_rejected() -> None:
 
 def test_scan_raises_for_multiple_recv_on_loop_body_path() -> None:
     with pytest.raises(
-        ComposableAgentsError,
+        JulepError,
         match="SESSION_LOOP_MULTIPLE_RECV",
     ):
         scan(seq(recv("in"), emit("out"), recv("in")), init={})
@@ -244,7 +244,7 @@ def test_undeclared_channel_emits_warning() -> None:
 
 def test_scan_raises_for_undeclared_session_channel() -> None:
     with pytest.raises(
-        ComposableAgentsError,
+        JulepError,
         match="SESSION_CHANNEL_UNDECLARED",
     ):
         scan(seq(recv("extra"), emit("out")), init={})
@@ -315,7 +315,7 @@ def test_recv_reachable_outside_loop_is_rejected() -> None:
 # --------------------------------------------------------------------------- #
 def test_scan_raises_for_unguarded_loop_body() -> None:
     with pytest.raises(
-        ComposableAgentsError,
+        JulepError,
         match="SESSION_LOOP_NOT_RECV_GUARDED",
     ):
         scan(ident(), init={})
@@ -323,7 +323,7 @@ def test_scan_raises_for_unguarded_loop_body() -> None:
 
 def test_scan_raises_for_recv_under_parallel_fence() -> None:
     with pytest.raises(
-        ComposableAgentsError,
+        JulepError,
         match="SESSION_RECV_IN_PARALLEL",
     ):
         scan(par(recv("in"), think("a")), init={})

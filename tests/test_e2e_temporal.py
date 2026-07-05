@@ -16,7 +16,7 @@ import uuid
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
@@ -25,7 +25,7 @@ if HAVE_TEMPORAL:
     from temporalio.exceptions import ApplicationError
     from temporalio.testing import WorkflowEnvironment
 
-    from composable_agents import (
+    from julep import (
         call, mcp, seq, think, freeze, manifest_to_json,
         arr,
         Reasoner,
@@ -35,31 +35,31 @@ if HAVE_TEMPORAL:
         Contract,
         sub,
     )
-    from composable_agents.derived import race, human_gate
-    from composable_agents.freeze import (
+    from julep.derived import race, human_gate
+    from julep.freeze import (
         McpSnapshot, McpServerSnapshot, McpToolSpec,
     )
-    from composable_agents.contracts import McpAnnotations
-    from composable_agents.execution.harness import (
+    from julep.contracts import McpAnnotations
+    from julep.execution.harness import (
         run_flow, start_flow, AgentWorkflow, AgentInput, ExecutionPolicy,
     )
-    from composable_agents.agent_loop import (
+    from julep.agent_loop import (
         REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
         REQUIRE_TOOL_CALL_REASK_MESSAGE,
     )
-    from composable_agents.execution.worker import build_worker, WORKFLOWS, ACTIVITIES
-    from composable_agents.execution.activities import (
+    from julep.execution.worker import build_worker, WORKFLOWS, ACTIVITIES
+    from julep.execution.activities import (
         WorkerContext, configure,
     )
-    from composable_agents.execution.session_store import InMemorySessionStore
-    from composable_agents.execution.blobstore import InMemoryBlobStore
-    from composable_agents.execution.llm_result import LlmCallMeta, LlmResult
+    from julep.execution.session_store import InMemorySessionStore
+    from julep.execution.blobstore import InMemoryBlobStore
+    from julep.execution.llm_result import LlmCallMeta, LlmResult
     from temporalio.worker import Worker
-    from composable_agents import purity
-    from composable_agents.purity import PureEntry
-    from composable_agents.deploy import deploy
-    from composable_agents.errors import PureDriftError
-    from composable_agents.registry import DEFAULT_REGISTRY
+    from julep import purity
+    from julep.purity import PureEntry
+    from julep.deploy import deploy
+    from julep.errors import PureDriftError
+    from julep.registry import DEFAULT_REGISTRY
 
 
 # --------------------------------------------------------------------------- #

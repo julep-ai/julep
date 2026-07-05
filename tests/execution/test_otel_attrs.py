@@ -1,5 +1,5 @@
-from composable_agents.projection import EventType, ProjectionEvent, SpanData
-from composable_agents.execution import otel
+from julep.projection import EventType, ProjectionEvent, SpanData
+from julep.execution import otel
 
 
 class _FakeSpan:

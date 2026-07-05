@@ -13,19 +13,19 @@ import uuid
 
 import pytest
 
-from composable_agents import HAVE_TEMPORAL
+from julep import HAVE_TEMPORAL
 
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
     from temporalio.testing import WorkflowEnvironment
 
-    from composable_agents import call, each, freeze, manifest_to_json, mcp
-    from composable_agents.contracts import McpAnnotations
-    from composable_agents.execution.activities import WorkerContext
-    from composable_agents.execution.debounce import submit_debounced
-    from composable_agents.execution.worker import build_worker
-    from composable_agents.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+    from julep import call, each, freeze, manifest_to_json, mcp
+    from julep.contracts import McpAnnotations
+    from julep.execution.activities import WorkerContext
+    from julep.execution.debounce import submit_debounced
+    from julep.execution.worker import build_worker
+    from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 
 
 BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
