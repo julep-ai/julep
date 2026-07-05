@@ -79,7 +79,7 @@ def schedule_drift(
                     name=sched.name,
                     schedule_id=sid,
                     state="missing",
-                    detail="not on server; run: ca schedule apply",
+                    detail="not on server; run: julep schedule apply",
                 )
             )
             continue

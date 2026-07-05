@@ -198,7 +198,7 @@ def test_schedule_drift_matrix() -> None:
         ("orphaned", "orphan"),
     ]
     assert "server cron" in rows[1].detail
-    assert "ca schedule apply" in rows[2].detail
+    assert "julep schedule apply" in rows[2].detail
     assert "not in config" in rows[3].detail
 
 
