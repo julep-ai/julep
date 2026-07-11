@@ -62,6 +62,7 @@ from .openai_responses import (
     AnyResponses,
     ResponsesModelBehaviorError,
     ResponsesRefusalError,
+    _strip_code_fence,
     call_openai_responses,
     is_responses_result,
     parse_responses_reply,
@@ -173,19 +174,6 @@ def provider_safe_tool_defs(
     if not needs_rewrite:
         return tools, {}
     return safe_tools, reverse
-
-
-def _strip_code_fence(text: str) -> str:
-    """Drop a leading ```` ```json ```` / ```` ``` ```` fence and its closer."""
-    stripped = text.strip()
-    if not stripped.startswith("```"):
-        return stripped
-    newline = stripped.find("\n")
-    if newline != -1:
-        stripped = stripped[newline + 1 :]
-    if stripped.rstrip().endswith("```"):
-        stripped = stripped.rstrip()[:-3]
-    return stripped.strip()
 
 
 def _response_format(schema: dict[str, Any]) -> dict[str, Any]:

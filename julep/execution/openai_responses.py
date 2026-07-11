@@ -21,6 +21,19 @@ from typing import Any
 AnyResponses = Callable[..., Awaitable[Any]]
 
 
+def _strip_code_fence(text: str) -> str:
+    """Drop a leading JSON/plain Markdown fence and its closer."""
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+    newline = stripped.find("\n")
+    if newline != -1:
+        stripped = stripped[newline + 1 :]
+    if stripped.rstrip().endswith("```"):
+        stripped = stripped.rstrip()[:-3]
+    return stripped.strip()
+
+
 class ResponsesStatusError(RuntimeError):
     """The Responses API returned a non-completed operational status."""
 
@@ -252,7 +265,7 @@ def parse_responses_reply(result: Any, *, expect_json: bool) -> tuple[Any, int]:
     if not expect_json:
         return text, 0
     try:
-        return json.loads(text.strip()), 0
+        return json.loads(_strip_code_fence(text)), 0
     except (json.JSONDecodeError, TypeError, ValueError):
         return text, 0
 

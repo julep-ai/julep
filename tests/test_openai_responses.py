@@ -372,6 +372,29 @@ def test_responses_structured_text_and_format_are_normalized() -> None:
     }
 
 
+def test_responses_schema_prompted_tool_round_strips_json_fences() -> None:
+    responses = Recorder(
+        FakeResponse(output=[FakeMessage(content=[FakeText('```json\n{"answer":"ok"}\n```')])])
+    )
+    schema = {
+        "type": "object",
+        "properties": {"answer": {"type": "string"}},
+        "required": ["answer"],
+    }
+
+    result = run(
+        complete_reasoner(
+            Reasoner(name="responses-fenced-json", model="openai:gpt-5.6", reply=schema),
+            "Answer without calling a tool.",
+            aresponses=responses,
+            tools=_tools(),
+        )
+    )
+
+    assert result.reply == {"answer": "ok"}
+    assert "response_format" not in responses.calls[0]
+
+
 def test_pre_5_6_openai_stays_on_acompletion() -> None:
     completion = Recorder(
         type(
