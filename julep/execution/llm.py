@@ -58,6 +58,17 @@ from ..resilience import (
     is_auth_error,
 )
 from .llm_result import AttemptMeta, LlmCallMeta, LlmResult
+from .openai_responses import (
+    AnyResponses,
+    ResponsesModelBehaviorError,
+    ResponsesRefusalError,
+    call_openai_responses,
+    is_responses_result,
+    parse_responses_reply,
+    responses_cache_usage,
+    responses_usage,
+    uses_openai_responses,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -442,6 +453,8 @@ def _add_tokens(a: int | None, b: int | None) -> int | None:
 
 
 def _usage_of(completion: Any) -> tuple[int | None, int | None, int | None]:
+    if is_responses_result(completion):
+        return responses_usage(completion)
     usage = getattr(completion, "usage", None)
     if usage is None:
         return None, None, None
@@ -457,6 +470,8 @@ def _cache_usage_of(completion: Any) -> tuple[int | None, int | None]:
     """(cache_read, cache_creation) from either anthropic-style raw usage keys
     or the OpenAI-normalized ``prompt_tokens_details.cached_tokens`` (the only
     cache field any-llm surfaces on the anthropic *completion* path)."""
+    if is_responses_result(completion):
+        return responses_cache_usage(completion)
     usage = getattr(completion, "usage", None)
     if usage is None:
         return None, None
@@ -483,7 +498,8 @@ async def complete_reasoner(
     reasoner: Reasoner,
     value: Any,
     *,
-    acompletion: AnyCompletion,
+    acompletion: Optional[AnyCompletion] = None,
+    aresponses: Optional[AnyResponses] = None,
     default_provider: str = DEFAULT_PROVIDER,
     transcript: Optional[list[dict[str, Any]]] = None,
     dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
@@ -512,6 +528,7 @@ async def complete_reasoner(
     reasoner = rendered_reasoner_for(reasoner, render_value)
     user_text = rendered_user_for(reasoner, render_value)
     provider, model = _split_model(reasoner.model, default_provider)
+    use_responses = uses_openai_responses(provider, model)
     schema = reasoner.reply_schema
     # mem-mcp's declarative json_object mode claims the kwarg only when no
     # reply schema does (the schema path wins; the call never carries both).
@@ -581,7 +598,20 @@ async def complete_reasoner(
             provider, reasoner.prompt_cache, messages, kwargs
         )
         pc_marker_placed = _has_cache_marker(messages)
-        return await acompletion(provider=provider, model=model, messages=messages, **kwargs)
+        if use_responses:
+            return await call_openai_responses(
+                _resolve_aresponses(aresponses),
+                provider=provider,
+                model=model,
+                messages=messages,
+                kwargs=kwargs,
+                tool_name_aliases={
+                    original: alias for alias, original in tool_name_reverse.items()
+                },
+            )
+        return await _resolve_acompletion(acompletion)(
+            provider=provider, model=model, messages=messages, **kwargs
+        )
 
     started = time.time()
     fallback_reason: Optional[str] = None
@@ -617,8 +647,10 @@ async def complete_reasoner(
     # Usage accumulates over every attempt — re-asks cost tokens too.
     pt, ct, tt = _usage_of(completion)
     cache_read, cache_creation = _cache_usage_of(completion)
-    reply, native_tool_calls = _parse_completion_reply(
-        completion, expect_json=schema is not None
+    reply, native_tool_calls = (
+        parse_responses_reply(completion, expect_json=schema is not None)
+        if is_responses_result(completion)
+        else _parse_completion_reply(completion, expect_json=schema is not None)
     )
     reply = _restore_tool_calls(reply)
     while (
@@ -642,7 +674,11 @@ async def complete_reasoner(
         rcr, rcc = _cache_usage_of(completion)
         cache_read = _add_tokens(cache_read, rcr)
         cache_creation = _add_tokens(cache_creation, rcc)
-        reply, native_tool_calls = _parse_completion_reply(completion, expect_json=True)
+        reply, native_tool_calls = (
+            parse_responses_reply(completion, expect_json=True)
+            if is_responses_result(completion)
+            else _parse_completion_reply(completion, expect_json=True)
+        )
         reply = _restore_tool_calls(reply)
     ended = time.time()
     pc = reasoner.prompt_cache
@@ -692,6 +728,20 @@ def _resolve_acompletion(acompletion: Optional[AnyCompletion]) -> AnyCompletion:
     return any_llm_acompletion
 
 
+def _resolve_aresponses(aresponses: Optional[AnyResponses]) -> AnyResponses:
+    if aresponses is not None:
+        return aresponses
+    try:
+        from any_llm import aresponses as any_llm_aresponses
+    except ImportError as exc:  # pragma: no cover - exercised only without any-llm
+        raise ImportError(
+            "any-llm is required for the GPT-5.6 Responses caller; install "
+            "julep[providers] plus the OpenAI provider extra "
+            "(e.g. pip install 'any-llm-sdk[openai]')."
+        ) from exc
+    return any_llm_aresponses
+
+
 # --------------------------------------------------------------------------- #
 # Seam factories.
 # --------------------------------------------------------------------------- #
@@ -699,6 +749,7 @@ def make_llm_caller(
     *,
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
+    aresponses: Optional[AnyResponses] = None,
 ) -> Callable[..., Awaitable[Any]]:
     """Activity-seam ``LlmCaller``: ``(Reasoner, value, principal, transcript, dispatch)``.
 
@@ -720,7 +771,8 @@ def make_llm_caller(
     ) -> Any:
         return await complete_reasoner(
             reasoner, value,
-            acompletion=_resolve_acompletion(acompletion),
+            acompletion=acompletion,
+            aresponses=aresponses,
             default_provider=default_provider,
             transcript=transcript,
             dispatch=dispatch,
@@ -735,6 +787,7 @@ def make_local_reasoner(
     *,
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
+    aresponses: Optional[AnyResponses] = None,
 ) -> Callable[[str, Any], Awaitable[Any]]:
     """Facade-seam llm: ``(reasoner_name, payload) -> reply``.
 
@@ -751,7 +804,8 @@ def make_local_reasoner(
         return await complete_reasoner(
             get_reasoner(reasoner_name),
             value,
-            acompletion=_resolve_acompletion(acompletion),
+            acompletion=acompletion,
+            aresponses=aresponses,
             default_provider=default_provider,
             tools=tools,
         )
@@ -796,6 +850,7 @@ def make_resilient_llm_caller(
     classifier: Callable[[BaseException], ErrorClass] = classify_error,
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
+    aresponses: Optional[AnyResponses] = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> Callable[..., Awaitable[Any]]:
     """An ``LlmCaller`` that survives provider outages deterministically.
@@ -839,7 +894,6 @@ def make_resilient_llm_caller(
         tools: Optional[list[dict[str, Any]]] = None,
         parallel_tool_calls: Optional[bool] = None,
     ) -> Any:
-        resolved = _resolve_acompletion(acompletion)
         attempts: list[AttemptRecord] = []
         last_exc: Optional[Exception] = None
 
@@ -862,13 +916,36 @@ def make_resilient_llm_caller(
                 try:
                     result = await complete_reasoner(
                         candidate, value,
-                        acompletion=resolved, default_provider=default_provider,
+                        acompletion=acompletion,
+                        aresponses=aresponses,
+                        default_provider=default_provider,
                         transcript=transcript,
                         dispatch=dispatch,
                         tools=tools,
                         parallel_tool_calls=parallel_tool_calls,
                     )
                     reply = result.reply
+                except ResponsesRefusalError as exc:
+                    record = AttemptRecord(
+                        model=model,
+                        provider=provider,
+                        outcome=ErrorClass.MODEL_BEHAVIOR.value,
+                        detail=str(exc),
+                    )
+                    attempts.append(record)
+                    _notify(record)
+                    raise
+                except ResponsesModelBehaviorError as exc:
+                    record = AttemptRecord(
+                        model=model,
+                        provider=provider,
+                        outcome=ErrorClass.MODEL_BEHAVIOR.value,
+                        detail=str(exc),
+                    )
+                    attempts.append(record)
+                    _notify(record)
+                    last_exc = exc
+                    break
                 except Exception as exc:
                     error_class = classifier(exc)
                     record = AttemptRecord(
@@ -931,6 +1008,7 @@ def make_resilient_llm_caller(
 
 __all__ = [
     "AnyCompletion",
+    "AnyResponses",
     "DEFAULT_PROVIDER",
     "complete_reasoner",
     "make_llm_caller",
