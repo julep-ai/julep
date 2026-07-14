@@ -463,6 +463,8 @@ def test_deployment_config_changes_release_and_physical_queue(tmp_path) -> None:
             temporal_namespace="default",
             worker_context_factory="memory.worker:context",
             worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="temporal-payload-codec",
             worker_environment={},
             worker_secret_environment={},
             lanes=("summary",),
@@ -507,7 +509,70 @@ def test_deployment_config_rejects_release_owned_environment_overrides(
             temporal_namespace="default",
             worker_context_factory="memory.worker:context",
             worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="temporal-payload-codec",
             worker_environment={"TEMPORAL_TASK_QUEUE": "wrong"},
+            worker_secret_environment={},
+            lanes=("summary",),
+        )
+
+
+def test_deployment_config_requires_payload_encryption_secret(tmp_path) -> None:
+    chart = tmp_path / "chart"
+    chart.mkdir()
+
+    with pytest.raises(ApplicationReleaseError, match="payload_encryption_secret"):
+        build_lane_deployment_config(
+            chart=str(chart),
+            namespace="memory",
+            temporal_address="temporal:7233",
+            temporal_namespace="default",
+            worker_context_factory="memory.worker:context",
+            worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="",
+            worker_environment={},
+            worker_secret_environment={},
+            lanes=("summary",),
+        )
+
+
+@pytest.mark.parametrize(
+    ("payload_encryption_secret", "worker_priority_class", "field"),
+    [
+        (
+            "codec,worker.priorityClassName=injected",
+            None,
+            "payload_encryption_secret",
+        ),
+        (
+            "temporal-payload-codec",
+            "workers,payloadEncryption.required=false",
+            "worker_priority_class",
+        ),
+        ("a" * 254, None, "payload_encryption_secret"),
+    ],
+)
+def test_deployment_config_rejects_unsafe_kubernetes_resource_names(
+    tmp_path,
+    payload_encryption_secret: str,
+    worker_priority_class: str | None,
+    field: str,
+) -> None:
+    chart = tmp_path / "chart"
+    chart.mkdir()
+
+    with pytest.raises(ApplicationReleaseError, match=field):
+        build_lane_deployment_config(
+            chart=str(chart),
+            namespace="memory",
+            temporal_address="temporal:7233",
+            temporal_namespace="default",
+            worker_context_factory="memory.worker:context",
+            worker_service_account=None,
+            worker_priority_class=worker_priority_class,
+            payload_encryption_secret=payload_encryption_secret,
+            worker_environment={},
             worker_secret_environment={},
             lanes=("summary",),
         )
@@ -525,6 +590,8 @@ def test_deployment_config_hashes_packaged_chart_contents(tmp_path) -> None:
             temporal_namespace="default",
             worker_context_factory="memory.worker:context",
             worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="temporal-payload-codec",
             worker_environment={},
             worker_secret_environment={},
             lanes=("summary",),
@@ -545,6 +612,8 @@ def test_deployment_config_rejects_mutable_remote_chart_reference() -> None:
             temporal_namespace="default",
             worker_context_factory="memory.worker:context",
             worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="temporal-payload-codec",
             worker_environment={},
             worker_secret_environment={},
             lanes=("summary",),
@@ -578,6 +647,8 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
             worker_application="memory.application:application",
             worker_runtime_declarations_hash=compiled.runtime_declarations_hash,
             worker_service_account="julep-worker",
+            worker_priority_class="julep-model-worker",
+            payload_encryption_secret="temporal-payload-codec",
             worker_environment=worker_environment,
             worker_secret_environment=worker_secret_environment,
             lanes=tuple(compiled.lanes),
@@ -591,9 +662,11 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
         namespace="memory",
         temporal_address="temporal:7233",
         worker_context_factory="memory.worker:context",
+        payload_encryption_secret="temporal-payload-codec",
         worker_application="memory.application:application",
         worker_runtime_declarations_hash=compiled.runtime_declarations_hash,
         worker_service_account="julep-worker",
+        worker_priority_class="julep-model-worker",
         worker_environment=worker_environment,
         worker_secret_environment=worker_secret_environment,
         runner=lambda args: commands.append(list(args)),
@@ -652,6 +725,24 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
     assert all(
         "worker.priorityClassName=julep-model-worker" in command for command in upgrade_commands
     )
+    assert all("payloadEncryption.enabled=true" in command for command in upgrade_commands)
+    assert all("payloadEncryption.required=true" in command for command in upgrade_commands)
+    assert all(
+        "payloadEncryption.secretName=temporal-payload-codec" in command
+        for command in upgrade_commands
+    )
+    assert all("payloadEncryption.keyringKey=keyring" in command for command in upgrade_commands)
+    assert all(
+        "payloadEncryption.activeKeyIdKey=active-key-id" in command
+        for command in upgrade_commands
+    )
+    assert release.deployment_config["payloadEncryption"] == {
+        "enabled": True,
+        "required": True,
+        "secretName": "temporal-payload-codec",
+        "keyringKey": "keyring",
+        "activeKeyIdKey": "active-key-id",
+    }
     assert all(
         'worker.environment={"MEMORY_TOOLS_MCP_URL":"http://memory-tools/mcp"}' in command
         for command in upgrade_commands
@@ -680,6 +771,8 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
             temporal_namespace="default",
             worker_context_factory="memory.worker:context",
             worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="temporal-payload-codec",
             worker_environment=worker_environment,
             worker_secret_environment={},
             lanes=tuple(compiled.lanes),
@@ -692,6 +785,8 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
         namespace="memory",
         temporal_address="temporal:7233",
         worker_context_factory="memory.worker:context",
+        payload_encryption_secret="temporal-payload-codec",
+        worker_priority_class=None,
         worker_environment=worker_environment,
         runner=lambda args: commands.append(list(args)),
     )
@@ -699,3 +794,5 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
     reconcile_application(release, reconciler)
 
     assert 'worker.environment={"CA_BUNDLE_ALLOWED_SIGNERS":"aa,bb"}' in commands[0]
+    assert "payloadEncryption.secretName=temporal-payload-codec" in commands[0]
+    assert "worker.priorityClassName=" in commands[0]

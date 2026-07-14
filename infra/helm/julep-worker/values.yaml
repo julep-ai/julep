@@ -48,8 +48,9 @@ worker:
   lane: default
   maxConcurrentActivities: 1
   # Shared infrastructure scopes a ResourceQuota to this class, bounding the
-  # sum of model-worker pods across coexisting immutable releases.
-  priorityClassName: julep-model-worker
+  # sum of model-worker pods across coexisting immutable releases. Leave empty
+  # on clusters that do not provision a matching PriorityClass.
+  priorityClassName: ""
   # Non-secret application configuration injected into the lane worker.
   environment: {}
   # Secret-backed configuration, for example:
@@ -59,9 +60,11 @@ worker:
   secretEnvironment: {}
 
 payloadEncryption:
+  # Every worker uses the encrypted Temporal payload codec. Supply the existing
+  # Secret name explicitly; application releases do this during reconciliation.
   enabled: true
   required: true
-  secretName: temporal-payload-codec
+  secretName: ""
   keyringKey: keyring
   activeKeyIdKey: active-key-id
 

@@ -144,6 +144,8 @@ release_store = "s3://julep-releases/julep"
 worker_image = "registry.example/memory@sha256:<digest>"
 worker_context_factory = "memory.worker:build_context"
 worker_service_account = "julep-worker"
+worker_priority_class = "julep-model-worker"
+payload_encryption_secret = "temporal-payload-codec"
 
 [tool.ca.env.staging.worker_environment]
 MEMORY_TOOLS_MCP_URL = "http://memory-tools/mcp-internal"
@@ -153,6 +155,12 @@ CA_BUNDLE_ALLOWED_SIGNERS = "<64-hex-ed25519-public-key>"
 secret_name = "memory-tools-jwt"
 key = "private-key"
 ```
+
+`payload_encryption_secret` is required for application releases and names an
+existing Kubernetes Secret in `kubernetes_namespace` with `keyring` and
+`active-key-id` entries. The PriorityClass is optional: set
+`worker_priority_class` only when shared cluster infrastructure provisions it
+(the EKS demo does); omit it on ordinary clusters.
 
 `julep plan --env staging` reports artifact, MCP-schema, Helm/KEDA, and runtime
 drift; `julep apply --env staging` publishes an immutable S3-CAS release and

@@ -26,9 +26,15 @@ from .ir import canonical_json
 _IMAGE_DIGEST = re.compile(r"^(?P<repository>[^@\s]+)@(?P<digest>sha256:[0-9a-f]{64})$")
 _OCI_CHART_DIGEST = re.compile(r"^oci://[^\s@]+@sha256:[0-9a-f]{64}$")
 _K8S_NAME = re.compile(r"[^a-z0-9-]+")
+_K8S_DNS_SUBDOMAIN = re.compile(
+    r"^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?"
+    r"(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$"
+)
+_K8S_DNS_SUBDOMAIN_MAX_LENGTH = 253
 _ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _WORKER_MAX_CONCURRENT_ACTIVITIES = 1
-_WORKER_PRIORITY_CLASS_NAME = "julep-model-worker"
+_PAYLOAD_KEYRING_KEY = "keyring"
+_PAYLOAD_ACTIVE_KEY_ID_KEY = "active-key-id"
 _RESERVED_WORKER_ENVIRONMENT = frozenset(
     {
         "CA_WORKER_BUILD_ID",
@@ -471,9 +477,11 @@ class HelmLaneReconciler:
         namespace: str,
         temporal_address: str,
         worker_context_factory: str,
+        payload_encryption_secret: str,
         worker_application: Optional[str] = None,
         worker_runtime_declarations_hash: Optional[str] = None,
         worker_service_account: Optional[str] = None,
+        worker_priority_class: Optional[str] = None,
         temporal_namespace: str = "default",
         worker_environment: Optional[Mapping[str, str]] = None,
         worker_secret_environment: Optional[Mapping[str, Mapping[str, str]]] = None,
@@ -481,6 +489,15 @@ class HelmLaneReconciler:
     ) -> None:
         if not worker_context_factory.strip():
             raise ApplicationReleaseError("worker_context_factory must be non-empty")
+        _validate_kubernetes_object_name(
+            payload_encryption_secret,
+            field="payload_encryption_secret",
+        )
+        if worker_priority_class is not None:
+            _validate_kubernetes_object_name(
+                worker_priority_class,
+                field="worker_priority_class",
+            )
         _validate_worker_application(
             worker_application,
             worker_runtime_declarations_hash,
@@ -490,9 +507,11 @@ class HelmLaneReconciler:
         self.temporal_address = temporal_address
         self.temporal_namespace = temporal_namespace
         self.worker_context_factory = worker_context_factory
+        self.payload_encryption_secret = payload_encryption_secret
         self.worker_application = worker_application
         self.worker_runtime_declarations_hash = worker_runtime_declarations_hash
         self.worker_service_account = worker_service_account
+        self.worker_priority_class = worker_priority_class
         self.worker_environment = dict(worker_environment or {})
         self.worker_secret_environment = {
             name: dict(source) for name, source in (worker_secret_environment or {}).items()
@@ -549,6 +568,16 @@ class HelmLaneReconciler:
             f"worker.deploymentConfigHash={deployment_config_hash(release.deployment_config)}",
             "--set-string",
             f"worker.lane={lane}",
+            "--set",
+            "payloadEncryption.enabled=true",
+            "--set",
+            "payloadEncryption.required=true",
+            "--set-string",
+            f"payloadEncryption.secretName={self.payload_encryption_secret}",
+            "--set-string",
+            f"payloadEncryption.keyringKey={_PAYLOAD_KEYRING_KEY}",
+            "--set-string",
+            f"payloadEncryption.activeKeyIdKey={_PAYLOAD_ACTIVE_KEY_ID_KEY}",
         ]
         args.extend(
             [
@@ -557,7 +586,7 @@ class HelmLaneReconciler:
                 "--set-string",
                 f"worker.maxConcurrentActivities={_WORKER_MAX_CONCURRENT_ACTIVITIES}",
                 "--set-string",
-                f"worker.priorityClassName={_WORKER_PRIORITY_CLASS_NAME}",
+                f"worker.priorityClassName={self.worker_priority_class or ''}",
             ]
         )
         if self.worker_application is not None:
@@ -647,6 +676,8 @@ class HelmLaneReconciler:
             worker_application=self.worker_application,
             worker_runtime_declarations_hash=self.worker_runtime_declarations_hash,
             worker_service_account=self.worker_service_account,
+            worker_priority_class=self.worker_priority_class,
+            payload_encryption_secret=self.payload_encryption_secret,
             worker_environment=self.worker_environment,
             worker_secret_environment=self.worker_secret_environment,
             lanes=release.lanes,
@@ -747,6 +778,8 @@ def build_lane_deployment_config(
     worker_application: Optional[str] = None,
     worker_runtime_declarations_hash: Optional[str] = None,
     worker_service_account: Optional[str],
+    worker_priority_class: Optional[str],
+    payload_encryption_secret: str,
     worker_environment: Mapping[str, str],
     worker_secret_environment: Mapping[str, Mapping[str, str]],
     lanes: Sequence[str],
@@ -758,6 +791,15 @@ def build_lane_deployment_config(
         worker_application,
         worker_runtime_declarations_hash,
     )
+    _validate_kubernetes_object_name(
+        payload_encryption_secret,
+        field="payload_encryption_secret",
+    )
+    if worker_priority_class is not None:
+        _validate_kubernetes_object_name(
+            worker_priority_class,
+            field="worker_priority_class",
+        )
 
     lane_names = tuple(sorted(set(lanes)))
     if not lane_names:
@@ -803,7 +845,14 @@ def build_lane_deployment_config(
         "workerRuntimeDeclarationsHash": worker_runtime_declarations_hash,
         "workerServiceAccount": worker_service_account,
         "workerMaxConcurrentActivities": _WORKER_MAX_CONCURRENT_ACTIVITIES,
-        "workerPriorityClassName": _WORKER_PRIORITY_CLASS_NAME,
+        "workerPriorityClassName": worker_priority_class,
+        "payloadEncryption": {
+            "enabled": True,
+            "required": True,
+            "secretName": payload_encryption_secret,
+            "keyringKey": _PAYLOAD_KEYRING_KEY,
+            "activeKeyIdKey": _PAYLOAD_ACTIVE_KEY_ID_KEY,
+        },
         "workerEnvironment": dict(sorted(worker_environment.items())),
         "workerSecretEnvironment": {
             name: dict(sorted(source.items()))
@@ -811,6 +860,17 @@ def build_lane_deployment_config(
         },
         "queues": {lane: queue_by_lane.get(lane, lane) for lane in lane_names},
     }
+
+
+def _validate_kubernetes_object_name(value: str, *, field: str) -> None:
+    if (
+        not value
+        or len(value) > _K8S_DNS_SUBDOMAIN_MAX_LENGTH
+        or _K8S_DNS_SUBDOMAIN.fullmatch(value) is None
+    ):
+        raise ApplicationReleaseError(
+            f"{field} must be a valid Kubernetes DNS-subdomain name"
+        )
 
 
 def _validate_worker_application(

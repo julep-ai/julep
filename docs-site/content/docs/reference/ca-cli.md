@@ -108,6 +108,8 @@ langfuse_host = "https://cloud.langfuse.com"
 | `env.<name>.kubernetes_namespace` | `julep` | Namespace for application lane releases. |
 | `env.<name>.worker_context_factory` | `None` | Required `module:attribute` worker context factory. |
 | `env.<name>.worker_service_account` | `None` | Existing Kubernetes service account used by lane workers. |
+| `env.<name>.worker_priority_class` | `None` | Optional existing Kubernetes PriorityClass for lane workers; omitted from pods when unset. |
+| `env.<name>.payload_encryption_secret` | `None` | Required by application deployment; existing Secret in `kubernetes_namespace` containing `keyring` and `active-key-id`. |
 | `env.<name>.queues` | `{}` | Logical application lane to base Temporal task queue; releases derive immutable queue names. |
 | `env.<name>.worker_environment` | `{}` | Non-secret values compiled into lane configuration and injected into workers. |
 | `env.<name>.worker_secret_environment` | `{}` | Environment name to Kubernetes `secret_name`/`key` references; values are resolved only in worker pods. |

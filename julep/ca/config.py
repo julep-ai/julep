@@ -34,6 +34,8 @@ class EnvConfig:
     kubernetes_namespace: str = "julep"
     worker_context_factory: str | None = None
     worker_service_account: str | None = None
+    worker_priority_class: str | None = None
+    payload_encryption_secret: str | None = None
     worker_environment: dict[str, str] = field(default_factory=dict)
     worker_secret_environment: dict[str, dict[str, str]] = field(default_factory=dict)
 
@@ -103,6 +105,8 @@ def _env_fields(table: object) -> dict[str, str | None]:
         'kubernetes_namespace',
         'worker_context_factory',
         'worker_service_account',
+        'worker_priority_class',
+        'payload_encryption_secret',
     ):
         if key in table:
             value = table[key]
@@ -209,6 +213,8 @@ def _build_envs(
             kubernetes_namespace=fields.get('kubernetes_namespace') or 'julep',
             worker_context_factory=fields.get('worker_context_factory'),
             worker_service_account=fields.get('worker_service_account'),
+            worker_priority_class=fields.get('worker_priority_class') or None,
+            payload_encryption_secret=fields.get('payload_encryption_secret') or None,
             worker_environment=worker_environments.get(name, {}),
             worker_secret_environment=worker_secret_environments.get(name, {}),
         )

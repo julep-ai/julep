@@ -4,6 +4,7 @@ import copy
 import dataclasses
 from pathlib import Path
 
+import pytest
 import yaml
 
 from julep import Application, PipelineSpec, ident
@@ -100,6 +101,8 @@ application = Application(
         f'worker_image = "example.invalid/memory@sha256:{"a" * 64}"\n'
         'worker_context_factory = "memory_application:build_context"\n'
         'worker_service_account = "julep-worker"\n'
+        'worker_priority_class = "julep-model-worker"\n'
+        'payload_encryption_secret = "temporal-payload-codec"\n'
         "[tool.ca.env.local.worker_environment]\n"
         'MEMORY_TOOLS_MCP_URL = "http://memory-tools/mcp"\n'
         "[tool.ca.env.local.worker_secret_environment.MEMORY_TOOLS_JWT_PRIVATE_KEY]\n"
@@ -120,6 +123,8 @@ def test_application_config_is_explicit_and_parses_release_fields(tmp_path: Path
     assert cfg.envs["local"].helm_chart == "infra/helm/julep-worker"
     assert cfg.envs["local"].worker_context_factory == "memory_application:build_context"
     assert cfg.envs["local"].worker_service_account == "julep-worker"
+    assert cfg.envs["local"].worker_priority_class == "julep-model-worker"
+    assert cfg.envs["local"].payload_encryption_secret == "temporal-payload-codec"
     assert cfg.envs["local"].worker_environment == {
         "MEMORY_TOOLS_MCP_URL": "http://memory-tools/mcp"
     }
@@ -225,6 +230,20 @@ def test_apply_reports_missing_signing_key_without_traceback(
     assert captured.err.startswith("error: bundle signing requires")
     assert "CA_BUNDLE_SIGNING_KEY" in captured.err
     assert "Traceback" not in captured.err
+
+
+def test_application_deployment_requires_explicit_payload_secret(
+    tmp_path: Path,
+) -> None:
+    cfg = load_config(_application_project(tmp_path))
+    env = dataclasses.replace(
+        cfg.envs["local"],
+        payload_encryption_secret=None,
+    )
+    compiled = application_module.compile_application(cfg, env)
+
+    with pytest.raises(ValueError, match="requires payload_encryption_secret"):
+        application_module._resolve_deployment_config(cfg, env, compiled)
 
 
 def test_temporal_status_degrades_when_only_one_probe_succeeds(monkeypatch, tmp_path: Path) -> None:

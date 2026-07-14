@@ -113,6 +113,11 @@ def _resolve_deployment_config(
         raise ValueError(f"env {env.name!r} requires temporal_address for lane reconciliation")
     if env.worker_context_factory is None:
         raise ValueError(f"env {env.name!r} requires worker_context_factory=module:attribute")
+    if env.payload_encryption_secret is None:
+        raise ValueError(
+            f"env {env.name!r} requires payload_encryption_secret naming an "
+            "existing Kubernetes Secret with keyring and active-key-id keys"
+        )
     allowed_signers = [
         value.strip().lower()
         for value in env.worker_environment.get("CA_BUNDLE_ALLOWED_SIGNERS", "").split(",")
@@ -156,6 +161,8 @@ def _resolve_deployment_config(
         worker_application=cfg.application,
         worker_runtime_declarations_hash=compiled.runtime_declarations_hash,
         worker_service_account=env.worker_service_account,
+        worker_priority_class=env.worker_priority_class,
+        payload_encryption_secret=env.payload_encryption_secret,
         worker_environment=worker_environment,
         worker_secret_environment=env.worker_secret_environment,
         lanes=tuple(compiled.lanes),
@@ -193,6 +200,7 @@ def apply_configured_application(
     if not publish_only:
         assert env.temporal_address is not None
         assert env.worker_context_factory is not None
+        assert env.payload_encryption_secret is not None
         reconciler = HelmLaneReconciler(
             chart=chart,
             namespace=env.kubernetes_namespace,
@@ -202,6 +210,8 @@ def apply_configured_application(
             worker_application=cfg.application,
             worker_runtime_declarations_hash=compiled.runtime_declarations_hash,
             worker_service_account=env.worker_service_account,
+            worker_priority_class=env.worker_priority_class,
+            payload_encryption_secret=env.payload_encryption_secret,
             worker_environment=worker_environment,
             worker_secret_environment=env.worker_secret_environment,
         )

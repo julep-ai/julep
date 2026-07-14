@@ -160,10 +160,17 @@ helm_chart = "infra/helm/julep-worker"
 kubernetes_namespace = "julep-demo"
 worker_context_factory = "mcp_memory_server.julep_flows.episode_summary_worker:build_summary_worker_context"
 worker_service_account = "julep-worker"
+worker_priority_class = "julep-model-worker"
+payload_encryption_secret = "temporal-payload-codec"
 
 [tool.ca.env.production.queues]
 summary = "memory-summary"
 ```
+
+The demo Terraform stack provisions both named resources. On another cluster,
+omit `worker_priority_class` unless that cluster provides it, and set
+`payload_encryption_secret` to an existing Secret in `kubernetes_namespace`
+containing `keyring` and `active-key-id` entries.
 
 Then run `julep plan --env production`, `julep apply --env production`, and
 `julep status --env production`. Apply publishes/reconciles capacity only; it

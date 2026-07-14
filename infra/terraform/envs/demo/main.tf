@@ -675,6 +675,7 @@ resource "helm_release" "worker" {
         deploymentConfigHash    = "demo"
         lane                    = "demo"
         maxConcurrentActivities = 1
+        priorityClassName       = kubernetes_priority_class_v1.model_worker.metadata[0].name
       }
       serviceAccount = {
         create = false
@@ -682,6 +683,7 @@ resource "helm_release" "worker" {
       }
       payloadEncryption = {
         enabled        = true
+        required       = true
         secretName     = kubernetes_secret_v1.temporal_payload.metadata[0].name
         keyringKey     = "keyring"
         activeKeyIdKey = "active-key-id"

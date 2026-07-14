@@ -71,12 +71,12 @@ spec:
             - name: TEMPORAL_PAYLOAD_KEYS
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.payloadEncryption.secretName | quote }}
+                  name: {{ required "payloadEncryption.secretName is required when payload encryption is enabled" .Values.payloadEncryption.secretName | quote }}
                   key: {{ .Values.payloadEncryption.keyringKey | quote }}
             - name: TEMPORAL_PAYLOAD_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.payloadEncryption.secretName | quote }}
+                  name: {{ required "payloadEncryption.secretName is required when payload encryption is enabled" .Values.payloadEncryption.secretName | quote }}
                   key: {{ .Values.payloadEncryption.activeKeyIdKey | quote }}
             {{ end }}
             {{ range $name, $value := .Values.worker.environment }}
