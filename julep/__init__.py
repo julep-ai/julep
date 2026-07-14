@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version as _distribution_version
+from types import ModuleType as _ModuleType
 from typing import Any
 
 try:
@@ -59,7 +60,7 @@ from .ir import (
 from .dsl import (
     Contract as Contract,
     alt as alt,
-    app as app,
+    app as _dsl_app,
     arr as arr,
     reasoner_from_ctx as reasoner_from_ctx,
     call as call,
@@ -148,8 +149,27 @@ from .staged import (
 )
 from .deploy import (
     Deployment as Deployment,
+    WorkflowStartOptions as WorkflowStartOptions,
     deploy as deploy,
     snapshot_from_listings as snapshot_from_listings,
+)
+from .app import (
+    Application as Application,
+    ApplicationDefinitionError as ApplicationDefinitionError,
+    CompiledApplication as CompiledApplication,
+    CompiledPipeline as CompiledPipeline,
+    PipelineSpec as PipelineSpec,
+)
+from .app_deploy import (
+    ApplicationPlan as ApplicationPlan,
+    ApplicationRelease as ApplicationRelease,
+    ApplicationReleaseError as ApplicationReleaseError,
+    HelmLaneReconciler as HelmLaneReconciler,
+    LaneObservation as LaneObservation,
+    ObservedApplicationState as ObservedApplicationState,
+    plan_application as plan_application,
+    publish_application as publish_application,
+    reconcile_application as reconcile_application,
 )
 from .dag import (
     Graph as Graph,
@@ -276,6 +296,21 @@ from .execution import (
     interpret as interpret,
 )
 
+
+class _CallableApplicationModule(_ModuleType):
+    """Keep ``julep.app(...)`` compatible while exposing ``julep.app`` as a module."""
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return _dsl_app(*args, **kwargs)
+
+
+# ``app`` was historically the root DSL callable, while the explicit
+# application API now intentionally lives in the ``julep.app`` submodule. A
+# callable module preserves both standard ``import julep.app`` semantics and
+# existing ``from julep import app; app(...)`` callers.
+app = import_module(".app", __name__)
+app.__class__ = _CallableApplicationModule
+
 _BASE_EXPORTS = [
     # kinds
     "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
@@ -306,7 +341,12 @@ _BASE_EXPORTS = [
     "CapabilityManifest", "Budget", "ToolGrant", "check_approval_gates",
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
     "bind_plan_to_manifest",
-    "deploy", "Deployment", "snapshot_from_listings",
+    "deploy", "Deployment", "WorkflowStartOptions", "snapshot_from_listings",
+    "Application", "PipelineSpec", "CompiledApplication", "CompiledPipeline",
+    "ApplicationDefinitionError", "ApplicationPlan", "ApplicationRelease",
+    "ApplicationReleaseError", "HelmLaneReconciler", "LaneObservation",
+    "ObservedApplicationState", "plan_application", "publish_application",
+    "reconcile_application",
     "Agent", "AGENT_REPLY_SCHEMA", "Tool", "tool", "snapshot_from_tools",
     # dotctx
     "Reasoner", "get_reasoner", "load_dotctx", "dotctx_flow",

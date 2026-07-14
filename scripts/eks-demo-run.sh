@@ -28,6 +28,11 @@ kubectl -n julep-demo create secret generic llm-keys \
   --from-literal=ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
   --dry-run=client -o yaml | kubectl apply -f -
 
+export TEMPORAL_PAYLOAD_KEYS="$(kubectl -n julep-demo get secret temporal-payload-codec \
+  -o jsonpath='{.data.keyring}' | base64 --decode)"
+export TEMPORAL_PAYLOAD_KEY_ID="$(kubectl -n julep-demo get secret temporal-payload-codec \
+  -o jsonpath='{.data.active-key-id}' | base64 --decode)"
+
 kubectl -n temporal rollout status deploy/temporal-frontend --timeout=5m
 kubectl -n temporal port-forward svc/temporal-frontend "$LOCAL_PORT:7233" >/tmp/julep-v2-temporal-port-forward.log 2>&1 &
 PF_PID=$!
@@ -58,11 +63,18 @@ import json
 import time
 
 from temporalio.client import Client
+from julep.execution.codec import parse_aes_gcm_keyring
+from julep.execution.worker import encrypted_payload_converter
 from llm_weather_agent import AGENT, QUESTION
+import os
 
 
 async def main() -> None:
-    client = await Client.connect("127.0.0.1:$LOCAL_PORT")
+    converter = encrypted_payload_converter(
+        parse_aes_gcm_keyring(os.environ["TEMPORAL_PAYLOAD_KEYS"]),
+        active_key_id=os.environ["TEMPORAL_PAYLOAD_KEY_ID"],
+    )
+    client = await Client.connect("127.0.0.1:$LOCAL_PORT", data_converter=converter)
     session_id = f"eks-rds-llm-demo-{int(time.time())}"
     print(f"starting {session_id!r}: {QUESTION}", flush=True)
     result = await AGENT.deploy(client, session_id=session_id, input=QUESTION)

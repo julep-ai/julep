@@ -112,6 +112,32 @@ def _write_tool_eval_ctx(tmp_path: Path, eval_py: str) -> Path:
     return ctx
 
 
+def test_eval_can_use_injected_production_llm_caller(tmp_path: Path) -> None:
+    ctx = _write_eval_ctx(
+        tmp_path,
+        '''\
+from dotctx.eval_types import Sample
+
+def sample(limit=-1):
+    return [Sample(name="injected", input={"task": "x"}, expected="from caller")]
+
+def score(_input, output, expected):
+    return 1.0 if output.get("content") == expected else 0.0
+''',
+    )
+    calls: list[tuple[Any, ...]] = []
+
+    async def caller(reasoner, value, principal, transcript, dispatch):
+        calls.append((reasoner, value, principal, transcript, dispatch))
+        return "from caller"
+
+    report = run(run_eval(str(ctx), llm_caller=caller))
+
+    assert report.passed is True
+    assert len(calls) == 1
+    assert calls[0][1:] == ({"task": "x"}, None, None, calls[0][4])
+
+
 # Scores exactly the way real mem-mcp agent-loop suites do (record/execute,
 # slack/bootstrap, ...): getattr(output, "_tool_calls", []) + "_rounds".
 META_SCORER_EVAL = '''\

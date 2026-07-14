@@ -43,7 +43,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, AsyncIterator, Awaitable, Callable, Optional, Sequence
+from typing import Any, AsyncIterator, Awaitable, Callable, Mapping, Optional, Sequence
 
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
@@ -2719,12 +2719,16 @@ async def start_flow(
     root_run_id: Optional[str] = None,
     bundle: Optional[list[dict[str, str]]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
+    workflow_start_options: Optional[Mapping[str, Any]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
     Use the handle to signal a human gate (``handle.signal("submitHuman", {...})``)
     or query the projection (``handle.query("projection")``) while the run is live.
     """
+    start_options = dict(workflow_start_options or {})
+    if "id" in start_options or "task_queue" in start_options:
+        raise ValueError("workflow_start_options cannot override id or task_queue")
     return await client.start_workflow(
         FlowWorkflow.run,
         FlowInput(
@@ -2742,6 +2746,7 @@ async def start_flow(
         ),
         id=session_id,
         task_queue=task_queue,
+        **start_options,
     )
 
 

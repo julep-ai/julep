@@ -1,12 +1,20 @@
 image:
   repository: ""
   tag: latest
+  # Production application releases set digest and render repository@digest.
+  # tag remains only for the local/demo path.
+  digest: ""
   pullPolicy: IfNotPresent
 
 temporal:
   address: temporal-frontend.temporal.svc.cluster.local:7233
   namespace: default
   taskQueue: julep
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
 
 # Queue-lane topology sketch for mem-mcp:
 #   foreground, maintenance, summary, slack, brief-refresh,
@@ -19,11 +27,46 @@ temporal:
 #   background: sweeps, rollups, clustering, dream
 
 worker:
+  # Importable zero-argument WorkerContext factory in the immutable image.
+  contextFactory: ""
+  # Explicit Application object baked into the immutable image. Application
+  # releases also pin its declarations hash and workers verify it before polling.
+  applicationSpec: ""
+  runtimeDeclarationsHash: ""
   gracefulShutdownSeconds: 20
   healthPort: 8080
-  secretName: llm-keys
+  # Optional demo-only secret containing ANTHROPIC_API_KEY. Production lanes
+  # normally use worker.secretEnvironment for their exact provider secrets.
+  secretName: ""
   buildId: ""
   useWorkerVersioning: false
+  application: ""
+  releaseHash: ""
+  applicationArtifactHash: ""
+  deploymentRevision: ""
+  deploymentConfigHash: ""
+  lane: default
+  maxConcurrentActivities: 1
+  # Shared infrastructure scopes a ResourceQuota to this class, bounding the
+  # sum of model-worker pods across coexisting immutable releases. Leave empty
+  # on clusters that do not provision a matching PriorityClass.
+  priorityClassName: ""
+  # Non-secret application configuration injected into the lane worker.
+  environment: {}
+  # Secret-backed configuration, for example:
+  #   MEMORY_TOOLS_JWT_PRIVATE_KEY:
+  #     secretName: memory-tools-jwt
+  #     key: private-key
+  secretEnvironment: {}
+
+payloadEncryption:
+  # Every worker uses the encrypted Temporal payload codec. Supply the existing
+  # Secret name explicitly; application releases do this during reconciliation.
+  enabled: true
+  required: true
+  secretName: ""
+  keyringKey: keyring
+  activeKeyIdKey: active-key-id
 
 scaling:
   minReplicas: 0

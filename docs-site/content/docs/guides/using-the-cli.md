@@ -13,6 +13,11 @@ description: "Discover, run, lint, test, deploy, and trace a whole module of age
 pip install --pre julep        # the `julep` command ships with the base install
 ```
 
+Application releases to S3 and generic Temporal workers need
+`pip install --pre 'julep[store,temporal]'` plus the extras used by the
+application itself. The control-plane host for application reconciliation also
+needs authenticated `helm`, `kubectl`, and `temporal` CLIs.
+
 Run `julep` from a directory that contains your agents. With no config it auto-discovers; everything else is optional.
 
 ## The module
@@ -47,6 +52,13 @@ langfuse_host      = "https://cloud.langfuse.com"
 
 A `local` environment always exists implicitly (LocalDirCAS at `.ca/cas`, no Temporal).
 
+Production application commands use an explicit
+`[tool.ca] application = "module:attribute"` object rather than AST discovery.
+An application's `snapshot_source(environment)` receives a read-only merge of
+the selected environment's `vars` and `worker_environment`, with worker values
+winning. Kubernetes Secret-backed worker values are references and are not
+included in that mapping.
+
 ## Commands
 
 | Command | What it does |
@@ -60,7 +72,10 @@ A `local` environment always exists implicitly (LocalDirCAS at `.ca/cas`, no Tem
 | `julep trace <run-id>` | Render a cached run's trace tree and print its Langfuse deep link. |
 | `julep doctor` | Preflight: discovery, git, Langfuse, Temporal. |
 | `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env CAS → record in the deploy ledger. |
-| `julep status [SEL] --env <name>` | Show what's deployed where + drift (exit 3 on drift). |
+| `julep plan --env <name>` | Compile the configured application and report artifact, schema, release, Helm/KEDA, and runtime drift. |
+| `julep apply --env <name>` | Publish a signed immutable application release and reconcile inactive lane workers without switching traffic. |
+| `julep status [SEL] --env <name>` | With an application and no selector, aggregate live application release/lane state; with a selector, inspect the legacy agent deploy ledger. Exit 3 on drift. |
+| `julep worker [--smoke-test-seconds N]` | Run the environment-configured Temporal worker continuously (`0`) or verify/poll/drain for a positive `N`. |
 | `julep chat <agent>` | Open a **local session** REPL: type a line, stream `Turn`/`Emit` events back, exit on `Closed`. |
 | `julep trigger <agent> <event> [--channel]` | Send one event into a session and render the resulting emits. |
 | `julep listen <agent> --forward-to URL` | Open a session and forward each emitted event to `URL` (HTTP POST). |

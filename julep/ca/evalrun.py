@@ -13,7 +13,7 @@ import inspect
 import json
 import os
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Awaitable, Callable, Mapping, Optional, Sequence
 
 from julep.agent_loop import AgentConfig, ROUND_NOTE_KEY, drive_agent_loop
 from julep.dotctx_evals import MockToolConfig, Sample, Turn, load_ctx_evals
@@ -24,7 +24,60 @@ from julep.execution.llm import (
     complete_reasoner,
 )
 from julep.prompt import rendered_user_for
+from julep.qos import ReasonerDispatch
 from julep.registry import DEFAULT_REGISTRY, Registry
+
+EvalLlmCaller = Callable[..., Awaitable[Any]]
+
+
+async def _invoke_eval_llm(
+    reasoner: Any,
+    value: Any,
+    *,
+    acompletion: Optional[AnyCompletion],
+    llm_caller: Optional[EvalLlmCaller],
+    transcript: Optional[list[dict[str, Any]]] = None,
+    tools: Optional[list[dict[str, Any]]] = None,
+) -> Any:
+    if llm_caller is None:
+        result = await complete_reasoner(
+            reasoner,
+            value,
+            acompletion=acompletion,
+            transcript=transcript,
+            tools=tools,
+            parallel_tool_calls=True if tools else None,
+        )
+        return result.reply
+
+    kwargs: dict[str, Any] = {}
+    if tools:
+        try:
+            signature = inspect.signature(llm_caller)
+        except (TypeError, ValueError):
+            signature = None
+        accepts_tools = signature is not None and (
+            "tools" in signature.parameters
+            or any(
+                parameter.kind is inspect.Parameter.VAR_KEYWORD
+                for parameter in signature.parameters.values()
+            )
+        )
+        if not accepts_tools:
+            raise ValueError(
+                "an injected LlmCaller used by a tool-loop eval must accept "
+                "the keyword argument tools"
+            )
+        kwargs["tools"] = tools
+    raw = await llm_caller(
+        reasoner,
+        value,
+        None,
+        transcript,
+        ReasonerDispatch(),
+        **kwargs,
+    )
+    return getattr(raw, "reply", raw)
 
 
 @dataclass(frozen=True)
@@ -302,10 +355,15 @@ def _tool_result_turn(call_id: Optional[str], content: Any) -> dict[str, Any]:
 async def _run_single_shot(
     reasoner: Any,
     sample: Sample,
-    acompletion: AnyCompletion,
+    acompletion: Optional[AnyCompletion],
+    llm_caller: Optional[EvalLlmCaller] = None,
 ) -> Any:
-    result = await complete_reasoner(reasoner, sample.input, acompletion=acompletion)
-    reply = result.reply
+    reply = await _invoke_eval_llm(
+        reasoner,
+        sample.input,
+        acompletion=acompletion,
+        llm_caller=llm_caller,
+    )
     text = reply if isinstance(reply, str) else json.dumps(reply)
     return {"content": text}
 
@@ -313,7 +371,8 @@ async def _run_single_shot(
 async def _run_tool_loop(
     rich: RichDotctx,
     sample: Sample,
-    acompletion: AnyCompletion,
+    acompletion: Optional[AnyCompletion],
+    llm_caller: Optional[EvalLlmCaller] = None,
 ) -> Any:
     reasoner = rich.reasoner
     tool_defs = _provider_tool_defs(
@@ -397,15 +456,14 @@ async def _run_tool_loop(
         value = dict(base_value) if isinstance(base_value, dict) else base_value
         if isinstance(value, dict) and ROUND_NOTE_KEY in payload:
             value[ROUND_NOTE_KEY] = payload[ROUND_NOTE_KEY]
-        result = await complete_reasoner(
+        reply = await _invoke_eval_llm(
             reasoner,
             value,
             acompletion=acompletion,
+            llm_caller=llm_caller,
             tools=tool_defs,
-            parallel_tool_calls=True,
             transcript=list(transcript) if transcript else None,
         )
-        reply = result.reply
         last_turn = _turn_from_reply(reply)
         tool_calls = reply.get("tool_calls") if isinstance(reply, dict) else None
         if isinstance(tool_calls, list) and tool_calls:
@@ -453,6 +511,7 @@ async def run_eval(
     tags: Optional[Sequence[str]] = None,
     sample_names: Optional[Sequence[str]] = None,
     acompletion: Optional[AnyCompletion] = None,
+    llm_caller: Optional[EvalLlmCaller] = None,
     registry: Registry = DEFAULT_REGISTRY,
 ) -> EvalReport:
     env = dict(env_vars) if env_vars is not None else {}
@@ -469,7 +528,7 @@ async def run_eval(
     threshold = config.threshold if config is not None else 0.5
     concurrency = config.concurrency if config is not None else 5
     reasoner = rich.reasoner
-    resolved = _resolve_acompletion(acompletion)
+    resolved = None if llm_caller is not None else _resolve_acompletion(acompletion)
 
     filtered = bool(tags) or bool(sample_names)
     try:
@@ -513,9 +572,19 @@ async def run_eval(
     async def score_one(index: int, sample: Sample) -> SampleScore:
         async with sem:
             if is_tool_loop:
-                output = await _run_tool_loop(rich, sample, resolved)
+                output = await _run_tool_loop(
+                    rich,
+                    sample,
+                    resolved,
+                    llm_caller=llm_caller,
+                )
             else:
-                output = await _run_single_shot(reasoner, sample, resolved)
+                output = await _run_single_shot(
+                    reasoner,
+                    sample,
+                    resolved,
+                    llm_caller=llm_caller,
+                )
             try:
                 raw_score = module.score(sample.input, output, sample.expected)
                 value = await raw_score if inspect.isawaitable(raw_score) else raw_score
@@ -546,6 +615,7 @@ def run_eval_sync(
     tags: Optional[Sequence[str]] = None,
     sample_names: Optional[Sequence[str]] = None,
     acompletion: Optional[AnyCompletion] = None,
+    llm_caller: Optional[EvalLlmCaller] = None,
 ) -> EvalReport:
     return asyncio.run(
         run_eval(
@@ -555,6 +625,7 @@ def run_eval_sync(
             tags=tags,
             sample_names=sample_names,
             acompletion=acompletion,
+            llm_caller=llm_caller,
         )
     )
 
@@ -589,6 +660,7 @@ def diff_reports(
 
 __all__ = [
     "EvalOutput",
+    "EvalLlmCaller",
     "EvalReport",
     "SampleScore",
     "diff_reports",

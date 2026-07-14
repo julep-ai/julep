@@ -39,8 +39,9 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from dataclasses import dataclass, field
+from datetime import timedelta
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, Sequence
 
 from . import __version__
 from .capabilities import CapabilityManifest, check_approval_gates
@@ -102,7 +103,9 @@ def snapshot_from_listings(
                 annotations=McpAnnotations(
                     read_only_hint=ann_raw.get("readOnlyHint", ann_raw.get("read_only_hint")),
                     idempotent_hint=ann_raw.get("idempotentHint", ann_raw.get("idempotent_hint")),
-                    destructive_hint=ann_raw.get("destructiveHint", ann_raw.get("destructive_hint")),
+                    destructive_hint=ann_raw.get(
+                        "destructiveHint", ann_raw.get("destructive_hint")
+                    ),
                     open_world_hint=ann_raw.get("openWorldHint", ann_raw.get("open_world_hint")),
                 ),
                 output_schema=spec.get("outputSchema", spec.get("output_schema")),
@@ -142,8 +145,11 @@ def _renderer_source_hashes(flow: Node) -> dict[str, str]:
         except KeyError:
             continue
         for render_name in (reasoner.system_render, reasoner.user_render):
-            if render_name and render_name in DEFAULT_REGISTRY.renderers:
-                out[render_name] = DEFAULT_REGISTRY.renderer_source_hash_of(render_name)
+            if render_name is None:
+                continue
+            if render_name not in DEFAULT_REGISTRY.renderers:
+                raise ValueError(f"reasoner {name!r} references unknown renderer {render_name!r}")
+            out[render_name] = DEFAULT_REGISTRY.renderer_source_hash_of(render_name)
     return out
 
 
@@ -155,6 +161,8 @@ def _referenced_reasoners(flow: Node) -> list[str]:
             names.add(step.reasoner)
         if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
             names.add(node.controller)
+        if node.summarizer is not None:
+            names.add(node.summarizer)
     return sorted(names)
 
 
@@ -221,6 +229,151 @@ def _capabilities_from_tools(
     return CapabilityManifest.from_dict(data)
 
 
+_ID_REUSE_POLICIES = {
+    "allow_duplicate": "ALLOW_DUPLICATE",
+    "allow_duplicate_failed_only": "ALLOW_DUPLICATE_FAILED_ONLY",
+    "reject_duplicate": "REJECT_DUPLICATE",
+    "terminate_if_running": "TERMINATE_IF_RUNNING",
+}
+_ID_CONFLICT_POLICIES = {
+    "unspecified": "UNSPECIFIED",
+    "fail": "FAIL",
+    "use_existing": "USE_EXISTING",
+    "terminate_existing": "TERMINATE_EXISTING",
+}
+
+
+@dataclass(frozen=True)
+class WorkflowStartOptions:
+    """Explicit Temporal options for a non-blocking deployment start.
+
+    The defaults implement an idempotent producer: an already-running workflow
+    returns its existing handle, a successful terminal workflow is accepted
+    without being rerun, and only a failed terminal workflow may start again
+    with the same ID.
+    """
+
+    workflow_id_reuse_policy: str = "allow_duplicate_failed_only"
+    workflow_id_conflict_policy: str = "use_existing"
+    execution_timeout: Optional[timedelta] = None
+    search_attributes: Optional[Mapping[str, Any]] = None
+    trace_headers: Optional[Mapping[str, str | bytes]] = None
+    task_queue: Optional[str] = None
+    require_payload_encryption: bool = True
+
+    def __post_init__(self) -> None:
+        if self.workflow_id_reuse_policy not in _ID_REUSE_POLICIES:
+            raise ValueError(
+                "workflow_id_reuse_policy must be one of " + ", ".join(sorted(_ID_REUSE_POLICIES))
+            )
+        if self.workflow_id_conflict_policy not in _ID_CONFLICT_POLICIES:
+            raise ValueError(
+                "workflow_id_conflict_policy must be one of "
+                + ", ".join(sorted(_ID_CONFLICT_POLICIES))
+            )
+        if self.execution_timeout is not None and self.execution_timeout <= timedelta(0):
+            raise ValueError("execution_timeout must be positive")
+        if self.task_queue is not None and not self.task_queue.strip():
+            raise ValueError("task_queue must be non-empty when provided")
+
+    def temporal_kwargs(self) -> dict[str, Any]:
+        """Materialize SDK enums lazily so compilation stays Temporal-optional."""
+
+        try:
+            from temporalio.common import (
+                TypedSearchAttributes,
+                WorkflowIDConflictPolicy,
+                WorkflowIDReusePolicy,
+            )
+        except ImportError as exc:
+            raise RuntimeError(
+                "Temporal support is not installed; install it with pip install 'julep[temporal]'"
+            ) from exc
+
+        kwargs: dict[str, Any] = {
+            "id_reuse_policy": getattr(
+                WorkflowIDReusePolicy,
+                _ID_REUSE_POLICIES[self.workflow_id_reuse_policy],
+            ),
+            "id_conflict_policy": getattr(
+                WorkflowIDConflictPolicy,
+                _ID_CONFLICT_POLICIES[self.workflow_id_conflict_policy],
+            ),
+        }
+        if self.execution_timeout is not None:
+            kwargs["execution_timeout"] = self.execution_timeout
+        if self.search_attributes is not None:
+            if isinstance(self.search_attributes, TypedSearchAttributes):
+                kwargs["search_attributes"] = self.search_attributes
+            elif isinstance(self.search_attributes, Mapping):
+                normalized: dict[str, list[Any]] = {}
+                for name, value in self.search_attributes.items():
+                    if not isinstance(name, str) or not name.strip():
+                        raise ValueError("search attribute names must be non-empty strings")
+                    values = list(value) if isinstance(value, (list, tuple)) else [value]
+                    if not values:
+                        raise ValueError(
+                            f"search attribute {name!r} must contain at least one value"
+                        )
+                    normalized[name] = values
+                kwargs["search_attributes"] = normalized
+            else:
+                raise TypeError("search_attributes must be a mapping or TypedSearchAttributes")
+        return kwargs
+
+
+async def _start_temporal_workflow(
+    client: Any,
+    *,
+    session_id: str,
+    options: WorkflowStartOptions,
+    starter: Callable[[], Any],
+) -> Any:
+    """Start with durable trace headers and duplicate-as-accepted semantics."""
+
+    from .execution.trace_headers import (
+        require_trace_headers_interceptor,
+        workflow_trace_headers,
+    )
+
+    if options.trace_headers:
+        require_trace_headers_interceptor(client)
+    config_method = getattr(client, "config", None)
+    if options.require_payload_encryption:
+        from .execution.codec import data_converter_uses_aes_gcm
+
+        if not callable(config_method):
+            raise ValueError(
+                "payload encryption requires a verifiable Temporal client with config()"
+            )
+        config = config_method(active_config=True)
+        converter = config.get("data_converter") if isinstance(config, dict) else None
+        if not data_converter_uses_aes_gcm(converter):
+            raise ValueError(
+                "Temporal starts require the AES-256-GCM data converter; set "
+                "require_payload_encryption=False only for local development"
+            )
+    with workflow_trace_headers(options.trace_headers):
+        try:
+            return await starter()
+        except Exception as exc:
+            try:
+                from temporalio.exceptions import WorkflowAlreadyStartedError
+            except ImportError:
+                raise
+            if not isinstance(exc, WorkflowAlreadyStartedError):
+                raise
+            if (
+                options.workflow_id_reuse_policy != "allow_duplicate_failed_only"
+                or options.workflow_id_conflict_policy != "use_existing"
+            ):
+                raise
+            get_handle = getattr(client, "get_workflow_handle", None)
+            if not callable(get_handle):
+                raise
+            return get_handle(session_id)
+
+
 @dataclass
 class Deployment:
     """A compiled, frozen flow ready to run, with its compile diagnostics."""
@@ -239,6 +392,11 @@ class Deployment:
     bundle_ref: Optional[list[dict[str, str]]] = None
     queue: Optional[str] = None
 
+    def __post_init__(self) -> None:
+        # Capture the compile boundary immediately. Runtime/publish paths verify
+        # the live object against this canonical snapshot before using it.
+        _ = self.artifact_hash
+
     @property
     def flow_json(self) -> dict[str, Any]:
         return self.flow.to_json()
@@ -249,16 +407,16 @@ class Deployment:
 
     @cached_property
     def artifact_components(self) -> dict[str, Any]:
-        capabilities_json = (
-            self.capabilities.to_json() if self.capabilities is not None else None
-        )
+        return self._build_artifact_components()
+
+    def _build_artifact_components(self) -> dict[str, Any]:
+        capabilities_json = self.capabilities.to_json() if self.capabilities is not None else None
         components = {
             "flowJson": self.flow_json,
             "manifestJson": self.manifest_json,
             "pureSourceHashes": _pure_source_hashes(self.flow),
             "reasoners": {
-                name: _reasoner_identity(name)
-                for name in _referenced_reasoners(self.flow)
+                name: _reasoner_identity(name) for name in _referenced_reasoners(self.flow)
             },
             "capabilities": capabilities_json,
             "executionPolicy": None,
@@ -268,6 +426,29 @@ class Deployment:
         if renderer_hashes:
             components["rendererSourceHashes"] = renderer_hashes
         return components
+
+    def assert_artifact_integrity(self) -> None:
+        """Reject mutation after the deployment's compile boundary."""
+
+        frozen = self.artifact_components
+        # Registry identities are compile-time pins. Re-reading process-global
+        # registries here would make integrity depend on unrelated registration
+        # order and would pre-empt worker-side pure drift verification. Recompute
+        # only state owned by this Deployment object; a referenced identity change
+        # in the flow itself is already visible in ``flowJson``. Bundle publishing
+        # separately validates pinned pure sources before writing artifacts.
+        current = dict(frozen)
+        current["flowJson"] = self.flow_json
+        current["manifestJson"] = self.manifest_json
+        current["capabilities"] = (
+            self.capabilities.to_json() if self.capabilities is not None else None
+        )
+
+        if canonical_json(current) != canonical_json(frozen):
+            raise ValueError(
+                "deployment flow, manifest, or capabilities changed after "
+                "compilation; compile a new Deployment"
+            )
 
     @cached_property
     def artifact_hash(self) -> str:
@@ -296,9 +477,7 @@ class Deployment:
         The base ``artifact_hash`` remains the refs-absent program identity; this
         hash is the refs-present identity after a bundle manifest exists.
         """
-        return _hash_artifact_components(
-            self.artifact_components_with_refs(pure_runtime_refs)
-        )
+        return _hash_artifact_components(self.artifact_components_with_refs(pure_runtime_refs))
 
     def publish(
         self,
@@ -311,6 +490,7 @@ class Deployment:
         from .cas import LocalDirCAS, cas_from_url
         from .gc import Lease, LeaseStore
 
+        self.assert_artifact_integrity()
         store = cas_from_url(store_or_url) if isinstance(store_or_url, str) else store_or_url
         rec = publish_bundle(self, store, signing_key=signing_key)
         if isinstance(store, LocalDirCAS):
@@ -344,10 +524,7 @@ class Deployment:
         for diagnostic in self.prod_gap:
             bucket = _prod_gap_bucket(diagnostic.code)
             buckets[bucket] = buckets.get(bucket, 0) + 1
-        parts = [
-            f"{count} {_pluralize_bucket(bucket, count)}"
-            for bucket, count in buckets.items()
-        ]
+        parts = [f"{count} {_pluralize_bucket(bucket, count)}" for bucket, count in buckets.items()]
         return "in prod this would block: " + ", ".join(parts)
 
     @cached_property
@@ -409,6 +586,8 @@ class Deployment:
 
         from .execution.harness import run_flow  # lazy: keeps deploy import-light
 
+        self.assert_artifact_integrity()
+
         run_kwargs = {
             "session_id": session_id,
             "input": input,
@@ -416,15 +595,62 @@ class Deployment:
             "policy": policy,
             "pinned_pures": self.artifact_components["pureSourceHashes"],
             "max_call_limits": (
-                self.capabilities.max_call_limits()
-                if self.capabilities is not None
-                else None
+                self.capabilities.max_call_limits() if self.capabilities is not None else None
             ),
             "principal": principal,
         }
         if self.bundle_ref is not None:
             run_kwargs["bundle"] = self.bundle_ref
         return await run_flow(client, self.flow_json, self.manifest_json, **run_kwargs)
+
+    async def start(
+        self,
+        client: Any,
+        *,
+        session_id: str,
+        input: Any = None,
+        options: WorkflowStartOptions,
+        policy: Any = None,
+        principal: Optional[dict[str, Any]] = None,
+        queue_lanes: Optional[dict[str, str]] = None,
+    ) -> Any:
+        """Start this deployment on Temporal and return its handle immediately."""
+
+        if self.mode is EnforcementMode.DEV:
+            raise ValueError(
+                "cannot start a dev-mode deployment on Temporal: resolve "
+                "deployment.prod_gap and rebuild in strict mode"
+            )
+        from .execution.harness import start_flow
+
+        self.assert_artifact_integrity()
+
+        start_kwargs: dict[str, Any] = {
+            "session_id": session_id,
+            "input": input,
+            "task_queue": options.task_queue or self.queue or "julep",
+            "policy": policy,
+            "pinned_pures": self.artifact_components["pureSourceHashes"],
+            "max_call_limits": (
+                self.capabilities.max_call_limits() if self.capabilities is not None else None
+            ),
+            "principal": principal,
+            "queue_lanes": queue_lanes,
+            "workflow_start_options": options.temporal_kwargs(),
+        }
+        if self.bundle_ref is not None:
+            start_kwargs["bundle"] = self.bundle_ref
+        return await _start_temporal_workflow(
+            client,
+            session_id=session_id,
+            options=options,
+            starter=lambda: start_flow(
+                client,
+                self.flow_json,
+                self.manifest_json,
+                **start_kwargs,
+            ),
+        )
 
     async def adry_run(
         self,
@@ -449,9 +675,7 @@ class Deployment:
             tools={native_tool.name: native_tool.bound_tool for native_tool in self._tools},
             reasoners=reasoners,
             max_calls=(
-                self.capabilities.max_call_limits()
-                if self.capabilities is not None
-                else {}
+                self.capabilities.max_call_limits() if self.capabilities is not None else {}
             ),
         )
         return await interpret(self.flow, value, env)
@@ -510,7 +734,9 @@ def deploy(
 
     retained_tools: Optional[Sequence[Tool[Any, Any]]] = None
     if tools is not None:
-        from .agent import snapshot_from_tools  # lazy: deploy.py must not import agent.py at module load
+        from .agent import (
+            snapshot_from_tools,
+        )  # lazy: deploy.py must not import agent.py at module load
 
         snapshot = snapshot_from_tools(tools)
         retained_tools = tools
@@ -604,4 +830,4 @@ def _pluralize_bucket(bucket: str, count: int) -> str:
     return f"{bucket}s"
 
 
-__all__ = ["Deployment", "deploy", "snapshot_from_listings"]
+__all__ = ["Deployment", "WorkflowStartOptions", "deploy", "snapshot_from_listings"]
