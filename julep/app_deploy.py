@@ -136,8 +136,6 @@ class PipelineRelease:
     ) -> Any:
         """Start this exact published artifact without recompiling live source."""
 
-        from .execution.harness import start_flow
-
         if self.task_queue is None:
             raise ValueError(
                 "PipelineRelease.start requires the release-specific task queue "
@@ -149,6 +147,8 @@ class PipelineRelease:
                 f"queue pinned by the release: {self.task_queue!r}"
             )
         task_queue = self.task_queue
+
+        from .execution.harness import start_flow
 
         return await _start_temporal_workflow(
             client,

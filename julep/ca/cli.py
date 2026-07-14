@@ -631,11 +631,10 @@ def main(argv: list[str] | None = None) -> int:
     # a clean exit code regardless of which Click the installed Typer uses.
     click_exceptions: tuple[type[BaseException], ...] = (click.exceptions.ClickException,)
     try:  # pragma: no cover - import shape depends on the installed Typer version
-        from typer._click.exceptions import (  # type: ignore[import-not-found]
-            ClickException as _TyperClickException,
-        )
+        from importlib import import_module
 
-        click_exceptions = (*click_exceptions, _TyperClickException)
+        typer_click_exception = vars(import_module("typer._click.exceptions"))["ClickException"]
+        click_exceptions = (*click_exceptions, typer_click_exception)
     except Exception:  # noqa: BLE001 - older Typer reuses the real click package
         pass
 
