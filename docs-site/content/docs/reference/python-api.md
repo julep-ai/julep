@@ -459,7 +459,10 @@ Console scripts in `pyproject.toml`:
 | `graph` | `julep graph [selector] [--exclude expr]` |
 | `run` | `julep run <name> [--input JSON] [--run-id id] [--env name]` |
 | `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
-| `status` | `julep status [selector] [--exclude expr] [--env name]` |
+| `plan` | `julep plan [--env name] [--json]` (explicit application) |
+| `apply` | `julep apply --env name [--publish-only]` (explicit application) |
+| `status` | `julep status [selector] [--exclude expr] [--env name]` (unselected explicit application, otherwise legacy agent ledger) |
+| `worker` | `julep worker [--smoke-test-seconds seconds]` (`0` continuous; positive smoke/poll/drain) |
 | `lint` | `julep lint [selector] [--exclude expr] [--fail-severity error|warning|info]` |
 | `test` | `julep test [selector] [--exclude expr] [--dry-run]` |
 | `trace` | `julep trace <run_id>` |

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio as _asyncio
 import enum as _enum
 import json as _json
 import subprocess as _subprocess
@@ -11,6 +12,11 @@ import click
 import typer
 
 from julep.ca import schedule as _schedule
+from julep.ca.application import (
+    apply_configured_application,
+    observe_application,
+    plan_configured_application,
+)
 from julep.ca.config import CaConfig, EnvConfig, load_config
 from julep.ca.chat import chat_command
 from julep.ca.deploy import deploy_agents
@@ -26,6 +32,8 @@ from julep.ca.status import status_exit_code, status_for_env
 from julep.ca.temporal_run import run_on_env
 from julep.ca.tracetree import render_tree
 from julep.ca.trigger import trigger_command
+from julep.bundle import BundleError
+from julep.cas import CASError
 from julep.projection import ProjectionEvent
 
 app = typer.Typer(add_completion=True, no_args_is_help=True, help="Developer CLI for julep modules.")
@@ -292,6 +300,79 @@ def deploy(
         typer.echo(f"{record.agent}  {record.artifact_hash[:19]}")
 
 
+@app.command("plan")
+def plan(
+    env: str = typer.Option("local", "--env", help="Application environment name."),
+    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+) -> None:
+    """Compile an application and show artifact, schema, lane, and runtime drift."""
+    cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    try:
+        application_plan = plan_configured_application(cfg, cfg.envs[env])
+    except (BundleError, CASError, RuntimeError, TypeError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from None
+    payload = application_plan.to_json()
+    if json_output:
+        typer.echo(_json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        artifact = payload["artifact"]
+        typer.echo(
+            f"artifact  {'drift' if artifact['drift'] else 'clean':9} "
+            f"{artifact['desired']}"
+        )
+        for name, drift in payload["mcpSchema"].items():
+            typer.echo(f"mcp       {name:24} {'drift' if drift else 'clean'}")
+        image = payload["workerImage"]
+        typer.echo(
+            f"image     {'drift' if image['drift'] else 'clean':9} "
+            f"{image['desired'] or '-'}"
+        )
+        for lane, state in payload["release"].items():
+            typer.echo(f"release   {lane:24} {state}")
+        for lane, state in payload["deploymentConfig"].items():
+            typer.echo(f"config    {lane:24} {state}")
+        for lane, state in payload["helmKeda"].items():
+            typer.echo(f"helm/keda {lane:24} {state}")
+        for lane, state in payload["runtime"].items():
+            typer.echo(f"runtime   {lane:24} {state}")
+
+
+@app.command("apply")
+def apply_application(
+    env: str = typer.Option(..., "--env", help="Application environment name."),
+    publish_only: bool = typer.Option(
+        False,
+        "--publish-only",
+        help="Publish immutable artifacts without reconciling lane Helm releases.",
+    ),
+) -> None:
+    """Publish an immutable release and reconcile inactive lane workers."""
+    cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    try:
+        release, lanes = apply_configured_application(
+            cfg,
+            cfg.envs[env],
+            publish_only=publish_only,
+        )
+    except (BundleError, CASError, RuntimeError, TypeError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from None
+    typer.echo(f"release   {release.release_hash}")
+    typer.echo(f"artifact  {release.application_artifact_hash}")
+    for lane in lanes:
+        typer.echo(f"lane      {lane.lane:24} {lane.release_name}  {lane.task_queue}")
+    if not lanes:
+        typer.echo("lanes     not reconciled (--publish-only)")
+    typer.echo("traffic   unchanged")
+
+
 @app.command("status")
 def status(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
@@ -303,6 +384,41 @@ def status(
     if env not in cfg.envs:
         typer.echo(f"error: unknown env {env!r}", err=True)
         raise typer.Exit(2)
+    if cfg.application is not None and not selector.strip() and not exclude.strip():
+        try:
+            observed = observe_application(cfg, cfg.envs[env])
+            application_plan = plan_configured_application(
+                cfg,
+                cfg.envs[env],
+                observed=observed,
+            )
+        except (BundleError, CASError, RuntimeError, TypeError, ValueError) as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(1) from None
+        typer.echo(f"application {application_plan.application}")
+        typer.echo(f"artifact    {application_plan.desired_artifact_hash}")
+        typer.echo(f"release     {observed.release_hash or '-'}")
+        for lane, state in sorted(observed.lanes.items()):
+            typer.echo(
+                f"{lane:24} helm={state.helm_ready!s:5} "
+                f"k8s={state.worker_ready!s:5} keda={state.keda_ready!s:5} "
+                f"backlog={state.temporal_backlog!s:5} running={state.temporal_running!s:5}"
+            )
+            if state.detail:
+                typer.echo(f"  {state.detail}")
+        drift = (
+            application_plan.artifact_drift
+            or application_plan.worker_image_drift
+            or any(application_plan.mcp_schema_drift.values())
+            or any(
+                value != "clean"
+                for value in application_plan.deployment_config_drift.values()
+            )
+            or any(value != "clean" for value in application_plan.release_drift.values())
+            or any(value != "ready" for value in application_plan.helm_keda_drift.values())
+            or any(value != "healthy" for value in application_plan.runtime_drift.values())
+        )
+        raise typer.Exit(3 if drift else 0)
     rows = status_for_env(cfg, env)
     if selector.strip() or exclude.strip():
         module = build_module(cfg)
@@ -311,6 +427,35 @@ def status(
     for row in rows:
         typer.echo(f"{row.name:24} {row.state:11} {row.deployed_hash or '-'}")
     raise typer.Exit(status_exit_code(rows))
+
+
+@app.command("worker")
+def worker(
+    smoke_test_seconds: float = typer.Option(
+        0.0,
+        "--smoke-test-seconds",
+        min=0.0,
+        help=(
+            "Positive: verify Temporal, poll for this many seconds, then drain "
+            "and exit. Zero (default): run continuously."
+        ),
+    ),
+) -> None:
+    """Run a Temporal worker from the explicit environment contract."""
+
+    from julep.execution.serve import (
+        WorkerServeSettings,
+        serve,
+        smoke_test_worker,
+    )
+
+    settings = WorkerServeSettings.from_env()
+    if smoke_test_seconds > 0:
+        _asyncio.run(
+            smoke_test_worker(settings, poll_seconds=smoke_test_seconds)
+        )
+    else:
+        _asyncio.run(serve(settings))
 
 
 @app.command("lint")
@@ -486,7 +631,9 @@ def main(argv: list[str] | None = None) -> int:
     # a clean exit code regardless of which Click the installed Typer uses.
     click_exceptions: tuple[type[BaseException], ...] = (click.exceptions.ClickException,)
     try:  # pragma: no cover - import shape depends on the installed Typer version
-        from typer._click.exceptions import ClickException as _TyperClickException
+        from typer._click.exceptions import (  # type: ignore[import-not-found]
+            ClickException as _TyperClickException,
+        )
 
         click_exceptions = (*click_exceptions, _TyperClickException)
     except Exception:  # noqa: BLE001 - older Typer reuses the real click package

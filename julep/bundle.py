@@ -122,6 +122,24 @@ def _signature_blob(manifest_bytes: bytes, bundle_hash: str, signing_key: str | 
     }
 
 
+def bundle_signer_public_key(signing_key: str | None = None) -> str:
+    """Return the Ed25519 public key for a configured bundle-signing seed."""
+
+    try:
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    except ModuleNotFoundError as exc:
+        raise BundleSigningError(
+            "bundle signing requires cryptography; install it with pip install "
+            "'julep[store]'"
+        ) from exc
+    private_key = Ed25519PrivateKey.from_private_bytes(_signing_seed(signing_key))
+    return private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    ).hex()
+
+
 def _custom_pure_sources(
     deployment: Deployment,
     registry: Registry,

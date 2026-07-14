@@ -28,6 +28,14 @@ class EnvConfig:
     # inside the resolver/freeze child (never the ambient process environment).
     vars: dict[str, str] = field(default_factory=dict)
     queues: dict[str, str] = field(default_factory=dict)
+    release_store: str | None = None
+    worker_image: str | None = None
+    helm_chart: str = "infra/helm/julep-worker"
+    kubernetes_namespace: str = "julep"
+    worker_context_factory: str | None = None
+    worker_service_account: str | None = None
+    worker_environment: dict[str, str] = field(default_factory=dict)
+    worker_secret_environment: dict[str, dict[str, str]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -52,6 +60,9 @@ class CaConfig:
     fail_severity: str = 'error'
     envs: dict[str, EnvConfig] = field(default_factory=dict)
     schedules: dict[str, ScheduleConfig] = field(default_factory=dict)
+    # Explicit ``module:attribute`` path to a julep.app.Application. This is
+    # imported directly; it is never AST-discovered.
+    application: str | None = None
 
 
 def validate_cron(cron: str) -> None:
@@ -86,6 +97,12 @@ def _env_fields(table: object) -> dict[str, str | None]:
         'task_queue',
         'cas',
         'langfuse_host',
+        'release_store',
+        'worker_image',
+        'helm_chart',
+        'kubernetes_namespace',
+        'worker_context_factory',
+        'worker_service_account',
     ):
         if key in table:
             value = table[key]
@@ -111,6 +128,30 @@ def _env_queues(table: object) -> dict[str, str]:
     return {str(key): str(value) for key, value in raw.items()}
 
 
+def _worker_environment(table: object) -> dict[str, str]:
+    if not isinstance(table, dict) or not isinstance(table.get("worker_environment"), dict):
+        return {}
+    return {str(key): str(value) for key, value in table["worker_environment"].items()}
+
+
+def _worker_secret_environment(table: object) -> dict[str, dict[str, str]]:
+    if not isinstance(table, dict) or not isinstance(
+        table.get("worker_secret_environment"), dict
+    ):
+        return {}
+    result: dict[str, dict[str, str]] = {}
+    for name, raw in table["worker_secret_environment"].items():
+        if not isinstance(raw, dict) or "secret_name" not in raw or "key" not in raw:
+            raise ValueError(
+                f"worker_secret_environment.{name} requires secret_name and key"
+            )
+        result[str(name)] = {
+            "secret_name": str(raw["secret_name"]),
+            "key": str(raw["key"]),
+        }
+    return result
+
+
 def _flow_queues(pyproject_queue: object, ca_toml_queue: object) -> dict[str, str]:
     out: dict[str, str] = {}
     for raw in (pyproject_queue, ca_toml_queue):
@@ -128,6 +169,8 @@ def _build_envs(
     env_tables: dict[str, dict[str, str | None]] = {}
     env_vars: dict[str, dict[str, str]] = {}
     env_queues: dict[str, dict[str, str]] = {}
+    worker_environments: dict[str, dict[str, str]] = {}
+    worker_secret_environments: dict[str, dict[str, dict[str, str]]] = {}
     for raw_envs in (pyproject_envs, ca_toml_envs):
         if not isinstance(raw_envs, dict):
             continue
@@ -137,6 +180,12 @@ def _build_envs(
             # vars merge per-key, ca.toml over pyproject (scalar-field order).
             env_vars.setdefault(env_name, {}).update(_env_vars(table))
             env_queues.setdefault(env_name, {}).update(_env_queues(table))
+            worker_environments.setdefault(env_name, {}).update(
+                _worker_environment(table)
+            )
+            worker_secret_environments.setdefault(env_name, {}).update(
+                _worker_secret_environment(table)
+            )
 
     local_defaults: dict[str, str | None] = {
         'cas': str(root / '.ca' / 'cas'),
@@ -154,6 +203,14 @@ def _build_envs(
             langfuse_host=fields.get('langfuse_host'),
             vars=env_vars.get(name, {}),
             queues=env_queues.get(name, {}),
+            release_store=fields.get('release_store'),
+            worker_image=fields.get('worker_image'),
+            helm_chart=fields.get('helm_chart') or 'infra/helm/julep-worker',
+            kubernetes_namespace=fields.get('kubernetes_namespace') or 'julep',
+            worker_context_factory=fields.get('worker_context_factory'),
+            worker_service_account=fields.get('worker_service_account'),
+            worker_environment=worker_environments.get(name, {}),
+            worker_secret_environment=worker_secret_environments.get(name, {}),
         )
         for name, fields in env_tables.items()
     }
@@ -208,7 +265,7 @@ def _build_schedules(
 
 def load_config(root: str | Path) -> CaConfig:
     """Read [tool.ca] from pyproject.toml, then overlay a sibling ca.toml if present."""
-    root = Path(root)
+    root = Path(root).resolve()
     pyproject = _read_toml(root / 'pyproject.toml').get('tool', {}).get('ca', {})
     ca_toml = _read_toml(root / 'ca.toml')
     merged: dict[str, Any] = {**pyproject, **ca_toml}
@@ -222,4 +279,5 @@ def load_config(root: str | Path) -> CaConfig:
         fail_severity=str(gates.get('fail_severity', 'error')),
         envs=_build_envs(root, pyproject.get('env', {}), ca_toml.get('env', {})),
         schedules=_build_schedules(pyproject.get("schedule", {}), ca_toml.get("schedule", {})),
+        application=(str(merged["application"]) if merged.get("application") else None),
     )

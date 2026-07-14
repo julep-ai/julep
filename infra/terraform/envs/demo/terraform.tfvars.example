@@ -1,4 +1,6 @@
 aws_region         = "us-east-1"
+# 1-41 lowercase letters/digits/single hyphens; starts with a letter.
+# The limit reserves room for the account-qualified S3 release bucket suffix.
 name_prefix        = "julep-v2-temporal-demo"
 worker_image_tag   = "latest"
 db_instance_class  = "db.t4g.micro"
@@ -6,3 +8,32 @@ db_engine_version  = "16.6"
 db_multi_az        = false
 worker_min_replicas = 0
 worker_max_replicas = 4
+
+# Required existing network. Production subnets must span at least two AZs and
+# must not auto-assign public IPs. They need NAT or VPC endpoints for the AWS
+# APIs, ECR, and external model providers used by workloads.
+vpc_id = "vpc-0123456789abcdef0"
+private_subnet_ids = [
+  "subnet-0123456789abcdef0",
+  "subnet-0fedcba9876543210",
+]
+
+# Production-shaped defaults. scripts/eks-demo-*.sh override these for the
+# disposable public-endpoint demo lifecycle.
+cluster_endpoint_public_access = false
+temporal_retention             = "14d"
+rds_backup_retention_days      = 14
+rds_deletion_protection        = true
+rds_skip_final_snapshot        = false
+release_bucket_force_destroy   = false
+deploy_demo_worker             = false
+secrets_recovery_window_days   = 30
+allow_public_subnets_for_demo  = false
+
+# Supply these through a secret CI variable for controlled rotation. Keep old
+# IDs until every workflow history encrypted with them has expired.
+# temporal_payload_keyring = {
+#   v1 = "<64-hex-key>"
+#   v2 = "<64-hex-key>"
+# }
+# temporal_payload_active_key_id = "v2"

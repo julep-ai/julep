@@ -44,6 +44,18 @@ def test_surface_shape_climbs_the_lattice():
     assert "max_rounds" not in agent_json
 
 
+def test_application_submodule_remains_importable_and_legacy_app_is_callable():
+    import importlib
+
+    import julep
+    import julep.app as app_module
+
+    assert app_module is importlib.import_module("julep.app")
+    assert app_module.Application is julep.Application
+    assert callable(julep.app)
+    assert julep.app("controller").controller == "controller"
+
+
 def test_join_takes_the_max_shape():
     # A pipeline containing a branching is at least Branching.
     f = seq(call("a"), alt("p", call("b"), call("c")))

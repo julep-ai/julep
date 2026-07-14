@@ -1,4 +1,7 @@
 .env
+.env.*
+!.env.example
+!.env.*.example
 
 # Python
 __pycache__/
@@ -27,6 +30,7 @@ dist/
 # ca outer-loop run/cas artifacts (deploys ledger stays tracked)
 .ca/runs/
 .ca/cas/
+.julep/
 
 # Terraform
 **/.terraform/

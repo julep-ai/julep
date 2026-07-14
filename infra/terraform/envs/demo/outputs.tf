@@ -18,6 +18,21 @@ output "worker_image_uri" {
   value = local.worker_image
 }
 
+output "release_store_url" {
+  description = "S3 CAS URL used by julep apply for immutable application releases."
+  value       = "s3://${aws_s3_bucket.releases.bucket}/julep"
+}
+
+output "data_kms_key_arn" {
+  description = "KMS key protecting release artifacts, Temporal RDS, and secrets."
+  value       = aws_kms_key.data.arn
+}
+
+output "temporal_payload_secret_arn" {
+  description = "Secrets Manager source for the rotating Temporal payload codec keyring."
+  value       = aws_secretsmanager_secret.temporal_payload.arn
+}
+
 output "temporal_frontend_service" {
   value = "temporal-frontend.${local.temporal_namespace}.svc.cluster.local:7233"
 }
@@ -26,12 +41,28 @@ output "rds_endpoint" {
   value = aws_db_instance.temporal.address
 }
 
+output "rds_final_snapshot_identifier" {
+  description = "Unique final snapshot identifier retained when rds_skip_final_snapshot is false."
+  value       = local.rds_final_snapshot_identifier
+}
+
+output "vpc_id" {
+  description = "Existing VPC used by EKS, Temporal RDS, and internal access resources."
+  value       = data.aws_vpc.selected.id
+}
+
+output "private_subnet_ids" {
+  description = "Explicit subnet set used by EKS, Temporal RDS, and internal load balancers."
+  value       = local.private_subnet_ids
+}
+
 output "control_plane_subnet_ids" {
-  value = local.control_plane_subnet_ids
+  description = "Deprecated compatibility alias for private_subnet_ids."
+  value       = local.private_subnet_ids
 }
 
 output "vpc_cidr_block" {
-  value = data.aws_vpc.default.cidr_block
+  value = data.aws_vpc.selected.cidr_block
 }
 
 output "temporal_ui_enabled" {

@@ -95,6 +95,88 @@ julep deploy triage --env staging         # freeze → publish → record in the
 
 Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs-site/content/docs/guides/using-the-cli.md](docs-site/content/docs/guides/using-the-cli.md)**.
 
+For production applications, declare an explicit object instead of adding a
+second discovery convention:
+
+```python
+from collections.abc import Mapping
+
+from julep import Application, CapabilityManifest, McpSnapshot, PipelineSpec
+
+
+def load_live_memory_tools_snapshot(
+    environment: Mapping[str, str],
+) -> McpSnapshot:
+    # Use the selected deployment environment to call tools/list.
+    ...
+
+application = Application("memory", [
+    PipelineSpec(
+        name="episode_summary",
+        flow=summary_flow,
+        reasoners=(summary_reasoner,),
+        capabilities=CapabilityManifest.from_file("summary-capabilities.yaml"),
+        lane="summary",
+        eval_packages=("prompts/episode_summary.ctx",),
+        snapshot=memory_tools_snapshot,
+        snapshot_source=load_live_memory_tools_snapshot,
+    ),
+])
+```
+
+For `julep plan`, `apply`, and application-level `status`, each
+`snapshot_source` receives a read-only mapping made from the selected
+environment's `[vars]` followed by `[worker_environment]` (worker values win on
+duplicate names). Secret-backed worker variables are intentionally absent:
+`worker_secret_environment` contains Kubernetes Secret references, not values,
+and those values exist only in the worker at runtime. The callback must return
+an `McpSnapshot`; pass any credential needed for schema discovery through a
+non-secret control-plane mechanism rather than expecting a Secret value here.
+
+Point `[tool.ca].application` at that object with a `module:attribute` value.
+Each deployable environment also names the worker's explicit context factory;
+ordinary and Secret-backed worker environment can be reconciled with the lane:
+
+```toml
+[tool.ca.env.staging]
+temporal_address = "temporal-frontend.temporal.svc.cluster.local:7233"
+release_store = "s3://julep-releases/julep"
+worker_image = "registry.example/memory@sha256:<digest>"
+worker_context_factory = "memory.worker:build_context"
+worker_service_account = "julep-worker"
+
+[tool.ca.env.staging.worker_environment]
+MEMORY_TOOLS_MCP_URL = "http://memory-tools/mcp-internal"
+CA_BUNDLE_ALLOWED_SIGNERS = "<64-hex-ed25519-public-key>"
+
+[tool.ca.env.staging.worker_secret_environment.MEMORY_TOOLS_JWT_PRIVATE_KEY]
+secret_name = "memory-tools-jwt"
+key = "private-key"
+```
+
+`julep plan --env staging` reports artifact, MCP-schema, Helm/KEDA, and runtime
+drift; `julep apply --env staging` publishes an immutable S3-CAS release and
+reconciles one digest-pinned Helm release per lane and immutable release on a
+release-specific task queue, without changing traffic;
+`julep status --env staging` aggregates the release and live lane state. That
+application-level status path is selected only when `[tool.ca].application` is
+configured and no selector or `--exclude` is supplied; selected status queries
+continue to inspect the legacy per-agent deploy ledger.
+
+Application publishing requires a 64-hex Ed25519 seed (or a file containing
+one) in `CA_BUNDLE_SIGNING_KEY`. In production, set the corresponding 64-hex
+public key in the non-secret `CA_BUNDLE_ALLOWED_SIGNERS` worker environment;
+`apply` rejects a configured allow-list that does not contain the publishing
+key. Read-only `plan` and application-level `status` need that public allow-list
+(or the private key as a local fallback). Install `julep[store,temporal]` for
+S3 publication and Temporal workers, plus any pipeline-specific extras. The
+control-plane host also needs authenticated `helm`, `kubectl`, and `temporal`
+CLIs; `apply --publish-only` skips Helm reconciliation.
+
+`julep worker` runs continuously from its environment contract. A positive
+`--smoke-test-seconds N` verifies Temporal connectivity, polls the configured
+queue for `N` seconds, drains, and exits; the default `0` keeps serving.
+
 ---
 
 ## Extras

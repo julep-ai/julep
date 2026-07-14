@@ -19,10 +19,11 @@ themselves stay free of it so replay is deterministic.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from typing import Any, Optional
 
 from temporalio.client import Client
-from temporalio.converter import DataConverter
+from temporalio.converter import DataConverter, DefaultFailureConverterWithEncodedAttributes
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
@@ -64,7 +65,7 @@ from .reasoner_batch import (
     submitReasonerBatch,
 )
 from .bundle_runner import BundleResolvingWorkflowRunner
-from .codec import ClaimCheckCodec
+from .codec import AesGcmPayloadCodec, ClaimCheckCodec, PayloadCodecChain
 from .debounce import DebounceCollector
 from .harness import (
     AgentWorkflow,
@@ -75,7 +76,7 @@ from .harness import (
     runSubCapture,
     startTrajectory,
 )
-from .serve import DEFAULT_TASK_QUEUE
+from .serve import DEFAULT_TASK_QUEUE, payload_encryption_from_env
 from .session_store import SessionStore
 from ..cas import cas_from_url
 
@@ -132,6 +133,46 @@ def claim_check_converter(
         payload_codec=ClaimCheckCodec(
             blob_store, tenant=tenant, threshold_bytes=threshold_bytes
         ),
+    )
+
+
+def encrypted_payload_converter(
+    keys: Mapping[str, bytes | str],
+    *,
+    active_key_id: str,
+    blob_store: Optional[BlobStore] = None,
+    tenant: Optional[str] = None,
+    threshold_bytes: int = 131072,
+) -> DataConverter:
+    """Build the shared client/worker converter for encrypted Temporal payloads.
+
+    When a blob store is supplied, claim checking runs first and its small
+    pointer is encrypted before reaching Temporal. The referenced S3 object is
+    expected to use bucket-level KMS encryption.
+    """
+
+    import dataclasses
+
+    encryption = AesGcmPayloadCodec(keys, active_key_id=active_key_id)
+    if blob_store is None:
+        codec = encryption
+    else:
+        if tenant is None or not tenant:
+            raise ValueError("tenant is required when blob_store is provided")
+        codec = PayloadCodecChain(
+            [
+                ClaimCheckCodec(
+                    blob_store,
+                    tenant=tenant,
+                    threshold_bytes=threshold_bytes,
+                ),
+                encryption,
+            ]
+        )
+    return dataclasses.replace(
+        DataConverter.default,
+        payload_codec=codec,
+        failure_converter_class=DefaultFailureConverterWithEncodedAttributes,
     )
 
 
@@ -224,7 +265,21 @@ async def run_worker(
     4-argument callers are wrapped by ``configure``); the idempotency key is the
     stable activation ``cid`` reused on activity retry.
     """
-    client = await Client.connect(target_host, namespace=namespace)
+    connect_kwargs: dict[str, Any] = {"namespace": namespace}
+    payload_keys, payload_key_id, _required = payload_encryption_from_env(os.environ)
+    if payload_keys is not None:
+        from .codec import parse_aes_gcm_keyring
+        from .trace_headers import WorkflowTraceHeadersInterceptor
+        from temporalio.common import HeaderCodecBehavior
+
+        assert payload_key_id is not None
+        connect_kwargs["data_converter"] = encrypted_payload_converter(
+            parse_aes_gcm_keyring(payload_keys),
+            active_key_id=payload_key_id,
+        )
+        connect_kwargs["header_codec_behavior"] = HeaderCodecBehavior.CODEC
+        connect_kwargs["interceptors"] = [WorkflowTraceHeadersInterceptor()]
+    client = await Client.connect(target_host, **connect_kwargs)
     context = WorkerContext(
         tool_urls=tool_urls or {},
         mcp_call=mcp_call,
@@ -249,5 +304,6 @@ __all__ = [
     "DEFAULT_TASK_QUEUE",
     "build_worker",
     "claim_check_converter",
+    "encrypted_payload_converter",
     "run_worker",
 ]

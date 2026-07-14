@@ -8,21 +8,29 @@ and run everywhere. The lifecycle test (connect, poll, drain on shutdown) needs
 from __future__ import annotations
 
 import asyncio
+import sys
+import types
 import warnings
+from importlib import import_module
 from typing import Any
 
 import pytest
 
 from julep import HAVE_TEMPORAL, __version__
 from julep.errors import JulepError
+from julep.app import Application, ApplicationDefinitionError, PipelineSpec
+from julep.dotctx import Reasoner
+from julep.dsl import think
 from julep.execution.effects import WorkerContext
 from julep.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
     WorkerServeSettings,
     _versioning_worker_kwargs,
+    load_application_runtime,
     load_context_factory,
     serve,
+    smoke_test_worker,
 )
 from conftest import run
 
@@ -38,6 +46,8 @@ def test_from_env_requires_context_factory():
 def test_from_env_defaults():
     s = WorkerServeSettings.from_env({"WORKER_CONTEXT_FACTORY": "m:f"})
     assert s.context_factory == "m:f"
+    assert s.application is None
+    assert s.runtime_declarations_hash is None
     assert s.address == "localhost:7233"
     assert s.namespace == "default"
     assert s.task_queue == DEFAULT_TASK_QUEUE == "julep"
@@ -50,9 +60,57 @@ def test_from_env_defaults():
     assert s.use_worker_versioning is False
 
 
+def test_worker_settings_preserve_original_positional_field_order():
+    settings = WorkerServeSettings(
+        "m:f",
+        "temporal.internal:7233",
+        "production",
+        "summary-lane",
+    )
+
+    assert settings.address == "temporal.internal:7233"
+    assert settings.namespace == "production"
+    assert settings.task_queue == "summary-lane"
+    assert settings.application is None
+    assert settings.runtime_declarations_hash is None
+
+
+def test_smoke_test_waits_for_ready_then_drains(monkeypatch):
+    calls: list[str] = []
+
+    async def fake_serve(
+        settings,
+        *,
+        shutdown_event,
+        ready_event,
+        verify_connection,
+    ):
+        assert settings.health_port is None
+        assert verify_connection is True
+        calls.append("started")
+        ready_event.set()
+        await shutdown_event.wait()
+        calls.append("drained")
+
+    serve_module = import_module("julep.execution.serve")
+    monkeypatch.setattr(serve_module, "serve", fake_serve)
+
+    run(
+        smoke_test_worker(
+            WorkerServeSettings(context_factory="m:f", health_port=8080),
+            poll_seconds=0.001,
+        )
+    )
+
+    assert calls == ["started", "drained"]
+
+
 def test_from_env_full_parse():
+    runtime_hash = "sha256:" + "a" * 64
     s = WorkerServeSettings.from_env({
         "WORKER_CONTEXT_FACTORY": "pkg.mod:make",
+        "WORKER_APPLICATION": "pkg.application:application",
+        "WORKER_RUNTIME_DECLARATIONS_HASH": runtime_hash,
         "TEMPORAL_ADDRESS": "temporal-frontend.temporal.svc:7233",
         "TEMPORAL_NAMESPACE": "prod",
         "TEMPORAL_TASK_QUEUE": "lane-embeddings",
@@ -62,6 +120,8 @@ def test_from_env_full_parse():
         "WORKER_HEALTH_PORT": "8080",
     })
     assert s.address == "temporal-frontend.temporal.svc:7233"
+    assert s.application == "pkg.application:application"
+    assert s.runtime_declarations_hash == runtime_hash
     assert s.namespace == "prod"
     assert s.task_queue == "lane-embeddings"
     assert s.graceful_shutdown_s == 12.5
@@ -97,6 +157,40 @@ def test_bad_env_values_fail_loudly():
         WorkerServeSettings.from_env({**base, "WORKER_HEALTH_PORT": "eighty"})
     with pytest.raises(ValueError, match="WORKER_GRACEFUL_SHUTDOWN_S"):
         WorkerServeSettings.from_env({**base, "WORKER_GRACEFUL_SHUTDOWN_S": "soon"})
+    with pytest.raises(ValueError, match="must be set together"):
+        WorkerServeSettings.from_env({**base, "WORKER_APPLICATION": "pkg:application"})
+    with pytest.raises(ValueError, match="sha256"):
+        WorkerServeSettings.from_env(
+            {
+                **base,
+                "WORKER_APPLICATION": "pkg:application",
+                "WORKER_RUNTIME_DECLARATIONS_HASH": "latest",
+            }
+        )
+
+
+def test_required_payload_encryption_rejects_missing_keys():
+    with pytest.raises(ValueError, match="payload encryption is required"):
+        WorkerServeSettings.from_env(
+            {
+                "WORKER_CONTEXT_FACTORY": "m:f",
+                "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED": "true",
+            }
+        )
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporal extra not installed")
+def test_run_worker_required_payload_encryption_rejects_missing_keys(
+    monkeypatch,
+):
+    from julep.execution.worker import run_worker
+
+    monkeypatch.setenv("TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED", "true")
+    monkeypatch.delenv("TEMPORAL_PAYLOAD_KEYS", raising=False)
+    monkeypatch.delenv("TEMPORAL_PAYLOAD_KEY_ID", raising=False)
+
+    with pytest.raises(ValueError, match="payload encryption is required"):
+        run(run_worker())
 
 
 def test_from_env_versioning_bad_bool():
@@ -207,6 +301,128 @@ def test_load_context_factory_rejects_bad_specs():
         load_context_factory(f"{__name__}:missing_factory")
     with pytest.raises(ValueError, match="not callable"):
         load_context_factory(f"{__name__}:NOT_CALLABLE")
+
+
+def test_load_application_runtime_registers_release_pinned_reasoner(
+    monkeypatch,
+):
+    from julep.registry import DEFAULT_REGISTRY, Registry
+
+    reasoner_name = "serve-application-runtime"
+    application = Application(
+        "memory",
+        [
+            PipelineSpec(
+                "summary",
+                think(reasoner_name),
+                reasoners=(Reasoner(reasoner_name, "test:model"),),
+            )
+        ],
+    )
+    module_name = "_julep_test_worker_application"
+    module = types.ModuleType(module_name)
+    module.application = application
+    monkeypatch.setitem(sys.modules, module_name, module)
+    context_registry = Registry()
+    existing = DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+    try:
+        load_application_runtime(
+            f"{module_name}:application",
+            expected_hash=application.runtime_declarations_hash,
+            registry=context_registry,
+        )
+
+        assert DEFAULT_REGISTRY.get_reasoner(reasoner_name).model == "test:model"
+        assert context_registry.get_reasoner(reasoner_name).model == "test:model"
+    finally:
+        DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+        if existing is not None:
+            DEFAULT_REGISTRY.reasoners[reasoner_name] = existing
+
+
+def test_load_application_runtime_restores_string_declared_reasoner(
+    monkeypatch,
+):
+    from julep.registry import DEFAULT_REGISTRY, Registry
+
+    reasoner_name = "serve-application-string-runtime"
+    reasoner = Reasoner(reasoner_name, "test:model")
+    existing = DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+    try:
+        DEFAULT_REGISTRY.register_reasoner(reasoner)
+        application = Application(
+            "memory",
+            [
+                PipelineSpec(
+                    "summary",
+                    think(reasoner_name),
+                    reasoners=(reasoner_name,),
+                )
+            ],
+        )
+        expected_hash = application.runtime_declarations_hash
+        module_name = "_julep_test_worker_string_application"
+        module = types.ModuleType(module_name)
+        module.application = application
+        monkeypatch.setitem(sys.modules, module_name, module)
+
+        context_registry = Registry()
+        context_registry.register_reasoner(reasoner)
+        DEFAULT_REGISTRY.reasoners.pop(reasoner_name)
+
+        load_application_runtime(
+            f"{module_name}:application",
+            expected_hash=expected_hash,
+            registry=context_registry,
+        )
+
+        assert DEFAULT_REGISTRY.get_reasoner(reasoner_name) == reasoner
+        assert context_registry.get_reasoner(reasoner_name) == reasoner
+    finally:
+        DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+        if existing is not None:
+            DEFAULT_REGISTRY.reasoners[reasoner_name] = existing
+
+
+def test_load_application_runtime_rejects_missing_renderer(monkeypatch):
+    from julep.registry import DEFAULT_REGISTRY
+
+    reasoner_name = "serve-application-missing-renderer"
+    renderer_name = "serve-renderer-does-not-exist"
+    application = Application(
+        "memory",
+        [
+            PipelineSpec(
+                "summary",
+                think(reasoner_name),
+                reasoners=(
+                    Reasoner(
+                        reasoner_name,
+                        "test:model",
+                        system_render=renderer_name,
+                    ),
+                ),
+            )
+        ],
+    )
+    module_name = "_julep_test_worker_missing_renderer_application"
+    module = types.ModuleType(module_name)
+    module.application = application
+    monkeypatch.setitem(sys.modules, module_name, module)
+    existing_reasoner = DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+    existing_renderer = DEFAULT_REGISTRY.renderers.pop(renderer_name, None)
+    try:
+        with pytest.raises(ApplicationDefinitionError, match="unknown renderer"):
+            load_application_runtime(
+                f"{module_name}:application",
+                expected_hash="sha256:" + "0" * 64,
+            )
+    finally:
+        DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+        if existing_reasoner is not None:
+            DEFAULT_REGISTRY.reasoners[reasoner_name] = existing_reasoner
+        if existing_renderer is not None:
+            DEFAULT_REGISTRY.renderers[renderer_name] = existing_renderer
 
 
 def test_serve_rejects_factory_returning_wrong_type():

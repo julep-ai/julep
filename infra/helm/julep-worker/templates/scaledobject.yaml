@@ -1,10 +1,20 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: ca-llm-worker-temporal
+  name: {{ .Release.Name }}-temporal
+  labels:
+    app.kubernetes.io/name: julep-worker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    julep.ai/lane: {{ .Values.worker.lane | quote }}
+  annotations:
+    julep.ai/application: {{ .Values.worker.application | quote }}
+    julep.ai/lane: {{ .Values.worker.lane | quote }}
+    julep.ai/release-hash: {{ .Values.worker.releaseHash | quote }}
+    julep.ai/deployment-revision: {{ .Values.worker.deploymentRevision | quote }}
+    julep.ai/deployment-config-hash: {{ .Values.worker.deploymentConfigHash | quote }}
 spec:
   scaleTargetRef:
-    name: ca-llm-worker
+    name: {{ .Release.Name }}
   pollingInterval: {{ .Values.scaling.pollingInterval }}
   cooldownPeriod: {{ .Values.scaling.cooldownPeriod }}
   minReplicaCount: {{ .Values.scaling.minReplicas }}

@@ -7,7 +7,9 @@ backlog (see docs/deploy-kubernetes.md). The framework pieces it adds:
 
 * :class:`WorkerServeSettings` — connection/tuning knobs read from the
   environment (:meth:`WorkerServeSettings.from_env`), the natural surface for a
-  container. The one thing that cannot come from an env var is the
+  container. Application releases name their explicit ``Application`` object
+  and its immutable declarations hash so inline reasoners are registered before
+  polling. The one thing that cannot come from an env var is the
   :class:`~julep.execution.effects.WorkerContext` (it holds live
   callables), so it is named by ``WORKER_CONTEXT_FACTORY`` as an importable
   ``module:attr`` factory — required, never defaulted.
@@ -29,15 +31,19 @@ import asyncio
 import contextlib
 import inspect
 import os
+import re
 import signal
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any, Callable, Mapping, Optional
+from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional
 
 from ..errors import JulepError
 from .effects import WorkerContext
+
+if TYPE_CHECKING:
+    from ..registry import Registry
 
 # Canonical default task queue. `execution.worker` re-exports this; it is
 # defined here because this module must import without temporalio.
@@ -79,13 +85,44 @@ def _env_float(env: Mapping[str, str], name: str, default: float) -> float:
         raise ValueError(f"{name} must be a number, got {raw!r}") from exc
 
 
+def payload_encryption_from_env(
+    env: Mapping[str, str],
+) -> tuple[Optional[str], Optional[str], bool]:
+    """Parse the shared Temporal payload-encryption environment contract.
+
+    Every client and worker entrypoint uses this helper so an explicit
+    ``TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=true`` can never silently fall back
+    to Temporal's plaintext data converter.
+    """
+
+    payload_keys = env.get("TEMPORAL_PAYLOAD_KEYS") or None
+    payload_key_id = env.get("TEMPORAL_PAYLOAD_KEY_ID") or None
+    if (payload_keys is None) != (payload_key_id is None):
+        raise ValueError(
+            "TEMPORAL_PAYLOAD_KEYS and TEMPORAL_PAYLOAD_KEY_ID must be set together"
+        )
+    required = _env_bool(
+        env,
+        "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED",
+        default=False,
+    )
+    if required and payload_keys is None:
+        raise ValueError(
+            "Temporal payload encryption is required but "
+            "TEMPORAL_PAYLOAD_KEYS and TEMPORAL_PAYLOAD_KEY_ID are missing"
+        )
+    return payload_keys, payload_key_id, required
+
+
 @dataclass(frozen=True)
 class WorkerServeSettings:
     """Environment-shaped configuration for one worker replica.
 
     ``context_factory`` is a ``module:attr`` spec naming a zero-argument
     callable (sync or async) that returns the process's
-    :class:`~julep.execution.effects.WorkerContext`. ``tls``
+    :class:`~julep.execution.effects.WorkerContext`. ``application`` names the
+    release-pinned :class:`~julep.app.Application` whose inline declarations
+    are verified and registered into its context before polling. ``tls``
     defaults to True exactly when ``api_key`` is set (Temporal Cloud);
     self-hosted plaintext stays the default otherwise.
     """
@@ -102,12 +139,18 @@ class WorkerServeSettings:
     health_port: Optional[int] = None
     build_id: Optional[str] = None
     use_worker_versioning: bool = False
+    payload_keys: Optional[str] = field(default=None, repr=False)
+    payload_key_id: Optional[str] = None
+    payload_encryption_required: bool = False
+    application: Optional[str] = None
+    runtime_declarations_hash: Optional[str] = None
 
     @classmethod
     def from_env(cls, env: Optional[Mapping[str, str]] = None) -> "WorkerServeSettings":
         """Read settings from ``env`` (default ``os.environ``).
 
-        Variables: ``WORKER_CONTEXT_FACTORY`` (required), ``TEMPORAL_ADDRESS``,
+        Variables: ``WORKER_CONTEXT_FACTORY`` (required), ``WORKER_APPLICATION``
+        and ``WORKER_RUNTIME_DECLARATIONS_HASH`` (paired), ``TEMPORAL_ADDRESS``,
         ``TEMPORAL_NAMESPACE``, ``TEMPORAL_TASK_QUEUE``, ``TEMPORAL_API_KEY``,
         ``TEMPORAL_TLS``, ``WORKER_GRACEFUL_SHUTDOWN_S``,
         ``WORKER_MAX_CONCURRENT_ACTIVITIES``,
@@ -122,9 +165,33 @@ class WorkerServeSettings:
                 "returning a WorkerContext. A worker without explicit context wiring "
                 "would silently run with no tool or LLM callers, so there is no default."
             )
+        application = e.get("WORKER_APPLICATION") or None
+        runtime_declarations_hash = (
+            e.get("WORKER_RUNTIME_DECLARATIONS_HASH") or None
+        )
+        if (application is None) != (runtime_declarations_hash is None):
+            raise ValueError(
+                "WORKER_APPLICATION and WORKER_RUNTIME_DECLARATIONS_HASH "
+                "must be set together"
+            )
+        if (
+            runtime_declarations_hash is not None
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", runtime_declarations_hash) is None
+        ):
+            raise ValueError(
+                "WORKER_RUNTIME_DECLARATIONS_HASH must be "
+                "sha256:<64 lowercase hex>"
+            )
         api_key = e.get("TEMPORAL_API_KEY") or None
+        (
+            payload_keys,
+            payload_key_id,
+            payload_encryption_required,
+        ) = payload_encryption_from_env(e)
         return cls(
             context_factory=factory,
+            application=application,
+            runtime_declarations_hash=runtime_declarations_hash,
             address=e.get("TEMPORAL_ADDRESS", "localhost:7233"),
             namespace=e.get("TEMPORAL_NAMESPACE", "default"),
             task_queue=e.get("TEMPORAL_TASK_QUEUE", DEFAULT_TASK_QUEUE),
@@ -136,6 +203,9 @@ class WorkerServeSettings:
             health_port=_env_int(e, "WORKER_HEALTH_PORT"),
             build_id=e.get("CA_WORKER_BUILD_ID") or None,
             use_worker_versioning=_env_bool(e, "CA_WORKER_VERSIONING", default=False),
+            payload_keys=payload_keys,
+            payload_key_id=payload_key_id,
+            payload_encryption_required=payload_encryption_required,
         )
 
 
@@ -276,10 +346,29 @@ async def _resolve_context(spec: str) -> WorkerContext:
     return context
 
 
+def load_application_runtime(
+    spec: str,
+    *,
+    expected_hash: str,
+    registry: Optional[Registry] = None,
+) -> None:
+    """Load and verify release-pinned application declarations for a worker."""
+
+    from ..app import load_application_spec
+
+    application = load_application_spec(spec)
+    application.register_runtime_declarations(
+        expected_hash=expected_hash,
+        registry=registry,
+    )
+
+
 async def serve(
     settings: WorkerServeSettings,
     *,
     shutdown_event: Optional[asyncio.Event] = None,
+    ready_event: Optional[asyncio.Event] = None,
+    verify_connection: bool = False,
 ) -> None:
     """Run one worker replica until shutdown, then drain gracefully.
 
@@ -298,7 +387,7 @@ async def serve(
         raise JulepError(
             "serve() requires temporalio; install 'julep[temporal]'"
         ) from exc
-    from .worker import build_worker
+    from .worker import build_worker, encrypted_payload_converter
 
     health: Optional[HealthServer] = None
     if settings.health_port is not None:
@@ -317,6 +406,16 @@ async def serve(
 
     try:
         context = await _resolve_context(settings.context_factory)
+        if settings.application is not None:
+            if settings.runtime_declarations_hash is None:
+                raise JulepError(
+                    "worker application requires a runtime declarations hash"
+                )
+            load_application_runtime(
+                settings.application,
+                expected_hash=settings.runtime_declarations_hash,
+                registry=context.registry,
+            )
 
         connect_kwargs: dict[str, Any] = {
             "namespace": settings.namespace,
@@ -327,7 +426,25 @@ async def serve(
         }
         if settings.api_key is not None:
             connect_kwargs["api_key"] = settings.api_key
+        if settings.payload_keys is not None:
+            from .codec import parse_aes_gcm_keyring
+            from .trace_headers import WorkflowTraceHeadersInterceptor
+            from temporalio.common import HeaderCodecBehavior
+
+            assert settings.payload_key_id is not None
+            connect_kwargs["data_converter"] = encrypted_payload_converter(
+                parse_aes_gcm_keyring(settings.payload_keys),
+                active_key_id=settings.payload_key_id,
+            )
+            connect_kwargs["header_codec_behavior"] = HeaderCodecBehavior.CODEC
+            connect_kwargs["interceptors"] = [WorkflowTraceHeadersInterceptor()]
         client = await Client.connect(settings.address, **connect_kwargs)
+        if verify_connection:
+            healthy = await client.service_client.check_health(
+                timeout=timedelta(seconds=10)
+            )
+            if not healthy:
+                raise JulepError("Temporal frontend health check failed")
 
         worker_kwargs: dict[str, Any] = {
             "graceful_shutdown_timeout": timedelta(seconds=settings.graceful_shutdown_s),
@@ -347,6 +464,8 @@ async def serve(
         stop_task = asyncio.create_task(stop.wait())
         if health is not None:
             health.ready = True
+        if ready_event is not None:
+            ready_event.set()
         try:
             await asyncio.wait({run_task, stop_task}, return_when=asyncio.FIRST_COMPLETED)
             if health is not None:
@@ -367,10 +486,70 @@ async def serve(
             await health.stop()
 
 
+async def smoke_test_worker(
+    settings: WorkerServeSettings,
+    *,
+    poll_seconds: float = 3.0,
+    startup_timeout_seconds: float = 30.0,
+) -> None:
+    """Start the real worker briefly, then drain it after polling is established."""
+
+    if poll_seconds <= 0:
+        raise ValueError("poll_seconds must be positive")
+    if startup_timeout_seconds <= 0:
+        raise ValueError("startup_timeout_seconds must be positive")
+
+    stop = asyncio.Event()
+    ready = asyncio.Event()
+    task = asyncio.create_task(
+        serve(
+            replace(settings, health_port=None),
+            shutdown_event=stop,
+            ready_event=ready,
+            verify_connection=True,
+        )
+    )
+    ready_task = asyncio.create_task(ready.wait())
+    try:
+        done, _pending = await asyncio.wait(
+            {task, ready_task},
+            timeout=startup_timeout_seconds,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if task in done:
+            await task
+            raise JulepError("worker exited before becoming ready for its smoke test")
+        if ready_task not in done:
+            raise TimeoutError(
+                "worker did not become ready before the smoke-test startup timeout"
+            )
+        await asyncio.sleep(poll_seconds)
+        if task.done():
+            await task
+            raise JulepError("worker exited before completing the smoke-test window")
+        stop.set()
+        await asyncio.wait_for(
+            task,
+            timeout=max(5.0, settings.graceful_shutdown_s + 5.0),
+        )
+    finally:
+        ready_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await ready_task
+        if not task.done():
+            stop.set()
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+
 __all__ = [
     "DEFAULT_TASK_QUEUE",
     "HealthServer",
     "WorkerServeSettings",
+    "load_application_runtime",
     "load_context_factory",
+    "payload_encryption_from_env",
     "serve",
+    "smoke_test_worker",
 ]

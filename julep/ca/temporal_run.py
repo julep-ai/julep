@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -140,6 +141,10 @@ def connect_temporal_client(env: EnvConfig) -> Any:
     if env.temporal_address is None:
         raise ValueError(f"env {env.name!r} has no temporal_address")
 
+    from julep.execution.serve import payload_encryption_from_env
+
+    payload_keys, payload_key_id, _required = payload_encryption_from_env(os.environ)
+
     try:
         from temporalio.client import Client
     except ImportError as exc:
@@ -148,9 +153,21 @@ def connect_temporal_client(env: EnvConfig) -> Any:
             "pip install 'julep[temporal]'"
         ) from exc
 
-    return asyncio.run(
-        Client.connect(env.temporal_address, namespace=env.temporal_namespace)
-    )
+    connect_kwargs: dict[str, Any] = {"namespace": env.temporal_namespace}
+    if payload_keys is not None:
+        from julep.execution.codec import parse_aes_gcm_keyring
+        from julep.execution.trace_headers import WorkflowTraceHeadersInterceptor
+        from julep.execution.worker import encrypted_payload_converter
+        from temporalio.common import HeaderCodecBehavior
+
+        assert payload_key_id is not None
+        connect_kwargs["data_converter"] = encrypted_payload_converter(
+            parse_aes_gcm_keyring(payload_keys),
+            active_key_id=payload_key_id,
+        )
+        connect_kwargs["header_codec_behavior"] = HeaderCodecBehavior.CODEC
+        connect_kwargs["interceptors"] = [WorkflowTraceHeadersInterceptor()]
+    return asyncio.run(Client.connect(env.temporal_address, **connect_kwargs))
 
 
 def _await_if_needed(result: Any) -> Any:

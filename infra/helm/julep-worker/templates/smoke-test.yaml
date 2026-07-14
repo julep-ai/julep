@@ -1,49 +1,36 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-smoke
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app.kubernetes.io/name: julep-worker
     app.kubernetes.io/instance: {{ .Release.Name }}
     julep.ai/lane: {{ .Values.worker.lane | quote }}
   annotations:
-    julep.ai/application: {{ .Values.worker.application | quote }}
-    julep.ai/lane: {{ .Values.worker.lane | quote }}
-    julep.ai/release-hash: {{ .Values.worker.releaseHash | quote }}
-    julep.ai/application-artifact-hash: {{ .Values.worker.applicationArtifactHash | quote }}
-    julep.ai/deployment-revision: {{ .Values.worker.deploymentRevision | quote }}
-    julep.ai/deployment-config-hash: {{ .Values.worker.deploymentConfigHash | quote }}
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
-  replicas: 0
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: julep-worker
-      app.kubernetes.io/instance: {{ .Release.Name }}
+  activeDeadlineSeconds: 90
+  backoffLimit: 0
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: julep-worker
+        app.kubernetes.io/name: julep-worker-smoke
         app.kubernetes.io/instance: {{ .Release.Name }}
-        julep.ai/lane: {{ .Values.worker.lane | quote }}
-      annotations:
-        julep.ai/application: {{ .Values.worker.application | quote }}
-        julep.ai/lane: {{ .Values.worker.lane | quote }}
-        julep.ai/release-hash: {{ .Values.worker.releaseHash | quote }}
-        julep.ai/application-artifact-hash: {{ .Values.worker.applicationArtifactHash | quote }}
-        julep.ai/deployment-revision: {{ .Values.worker.deploymentRevision | quote }}
-        julep.ai/deployment-config-hash: {{ .Values.worker.deploymentConfigHash | quote }}
     spec:
       serviceAccountName: {{ default .Release.Name .Values.serviceAccount.name | quote }}
-      priorityClassName: {{ .Values.worker.priorityClassName | quote }}
-      terminationGracePeriodSeconds: 30
+      restartPolicy: Never
       containers:
-        - name: worker
+        - name: worker-smoke
           {{ if .Values.image.digest }}
           image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
           {{ else }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           {{ end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["julep"]
+          args: ["worker", "--smoke-test-seconds", "3"]
           env:
             {{ if .Values.worker.applicationSpec }}
             - name: WORKER_APPLICATION
@@ -58,13 +45,11 @@ spec:
             - name: TEMPORAL_NAMESPACE
               value: {{ .Values.temporal.namespace | quote }}
             - name: TEMPORAL_TASK_QUEUE
-              value: {{ .Values.temporal.taskQueue | quote }}
-            - name: WORKER_HEALTH_PORT
-              value: {{ .Values.worker.healthPort | quote }}
+              value: {{ printf "%s-smoke" .Values.temporal.taskQueue | quote }}
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: {{ .Values.worker.gracefulShutdownSeconds | quote }}
             - name: WORKER_MAX_CONCURRENT_ACTIVITIES
-              value: {{ .Values.worker.maxConcurrentActivities | quote }}
+              value: "1"
             - name: TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED
               value: {{ .Values.payloadEncryption.required | quote }}
             {{ if .Values.worker.useWorkerVersioning }}
@@ -105,18 +90,3 @@ spec:
                   name: {{ $source.secretName | quote }}
                   key: {{ $source.key | quote }}
             {{ end }}
-          ports:
-            - containerPort: {{ .Values.worker.healthPort }}
-              name: health
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: health
-            periodSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /readyz
-              port: health
-            periodSeconds: 2
-          resources:
-{{ toYaml .Values.resources | indent 12 }}

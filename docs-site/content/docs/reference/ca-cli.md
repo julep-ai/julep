@@ -77,6 +77,7 @@ sibling `ca.toml`. In `ca.toml`, omit the `tool.ca` prefix and use top-level
 [tool.ca]
 src = ["pkg"]
 exclude = ["scratch_*.py"]
+application = "memory_app:application" # optional explicit Application object
 [tool.ca.tags]
 triage = ["support"]
 [tool.ca.gates]
@@ -95,23 +96,46 @@ langfuse_host = "https://cloud.langfuse.com"
 | `exclude` | `[]` | Discovery exclusion globs. |
 | `tags` | `{}` | `tag:` selection and display. |
 | `gates.fail_severity` | `error` | Default `julep lint` threshold. |
-| `env.<name>.temporal_address` | `None` | Non-local `julep run --env`. |
-| `env.<name>.temporal_namespace` | `default` | Temporal client namespace. |
+| `application` | `None` | Explicit `module:attribute` application used by `plan`, `apply`, and unselected application-level `status`; never AST-discovered. |
+| `env.<name>.temporal_address` | `None` | Non-local `julep run --env` and required application lane endpoint. |
+| `env.<name>.temporal_namespace` | `default` | Temporal client/worker namespace. |
 | `env.<name>.task_queue` | `julep` | Temporal workflow task queue. |
 | `env.<name>.cas` | `None` | Deploy CAS; implicit `local` defaults to `.ca/cas`. |
 | `env.<name>.langfuse_host` | `None` | Parsed, but current trace links read `LANGFUSE_HOST`. |
+| `env.<name>.release_store` | `None` | Application release CAS (`s3://...` or `file://...`). |
+| `env.<name>.worker_image` | `None` | Immutable `repository@sha256:...` image required by application `apply`. |
+| `env.<name>.helm_chart` | `infra/helm/julep-worker` | Local chart path or digest-pinned OCI chart. |
+| `env.<name>.kubernetes_namespace` | `julep` | Namespace for application lane releases. |
+| `env.<name>.worker_context_factory` | `None` | Required `module:attribute` worker context factory. |
+| `env.<name>.worker_service_account` | `None` | Existing Kubernetes service account used by lane workers. |
+| `env.<name>.queues` | `{}` | Logical application lane to base Temporal task queue; releases derive immutable queue names. |
+| `env.<name>.worker_environment` | `{}` | Non-secret values compiled into lane configuration and injected into workers. |
+| `env.<name>.worker_secret_environment` | `{}` | Environment name to Kubernetes `secret_name`/`key` references; values are resolved only in worker pods. |
 
 Implicit `local` always exists. `julep run --env local` always uses the in-memory
 runner because the env name is `local`.
+
+For application compilation, every `PipelineSpec.snapshot_source` is called
+with a read-only mapping of `env.<name>.vars` followed by
+`env.<name>.worker_environment` (the worker value wins on a duplicate key).
+`worker_secret_environment` contributes references only, so its secret values
+are deliberately absent from the callback mapping. A snapshot callback must
+return `McpSnapshot`.
 
 | Environment variable | Used by |
 |---|---|
 | `LANGFUSE_HOST` | `doctor`, `trace`, and Langfuse link printing. |
 | `LANGFUSE_PROJECT_ID` | Changes trace links to `/project/<id>/traces/<trace-id>`. |
 | `CA_BUNDLE_SIGNING_KEY` | Bundle signing seed or path; local non-S3 deploy sets a dev seed if unset. |
+| `CA_BUNDLE_ALLOWED_SIGNERS` | Public signer allow-list used by bundle workers; for applications, configure it under `worker_environment`. |
 | `CA_PURE_NATIVE_DEPS` | Grants named pures to publish for native execution when WASM build metadata is unsupported. |
 
-Install notes: `typer` and `click` are core dependencies; non-local `run --env` requires `julep[temporal]`; S3 CAS and missing signing dependencies require `julep[store]`.
+Install notes: `typer` and `click` are core dependencies; non-local `run --env`
+requires `julep[temporal]`; S3 CAS and signing require `julep[store]`.
+Application publishing and workers normally use `julep[store,temporal]` plus
+pipeline-specific extras. Application reconciliation/observation shells out to
+authenticated `helm`, `kubectl`, and `temporal` CLIs (`apply --publish-only`
+skips Helm reconciliation).
 
 ## `julep ls`
 
@@ -258,11 +282,62 @@ Exit/errors: unknown env exits `2`; no selected agents prints `no agents
 matched` and exits `0`; freeze/publish errors print `failed to deploy agent
 '<name>': ...` and exit `1`; success exits `0`.
 
+## `julep plan`
+
+Synopsis: `julep plan [--env ENV] [--json]`
+
+Compile the explicit `[tool.ca].application` against the selected environment's
+live MCP snapshots, observe deployed lanes, and report artifact, MCP-schema,
+worker-image, release, deployment-config, Helm/KEDA, and Temporal runtime drift.
+The command is read-only.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--env ENV` | `local` | Configured application environment. |
+| `--json` | false | Emit the complete machine-readable plan. |
+
+Read-only application commands require a 64-hex public signer in
+`env.<name>.worker_environment.CA_BUNDLE_ALLOWED_SIGNERS`, unless
+`CA_BUNDLE_SIGNING_KEY` is available as a local fallback.
+
+Exit/errors: unknown env exits `2`; invalid application/configuration or an
+observation failure exits `1`; success exits `0`. Drift is reported in output
+and does not change plan's success exit code.
+
+## `julep apply`
+
+Synopsis: `julep apply --env ENV [--publish-only]`
+
+Compile and publish a signed, immutable application release. By default it then
+reconciles one digest-pinned Helm release and release-specific Temporal task
+queue per logical lane, runs the chart's worker smoke test, and records local
+applied state. It never switches application traffic.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--env ENV` | required | Configured application environment. |
+| `--publish-only` | false | Publish release artifacts without Helm reconciliation or local applied-state recording. |
+
+`CA_BUNDLE_SIGNING_KEY` is required even with `--publish-only`; it must be a
+64-hex Ed25519 private seed or a path to a file containing one. If
+`CA_BUNDLE_ALLOWED_SIGNERS` is configured for workers, its comma-separated
+64-hex public keys must include the publishing key. An omitted allow-list is
+derived from the publishing key and injected into the worker configuration.
+
+Exit/errors: unknown env exits `2`; compile, signing, CAS, configuration, or
+reconciliation failures exit `1`; success exits `0` and prints the release,
+artifact, lane releases/queues, and `traffic unchanged`.
+
 ## `julep status`
 
 Synopsis: `julep status [SELECTOR] [--exclude EXPR] [--env ENV]`
 
-Show deployment status and drift for an environment.
+Show deployment status and drift for an environment. When
+`[tool.ca].application` is configured and neither a selector nor `--exclude` is
+provided, this is application status: it aggregates the immutable release,
+Helm Deployment, KEDA ScaledObject, and Temporal workflow/activity queue state
+for each lane. Supplying a selector or `--exclude` deliberately selects the
+legacy per-agent deploy-ledger path described below.
 
 | Arg/flag | Default | Meaning |
 |---|---|---|
@@ -278,13 +353,31 @@ julep status triage --env local
 triage                   clean       sha256:3f14bac9c12...
 ```
 
-States: `undeployed` means source exists without a ledger record; `clean` means
+Legacy states: `undeployed` means source exists without a ledger record; `clean` means
 current read-only freeze hash equals deployed hash; `drift` means source is
 missing or hashes differ; `error` means read-only freeze failed.
 
-Exit/errors: unknown env exits `2`; any `drift` or `error` exits `3`; `clean`
-and `undeployed` exit `0`. `status` uses `publish=False` and does not mutate
-CAS. The CLI prints `name`, `state`, and deployed hash or `-`.
+Exit/errors: unknown env exits `2`; application observation/configuration
+failures exit `1`; application drift or unhealthy/unknown lane state exits `3`.
+On the legacy path, any `drift` or `error` exits `3`, while `clean` and
+`undeployed` exit `0`. Status is read-only. Legacy output prints `name`, state,
+and deployed hash; application output prints release and per-lane health,
+backlog, and running counts.
+
+## `julep worker`
+
+Synopsis: `julep worker [--smoke-test-seconds SECONDS]`
+
+Run the Temporal worker described entirely by its environment contract
+(`WORKER_CONTEXT_FACTORY`, Temporal connection, task queue, CAS, codec, and
+bundle signer variables).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--smoke-test-seconds SECONDS` | `0` | Zero runs continuously. A positive value verifies Temporal connectivity, polls for that many seconds, then drains and exits. |
+
+Negative values are rejected as usage errors. The Helm application chart uses
+positive smoke mode on a release-specific empty queue before `apply` succeeds.
 
 ## `julep lint`
 

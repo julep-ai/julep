@@ -27,7 +27,7 @@ import pytest
 from julep.ca.config import CaConfig, EnvConfig, load_config
 from julep.ca.ledger import DeployRecord, upsert_records
 from julep.ca.runner import RunOutcome
-from julep.ca.temporal_run import run_on_env
+from julep.ca.temporal_run import connect_temporal_client, run_on_env
 
 
 # --------------------------------------------------------------------------- #
@@ -205,6 +205,19 @@ def test_non_local_env_without_temporal_address_raises(tmp_path: Path) -> None:
             cfg.envs["staging"],
             None,
             run_flow=lambda *a, **k: None,  # must never be reached
+        )
+
+
+def test_connect_temporal_client_required_encryption_rejects_missing_keys(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED", "true")
+    monkeypatch.delenv("TEMPORAL_PAYLOAD_KEYS", raising=False)
+    monkeypatch.delenv("TEMPORAL_PAYLOAD_KEY_ID", raising=False)
+
+    with pytest.raises(ValueError, match="payload encryption is required"):
+        connect_temporal_client(
+            EnvConfig(name="staging", temporal_address="temporal:7233")
         )
 
 
