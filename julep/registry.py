@@ -112,6 +112,27 @@ def _source_hash(fn: PureFn) -> str:
     return _text_hash(src)
 
 
+def _has_module_top_pep723_block(module_source: str) -> bool:
+    """Return ``True`` when the module header looks like a PEP 723 block.
+
+    We only inspect the preamble before the first top-level decorator or ``def``.
+    That catches a module-top block, which ``inspect.getsource(fn)`` would miss,
+    while still allowing the supported placement between ``@pure(...)`` and ``def``.
+    """
+    lines = module_source.splitlines()
+    first_defn = len(lines)
+    for idx, line in enumerate(lines):
+        if line.startswith(("@", "def ", "async def ")):
+            first_defn = idx
+            break
+    preamble = "\n".join(lines[:first_defn])
+    try:
+        deps, requires_python = parse_pep723(preamble)
+    except ValueError:
+        return True
+    return bool(deps) or requires_python is not None
+
+
 class Registry:
     """An explicit registry for named reasoners and deterministic pure functions."""
 
@@ -136,10 +157,6 @@ class Registry:
     def list_reasoners(self) -> list[str]:
         return sorted(self.reasoners)
 
-    # FIXME(P4-2/P4-6): inspect.getsource(fn) drops a module-top `# /// script` block
-    # (the idiomatic PEP 723 placement) => a dep-declaring baked pure registers as no-dep
-    # and `import <dep>` fails OPEN late in wasm. Reject pures that import an undeclared
-    # third-party module, or support module-top metadata. See TODOS.md (P4 follow-ups).
     def register_pure(self, name: str, fn: PureFn) -> PureEntry:
         if name in self.pures and self.pures[name].fn is not fn:
             raise ValueError(f"pure name already registered to a different fn: {name!r}")
@@ -151,6 +168,20 @@ class Registry:
             pass
         else:
             deps, requires_python = parse_pep723(source)
+            if not deps:
+                module = inspect.getmodule(fn)
+                module_source = None
+                if module is not None:
+                    try:
+                        module_source = inspect.getsource(module)
+                    except (OSError, TypeError):
+                        module_source = None
+                if module_source is not None and _has_module_top_pep723_block(module_source):
+                    raise ValueError(
+                        f"pure {name!r}: a PEP 723 `# /// script` block is placed at module "
+                        "top, where register_pure cannot see it. Move it between the "
+                        "`@pure(...)` decorator and `def`."
+                    )
         entry = PureEntry(
             name=name,
             fn=fn,
