@@ -158,7 +158,7 @@ git commit -m "feat(define): add switch_on(subject, key=, cases=) branching suga
   5. **Fan-out** — `each(body, items, max_parallel=…)` over a list; note the body item param is positional.
   6. **Deploy & inspect** — `deployment.surface_shape`, `prod_gap_summary()`, and the keyless `dry_run` story.
 
-  Each fenced block must be a complete runnable program (imports + flow + deploy + dry_run + print), tagged `<!-- ca:doctest expect-output -->` with a following ```text``` block where the output is stable, else left as default-run (no pragma). Mark any partial illustrative snippet `<!-- ca:doctest skip -->`. End-state mirrors the experiment's returns-triage task so the ladder doubles as a worked example.
+  Each fenced block must be a complete runnable program (imports + flow + deploy + dry_run + print), tagged `<!-- julep:doctest expect-output -->` with a following ```text``` block where the output is stable, else left as default-run (no pragma). Mark any partial illustrative snippet `<!-- julep:doctest skip -->`. End-state mirrors the experiment's returns-triage task so the ladder doubles as a worked example.
 
 - [ ] **Step 2: Add `ladder` to the nav.** In `start/meta.json`, insert `"ladder"` into the `pages` array in reading order (after `first-flow`, before `next-steps`). Match the existing JSON shape exactly.
 

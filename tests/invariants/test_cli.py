@@ -4,7 +4,7 @@ import json
 
 from julep import Diagnostic, arr, ident, register_pure, seq
 from julep import explain as explain_diagnostics
-from julep import cli
+from julep.cli import artifact as cli
 
 
 def _write_json(path, payload) -> None:

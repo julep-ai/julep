@@ -3,13 +3,13 @@
 # This image holds no flow code, no pures, and no example modules. It is built
 # once at framework cadence and is never rebuilt to ship a new flow. The flow
 # and its custom pures arrive as a signed CAS bundle resolved from STORE_URL at
-# startup (WORKER_CONTEXT_FACTORY below plus CA_BUNDLES and
-# CA_BUNDLE_ALLOWED_SIGNERS in the Deployment env).
+# startup (WORKER_CONTEXT_FACTORY below plus JULEP_BUNDLES and
+# JULEP_BUNDLE_ALLOWED_SIGNERS in the Deployment env).
 #
 # The `julep worker` entrypoint provides /healthz, /readyz, and
 # graceful SIGTERM drain. `uv` is present for the P4 native dependency tier: a
 # per-pure uv-managed venv is built on the worker at bundle-resolution time only
-# for off-WASI-wheel deps explicitly granted by CA_PURE_NATIVE_DEPS. The default
+# for off-WASI-wheel deps explicitly granted by JULEP_PURE_NATIVE_DEPS. The default
 # wasm tier does not need uv, so uv stays dormant unless a native grant is set.
 FROM python:3.12-slim
 

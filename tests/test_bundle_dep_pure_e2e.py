@@ -239,14 +239,14 @@ def test_off_list_dep_without_native_grant_blocks_deploy_and_publish(
     name = "dep.e2e.numpy.blocked.v1"
     source = _source(name, "numpy==2")
     with _with_default_source(name, source):
-        monkeypatch.delenv("CA_PURE_NATIVE_DEPS", raising=False)
+        monkeypatch.delenv("JULEP_PURE_NATIVE_DEPS", raising=False)
         with pytest.raises(PureDepsUnbuildableError) as deploy_exc:
             deploy(arr(name), read_snapshot())
         assert name in str(deploy_exc.value)
         assert "numpy==2" in str(deploy_exc.value)
-        assert "CA_PURE_NATIVE_DEPS" in str(deploy_exc.value)
+        assert "JULEP_PURE_NATIVE_DEPS" in str(deploy_exc.value)
 
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
         with pytest.raises(PureDepsUnbuildableError) as publish_exc:
             publish_bundle(
@@ -268,7 +268,7 @@ def test_off_list_dep_with_native_grant_resolves_as_native_venv(
     name = "dep.e2e.numpy.native.v1"
     source = _source(name, "numpy==2")
     with _with_default_source(name, source, tier="native_venv"):
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
         store = LocalDirCAS(tmp_path)
         rec = publish_bundle(
@@ -306,7 +306,7 @@ def test_off_list_dep_with_native_grant_resolves_as_native_venv(
     assert entry.requires_python == ">=3.11"
 
     denied = Registry()
-    with pytest.raises(BundleResolutionError, match="CA_PURE_NATIVE_DEPS"):
+    with pytest.raises(BundleResolutionError, match="JULEP_PURE_NATIVE_DEPS"):
         resolve_and_register(
             store,
             rec["bundleHash"],

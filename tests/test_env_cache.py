@@ -284,9 +284,9 @@ def test_off_list_dep_publish_fails_closed(tmp_path: Path, monkeypatch: pytest.M
     name = "env.cache.numpy.v1"
     _patch_synth_env_builder(monkeypatch, tmp_path)
     with _with_default_source(name, _source(name, "numpy==2")):
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
-        monkeypatch.delenv("CA_PURE_NATIVE_DEPS", raising=False)
+        monkeypatch.delenv("JULEP_PURE_NATIVE_DEPS", raising=False)
         with pytest.raises(BundleError, match="off the curated WASI wheel list"):
             deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED)
 

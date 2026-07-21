@@ -8,7 +8,7 @@ for boto3 and ed25519 signing)::
 
 Writes the signed CAS bundle (manifest + flowJson + pure source + detached
 signature) into the S3 bucket and prints/saves the env the generic worker needs:
-``CA_BUNDLES`` (``<bundleHash>:<signatureDigest>``) and the signer public key.
+``JULEP_BUNDLES`` (``<bundleHash>:<signatureDigest>``) and the signer public key.
 The worker pod is given the same ``STORE_URL`` and reads the bundle from S3 at
 startup -- zero docker in the per-flow loop: the flow ships as data, not an image.
 
@@ -31,11 +31,12 @@ from cryptography.hazmat.primitives import serialization  # noqa: E402
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey  # noqa: E402
 
 import grade_scores_flow  # noqa: E402
+from julep import _env  # noqa: E402
 from julep.cas import cas_from_url  # noqa: E402
 
 # DEMO KEY — a fixed ed25519 seed so the demo is reproducible. NOT a secret; a
 # real deployment generates a seed and keeps it out of the repo.
-DEMO_SEED = os.environ.get("CA_BUNDLE_SIGNING_KEY", "c0de" * 16)
+DEMO_SEED = _env.get(_env.JULEP_BUNDLE_SIGNING_KEY, "c0de" * 16)
 
 
 def _public_key(seed: str) -> str:
@@ -61,8 +62,8 @@ def main() -> None:
 
     env = {
         "STORE_URL": store_url,
-        "CA_BUNDLES": f"{rec['bundleHash']}:{rec['signatureDigest']}",
-        "CA_BUNDLE_ALLOWED_SIGNERS": _public_key(DEMO_SEED),
+        _env.JULEP_BUNDLES: f"{rec['bundleHash']}:{rec['signatureDigest']}",
+        _env.JULEP_BUNDLE_ALLOWED_SIGNERS: _public_key(DEMO_SEED),
         "publishedArtifactHash": rec["publishedArtifactHash"],
         "pures": sorted(deployment.artifact_components["pureSourceHashes"]),
     }

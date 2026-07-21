@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-import julep as ca
+import julep as julep_api
 from julep import as_flow, cond, delay, deploy, dsl, each, flow, pure, reschedule, switch, think, tool
 from julep.define import DefineError, Handle
 from julep.ir import Node, SLEEP_TOOL, CallStep, NativeTool, ThinkStep, canonical_json
@@ -1007,7 +1007,7 @@ def test_qualified_and_aliased_control_helpers_are_allowed_by_identity() -> None
 
     @flow
     def qualified(source: dict[str, Any]) -> dict[str, Any]:
-        result = ca.cond(p52_episode_found, source, then=found, orelse=missing)
+        result = julep_api.cond(p52_episode_found, source, then=found, orelse=missing)
         return result
 
     @flow

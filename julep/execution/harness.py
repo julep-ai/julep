@@ -399,7 +399,7 @@ class FlowInput:
     # workflow input so it is replay-stable and absent from the frozen artifact.
     principal: Optional[dict[str, Any]] = None
     # Signed CAS bundle pointers for custom pures referenced by this flow.
-    # Worker-side STORE_URL and CA_BUNDLE_ALLOWED_SIGNERS remain authoritative.
+    # Worker-side STORE_URL and JULEP_BUNDLE_ALLOWED_SIGNERS remain authoritative.
     bundle: Optional[list[dict[str, str]]] = None
     # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
     root_run_id: Optional[str] = None
@@ -685,7 +685,7 @@ class _TemporalEnv:
                     reasoner, value, cid, timeout_s, QoSTier.STANDARD
                 )
                 return {
-                    "__ca_meta__": {
+                    "__julep_meta__": {
                         "tier": QoSTier.STANDARD.value,
                         "promoted": True,
                         "reason": "batch_timeout",
@@ -698,7 +698,7 @@ class _TemporalEnv:
                     reasoner, value, cid, timeout_s, QoSTier.STANDARD
                 )
                 return {
-                    "__ca_meta__": {
+                    "__julep_meta__": {
                         "tier": QoSTier.STANDARD.value,
                         "promoted": True,
                         "reason": err_reason,
@@ -2152,8 +2152,8 @@ class AgentWorkflow:
                 start_to_close_timeout=timedelta(seconds=policy.reasoner_timeout_s),
                 retry_policy=_reasoner_retry(policy),
             )
-            if isinstance(reply, dict) and "__ca_meta__" in reply and "reply" in reply:
-                meta = reply["__ca_meta__"]
+            if isinstance(reply, dict) and "__julep_meta__" in reply and "reply" in reply:
+                meta = reply["__julep_meta__"]
                 state.controller_meta = (
                     dict(meta) if isinstance(meta, dict) else {"meta": meta}
                 )
@@ -2641,8 +2641,8 @@ def build_flow_input(
 ) -> FlowInput:
     """Single source of truth for deployed-run FlowInput construction.
 
-    Used by run_flow AND by ca-layer ``build_flow_start_args`` consumers
-    (ca run / ca schedule) so scheduled and manual runs carry byte-identical args.
+    Used by run_flow and by Julep CLI ``build_flow_start_args`` consumers
+    (julep run / julep schedule) so scheduled and manual runs carry byte-identical args.
     """
     return FlowInput(
         session_id=session_id,

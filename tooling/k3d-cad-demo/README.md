@@ -18,8 +18,8 @@ The generic runtime image is defined once at `tooling/runtime-image/Dockerfile`;
   dir the k3d node bind-mounts at `/cas`.
 - The worker runs the stock `julep worker` with
   `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`.
-  At startup it resolves `CA_BUNDLES`, verifies the signature against
-  `CA_BUNDLE_ALLOWED_SIGNERS` (fail-closed), and registers the bundle's pures —
+  At startup it resolves `JULEP_BUNDLES`, verifies the signature against
+  `JULEP_BUNDLE_ALLOWED_SIGNERS` (fail-closed), and registers the bundle's pures —
   before accepting any task.
 - `drive.py` submits the flow on Temporal. The pod runs it and returns the
   result, byte-identical to the local dry run.
@@ -41,8 +41,8 @@ the worker. Re-running it is idempotent.
 
 ## Ship a *different* flow without touching docker
 
-Point `publish.py` at another deployment, re-run publish, patch `CA_BUNDLES` +
-`CA_BUNDLE_ALLOWED_SIGNERS` on the Deployment, and the same image runs the new
+Point `publish.py` at another deployment, re-run publish, patch `JULEP_BUNDLES` +
+`JULEP_BUNDLE_ALLOWED_SIGNERS` on the Deployment, and the same image runs the new
 flow. The image never changes.
 
 ## Autoscaling (optional, KEDA)
@@ -62,11 +62,11 @@ core demo runs on the plain `replicas: 1` Deployment regardless.
   and fail closed on unsigned/unknown-signer/tampered bundles.
 - Bundle-sourced pures run in the **P3 wasmtime sandbox** (no clock, filesystem,
   or network; fresh instance per call), not natively in-process. Resolution is
-  therefore ungated — the old P2 dev-only `CA_BUNDLE_NATIVE_EXEC=1` flag is gone.
+  therefore ungated — the old P2 dev-only `JULEP_BUNDLE_NATIVE_EXEC=1` flag is gone.
   The fixed `DEMO_SEED` in `publish.py` is a throwaway demo key, not a secret.
 - The wasm executor needs the `wasm` extra (`wasmtime`) installed in the worker
   image; without it, resolving a bundle pure fails fast at lookup time.
-- The P4 native dependency tier is opt-in only: uncomment `CA_PURE_NATIVE_DEPS`
+- The P4 native dependency tier is opt-in only: uncomment `JULEP_PURE_NATIVE_DEPS`
   in `worker.yaml` to grant named pures access to the uv-managed native venv
   tier for deps with no WASI wheel. Empty or unset remains wasm-only.
 
@@ -77,6 +77,6 @@ runbook.
 
 ```bash
 K3D=$(ls -d "$HOME"/.local/share/mise/installs/k3d/*/k3d | sort -V | tail -1)
-"$K3D" cluster delete ca-cad-demo
+"$K3D" cluster delete julep-cad-demo
 pkill -f "temporal server start-dev" || true
 ```

@@ -110,22 +110,19 @@ in the source.
   block, so a dep'd baked pure publishes as no-dep and imports fail late in wasm. Reject
   pures importing an undeclared third-party module, or support module-top metadata; fix
   `examples/regex_extract_flow.py` to the documented placement.
-- **FIXME(P4-3) major — weak validation.** `deps.parse_pep723` coerces invalid
-  `requires-python` to null (envHash collision) and does not PEP 508-validate deps.
-  Reject both at parse/publish.
-- **FIXME(P4-4) minor — non-canonical manifest accepted.** `worker_store._manifest_pures`
-  accepts explicit `executorTier:"wasm"` and absent-vs-null; enforce SPEC §6.5 canonical
-  presence. (Bounded: manifest is content-addressed + signed.)
-- **FIXME(P4-5) minor — tar extraction.** `env_builder._safe_extract` lacks
-  `filter='data'`; add it / refuse symlink+hardlink members.
+- **RESOLVED(P4-3) — strict PEP 723 validation.** Unknown keys, invalid PEP 508
+  dependencies, and invalid `requires-python` specifiers now fail at parse/publish.
+- **RESOLVED(P4-4) — canonical manifest presence.** Worker resolution now rejects
+  explicit wasm-tier defaults and null encodings for fields that must be absent.
+- **RESOLVED(P4-5).** P4-1 wheel vendoring removed the extraction path; no tar is extracted in-package.
 - **FIXME(P4-6) nit — vestigial baked-deps parse.** `register_pure` parses PEP 723 but
   module-top is dropped, so baked native pures always get `deps=()`; wire consistently or
   drop the parse.
 - **Native tier real e2e (not yet exercised).** The `uv`-venv native tier
-  (`native_venv_executor`) resolves/registers behind `CA_PURE_NATIVE_DEPS` but its in-venv
+  (`native_venv_executor`) resolves/registers behind `JULEP_PURE_NATIVE_DEPS` but its in-venv
   subprocess execution is not run in CI (needs uv + network). A numpy pure through the
   native tier on a worker is the natural P5 dep'd-pure acceptance. Manifest wiring for
-  `CA_PURE_NATIVE_DEPS` in the k3d/EKS worker manifests is done.
+  `JULEP_PURE_NATIVE_DEPS` in the k3d/EKS worker manifests is done.
 
 ## P5 runtime/infra/docs: review follow-ups
 

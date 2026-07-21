@@ -18,7 +18,7 @@ Related docs: [docs index](/docs), [concepts](/docs/concepts/model), [spec](/doc
 
 Use this when production Julep workers need deploy, scale, drain,
 rollback, or wedged-flow triage. This is the Temporal/Kubernetes path:
-`FlowWorkflow`, `AgentWorkflow`, `SessionWorkflow`, `python -m julep.cli worker`,
+`FlowWorkflow`, `AgentWorkflow`, `SessionWorkflow`, `julep worker`,
 and KEDA's `temporal` scaler on task-queue backlog.
 
 Do not use it for DBOS operations. DBOS runs through `julep.execution.dbos_backend`, rejects `race`/`hedge`/`quorum`, and uses DBOS queues/workflows instead of Temporal polling.
@@ -35,11 +35,11 @@ python -m pip install --pre 'julep[store,wasm]'
 
 You need Temporal address/namespace/task queue, Kubernetes rights for
 Deployments/Secrets/HPAs/KEDA `ScaledObject`s, an image that runs
-`python -m julep.cli worker`, provider/tool credentials as Secrets, and one
+`julep worker`, provider/tool credentials as Secrets, and one
 `WorkerContext` factory. Use `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`
 for an app-specific image, or
 `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
-plus `STORE_URL`, `CA_BUNDLES`, and `CA_BUNDLE_ALLOWED_SIGNERS` for the generic
+plus `STORE_URL`, `JULEP_BUNDLES`, and `JULEP_BUNDLE_ALLOWED_SIGNERS` for the generic
 signed-bundle worker.
 
 #### Procedure
@@ -47,14 +47,14 @@ signed-bundle worker.
 1. Set operator variables.
 
    ```bash
-   export CA_ENV=prod
+   export JULEP_ENV=prod
    export AGENT=triage
    export NS=julep-prod
-   export WORKER_DEPLOY=ca-worker
+   export WORKER_DEPLOY=julep-worker
    export TASK_QUEUE=julep
    export TEMPORAL_ADDRESS=temporal-frontend.temporal.svc.cluster.local:7233
    export TEMPORAL_NAMESPACE=default
-   export IMAGE=registry.example.com/ca-worker:2026-06-25
+   export IMAGE=registry.example.com/julep-worker:2026-06-25
    export WORKER_CONTEXT_FACTORY=yourapp.worker:make_context
    export SMOKE_INPUT='"TICKET-42"'
    ```
@@ -64,8 +64,8 @@ signed-bundle worker.
    ```bash
    julep doctor
    julep lint "$AGENT"
-   julep deploy "$AGENT" --env "$CA_ENV"
-   julep status "$AGENT" --env "$CA_ENV"
+   julep deploy "$AGENT" --env "$JULEP_ENV"
+   julep status "$AGENT" --env "$JULEP_ENV"
    ```
 
    Healthy result: discovery is `ok`, lint prints `clean`, deploy prints an
@@ -76,7 +76,7 @@ signed-bundle worker.
 
    ```bash
    kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
-   kubectl -n "$NS" create secret generic ca-worker-secrets \
+   kubectl -n "$NS" create secret generic julep-worker-secrets \
      --from-literal=ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
      --dry-run=client -o yaml | kubectl apply -f -
    ```
@@ -107,7 +107,7 @@ signed-bundle worker.
            - name: worker
              image: ${IMAGE}
              envFrom:
-               - secretRef: {name: ca-worker-secrets}
+               - secretRef: {name: julep-worker-secrets}
              env:
                - {name: WORKER_CONTEXT_FACTORY, value: "${WORKER_CONTEXT_FACTORY}"}
                - {name: TEMPORAL_ADDRESS, value: "${TEMPORAL_ADDRESS}"}
@@ -183,7 +183,7 @@ signed-bundle worker.
 
    ```bash
    kubectl get deployment "$WORKER_DEPLOY" -n "$NS" -w
-   julep run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
+   julep run "$AGENT" --env "$JULEP_ENV" --input "$SMOKE_INPUT"
    ```
 
    Healthy result: `julep run` prints `output: ...`; the Deployment scales up when
@@ -208,8 +208,8 @@ signed-bundle worker.
 Run after every deploy, scale change, and rollback:
 
 ```bash
-julep status "$AGENT" --env "$CA_ENV"
-julep run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
+julep status "$AGENT" --env "$JULEP_ENV"
+julep run "$AGENT" --env "$JULEP_ENV" --input "$SMOKE_INPUT"
 kubectl rollout status deployment/"$WORKER_DEPLOY" -n "$NS" --timeout=180s
 kubectl get scaledobject "${WORKER_DEPLOY}-temporal" -n "$NS"
 kubectl logs -n "$NS" deployment/"$WORKER_DEPLOY" --since=30m
@@ -240,8 +240,8 @@ Bad signed-bundle pointer:
 
 ```bash
 kubectl set env deployment/"$WORKER_DEPLOY" -n "$NS" \
-  CA_BUNDLES="$PREVIOUS_CA_BUNDLES" \
-  CA_BUNDLE_ALLOWED_SIGNERS="$PREVIOUS_CA_BUNDLE_ALLOWED_SIGNERS"
+  JULEP_BUNDLES="$PREVIOUS_JULEP_BUNDLES" \
+  JULEP_BUNDLE_ALLOWED_SIGNERS="$PREVIOUS_JULEP_BUNDLE_ALLOWED_SIGNERS"
 kubectl rollout status deployment/"$WORKER_DEPLOY" -n "$NS" --timeout=180s
 ```
 
@@ -249,13 +249,13 @@ Healthy result: startup bundle verification and `verifyPures` pass. Missing
 `STORE_URL`, unknown signer, or tampered bundle fails closed before the worker
 accepts workflow tasks.
 
-Bad deployed artifact: restore the previous `.ca/deploys/${CA_ENV}.json` record
+Bad deployed artifact: restore the previous `.julep/deploys/${JULEP_ENV}.json` record
 from the release artifact or source-control history. Do not re-freeze current
 source as rollback. Then run:
 
 ```bash
-julep status "$AGENT" --env "$CA_ENV"
-julep run "$AGENT" --env "$CA_ENV" --input "$SMOKE_INPUT"
+julep status "$AGENT" --env "$JULEP_ENV"
+julep run "$AGENT" --env "$JULEP_ENV" --input "$SMOKE_INPUT"
 ```
 
 Bad scale setting:
@@ -324,7 +324,7 @@ export ANTHROPIC_API_KEY=...
 ```
 
 - Temporal access: frontend address, namespace, task queue, and credentials.
-  `python -m julep.cli worker` reads `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`,
+  `julep worker` reads `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`,
   `TEMPORAL_TASK_QUEUE`, `TEMPORAL_API_KEY`, and `TEMPORAL_TLS`.
 - Worker context: `WORKER_CONTEXT_FACTORY=module:attr` must resolve to a
   callable returning `julep.execution.effects.WorkerContext`.
@@ -359,7 +359,7 @@ export WORKER_CONTEXT_FACTORY=yourapp.worker:make_context
 export TEMPORAL_ADDRESS=localhost:7233
 export TEMPORAL_NAMESPACE=default
 export TEMPORAL_TASK_QUEUE=julep
-python -m julep.cli worker --task-queue julep --health-port 8080
+julep worker --task-queue julep --health-port 8080
 ```
 
 Healthy result: stdout starts with
@@ -670,4 +670,4 @@ a Route53 private record for the ALB and a custom SSM document with the host/por
 then scope `StartSession` to that document. Left out of the baseline because the team is
 already cluster-admin and the egress scoping covers the main risk.
 
-<!-- ported-by ca-docs-site: deploy/operations -->
+<!-- ported-by julep-docs-site: deploy/operations -->

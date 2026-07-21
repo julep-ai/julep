@@ -4,7 +4,7 @@ No reasoners, no tools: the application is custom pures plus the ``each``
 combinator, so the published CAS bundle (``flowJson`` + pure source) *is* the
 entire app. The extraction pure declares an off-list third-party dependency
 (``numpy``) with a PEP 723 ``# /// script`` block, so the bundle records the pure
-as a native-tier dependency pure when it is granted by ``CA_PURE_NATIVE_DEPS``.
+as a native-tier dependency pure when it is granted by ``JULEP_PURE_NATIVE_DEPS``.
 
 The pure remains deterministic and JSON-in/JSON-out: the dependency import
 happens inside the pure body, and workers execute it on the native uv-venv tier

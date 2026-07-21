@@ -18,6 +18,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, Optional, Protocol
 
+from . import _env
 from .app import CompiledApplication
 from .cas import CASStore
 from .deploy import WorkflowStartOptions, _start_temporal_workflow
@@ -37,8 +38,8 @@ _PAYLOAD_KEYRING_KEY = "keyring"
 _PAYLOAD_ACTIVE_KEY_ID_KEY = "active-key-id"
 _RESERVED_WORKER_ENVIRONMENT = frozenset(
     {
-        "CA_WORKER_BUILD_ID",
-        "CA_WORKER_VERSIONING",
+        _env.JULEP_WORKER_BUILD_ID,
+        _env.JULEP_WORKER_VERSIONING,
         "TEMPORAL_ADDRESS",
         "TEMPORAL_NAMESPACE",
         "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED",

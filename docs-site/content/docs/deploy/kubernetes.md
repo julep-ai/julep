@@ -10,7 +10,7 @@ a Deployment of worker pods, autoscaled by [Temporal](/docs/deploy/temporal).
 ## The container entrypoint
 
 ```bash
-python -m julep.cli worker
+julep worker
 ```
 
 reads its configuration from the environment:
@@ -47,7 +47,7 @@ def make_context() -> WorkerContext:  # async def also works
 ```
 
 and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`. Flags override
-the environment for local runs: `python -m julep.cli worker --task-queue
+the environment for local runs: `julep worker --task-queue
 lane-embeddings --address localhost:7233`.
 
 Lifecycle per replica: the probe listener starts first (liveness is green while
@@ -76,21 +76,21 @@ ENTRYPOINT ["julep", "worker"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-worker
+  name: julep-worker
 spec:
   replicas: 1                      # KEDA takes over below
   selector:
-    matchLabels: {app: ca-worker}
+    matchLabels: {app: julep-worker}
   template:
     metadata:
-      labels: {app: ca-worker}
+      labels: {app: julep-worker}
     spec:
       # Must exceed WORKER_GRACEFUL_SHUTDOWN_S so the drain finishes
       # before the kubelet sends SIGKILL.
       terminationGracePeriodSeconds: 45
       containers:
         - name: worker
-          image: yourrepo/ca-worker:latest
+          image: yourrepo/julep-worker:latest
           env:
             - name: TEMPORAL_ADDRESS
               value: temporal-frontend.temporal.svc:7233
@@ -122,10 +122,10 @@ Temporal frontend — no metrics pipeline required:
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: ca-worker
+  name: julep-worker
 spec:
   scaleTargetRef:
-    name: ca-worker
+    name: julep-worker
   minReplicaCount: 0          # scale-to-zero; use >= 1 for a warm floor
   maxReplicaCount: 20
   cooldownPeriod: 120         # seconds idle before scaling back to zero
@@ -206,4 +206,4 @@ Related: [Temporal](/docs/deploy/temporal),
 [the Dispatch Boundary](/docs/concepts/dispatch-boundary),
 [Providers And Resilience](/docs/guides/providers-and-resilience), [docs index](/docs).
 
-<!-- ported-by ca-docs-site: deploy/kubernetes -->
+<!-- ported-by julep-docs-site: deploy/kubernetes -->

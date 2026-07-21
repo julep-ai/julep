@@ -324,7 +324,7 @@ MUST NOT be mutated in place — add `.v2`.
   for a bundle therefore record `wasm`. A bundle-sourced pure whose declared
   dependencies are off the curated WASI-wheel set MAY instead resolve to the
   `native` tier (an in-venv subprocess), but ONLY under an explicit per-pure
-  capability grant (the `CA_PURE_NATIVE_DEPS` allowlist) present at BOTH deploy
+  capability grant (the `JULEP_PURE_NATIVE_DEPS` allowlist) present at BOTH deploy
   and worker resolution. Without the grant, a deploy/publish of such a pure MUST
   fail closed naming the pure and the offending dependency; a worker MUST refuse
   to register a `native`-tier manifest pure it has not granted. A `native`-tier
@@ -903,4 +903,4 @@ and server.
 *This spec is the contract. When code and spec disagree, fix one of them on
 purpose — never let them drift silently.*
 
-<!-- ported-by ca-docs-site: internals/specification -->
+<!-- ported-by julep-docs-site: internals/specification -->

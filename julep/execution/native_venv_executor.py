@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import subprocess
 import tempfile
@@ -13,6 +12,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from .. import _env
 from ..errors import PureExecutionError
 from ..ir import canonical_json
 
@@ -63,7 +63,7 @@ class NativeVenvExecutor:
     """Run source-only pures in cached uv virtualenv subprocesses."""
 
     def __init__(self, *, cache_dir: str | Path | None = None) -> None:
-        root = cache_dir or os.environ.get("COMPOSABLE_NATIVE_VENV_CACHE_DIR")
+        root = cache_dir or _env.get(_env.JULEP_NATIVE_VENV_CACHE_DIR)
         self._cache_dir = Path(root) if root is not None else Path(tempfile.gettempdir())
         self._lock = threading.Lock()
 

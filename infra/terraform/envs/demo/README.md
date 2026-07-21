@@ -149,10 +149,10 @@ See `docs/temporal-ui-access.md` for the full flow and security model.
 Configure an explicit application and environment; no AST discovery is used:
 
 ```toml
-[tool.ca]
+[tool.julep]
 application = "memory_app:application"
 
-[tool.ca.env.production]
+[tool.julep.env.production]
 temporal_address = "temporal-frontend.temporal.svc.cluster.local:7233"
 release_store = "s3://<release-bucket>/julep"
 worker_image = "<ecr-repository>@sha256:<image-digest>"
@@ -163,7 +163,7 @@ worker_service_account = "julep-worker"
 worker_priority_class = "julep-model-worker"
 payload_encryption_secret = "temporal-payload-codec"
 
-[tool.ca.env.production.queues]
+[tool.julep.env.production.queues]
 summary = "memory-summary"
 ```
 
@@ -180,9 +180,9 @@ previous lane release and queue remain available for drain/rollback.
 
 Install `julep[store,temporal]` (plus application-specific extras) and provide
 authenticated `helm`, `kubectl`, and `temporal` CLIs on the control-plane host.
-Before applying, export `CA_BUNDLE_SIGNING_KEY` as a 64-hex Ed25519 seed or the
+Before applying, export `JULEP_BUNDLE_SIGNING_KEY` as a 64-hex Ed25519 seed or the
 path to a file containing one. Configure its 64-hex public key as the non-secret
-`CA_BUNDLE_ALLOWED_SIGNERS` value under the environment's
+`JULEP_BUNDLE_ALLOWED_SIGNERS` value under the environment's
 `worker_environment`; a configured allow-list that omits the publishing key is
 rejected. Plan and status use this public allow-list without requiring the
 private key.

@@ -13,7 +13,7 @@
 - Python **3.12+**. (copied from spec / cheatsheet)
 - The **pure core must not import `temporalio`**; only `composable_agents/execution/` may. `composable_agents/ca/` is allowed to import the interpreter/projection (it already does). Do not add a `temporalio` import anywhere in `ca/`.
 - Verify gates, run **all three** and they must be clean before any commit that closes a task:
-  - `python -m pytest tests/ca -q` (use `python -m pytest`, never bare `pytest`)
+  - `python -m pytest tests/cli -q` (use `python -m pytest`, never bare `pytest`)
   - `uv run mypy --strict composable_agents`
   - `ruff check composable_agents`
 - **Determinism contract is preserved**: pures stay registered by raw `@pure` source in the child; we are not changing how pures register, only *where* validate/interpret runs.
@@ -27,18 +27,18 @@
 - **Modify** `composable_agents/ca/resolve.py` — add a generic `_invoke_child(...)` and two parent wrappers `lint_agent(...)` / `run_agent(...)` returning small result dataclasses.
 - **Modify** `composable_agents/ca/lint.py` — consume child-side diagnostics instead of validating in-parent.
 - **Modify** `composable_agents/ca/runner.py` — `run_agent_local(...)` delegates to the child via `run_agent(...)`; keep `RunOutcome` (still used by the Temporal env path in `cli.run`); echo helpers now live in `_echo.py`.
-- **Create** `tests/ca/test_pure_cli_regression.py` — the regression: `ca lint`/`ca run` over a flow that uses a `@pure`, both at the function level and through the real CLI entry point.
+- **Create** `tests/cli/test_pure_cli_regression.py` — the regression: `ca lint`/`ca run` over a flow that uses a `@pure`, both at the function level and through the real CLI entry point.
 
 ---
 
 ### Task 1: Extract the echo-env builder into `ca/_echo.py`
 
-Pure refactor with no behavior change. Existing `tests/ca/test_run.py` is the safety net.
+Pure refactor with no behavior change. Existing `tests/cli/test_run.py` is the safety net.
 
 **Files:**
 - Create: `composable_agents/ca/_echo.py`
 - Modify: `composable_agents/ca/runner.py`
-- Test: `tests/ca/test_run.py` (existing — must stay green)
+- Test: `tests/cli/test_run.py` (existing — must stay green)
 
 **Interfaces:**
 - Produces (consumed by Tasks 2 & 4):
@@ -167,7 +167,7 @@ def run_agent_local(resolved: ResolvedAgent, value: Any, *, run_id: str) -> RunO
 
 - [ ] **Step 3: Run the existing run tests to confirm no regression**
 
-Run: `python -m pytest tests/ca/test_run.py -q`
+Run: `python -m pytest tests/cli/test_run.py -q`
 Expected: PASS (same behavior as before the extraction).
 
 - [ ] **Step 4: Run the gates**
@@ -190,21 +190,21 @@ git commit -m "refactor(ca): extract offline echo-env builder into ca/_echo"
 - Modify: `composable_agents/ca/_resolve_child.py`
 - Modify: `composable_agents/ca/resolve.py`
 - Modify: `composable_agents/ca/lint.py`
-- Test: `tests/ca/test_pure_cli_regression.py` (new)
+- Test: `tests/cli/test_pure_cli_regression.py` (new)
 
 **Interfaces:**
 - Consumes: `_discover_agent(root, src, target) -> _DiscoveryResult` (existing in `_resolve_child.py`); `composable_agents.validate.validate(node) -> list[Diagnostic]`.
 - Produces (consumed by `lint.py` and Task 3):
   - `composable_agents.ca.resolve.LintResolution(diagnostics: list[dict[str, str]], error: str | None)`
-  - `composable_agents.ca.resolve.lint_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> LintResolution`
-  - `composable_agents.ca.resolve._invoke_child(cfg: CaConfig, extra: dict[str, Any], *, timeout: float = 30.0) -> dict[str, Any]`
+  - `composable_agents.ca.resolve.lint_agent(cfg: JulepConfig, name: str, *, timeout: float = 30.0) -> LintResolution`
+  - `composable_agents.ca.resolve._invoke_child(cfg: JulepConfig, extra: dict[str, Any], *, timeout: float = 30.0) -> dict[str, Any]`
 
 - [ ] **Step 1: Write the failing regression test (lint half)**
 
-Create `tests/ca/test_pure_cli_regression.py`. The flow uses a `@pure` *and* an echo-tolerant pure body (does not index tool-output keys, so it cannot fail for an unrelated `KeyError`):
+Create `tests/cli/test_pure_cli_regression.py`. The flow uses a `@pure` *and* an echo-tolerant pure body (does not index tool-output keys, so it cannot fail for an unrelated `KeyError`):
 
 ```python
-# tests/ca/test_pure_cli_regression.py
+# tests/cli/test_pure_cli_regression.py
 from pathlib import Path
 
 import pytest
@@ -238,7 +238,7 @@ def pure_module(tmp_path: Path) -> Path:
     pkg.mkdir()
     (pkg / "__init__.py").write_text("", encoding="utf-8")
     (pkg / "agents.py").write_text(PURE_SAMPLE, encoding="utf-8")
-    (tmp_path / "pyproject.toml").write_text('[tool.ca]\nsrc = ["pkg"]\n', encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[tool.julep]\nsrc = ["pkg"]\n', encoding="utf-8")
     return tmp_path
 
 
@@ -256,7 +256,7 @@ def test_lint_resolves_pures_no_unknown_pure(pure_module: Path) -> None:
 
 - [ ] **Step 2: Run it to confirm it fails on current code**
 
-Run: `python -m pytest tests/ca/test_pure_cli_regression.py::test_lint_resolves_pures_no_unknown_pure -v`
+Run: `python -m pytest tests/cli/test_pure_cli_regression.py::test_lint_resolves_pures_no_unknown_pure -v`
 Expected: FAIL — findings include `UNKNOWN_PURE — arr function not registered: 'passthrough'`.
 
 - [ ] **Step 3: Add the `lint` action to the child** (`composable_agents/ca/_resolve_child.py`). Insert a handler in `main()` before the default `resolve` tail (after the existing `if action in ("freeze", "freeze_check")` block):
@@ -284,7 +284,7 @@ Expected: FAIL — findings include `UNKNOWN_PURE — arr function not registere
 - [ ] **Step 4: Add `_invoke_child`, `LintResolution`, and `lint_agent` to the parent** (`composable_agents/ca/resolve.py`). Refactor `resolve_agent` to use `_invoke_child` so there is one subprocess path:
 
 ```python
-def _invoke_child(cfg: CaConfig, extra: dict[str, Any], *, timeout: float = 30.0) -> dict[str, Any]:
+def _invoke_child(cfg: JulepConfig, extra: dict[str, Any], *, timeout: float = 30.0) -> dict[str, Any]:
     """Run the resolve child with ``{root, src, **extra}`` and return its payload dict.
 
     On any transport-level failure returns ``{"error": "<message>"}`` so callers
@@ -316,7 +316,7 @@ class LintResolution:
     error: str | None = None
 
 
-def lint_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> LintResolution:
+def lint_agent(cfg: JulepConfig, name: str, *, timeout: float = 30.0) -> LintResolution:
     """Validate an agent IN the child (where pures are registered) and return diagnostics."""
     data = _invoke_child(cfg, {"name": name, "action": "lint"}, timeout=timeout)
     if "error" in data:
@@ -328,7 +328,7 @@ def lint_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> LintResolu
 Then simplify `resolve_agent` to reuse `_invoke_child` (behavior identical):
 
 ```python
-def resolve_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> ResolvedAgent:
+def resolve_agent(cfg: JulepConfig, name: str, *, timeout: float = 30.0) -> ResolvedAgent:
     """Import the user's module in a subprocess and return the agent's serialized IR."""
     data = _invoke_child(cfg, {"name": name}, timeout=timeout)
     if "error" in data:
@@ -345,7 +345,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from composable_agents.ca.config import CaConfig
+from composable_agents.ca.config import JulepConfig
 from composable_agents.ca.resolve import lint_agent
 
 _SEVERITY_ORDER = {"info": 0, "warning": 1, "error": 2}
@@ -360,7 +360,7 @@ class Finding:
 
 
 def lint_agents(
-    cfg: CaConfig,
+    cfg: JulepConfig,
     names: list[str],
     *,
     fail_severity: str,
@@ -389,7 +389,7 @@ def lint_agents(
 
 - [ ] **Step 6: Run the lint regression + existing lint tests**
 
-Run: `python -m pytest tests/ca/test_pure_cli_regression.py::test_lint_resolves_pures_no_unknown_pure tests/ca/test_lint.py -v`
+Run: `python -m pytest tests/cli/test_pure_cli_regression.py::test_lint_resolves_pures_no_unknown_pure tests/cli/test_lint.py -v`
 Expected: PASS (3 tests).
 
 - [ ] **Step 7: Run the gates**
@@ -400,7 +400,7 @@ Expected: clean.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add composable_agents/ca/_resolve_child.py composable_agents/ca/resolve.py composable_agents/ca/lint.py tests/ca/test_pure_cli_regression.py
+git add composable_agents/ca/_resolve_child.py composable_agents/ca/resolve.py composable_agents/ca/lint.py tests/cli/test_pure_cli_regression.py
 git commit -m "fix(ca): validate in the resolve child so ca lint resolves @pure helpers"
 ```
 
@@ -412,17 +412,17 @@ git commit -m "fix(ca): validate in the resolve child so ca lint resolves @pure 
 - Modify: `composable_agents/ca/_resolve_child.py`
 - Modify: `composable_agents/ca/resolve.py`
 - Modify: `composable_agents/ca/runner.py`
-- Test: `tests/ca/test_pure_cli_regression.py` (extend)
+- Test: `tests/cli/test_pure_cli_regression.py` (extend)
 
 **Interfaces:**
 - Consumes: `_echo.build_echo_env` (Task 1); `composable_agents.execution.interpreter.interpret`; `ProjectionEvent.to_json/from_json` (existing in `composable_agents.projection`).
 - Produces (consumed by `runner.py`):
   - `composable_agents.ca.resolve.RunResolution(value: Any, events: list[dict[str, Any]], error: str | None)`
-  - `composable_agents.ca.resolve.run_agent(cfg: CaConfig, name: str, value: Any, *, timeout: float = 30.0) -> RunResolution`
+  - `composable_agents.ca.resolve.run_agent(cfg: JulepConfig, name: str, value: Any, *, timeout: float = 30.0) -> RunResolution`
 
 - [ ] **Step 1: Write the failing regression test (run half)**
 
-Append to `tests/ca/test_pure_cli_regression.py`:
+Append to `tests/cli/test_pure_cli_regression.py`:
 
 ```python
 def test_run_executes_pures_no_unknown_pure(pure_module: Path) -> None:
@@ -446,7 +446,7 @@ def test_run_executes_pures_no_unknown_pure(pure_module: Path) -> None:
 
 - [ ] **Step 2: Run it to confirm it fails on current code**
 
-Run: `python -m pytest tests/ca/test_pure_cli_regression.py::test_run_executes_pures_no_unknown_pure -v`
+Run: `python -m pytest tests/cli/test_pure_cli_regression.py::test_run_executes_pures_no_unknown_pure -v`
 Expected: FAIL — `outcome.error` contains `unknown pure 'passthrough'`.
 
 - [ ] **Step 3: Add the `run` action to the child** (`composable_agents/ca/_resolve_child.py`), after the `lint` block:
@@ -495,7 +495,7 @@ class RunResolution:
     error: str | None = None
 
 
-def run_agent(cfg: CaConfig, name: str, value: Any, *, timeout: float = 30.0) -> RunResolution:
+def run_agent(cfg: JulepConfig, name: str, value: Any, *, timeout: float = 30.0) -> RunResolution:
     """Interpret an agent IN the child (echo env, pures live) and return value + events."""
     data = _invoke_child(cfg, {"name": name, "action": "run", "value": value}, timeout=timeout)
     if "error" in data and "value" not in data:
@@ -539,7 +539,7 @@ def run_agent_local(resolved: ResolvedAgent, value: Any, *, run_id: str) -> RunO
         return RunOutcome(run_id=run_id, value=None, events=[], error=resolved.error)
 
     # ``resolved`` is produced by the same config; re-resolve+run in one child call.
-    from composable_agents.ca.config import CaConfig  # local import: avoid cycle at module load
+    from composable_agents.ca.config import JulepConfig  # local import: avoid cycle at module load
 
     # The caller already resolved; we need the cfg to invoke the child. cli.run passes
     # a freshly resolved agent, so re-derive cfg-less by re-running through run_agent is
@@ -559,7 +559,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from composable_agents.ca.config import CaConfig
+from composable_agents.ca.config import JulepConfig
 from composable_agents.ca.resolve import RunResolution, run_agent
 from composable_agents.projection import ProjectionEvent
 
@@ -572,7 +572,7 @@ class RunOutcome:
     error: str | None = None
 
 
-def run_agent_local(cfg: CaConfig, name: str, value: Any, *, run_id: str) -> RunOutcome:
+def run_agent_local(cfg: JulepConfig, name: str, value: Any, *, run_id: str) -> RunOutcome:
     """Execute an agent locally by interpreting it in the resolve child (pures live)."""
     resolution: RunResolution = run_agent(cfg, name, value)
     events = [ProjectionEvent.from_json(e) for e in resolution.events]
@@ -589,7 +589,7 @@ Update the test from Step 1 to the new signature:
 Update the local-run branch of `cli.run` (`composable_agents/ca/cli.py`, around lines 151-160) to the new signature (it currently does `resolved = resolve_agent(cfg, name); outcome = run_agent_local(resolved, parsed, run_id=rid)`):
 
 ```python
-    rid = run_id or f"ca-{name}-local"
+    rid = run_id or f"julep-{name}-local"
     outcome = run_agent_local(cfg, name, parsed, run_id=rid)
     if outcome.error is not None:
         typer.echo(f"error: {outcome.error}", err=True)
@@ -604,18 +604,18 @@ Remove the now-unused `resolve_agent` import in `cli.py` only if no other comman
 
 - [ ] **Step 7: Run the run regression + existing run tests**
 
-Run: `python -m pytest tests/ca/test_pure_cli_regression.py tests/ca/test_run.py -v`
-Expected: PASS. If `tests/ca/test_run.py` constructs `run_agent_local(resolved, ...)` directly, update those call sites to `run_agent_local(cfg, name, ...)` (the test already has a `cfg`/`sample_module`); show the diff in the commit.
+Run: `python -m pytest tests/cli/test_pure_cli_regression.py tests/cli/test_run.py -v`
+Expected: PASS. If `tests/cli/test_run.py` constructs `run_agent_local(resolved, ...)` directly, update those call sites to `run_agent_local(cfg, name, ...)` (the test already has a `cfg`/`sample_module`); show the diff in the commit.
 
 - [ ] **Step 8: Run the gates**
 
-Run: `python -m pytest tests/ca -q && ruff check composable_agents && uv run mypy --strict composable_agents`
+Run: `python -m pytest tests/cli -q && ruff check composable_agents && uv run mypy --strict composable_agents`
 Expected: clean.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-git add composable_agents/ca/_resolve_child.py composable_agents/ca/resolve.py composable_agents/ca/runner.py composable_agents/ca/cli.py tests/ca/test_pure_cli_regression.py tests/ca/test_run.py
+git add composable_agents/ca/_resolve_child.py composable_agents/ca/resolve.py composable_agents/ca/runner.py composable_agents/ca/cli.py tests/cli/test_pure_cli_regression.py tests/cli/test_run.py
 git commit -m "fix(ca): interpret in the resolve child so ca run executes @pure helpers"
 ```
 
@@ -626,7 +626,7 @@ git commit -m "fix(ca): interpret in the resolve child so ca run executes @pure 
 Function-level tests (Tasks 2–3) prove the resolve boundary is fixed; this proves the user-facing `ca` command works and locks it forever.
 
 **Files:**
-- Modify: `tests/ca/test_pure_cli_regression.py` (add an e2e test)
+- Modify: `tests/cli/test_pure_cli_regression.py` (add an e2e test)
 - Modify: `docs-site/content/docs/guides/using-the-cli.md` (one clarifying note)
 
 **Interfaces:**
@@ -634,7 +634,7 @@ Function-level tests (Tasks 2–3) prove the resolve boundary is fixed; this pro
 
 - [ ] **Step 1: Write the e2e CLI test**
 
-Append to `tests/ca/test_pure_cli_regression.py`:
+Append to `tests/cli/test_pure_cli_regression.py`:
 
 ```python
 import subprocess
@@ -662,7 +662,7 @@ def test_cli_lint_and_run_end_to_end(pure_module: Path) -> None:
 
 - [ ] **Step 2: Run it**
 
-Run: `python -m pytest tests/ca/test_pure_cli_regression.py::test_cli_lint_and_run_end_to_end -v`
+Run: `python -m pytest tests/cli/test_pure_cli_regression.py::test_cli_lint_and_run_end_to_end -v`
 Expected: PASS.
 
 - [ ] **Step 3: Add a docs note distinguishing `ca run` (echo) from `dry_run` (realistic).** In `docs-site/content/docs/guides/using-the-cli.md`, under the "Inner loop — local" section, after the trace-tree example, add:
@@ -678,13 +678,13 @@ Expected: PASS.
 
 - [ ] **Step 4: Full gate**
 
-Run: `python -m pytest tests/ca -q && ruff check composable_agents && uv run mypy --strict composable_agents`
+Run: `python -m pytest tests/cli -q && ruff check composable_agents && uv run mypy --strict composable_agents`
 Expected: clean.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/ca/test_pure_cli_regression.py docs-site/content/docs/guides/using-the-cli.md
+git add tests/cli/test_pure_cli_regression.py docs-site/content/docs/guides/using-the-cli.md
 git commit -m "test(ca): e2e regression for ca lint/run over @pure flows + docs note"
 ```
 

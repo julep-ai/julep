@@ -404,7 +404,7 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         timeout_s = node.ann.timeout if node.ann else None
         batchable = bool(node.ann.batchable) if node.ann else False
         out = await env.invoke_reasoner(step.reasoner, value, cid, timeout_s, batchable)
-        reply, attrs = _unwrap_ca_meta(out)
+        reply, attrs = _unwrap_julep_meta(out)
         return Result(reply, attrs=attrs, reported_cost=_reported_reasoner_cost(reply))
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
@@ -524,22 +524,22 @@ def _projection_cost(node: Node, reported_cost: Optional[float]) -> Optional[flo
     return None
 
 
-_CA_META_KEY = "__ca_meta__"
+_JULEP_META_KEY = "__julep_meta__"
 
 
-def _unwrap_ca_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
+def _unwrap_julep_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
     """Strip the framework reasoner-attribution envelope.
 
     Two shapes reach this single gateway: an ``LlmResult`` (the facade/in-memory
     path, where ``make_local_reasoner`` calls ``complete_reasoner`` directly) and
-    the ``__ca_meta__`` dict envelope (the engine path, where the ``invokeReasoner``
+    the ``__julep_meta__`` dict envelope (the engine path, where the ``invokeReasoner``
     activity wraps the reply). Both surface their LLM ``meta`` as DID ``attrs`` so
     a usage-bearing generation reaches the projection (and thus Langfuse).
     """
     if isinstance(value, LlmResult):
         return value.reply, value.meta.to_attrs()
-    if isinstance(value, dict) and _CA_META_KEY in value and "reply" in value:
-        meta = value[_CA_META_KEY]
+    if isinstance(value, dict) and _JULEP_META_KEY in value and "reply" in value:
+        meta = value[_JULEP_META_KEY]
         return value.get("reply"), (dict(meta) if isinstance(meta, dict) else {"meta": meta})
     return value, None
 

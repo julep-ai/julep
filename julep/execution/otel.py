@@ -99,13 +99,13 @@ def export_spans(
         links = [Link(contexts[p]) for p in s.parents if p in contexts]
         start_ns = _ns(s.attrs.get("llm.started_at", s.start_ts))
         span = tr.start_span(s.name, start_time=start_ns, links=links)
-        span.set_attribute("ca.cid", s.cid)
-        span.set_attribute("ca.node", s.node)
+        span.set_attribute("julep.cid", s.cid)
+        span.set_attribute("julep.node", s.node)
         for k, v in s.attrs.items():
             attr = v if isinstance(v, (str, int, float, bool)) else _json(v)
             span.set_attribute(k, attr)
         if s.cost is not None:
-            span.set_attribute("ca.cost", s.cost)
+            span.set_attribute("julep.cost", s.cost)
         if s.status == "error":
             span.set_status(Status(StatusCode.ERROR, s.error or "error"))
             if s.error:

@@ -160,7 +160,7 @@ def test_std_pures_are_excluded_when_custom_pures_are_bundled(tmp_path: Path) ->
 def test_signing_key_can_come_from_env_or_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     deployment = _simple_deployment()
 
-    monkeypatch.setenv("CA_BUNDLE_SIGNING_KEY", SEED_A)
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", SEED_A)
     from_env = deployment.publish(LocalDirCAS(tmp_path / "env"))
     assert _json_from_store(LocalDirCAS(tmp_path / "env"), from_env["signatureDigest"])[
         "publicKey"
@@ -168,7 +168,7 @@ def test_signing_key_can_come_from_env_or_file(tmp_path: Path, monkeypatch: pyte
 
     key_file = tmp_path / "seed.txt"
     key_file.write_text(f"  {SEED_B}\n", encoding="utf-8")
-    monkeypatch.setenv("CA_BUNDLE_SIGNING_KEY", str(key_file))
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", str(key_file))
     from_file = deployment.publish(LocalDirCAS(tmp_path / "file"))
     assert _json_from_store(LocalDirCAS(tmp_path / "file"), from_file["signatureDigest"])[
         "publicKey"
@@ -176,9 +176,9 @@ def test_signing_key_can_come_from_env_or_file(tmp_path: Path, monkeypatch: pyte
 
 
 def test_missing_signing_key_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CA_BUNDLE_SIGNING_KEY", raising=False)
+    monkeypatch.delenv("JULEP_BUNDLE_SIGNING_KEY", raising=False)
 
-    with pytest.raises(BundleError, match="CA_BUNDLE_SIGNING_KEY"):
+    with pytest.raises(BundleError, match="JULEP_BUNDLE_SIGNING_KEY"):
         _simple_deployment().publish(LocalDirCAS(tmp_path))
 
 

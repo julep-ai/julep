@@ -35,7 +35,7 @@ def test_scan_rejects_race():
 
 def test_scan_accepts_app():
     flow = app("triage_controller")
-    assert_dbos_executable(flow)  # no raise: app runs via the ca_agent chain
+    assert_dbos_executable(flow)  # no raise: app runs via the julep_agent chain
 
 
 def test_run_call_step_names_are_durable_identities():

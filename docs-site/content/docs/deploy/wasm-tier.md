@@ -18,7 +18,7 @@ trust surface of those bundle execution tiers.
 | Baked into the worker image | `register_pure` / `@pure(...)` | native (in-process) | none (trusted code) |
 | `std.*` library | baked | native | none |
 | Signed CAS bundle, no deps or supported WASI-wheel deps | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
-| Signed CAS bundle, off-list deps with `CA_PURE_NATIVE_DEPS` grant | `register_pure_from_source` | **native** (`uv` venv subprocess) | none (operator-trusted bundle source) |
+| Signed CAS bundle, off-list deps with `JULEP_PURE_NATIVE_DEPS` grant | `register_pure_from_source` | **native** (`uv` venv subprocess) | none (operator-trusted bundle source) |
 
 The selection is a single seam: `Registry.get_pure(name)` returns a wasm-bound
 callable for `executor == "wasm"` entries and a native-venv callable for
@@ -40,11 +40,11 @@ The **native tier** exists only for bundle pures whose declared dependencies are
 off the curated WASI-wheel set. The worker executes the bundle-shipped source as
 a real OS subprocess in a `uv`-managed venv
 (`julep/execution/native_venv_executor.py`) with the declared deps
-installed. This is outside the wasm sandbox. `CA_PURE_NATIVE_DEPS` is therefore
+installed. This is outside the wasm sandbox. `JULEP_PURE_NATIVE_DEPS` is therefore
 the operator trust boundary: adding a pure name to that allowlist means trusting
 that bundle's source to run as native code on the worker.
 
-`CA_PURE_NATIVE_DEPS` is empty by default, per-pure, and required at both
+`JULEP_PURE_NATIVE_DEPS` is empty by default, per-pure, and required at both
 publish/deploy and worker resolution. Without it, publish fails closed for
 off-list deps and workers refuse to register native-tier manifest pures they
 have not granted. A native-tier runtime ref carries no `envHash`; the worker
@@ -62,7 +62,7 @@ and [§6.6](/docs/internals/specification#66-bundle-manifest--detached-signature
 - The vendored portable component ships at
   `julep/execution/_wasm/executor.wasm` (committed). A compiled
   module cache (`.cwasm`) is built lazily at runtime (~0.9s one-time) into
-  `COMPOSABLE_WASM_CACHE_DIR` (default: the OS temp dir) and is **not** committed
+  `JULEP_WASM_CACHE_DIR` (default: the OS temp dir) and is **not** committed
   (it is wasmtime-version/platform specific). Mounting a writable, node-local
   cache dir avoids paying the one-time compile on every pod start.
 - On the Temporal path the worker passes `wasmtime` through the workflow sandbox
@@ -74,9 +74,9 @@ and [§6.6](/docs/internals/specification#66-bundle-manifest--detached-signature
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `COMPOSABLE_WASM_FUEL` | `2_000_000_000` | Fuel ceiling per call; bounds runaway compute. **Deterministic, always-on primary bound.** |
-| `COMPOSABLE_WASM_EPOCH_MS` | unset (off) | If set (>0), enables a best-effort epoch ticker + one-tick wall-clock deadline per call. **Opt-in, non-deterministic, coarse operational backstop only.** |
-| `COMPOSABLE_WASM_CACHE_DIR` | OS temp dir | Where the compiled `.cwasm` cache is written. |
+| `JULEP_WASM_FUEL` | `2_000_000_000` | Fuel ceiling per call; bounds runaway compute. **Deterministic, always-on primary bound.** |
+| `JULEP_WASM_EPOCH_MS` | unset (off) | If set (>0), enables a best-effort epoch ticker + one-tick wall-clock deadline per call. **Opt-in, non-deterministic, coarse operational backstop only.** |
+| `JULEP_WASM_CACHE_DIR` | OS temp dir | Where the compiled `.cwasm` cache is written. |
 
 A pure that exceeds fuel (or the epoch deadline, if enabled) traps; the host
 surfaces it as a `PureExecutionError` so flow error semantics match a native
@@ -122,8 +122,8 @@ stable, greppable tag. The two classes are distinct on purpose:
 | --- | --- | --- |
 | _the real Python type_ (e.g. `ValueError`, `KeyError`) | The pure raised in-sandbox (a normal application error). | Fix the pure / its input — same as a native pure raising. |
 | `WasmSandboxTrap` | The pure reached for a host capability (clock, filesystem, network, entropy, env). The `--stub-wasi` build has no WASI, so the syscall traps. | The pure is not actually pure. Remove the capability use; bundle pures must be deterministic compute only. |
-| `WasmFuelExhausted` | The pure burned through `COMPOSABLE_WASM_FUEL` (runaway compute). | Fix the runaway loop, or raise `COMPOSABLE_WASM_FUEL` if the budget is genuinely too low. |
-| `WasmDeadlineExceeded` | The pure exceeded the `COMPOSABLE_WASM_EPOCH_MS` wall-clock deadline (only when epoch interruption is enabled). | As above: fix the long-running pure or raise the deadline. |
+| `WasmFuelExhausted` | The pure burned through `JULEP_WASM_FUEL` (runaway compute). | Fix the runaway loop, or raise `JULEP_WASM_FUEL` if the budget is genuinely too low. |
+| `WasmDeadlineExceeded` | The pure exceeded the `JULEP_WASM_EPOCH_MS` wall-clock deadline (only when epoch interruption is enabled). | As above: fix the long-running pure or raise the deadline. |
 | `WasmHostError` | A host-boundary failure that is not a trap (e.g. malformed component response). | Usually a toolchain/version mismatch — check the `wasm` extra and the vendored component. |
 
 The message names the offending pure and (for traps) points back at this runbook;
@@ -135,8 +135,8 @@ failing closed with a structured diagnostic rather than a bare `WasmtimeError`.
 ## Trust model & signing
 
 Bundle resolution is **fail-closed**. The former P2 dev-only
-`CA_BUNDLE_NATIVE_EXEC` escape hatch is gone. Bundle pures default to the wasm
-sandbox; the only native bundle path is the per-pure `CA_PURE_NATIVE_DEPS`
+`JULEP_BUNDLE_NATIVE_EXEC` escape hatch is gone. Bundle pures default to the wasm
+sandbox; the only native bundle path is the per-pure `JULEP_PURE_NATIVE_DEPS`
 capability described above.
 
 Signatures are ed25519 DETACHED signatures. `bundleHash` is sha256 over the
@@ -148,7 +148,7 @@ detached signature object is stored and verified separately, consistent with
 Resolution verifies, in order, and refuses to register anything on any failure:
 
 1. **Signer allowlist.** The bundle's detached ed25519 signature must carry a
-   `publicKey` present in `CA_BUNDLE_ALLOWED_SIGNERS` (comma-separated hex keys).
+   `publicKey` present in `JULEP_BUNDLE_ALLOWED_SIGNERS` (comma-separated hex keys).
 2. **Signature.** The signature must verify against the manifest bytes, and its
    `bundleHash` must equal the requested bundle hash.
 3. **Content addressing.** Every CAS read is integrity-checked against its hash
@@ -169,7 +169,7 @@ Unsigned bundles and signatures from unknown public keys fail closed.
   uses a fixed `DEMO_SEED` purely for reproducibility — never a secret.
 - **Staging/production**: an offline or HSM/KMS-held signing key. Publish bundles
   through a signing step that never exposes the private key to the worker. Workers
-  only ever hold **public** keys (`CA_BUNDLE_ALLOWED_SIGNERS`).
+  only ever hold **public** keys (`JULEP_BUNDLE_ALLOWED_SIGNERS`).
 - **Key rotation**: add the new public key to the allowlist, republish bundles
   signed with the new key, then remove the old key once no live workers pin
   bundles signed by it. The allowlist supports multiple keys for this overlap.
@@ -229,11 +229,11 @@ scale-from-zero, and a worker image built with the `wasm` extra — requires
 cluster/S3/credentials not available in CI and remains a **manual ops step**:
 
 1. Build and push the worker image with `julep[wasm]`.
-2. Publish the signed bundle to the S3 CAS; record `CA_BUNDLES` and the signer
+2. Publish the signed bundle to the S3 CAS; record `JULEP_BUNDLES` and the signer
    public key.
-3. Set `STORE_URL`, `CA_BUNDLES`, `CA_BUNDLE_ALLOWED_SIGNERS` on the worker
+3. Set `STORE_URL`, `JULEP_BUNDLES`, `JULEP_BUNDLE_ALLOWED_SIGNERS` on the worker
    Deployment (see `tooling/sandbox-k8s/worker.yaml`).
 4. Drive the grade-scores flow and assert the wasm-tier result matches the local
    baked (native) dry-run value (parity).
 
-<!-- ported-by ca-docs-site: deploy/wasm-tier -->
+<!-- ported-by julep-docs-site: deploy/wasm-tier -->

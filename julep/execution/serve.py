@@ -39,6 +39,7 @@ from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional
 
+from .. import _env
 from ..errors import JulepError
 from .effects import WorkerContext
 
@@ -155,7 +156,7 @@ class WorkerServeSettings:
         ``TEMPORAL_TLS``, ``WORKER_GRACEFUL_SHUTDOWN_S``,
         ``WORKER_MAX_CONCURRENT_ACTIVITIES``,
         ``WORKER_MAX_CONCURRENT_WORKFLOW_TASKS``, ``WORKER_HEALTH_PORT``,
-        ``CA_WORKER_BUILD_ID``, ``CA_WORKER_VERSIONING``.
+        ``JULEP_WORKER_BUILD_ID``, ``JULEP_WORKER_VERSIONING``.
         """
         e: Mapping[str, str] = os.environ if env is None else env
         factory = e.get("WORKER_CONTEXT_FACTORY")
@@ -201,8 +202,12 @@ class WorkerServeSettings:
             max_concurrent_activities=_env_int(e, "WORKER_MAX_CONCURRENT_ACTIVITIES"),
             max_concurrent_workflow_tasks=_env_int(e, "WORKER_MAX_CONCURRENT_WORKFLOW_TASKS"),
             health_port=_env_int(e, "WORKER_HEALTH_PORT"),
-            build_id=e.get("CA_WORKER_BUILD_ID") or None,
-            use_worker_versioning=_env_bool(e, "CA_WORKER_VERSIONING", default=False),
+            build_id=_env.get(_env.JULEP_WORKER_BUILD_ID, environ=e) or None,
+            use_worker_versioning=_env_bool(
+                e,
+                _env.JULEP_WORKER_VERSIONING,
+                default=False,
+            ),
             payload_keys=payload_keys,
             payload_key_id=payload_key_id,
             payload_encryption_required=payload_encryption_required,
@@ -214,7 +219,7 @@ def _versioning_worker_kwargs(settings: WorkerServeSettings) -> dict[str, Any]:
 
     DELIBERATE deprecated-kwarg use: temporalio 1.30 deprecates `build_id` /
     `use_worker_versioning` on Worker in favor of `deployment_config`. The stable
-    contract we ship is the CA_WORKER_* env seam (parsed into WorkerServeSettings);
+    contract we ship is the JULEP_WORKER_* env seam (parsed into WorkerServeSettings);
     the Worker kwarg can migrate to deployment_config later without touching that seam.
     Omit-when-unset: versioning off + no build_id -> {} so build_worker is called
     byte-identically to before this task. When versioning is on and no explicit
@@ -230,10 +235,10 @@ def _versioning_worker_kwargs(settings: WorkerServeSettings) -> dict[str, Any]:
             build_id = version("julep")
         except PackageNotFoundError as exc:
             raise JulepError(
-                "worker versioning is on (CA_WORKER_VERSIONING=1) but no "
-                "CA_WORKER_BUILD_ID is set and the julep version cannot "
+                "worker versioning is on (JULEP_WORKER_VERSIONING=1) but no "
+                "JULEP_WORKER_BUILD_ID is set and the julep version cannot "
                 "be read from installed package metadata (source checkout or an image "
-                "without distribution metadata). Set CA_WORKER_BUILD_ID to a stable, "
+                "without distribution metadata). Set JULEP_WORKER_BUILD_ID to a stable, "
                 "per-image Build ID: versioning must never advertise a constant fake "
                 "Build ID across mutually-incompatible worker images."
             ) from exc

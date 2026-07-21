@@ -293,4 +293,4 @@ traceability.
   `callTool` return is `activities.py:155`; `recall`/`append` are `algebra.hs:207-208`
   (`:161` is `Tools`). → all corrected throughout.
 
-<!-- ported-by ca-docs-site: internals/durable-session-store -->
+<!-- ported-by julep-docs-site: internals/durable-session-store -->

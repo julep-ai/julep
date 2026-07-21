@@ -11,7 +11,7 @@ Backend-specific contracts (the deltas vs Temporal -- see docs/deploy-dbos.md):
 * **No race/hedge/quorum**. DBOS cannot cancel an in-flight step, so racing
   semantics would lie. :func:`assert_dbos_executable` rejects these at
   dispatch; the compiled output of an ``eval_plan`` is re-scanned too.
-* **App (agent-loop) nodes are supported** via a dedicated ``ca_agent``
+* **App (agent-loop) nodes are supported** via a dedicated ``julep_agent``
   workflow: one DBOS workflow per history segment (ids ``{base}``,
   ``{base}-seg1``, ...), state crossing segments in the continuation envelope.
   Standalone dispatch goes through :func:`run_agent_dbos`; ``Op.APP`` nodes in
@@ -650,7 +650,7 @@ class DbosEnv:
 # --------------------------------------------------------------------------- #
 # The workflow: one chain segment of one frozen flow.
 # --------------------------------------------------------------------------- #
-@DBOS.workflow(name="ca_flow")
+@DBOS.workflow(name="julep_flow")
 async def flow_workflow(inp: dict) -> Any:
     """Interpret one segment. ``inp`` is a plain JSON dict (camelCase keys
     mirroring :class:`~julep.execution.harness.FlowInput`)."""
@@ -727,7 +727,7 @@ async def flow_workflow(inp: dict) -> Any:
 # --------------------------------------------------------------------------- #
 # The agent workflow: one chain segment of one agent loop (Op.APP).
 # --------------------------------------------------------------------------- #
-@DBOS.workflow(name="ca_agent")
+@DBOS.workflow(name="julep_agent")
 async def agent_workflow(inp: dict) -> Any:
     """Run one history segment of the bounded agent loop.
 
@@ -1055,7 +1055,7 @@ async def _run_agent_chain(
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
 ) -> Any:
-    """Drive ``ca_agent`` segments to settlement (shared by
+    """Drive ``julep_agent`` segments to settlement (shared by
     :func:`run_agent_dbos` and :meth:`DbosEnv.run_agent`).
 
     Segment ``i`` runs as workflow id ``base_id`` (i=0) / ``f"{base_id}-seg{i}"``;
@@ -1163,7 +1163,7 @@ async def run_agent_dbos(
 
 
 async def submit_human_dbos(workflow_id: str, cid: str, value: Any) -> None:
-    """Release a parked human gate in a running ``ca_flow`` or ``ca_agent`` workflow.
+    """Release a parked human gate in a running ``julep_flow`` or ``julep_agent`` workflow.
 
     ``cid`` is the gate's activation id; with the DBOS env's session-prefixed
     cids, the first gate of a root flow is ``f"{workflow_id}/{gate_node_id}@1"``.

@@ -72,7 +72,7 @@ if HAVE_TEMPORAL:
         async def run(self) -> Any:
             await workflow.wait_condition(lambda: bool(self._inbox))
             reply = self._inbox[0]["reply"]
-            if isinstance(reply, dict) and "__ca_meta__" in reply:
+            if isinstance(reply, dict) and "__julep_meta__" in reply:
                 return reply["reply"]
             return reply
 
@@ -325,7 +325,7 @@ async def _collector_routes_batch_result(env: WorkflowEnvironment) -> None:
     register_batch_provider("fake", FakeBatch)
     DEFAULT_REGISTRY.register_reasoner(Reasoner(name="echo_reasoner", model="fake:m", system="", reply=None))
 
-    tq = f"ca-reasoner-batch-{uuid.uuid4()}"
+    tq = f"julep-reasoner-batch-{uuid.uuid4()}"
     async with Worker(
         env.client,
         task_queue=tq,
@@ -384,7 +384,7 @@ async def _same_key_fresh_collectors_start_distinct_poll_workflows(
     reasoner_name = f"blocking_reasoner_{uuid.uuid4().hex}"
     DEFAULT_REGISTRY.register_reasoner(Reasoner(name=reasoner_name, model="blockingfake:m", system=""))
 
-    tq = f"ca-reasoner-batch-collision-{uuid.uuid4()}"
+    tq = f"julep-reasoner-batch-collision-{uuid.uuid4()}"
     principal = {"tenant": "same"}
     collector_id = f"batch:blockingfake:BATCH:{_principal_key(principal)}"
 
@@ -548,7 +548,7 @@ async def _flow_reasoner_rendezvous_through_build_worker(
 
     flow = think(reasoner_name, ann=Ann(batchable=True))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
+    tq = f"julep-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
@@ -617,7 +617,7 @@ async def _two_runs_do_not_misroute(env: WorkflowEnvironment) -> None:
 
     flow = think(reasoner_name, ann=Ann(batchable=True))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
+    tq = f"julep-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
@@ -695,7 +695,7 @@ async def _batch_timeout_promotes_to_sync(env: WorkflowEnvironment) -> None:
 
     flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
+    tq = f"julep-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
@@ -769,7 +769,7 @@ async def _batch_entry_error_promotes_to_sync(env: WorkflowEnvironment) -> None:
 
     flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
+    tq = f"julep-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(
@@ -845,7 +845,7 @@ async def _whole_batch_failure_promotes_to_sync(env: WorkflowEnvironment) -> Non
 
     flow = think(reasoner_name, ann=Ann(batchable=True, timeout_s=5))
     frozen = freeze(flow, McpSnapshot())
-    tq = f"ca-reasoner-rendezvous-{uuid.uuid4()}"
+    tq = f"julep-reasoner-rendezvous-{uuid.uuid4()}"
     llm_calls = 0
 
     def resolve_qos(

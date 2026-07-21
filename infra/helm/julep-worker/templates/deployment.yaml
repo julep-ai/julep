@@ -70,11 +70,11 @@ spec:
             - name: TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED
               value: {{ .Values.payloadEncryption.required | quote }}
             {{ if .Values.worker.useWorkerVersioning }}
-            - name: CA_WORKER_VERSIONING
+            - name: JULEP_WORKER_VERSIONING
               value: "1"
             {{ end }}
             {{ if .Values.worker.buildId }}
-            - name: CA_WORKER_BUILD_ID
+            - name: JULEP_WORKER_BUILD_ID
               value: {{ .Values.worker.buildId | quote }}
             {{ end }}
             {{ if .Values.worker.secretName }}

@@ -133,8 +133,8 @@ def test_from_env_full_parse():
 def test_from_env_parses_versioning():
     s = WorkerServeSettings.from_env({
         "WORKER_CONTEXT_FACTORY": "m:f",
-        "CA_WORKER_BUILD_ID": "build-42",
-        "CA_WORKER_VERSIONING": "1",
+        "JULEP_WORKER_BUILD_ID": "build-42",
+        "JULEP_WORKER_VERSIONING": "1",
     })
     assert s.build_id == "build-42"
     assert s.use_worker_versioning is True
@@ -194,10 +194,10 @@ def test_run_worker_required_payload_encryption_rejects_missing_keys(
 
 
 def test_from_env_versioning_bad_bool():
-    with pytest.raises(ValueError, match="CA_WORKER_VERSIONING"):
+    with pytest.raises(ValueError, match="JULEP_WORKER_VERSIONING"):
         WorkerServeSettings.from_env({
             "WORKER_CONTEXT_FACTORY": "m:f",
-            "CA_WORKER_VERSIONING": "banana",
+            "JULEP_WORKER_VERSIONING": "banana",
         })
 
 
@@ -224,7 +224,7 @@ def test_versioning_kwargs_missing_metadata_raises(monkeypatch):
 
     monkeypatch.setattr(serve_mod, "version", _boom)
     settings = WorkerServeSettings(context_factory="m:f", use_worker_versioning=True)
-    with pytest.raises(JulepError, match="CA_WORKER_BUILD_ID"):
+    with pytest.raises(JulepError, match="JULEP_WORKER_BUILD_ID"):
         _versioning_worker_kwargs(settings)
 
 
@@ -487,7 +487,7 @@ def test_build_worker_forwards_versioning_kwargs(monkeypatch):
     monkeypatch.delenv("STORE_URL", raising=False)
     monkeypatch.setattr(worker_mod, "Worker", FakeWorker)
     with warnings.catch_warnings():
-        # The CA_WORKER_* seam intentionally maps to Temporal's deprecated
+        # The JULEP_WORKER_* seam intentionally maps to Temporal's deprecated
         # Worker kwargs for now; suppress future runtime warnings around this call.
         warnings.simplefilter("ignore", DeprecationWarning)
         build_worker(
@@ -575,7 +575,7 @@ async def _serve_lifecycle():
         settings = WorkerServeSettings(
             context_factory=f"{__name__}:make_context",
             address=env.client.service_client.config.target_host,
-            task_queue="ca-serve",
+            task_queue="julep-serve",
             graceful_shutdown_s=5.0,
         )
         stop = asyncio.Event()
@@ -583,7 +583,7 @@ async def _serve_lifecycle():
         try:
             out = await run_flow(
                 env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-                session_id="serve-1", input=2, task_queue="ca-serve",
+                session_id="serve-1", input=2, task_queue="julep-serve",
             )
             assert out == 3, out  # the served worker polled and executed
         finally:

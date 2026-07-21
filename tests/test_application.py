@@ -352,7 +352,7 @@ def test_application_evals_receive_the_supplied_llm_caller(monkeypatch, tmp_path
         calls.append((path, kwargs["llm_caller"]))
         return path
 
-    monkeypatch.setattr("julep.ca.evalrun.run_eval_sync", fake_run)
+    monkeypatch.setattr("julep.cli.evalrun.run_eval_sync", fake_run)
     app = Application("memory", [_spec("summary")])
 
     reports = app.run_evals(caller, root=tmp_path)
@@ -759,7 +759,7 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
     compiled = Application("memory", [_spec("summary")]).compile()
     chart = tmp_path / "chart"
     chart.mkdir()
-    worker_environment = {"CA_BUNDLE_ALLOWED_SIGNERS": "aa,bb"}
+    worker_environment = {"JULEP_BUNDLE_ALLOWED_SIGNERS": "aa,bb"}
     release = publish_application(
         compiled,
         LocalDirCAS(tmp_path / "cas"),
@@ -793,6 +793,6 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
 
     reconcile_application(release, reconciler)
 
-    assert 'worker.environment={"CA_BUNDLE_ALLOWED_SIGNERS":"aa,bb"}' in commands[0]
+    assert 'worker.environment={"JULEP_BUNDLE_ALLOWED_SIGNERS":"aa,bb"}' in commands[0]
     assert "payloadEncryption.secretName=temporal-payload-codec" in commands[0]
     assert "worker.priorityClassName=" in commands[0]

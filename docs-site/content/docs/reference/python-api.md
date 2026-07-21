@@ -255,7 +255,7 @@ single-consumer and ends only on `Closed`.
 | `Deployment.refresh` | `refresh(snapshot=None) -> Deployment` | fresh snapshot or stored source | new deployment | `ValueError`, deploy errors | `deployment.refresh(new_snapshot)` |
 | `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="julep", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
 | `Deployment.adry_run` / `dry_run` | `adry_run(value, *, reasoners=None) -> Result`; `dry_run(value, *, reasoners=None) -> Result` | local value and fake reasoners | interpreter result | `ValueError` if not built with `tools=` | `deployment.dry_run("TICKET-42", reasoners={...})` |
-| `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | CAS store/url and optional signing key | bundle record | bundle/CAS/signing errors | `deployment.publish(".ca/cas")` |
+| `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | CAS store/url and optional signing key | bundle record | bundle/CAS/signing errors | `deployment.publish(".julep/cas")` |
 
 `mode="dev"` returns deployments with would-block diagnostics in
 `Deployment.prod_gap`; Temporal `Deployment.run(...)` refuses dev mode.
@@ -431,23 +431,23 @@ durability.
 
 ## CLI and configuration
 
-Console scripts in `pyproject.toml`:
+CLI entry points:
 
 | Script | Entry point | Scope |
 |---|---|---|
-| `julep` | `julep.ca.cli:main` | module-level developer CLI over Python source |
-| `python -m julep.cli` | `julep.cli:main` | JSON artifact plumbing plus worker host (no console script) |
+| `julep` | `julep.cli.main:main` | module-level developer CLI over Python source |
+| `python -m julep.cli.artifact` | `julep.cli.artifact:main` | Direct module fallback for JSON artifact plumbing |
 
-`julep` commands and flags:
+`julep artifact` and `julep worker` commands and flags:
 
 | Command | Verified signature |
 |---|---|
-| `validate` | `python -m julep.cli validate <flow_json> [--manifest <path>]` |
-| `freeze` | `python -m julep.cli freeze <flow_json> <snapshot_json> [--caps <path>]` |
-| `inspect` | `python -m julep.cli inspect <flow_json> [--manifest <path>] [--caps <path>]` |
-| `run-local` | `python -m julep.cli run-local <flow_json> <input_json> [--mode strict|dev]` |
-| `graph` | `python -m julep.cli graph <flow_json>` |
-| `worker` | `python -m julep.cli worker [--context-factory module:attr] [--address host:port] [--namespace ns] [--task-queue queue] [--health-port port]` |
+| `validate` | `julep artifact validate <flow_json> [--manifest <path>]` |
+| `freeze` | `julep artifact freeze <flow_json> <snapshot_json> [--caps <path>]` |
+| `inspect` | `julep artifact inspect <flow_json> [--manifest <path>] [--caps <path>]` |
+| `run-local` | `julep artifact run-local <flow_json> <input_json> [--mode strict|dev]` |
+| `graph` | `julep artifact graph <flow_json>` |
+| `worker` | `julep worker [--context-factory module:attr] [--address host:port] [--namespace ns] [--task-queue queue] [--health-port port]` |
 
 `julep` commands and flags:
 
@@ -477,7 +477,7 @@ Environment knobs verified in source:
 
 | Variable | Used by | Meaning |
 |---|---|---|
-| `COMPOSABLE_AGENTS_SOURCE_CAPTURE` | `dsl.py` | `1` enables `SourceSpan` capture for diagnostics |
+| `JULEP_SOURCE_CAPTURE` | `dsl.py` | `1` enables `SourceSpan` capture for diagnostics |
 | `WORKER_CONTEXT_FACTORY` | `WorkerServeSettings.from_env` | required `module:attr` factory returning `WorkerContext` |
 | `TEMPORAL_ADDRESS` | worker host | Temporal frontend, default `localhost:7233` |
 | `TEMPORAL_NAMESPACE` | worker host | namespace, default `default` |
@@ -489,18 +489,18 @@ Environment knobs verified in source:
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | worker host | SDK workflow-task slots |
 | `WORKER_HEALTH_PORT` | worker host | probe port serving `/healthz` and `/readyz` |
 | `STORE_URL` | bundle worker/verification | CAS URL for bundle resolution |
-| `CA_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
-| `CA_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
-| `CA_BUNDLES` | bundle worker | bundle refs to load from `STORE_URL` |
-| `CA_PURE_NATIVE_DEPS` | pure dependency admission | comma-separated pure names allowed to use native dependency tier |
-| `COMPOSABLE_WASM_FUEL` | wasm executor | instruction fuel, default from executor |
-| `COMPOSABLE_WASM_CACHE_DIR` | wasm executor | compiled component cache directory |
-| `COMPOSABLE_WASM_EPOCH_MS` | wasm executor | optional epoch interruption interval |
-| `COMPOSABLE_NATIVE_VENV_CACHE_DIR` | native venv executor | cache directory for native-venv pure tier |
+| `JULEP_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
+| `JULEP_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
+| `JULEP_BUNDLES` | bundle worker | bundle refs to load from `STORE_URL` |
+| `JULEP_PURE_NATIVE_DEPS` | pure dependency admission | comma-separated pure names allowed to use native dependency tier |
+| `JULEP_WASM_FUEL` | wasm executor | instruction fuel, default from executor |
+| `JULEP_WASM_CACHE_DIR` | wasm executor | compiled component cache directory |
+| `JULEP_WASM_EPOCH_MS` | wasm executor | optional epoch interruption interval |
+| `JULEP_NATIVE_VENV_CACHE_DIR` | native venv executor | cache directory for native-venv pure tier |
 | `ANTHROPIC_API_KEY` | Anthropic CMA client | fallback API key |
 | `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | Langfuse exporter | OTLP endpoint credentials |
 | `LANGFUSE_CAPTURE_IO` | Langfuse exporter | `1`/`true` captures IO |
 | `LANGFUSE_PROJECT_ID` | `julep trace` deep links | optional project deep-link component |
-<!-- generated by ca-docs-matrix: julep/reference -->
+<!-- generated by julep-docs-matrix: julep/reference -->
 
-<!-- ported-by ca-docs-site: reference/python-api -->
+<!-- ported-by julep-docs-site: reference/python-api -->

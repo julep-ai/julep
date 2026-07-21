@@ -136,7 +136,7 @@ _TRAJECTORY_SINK: Optional[TrajectorySink] = None
 _TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
 _TRAJECTORY_REDACTOR: Optional[Redactor] = None
 _DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
-_CA_META_KEY = "__ca_meta__"
+_JULEP_META_KEY = "__julep_meta__"
 
 
 def _unwrap_llm(out: Any) -> tuple[Any, dict[str, Any]]:
@@ -146,16 +146,16 @@ def _unwrap_llm(out: Any) -> tuple[Any, dict[str, Any]]:
     return out, {}
 
 
-def _with_ca_meta(value: Any, attrs: dict[str, Any]) -> Any:
+def _with_julep_meta(value: Any, attrs: dict[str, Any]) -> Any:
     if not attrs:
         return value
-    if isinstance(value, dict) and _CA_META_KEY in value and "reply" in value:
-        meta = value[_CA_META_KEY]
+    if isinstance(value, dict) and _JULEP_META_KEY in value and "reply" in value:
+        meta = value[_JULEP_META_KEY]
         existing = dict(meta) if isinstance(meta, dict) else {"meta": meta}
-        return {**value, _CA_META_KEY: {**existing, **attrs}}
+        return {**value, _JULEP_META_KEY: {**existing, **attrs}}
     if isinstance(value, dict) and SUMMARY_KEY in value and "reply" in value:
-        return {**value, _CA_META_KEY: attrs}
-    return {"reply": value, _CA_META_KEY: attrs}
+        return {**value, _JULEP_META_KEY: attrs}
+    return {"reply": value, _JULEP_META_KEY: attrs}
 
 
 def set_trajectory_sink(
@@ -900,7 +900,7 @@ async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
         result = {SUMMARY_KEY: new_summary, "reply": reply}
     else:
         result = reply
-    result = _with_ca_meta(result, llm_attrs)
+    result = _with_julep_meta(result, llm_attrs)
     await _capture_effect(
         op="think",
         kind="reasoner",

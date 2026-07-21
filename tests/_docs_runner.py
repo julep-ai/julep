@@ -4,7 +4,9 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-_PRAGMA = re.compile(r"<!--\s*ca:doctest\s+(skip|expect-output|raises=[A-Za-z_][A-Za-z0-9_]*)\s*-->")
+_PRAGMA = re.compile(
+    r"<!--\s*julep:doctest\s+(skip|expect-output|raises=[A-Za-z_][A-Za-z0-9_]*)\s*-->"
+)
 _FENCE = re.compile(r"^```([A-Za-z0-9_-]*)\s*$")
 
 

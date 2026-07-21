@@ -209,4 +209,4 @@ compaction lives at the Sub firewall (`SummaryPolicy`,
 - Changing `ContextScope`/`ContextPolicy` or what each scope projects.
 - Type-safety across the model/LLM boundary (the reply is still honestly `Any`).
 
-<!-- ported-by ca-docs-site: internals/prompt-fragments -->
+<!-- ported-by julep-docs-site: internals/prompt-fragments -->

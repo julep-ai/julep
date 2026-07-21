@@ -20,10 +20,10 @@ Effects are configured exactly like the Temporal worker -- one process-global
 ```python
 from dbos import DBOS, DBOSConfig
 from julep.execution.effects import WorkerContext, configure
-import julep.execution.dbos_backend as ca_dbos
+import julep.execution.dbos_backend as julep_dbos
 
 configure(WorkerContext(mcp_call=my_mcp_caller, llm=my_llm_caller))
-ca_dbos.set_projection_sink(my_logfire_sink)   # optional ProjectionSink
+julep_dbos.set_projection_sink(my_logfire_sink)   # optional ProjectionSink
 
 DBOS(config=DBOSConfig(name="my-app", system_database_url=DB_URL))
 DBOS.launch()
@@ -49,7 +49,7 @@ across the chain. Human gates park on `DBOS.recv_async`; release with
 
 ## Running an agent
 
-`app` (agent-loop) nodes run on a dedicated `ca_agent` workflow. Dispatch one
+`app` (agent-loop) nodes run on a dedicated `julep_agent` workflow. Dispatch one
 standalone with `run_agent_dbos` (the counterpart of starting Temporal's
 `AgentWorkflow` directly); an `app` node inside a flow reaches the same chain
 automatically through the env.
@@ -90,7 +90,7 @@ segments in the continuation payload.
 | | Temporal | DBOS |
 |---|---|---|
 | race / hedge / quorum | supported | **rejected at dispatch** (no step cancellation) |
-| `app` (agent loop) nodes | child `AgentWorkflow` + continue-as-new | inline `ca_agent` workflow per segment (`run_agent_dbos` / app nodes in flows) |
+| `app` (agent loop) nodes | child `AgentWorkflow` + continue-as-new | inline `julep_agent` workflow per segment (`run_agent_dbos` / app nodes in flows) |
 | Reasoner retries | engine retry (4 attempts) | **none -- your `LlmCaller` owns resilience** |
 | Tool retries | per-contract `RetryPolicy` | quantized: idempotent 5 / write 3 attempts |
 | Sub-flows | child workflow | inline in the parent workflow |
@@ -107,4 +107,4 @@ DBOS async methods set the current event loop's default executor to DBOS's
 executor; repeated `asyncio.run()` calls close that executor after the first
 run, so the DBOS API spike tests reuse one module-scoped event loop.
 
-<!-- ported-by ca-docs-site: deploy/dbos -->
+<!-- ported-by julep-docs-site: deploy/dbos -->

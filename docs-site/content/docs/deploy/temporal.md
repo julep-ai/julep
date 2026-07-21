@@ -94,7 +94,7 @@ functions. The six boundary/resolution activities are below; the seventh,
 `resolveRuntimeCapabilities`, supplies deterministic run-time policy such as
 `maxCalls`.
 
-For containers there is a third entry point: `python -m julep.cli worker` reads
+For containers there is a third entry point: `julep worker` reads
 the connection and tuning knobs from the environment, resolves the
 `WorkerContext` from a `WORKER_CONTEXT_FACTORY=module:attr` factory, drains
 gracefully on SIGTERM, and serves `/healthz` + `/readyz` probes. That is the
@@ -239,4 +239,4 @@ Related: [docs index](/docs), [First Agent](/docs/start/first-agent),
 [the Typed Flow Calculus](/docs/internals/typed-flow-calculus), [the Specification](/docs/internals/specification), and
 [Contributing](/docs/development/contributing).
 
-<!-- ported-by ca-docs-site: deploy/temporal -->
+<!-- ported-by julep-docs-site: deploy/temporal -->

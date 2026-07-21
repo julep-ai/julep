@@ -1,4 +1,4 @@
-"""End-to-end agent loops (``ca_agent``) on a real DBOS runtime.
+"""End-to-end agent loops (``julep_agent``) on a real DBOS runtime.
 
 Each test mirrors a Temporal ``_agent`` scenario from tests/test_e2e_temporal.py.
 Needs ``DBOS_TEST_DATABASE_URL`` (see tests/test_dbos_api_spike.py). Reuses one
@@ -238,7 +238,7 @@ def dbos_runtime(run_async: Callable[[Awaitable[Any]], Any]) -> Iterator[None]:
     )
     DBOS(
         config=DBOSConfig(
-            name=f"ca-e2e-agent-{uuid.uuid4().hex[:8]}",
+            name=f"julep-e2e-agent-{uuid.uuid4().hex[:8]}",
             system_database_url=DB_URL,
         )
     )

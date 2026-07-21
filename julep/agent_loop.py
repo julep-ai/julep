@@ -483,7 +483,7 @@ def terminal_result(status: str, state: AgentState, output: Any = None,
     if state.call_counts:
         out["callCounts"] = dict(sorted(state.call_counts.items()))
     if state.controller_meta:
-        out["__ca_meta__"] = dict(state.controller_meta)
+        out["__julep_meta__"] = dict(state.controller_meta)
     return out
 
 

@@ -150,7 +150,7 @@ Concrete design:
     (`_echo_tools`/`_echo_reasoners`/`_echo_subs`/`_echo_agents`,
     `_clear_frozen_hashes`, the `InMemoryProjection` ownership) from `runner.py`
     into the child. The run `value` and events are already JSON-serializable
-    (they round-trip through the `.ca/runs/` trace cache today).
+    (they round-trip through the `.julep/runs/` trace cache today).
 - **`resolve.py`** grows a small dispatch so each verb invokes the child with its
   action and parses the matching payload (extend `ResolvedAgent` or add sibling
   result dataclasses: `LintResult{diagnostics, error}`,
@@ -206,8 +206,8 @@ A doc-test harness (greenfield — no such infra exists today) that:
 2. Executes each runnable block against the **built wheel** in a clean
    subprocess (keyless; no network), honoring per-block directives in an
    HTML-comment pragma for blocks that are illustrative-only or expected to raise
-   (e.g. `<!-- ca:doctest skip -->`, `<!-- ca:doctest raises=DefineError -->`,
-   `<!-- ca:doctest expect-output -->`).
+   (e.g. `<!-- julep:doctest skip -->`, `<!-- julep:doctest raises=DefineError -->`,
+   `<!-- julep:doctest expect-output -->`).
 3. For blocks tagged `expect-output`, compares stdout to the following ```text```
    block and fails on mismatch.
 4. Runs in CI on every change to docs or the package.

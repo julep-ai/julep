@@ -250,7 +250,7 @@ def _build_worker(env, task_queue, store, *, mcp_call=None):
 async def _multi_turn(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-multi"
+    tq = "julep-session-multi"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-{uuid.uuid4()}"
@@ -306,7 +306,7 @@ async def _multi_turn(env):
 async def _queries(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-queries"
+    tq = "julep-session-queries"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-q-{uuid.uuid4()}"
@@ -347,7 +347,7 @@ async def _queries(env):
 async def _carrier_survives_continue_as_new(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-can"
+    tq = "julep-session-can"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-can-{uuid.uuid4()}"
@@ -422,7 +422,7 @@ async def _carrier_survives_continue_as_new(env):
 async def _recv_timeout_keeps_session_alive(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_timeout_session()
-    tq = "ca-session-timeout"
+    tq = "julep-session-timeout"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-timeout-{uuid.uuid4()}"
@@ -472,7 +472,7 @@ async def _recv_timeout_keeps_session_alive(env):
 async def _channel_full(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-full"
+    tq = "julep-session-full"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-full-{uuid.uuid4()}"
@@ -517,7 +517,7 @@ async def _channel_full(env):
 # --------------------------------------------------------------------------- #
 async def _facade(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-facade"
+    tq = "julep-session-facade"
     worker = _build_worker(env, tq, store)
     async with worker:
         session = _make_session_flow()
@@ -575,7 +575,7 @@ async def _facade(env):
 # --------------------------------------------------------------------------- #
 async def _facade_ack_lags_delivery(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-facade-ack"
+    tq = "julep-session-facade-ack"
     worker = _build_worker(env, tq, store)
     async with worker:
         session = _make_session_flow()
@@ -634,7 +634,7 @@ async def _facade_event_contract_matches_local(env):
     local_events = await _collect_two_turn_contract(local_handle)
 
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-event-contract"
+    tq = "julep-session-event-contract"
     worker = _build_worker(env, tq, store)
     async with worker:
         temporal_agent = Agent("test-model", llm=None)
@@ -656,7 +656,7 @@ async def _facade_event_contract_matches_local(env):
 # --------------------------------------------------------------------------- #
 async def _facade_close_flushes_in_flight_turn(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-close-flush"
+    tq = "julep-session-close-flush"
     worker = _build_worker(env, tq, store)
     async with worker:
         agent = Agent("test-model", llm=None)
@@ -686,7 +686,7 @@ async def _facade_close_flushes_in_flight_turn(env):
 
 async def _facade_close_returns_after_quiescence(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-close-quiesce"
+    tq = "julep-session-close-quiesce"
     worker = _build_worker(env, tq, store)
     async with worker:
         agent = Agent("test-model", llm=None)
@@ -712,7 +712,7 @@ async def _facade_close_returns_after_quiescence(env):
 
 async def _facade_events_single_consumer(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-single-events"
+    tq = "julep-session-single-events"
     worker = _build_worker(env, tq, store)
     async with worker:
         agent = Agent("test-model", llm=None)
@@ -731,7 +731,7 @@ async def _facade_events_single_consumer(env):
 
 async def _facade_output_capacity_progresses_with_event_ack(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-output-capacity"
+    tq = "julep-session-output-capacity"
     worker = _build_worker(env, tq, store)
     async with worker:
         agent = Agent("test-model", llm=None)
@@ -777,7 +777,7 @@ async def _facade_output_capacity_progresses_with_event_ack(env):
 async def _facade_carried_event_log_is_deterministic(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-event-log-can"
+    tq = "julep-session-event-log-can"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-event-log-can-{uuid.uuid4()}"
@@ -839,7 +839,7 @@ async def _facade_carried_event_log_is_deterministic(env):
 
 async def _facade_nonfatal_turn_error_books_and_proceeds(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-nonfatal"
+    tq = "julep-session-nonfatal"
     worker = _build_worker(env, tq, store)
     async with worker:
         agent = Agent("test-model", llm=None)
@@ -881,7 +881,7 @@ async def _facade_nonfatal_turn_error_books_and_proceeds(env):
 
 async def _facade_fatal_turn_error_appends_closed(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-fatal"
+    tq = "julep-session-fatal"
     worker = _build_worker(env, tq, store)
     async with worker:
         agent = Agent("test-model", llm=None)
@@ -959,7 +959,7 @@ def test_session_rehydrate_restamps_pre_rehydrate_pending_items():
 # --------------------------------------------------------------------------- #
 async def _facade_max_calls_denies_second_turn(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-guards-max"
+    tq = "julep-session-guards-max"
     worker = _build_worker(env, tq, store, mcp_call=_mcp)
     caps = _mcp_caps(
         tools=[
@@ -1003,7 +1003,7 @@ async def _facade_max_calls_denies_second_turn(env):
 # --------------------------------------------------------------------------- #
 async def _facade_budget_closes_over_budget(env):
     store = InMemorySessionStore(empty_value=0)
-    tq = "ca-session-guards-budget"
+    tq = "julep-session-guards-budget"
     worker = _build_worker(env, tq, store, mcp_call=_mcp)
     caps = _mcp_caps(
         tools=[
@@ -1053,7 +1053,7 @@ async def _facade_ungranted_tool_denied_at_open(env):
             backend="temporal",
             client=env.client,
             session_id=f"session-guard-deny-{uuid.uuid4()}",
-            task_queue="ca-session-guards-deny",
+            task_queue="julep-session-guards-deny",
         )
 
 
@@ -1063,7 +1063,7 @@ async def _facade_ungranted_tool_denied_at_open(env):
 async def _idempotency_conflict(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-idem"
+    tq = "julep-session-idem"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"session-idem-{uuid.uuid4()}"
@@ -1117,7 +1117,7 @@ async def _idempotency_conflict(env):
 async def _flowworkflow_rejects_loop(env):
     store = InMemorySessionStore(empty_value=0)
     fr, session = _frozen_session()
-    tq = "ca-session-reject"
+    tq = "julep-session-reject"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"reject-{uuid.uuid4()}"
@@ -1152,7 +1152,7 @@ async def _flowworkflow_rejects_nested_loop(env):
     session = _make_session_flow()
     nested = seq(arr("test.session_identity_step"), session.body)
     fr = freeze(nested, McpSnapshot())
-    tq = "ca-session-reject-nested"
+    tq = "julep-session-reject-nested"
     worker = _build_worker(env, tq, store)
     async with worker:
         sid = f"reject-nested-{uuid.uuid4()}"

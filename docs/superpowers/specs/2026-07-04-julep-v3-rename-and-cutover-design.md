@@ -52,7 +52,7 @@ SDK on PyPI sees only bot-level traffic (~10–30 downloads/day).
   composable-agents back-compat) is dropped.
 - Entry points: exactly one console script — `julep` → the current `ca` Typer porcelain
   (`run`/`lint`/`test`/`trace`/`deploy`/…). The argparse inspection CLI loses its console
-  script but stays reachable as `python -m julep.cli`. `ca` and `composable-agents` scripts
+  script but stays reachable as `python -m julep.cli.artifact`. `ca` and `composable-agents` scripts
   are removed.
 - User-visible identifiers rename outright, no aliases (e.g. `ComposableAgentsError` →
   `JulepError`). Deploy-identity hashing includes package identifiers, so golden tests will

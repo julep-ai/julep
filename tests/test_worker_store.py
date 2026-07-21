@@ -24,6 +24,7 @@ from julep.projection import InMemoryProjection, ProjectionEmitter
 from julep.registry import PureEntry, Registry, _text_hash
 from julep.worker_store import (
     BundleResolutionError,
+    _manifest_pures,
     bundle_ref_entries,
     load_bundles_from_env,
     resolve_and_register,
@@ -111,6 +112,66 @@ def _published(tmp_path: Path):
     deployment = _deployment()
     rec = deployment.publish(store, signing_key=SEED_A)
     return store, deployment, rec
+
+
+def _manifest_with_pure(**updates: Any) -> dict[str, Any]:
+    record: dict[str, Any] = {
+        "abi": ABI_PYTHON_SOURCE_JSON_V1,
+        "name": "bundle.worker.canonical.v1",
+        "source": "a" * 64,
+        "sourceHash": "pure:" + "b" * 16,
+    }
+    record.update(updates)
+    return {"pures": [record]}
+
+
+def test_manifest_pures_uses_omitted_wasm_default() -> None:
+    [record] = _manifest_pures(_manifest_with_pure())
+
+    assert record.executor_tier == "wasm"
+
+
+@pytest.mark.parametrize("executor_tier", ["wasm", None])
+def test_manifest_pures_rejects_explicit_wasm_default(executor_tier: Any) -> None:
+    with pytest.raises(BundleResolutionError, match="omit executorTier"):
+        _manifest_pures(_manifest_with_pure(executorTier=executor_tier))
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"envHash": None},
+        {"envComponent": None},
+        {"envHash": None, "envComponent": None},
+    ],
+)
+def test_manifest_pures_rejects_null_env_fields(fields: dict[str, Any]) -> None:
+    with pytest.raises(BundleResolutionError, match="envHash and envComponent"):
+        _manifest_pures(_manifest_with_pure(**fields))
+
+
+@pytest.mark.parametrize("field", ["deps", "requiresPython"])
+def test_manifest_pures_rejects_null_native_only_fields_on_wasm(field: str) -> None:
+    with pytest.raises(BundleResolutionError, match="must not carry deps/requiresPython"):
+        _manifest_pures(_manifest_with_pure(**{field: None}))
+
+
+def test_manifest_pures_distinguishes_missing_from_null_native_requires_python() -> None:
+    with pytest.raises(BundleResolutionError, match="must carry executorTier, deps"):
+        _manifest_pures(
+            _manifest_with_pure(executorTier="native", deps=["numpy==2"])
+        )
+
+    [record] = _manifest_pures(
+        _manifest_with_pure(
+            executorTier="native",
+            deps=["numpy==2"],
+            requiresPython=None,
+        )
+    )
+    assert record.executor_tier == "native"
+    assert record.dep_list == ("numpy==2",)
+    assert record.requires_python is None
 
 
 def _resolve(
@@ -382,11 +443,11 @@ def test_resolution_is_ungated_and_registers_wasm_tier(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # P3: the former P2 dev-only CA_BUNDLE_NATIVE_EXEC native-exec gate is gone.
+    # P3: the former P2 dev-only JULEP_BUNDLE_NATIVE_EXEC native-exec gate is gone.
     # Bundle pures run in the wasm sandbox (not natively in-process), so
     # resolution succeeds by default and registers pures as the wasm tier.
     store, _deployment, rec = _published(tmp_path)
-    monkeypatch.delenv("CA_BUNDLE_NATIVE_EXEC", raising=False)
+    monkeypatch.delenv("JULEP_BUNDLE_NATIVE_EXEC", raising=False)
     fresh = Registry()
 
     resolved = resolve_and_register(
@@ -504,8 +565,8 @@ def test_load_bundles_from_env_registers_idempotently(
     _store, _deployment, rec = _published(tmp_path)
     fresh = Registry()
     monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
-    monkeypatch.setenv("CA_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
-    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", f" {_public_key(SEED_A)} ")
+    monkeypatch.setenv("JULEP_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", f" {_public_key(SEED_A)} ")
 
     first = load_bundles_from_env(registry=fresh)
     second = load_bundles_from_env(registry=fresh)
@@ -520,10 +581,10 @@ def test_load_bundles_from_env_noop_and_errors(
 ) -> None:
     fresh = Registry()
 
-    monkeypatch.delenv("CA_BUNDLES", raising=False)
+    monkeypatch.delenv("JULEP_BUNDLES", raising=False)
     assert load_bundles_from_env(registry=fresh) == []
 
-    monkeypatch.setenv("CA_BUNDLES", "abc")
+    monkeypatch.setenv("JULEP_BUNDLES", "abc")
     monkeypatch.delenv("STORE_URL", raising=False)
     with pytest.raises(BundleResolutionError, match="STORE_URL"):
         load_bundles_from_env(registry=fresh)
@@ -710,7 +771,7 @@ def test_bundle_runner_resolves_flow_input_bundle_before_activation(
 ) -> None:
     store, deployment, rec = _published(tmp_path)
     fresh = Registry()
-    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
     dummy = _DummyInstance()
     runner = BundleResolvingWorkflowRunner(
         inner=_DummyRunner(dummy),

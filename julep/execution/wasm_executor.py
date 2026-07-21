@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import tempfile
 import threading
 import weakref
@@ -13,6 +12,7 @@ from typing import Any
 from wasmtime import Config, Engine, Store
 from wasmtime.component import Component, Linker
 
+from .. import _env
 from ..errors import PureExecutionError
 
 VENDORED_WASM = Path(__file__).resolve().parent / "_wasm" / "executor.wasm"
@@ -48,12 +48,12 @@ class WasmExecutor:
     """Run bundle-sourced pures in a fresh wasmtime CPython component instance.
 
     Fuel is always enabled. Epoch interruption is disabled by default; set
-    ``COMPOSABLE_WASM_EPOCH_MS`` to enable a best-effort epoch ticker and a
+    ``JULEP_WASM_EPOCH_MS`` to enable a best-effort epoch ticker and a
     one-tick deadline per call.
     """
 
     def __init__(self) -> None:
-        self._fuel = int(os.environ.get("COMPOSABLE_WASM_FUEL", str(DEFAULT_FUEL)))
+        self._fuel = int(_env.get(_env.JULEP_WASM_FUEL, str(DEFAULT_FUEL)))
         self._epoch_ms = self._read_epoch_ms()
         self._lock = threading.Lock()
         self._epoch_stop = threading.Event()
@@ -215,8 +215,8 @@ class WasmExecutor:
         key = hashlib.sha256(
             f"{wasmtime_version}:{digest}:{config_tag}".encode()
         ).hexdigest()[:24]
-        cache_dir = Path(os.environ.get("COMPOSABLE_WASM_CACHE_DIR", tempfile.gettempdir()))
-        return cache_dir / f"composable_executor_{key}.cwasm"
+        cache_dir = Path(_env.get(_env.JULEP_WASM_CACHE_DIR, tempfile.gettempdir()))
+        return cache_dir / f"julep_executor_{key}.cwasm"
 
     def _start_epoch_ticker(self) -> None:
         assert self._epoch_ms is not None
@@ -232,7 +232,7 @@ class WasmExecutor:
 
         thread = threading.Thread(
             target=tick,
-            name="composable-wasm-epoch",
+            name="julep-wasm-epoch",
             daemon=True,
         )
         self._epoch_thread = thread
@@ -240,7 +240,7 @@ class WasmExecutor:
 
     @staticmethod
     def _read_epoch_ms() -> int | None:
-        raw = os.environ.get("COMPOSABLE_WASM_EPOCH_MS")
+        raw = _env.get(_env.JULEP_WASM_EPOCH_MS)
         if not raw:
             return None
         epoch_ms = int(raw)
@@ -260,12 +260,12 @@ class WasmExecutor:
         if error_type == "WasmFuelExhausted":
             return (
                 f"bundle pure {pure_name!r} exhausted its wasm fuel budget ({self._fuel}); "
-                "raise COMPOSABLE_WASM_FUEL or fix the pure's runaway compute"
+                "raise JULEP_WASM_FUEL or fix the pure's runaway compute"
             )
         if error_type == "WasmDeadlineExceeded":
             return (
                 f"bundle pure {pure_name!r} exceeded its wasm epoch deadline "
-                "(COMPOSABLE_WASM_EPOCH_MS); the pure ran too long"
+                "(JULEP_WASM_EPOCH_MS); the pure ran too long"
             )
         if error_type == "WasmSandboxTrap":
             return (

@@ -925,23 +925,23 @@ Run: `uv pip install 'yglu>=1.0'` (dev env), then `python -m pytest tests/test_d
 - Modify: `composable_agents/ca/config.py:14-31` (`EnvConfig.vars`) and the env-table merge (`_env_fields`/`_build_envs`, `:44-90`)
 - Modify: `composable_agents/ca/resolve.py` and `composable_agents/ca/_resolve_child.py` — thread `env_vars` through the resolver child payload; `composable_agents/ca/deploy.py:114` area (freeze subprocess) likewise
 - Modify: `composable_agents/ca/cli.py:114-135` (`run`) and `:165-185` (`deploy`) — pass `cfg.envs[env].vars` into the resolver/freeze invocations
-- Test: `tests/ca/test_env_vars.py`
+- Test: `tests/cli/test_env_vars.py`
 
 **Interfaces:**
 - Consumes: `dotctx_yglu.set_default_env` (Task 7).
-- Produces: `[env.<name>.vars]` (ca.toml) / `[tool.ca.env.<name>.vars]` (pyproject) → `EnvConfig.vars: dict[str, str]` — table names are SINGULAR `env`, matching the existing convention (`config.py:106`, `tests/ca/test_envconfig.py:36,82`). The binding must reach the process that imports user modules: `ca run`/`lint`/`deploy` resolve and freeze in a **subprocess** (`runner.py:19` → `resolve.py:35` → `_resolve_child.py:75`), so `set_default_env` is called inside `_resolve_child.main()` from a payload field, not in `cli.py`'s own process.
+- Produces: `[env.<name>.vars]` (julep.toml) / `[tool.julep.env.<name>.vars]` (pyproject) → `EnvConfig.vars: dict[str, str]` — table names are SINGULAR `env`, matching the existing convention (`config.py:106`, `tests/cli/test_envconfig.py:36,82`). The binding must reach the process that imports user modules: `ca run`/`lint`/`deploy` resolve and freeze in a **subprocess** (`runner.py:19` → `resolve.py:35` → `_resolve_child.py:75`), so `set_default_env` is called inside `_resolve_child.main()` from a payload field, not in `cli.py`'s own process.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```python
-# tests/ca/test_env_vars.py
+# tests/cli/test_env_vars.py
 from pathlib import Path
 
 from composable_agents.ca.config import load_config
 
 
 def test_env_vars_parsed(tmp_path: Path) -> None:
-    (tmp_path / "ca.toml").write_text(
+    (tmp_path / "julep.toml").write_text(
         '[env.prod]\n'
         'task_queue = "prod-q"\n'
         '[env.prod.vars]\n'
@@ -970,7 +970,7 @@ def test_run_binds_env_vars_in_resolver_child(tmp_path: Path) -> None:
         "import os\n"
         "R = load_dotctx(os.path.join(os.path.dirname(__file__), 'summary.ctx'))\n"
     )
-    (tmp_path / "ca.toml").write_text(
+    (tmp_path / "julep.toml").write_text(
         'src = ["flows"]\n'
         '[env.prod.vars]\nSUMMARY_MODEL = "anthropic:claude-sonnet-4-6@high"\n'
     )
@@ -983,12 +983,12 @@ Complete the driver against `resolve.py`'s actual public function signature when
 
 - [ ] **Step 2: Run to verify failure**
 
-Run: `python -m pytest tests/ca/test_env_vars.py -v`
+Run: `python -m pytest tests/cli/test_env_vars.py -v`
 Expected: FAIL — `EnvConfig` has no `vars`; child test fails on the default model.
 
 - [ ] **Step 3: Implement**
 
-`config.py`: add `vars: dict[str, str] = field(default_factory=dict)` to `EnvConfig`. In the env-table merge (`_build_envs`), pop the `"vars"` sub-table from each raw env table, `str()`-coerce keys/values, and merge ca.toml over pyproject (same order as scalar fields); construct `EnvConfig(vars=...)`.
+`config.py`: add `vars: dict[str, str] = field(default_factory=dict)` to `EnvConfig`. In the env-table merge (`_build_envs`), pop the `"vars"` sub-table from each raw env table, `str()`-coerce keys/values, and merge julep.toml over pyproject (same order as scalar fields); construct `EnvConfig(vars=...)`.
 
 `resolve.py` / `_resolve_child.py`: add an `env_vars: dict[str, str] | None` field to the child payload (same JSON channel the resolver already uses). In `_resolve_child.main()`, BEFORE `_discover_modules`/`importlib.import_module` (line 75):
 
@@ -1004,7 +1004,7 @@ Expected: FAIL — `EnvConfig` has no `vars`; child test fails on the default mo
 
 - [ ] **Step 4: Run tests + gates**
 
-Run: `python -m pytest tests/ca/test_env_vars.py tests/ca/test_envconfig.py -v && python -m pytest tests/ca && uv run mypy --strict composable_agents && ruff check composable_agents` → PASS/clean
+Run: `python -m pytest tests/cli/test_env_vars.py tests/cli/test_envconfig.py -v && python -m pytest tests/cli && uv run mypy --strict composable_agents && ruff check composable_agents` → PASS/clean
 
 - [ ] **Step 5: Commit** — `git commit -am "feat(phase1): ca env vars bind dotctx yglu env per --env"`
 

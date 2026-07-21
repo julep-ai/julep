@@ -6,7 +6,7 @@ scripted provider, asserting the four acceptance behaviors together:
 1. parallel (CALL_MANY) calls execute effect-fenced (reads concurrent, write after);
 2. a raising tool becomes an error observation the controller recovers from;
 3. the transcript replays in provider (OpenAI/Anthropic) tool-call grammar;
-4. `ca eval` scores the run against the fixture eval suite with threshold +
+4. `julep eval` scores the run against the fixture eval suite with threshold +
    baseline regression gates.
 
 No live provider and no temporal are needed: effects are injected callables and
@@ -27,8 +27,8 @@ pytest.importorskip("jinja2")
 pytest.importorskip("yglu")  # the fixture settings carry a `!?` env expression
 
 from julep.agent_loop import ROUND_NOTE_KEY, AgentConfig, drive_agent_loop
-from julep.ca import cli
-from julep.ca.evalrun import _run_tool_loop, diff_reports, run_eval
+from julep.cli.main import main
+from julep.cli.evalrun import _run_tool_loop, diff_reports, run_eval
 from julep.dotctx import load_dotctx
 from julep.dotctx_evals import Sample, stop_after_turns
 from julep.dotctx_rich import load_rich_dotctx
@@ -54,7 +54,7 @@ def _acceptance_cfg() -> AgentConfig:
 
 
 # --------------------------------------------------------------------------- #
-# Provider-completion fakes for the `ca eval` seam (mirrors tests/ca conventions)
+# Provider-completion fakes for the `julep eval` seam (mirrors tests/julep conventions)
 # --------------------------------------------------------------------------- #
 @dataclass
 class FakeMessage:
@@ -297,9 +297,9 @@ def test_acceptance_transcript_replays_in_provider_grammar() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# 4a. `ca eval` scores the run against the fixture suite and PASSES the threshold.
+# 4a. `julep eval` scores the run against the fixture suite and PASSES the threshold.
 # --------------------------------------------------------------------------- #
-def test_acceptance_ca_eval_threshold_pass(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_acceptance_julep_eval_threshold_pass(monkeypatch: pytest.MonkeyPatch) -> None:
     report = run(run_eval(str(FIXTURE), acompletion=GoodRecordExecuteFake()))
     data = report.to_json()
 
@@ -311,16 +311,16 @@ def test_acceptance_ca_eval_threshold_pass(monkeypatch: pytest.MonkeyPatch) -> N
     assert all(s.passed for s in report.scores)
 
     monkeypatch.setattr(
-        "julep.ca.evalrun._resolve_acompletion",
+        "julep.cli.evalrun._resolve_acompletion",
         lambda _a: GoodRecordExecuteFake(),
     )
-    assert cli.main(["eval", str(FIXTURE)]) == 0
+    assert main(["eval", str(FIXTURE)]) == 0
 
 
 # --------------------------------------------------------------------------- #
-# 4b. `ca eval` below-threshold gate (exit 2) and baseline-regression gate (exit 3).
+# 4b. `julep eval` below-threshold gate (exit 2) and baseline-regression gate (exit 3).
 # --------------------------------------------------------------------------- #
-def test_acceptance_ca_eval_below_threshold_and_baseline_regression(
+def test_acceptance_julep_eval_below_threshold_and_baseline_regression(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     good = run(run_eval(str(FIXTURE), acompletion=GoodRecordExecuteFake()))
@@ -337,8 +337,8 @@ def test_acceptance_ca_eval_below_threshold_and_baseline_regression(
     baseline.write_text(json.dumps(good.to_json()), encoding="utf-8")
 
     monkeypatch.setattr(
-        "julep.ca.evalrun._resolve_acompletion",
+        "julep.cli.evalrun._resolve_acompletion",
         lambda _a: SilentBadFake(),
     )
-    assert cli.main(["eval", str(FIXTURE)]) == 2
-    assert cli.main(["eval", str(FIXTURE), "--baseline", str(baseline)]) == 3
+    assert main(["eval", str(FIXTURE)]) == 2
+    assert main(["eval", str(FIXTURE), "--baseline", str(baseline)]) == 3

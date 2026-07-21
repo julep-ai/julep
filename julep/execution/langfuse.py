@@ -73,8 +73,8 @@ def span_attributes(
     out: dict[str, Any] = {
         "langfuse.session.id": session_id,
         "langfuse.trace.name": trace_name,
-        "ca.cid": span.cid,
-        "ca.node": span.node,
+        "julep.cid": span.cid,
+        "julep.node": span.node,
     }
     usage = span.attrs.get("llm.usage")
     model = span.attrs.get("llm.model")
@@ -97,7 +97,7 @@ def span_attributes(
         if "llm.output" in span.attrs:
             out["langfuse.observation.output"] = span.attrs["llm.output"]
     if span.attrs.get("llm.attempts"):
-        out["ca.llm.attempts"] = _json(span.attrs["llm.attempts"])
+        out["julep.llm.attempts"] = _json(span.attrs["llm.attempts"])
     return out
 
 

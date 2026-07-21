@@ -335,4 +335,4 @@ against the managed-agents beta. The remaining deferred items (CMA-usage→USD
 budget reconciliation, human gates inside the CMA loop, a Temporal-side backend,
 and richer trace refs) are what stand between this v1 and production use.
 
-<!-- ported-by ca-docs-site: internals/cma-runtime -->
+<!-- ported-by julep-docs-site: internals/cma-runtime -->

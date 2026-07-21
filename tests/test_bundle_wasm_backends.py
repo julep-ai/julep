@@ -293,10 +293,10 @@ def test_temporal_flow_runs_bundle_pure_via_wasm(
     rec = deployment.publish(store, signing_key=SEED)
 
     # The worker's BundleResolvingWorkflowRunner reads STORE_URL; the resolver
-    # checks CA_BUNDLE_ALLOWED_SIGNERS. No CA_BUNDLE_NATIVE_EXEC: P3 resolution is
+    # checks JULEP_BUNDLE_ALLOWED_SIGNERS. No JULEP_BUNDLE_NATIVE_EXEC: P3 resolution is
     # ungated and lands on the wasm tier.
     monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
-    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
 
     async def _run() -> Any:
         # Remove the baked native registration: the only resolution path left is

@@ -73,4 +73,4 @@ The [specification](/docs/internals/specification) defines conformance in terms 
 
 Keep pull requests focused. Ensure all CI gates are green. Describe what changed, why it changed, and any intentional golden corpus movement.
 
-<!-- ported-by ca-docs-site: development/contributing -->
+<!-- ported-by julep-docs-site: development/contributing -->

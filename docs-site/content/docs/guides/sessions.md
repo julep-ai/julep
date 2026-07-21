@@ -297,7 +297,7 @@ async def serve() -> None:
 For a container entrypoint, expose a `WORKER_CONTEXT_FACTORY=module:attr` factory that returns `WorkerContext` and run:
 
 ```bash
-python -m julep.cli worker \
+julep worker \
   --address localhost:7233 \
   --namespace default \
   --task-queue support-sessions \
@@ -373,4 +373,4 @@ uv run --extra dev --extra providers --extra cma python examples/session_demo.py
 - [Sessions API reference](/docs/reference/sessions-api)
 - Design: [durable session store](/docs/internals/durable-session-store) · [agent loop as turn](/docs/internals/agent-loop-as-turn) · [CMA runtime](/docs/internals/cma-runtime)
 
-<!-- ported-by ca-docs-site: guides/sessions -->
+<!-- ported-by julep-docs-site: guides/sessions -->

@@ -8,7 +8,7 @@ from julep.execution.effects import (
     _unwrap_llm,
     configure,
 )
-from julep.execution.interpreter import _unwrap_ca_meta
+from julep.execution.interpreter import _unwrap_julep_meta
 from julep.execution.llm_result import LlmCallMeta, LlmResult
 from julep.registry import Registry
 
@@ -68,7 +68,7 @@ def test_did_event_carries_llm_usage():
     finally:
         _restore_ctx(prev)
 
-    reply, attrs = _unwrap_ca_meta(out)
+    reply, attrs = _unwrap_julep_meta(out)
     assert reply == {"answer": 42}
     assert attrs is not None
     assert attrs["llm.usage"] == {"input": 1, "output": 2, "total": 3}

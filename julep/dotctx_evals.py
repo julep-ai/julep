@@ -73,9 +73,9 @@ def stop_after_turns(max_turns: int) -> StopFn:
     def _stop(_last: Turn, turn_index: int) -> bool:
         return turn_index >= max_turns
 
-    # Marker the ca eval runner reads to honor "stop_after_turns(n) -> max_rounds
+    # Marker the Julep eval runner reads to honor "stop_after_turns(n) -> max_rounds
     # override" without introspecting the opaque StopFn closure.
-    _stop._ca_max_turns = max_turns  # type: ignore[attr-defined]
+    _stop._julep_max_turns = max_turns  # type: ignore[attr-defined]
     return _stop
 
 

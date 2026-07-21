@@ -55,7 +55,7 @@ flowchart TB
 
     E --> F1[Local\nDeployment.dry_run]
     E --> F2[Temporal\nFlowWorkflow / AgentWorkflow / SessionWorkflow]
-    E --> F3[DBOS\nca_flow / ca_agent]
+    E --> F3[DBOS\njulep_flow / julep_agent]
     E --> F4[CMA\nAgent.run_on_cma / Agent.open]
 
     F1 --> G[interpret(node, value, env)]
@@ -200,7 +200,7 @@ await worker.run()
 The container entrypoint is the artifact CLI:
 
 ```bash
-python -m julep.cli worker \
+julep worker \
   --context-factory app.worker:context \
   --address localhost:7233 \
   --namespace default \
@@ -282,12 +282,12 @@ or `BATCH`; non-batchable batch requests clamp to `FLEX`.
 `julep` operates on JSON artifacts and workers:
 
 ```bash
-python -m julep.cli validate flow.json --manifest manifest.json
-python -m julep.cli freeze flow.json snapshot.json --caps caps.yaml
-python -m julep.cli inspect flow.json --manifest manifest.json --caps caps.yaml
-python -m julep.cli run-local flow.json input.json --mode dev
-python -m julep.cli graph flow.json
-python -m julep.cli worker --context-factory app.worker:context
+julep artifact validate flow.json --manifest manifest.json
+julep artifact freeze flow.json snapshot.json --caps caps.yaml
+julep artifact inspect flow.json --manifest manifest.json --caps caps.yaml
+julep artifact run-local flow.json input.json --mode dev
+julep artifact graph flow.json
+julep worker --context-factory app.worker:context
 ```
 
 `julep` operates on Python source modules and adds no runtime:
@@ -302,8 +302,8 @@ julep status --env staging
 ```
 
 A single console script is declared in `pyproject.toml`:
-`julep = "julep.ca.cli:main"`. The lower-level artifact/worker plumbing
-CLI is reachable as `python -m julep.cli`.
+`julep = "julep.cli.main:main"`. The lower-level artifact/worker plumbing
+CLI is reachable as `python -m julep.cli.artifact`.
 
 Install only the runtime you need:
 
@@ -404,7 +404,7 @@ flowchart TD
     race --> deploy["deploy.py\nDeployment"]
     deploy --> local["dry_run(...)\nInMemoryEnv"]
     deploy --> temporal["run(...)\nTemporal FlowWorkflow"]
-    deploy --> dbos["run_flow_dbos(...)\nDBOS ca_flow"]
+    deploy --> dbos["run_flow_dbos(...)\nDBOS julep_flow"]
     local --> projection["projection.py\nProjectionEmitter"]
     temporal --> projection
     dbos --> projection
@@ -1042,7 +1042,7 @@ same interpreter, validator, deploy, projection, and Temporal harness as the
 rest of the framework.
 
 User-facing reference: [Using The Cli](/docs/guides/using-the-cli). This document describes the
-implementation boundaries in `julep/ca/`.
+implementation boundaries in `julep/cli/`.
 
 #### Context And Goals
 
@@ -1064,10 +1064,10 @@ The console entry point is:
 
 ```toml
 [project.scripts]
-julep = "julep.ca.cli:main"
+julep = "julep.cli.main:main"
 ```
 
-`julep.ca.cli.main(argv: list[str] | None = None) -> int` wraps the
+`julep.cli.main.main(argv: list[str] | None = None) -> int` wraps the
 Typer app and returns a process exit code. It converts Typer/Click usage errors
 to exit code `2` instead of leaking tracebacks.
 
@@ -1075,7 +1075,7 @@ to exit code `2` instead of leaking tracebacks.
 
 ```mermaid
 flowchart TD
-    entry["julep = julep.ca.cli:main"]
+    entry["julep = julep.cli.main:main"]
     cfg["config.load_config(Path('.'))"]
     module["model.build_module(cfg)"]
     scan["discover.scan_agents(cfg)\nAST only"]
@@ -1086,12 +1086,12 @@ flowchart TD
     child["_resolve_child\nimports user modules"]
     ir["FlowLike.to_ir() -> Node JSON"]
     local["runner.run_agent_local(...)\nInMemoryEnv + ProjectionEmitter"]
-    cache["runcache.save_run(.ca/runs)"]
+    cache["runcache.save_run(.julep/runs)"]
     trace["trace -> tracetree.render_tree"]
     freeze["deploy.freeze_agent(...)\ntimeout=120.0"]
     artifact["deploy(node, snapshot, strict=False)\nflow_json + manifest_json + pins"]
     cas["CAS publish\nLocalDirCAS or s3://"]
-    ledger["ledger.upsert_records(.ca/deploys/<env>.json)"]
+    ledger["ledger.upsert_records(.julep/deploys/<env>.json)"]
     status["status.status_for_env(...)\nfreeze publish=False"]
     remote["temporal_run.run_on_env(...)"]
     temporal["execution.harness.run_flow(...)\nTemporal FlowWorkflow"]
@@ -1121,7 +1121,7 @@ Source-verified commands and flags:
 | `julep status [selector]` | `cli.status` | `--exclude`, `--env`; exit `3` on drift/error. |
 | `julep lint [selector]` | `cli.lint` | `--exclude`, `--fail-severity error|warning|info`. |
 | `julep test [selector]` | `cli.test_cmd` | `--exclude`, `--dry-run`; selected names become pytest `-k`. |
-| `julep trace <run_id>` | `cli.trace` | Reads `.ca/runs/<run_id>.json`; missing cache exits `2`. |
+| `julep trace <run_id>` | `cli.trace` | Reads `.julep/runs/<run_id>.json`; missing cache exits `2`. |
 | `julep doctor` | `cli.doctor` | Discovery, git, Langfuse, Temporal preflight. |
 | `julep chat <name>` | `chat.chat_command` | `--env`; only `local` is supported. |
 | `julep trigger <name> <event>` | `trigger.trigger_command` | `--channel`; only `"in"` is supported. |
@@ -1143,7 +1143,7 @@ julep trace ticket-42
 
 #### Discovery And Selection
 
-`discover.scan_agents(cfg: CaConfig) -> list[AgentInfo]` parses Python files
+`discover.scan_agents(cfg: JulepConfig) -> list[AgentInfo]` parses Python files
 under `cfg.src` with `ast.parse(...)` and does not import target modules. It
 recognizes top-level `@flow`-decorated functions and assignments whose value is
 a direct `Agent(...)` call.
@@ -1177,10 +1177,10 @@ current CLI does not expose a `--state` flag; `state:modified` uses `HEAD`.
 Commands that need runnable IR call:
 
 ```python
-resolve_agent(cfg: CaConfig, name: str, *, timeout: float = 30.0) -> ResolvedAgent
+resolve_agent(cfg: JulepConfig, name: str, *, timeout: float = 30.0) -> ResolvedAgent
 ```
 
-The parent process runs `python -m julep.ca._resolve_child <json>`.
+The parent process runs `python -m julep.cli._resolve_child <json>`.
 The child computes importable module names relative to each `src` entry, inserts
 the repo root and each import root on `sys.path`, imports modules, and finds a
 `FlowLike` whose `.name` or `._name` matches the target.
@@ -1188,9 +1188,9 @@ the repo root and each import root on `sys.path`, imports modules, and finds a
 The child writes JSON between sentinels:
 
 ```text
-__CA_RESOLVE_BEGIN__
+__JULEP_RESOLVE_BEGIN__
 {"ir": ..., "name": "..."}
-__CA_RESOLVE_END__
+__JULEP_RESOLVE_END__
 ```
 
 The sentinel block tolerates arbitrary user prints during import or process
@@ -1216,7 +1216,7 @@ The echo handler returns `{"output": value}` so env pures such as `std.init`,
 `RunOutcome` carries `run_id`, `value`, `events`, and `error`. Runtime exceptions
 become `RunOutcome.error`. Successful local runs render
 `tracetree.render_tree(outcome.events)`, print JSON output, and write
-`.ca/runs/<run_id>.json`. Failed runs write the same cache shape with status
+`.julep/runs/<run_id>.json`. Failed runs write the same cache shape with status
 `error`.
 
 `julep trace <run_id>` loads that cache, rehydrates events through
@@ -1238,7 +1238,7 @@ and exits `0` instead of running the whole suite.
 `julep deploy` freezes selected agents one at a time:
 
 ```python
-freeze_agent(cfg: CaConfig, name: str, env: str, *, publish: bool = True) -> FrozenArtifact
+freeze_agent(cfg: JulepConfig, name: str, env: str, *, publish: bool = True) -> FrozenArtifact
 ```
 
 The parent calls `_resolve_child` with `action: "freeze"` or
@@ -1254,9 +1254,9 @@ blocking diagnostic exists, and does not publish in that case.
 A successful freeze returns `artifact_hash`, `flow_json`, `manifest_json`,
 `bundle_ref`, and `pinned_pures`. Publishing uses `cas_from_url(cas)` for
 `s3://...` URLs and `LocalDirCAS(cas)` otherwise. Local CAS publishing sets a
-deterministic development signing key if `CA_BUNDLE_SIGNING_KEY` is unset.
+deterministic development signing key if `JULEP_BUNDLE_SIGNING_KEY` is unset.
 
-The deploy ledger is `.ca/deploys/<env>.json`. Each `DeployRecord` embeds
+The deploy ledger is `.julep/deploys/<env>.json`. Each `DeployRecord` embeds
 `agent`, `artifact_hash`, `flow_json`, `manifest_json`, `bundle_ref`,
 `deployed_at`, and `pinned_pures`. `upsert_records(...)` merges selected agents
 into the per-env ledger and writes sorted, pretty JSON.
@@ -1277,7 +1277,7 @@ run_on_env(cfg, name, env, value, *, run_id=None, client=None, run_flow=None)
 
 `EnvConfig.temporal_address` is required for non-local envs. If it is missing,
 `run_on_env(...)` raises instead of falling back to live source. The agent must
-already exist in `.ca/deploys/<env>.json`.
+already exist in `.julep/deploys/<env>.json`.
 
 The remote path loads the ledger record and calls:
 
@@ -1294,7 +1294,7 @@ run_flow(
 )
 ```
 
-The default remote session id is `ca-<name>-<env>-<12 hex chars>`. An explicit
+The default remote session id is `julep-<name>-<env>-<12 hex chars>`. An explicit
 `--run-id` is passed through; the CLI does not fabricate a fixed local-looking id
 for cloud envs.
 
@@ -1350,13 +1350,13 @@ workflow history; DBOS durability remains DBOS workflow state. See
 
 #### Configuration And Failure Model
 
-`load_config(root)` reads `[tool.ca]` from `pyproject.toml`, then overlays
-`ca.toml`. Verified fields are `src`, `exclude`, `[tool.ca.tags]`,
-`[tool.ca.gates].fail_severity`, and env fields `temporal_address`,
+`load_config(root)` reads `[tool.julep]` from `pyproject.toml`, then overlays
+`julep.toml`. Verified fields are `src`, `exclude`, `[tool.julep.tags]`,
+`[tool.julep.gates].fail_severity`, and env fields `temporal_address`,
 `temporal_namespace`, `task_queue`, `cas`, and `langfuse_host`.
 
-`env.local` always exists. Its default CAS is `.ca/cas`, and it has no Temporal
-address. `ca.toml` may override `env.local.cas`.
+`env.local` always exists. Its default CAS is `.julep/cas`, and it has no Temporal
+address. `julep.toml` may override `env.local.cas`.
 
 Common exit codes:
 
@@ -1383,4 +1383,4 @@ remote run loads that record and calls Temporal `run_flow(...)` with
 `julep` is a repo-oriented control plane for the framework, not a new execution
 substrate.
 
-<!-- ported-by ca-docs-site: concepts/architecture -->
+<!-- ported-by julep-docs-site: concepts/architecture -->

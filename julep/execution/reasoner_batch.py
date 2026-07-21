@@ -383,7 +383,7 @@ class BatchPoll:
             else:
                 attrs = dict(entry.get("attrs") or {})
                 payload = {
-                    "__ca_meta__": {
+                    "__julep_meta__": {
                         **attrs,
                         "tier": "BATCH",
                         "batch_id": batch_id,

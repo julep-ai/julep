@@ -194,4 +194,4 @@ Full version: [Concepts](/docs/concepts/model) · [Capabilities & Safety](/docs/
 5. **The team** — ask in the project channel; link the failing diagnostic or the
    minimal `@flow` that reproduces it.
 
-<!-- ported-by ca-docs-site: development/team-guide -->
+<!-- ported-by julep-docs-site: development/team-guide -->

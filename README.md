@@ -133,12 +133,12 @@ and those values exist only in the worker at runtime. The callback must return
 an `McpSnapshot`; pass any credential needed for schema discovery through a
 non-secret control-plane mechanism rather than expecting a Secret value here.
 
-Point `[tool.ca].application` at that object with a `module:attribute` value.
+Point `[tool.julep].application` at that object with a `module:attribute` value.
 Each deployable environment also names the worker's explicit context factory;
 ordinary and Secret-backed worker environment can be reconciled with the lane:
 
 ```toml
-[tool.ca.env.staging]
+[tool.julep.env.staging]
 temporal_address = "temporal-frontend.temporal.svc.cluster.local:7233"
 release_store = "s3://julep-releases/julep"
 worker_image = "registry.example/memory@sha256:<digest>"
@@ -147,11 +147,11 @@ worker_service_account = "julep-worker"
 worker_priority_class = "julep-model-worker"
 payload_encryption_secret = "temporal-payload-codec"
 
-[tool.ca.env.staging.worker_environment]
+[tool.julep.env.staging.worker_environment]
 MEMORY_TOOLS_MCP_URL = "http://memory-tools/mcp-internal"
-CA_BUNDLE_ALLOWED_SIGNERS = "<64-hex-ed25519-public-key>"
+JULEP_BUNDLE_ALLOWED_SIGNERS = "<64-hex-ed25519-public-key>"
 
-[tool.ca.env.staging.worker_secret_environment.MEMORY_TOOLS_JWT_PRIVATE_KEY]
+[tool.julep.env.staging.worker_secret_environment.MEMORY_TOOLS_JWT_PRIVATE_KEY]
 secret_name = "memory-tools-jwt"
 key = "private-key"
 ```
@@ -167,13 +167,13 @@ drift; `julep apply --env staging` publishes an immutable S3-CAS release and
 reconciles one digest-pinned Helm release per lane and immutable release on a
 release-specific task queue, without changing traffic;
 `julep status --env staging` aggregates the release and live lane state. That
-application-level status path is selected only when `[tool.ca].application` is
+application-level status path is selected only when `[tool.julep].application` is
 configured and no selector or `--exclude` is supplied; selected status queries
 continue to inspect the legacy per-agent deploy ledger.
 
 Application publishing requires a 64-hex Ed25519 seed (or a file containing
-one) in `CA_BUNDLE_SIGNING_KEY`. In production, set the corresponding 64-hex
-public key in the non-secret `CA_BUNDLE_ALLOWED_SIGNERS` worker environment;
+one) in `JULEP_BUNDLE_SIGNING_KEY`. In production, set the corresponding 64-hex
+public key in the non-secret `JULEP_BUNDLE_ALLOWED_SIGNERS` worker environment;
 `apply` rejects a configured allow-list that does not contain the publishing
 key. Read-only `plan` and application-level `status` need that public allow-list
 (or the private key as a local fallback). Install `julep[store,temporal]` for

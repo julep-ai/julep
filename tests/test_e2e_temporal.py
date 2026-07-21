@@ -130,23 +130,23 @@ def _worker(env, *, task_queue, agents=None, llm=None, extra_reasoners=(), mcp_c
 # --------------------------------------------------------------------------- #
 async def _pipeline_and_reasoner(env):
     fr = freeze(seq(call(mcp("srv", "double")), think("adder")), _snapshot())
-    async with _worker(env, task_queue="ca-pipe"):
+    async with _worker(env, task_queue="julep-pipe"):
         out = await run_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-                             session_id=f"pipe-{uuid.uuid4()}", input=5, task_queue="ca-pipe")
+                             session_id=f"pipe-{uuid.uuid4()}", input=5, task_queue="julep-pipe")
     assert out == 20, f"pipeline+reasoner expected 20, got {out}"
 
 
 async def _queue_lanes_do_not_break_subflow_inheritance(env):
     fr = freeze(sub("child", Contract.pipeline()), _snapshot())
-    async with _worker(env, task_queue="ca-queue-lanes"):
+    async with _worker(env, task_queue="julep-queue-lanes"):
         out = await run_flow(
             env.client,
             fr.flow.to_json(),
             manifest_to_json(fr.manifest),
             session_id=f"queue-lanes-{uuid.uuid4()}",
             input=5,
-            task_queue="ca-queue-lanes",
-            queue_lanes={"foreground": "ca-fg"},
+            task_queue="julep-queue-lanes",
+            queue_lanes={"foreground": "julep-fg"},
         )
     assert out == 6, f"queue-lane subflow expected 6, got {out}"
 
@@ -164,7 +164,7 @@ async def _agent_sub_routes_to_mapped_lane(env):
     -> _resolve_child_queue -> execute_child_workflow(task_queue=mapped).
     """
     DEFAULT_REGISTRY.register_reasoner(Reasoner(name="lane_ctrl", model="test", system="decide"))
-    parent_q, lane_q = "ca-lane-parent", "ca-lane-bg"
+    parent_q, lane_q = "julep-lane-parent", "julep-lane-bg"
 
     async def lane_mcp(server, tool, value, idempotency_key):
         assert idempotency_key
@@ -222,10 +222,10 @@ async def _principal_threading(env):
         return await _mcp(server, tool, value, idempotency_key)
 
     fr = freeze(call(mcp("srv", "double")), _snapshot())
-    async with _worker(env, task_queue="ca-principal", mcp_call=principal_mcp):
+    async with _worker(env, task_queue="julep-principal", mcp_call=principal_mcp):
         out = await run_flow(
             env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-            session_id=f"principal-{uuid.uuid4()}", input=3, task_queue="ca-principal",
+            session_id=f"principal-{uuid.uuid4()}", input=3, task_queue="julep-principal",
             principal={"storeId": 413, "tokenRef": "cred_abc"},
         )
     assert out == 6, f"principal flow expected 6, got {out}"
@@ -234,19 +234,19 @@ async def _principal_threading(env):
 
 async def _race(env):
     fr = freeze(race(call(mcp("srv", "fail")), call(mcp("srv", "slow"))), _snapshot())
-    async with _worker(env, task_queue="ca-race"):
+    async with _worker(env, task_queue="julep-race"):
         out = await run_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-                             session_id=f"race-{uuid.uuid4()}", input=7, task_queue="ca-race",
+                             session_id=f"race-{uuid.uuid4()}", input=7, task_queue="julep-race",
                              policy=ExecutionPolicy(idempotent_max_attempts=1))
     assert out == 700, f"race expected slow success 700 after fast failure, got {out}"
 
 
 async def _human_gate(env):
     fr = freeze(seq(human_gate(timeout_s=None), call(mcp("srv", "echo"))), _snapshot())
-    async with _worker(env, task_queue="ca-gate"):
+    async with _worker(env, task_queue="julep-gate"):
         sid = f"gate-{uuid.uuid4()}"
         handle = await start_flow(env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-                                  session_id=sid, input={"q": "x"}, task_queue="ca-gate")
+                                  session_id=sid, input={"q": "x"}, task_queue="julep-gate")
         cid = None
         for _ in range(60):
             gates = await handle.query("openGates")
@@ -262,14 +262,14 @@ async def _human_gate(env):
 
 async def _human_gate_timeout(env):
     fr = freeze(human_gate(timeout_s=1), _snapshot())
-    async with _worker(env, task_queue="ca-gate-timeout"):
+    async with _worker(env, task_queue="julep-gate-timeout"):
         out = await run_flow(
             env.client,
             fr.flow.to_json(),
             manifest_to_json(fr.manifest),
             session_id=f"gate-timeout-{uuid.uuid4()}",
             input={"q": "timeout"},
-            task_queue="ca-gate-timeout",
+            task_queue="julep-gate-timeout",
         )
     assert out == {
         "approved": False,
@@ -280,12 +280,12 @@ async def _human_gate_timeout(env):
 
 async def _agent(env):
     agents = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["srv/double"]}}
-    async with _worker(env, task_queue="ca-agent", agents=agents):
+    async with _worker(env, task_queue="julep-agent", agents=agents):
         sid = f"agent-{uuid.uuid4()}"
         res = await env.client.execute_workflow(
             AgentWorkflow.run,
             AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
-            id=sid, task_queue="ca-agent",
+            id=sid, task_queue="julep-agent",
         )
     assert res["status"] == "done", res
     assert res["output"] == 11, f"agent expected 11, got {res['output']}"
@@ -306,7 +306,7 @@ async def _agent(env):
     }
     async with _worker(
         env,
-        task_queue="ca-agent-b",
+        task_queue="julep-agent-b",
         agents=agents_b,
         llm=fail_if_budget_reasoner_invoked,
         extra_reasoners=(Reasoner(name="budget_ctrl", model="test", system="budget"),),
@@ -320,7 +320,7 @@ async def _agent(env):
                 input=5,
                 policy=ExecutionPolicy().to_json(),
             ),
-            id=sid, task_queue="ca-agent-b",
+            id=sid, task_queue="julep-agent-b",
         )
     assert res2["status"] == "over_budget", res2
     assert res2["cost"] == 0, res2
@@ -329,12 +329,12 @@ async def _agent(env):
 
     # Capability deny: the requested tool is not granted.
     agents_d = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["only/other"]}}
-    async with _worker(env, task_queue="ca-agent-d", agents=agents_d):
+    async with _worker(env, task_queue="julep-agent-d", agents=agents_d):
         sid = f"agentd-{uuid.uuid4()}"
         res3 = await env.client.execute_workflow(
             AgentWorkflow.run,
             AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
-            id=sid, task_queue="ca-agent-d",
+            id=sid, task_queue="julep-agent-d",
         )
     assert res3["status"] == "denied", res3
 
@@ -352,12 +352,12 @@ async def _agent(env):
             },
         }
     }
-    async with _worker(env, task_queue="ca-agent-a", agents=agents_a):
+    async with _worker(env, task_queue="julep-agent-a", agents=agents_a):
         sid = f"agenta-{uuid.uuid4()}"
         res4 = await env.client.execute_workflow(
             AgentWorkflow.run,
             AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
-            id=sid, task_queue="ca-agent-a",
+            id=sid, task_queue="julep-agent-a",
         )
     assert res4["status"] == "denied", res4
     assert res4["reason"] == "approval-required tool 'srv/double'; agent must ESCALATE"
@@ -394,7 +394,7 @@ async def _agent(env):
     }
     async with _worker(
         env,
-        task_queue="ca-agent-m",
+        task_queue="julep-agent-m",
         agents=agents_m,
         llm=max_calls_llm,
         mcp_call=counted_mcp,
@@ -405,7 +405,7 @@ async def _agent(env):
             AgentWorkflow.run,
             AgentInput(controller="max_ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
             id=sid,
-            task_queue="ca-agent-m",
+            task_queue="julep-agent-m",
         )
     assert res5["status"] == "denied", res5
     assert res5["reason"] == "tool 'srv/double' exceeded maxCalls=1"
@@ -437,7 +437,7 @@ async def _agent(env):
     }
     async with _worker(
         env,
-        task_queue="ca-agent-sub",
+        task_queue="julep-agent-sub",
         agents=sub_agents,
         llm=subflow_llm,
         extra_reasoners=(
@@ -455,7 +455,7 @@ async def _agent(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=f"agentsubd-{uuid.uuid4()}",
-            task_queue="ca-agent-sub",
+            task_queue="julep-agent-sub",
         )
         empty = await env.client.execute_workflow(
             AgentWorkflow.run,
@@ -466,7 +466,7 @@ async def _agent(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=f"agentsube-{uuid.uuid4()}",
-            task_queue="ca-agent-sub",
+            task_queue="julep-agent-sub",
         )
         allowed = await env.client.execute_workflow(
             AgentWorkflow.run,
@@ -477,7 +477,7 @@ async def _agent(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=f"agentsuba-{uuid.uuid4()}",
-            task_queue="ca-agent-sub",
+            task_queue="julep-agent-sub",
         )
     assert denied["status"] == "denied", denied
     assert denied["reason"] == "subflow 'child' is not granted"
@@ -530,7 +530,7 @@ async def _app_inline_grant_attenuation(env):
 
     async with _worker(
         env,
-        task_queue="ca-app-inline",
+        task_queue="julep-app-inline",
         agents=agents,
         llm=app_llm,
         extra_reasoners=(
@@ -542,13 +542,13 @@ async def _app_inline_grant_attenuation(env):
             env.client,
             session_id=f"appinline-missing-{uuid.uuid4()}",
             input=5,
-            task_queue="ca-app-inline",
+            task_queue="julep-app-inline",
         )
         allowed = await allowed_inline.run(
             env.client,
             session_id=f"appinline-allowed-{uuid.uuid4()}",
             input=5,
-            task_queue="ca-app-inline",
+            task_queue="julep-app-inline",
         )
 
     assert denied["status"] == "denied", denied
@@ -584,7 +584,7 @@ async def _app_max_calls_inherits_parent_counts(env):
 
     async with _worker(
         env,
-        task_queue="ca-app-seeded",
+        task_queue="julep-app-seeded",
         agents=agents,
         llm=seed_llm,
         extra_reasoners=(Reasoner(name="seeded_app_ctrl", model="test", system="seeded app"),),
@@ -595,7 +595,7 @@ async def _app_max_calls_inherits_parent_counts(env):
             manifest_to_json(parent.manifest),
             session_id=f"appseed-{uuid.uuid4()}",
             input=5,
-            task_queue="ca-app-seeded",
+            task_queue="julep-app-seeded",
             max_call_limits={"srv/double": 1},
         )
 
@@ -624,7 +624,7 @@ async def _strict_controller_contract(env):
     }
     async with _worker(
         env,
-        task_queue="ca-strict-controller",
+        task_queue="julep-strict-controller",
         agents=agents,
         llm=malformed_llm,
         extra_reasoners=(
@@ -641,7 +641,7 @@ async def _strict_controller_contract(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=f"strictctrl-{uuid.uuid4()}",
-            task_queue="ca-strict-controller",
+            task_queue="julep-strict-controller",
         )
         permissive = await env.client.execute_workflow(
             AgentWorkflow.run,
@@ -652,7 +652,7 @@ async def _strict_controller_contract(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=f"permissivectrl-{uuid.uuid4()}",
-            task_queue="ca-strict-controller",
+            task_queue="julep-strict-controller",
         )
 
     assert strict["status"] == "controller_error", strict
@@ -684,7 +684,7 @@ async def _sub_max_calls_inherits_parent_counts(env):
             llm=_llm,
             subflows=child_registry,
         ),
-        task_queue="ca-sub-maxcalls",
+        task_queue="julep-sub-maxcalls",
     ):
         with pytest.raises(WorkflowFailureError) as raised:
             await run_flow(
@@ -693,7 +693,7 @@ async def _sub_max_calls_inherits_parent_counts(env):
                 manifest_to_json(parent.manifest),
                 session_id=f"submax-denied-{uuid.uuid4()}",
                 input=5,
-                task_queue="ca-sub-maxcalls",
+                task_queue="julep-sub-maxcalls",
                 max_call_limits={"srv/double": 1},
             )
 
@@ -703,7 +703,7 @@ async def _sub_max_calls_inherits_parent_counts(env):
             manifest_to_json(parent.manifest),
             session_id=f"submax-ok-{uuid.uuid4()}",
             input=5,
-            task_queue="ca-sub-maxcalls",
+            task_queue="julep-sub-maxcalls",
             max_call_limits={"srv/double": 2},
         )
 
@@ -747,7 +747,7 @@ async def _agent_session_store(env):
     configure(ctx)
     worker = Worker(
         env.client,
-        task_queue="ca-agent-store",
+        task_queue="julep-agent-store",
         workflows=WORKFLOWS,
         activities=ACTIVITIES,
     )
@@ -763,7 +763,7 @@ async def _agent_session_store(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-store",
+            task_queue="julep-agent-store",
         )
 
     # Same terminal result as the default inline path in _agent(env).
@@ -810,7 +810,7 @@ async def _agent_session_store_fencing(env):
     configure(ctx)
     worker = Worker(
         env.client,
-        task_queue="ca-agent-store-fencing",
+        task_queue="julep-agent-store-fencing",
         workflows=WORKFLOWS,
         activities=ACTIVITIES,
     )
@@ -827,7 +827,7 @@ async def _agent_session_store_fencing(env):
                     policy=ExecutionPolicy().to_json(),
                 ),
                 id=f"other-{uuid.uuid4()}",
-                task_queue="ca-agent-store-fencing",
+                task_queue="julep-agent-store-fencing",
             )
 
     cause = raised.value.__cause__
@@ -869,7 +869,7 @@ async def _agent_trace_fidelity(env):
     configure(ctx)
     worker = Worker(
         env.client,
-        task_queue="ca-agent-fidelity",
+        task_queue="julep-agent-fidelity",
         workflows=WORKFLOWS,
         activities=ACTIVITIES,
     )
@@ -885,7 +885,7 @@ async def _agent_trace_fidelity(env):
                 policy=ExecutionPolicy(trace_content_refs=True).to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-fidelity",
+            task_queue="julep-agent-fidelity",
         )
 
         # Fidelity OFF (default): identical run, no outputRef recorded.
@@ -899,7 +899,7 @@ async def _agent_trace_fidelity(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid_off,
-            task_queue="ca-agent-fidelity",
+            task_queue="julep-agent-fidelity",
         )
 
     # Same terminal result as the default inline path in _agent(env).
@@ -963,7 +963,7 @@ async def _agent_require_tool_call_reasks_then_calls(env):
 
     async with _worker(
         env,
-        task_queue="ca-agent-require-tool-call",
+        task_queue="julep-agent-require-tool-call",
         agents=agents,
         llm=scripted,
         extra_reasoners=(Reasoner(name="require_ctrl", model="test", system="decide"),),
@@ -978,7 +978,7 @@ async def _agent_require_tool_call_reasks_then_calls(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-require-tool-call",
+            task_queue="julep-agent-require-tool-call",
         )
 
     assert res["status"] == "done", res
@@ -1017,7 +1017,7 @@ async def _agent_require_tool_call_halts(env):
 
     async with _worker(
         env,
-        task_queue="ca-agent-require-tool-call-halt",
+        task_queue="julep-agent-require-tool-call-halt",
         agents=agents,
         llm=scripted,
         extra_reasoners=(Reasoner(name="require_ctrl2", model="test", system="decide"),),
@@ -1032,7 +1032,7 @@ async def _agent_require_tool_call_halts(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-require-tool-call-halt",
+            task_queue="julep-agent-require-tool-call-halt",
         )
 
     assert res["status"] == "controller_error", res
@@ -1071,7 +1071,7 @@ async def _agent_tool_error_persisted_for_transcript(env):
     configure(ctx)
     worker = Worker(
         env.client,
-        task_queue="ca-agent-tool-error-blob",
+        task_queue="julep-agent-tool-error-blob",
         workflows=WORKFLOWS,
         activities=ACTIVITIES,
     )
@@ -1089,7 +1089,7 @@ async def _agent_tool_error_persisted_for_transcript(env):
                 ).to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-tool-error-blob",
+            task_queue="julep-agent-tool-error-blob",
         )
 
     assert res["status"] == "done", res
@@ -1118,13 +1118,13 @@ async def _pure_drift_fails_before_effect(env):
     purity._REGISTRY["e2e.drift"] = PureEntry("e2e.drift", _drift_pure, "pure:changed")
 
     ctx = WorkerContext(mcp_call=mcp_counter, llm=_llm, subflows=_child_registry())
-    async with build_worker(env.client, ctx, task_queue="ca-pure-drift"):
+    async with build_worker(env.client, ctx, task_queue="julep-pure-drift"):
         with pytest.raises(WorkflowFailureError) as raised:
             await deployment.run(
                 env.client,
                 session_id=f"pure-drift-{uuid.uuid4()}",
                 input=5,
-                task_queue="ca-pure-drift",
+                task_queue="julep-pure-drift",
             )
 
     cause = raised.value.__cause__
@@ -1200,7 +1200,7 @@ async def _agent_native_tools_call_many(env):
 
     async with _worker(
         env,
-        task_queue="ca-agent-native-tools",
+        task_queue="julep-agent-native-tools",
         agents=agents,
         llm=native_llm,
         mcp_call=counted_mcp,
@@ -1216,7 +1216,7 @@ async def _agent_native_tools_call_many(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-native-tools",
+            task_queue="julep-agent-native-tools",
         )
 
     assert res["status"] == "done", res
@@ -1292,7 +1292,7 @@ async def _agent_native_tools_llm_result_meta_unwrap(env):
 
     async with _worker(
         env,
-        task_queue="ca-agent-native-tools-llm-result",
+        task_queue="julep-agent-native-tools-llm-result",
         agents=agents,
         llm=native_llm,
         mcp_call=counted_mcp,
@@ -1308,7 +1308,7 @@ async def _agent_native_tools_llm_result_meta_unwrap(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-native-tools-llm-result",
+            task_queue="julep-agent-native-tools-llm-result",
         )
 
     assert res["status"] == "done", res
@@ -1381,7 +1381,7 @@ async def _agent_call_many_tool_error_folds_to_observation(env):
 
     async with _worker(
         env,
-        task_queue="ca-agent-call-many-tool-error",
+        task_queue="julep-agent-call-many-tool-error",
         agents=agents,
         llm=native_llm,
         extra_reasoners=(Reasoner(name="native_error_ctrl", model="test", system="native"),),
@@ -1396,7 +1396,7 @@ async def _agent_call_many_tool_error_folds_to_observation(env):
                 policy=ExecutionPolicy().to_json(),
             ),
             id=sid,
-            task_queue="ca-agent-call-many-tool-error",
+            task_queue="julep-agent-call-many-tool-error",
         )
 
     assert res["status"] == "done", res
@@ -1422,7 +1422,7 @@ async def _agent_call_many_tool_error_folds_to_observation(env):
 async def _agent_native_tools_without_tool_defs_fails(env):
     async with _worker(
         env,
-        task_queue="ca-agent-native-tools-missing",
+        task_queue="julep-agent-native-tools-missing",
         extra_reasoners=(
             Reasoner(name="native_missing_defs_ctrl", model="test", system="native"),
         ),
@@ -1445,7 +1445,7 @@ async def _agent_native_tools_without_tool_defs_fails(env):
                     resolve_spec=False,
                 ),
                 id=sid,
-                task_queue="ca-agent-native-tools-missing",
+                task_queue="julep-agent-native-tools-missing",
             )
 
     cause = raised.value.__cause__

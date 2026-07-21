@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import inspect
-import os
 import re
 from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from . import deps
+from . import _env, deps
 from .cas import CASStore
 from .ir import canonical_json
 from .registry import DEFAULT_REGISTRY, Registry, _text_hash
@@ -70,15 +69,15 @@ def validate_pure_deps(
             f"{', '.join(repr(dep) for dep in offending)} are off the curated WASI "
             f"wheel list ({', '.join(sorted(env_builder.SUPPORTED_WASI_WHEELS))}). "
             "Use a supported wasi-wheel dependency, or grant this pure the native "
-            f"tier by adding {name} to CA_PURE_NATIVE_DEPS."
+            f"tier by adding {name} to JULEP_PURE_NATIVE_DEPS."
         )
 
 
 def _signing_seed(value: str | None) -> bytes:
-    raw = value if value is not None else os.environ.get("CA_BUNDLE_SIGNING_KEY")
+    raw = value if value is not None else _env.get(_env.JULEP_BUNDLE_SIGNING_KEY)
     if raw is None or raw.strip() == "":
         raise BundleSigningError(
-            "bundle signing requires a signing_key parameter or CA_BUNDLE_SIGNING_KEY"
+            "bundle signing requires a signing_key parameter or JULEP_BUNDLE_SIGNING_KEY"
         )
 
     text = raw.strip()

@@ -39,7 +39,7 @@ print(result["trace"])
 
 `Agent.run(...)` returns `Result`, a dict subclass with attribute accessors:
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 result = agent.run("Customer was charged twice.")
 
@@ -100,7 +100,7 @@ The framework constrains the controller through the reply schema and the granted
 
 For a batteries-included multi-provider controller, install the `providers` extra and use `make_local_reasoner` from `julep.execution.llm`. It routes a `provider:model` prefix on `reasoner=` (e.g. `"openai:gpt-4o"`, `"gemini:gemini-2.5-flash"`) through [any-llm](https://github.com/mozilla-ai/any-llm), so the same agent runs on any supported provider:
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 # pip install --pre 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
 from julep import Agent, tool
@@ -144,4 +144,4 @@ print(agent.run("acct-123").prod_gap)
 
 `deployment.prod_gap_summary()` gives the strict-production summary. Temporal stays prod-strict: `Deployment.run(...)` rejects dev-mode deployments, and `Agent.deploy(...)` uses the strict deployment path.
 
-<!-- ported-by ca-docs-site: start/first-agent -->
+<!-- ported-by julep-docs-site: start/first-agent -->

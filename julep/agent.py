@@ -440,7 +440,7 @@ def _llm_result_envelope(result: LlmResult) -> dict[str, Any]:
     attrs = result.meta.to_attrs()
     if not attrs:
         return {"reply": result.reply}
-    return {"reply": result.reply, "__ca_meta__": attrs}
+    return {"reply": result.reply, "__julep_meta__": attrs}
 
 
 class Agent(FlowLike[Any, Any]):
@@ -925,7 +925,7 @@ class Agent(FlowLike[Any, Any]):
             # A provider llm seam (make_local_reasoner) returns an LlmResult so the
             # engine path can capture usage; the facade controller loop consumes a
             # bare reply (interpret_reasoner_reply). The flow facade path unwraps in
-            # interpreter._unwrap_ca_meta; this is its app-loop counterpart.
+            # interpreter._unwrap_julep_meta; this is its app-loop counterpart.
             if isinstance(reply, LlmResult):
                 return _llm_result_envelope(reply)
             return reply

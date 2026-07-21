@@ -3,7 +3,7 @@ title: "Using the julep CLI"
 description: "Discover, run, lint, test, deploy, and trace a whole module of agents with one selection grammar."
 ---
 
-`julep` is the developer-facing CLI for a **module of agents**. Where the lower-level plumbing CLI (`python -m julep.cli`) operates on frozen JSON artifacts, `julep` operates on your **Python source**: point it at a directory and it discovers every `@flow` and `Agent(...)`, treats each as a node in a cross-agent dependency graph, and gives you one selection grammar to inspect, run, gate, and deploy any slice — "dbt for agents, terminal-native, local-first."
+`julep` is the developer-facing CLI for a **module of agents**. Its lower-level `julep artifact` commands operate on frozen JSON artifacts, while the other commands operate on your **Python source**: point them at a directory and Julep discovers every `@flow` and `Agent(...)`, treats each as a node in a cross-agent dependency graph, and gives you one selection grammar to inspect, run, gate, and deploy any slice — "dbt for agents, terminal-native, local-first."
 
 `julep` is porcelain over the existing APIs (`deploy`, the in-memory interpreter, `validate`, the projection→Langfuse export); it adds no new runtime.
 
@@ -29,31 +29,31 @@ An **agent** is a top-level `@flow`-decorated function or an `Agent(...)` instan
 
 ### Optional config
 
-`[tool.ca]` in `pyproject.toml`, overridden by a sibling `ca.toml` when present:
+`[tool.julep]` in `pyproject.toml`, overridden by a sibling `julep.toml` when present:
 
 ```toml
-[tool.ca]
+[tool.julep]
 src     = ["agents", "examples"]      # discovery roots (default: the current package)
 exclude = ["examples/scratch_*.py"]
 
-[tool.ca.tags]                         # tag agents for tag: selection
+[tool.julep.tags]                         # tag agents for tag: selection
 triage = ["support"]
 
-[tool.ca.gates]
+[tool.julep.gates]
 fail_severity = "error"                # default gate threshold for `julep lint`
 
-[tool.ca.env.staging]                  # deploy/run targets (see "Outer loop")
+[tool.julep.env.staging]                  # deploy/run targets (see "Outer loop")
 temporal_address   = "temporal.example:7233"
 temporal_namespace = "default"
-task_queue         = "ca-staging"
-cas                = "s3://my-bucket/ca"   # local envs default to .ca/cas (LocalDirCAS)
+task_queue         = "julep-staging"
+cas                = "s3://my-bucket/julep"   # local envs default to .julep/cas (LocalDirCAS)
 langfuse_host      = "https://cloud.langfuse.com"
 ```
 
-A `local` environment always exists implicitly (LocalDirCAS at `.ca/cas`, no Temporal).
+A `local` environment always exists implicitly (LocalDirCAS at `.julep/cas`, no Temporal).
 
 Production application commands use an explicit
-`[tool.ca] application = "module:attribute"` object rather than AST discovery.
+`[tool.julep] application = "module:attribute"` object rather than AST discovery.
 An application's `snapshot_source(environment)` receives a read-only merge of
 the selected environment's `vars` and `worker_environment`, with worker values
 winning. Kubernetes Secret-backed worker values are references and are not
@@ -125,7 +125,7 @@ output: {"reply": "..."}
 > reasoners (see [Your First Flow](/docs/start/first-flow)). Registered `@pure`
 > functions run for real in both.
 
-The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.ca/runs/` so `julep trace <run-id>` can re-render them and `result:fail` can select the failures.
+The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.julep/runs/` so `julep trace <run-id>` can re-render them and `result:fail` can select the failures.
 
 ## Gates
 
@@ -146,7 +146,7 @@ julep deploy triage --env staging
 ```
 - freezes the agent (`deploy(..., strict=False)`, minting a content-addressed `artifact_hash`),
 - publishes the bundle (frozen flow + manifest + pure sources) to the env's CAS (`LocalDirCAS` locally, `S3CAS` for `s3://`),
-- appends a record to the **committed** ledger `.ca/deploys/<env>.json` (artifact hash + frozen IR + timestamp — self-describing).
+- appends a record to the **committed** ledger `.julep/deploys/<env>.json` (artifact hash + frozen IR + timestamp — self-describing).
 
 ```bash
 julep status --env staging        # triage  clean   sha256:3f14bac…     (exit 0)
@@ -159,7 +159,7 @@ julep run triage --env staging --input '"TICKET-42"'
 ```
 replays the **deployed** artifact (never re-freezes drifted source): connects to the env's Temporal and runs the frozen flow on its task queue via `run_flow`.
 
-The ledger lives in git (`.ca/deploys/` is tracked); `.ca/runs/` and `.ca/cas/` are ignored. Immutable, content-addressed artifacts make rollback a pointer swap.
+The ledger lives in git (`.julep/deploys/` is tracked); `.julep/runs/` and `.julep/cas/` are ignored. Immutable, content-addressed artifacts make rollback a pointer swap.
 
 > **Status:** `--env local` (deploy/status/run) is local-only and needs no extra services. `run --env <cloud>` (Temporal) and S3 publishing require the `temporal` / `store` extras and live infrastructure.
 
@@ -183,7 +183,7 @@ julep listen support-agent --forward-to https://example.com/hook   # forward emi
 
 ## See also
 
-- [`julep` CLI reference](/docs/reference/ca-cli) — every subcommand, flag, and the full selection grammar.
+- [`julep` CLI reference](/docs/reference/julep-cli) — every subcommand, flag, and the full selection grammar.
 - [Operations](/docs/deploy/operations) — operational runbooks for deploy, status/drift, and tracing a failing run in production.
 
-<!-- ported-by ca-docs-site: guides/using-the-cli -->
+<!-- ported-by julep-docs-site: guides/using-the-cli -->

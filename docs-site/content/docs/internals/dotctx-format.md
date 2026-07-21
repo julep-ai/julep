@@ -194,4 +194,4 @@ Details live in mem-mcp `specs/042-julep-temporal/`.
 | `docs/SPEC.md` | rich layout, renderer naming/hashing, drift diagnostic |
 | tests | minimal-layout regression; rich load of a fixture `.ctx`; renderer drift; bundle rejection cases; schema-drift diagnostic; golden corpus unmoved |
 
-<!-- ported-by ca-docs-site: internals/dotctx-format -->
+<!-- ported-by julep-docs-site: internals/dotctx-format -->

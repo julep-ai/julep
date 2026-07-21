@@ -172,7 +172,7 @@ Diagnostic(
 
 `explain(diagnostics)` renders blocking diagnostics before warnings. It prints
 `fix:` from the diagnostic's `hint` or from the built-in `HINTS` table. Source
-capture is opt-in with `COMPOSABLE_AGENTS_SOURCE_CAPTURE=1` or
+capture is opt-in with `JULEP_SOURCE_CAPTURE=1` or
 `set_source_capture(True)`; when enabled, freeze maps authored source spans onto
 normalized node ids and `explain(...)` includes `--> file:line`.
 
@@ -193,4 +193,4 @@ Related: [First Agent](/docs/start/first-agent), [Temporal](/docs/deploy/tempora
 [Examples](/docs/guides/examples), [the Typed Flow Calculus](/docs/internals/typed-flow-calculus), and
 [Contributing](/docs/development/contributing).
 
-<!-- ported-by ca-docs-site: guides/capabilities-and-safety -->
+<!-- ported-by julep-docs-site: guides/capabilities-and-safety -->

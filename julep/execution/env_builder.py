@@ -130,7 +130,7 @@ def synthesize_env_component(
     """
     env_hash = _env_hash(deps, requires_python)
     payload = env_hash.encode("ascii") + b"\0" + marker
-    return _BASE_COMPONENT.read_bytes() + _custom_section("composable-env", payload)
+    return _BASE_COMPONENT.read_bytes() + _custom_section("julep-env", payload)
 
 
 def build_env_component(
@@ -171,12 +171,12 @@ def build_env_component(
 
     env_hash = _env_hash(deps, requires_python)
     output_root = Path(out_dir) if out_dir is not None else Path(
-        tempfile.mkdtemp(prefix="composable-env-")
+        tempfile.mkdtemp(prefix="julep-env-")
     )
     output_root.mkdir(parents=True, exist_ok=True)
     output = output_root / f"env_{env_hash}.wasm"
 
-    with tempfile.TemporaryDirectory(prefix="composable-env-site-") as temp:
+    with tempfile.TemporaryDirectory(prefix="julep-env-site-") as temp:
         temp_root = Path(temp)
         site_packages = temp_root / "site-packages"
         site_packages.mkdir(parents=True)

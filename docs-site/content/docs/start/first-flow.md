@@ -21,7 +21,7 @@ pip install --pre julep
 
 Save this as `quickstart_flow.py` and run it with `python quickstart_flow.py`.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from typing import TypedDict
 
@@ -85,7 +85,7 @@ Dataflow
 
 ### `@tool` — side-effecting callables
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 @tool(effect="read", idempotent=True)
 def lookup_ticket(ticket: str) -> dict[str, str]:
@@ -96,7 +96,7 @@ def lookup_ticket(ticket: str) -> dict[str, str]:
 
 ### `@pure` — deterministic functions
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 @pure("ticket_prompt")
 def ticket_prompt(hit: dict[str, str]) -> dict[str, str]:
@@ -107,7 +107,7 @@ A pure is a deterministic, side-effect-free function that runs on the workflow s
 
 ### `Reasoner` — named LLM steps
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 SUPPORT_REPLY = Reasoner(
     name="support_reply",
@@ -121,7 +121,7 @@ A `Reasoner` names an LLM configuration. Declare it as an object, call it inside
 
 ### `@flow` — the authoring surface
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 @flow
 def triage(ticket: str) -> dict[str, str]:
@@ -135,7 +135,7 @@ def triage(ticket: str) -> dict[str, str]:
 
 You cannot branch or iterate on a `Handle` with plain Python:
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 # These are define-time errors:
 if hit:          # use cond(...) instead
@@ -148,7 +148,7 @@ Use the provided control helpers — `cond(pred, subject, then=..., orelse=...)`
 
 ### `deploy(...)` — freeze and admit
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 deployment = deploy(triage, tools=[lookup_ticket], reasoners=[SUPPORT_REPLY])
 ```
@@ -157,7 +157,7 @@ deployment = deploy(triage, tools=[lookup_ticket], reasoners=[SUPPORT_REPLY])
 
 After deploy you can inspect the artifact:
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 deployment.surface_shape    # inferred shape: Pipeline, Dataflow, Branching, …
 deployment.diagnostics      # any non-blocking warnings
@@ -166,7 +166,7 @@ deployment.prod_gap_summary()  # what strict production deploy would block
 
 ### `dry_run(...)` — local execution
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 result = deployment.dry_run(
     "Customer was charged twice.",
@@ -181,7 +181,7 @@ print(result.value)
 
 ## What the shape tells you
 
-<!-- ca:doctest skip -->
+<!-- julep:doctest skip -->
 ```python
 print(deployment.surface_shape.value)  # "Dataflow"
 ```
@@ -197,4 +197,4 @@ Every flow has an inferred shape on the lattice `Pipeline < Dataflow < Branching
 - [Deploy to Temporal](/docs/deploy/temporal) — durable execution and worker setup.
 - Larger examples: [`examples/episode_summary_flow.py`](https://github.com/julep-ai/julep-v2/blob/main/examples/episode_summary_flow.py) and [`examples/cluster_labeling_flow.py`](https://github.com/julep-ai/julep-v2/blob/main/examples/cluster_labeling_flow.py).
 
-<!-- ported-by ca-docs-site: start/first-flow -->
+<!-- ported-by julep-docs-site: start/first-flow -->

@@ -18,6 +18,7 @@ import itertools
 import os
 from typing import Any, Optional, Sequence, Union
 
+from . import _env
 from .ir import (
     Ann,
     CallStep,
@@ -35,7 +36,7 @@ from .kinds import ContextScope, Op, Shape, SummaryPolicy
 
 _counter = itertools.count()
 _PACKAGE_ROOT = os.path.dirname(__file__)
-_SOURCE_CAPTURE = os.environ.get("COMPOSABLE_AGENTS_SOURCE_CAPTURE") == "1"
+_SOURCE_CAPTURE = _env.get(_env.JULEP_SOURCE_CAPTURE) == "1"
 
 
 def _nid(tag: str) -> str:

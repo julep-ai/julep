@@ -2,7 +2,7 @@
 
 Needs: ``pip install 'julep[dbos]'`` and a Postgres reachable via
 ``DBOS_TEST_DATABASE_URL``. Local one-liner:
-``docker run -d --name ca-dbos-pg -e POSTGRES_PASSWORD=ca -p 5433:5432 postgres:16``.
+``docker run -d --name julep-dbos-pg -e POSTGRES_PASSWORD=julep -p 5433:5432 postgres:16``.
 Skipped otherwise. If this file fails after a dbos upgrade, fix
 ``dbos_backend.py`` to match before anything else.
 """
@@ -42,7 +42,7 @@ pytestmark = pytest.mark.skipif(
 if HAVE_DBOS and DB_URL:
     from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
 
-    spike_queue = Queue("ca_spike", concurrency=2)
+    spike_queue = Queue("julep_spike", concurrency=2)
 
     @DBOS.step(retries_allowed=True, max_attempts=3)
     async def double(x: int) -> int:
@@ -88,7 +88,7 @@ def run_async() -> Iterator[Callable[[Awaitable[T]], T]]:
 def dbos_runtime(run_async: Callable[[Awaitable[Any]], Any]) -> Iterator[None]:
     DBOS(
         config=DBOSConfig(
-            name=f"ca-spike-{uuid.uuid4().hex[:8]}",
+            name=f"julep-spike-{uuid.uuid4().hex[:8]}",
             system_database_url=DB_URL,
         )
     )

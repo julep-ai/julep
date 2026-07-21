@@ -94,6 +94,53 @@ def test_parse_pep723_deps_and_requires_python() -> None:
     assert parse_pep723(source) == (("anyio>=4", "zipp==3.20.0"), ">=3.11")
 
 
+def test_parse_pep723_rejects_unknown_keys() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = []\n"
+        "# dependency-groups = {}\n"
+        "# ///\n"
+    )
+
+    with pytest.raises(ValueError, match=r"unknown key\(s\).*dependency-groups"):
+        parse_pep723(source)
+
+
+def test_parse_pep723_allows_standard_tool_table() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = []\n"
+        "# [tool.julep]\n"
+        "# mode = \"strict\"\n"
+        "# ///\n"
+    )
+
+    assert parse_pep723(source) == ((), None)
+
+
+def test_parse_pep723_rejects_invalid_dependency() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = [\"numpy =>1\"]\n"
+        "# ///\n"
+    )
+
+    with pytest.raises(ValueError, match=r"not valid PEP 508.*numpy =>1"):
+        parse_pep723(source)
+
+
+def test_parse_pep723_rejects_invalid_requires_python() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = []\n"
+        "# requires-python = \">=three\"\n"
+        "# ///\n"
+    )
+
+    with pytest.raises(ValueError, match=r"not a valid version specifier.*>=three"):
+        parse_pep723(source)
+
+
 def test_parse_pep723_sorts_deps_regardless_of_source_order() -> None:
     first = (
         "# /// script\n"

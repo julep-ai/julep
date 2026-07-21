@@ -138,7 +138,7 @@ non-retryable class list in the retry policy.
 | `execution/effects.py` | `RunPrincipal`, widened caller signatures + arity shim in `configure`, `principal` on `CallToolInput`/`InvokeReasonerInput`/`CompilePlanInput`, `principal_headers` on `WorkerContext` |
 | `execution/interpreter.py` | `interpret(..., principal=None)`, `InMemoryEnv` carries + stamps it |
 | `execution/harness.py` | `FlowInput`/`AgentInput` field, `_TemporalEnv` stamping, child workflow propagation, `continue_as_new` carry-forward in both workflows |
-| `execution/dbos_backend.py` | same for `DbosEnv` / `flow_workflow` / `ca_agent` |
+| `execution/dbos_backend.py` | same for `DbosEnv` / `flow_workflow` / `julep_agent` |
 | `errors.py` | `PrincipalRequired` |
 | public entry points (`Agent.run` / `Agent.deploy`, `Deployment.run`, `run_flow` / `start_flow`) | `principal=` passthrough |
 | `docs/SPEC.md` | §: run principal (input, opacity, no-secrets rule, child propagation) |
@@ -148,4 +148,4 @@ non-retryable class list in the retry policy.
 Everything flows through the one effects seam, so the change is cross-cutting
 but mechanical. The only design-bearing decisions are the two invariants above.
 
-<!-- ported-by ca-docs-site: internals/run-principal -->
+<!-- ported-by julep-docs-site: internals/run-principal -->

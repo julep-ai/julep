@@ -436,7 +436,7 @@ class Application:
     ) -> dict[str, tuple[Any, ...]]:
         """Run declared eval packages through the supplied production caller."""
 
-        from .ca.evalrun import run_eval_sync
+        from .cli.evalrun import run_eval_sync
 
         base = Path(root)
         return {

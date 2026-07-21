@@ -274,7 +274,7 @@ async def run_temporal() -> None:
 
     env = await WorkflowEnvironment.start_time_skipping()
     try:
-        task_queue = "ca-session-demo"
+        task_queue = "julep-session-demo"
         # The worker's LLM seam is the REAL multi-provider any-llm caller.
         ctx = WorkerContext(
             session_store=InMemorySessionStore(empty_value=[]),

@@ -12,10 +12,10 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 
-CLUSTER="${CLUSTER:-ca-cad-demo}"
-CAS_DIR="${CAS_DIR:-/tmp/ca-cad-cas}"
+CLUSTER="${CLUSTER:-julep-cad-demo}"
+CAS_DIR="${CAS_DIR:-/tmp/julep-cad-cas}"
 IMAGE="${IMAGE:-julep-worker:cad-demo}"
-ENV_OUT="${ENV_OUT:-/tmp/ca-cad-env.json}"
+ENV_OUT="${ENV_OUT:-/tmp/julep-cad-env.json}"
 
 K3D="${K3D:-$(command -v k3d 2>/dev/null || true)}"
 if [ -z "$K3D" ] || ! "$K3D" version >/dev/null 2>&1; then
@@ -28,7 +28,7 @@ echo "k3d: $K3D"
 if ! temporal operator namespace list --address localhost:7233 >/dev/null 2>&1; then
   echo "starting temporal dev server (0.0.0.0:7233) ..."
   nohup temporal server start-dev --ip 0.0.0.0 --port 7233 --headless \
-    >/tmp/ca-cad-temporal.log 2>&1 &
+    >/tmp/julep-cad-temporal.log 2>&1 &
   for _ in $(seq 1 30); do
     temporal operator namespace list --address localhost:7233 >/dev/null 2>&1 && break
     sleep 1
@@ -48,24 +48,24 @@ kubectl config use-context "k3d-$CLUSTER" >/dev/null
 kubectl wait --for=condition=ready node --all --timeout=120s
 
 # --- 3. Generic worker image (built once; never rebuilt per flow) ---------- #
-BUILD=/tmp/ca-cad-build
+BUILD=/tmp/julep-cad-build
 rm -rf "$BUILD" && mkdir -p "$BUILD"
 git -C "$REPO_ROOT" archive HEAD --prefix=julep-v2/ | tar -x -C "$BUILD"
 cp "$REPO_ROOT/tooling/runtime-image/Dockerfile" "$BUILD/"
 echo "building $IMAGE ..."
-docker build -t "$IMAGE" "$BUILD" >/tmp/ca-cad-build.log 2>&1 \
-  || { echo "image build failed; see /tmp/ca-cad-build.log"; tail -20 /tmp/ca-cad-build.log; exit 1; }
+docker build -t "$IMAGE" "$BUILD" >/tmp/julep-cad-build.log 2>&1 \
+  || { echo "image build failed; see /tmp/julep-cad-build.log"; tail -20 /tmp/julep-cad-build.log; exit 1; }
 "$K3D" image import "$IMAGE" -c "$CLUSTER"
 
 # --- 4. Publish the bundle into the shared CAS dir ------------------------- #
 echo "publishing grade-scores bundle into $CAS_DIR ..."
 CAS_DIR="$CAS_DIR" ENV_OUT="$ENV_OUT" uv --project "$REPO_ROOT" run python "$HERE/publish.py"
-CA_BUNDLES="$(python3 -c "import json;print(json.load(open('$ENV_OUT'))['CA_BUNDLES'])")"
-SIGNER="$(python3 -c "import json;print(json.load(open('$ENV_OUT'))['CA_BUNDLE_ALLOWED_SIGNERS'])")"
+JULEP_BUNDLES="$(python3 -c "import json;print(json.load(open('$ENV_OUT'))['JULEP_BUNDLES'])")"
+SIGNER="$(python3 -c "import json;print(json.load(open('$ENV_OUT'))['JULEP_BUNDLE_ALLOWED_SIGNERS'])")"
 
 # --- 5. Deploy the generic worker pointed at the bundle -------------------- #
 RENDERED=/tmp/julep-cad-worker.yaml
-sed -e "s|__CA_BUNDLES__|$CA_BUNDLES|" -e "s|__SIGNER__|$SIGNER|" "$HERE/worker.yaml" > "$RENDERED"
+sed -e "s|__JULEP_BUNDLES__|$JULEP_BUNDLES|" -e "s|__SIGNER__|$SIGNER|" "$HERE/worker.yaml" > "$RENDERED"
 kubectl apply -f "$RENDERED"
 echo "waiting for worker rollout ..."
 kubectl rollout status deploy/julep-cad-worker --timeout=120s

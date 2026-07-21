@@ -167,7 +167,7 @@ def test_native_venv_routes_through_registry_get_pure(
     )
     registry = Registry()
     registry.register_pure_from_source(name, source, tier="native_venv")
-    monkeypatch.setenv("COMPOSABLE_NATIVE_VENV_CACHE_DIR", str(tmp_path))
+    monkeypatch.setenv("JULEP_NATIVE_VENV_CACHE_DIR", str(tmp_path))
     monkeypatch.setattr(native_venv_executor, "_EXECUTOR", None)
 
     result = registry.get_pure(name)(11)

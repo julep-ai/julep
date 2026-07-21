@@ -191,8 +191,8 @@ def controller_turn(
             if state.summary is not None:
                 payload["summary"] = state.summary
         reply = await invoke_controller(payload)
-        if isinstance(reply, dict) and "__ca_meta__" in reply and "reply" in reply:
-            meta = reply["__ca_meta__"]
+        if isinstance(reply, dict) and "__julep_meta__" in reply and "reply" in reply:
+            meta = reply["__julep_meta__"]
             state.controller_meta = (
                 dict(meta) if isinstance(meta, dict) else {"meta": meta}
             )

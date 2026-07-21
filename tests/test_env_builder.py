@@ -7,6 +7,10 @@ import pytest
 from julep.execution import env_builder
 
 
+def test_synthesized_component_uses_julep_custom_section() -> None:
+    assert b"julep-env" in env_builder.synthesize_env_component((), None)
+
+
 def _write_dist_info(site_packages: Path, name: str, version: str) -> None:
     dist_info = site_packages / f"{name}-{version}.dist-info"
     dist_info.mkdir(parents=True)

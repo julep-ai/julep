@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Rename hard-cutover guard
+        run: python scripts/check_rename_inventory.py
       - name: Install dev tools
         run: python -m pip install -e '.[dev]'
       - name: Ruff

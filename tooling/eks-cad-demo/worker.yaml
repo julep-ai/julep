@@ -4,9 +4,9 @@
 # tooling/runtime-image/Dockerfile -- it holds NO flow code. The grade-scores
 # flow + its three custom pures arrive as a signed CAS bundle read from S3
 # (STORE_URL) at startup; the worker verifies the bundle against
-# CA_BUNDLE_ALLOWED_SIGNERS, then runs the pures in the P3 wasm sandbox.
+# JULEP_BUNDLE_ALLOWED_SIGNERS, then runs the pures in the P3 wasm sandbox.
 #
-# up.sh substitutes __IMAGE__ / __STORE_URL__ / __CA_BUNDLES__ / __SIGNER__.
+# up.sh substitutes __IMAGE__ / __STORE_URL__ / __JULEP_BUNDLES__ / __SIGNER__.
 # The pod reads S3 with creds from the `aws-cas-creds` secret (the EKS node role
 # has no S3 access). KEDA's temporal scaler drives 0 -> N -> 0 on queue backlog.
 apiVersion: apps/v1
@@ -32,19 +32,19 @@ spec:
             - name: TEMPORAL_ADDRESS
               value: temporal-frontend.temporal.svc.cluster.local:7233
             - name: TEMPORAL_TASK_QUEUE
-              value: ca-cad-demo
+              value: julep-cad-demo
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: "20"
             - name: STORE_URL
               value: __STORE_URL__
-            - name: CA_BUNDLES
-              value: "__CA_BUNDLES__"
-            - name: CA_BUNDLE_ALLOWED_SIGNERS
+            - name: JULEP_BUNDLES
+              value: "__JULEP_BUNDLES__"
+            - name: JULEP_BUNDLE_ALLOWED_SIGNERS
               value: "__SIGNER__"
             # Native dependency tier grant (P4): comma-separated pure names allowed
             # to use the uv-venv native tier for deps with no WASI wheel. Empty/unset
             # = no native grant = bundle pures run wasm-only. Off by default.
-            # - name: CA_PURE_NATIVE_DEPS
+            # - name: JULEP_PURE_NATIVE_DEPS
             #   value: "my.pkg.heavy_pure,other.pure"
             - name: AWS_DEFAULT_REGION
               value: us-east-1
@@ -96,7 +96,7 @@ spec:
       metadata:
         endpoint: temporal-frontend.temporal.svc.cluster.local:7233
         namespace: default
-        taskQueue: ca-cad-demo
+        taskQueue: julep-cad-demo
         queueTypes: "workflow,activity"
         targetQueueSize: "1"
         activationTargetQueueSize: "0"

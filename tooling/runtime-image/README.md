@@ -19,7 +19,7 @@ image used by the demos.
 The flow and its custom pures arrive as a signed CAS bundle. The worker resolves
 that bundle from `STORE_URL` at startup using
 `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
-and the `CA_BUNDLES` / `CA_BUNDLE_ALLOWED_SIGNERS` environment block.
+and the `JULEP_BUNDLES` / `JULEP_BUNDLE_ALLOWED_SIGNERS` environment block.
 
 ## Build context shape
 
@@ -27,7 +27,7 @@ The Dockerfile expects an archived copy of the repo under `julep-v2/` next to
 the Dockerfile. This is the same shape used by `tooling/k3d-cad-demo/up.sh`:
 
 ```bash
-BUILD=/tmp/ca-cad-build
+BUILD=/tmp/julep-cad-build
 rm -rf "$BUILD" && mkdir -p "$BUILD"
 git -C "$REPO_ROOT" archive HEAD --prefix=julep-v2/ | tar -x -C "$BUILD"
 cp "$REPO_ROOT/tooling/runtime-image/Dockerfile" "$BUILD/"
@@ -61,11 +61,11 @@ Operators provide:
 - `WORKER_MAX_CONCURRENT_ACTIVITIES`
 - `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS`
 - `STORE_URL`
-- `CA_BUNDLES`
-- `CA_BUNDLE_ALLOWED_SIGNERS`
-- `CA_PURE_NATIVE_DEPS`
+- `JULEP_BUNDLES`
+- `JULEP_BUNDLE_ALLOWED_SIGNERS`
+- `JULEP_PURE_NATIVE_DEPS`
 
-`CA_PURE_NATIVE_DEPS` is the native-tier grant: a comma-separated list of pure
+`JULEP_PURE_NATIVE_DEPS` is the native-tier grant: a comma-separated list of pure
 names allowed to use the uv-managed native venv tier. Empty or unset means no
 native grant, so bundle-sourced pures run wasm-only.
 
@@ -75,7 +75,7 @@ and `GET /readyz` for readiness, and drains gracefully on SIGTERM.
 ## Execution tiers
 
 Bundle-sourced pures default to the wasm sandbox via the `wasm` extra. The
-native tier is opt-in per pure through `CA_PURE_NATIVE_DEPS`; it exists for deps
+native tier is opt-in per pure through `JULEP_PURE_NATIVE_DEPS`; it exists for deps
 with no supported WASI wheel and builds a per-pure uv-managed venv on the worker
 at bundle-resolution time.
 

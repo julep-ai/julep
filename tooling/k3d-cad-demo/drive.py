@@ -37,7 +37,7 @@ async def main() -> None:
         client,
         session_id=session_id,
         input=SCORES,
-        task_queue="ca-cad-demo",
+        task_queue="julep-cad-demo",
     )
 
     print("\n=== durable flow result (worker: generic k3d pod, pures: from bundle) ===")

@@ -152,4 +152,4 @@ argument for C1, not against the stopgap.
 | `docs/SPEC.md` | transcript semantics per scope; elision marker; summarizer requirement |
 | tests | `transcript_for` determinism + budget edge cases; elision marker; summary persistence across `continue_as_new`; deploy diagnostic; golden corpus unmoved |
 
-<!-- ported-by ca-docs-site: internals/agent-transcripts -->
+<!-- ported-by julep-docs-site: internals/agent-transcripts -->

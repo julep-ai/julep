@@ -23,6 +23,7 @@ import uuid
 from temporalio.client import Client
 
 from julep import Ann, freeze, manifest_to_json, think
+from julep import _env
 from julep.dotctx import Reasoner
 from julep.execution.activities import WorkerContext
 from julep.execution.harness import start_flow
@@ -35,7 +36,7 @@ API_KEY_ENV = "OPENAI_API_KEY"
 MODEL = "openai:gpt-4o-mini"
 TEMPORAL_HOST = "localhost:7233"
 UI = "http://localhost:8233"
-RESULT_TIMEOUT_S = int(os.environ.get("CA_BATCH_RESULT_TIMEOUT_S", "180"))
+RESULT_TIMEOUT_S = int(_env.get(_env.JULEP_BATCH_RESULT_TIMEOUT_S, "180"))
 N = 4
 INPUTS = [
     "I love this!",
