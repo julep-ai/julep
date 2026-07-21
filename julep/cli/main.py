@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio as _asyncio
 import enum as _enum
 import json as _json
+import os as _os
 import subprocess as _subprocess
 import sys as _sys
 from datetime import datetime, timezone
@@ -460,11 +461,17 @@ def worker(
 
     from julep.execution.serve import (
         WorkerServeSettings,
+        read_redaction_pyproject,
         serve,
         smoke_test_worker,
     )
 
-    settings = WorkerServeSettings.from_env()
+    env = dict(_os.environ)
+    if "JULEP_REDACTION" not in env:
+        table = read_redaction_pyproject(Path("."))
+        if table:
+            env["JULEP_REDACTION"] = _json.dumps(table)
+    settings = WorkerServeSettings.from_env(env)
     if smoke_test_seconds > 0:
         _asyncio.run(
             smoke_test_worker(settings, poll_seconds=smoke_test_seconds)

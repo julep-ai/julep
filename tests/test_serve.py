@@ -12,6 +12,7 @@ import sys
 import types
 import warnings
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -26,12 +27,15 @@ from julep.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
     WorkerServeSettings,
+    _install_default_redactor,
     _versioning_worker_kwargs,
     load_application_runtime,
     load_context_factory,
+    read_redaction_pyproject,
     serve,
     smoke_test_worker,
 )
+from julep.trajectory import REDACTED_PLACEHOLDER, RedactionConfig
 from conftest import run
 
 
@@ -58,6 +62,68 @@ def test_from_env_defaults():
     assert s.health_port is None
     assert s.build_id is None
     assert s.use_worker_versioning is False
+    assert s.redaction is None
+
+
+def test_from_env_parses_redaction_config() -> None:
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "JULEP_REDACTION": (
+                '{"key_patterns":["^private$"],'
+                '"path_patterns":["items.*.note"]}'
+            ),
+        }
+    )
+    assert settings.redaction == RedactionConfig(
+        key_patterns=("^private$",),
+        path_patterns=("items.*.note",),
+    )
+
+    with pytest.raises(ValueError, match="invalid redaction JSON"):
+        WorkerServeSettings.from_env(
+            {"WORKER_CONTEXT_FACTORY": "m:f", "JULEP_REDACTION": "{"}
+        )
+
+
+def test_install_default_redactor_respects_factory_override() -> None:
+    settings = WorkerServeSettings(
+        context_factory="m:f",
+        redaction=RedactionConfig(key_patterns=(r"^private$",)),
+    )
+    context = WorkerContext()
+
+    _install_default_redactor(context, settings)
+
+    assert context.redactor is not None
+    assert context.redactor({"api_key": "secret", "private": "hidden"}) == {
+        "api_key": REDACTED_PLACEHOLDER,
+        "private": REDACTED_PLACEHOLDER,
+    }
+
+    def factory_redactor(value: Any) -> Any:
+        return {"factory": value}
+
+    factory_context = WorkerContext(redactor=factory_redactor)
+    _install_default_redactor(factory_context, settings)
+    assert factory_context.redactor is factory_redactor
+
+
+def test_read_redaction_pyproject(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[tool.julep.redaction]
+key_patterns = ["^private$"]
+path_patterns = ["items.*.note"]
+disable_default = true
+""".strip()
+    )
+
+    assert read_redaction_pyproject(tmp_path) == {
+        "key_patterns": ["^private$"],
+        "path_patterns": ["items.*.note"],
+        "disable_default": True,
+    }
 
 
 def test_worker_settings_preserve_original_positional_field_order():
