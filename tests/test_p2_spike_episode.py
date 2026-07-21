@@ -77,15 +77,27 @@ def test_spike_compiled_episode_ir_matches_manual_combinators() -> None:
 
 
 def test_spike_episode_slice_dry_run_rolls_up_cas_statuses() -> None:
+    async def spike_mcp_call(server, tool, value, cid, principal):
+        if tool == "read_episode":
+            value = {"episode_id": value}
+        elif tool == "write_summary_surfaces":
+            value = {
+                "episode_id": value["episodeId"],
+                "content_hash": value["contentHash"],
+                "summary": value["summary"],
+                "one_liner": value["oneLiner"],
+            }
+        return await episode._fake_mcp_call(server, tool, value, cid, principal)
+
     episode.reset_store()
     deployment = deploy(
         episode_slice.BATCH.to_ir(),
-        tools=episode.TOOLS,
-        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
+        mcp_listings=episode.mcp_listings(),
     )
 
     result = deployment.dry_run(
         episode.EPISODE_BATCH,
+        mcp_call=spike_mcp_call,
         reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,

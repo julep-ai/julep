@@ -27,7 +27,7 @@ import asyncio
 import inspect
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional, Protocol, Sequence
 
 from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest, contract_allows_retry
 from ..derived import flatten_race_group
@@ -43,6 +43,7 @@ from ..ir import (
     CallStep,
     EMIT_TOOL,
     HUMAN_GATE_TOOL,
+    McpTool,
     Node,
     RECV_TOOL,
     SLEEP_TOOL,
@@ -57,6 +58,9 @@ from .llm_result import LlmResult
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..shapes import surface_shape
 from ..validate import reads_whole_session
+
+if TYPE_CHECKING:
+    from .effects import McpCaller
 
 
 # Runtime projection cost defaults for effect leaves without Ann.cost. These
@@ -754,10 +758,11 @@ class InMemoryEnv:
     """A deterministic, dependency-free :class:`Env`.
 
     Effect handlers are plain callables you supply (``tools``: name -> fn,
-    ``reasoners``: name -> fn, etc.). Concurrency uses ``asyncio`` but stays
-    deterministic for the control-flow under test: ``race_first`` resolves
-    already-ready coroutines in branch order, so a race over synchronous fakes
-    picks the first branch — exactly what a golden test wants to assert.
+    ``mcp_call``: async MCP dispatcher, ``reasoners``: name -> fn, etc.).
+    Concurrency uses ``asyncio`` but stays deterministic for the control-flow
+    under test: ``race_first`` resolves already-ready coroutines in branch
+    order, so a race over synchronous fakes picks the first branch — exactly
+    what a golden test wants to assert.
     """
 
     def __init__(
@@ -766,6 +771,7 @@ class InMemoryEnv:
         emitter: ProjectionEmitter,
         *,
         tools: Optional[dict[str, Callable[[Any], Any]]] = None,
+        mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
         subs: Optional[dict[str, Callable[[Any], Any]]] = None,
         agents: Optional[dict[str, Callable[[Any], Any]]] = None,
@@ -788,6 +794,7 @@ class InMemoryEnv:
         self.root_run_id = root_run_id
         self.segment_seq = segment_seq
         self._tools = tools or {}
+        self._mcp_call = mcp_call
         self._reasoners = reasoners or {}
         self._subs = subs or {}
         self._agents = agents or {}
@@ -840,9 +847,15 @@ class InMemoryEnv:
     async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         key = call_ref_key(node, self.manifest)
         fn = self._tools.get(key)
-        if fn is None:
-            raise KeyError(f"no in-memory tool for {key!r}")
-        return fn(value)
+        if fn is not None:
+            return fn(value)
+
+        step = node.step
+        assert isinstance(step, CallStep)
+        ref = bind(node, self.manifest).ref if step.frozen_hash is not None else step.tool
+        if isinstance(ref, McpTool) and self._mcp_call is not None:
+            return await self._mcp_call(ref.server, ref.tool, value, cid, self.principal)
+        raise KeyError(f"no in-memory tool for {key!r}")
 
     async def invoke_reasoner(
         self,

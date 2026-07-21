@@ -320,6 +320,11 @@ def deploy(
 def plan(
     env: str = typer.Option("local", "--env", help="Application environment name."),
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+    mcp_snapshot: bool = typer.Option(
+        False,
+        "--mcp-snapshot",
+        help="Fetch configured MCP tools/list schemas before compiling.",
+    ),
 ) -> None:
     """Compile an application and show artifact, schema, lane, and runtime drift."""
     cfg = load_config(Path("."))
@@ -327,8 +332,12 @@ def plan(
         typer.echo(f"error: unknown env {env!r}", err=True)
         raise typer.Exit(2)
     try:
-        application_plan = plan_configured_application(cfg, cfg.envs[env])
-    except (BundleError, CASError, RuntimeError, TypeError, ValueError) as exc:
+        application_plan = plan_configured_application(
+            cfg,
+            cfg.envs[env],
+            mcp_snapshot=mcp_snapshot,
+        )
+    except (BundleError, CASError, ImportError, RuntimeError, TypeError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from None
     payload = application_plan.to_json()
@@ -365,6 +374,11 @@ def apply_application(
         "--publish-only",
         help="Publish immutable artifacts without reconciling lane Helm releases.",
     ),
+    mcp_snapshot: bool = typer.Option(
+        False,
+        "--mcp-snapshot",
+        help="Fetch configured MCP tools/list schemas before publishing.",
+    ),
 ) -> None:
     """Publish an immutable release and reconcile inactive lane workers."""
     cfg = load_config(Path("."))
@@ -376,8 +390,9 @@ def apply_application(
             cfg,
             cfg.envs[env],
             publish_only=publish_only,
+            mcp_snapshot=mcp_snapshot,
         )
-    except (BundleError, CASError, RuntimeError, TypeError, ValueError) as exc:
+    except (BundleError, CASError, ImportError, RuntimeError, TypeError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from None
     typer.echo(f"release   {release.release_hash}")

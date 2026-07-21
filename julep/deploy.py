@@ -57,7 +57,7 @@ from .freeze import (
     McpToolSpec,
     freeze,
 )
-from .ir import Node, ThinkStep, canonical_json
+from .ir import McpTool, Node, ThinkStep, canonical_json, toolref_key
 from .kinds import EnforcementMode, Op, Shape
 from .purity import is_registered, source_hash_of
 from .registry import DEFAULT_REGISTRY
@@ -67,6 +67,7 @@ from .validate import Diagnostic, blocking, validate
 if TYPE_CHECKING:
     from .agent import Tool
     from .cas import CASStore
+    from .execution.effects import McpCaller
     from .execution.interpreter import Result as InterpreterResult
     from .typed import FlowLike
 
@@ -229,6 +230,42 @@ def _capabilities_from_tools(
     return CapabilityManifest.from_dict(data)
 
 
+def _capabilities_from_resolved_manifest(
+    manifest: ToolManifest,
+    reasoners: Sequence[str],
+) -> CapabilityManifest:
+    grants = {
+        toolref_key(tool.ref): {
+            "name": toolref_key(tool.ref),
+            "effect": tool.contract.effect.value,
+            "idempotency": tool.contract.idempotency.value,
+        }
+        for tool in manifest.values()
+    }
+    return CapabilityManifest.from_dict(
+        {
+            "tools": [grants[name] for name in sorted(grants)],
+            "reasoners": list(reasoners),
+        }
+    )
+
+
+def _configured_mcp_urls(servers: Mapping[str, Any]) -> frozenset[str]:
+    urls: set[str] = set()
+    for server, raw in servers.items():
+        url: object
+        if isinstance(raw, str):
+            url = raw
+        elif isinstance(raw, Mapping):
+            url = raw.get("url")
+        else:
+            url = getattr(raw, "url", None)
+        if not isinstance(url, str):
+            raise ValueError(f"MCP server {server!r} requires a URL")
+        urls.add(url)
+    return frozenset(urls)
+
+
 _ID_REUSE_POLICIES = {
     "allow_duplicate": "ALLOW_DUPLICATE",
     "allow_duplicate_failed_only": "ALLOW_DUPLICATE_FAILED_ONLY",
@@ -389,6 +426,7 @@ class Deployment:
     _snapshot_source: Optional[Callable[[], McpSnapshot]] = None
     _overrides: CapabilityOverrides = field(default_factory=CapabilityOverrides)
     _tools: Optional[Sequence[Tool[Any, Any]]] = None
+    _capabilities_from_resolved_manifest: bool = False
     bundle_ref: Optional[list[dict[str, str]]] = None
     queue: Optional[str] = None
 
@@ -547,7 +585,14 @@ class Deployment:
         refreshed = deploy(
             self.flow,
             snap,
-            capabilities=self.capabilities,
+            capabilities=(
+                None if self._capabilities_from_resolved_manifest else self.capabilities
+            ),
+            reasoners=(
+                sorted(self.capabilities.reasoners)
+                if self._capabilities_from_resolved_manifest and self.capabilities is not None
+                else None
+            ),
             extra_overrides=self._overrides,
             freeze_timing=self.freeze_timing,
             snapshot_source=self._snapshot_source,
@@ -656,14 +701,20 @@ class Deployment:
         self,
         value: Any,
         *,
+        mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
     ) -> "InterpreterResult":
-        """Run this deployment locally with stashed native tools and fake reasoners."""
-        if self._tools is None:
+        """Run locally with stashed native tools, an MCP caller, and fake reasoners."""
+        mcp_backed = any(isinstance(tool.ref, McpTool) for tool in self.manifest.values())
+        if self._tools is None and not mcp_backed:
             raise ValueError(
                 "Deployment.dry_run() requires a deployment built with "
                 "deploy(tools=...). Rebuild with deploy(..., tools=...) so local "
                 "dry runs can bind native tool tools."
+            )
+        if mcp_backed and mcp_call is None:
+            raise ValueError(
+                "Deployment.dry_run() requires mcp_call=... for an MCP-backed deployment"
             )
 
         from .execution.interpreter import InMemoryEnv, interpret  # lazy: keeps deploy import-light
@@ -672,7 +723,12 @@ class Deployment:
         env = InMemoryEnv(
             self.manifest,
             ProjectionEmitter(InMemoryProjection()),
-            tools={native_tool.name: native_tool.bound_tool for native_tool in self._tools},
+            tools=(
+                {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
+                if self._tools is not None
+                else None
+            ),
+            mcp_call=mcp_call,
             reasoners=reasoners,
             max_calls=(
                 self.capabilities.max_call_limits() if self.capabilities is not None else {}
@@ -684,10 +740,11 @@ class Deployment:
         self,
         value: Any,
         *,
+        mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
     ) -> "InterpreterResult":
         """Synchronously run this deployment locally via :meth:`adry_run`."""
-        return asyncio.run(self.adry_run(value, reasoners=reasoners))
+        return asyncio.run(self.adry_run(value, mcp_call=mcp_call, reasoners=reasoners))
 
 
 def deploy(
@@ -695,6 +752,8 @@ def deploy(
     snapshot: Optional[McpSnapshot] = None,
     *,
     tools: Optional[Sequence[Tool[Any, Any]]] = None,
+    mcp_servers: Optional[Mapping[str, Any]] = None,
+    mcp_listings: Optional[dict[str, dict[str, Any]]] = None,
     reasoners: Optional[Sequence[str | Reasoner]] = None,
     capabilities: Optional[CapabilityManifest] = None,
     extra_overrides: Optional[CapabilityOverrides] = None,
@@ -719,21 +778,49 @@ def deploy(
     assertions on top. ``freeze_timing`` selects the §6 seam; pass
     ``snapshot_source`` for the per-run case so :meth:`Deployment.refresh` can
     re-freeze without an explicit snapshot.
+
+    An explicit ``snapshot`` is authoritative. Without one, pass exactly one of
+    ``mcp_listings``, ``mcp_servers``, or native ``tools``.
     """
     if reasoners is not None and capabilities is not None:
         raise ValueError("pass either capabilities or reasoners=, not both")
-    if reasoners is not None and tools is None:
-        raise ValueError("reasoners= requires tools= so deploy can derive capabilities")
-    if snapshot is not None and tools is not None:
-        raise ValueError("pass either snapshot or tools=, not both")
-    if snapshot is None and tools is None:
-        raise ValueError("pass either snapshot or tools=; one is required")
+    generated_sources = (mcp_listings, mcp_servers, tools)
+    if snapshot is None and sum(source is not None for source in generated_sources) != 1:
+        raise ValueError(
+            "pass snapshot= or exactly one generated tool source: "
+            "mcp_listings=, mcp_servers=, or tools="
+        )
 
     if not isinstance(flow, Node):
         flow = flow.to_ir()
 
+    reasoner_names: Optional[list[str]] = None
+    if reasoners is not None:
+        reasoner_names = []
+        for reasoner in reasoners:
+            if isinstance(reasoner, Reasoner):
+                DEFAULT_REGISTRY.register_reasoner(reasoner)
+                reasoner_names.append(reasoner.name)
+            else:
+                reasoner_names.append(reasoner)
+
     retained_tools: Optional[Sequence[Tool[Any, Any]]] = None
-    if tools is not None:
+    if snapshot is not None:
+        pass
+    elif mcp_listings is not None:
+        snapshot = snapshot_from_listings(mcp_listings)
+    elif mcp_servers is not None:
+        from .mcp_snapshot import snapshot_servers
+
+        allowlist = _configured_mcp_urls(mcp_servers)
+
+        def live_snapshot() -> McpSnapshot:
+            return snapshot_servers(mcp_servers, allowlist=allowlist)
+
+        snapshot = live_snapshot()
+        if snapshot_source is None:
+            snapshot_source = live_snapshot
+    elif tools is not None:
         from .agent import (
             snapshot_from_tools,
         )  # lazy: deploy.py must not import agent.py at module load
@@ -741,15 +828,6 @@ def deploy(
         snapshot = snapshot_from_tools(tools)
         retained_tools = tools
         if capabilities is None:
-            reasoner_names: Optional[list[str]] = None
-            if reasoners is not None:
-                reasoner_names = []
-                for r in reasoners:
-                    if isinstance(r, Reasoner):
-                        DEFAULT_REGISTRY.register_reasoner(r)
-                        reasoner_names.append(r.name)
-                    else:
-                        reasoner_names.append(r)
             capabilities = _capabilities_from_tools(tools, reasoner_names)
     assert snapshot is not None
 
@@ -762,6 +840,15 @@ def deploy(
 
     # 1. Freeze (raises FreezeError on cycle / unresolved tool).
     fr: FreezeResult = freeze(flow, snapshot, overrides)
+    derived_from_resolved_manifest = False
+    if capabilities is None and any(
+        isinstance(tool.ref, McpTool) for tool in fr.manifest.values()
+    ):
+        capabilities = _capabilities_from_resolved_manifest(
+            fr.manifest,
+            _referenced_reasoners(fr.flow),
+        )
+        derived_from_resolved_manifest = True
 
     diagnostics: list[Diagnostic] = []
     # 2. Well-formedness + schema edges.
@@ -795,6 +882,7 @@ def deploy(
         _snapshot_source=snapshot_source,
         _overrides=overrides,
         _tools=retained_tools,
+        _capabilities_from_resolved_manifest=derived_from_resolved_manifest,
         queue=queue,
     )
     from .bundle import validate_pure_deps

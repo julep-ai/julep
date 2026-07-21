@@ -64,7 +64,7 @@ def test_worker_smoke_command_uses_environment_contract(monkeypatch):
 
 def test_worker_help_distinguishes_smoke_test_from_continuous_mode(capsys):
     assert main(["worker", "--help"]) == 0
-    out = " ".join(capsys.readouterr().out.split())
+    out = " ".join(capsys.readouterr().out.replace("│", " ").split())
     assert "Positive: verify Temporal" in out
     assert "Zero (default): run" in out
     assert "continuously." in out

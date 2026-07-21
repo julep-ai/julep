@@ -277,6 +277,1742 @@
     "toolHashesCount": 2,
     "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
+  "record_binding_cond": {
+    "flowJson": "sha256:a0f43cd55958513d53ac9ec1a161e6945bcac14f58ab8c525f6402ed80d00294",
+    "manifestJson": "sha256:d6efa2cfb9a2ede484927579e684f36d1feea4df8c3f5473ce97efa057c43243",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Branching",
+          "id": "$",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.R",
+          "op": "alt",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.L.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.L.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.R.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.R.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Branching",
+        "surface": "Branching"
+      }
+    },
+    "shapes": "sha256:0faab06c79283111a778d2e91d7938d6b8c5345a1b7d08aa0c8eb13edc257691",
+    "snapshot": "sha256:2e27e9083623915b2af891252d85ff481076394beda17a183a6ca71466dfb4bd",
+    "toolHashesCount": 1,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "record_binding_each": {
+    "flowJson": "sha256:f63aae49c3b2eeacc6b7428bf78702733c0fc4b1c80b8d532d3c664141cd88c1",
+    "manifestJson": "sha256:d6efa2cfb9a2ede484927579e684f36d1feea4df8c3f5473ce97efa057c43243",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R",
+          "op": "each",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.R.B.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R.B.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:d10322596eac64c0f82cc68010c4aee398cd2e302e9b8ac23325c4e485255117",
+    "snapshot": "sha256:80ac60eb3143d31a7bacd573dbfdc34d15ec6281a88adb0ffe4a929169d6c58c",
+    "toolHashesCount": 1,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "record_binding_external_rename": {
+    "flowJson": "sha256:0f18092925f0f868038bb201adfdd5c16e7ee1be9c305c6e1bbef00a2fd58721",
+    "manifestJson": "sha256:d6efa2cfb9a2ede484927579e684f36d1feea4df8c3f5473ce97efa057c43243",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Branching",
+          "id": "$",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Branching",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R",
+          "op": "alt",
+          "surface": "Branching"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.L.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.L.R.R.R.R.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Branching",
+        "surface": "Branching"
+      }
+    },
+    "shapes": "sha256:d5eb25756317373163d141dcf104f7439876d9485fdc7cb6a92c9a3385c10092",
+    "snapshot": "sha256:96c4af2bb525aee04be3c36e603c2c976cc69fefdc4aa5802a0a40cb441c443f",
+    "toolHashesCount": 1,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "record_binding_inline": {
+    "flowJson": "sha256:5fc0afa3ece60de0331458ee657f3994284f368701f018d9a2a7cbc930bb5559",
+    "manifestJson": "sha256:d6efa2cfb9a2ede484927579e684f36d1feea4df8c3f5473ce97efa057c43243",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:ef4942bc37c5cf4867804760a25032453914c8f2cfa7c47be8146771ab910e13",
+    "snapshot": "sha256:b84dcc269e65c8040dc37171d0e1d76d79bbc7a297ff564121f568d887163656",
+    "toolHashesCount": 1,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "record_binding_straight": {
+    "flowJson": "sha256:f9d3b486a2270a593169c140b6ae8565e8db92ba153bb4816c72e317f1a46368",
+    "manifestJson": "sha256:d6efa2cfb9a2ede484927579e684f36d1feea4df8c3f5473ce97efa057c43243",
+    "shapeValues": {
+      "nodes": [
+        {
+          "closed": "Dataflow",
+          "id": "$",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.L.L.L.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.L.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.L",
+          "op": "ident",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R.R",
+          "op": "seq",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Dataflow",
+          "id": "$.L.L.L.R.R.L",
+          "op": "par",
+          "surface": "Dataflow"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.L.L",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.L.R.R.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.L.R",
+          "op": "arr",
+          "surface": "Pipeline"
+        },
+        {
+          "closed": "Pipeline",
+          "id": "$.R",
+          "op": "prim",
+          "surface": "Pipeline"
+        }
+      ],
+      "root": {
+        "closed": "Dataflow",
+        "surface": "Dataflow"
+      }
+    },
+    "shapes": "sha256:ef4942bc37c5cf4867804760a25032453914c8f2cfa7c47be8146771ab910e13",
+    "snapshot": "sha256:ba45f3561d179bd6ee6032f33bf3ac70a892e97225e34bcb075879a04bc4d7f9",
+    "toolHashesCount": 1,
+    "validateDiagnostics": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
   "simple_pipeline": {
     "flowJson": "sha256:7e99636ded4ef627fd2bcc92da8de81da5b110c469056dbda4519740bef89e4d",
     "manifestJson": "sha256:25f67af39f9398dea096b603920583bab92d441fdb19211b3b80c0c73703b2c4",

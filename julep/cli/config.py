@@ -6,6 +6,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from julep.cli.queues import resolve_queue_lane as resolve_queue_lane
 
@@ -37,6 +38,8 @@ _TOP_LEVEL_ALLOWED_KEYS = frozenset(
     }
 )
 _GATES_ALLOWED_KEYS = frozenset({"fail_severity"})
+_MCP_ALLOWED_KEYS = frozenset({"servers"})
+_MCP_SERVER_ALLOWED_KEYS = frozenset({"auth", "headers", "url", "version"})
 _ENV_ALLOWED_KEYS = frozenset(
     {
         "cas",
@@ -97,6 +100,14 @@ class ScheduleConfig:
 
 
 @dataclass(frozen=True)
+class McpServerConfig:
+    url: str
+    headers: dict[str, str] = field(default_factory=dict)
+    auth: str | None = field(default=None, repr=False)
+    version: str | None = None
+
+
+@dataclass(frozen=True)
 class JulepConfig:
     root: Path
     src: list[str] = field(default_factory=list)
@@ -111,6 +122,11 @@ class JulepConfig:
     # Explicit ``module:attribute`` path to a julep.app.Application. This is
     # imported directly; it is never AST-discovered.
     application: str | None = None
+    mcp_servers: dict[str, McpServerConfig] = field(default_factory=dict)
+
+    @property
+    def mcp_allowlist(self) -> frozenset[str]:
+        return frozenset(server.url for server in self.mcp_servers.values())
 
 
 def validate_cron(cron: str) -> None:
@@ -350,6 +366,93 @@ def _build_schedules(
     return schedules
 
 
+def _mcp_table(table: object, *, context: str) -> dict[str, Any]:
+    parsed = _require_table(table, context=context)
+    _validate_allowed_keys(parsed, _MCP_ALLOWED_KEYS, context=context)
+    return parsed
+
+
+def _mcp_headers(table: object, *, context: str) -> dict[str, str]:
+    parsed = _require_table(table, context=context)
+    headers: dict[str, str] = {}
+    for raw_name, raw_value in parsed.items():
+        name = str(raw_name)
+        if not name or name.strip() != name:
+            raise ValueError(f"header names in {context} must be non-empty and trimmed")
+        if not isinstance(raw_value, str):
+            raise ValueError(f"header {name!r} in {context} must be a string")
+        headers[name] = raw_value
+    return headers
+
+
+def _build_mcp_servers(
+    pyproject_mcp: object,
+    julep_toml_mcp: object,
+) -> dict[str, McpServerConfig]:
+    tables: dict[str, dict[str, Any]] = {}
+    headers: dict[str, dict[str, str]] = {}
+    for source, raw_mcp in (
+        ("[tool.julep.mcp]", pyproject_mcp),
+        ("julep.toml [mcp]", julep_toml_mcp),
+    ):
+        mcp = _mcp_table(raw_mcp, context=source)
+        raw_servers = _require_table(mcp.get("servers", {}), context=f"{source}.servers")
+        for raw_name, raw_server in raw_servers.items():
+            name = str(raw_name)
+            if not name or name.strip() != name:
+                raise ValueError(f"MCP server ids in {source}.servers must be non-empty and trimmed")
+            context = f"{source}.servers.{name}"
+            server = _require_table(raw_server, context=context)
+            _validate_allowed_keys(server, _MCP_SERVER_ALLOWED_KEYS, context=context)
+            merged = tables.setdefault(name, {})
+            for key, value in server.items():
+                if key == "headers":
+                    headers.setdefault(name, {}).update(
+                        _mcp_headers(value, context=f"{context}.headers")
+                    )
+                else:
+                    merged[key] = value
+
+    result: dict[str, McpServerConfig] = {}
+    for name, table in tables.items():
+        context = f"MCP server {name!r}"
+        url = table.get("url")
+        if not isinstance(url, str) or not url or url.strip() != url:
+            raise ValueError(f"{context} requires a non-empty trimmed 'url' string")
+        try:
+            parsed_url = urlsplit(url)
+            hostname = parsed_url.hostname
+        except ValueError:
+            parsed_url = None
+            hostname = None
+        if (
+            parsed_url is None
+            or parsed_url.scheme not in {"http", "https"}
+            or hostname is None
+            or parsed_url.fragment
+        ):
+            raise ValueError(f"{context} url must be an absolute http(s) URL")
+        if parsed_url.username is not None or parsed_url.password is not None:
+            raise ValueError(f"{context} url must not contain credentials; use auth or headers")
+        auth = table.get("auth")
+        if auth is not None and (
+            not isinstance(auth, str) or not auth or auth.strip() != auth
+        ):
+            raise ValueError(f"{context} auth must be a non-empty trimmed string")
+        version = table.get("version")
+        if version is not None and (
+            not isinstance(version, str) or not version or version.strip() != version
+        ):
+            raise ValueError(f"{context} version must be a non-empty trimmed string")
+        result[name] = McpServerConfig(
+            url=url,
+            headers=headers.get(name, {}),
+            auth=auth,
+            version=version,
+        )
+    return result
+
+
 def load_config(root: str | Path) -> JulepConfig:
     """Read ``[tool.julep]``, then overlay a sibling ``julep.toml``."""
     root = Path(root).resolve()
@@ -385,6 +488,10 @@ def load_config(root: str | Path) -> JulepConfig:
         _GATES_ALLOWED_KEYS,
         context="julep.toml [gates]",
     )
+    mcp_servers = _build_mcp_servers(
+        pyproject.get("mcp", {}),
+        julep_toml.get("mcp", {}),
+    )
 
     merged: dict[str, Any] = {**pyproject, **julep_toml}
     gates = {**pyproject_gates, **julep_toml_gates}
@@ -401,4 +508,5 @@ def load_config(root: str | Path) -> JulepConfig:
             julep_toml.get("schedule", {}),
         ),
         application=(str(merged["application"]) if merged.get("application") else None),
+        mcp_servers=mcp_servers,
     )
