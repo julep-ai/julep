@@ -31,6 +31,7 @@ from julep.app_deploy import (
 from julep.cli.config import JulepConfig, EnvConfig
 from julep.cas import cas_from_url
 from julep.bundle import bundle_signer_public_key
+from julep.ctx_pipeline import pipeline_spec_from_ctx
 from julep.freeze import McpSnapshot
 
 
@@ -76,6 +77,42 @@ def load_application(cfg: JulepConfig) -> Application:
     return load_application_spec(cfg.application)
 
 
+def _synth_application_name(root: Path) -> str:
+    raw = re.sub(r"[^a-z0-9-]", "-", root.name.lower()).strip("-")
+    if not raw or re.fullmatch(r"[a-z0-9](?:[-a-z0-9_.]{0,61}[a-z0-9])?", raw) is None:
+        raise ValueError(
+            "cannot derive an application name from the project directory "
+            f"{root.name!r}; set [tool.julep] application or rename the directory "
+            "to a lowercase Kubernetes label"
+        )
+    return raw
+
+
+def resolve_application(cfg: JulepConfig, env: EnvConfig) -> Application:
+    env_vars = {**env.vars, **env.worker_environment}
+    ctx_specs = [
+        pipeline_spec_from_ctx(pipeline, root=cfg.root, env_vars=env_vars)
+        for _name, pipeline in sorted(cfg.pipelines.items())
+    ]
+    if cfg.application is not None:
+        base = load_application(cfg)
+        base_names = {pipeline.name for pipeline in base.pipelines}
+        collisions = sorted(name for name in cfg.pipelines if name in base_names)
+        if collisions:
+            raise ValueError(
+                "ctx pipeline name(s) collide with code pipelines: " + ", ".join(collisions)
+            )
+        if not ctx_specs:
+            return base
+        return Application(name=base.name, pipelines=(*base.pipelines, *ctx_specs))
+    if not ctx_specs:
+        raise ValueError(
+            "no application configured; set [tool.julep] application = "
+            "'your.module:application' or declare a [tool.julep.pipeline.<name>] with a .ctx"
+        )
+    return Application(name=_synth_application_name(cfg.root), pipelines=tuple(ctx_specs))
+
+
 def _snapshot_configured_servers(cfg: JulepConfig) -> McpSnapshot:
     if not cfg.mcp_servers:
         raise ValueError(
@@ -94,7 +131,7 @@ def compile_application(
     mcp_snapshot: bool = False,
 ) -> CompiledApplication:
     snapshot_environment = {**env.vars, **env.worker_environment}
-    application = load_application(cfg)
+    application = resolve_application(cfg, env)
     if not mcp_snapshot:
         return application.compile_live(env_vars=snapshot_environment)
 
@@ -319,7 +356,7 @@ def observe_application(cfg: JulepConfig, env: EnvConfig) -> ObservedApplication
     """Aggregate recorded release, live Helm/KEDA, and Temporal lane state."""
 
     state = read_applied_state(cfg.root, env.name)
-    declared = load_application(cfg)
+    declared = resolve_application(cfg, env)
     lane_names = sorted({pipeline.lane for pipeline in declared.pipelines})
     recorded_lanes = {lane.lane: lane for lane in (state.lanes if state is not None else ())}
     discovered = _discover_application_deployments(
@@ -964,5 +1001,6 @@ __all__ = [
     "observe_application",
     "plan_configured_application",
     "read_applied_state",
+    "resolve_application",
     "write_applied_state",
 ]

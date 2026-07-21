@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from julep.cli.queues import resolve_queue_lane as resolve_queue_lane
+from julep.ctx_pipeline import CtxPipelineConfig
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib
@@ -24,6 +25,7 @@ _LEGACY_CONFIG_ERROR = (
 _TOP_LEVEL_ALLOWED_KEYS = frozenset(
     {
         "application",
+        "llm_caller",
         "env",
         "exclude",
         "gates",
@@ -63,6 +65,7 @@ _ENV_ALLOWED_KEYS = frozenset(
 )
 _WORKER_SECRET_ALLOWED_KEYS = frozenset({"key", "secret_name"})
 _SCHEDULE_ALLOWED_KEYS = frozenset({"cron", "env", "flow", "input", "paused"})
+_PIPELINE_ALLOWED_KEYS = frozenset({"ctx", "lane", "env"})
 
 
 @dataclass(frozen=True)
@@ -122,6 +125,8 @@ class JulepConfig:
     # Explicit ``module:attribute`` path to a julep.app.Application. This is
     # imported directly; it is never AST-discovered.
     application: str | None = None
+    llm_caller: str | None = None
+    pipelines: dict[str, CtxPipelineConfig] = field(default_factory=dict)
     mcp_servers: dict[str, McpServerConfig] = field(default_factory=dict)
 
     @property
@@ -366,6 +371,42 @@ def _build_schedules(
     return schedules
 
 
+def _build_pipelines(
+    pyproject_pipeline: object,
+    julep_toml_pipeline: object,
+) -> dict[str, CtxPipelineConfig]:
+    tables: dict[str, dict[str, Any]] = {}
+    for raw_pipelines in (pyproject_pipeline, julep_toml_pipeline):
+        if not isinstance(raw_pipelines, dict):
+            continue
+        for raw_name, raw_table in raw_pipelines.items():
+            name = str(raw_name)
+            if not isinstance(raw_table, dict):
+                raise ValueError(f"pipeline {name!r} must be a table")
+            tables.setdefault(name, {}).update(raw_table)
+
+    result: dict[str, CtxPipelineConfig] = {}
+    for name, table in tables.items():
+        context = f"pipeline {name!r}"
+        _validate_allowed_keys(table, _PIPELINE_ALLOWED_KEYS, context=context)
+        ctx = table.get("ctx")
+        if not isinstance(ctx, str) or not ctx or ctx.strip() != ctx:
+            raise ValueError(f"{context} requires a non-empty trimmed 'ctx' string")
+        lane = table.get("lane", "default")
+        if not isinstance(lane, str) or not lane or lane.strip() != lane:
+            raise ValueError(f"{context} lane must be a non-empty trimmed string")
+        raw_env = table.get("env", {})
+        if not isinstance(raw_env, dict):
+            raise ValueError(f"{context} env must be a table of string values")
+        env: dict[str, str] = {}
+        for raw_key, raw_value in raw_env.items():
+            if not isinstance(raw_value, str):
+                raise ValueError(f"{context} env value {raw_key!r} must be a string")
+            env[str(raw_key)] = raw_value
+        result[name] = CtxPipelineConfig(name=name, ctx=ctx, lane=lane, env=env)
+    return result
+
+
 def _mcp_table(table: object, *, context: str) -> dict[str, Any]:
     parsed = _require_table(table, context=context)
     _validate_allowed_keys(parsed, _MCP_ALLOWED_KEYS, context=context)
@@ -508,5 +549,10 @@ def load_config(root: str | Path) -> JulepConfig:
             julep_toml.get("schedule", {}),
         ),
         application=(str(merged["application"]) if merged.get("application") else None),
+        llm_caller=(str(merged["llm_caller"]) if merged.get("llm_caller") else None),
+        pipelines=_build_pipelines(
+            pyproject.get("pipeline", {}),
+            julep_toml.get("pipeline", {}),
+        ),
         mcp_servers=mcp_servers,
     )

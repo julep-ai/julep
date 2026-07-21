@@ -36,12 +36,12 @@ import signal
 import sys
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
-from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional
 
 from .. import _env
+from .._specload import resolve_spec
 from ..errors import JulepError
 from ..trajectory import RedactionConfig, build_redactor
 from .effects import WorkerContext
@@ -291,23 +291,7 @@ def load_context_factory(spec: str) -> Callable[[], Any]:
     with the failing spec on any bad shape, missing module, missing attribute,
     or non-callable target — the CLI surfaces these as one-line errors.
     """
-    module_name, sep, attr_path = spec.partition(":")
-    if not sep or not module_name or not attr_path:
-        raise ValueError(f"context factory spec must be 'module:attr', got {spec!r}")
-    try:
-        target: Any = import_module(module_name)
-    except ImportError as exc:
-        raise ValueError(f"cannot import context factory module {module_name!r}: {exc}") from exc
-    for part in attr_path.split("."):
-        try:
-            target = getattr(target, part)
-        except AttributeError as exc:
-            raise ValueError(
-                f"context factory {spec!r}: module {module_name!r} has no attribute {attr_path!r}"
-            ) from exc
-    if not callable(target):
-        raise ValueError(f"context factory {spec!r} is not callable")
-    return target  # type: ignore[no-any-return]
+    return resolve_spec(spec, what="context factory")
 
 
 class HealthServer:

@@ -8,6 +8,7 @@ import subprocess as _subprocess
 import sys as _sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
 import typer
@@ -36,6 +37,9 @@ from julep.cli.trigger import trigger_command
 from julep.bundle import BundleError
 from julep.cas import CASError
 from julep.projection import ProjectionEvent
+
+if TYPE_CHECKING:
+    from julep.client import JulepClient
 
 app = typer.Typer(add_completion=True, no_args_is_help=True, help="Developer CLI for julep modules.")
 schedule_app = typer.Typer(
@@ -265,7 +269,18 @@ def schedule_rm(
         typer.echo(f"no schedule {sid}")
 
 
-def _eval_env_vars(env: str) -> dict[str, str]:
+def _eval_project_config() -> JulepConfig | None:
+    root = Path(".")
+    if not ((root / "pyproject.toml").is_file() or (root / "julep.toml").is_file()):
+        return None
+    try:
+        return load_config(root)
+    except Exception as exc:  # noqa: BLE001 - malformed project config is loud, never silent
+        typer.echo(f"error: could not load Julep project config: {exc}", err=True)
+        raise typer.Exit(4) from None
+
+
+def _eval_env_vars(env: str, *, cfg: JulepConfig | None = None) -> dict[str, str]:
     """Env vars for ``$env`` resolution during eval.
 
     A standalone ``.ctx`` outside any Julep project resolves to ``{}`` (the default
@@ -273,23 +288,34 @@ def _eval_env_vars(env: str) -> dict[str, str]:
     loud teaching error (G-8), matching every other command; a malformed
     julep.toml/pyproject surfaces as a config error rather than a silent ``{}``.
     """
-    root = Path(".")
-    if not ((root / "pyproject.toml").is_file() or (root / "julep.toml").is_file()):
+    resolved_cfg = cfg if cfg is not None else _eval_project_config()
+    if resolved_cfg is None:
         return {}
-    try:
-        cfg = load_config(root)
-    except Exception as exc:  # noqa: BLE001 - malformed project config is loud, never silent
-        typer.echo(f"error: could not load Julep project config: {exc}", err=True)
-        raise typer.Exit(4) from None
-    if env in cfg.envs:
-        return dict(cfg.envs[env].vars)
-    known = ", ".join(sorted(cfg.envs)) or "local"
+    if env in resolved_cfg.envs:
+        return dict(resolved_cfg.envs[env].vars)
+    known = ", ".join(sorted(resolved_cfg.envs)) or "local"
     typer.echo(
         f"error: unknown env {env!r}; define it under [env.{env}] in julep.toml or "
         f"[tool.julep.env.{env}] in pyproject.toml (known: {known})",
         err=True,
     )
     raise typer.Exit(4)
+
+
+def _remote_client(api_url: str | None, api_key: str | None) -> JulepClient:
+    from julep import _env
+
+    url = api_url or _env.get(_env.JULEP_API_URL)
+    key = api_key or _env.get(_env.JULEP_API_KEY)
+    if not url:
+        typer.echo("error: --remote needs --api-url or JULEP_API_URL", err=True)
+        raise typer.Exit(2)
+    try:
+        from julep.client import JulepClient
+    except ImportError:
+        typer.echo("error: --remote requires httpx; install 'julep[http]'", err=True)
+        raise typer.Exit(2) from None
+    return JulepClient(url, key)
 
 
 @app.command("ls")
@@ -356,18 +382,30 @@ def artifact_command(ctx: typer.Context) -> None:
 
 @app.command("run")
 def run(
-    name: str = typer.Argument(..., help="Agent name."),
+    name: str = typer.Argument(..., help="Agent name, or a path to a .ctx package to run locally."),
     input: str = typer.Option("null", "--input", help="JSON-encoded input value."),
     run_id: str = typer.Option("", "--run-id", help="Run id (default: julep-<name>-local)."),
     env: str = typer.Option("local", "--env", help="Environment name."),
 ) -> None:
     """Execute an agent locally and stream its terminal trace tree."""
-    cfg = load_config(Path("."))
     try:
         parsed = _json.loads(input)
     except _json.JSONDecodeError as exc:
         typer.echo(f"error: invalid --input JSON: {exc}", err=True)
         raise typer.Exit(2) from None
+    if name.endswith(".ctx"):
+        env_vars = _eval_env_vars(env)
+        try:
+            from julep.cli.ctxrun import run_ctx_local
+
+            ctx_outcome = run_ctx_local(name, parsed, env_vars=env_vars)
+        except (ValueError, FileNotFoundError) as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(2) from None
+        typer.echo(f"artifact {ctx_outcome.artifact_hash}")
+        typer.echo(f"output: {_json.dumps(ctx_outcome.reply, default=str)}")
+        return
+    cfg = load_config(Path("."))
     if env not in cfg.envs:
         typer.echo(f"error: unknown env {env!r}", err=True)
         raise typer.Exit(2)
@@ -525,8 +563,29 @@ def status(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
     exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
     env: str = typer.Option("local", "--env", help="Environment name."),
+    remote: bool = typer.Option(False, "--remote", help="Read runs from the remote API."),
+    api_url: str = typer.Option("", "--api-url", help="Remote Julep API base URL."),
+    api_key: str = typer.Option("", "--api-key", help="Remote Julep API bearer key."),
+    limit: int = typer.Option(50, "--limit", min=1, max=100, help="Maximum remote runs."),
 ) -> None:
     """Show deployment status and drift for an environment."""
+    if remote:
+        client = _remote_client(api_url or None, api_key or None)
+        from julep.client import JulepClientError
+
+        try:
+            data = client.list_runs(limit=limit)
+        except JulepClientError as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(1) from None
+        finally:
+            client.close()
+        for row in data.get("items", []):
+            typer.echo(
+                f"{str(row.get('run_id', '-')):38} {str(row.get('status', '-')):12} "
+                f"{str(row.get('pipeline', '-')):20} {row.get('application', '-')}"
+            )
+        raise typer.Exit(0)
     cfg = load_config(Path("."))
     if env not in cfg.envs:
         typer.echo(f"error: unknown env {env!r}", err=True)
@@ -683,6 +742,11 @@ def eval_cmd(
     sample_name: list[str] = _EVAL_SAMPLE_NAME_OPTION,
     json_out: str = typer.Option("", "--json", help="Write the JSON report to this path."),
     baseline: str = typer.Option("", "--baseline", help="Baseline report JSON to diff against."),
+    llm_caller: str = typer.Option(
+        "",
+        "--llm-caller",
+        help="Resolve a production LlmCaller as module:attr; overrides [tool.julep] llm_caller.",
+    ),
 ) -> None:
     """Run a .ctx package's eval suite with a threshold + baseline regression gate.
 
@@ -691,7 +755,18 @@ def eval_cmd(
     """
     from julep.cli.evalrun import diff_reports, run_eval_sync
 
-    env_vars = _eval_env_vars(env)
+    cfg = _eval_project_config()
+    env_vars = _eval_env_vars(env, cfg=cfg)
+    effective_llm_caller = llm_caller or (cfg.llm_caller if cfg is not None else None)
+    caller = None
+    if effective_llm_caller:
+        from julep._specload import resolve_spec
+
+        try:
+            caller = resolve_spec(effective_llm_caller, what="llm caller")
+        except ValueError as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(4) from None
     try:
         report = run_eval_sync(
             ctx_path,
@@ -699,6 +774,7 @@ def eval_cmd(
             limit=(None if limit < 0 else limit),
             tags=(tag or None),
             sample_names=(sample_name or None),
+            llm_caller=caller,
         )
     except ValueError as exc:
         # A broken/misconfigured eval (missing eval.py, non-.ctx dir, malformed
@@ -742,8 +818,32 @@ def trace(
     run_id: str = typer.Argument(
         ..., help="Run id from a prior `julep run` (or a deployed run)."
     ),
+    remote: bool = typer.Option(False, "--remote", help="Read trace events from the remote API."),
+    api_url: str = typer.Option("", "--api-url", help="Remote Julep API base URL."),
+    api_key: str = typer.Option("", "--api-key", help="Remote Julep API bearer key."),
 ) -> None:
     """Render a cached run's trace tree and print its Langfuse deep link."""
+    if remote:
+        client = _remote_client(api_url or None, api_key or None)
+        from julep.client import JulepClientError
+
+        try:
+            events = client.projection_events(run_id)
+            tree = render_tree(events)
+            if tree:
+                typer.echo(tree)
+            else:
+                run_data = client.get_run(run_id)
+                typer.echo(
+                    f"run {run_id!r} status={run_data.get('status')} "
+                    "(no trace events captured)"
+                )
+        except JulepClientError as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(1) from None
+        finally:
+            client.close()
+        return
     cfg = load_config(Path("."))
     cached = load_run(str(cfg.root), run_id)
     if cached is None:

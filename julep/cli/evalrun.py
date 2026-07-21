@@ -20,7 +20,7 @@ from julep.dotctx_evals import MockToolConfig, Sample, Turn, load_ctx_evals
 from julep.dotctx_rich import RichDotctx, load_rich_dotctx
 from julep.execution.llm import (
     AnyCompletion,
-    _resolve_acompletion,
+    _resolve_acompletion as _resolve_acompletion,
     complete_reasoner,
 )
 from julep.prompt import rendered_user_for

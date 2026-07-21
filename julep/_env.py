@@ -26,6 +26,8 @@ JULEP_NATIVE_VENV_CACHE_DIR: Final = "JULEP_NATIVE_VENV_CACHE_DIR"
 JULEP_WASM_FUEL: Final = "JULEP_WASM_FUEL"
 JULEP_WASM_CACHE_DIR: Final = "JULEP_WASM_CACHE_DIR"
 JULEP_WASM_EPOCH_MS: Final = "JULEP_WASM_EPOCH_MS"
+JULEP_API_URL: Final = "JULEP_API_URL"
+JULEP_API_KEY: Final = "JULEP_API_KEY"
 
 LEGACY_ENV_VAR_RENAMES: Final[Mapping[str, str]] = MappingProxyType(
     {
@@ -102,6 +104,8 @@ def snapshot(*, environ: Mapping[str, str] | None = None) -> dict[str, str]:
 
 __all__ = [
     "CANONICAL_ENV_VAR_NAMES",
+    "JULEP_API_KEY",
+    "JULEP_API_URL",
     "JULEP_BATCH_RESULT_TIMEOUT_S",
     "JULEP_BUNDLES",
     "JULEP_BUNDLE_ALLOWED_SIGNERS",

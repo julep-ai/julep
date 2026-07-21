@@ -167,9 +167,8 @@ def test_mcp_config_rejects_invalid_shapes(tmp_path, body, message):
         load_config(tmp_path)
 
 
-def test_future_sections_are_reserved_no_ops(tmp_path):
+def test_remaining_future_sections_are_reserved_no_ops(tmp_path):
     (tmp_path / "julep.toml").write_text(
-        "[pipeline]\nenabled = true\n"
         "[server]\nenabled = true\n"
         "[redaction]\nenabled = true\n",
         encoding="utf-8",
