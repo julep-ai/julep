@@ -197,15 +197,15 @@ worker = build_worker(client, context, task_queue=DEFAULT_TASK_QUEUE)
 await worker.run()
 ```
 
-The container entrypoint is the artifact CLI:
+The container entrypoint reads the worker environment contract:
 
 ```bash
-julep worker \
-  --context-factory app.worker:context \
-  --address localhost:7233 \
-  --namespace default \
-  --task-queue julep \
-  --health-port 8080
+export WORKER_CONTEXT_FACTORY=app.worker:context
+export TEMPORAL_ADDRESS=localhost:7233
+export TEMPORAL_NAMESPACE=default
+export TEMPORAL_TASK_QUEUE=julep
+export WORKER_HEALTH_PORT=8080
+julep worker
 ```
 
 `WorkerServeSettings.from_env(...)` reads `WORKER_CONTEXT_FACTORY`,
@@ -287,10 +287,11 @@ julep artifact freeze flow.json snapshot.json --caps caps.yaml
 julep artifact inspect flow.json --manifest manifest.json --caps caps.yaml
 julep artifact run-local flow.json input.json --mode dev
 julep artifact graph flow.json
-julep worker --context-factory app.worker:context
+WORKER_CONTEXT_FACTORY=app.worker:context julep worker
 ```
 
-`julep` operates on Python source modules and adds no runtime:
+The remaining `julep` commands operate on Python source modules; `serve api`
+and `worker` launch the optional service processes:
 
 ```bash
 julep ls

@@ -58,6 +58,31 @@ sub-capabilities expose child artifacts through `agent.sub_deployments()`; the
 worker must register those on `WorkerContext.subflows`, then run the parent via
 `agent.deployment().run(...)`.
 
+## Self-contained schema-v2 releases
+
+`ApplicationRelease` uses `schemaVersion: 2`. Each pipeline entry carries a
+`runtimeDeclarationsRef` with a content hash and byte size. The referenced,
+hash-verified CAS blob contains the reasoners and renderers needed by that
+pipeline: inline reasoners retain their prompt strings; rich dotctx reasoners
+retain the `.ctx` package content and portable renderer declarations. The
+release manifest's tool-map shape is unchanged.
+
+Reasoner activities fetch declarations by blob hash and cache each verified
+hash in the worker process. A generic worker therefore runs released pipelines
+without importing an application object. `WORKER_APPLICATION` and
+`WORKER_RUNTIME_DECLARATIONS_HASH` are optional. When supplied, they must be
+supplied together and are only loud cross-checks against the released
+declarations; a mismatch fails the worker.
+
+Release parsing rejects every schema version other than 2:
+
+```text
+unsupported application release schema version <v>; version 2 is required; re-publish with this julep version
+```
+
+A schema-v1 release cannot be upgraded in place. Re-publish it with this Julep
+version so the declarations blob is written to CAS.
+
 ## Standing up a worker
 
 The worker host is the process that connects environment-specific capability to
@@ -99,6 +124,11 @@ the connection and tuning knobs from the environment, resolves the
 `WorkerContext` from a `WORKER_CONTEXT_FACTORY=module:attr` factory, drains
 gracefully on SIGTERM, and serves `/healthz` + `/readyz` probes. That is the
 Kubernetes/KEDA path — see [Kubernetes](/docs/deploy/kubernetes).
+
+Generic workers leave `WORKER_APPLICATION` and
+`WORKER_RUNTIME_DECLARATIONS_HASH` unset. The release supplies the declaration
+reference to reasoner-facing activities, which hydrate it from the CAS named by
+`STORE_URL`.
 
 ## Activities
 
@@ -157,8 +187,9 @@ Two queries support a review UI:
 - `projection`: an in-workflow read-only pomset snapshot with `events`,
   `costByShape`, and `pending`.
 
-The projection query is not the durable observability sink. [SPEC §11](/docs/internals/specification#11-projection)
-requires durable projection sinks to be derived out-of-band from history.
+The projection query is not the durable observability sink. Control-plane runs
+also egress a derived Postgres projection through regular Temporal activities;
+see [Control plane](/docs/deploy/control-plane).
 
 ## Worked example
 
@@ -230,8 +261,9 @@ defines the replay-integrity constraints around them.
   counts, backoff, and maximum retry interval.
 - Continue-as-new cadence: `AgentConfig.continue_as_new_after` bounds agent
   workflow history; `0` disables the cadence.
-- Projection sinks: the workflow query is replay-safe and in-memory. Durable
-  sinks such as Postgres or OTel are fed from history outside the workflow.
+- Projection sinks: the workflow query is replay-safe and in-memory. The
+  control-plane Postgres view is activity-fed, batched, redacted, and
+  best-effort; OTel remains a derived export.
 
 Related: [docs index](/docs), [First Agent](/docs/start/first-agent),
 [Kubernetes](/docs/deploy/kubernetes),

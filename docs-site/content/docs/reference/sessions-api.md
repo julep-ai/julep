@@ -491,7 +491,7 @@ ctx = WorkerContext(session_store=InMemorySessionStore(empty_value=0), mcp_call=
 worker = build_worker(client, ctx, task_queue=DEFAULT_TASK_QUEUE)
 ```
 
-`WorkerServeSettings.from_env(...)` reads `WORKER_CONTEXT_FACTORY`, `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, `TEMPORAL_API_KEY`, `TEMPORAL_TLS`, `WORKER_GRACEFUL_SHUTDOWN_S`, `WORKER_MAX_CONCURRENT_ACTIVITIES`, `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS`, and `WORKER_HEALTH_PORT`. Worker CLI flags are exactly `--context-factory`, `--address`, `--namespace`, `--task-queue`, and `--health-port`.
+`WorkerServeSettings.from_env(...)` reads `WORKER_CONTEXT_FACTORY`, `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, `TEMPORAL_API_KEY`, `TEMPORAL_TLS`, `WORKER_GRACEFUL_SHUTDOWN_S`, `WORKER_MAX_CONCURRENT_ACTIVITIES`, `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS`, and `WORKER_HEALTH_PORT`. `julep worker` reads that contract directly; its only flag is `--smoke-test-seconds`.
 
 Local `julep` session commands:
 

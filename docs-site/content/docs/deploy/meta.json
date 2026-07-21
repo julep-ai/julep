@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "temporal",
+    "control-plane",
     "kubernetes",
     "dbos",
     "operations",

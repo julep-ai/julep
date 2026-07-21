@@ -18,6 +18,8 @@ reads its configuration from the environment:
 | Variable | Default | Meaning |
 |---|---|---|
 | `WORKER_CONTEXT_FACTORY` | **required** | `module:attr` of a zero-arg callable (sync or async) returning the `WorkerContext` |
+| `WORKER_APPLICATION` | unset | Optional application `module:attr` cross-check; set with `WORKER_RUNTIME_DECLARATIONS_HASH`. |
+| `WORKER_RUNTIME_DECLARATIONS_HASH` | unset | Optional `sha256:<hex>` declarations cross-check; set with `WORKER_APPLICATION`. |
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Temporal frontend `host:port` |
 | `TEMPORAL_NAMESPACE` | `default` | Temporal namespace |
 | `TEMPORAL_TASK_QUEUE` | `julep` | task queue this replica polls (one queue per lane) |
@@ -46,9 +48,13 @@ def make_context() -> WorkerContext:  # async def also works
     )
 ```
 
-and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`. Flags override
-the environment for local runs: `julep worker --task-queue
-lane-embeddings --address localhost:7233`.
+and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`.
+
+Released pipelines are self-contained. Generic workers normally leave
+`WORKER_APPLICATION` and `WORKER_RUNTIME_DECLARATIONS_HASH` unset and hydrate
+the release's `runtimeDeclarationsRef` from the CAS configured by `STORE_URL`.
+If the two optional variables are used, they must be set together; they verify
+an image-specific application declaration and fail on mismatch.
 
 Lifecycle per replica: the probe listener starts first (liveness is green while
 the pod connects), the worker polls, readiness flips to 200. On SIGTERM,

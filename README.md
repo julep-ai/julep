@@ -75,6 +75,11 @@ print(result.value)
 
 `@flow` runs once at definition time with data handles. Registered tools, registered pures, `think(...)`, `cond(...)`, `switch(...)`, `each(...)`, and `reschedule(...)` append graph steps instead of doing runtime work; `|` merges records and `h["key"]` plucks fields. `deploy(..., tools=..., reasoners=...)` freezes the tool and reasoner surface, and `dry_run(...)` executes locally with in-memory tools and deterministic fake reasoners. See the larger `@flow` examples in `examples/episode_summary_flow.py` and `examples/cluster_labeling_flow.py`.
 
+Use `mcp_tool(server, tool)` inside `@flow` for an MCP reference. Its schemas
+and behavior contract come from the frozen MCP snapshot; handle-valued keyword
+arguments build its input record directly. `examples/episode_summary_flow.py`
+shows snapshot-backed MCP reads and writes with a local `mcp_call` fake.
+
 ---
 
 ## The CLI
@@ -91,6 +96,7 @@ julep test triage                         # run pytest for the selected agents
 julep trace <run-id>                      # render a cached run's trace tree + Langfuse link
 julep doctor                              # preflight: discovery, git, Langfuse, Temporal
 julep deploy triage --env staging         # freeze → publish → record in the deploy ledger
+julep serve api --migrate                 # run the self-hosted FastAPI control plane
 ```
 
 Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs-site/content/docs/guides/using-the-cli.md](docs-site/content/docs/guides/using-the-cli.md)**.
@@ -196,6 +202,9 @@ The base install is authoring + compile only (PyYAML). Optional extras add runti
 | `temporal` | `julep[temporal]` | durable execution on Temporal (workflows, activities, worker, client helpers) |
 | `dbos` | `julep[dbos]` | durable execution on DBOS / Postgres (steps, flow workflow, chaining runner) |
 | `http` | `julep[http]` | native HTTP tool calls from the `callTool` activity |
+| `cma` | `julep[cma]` | httpx transport for the CMA HTTP adapter |
+| `mcp` | `julep[mcp]` | official MCP SDK, httpx, PyJWT, and cryptography for MCP references, snapshots, calls, and auth |
+| `server` | `julep[server]` | FastAPI/Uvicorn control plane, SSE, Postgres store, Temporal gateway, cryptography, and httpx |
 | `dotctx` | `julep[dotctx]` | rich `.ctx` layout (Jinja2 templates compiled into registered renderers) |
 | `yglu` | `julep[yglu]` | Yglu-evaluated `settings.yaml` (mem-mcp `.ctx` compatibility) |
 | `providers` | `julep[providers]` | multi-provider `LlmCaller` via any-llm (pair with provider extras) |

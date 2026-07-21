@@ -78,6 +78,7 @@ sibling `julep.toml`. In `julep.toml`, omit the `tool.julep` prefix and use top-
 src = ["pkg"]
 exclude = ["scratch_*.py"]
 application = "memory_app:application" # optional explicit Application object
+llm_caller = "memory_app.llm:call"      # optional production LlmCaller for eval
 [tool.julep.tags]
 triage = ["support"]
 [tool.julep.gates]
@@ -88,7 +89,39 @@ temporal_namespace = "default"
 task_queue = "julep-staging"
 cas = "s3://my-bucket/julep"
 langfuse_host = "https://cloud.langfuse.com"
+
+[tool.julep.mcp.servers.memory]
+url = "https://memory.example/mcp"
+auth = "snapshot-token"
+version = "2026.7"
+
+[tool.julep.mcp.servers.memory.headers]
+X-Tenant = "acme"
+
+[tool.julep.pipeline.episode_summary]
+ctx = "prompts/episode_summary.ctx"
+lane = "summaries"
+
+[tool.julep.pipeline.episode_summary.env]
+MODEL = "anthropic:claude-haiku-4-5-20251001"
 ```
+
+Reserved top-level sections are `mcp`, `pipeline`, `server`, and `redaction`;
+`llm_caller` is a top-level scalar. In `julep.toml`, drop the
+`tool.julep` prefix: use `[mcp.servers.<id>]`, `[pipeline.<name>]`, `[server]`,
+and `[redaction]`.
+
+MCP server keys are `url`, `auth`, `headers`, and `version`. URLs must be
+absolute HTTP(S) endpoints without embedded credentials and form the live
+snapshot allow-list. Pipeline keys are `ctx`, `lane`, and nested `env` string
+values. Server settings are documented under
+[Control plane](/docs/deploy/control-plane). Redaction keys are
+`key_patterns`, `path_patterns`, and `disable_default`; worker-side file loading
+uses `[tool.julep.redaction]` in `pyproject.toml`.
+
+Unknown supported config keys are rejected. Where the table has a fixed schema,
+the error includes a close-match suggestion, such as `lan` to `lane` or
+`versoin` to `version`.
 
 | Config field | Default | Used by |
 |---|---|---|
@@ -97,6 +130,9 @@ langfuse_host = "https://cloud.langfuse.com"
 | `tags` | `{}` | `tag:` selection and display. |
 | `gates.fail_severity` | `error` | Default `julep lint` threshold. |
 | `application` | `None` | Explicit `module:attribute` application used by `plan`, `apply`, and unselected application-level `status`; never AST-discovered. |
+| `llm_caller` | `None` | Production `module:attribute` caller used by `julep eval`; `--llm-caller` overrides it. |
+| `mcp.servers.<id>` | `{}` | Validated MCP Streamable HTTP endpoints used by `--mcp-snapshot`. |
+| `pipeline.<name>` | `{}` | Zero-code dotctx pipelines synthesized for `plan` and `apply`. |
 | `env.<name>.temporal_address` | `None` | Non-local `julep run --env` and required application lane endpoint. |
 | `env.<name>.temporal_namespace` | `default` | Temporal client/worker namespace. |
 | `env.<name>.task_queue` | `julep` | Temporal workflow task queue. |
@@ -231,7 +267,7 @@ is `python -m julep.cli.artifact`.
 
 ## `julep run`
 
-Synopsis: `julep run <NAME> [--input JSON] [--run-id RUN_ID] [--env ENV]`
+Synopsis: `julep run <NAME|PATH.ctx> [--input JSON] [--run-id RUN_ID] [--env ENV]`
 
 Execute one agent. `local` resolves live source and runs the in-memory
 interpreter with echo stubs; non-local envs replay the deployed ledger record
@@ -239,7 +275,7 @@ through Temporal.
 
 | Arg/flag | Default | Meaning |
 |---|---|---|
-| `NAME` | required | Agent name. |
+| `NAME|PATH.ctx` | required | Agent name, or a `.ctx` package path for local evaluation. |
 | `--input JSON` | `null` | JSON-encoded input. |
 | `--run-id RUN_ID` | `""` | Local default `julep-<name>-local`; non-local default `julep-<name>-<env>-<12hex>`. |
 | `--env ENV` | `local` | Configured environment. |
@@ -272,6 +308,20 @@ print `langfuse: ...`. Non-local `run_on_env(...)` raises if `temporal_address`,
 Temporal support, or a deploy ledger record is missing; the command does not
 wrap those exceptions. Cache path: `.julep/runs/<run-id>.json`.
 
+For a `.ctx` path, the command loads dotctx, lowers it with
+`reasoner_to_flow`, freezes it, and runs the local eval harness. It resolves
+`$env` from the selected config environment and prints the frozen identity and
+reply:
+
+```bash
+julep run prompts/summary.ctx --input '{"episode":"42"}' --env staging
+```
+
+```text
+artifact sha256:...
+output: {"summary":"..."}
+```
+
 ## `julep deploy`
 
 Synopsis: `julep deploy [SELECTOR] [--exclude EXPR] [--env ENV]`
@@ -302,17 +352,23 @@ matched` and exits `0`; freeze/publish errors print `failed to deploy agent
 
 ## `julep plan`
 
-Synopsis: `julep plan [--env ENV] [--json]`
+Synopsis: `julep plan [--env ENV] [--json] [--mcp-snapshot]`
 
-Compile the explicit `[tool.julep].application` against the selected environment's
-live MCP snapshots, observe deployed lanes, and report artifact, MCP-schema,
-worker-image, release, deployment-config, Helm/KEDA, and Temporal runtime drift.
-The command is read-only.
+Compile the explicit `[tool.julep].application`, configured dotctx pipelines,
+or both against the selected environment, observe deployed lanes, and report
+artifact, MCP-schema, worker-image, release, deployment-config, Helm/KEDA, and
+Temporal runtime drift. The command is read-only.
 
 | Flag | Default | Meaning |
 |---|---|---|
 | `--env ENV` | `local` | Configured application environment. |
 | `--json` | false | Emit the complete machine-readable plan. |
+| `--mcp-snapshot` | false | Fetch configured MCP `tools/list` schemas before compiling. Requires `julep[mcp]`. |
+
+Configured `[tool.julep.pipeline.<name>]` dotctx pipelines are appended to the
+code application before compilation. If no code application exists, Julep
+synthesizes one from those pipelines. A name collision with a code pipeline is
+an error.
 
 Read-only application commands require a 64-hex public signer in
 `env.<name>.worker_environment.JULEP_BUNDLE_ALLOWED_SIGNERS`, unless
@@ -324,7 +380,7 @@ and does not change plan's success exit code.
 
 ## `julep apply`
 
-Synopsis: `julep apply --env ENV [--publish-only]`
+Synopsis: `julep apply --env ENV [--publish-only] [--mcp-snapshot]`
 
 Compile and publish a signed, immutable application release. By default it then
 reconciles one digest-pinned Helm release and release-specific Temporal task
@@ -335,6 +391,12 @@ applied state. It never switches application traffic.
 |---|---|---|
 | `--env ENV` | required | Configured application environment. |
 | `--publish-only` | false | Publish release artifacts without Helm reconciliation or local applied-state recording. |
+| `--mcp-snapshot` | false | Fetch configured MCP `tools/list` schemas before publishing. Requires `julep[mcp]`. |
+
+An explicit `snapshot=` in application code remains authoritative. The CLI
+flag applies the configured server snapshot to pipelines without native tools.
+Dotctx pipelines are published in schema-v2 releases with their package content
+and renderer declarations, so generic workers can execute them.
 
 `JULEP_BUNDLE_SIGNING_KEY` is required even with `--publish-only`; it must be a
 64-hex Ed25519 private seed or a path to a file containing one. If
@@ -348,7 +410,7 @@ artifact, lane releases/queues, and `traffic unchanged`.
 
 ## `julep status`
 
-Synopsis: `julep status [SELECTOR] [--exclude EXPR] [--env ENV]`
+Synopsis: `julep status [SELECTOR] [--exclude EXPR] [--env ENV] [--remote] [--api-url URL] [--api-key KEY] [--limit N]`
 
 Show deployment status and drift for an environment. When
 `[tool.julep].application` is configured and neither a selector nor `--exclude` is
@@ -362,6 +424,10 @@ legacy per-agent deploy-ledger path described below.
 | `SELECTOR` | `""` | Optional filter applied after status rows are computed. |
 | `--exclude EXPR` | `""` | Selection expression to subtract. |
 | `--env ENV` | `local` | Configured environment. |
+| `--remote` | false | Read `GET /v1/runs` instead of local application or ledger state. |
+| `--api-url URL` | `JULEP_API_URL` | Remote control-plane base URL. |
+| `--api-key KEY` | `JULEP_API_KEY` or unset | Remote bearer key. |
+| `--limit N` | `50` | Maximum remote rows, `1..100`. |
 
 ```bash
 julep status triage --env local
@@ -381,6 +447,53 @@ On the legacy path, any `drift` or `error` exits `3`, while `clean` and
 `undeployed` exit `0`. Status is read-only. Legacy output prints `name`, state,
 and deployed hash; application output prints release and per-lane health,
 backlog, and running counts.
+
+Remote output prints run id, status, pipeline, and application. Remote API
+errors exit `1`; missing API URL or httpx exits `2`.
+
+## `julep serve api`
+
+Synopsis: `julep serve api [--host HOST] [--port PORT] [--migrate]`
+
+Build and run the FastAPI control plane from `ServerSettings.from_env()`.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--host HOST` | `JULEP_SERVER_HOST` or `127.0.0.1` | Uvicorn listen host. |
+| `--port PORT` | `JULEP_SERVER_PORT` or `8080` | Uvicorn listen port. |
+| `--migrate` | false | Apply the execution-store schema before serving. |
+
+Requires `julep[server]` and `JULEP_EXECUTION_STORE_DSN`. Configuration or
+optional-dependency failures exit `2`. See
+[Control plane](/docs/deploy/control-plane).
+
+## `julep db migrate`
+
+Synopsis: `julep db migrate [--dsn DSN]`
+
+Apply every numbered, idempotent projection-store migration. `--dsn` defaults
+to `JULEP_EXECUTION_STORE_DSN`; omitting both exits `2`.
+
+## `julep db sweep`
+
+Synopsis: `julep db sweep --older-than SECONDS [--dsn DSN]`
+
+Delete projection rows for terminal runs older than the non-negative threshold.
+The operator owns retention policy. The DSN resolution matches `db migrate`.
+
+## `julep schedule apply|ls|rm`
+
+Schedules are declared under `[tool.julep.schedule.<name>]` or
+`[schedule.<name>]` with `cron`, `flow`, optional `input`, `env`, and `paused`.
+
+| Command | Synopsis | Behavior |
+|---|---|---|
+| `apply` | `julep schedule apply [--env ENV]` | Create or update configured Temporal cron schedules. |
+| `ls` | `julep schedule ls [--env ENV]` | Compare configured and server schedules; exits `3` on drift. |
+| `rm` | `julep schedule rm <NAME> [--env ENV]` | Remove the deterministic schedule id. |
+
+`ENV` defaults to `local`, but the selected environment must configure
+`temporal_address`.
 
 ## `julep worker`
 
@@ -456,13 +569,16 @@ return code; an explicit no-match selector prints `no agents matched` and exits
 
 ## `julep trace`
 
-Synopsis: `julep trace <RUN_ID>`
+Synopsis: `julep trace <RUN_ID> [--remote] [--api-url URL] [--api-key KEY]`
 
 Render a cached run's trace tree and print a Langfuse link when configured.
 
 | Arg/flag | Default | Meaning |
 |---|---|---|
 | `RUN_ID` | required | Run id under `.julep/runs/`. |
+| `--remote` | false | Read paginated projection events from the remote API. |
+| `--api-url URL` | `JULEP_API_URL` | Remote control-plane base URL. |
+| `--api-key KEY` | `JULEP_API_KEY` or unset | Remote bearer key. |
 
 ```bash
 julep trace r-cmd-1
@@ -482,6 +598,28 @@ langfuse: https://cloud.langfuse.com/project/<project-id>/traces/<trace-id>
 
 Exit/errors: missing cache prints `error: no cached run '...'` to stderr and
 exits `2`; existing cache entries exit `0`, even with cached status `error`.
+Remote mode renders API projection events. If none exist, it prints the remote
+run status. API errors exit `1`.
+
+## `julep eval`
+
+Synopsis: `julep eval <CTX_PATH> [--env ENV] [--limit N] [--tag TAG] [--sample-name NAME] [--json PATH] [--baseline PATH] [--llm-caller MODULE:ATTR]`
+
+Run a `.ctx` package's `eval.py` suite and enforce its threshold and optional
+baseline.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--env ENV` | `local` | Config environment used for `$env` resolution. |
+| `--limit N` | `-1` | Maximum samples; `-1` means all. |
+| `--tag TAG` | none | Any-match tag filter; repeatable. |
+| `--sample-name NAME` | none | Exact sample filter; repeatable. |
+| `--json PATH` | unset | Write the JSON report. |
+| `--baseline PATH` | unset | Compare with a prior report. |
+| `--llm-caller MODULE:ATTR` | `[tool.julep] llm_caller` | Resolve a production `LlmCaller`; the flag wins. |
+
+Exit `0` means pass, `2` means below threshold, `3` means regression against
+the baseline, and `4` means a broken eval configuration or unknown environment.
 
 ## `julep doctor`
 

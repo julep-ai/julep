@@ -297,11 +297,11 @@ async def serve() -> None:
 For a container entrypoint, expose a `WORKER_CONTEXT_FACTORY=module:attr` factory that returns `WorkerContext` and run:
 
 ```bash
-julep worker \
-  --address localhost:7233 \
-  --namespace default \
-  --task-queue support-sessions \
-  --health-port 8080
+export TEMPORAL_ADDRESS=localhost:7233
+export TEMPORAL_NAMESPACE=default
+export TEMPORAL_TASK_QUEUE=support-sessions
+export WORKER_HEALTH_PORT=8080
+julep worker
 ```
 
 Temporal sessions enforce capability grants, `maxCalls`, pure pins, and cost budgets across turns. The Temporal backend rejects token and wall-clock budget dimensions — it currently enforces only the `cost` dimension.

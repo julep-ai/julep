@@ -155,7 +155,7 @@ compose with `>>`; elaborates to the same IR and disappears before freeze.
 | `inspect <flow.json> [--manifest --caps]` | shape, node, manifest, capability data |
 | `run <flow.json> <input.json> [--mode strict\|dev]` | run locally via the interpreter |
 | `graph <flow.json>` | emit Graphviz DOT for the IR tree |
-| `worker [--address --namespace --task-queue]` | host a durable worker (Temporal) |
+| `worker [--smoke-test-seconds N]` | host a durable worker from its environment contract |
 
 ## Common errors
 

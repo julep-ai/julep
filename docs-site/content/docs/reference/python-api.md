@@ -60,6 +60,8 @@ report optional runtime availability.
 | `dbos` | DBOS backend on `dbos>=2.18` | `pip install --pre 'julep[dbos]'` |
 | `http` | native HTTP tool calls from `callTool` | `pip install --pre 'julep[http]'` |
 | `cma` | Claude Managed Agents HTTP adapter | `pip install --pre 'julep[cma]'` |
+| `mcp` | MCP SDK, live snapshots, HTTP caller, PyJWT, Ed25519 auth | `pip install --pre 'julep[mcp]'` |
+| `server` | FastAPI control plane, Postgres store, SSE, Temporal gateway | `pip install --pre 'julep[server]'` |
 | `dotctx` | rich dotctx prompt packages with Jinja2 | `pip install --pre 'julep[dotctx]'` |
 | `providers` | `any-llm` provider caller | `pip install --pre 'julep[providers]'` |
 | `otel`, `langfuse` | projection span export | `pip install --pre 'julep[otel]'` |
@@ -104,7 +106,7 @@ available where shown; `from_json(...)` exists on the matching JSON codecs.
 `@flow` runs the Python function once at definition time with `Handle` values.
 Registered tools, registered pures, `think(...)`, `cond(...)`, `switch(...)`,
 `each(...)`, and `reschedule(...)` append graph steps; `h1 | h2` emits
-`std.merge`; `h["field"]` emits `std.pluck`. Runtime values must enter through
+`std.merge`; `h["field"]` and `h.field` emit `std.pluck`. Runtime values must enter through
 flow parameters or JSON captures.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
@@ -113,9 +115,10 @@ flow parameters or JSON captures.
 | `FlowDef` | `FlowDef(fn: Callable[..., Any])` | function to lower | lowerable flow | `DefineError` | `flow(lambda x: x)` is invalid because source/return rules are stricter |
 | `FlowDef.to_ir` | `to_ir(self) -> Node` | no args | compiled IR | `DefineError` if more than one runtime parameter remains | `triage.to_ir().to_json()` |
 | `BoundFlow` | `BoundFlow(flow: FlowDef, bound_args: dict[str, Any])` | partially applied JSON args | lowerable flow | `DefineError` if not exactly one runtime parameter remains | `some_flow(region="us").to_ir()` |
-| `Handle` | `Handle(label: str, graph, source)` | internal data handle | authoring handle | `TypeError`/`DefineError` on bool, iter, equality, attribute access | `h["summary"]`, `h1 | h2` inside `@flow` |
+| `Handle` | `Handle(label: str, graph, source)` | internal data handle | authoring handle | `TypeError`/`DefineError` on bool, iter, equality, or invalid/private attribute access | `h.summary`, `h["summary"]`, `h1 | h2` inside `@flow` |
 | `tool` | `tool(fn=None, /, *, effect="write", idempotent=False, name=None)` | function plus effect/idempotency/name | `Tool` or decorator | `ValueError` for invalid effect | `@tool(effect="read", idempotent=True)` |
 | `Tool` | `Tool(name, fn, contract, input_schema, output_schema, param_names=())` | native callable contract | `FlowLike` tool | callable may raise its own errors | `lookup.to_ir()` |
+| `mcp_tool` | `mcp_tool(server, tool, *, name=None) -> McpToolStep` | frozen MCP server/tool reference | `FlowLike` MCP step | `ValueError` for empty names; callable only on handles inside `@flow` | `read = mcp_tool("episodes", "read_episode")` |
 | `Tool.bound_tool` | property `Callable[[Any], Any]` | single threaded input adapter | callable | function errors | `snapshot_from_tools([lookup])` |
 | `snapshot_from_tools` | `snapshot_from_tools(tools: Sequence[Tool]) -> McpSnapshot` | native tools | freeze snapshot | none | `deploy(triage, tools=[lookup])` |
 | `pure` | `pure(fn, /) -> Pure`; `pure(name: str, /) -> Callable[[fn], Pure]` | deterministic map/predicate | `Pure` | registry `ValueError` on conflicting name | `@pure("is_large")` |
@@ -130,6 +133,8 @@ flow parameters or JSON captures.
 | `reasoner_from_settings` | `reasoner_from_settings(settings: dict[str, Any], *, name=None, base_dir=None) -> Reasoner` | settings mapping and optional path | registered reasoner | `ValueError` if no name | `reasoner_from_settings({"name":"r","model":"m"})` |
 | `reasoner_to_flow` | `reasoner_to_flow(reasoner: Reasoner, *, ctx=None) -> Node` | reasoner and optional context | `think`, `iter_up_to`, `app`, or `sub` node | none | `reasoner_to_flow(get_reasoner("r"))` |
 | `dotctx_flow` | `dotctx_flow(path: str, *, ctx=None) -> Node` | dotctx path | lowered node | same as `load_dotctx` | `dotctx_flow("reasoners/r")` |
+| `CtxPipelineConfig` | `CtxPipelineConfig(name, ctx, lane="default", env={})` | zero-code pipeline declaration | config value | config validation occurs in `load_config` | `CtxPipelineConfig("summary", "prompts/summary.ctx")` |
+| `pipeline_spec_from_ctx` | `pipeline_spec_from_ctx(config, *, root, env_vars=None) -> PipelineSpec` | load dotctx, merge env, and lower with `reasoner_to_flow` | pipeline spec | dotctx/config errors | `pipeline_spec_from_ctx(cfg, root=Path("."))` |
 
 ## `@flow` control helpers
 
@@ -250,16 +255,48 @@ single-consumer and ends only on `Closed`.
 | `CapabilityManifest.assert_within_budget` | `assert_within_budget(*, cost=0.0, tokens=0) -> None` | current estimates | None | `CapabilityDenied` | `caps.assert_within_budget(cost=0.5)` |
 | `check_approval_gates` | `check_approval_gates(flow, manifest, capabilities=None) -> list[Diagnostic]` | frozen flow/manifest/caps | diagnostics | none | `check_approval_gates(flow, manifest, caps)` |
 | `snapshot_from_listings` | `snapshot_from_listings(listings, *, versions=None) -> McpSnapshot` | MCP tools/list-shaped dict | snapshot | none | `snapshot_from_listings({"s": {"t": {"inputSchema": {}}}})` |
-| `deploy` | `deploy(flow, snapshot=None, *, tools=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow") -> Deployment` | flow plus snapshot or native tools; capability gates; mode | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(triage, tools=[lookup], reasoners=[SUPPORT_REPLY])` |
+| `fetch_listings` | `fetch_listings(servers, *, auth=None, timeout_s=10, total_timeout_s=60, allowlist=None) -> dict` | Streamable HTTP server configs and exact URL allow-list | plain `tools/list` data | `McpSnapshotError`, `ImportError`, `RuntimeError` in an active event loop | `fetch_listings(servers, allowlist={servers["memory"]["url"]})` |
+| `snapshot_servers` | `snapshot_servers(servers, *, auth=None, timeout_s=10, total_timeout_s=60, allowlist=None) -> McpSnapshot` | same live server configuration | version-pinned freeze snapshot | same as `fetch_listings` | `snapshot_servers(servers, allowlist=urls)` |
+| `deploy` | `deploy(flow, snapshot=None, *, tools=None, mcp_servers=None, mcp_listings=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow", queue=None) -> Deployment` | explicit snapshot, or exactly one generated source; explicit `snapshot` wins | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(batch, mcp_listings=listings)` |
 | `Deployment` | `Deployment(flow, manifest, diagnostics=[], capabilities=None, mode=STRICT, freeze_timing="deploy_time", ...)` | compiled artifact | deployment | none | `deployment.artifact_hash` |
 | `Deployment.refresh` | `refresh(snapshot=None) -> Deployment` | fresh snapshot or stored source | new deployment | `ValueError`, deploy errors | `deployment.refresh(new_snapshot)` |
 | `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="julep", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
-| `Deployment.adry_run` / `dry_run` | `adry_run(value, *, reasoners=None) -> Result`; `dry_run(value, *, reasoners=None) -> Result` | local value and fake reasoners | interpreter result | `ValueError` if not built with `tools=` | `deployment.dry_run("TICKET-42", reasoners={...})` |
+| `Deployment.adry_run` / `dry_run` | `adry_run(value, *, mcp_call=None, reasoners=None) -> Result`; sync equivalent | local value, MCP seam, and fake reasoners | interpreter result | effect handler and interpreter errors | `deployment.adry_run(batch, mcp_call=fake, reasoners={...})` |
 | `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | CAS store/url and optional signing key | bundle record | bundle/CAS/signing errors | `deployment.publish(".julep/cas")` |
 
 `mode="dev"` returns deployments with would-block diagnostics in
 `Deployment.prod_gap`; Temporal `Deployment.run(...)` refuses dev mode.
 `freeze_timing` is `"deploy_time"` or `"per_run"`.
+
+Import live snapshot helpers from `julep.mcp_snapshot`. They use the official
+MCP SDK from `julep[mcp]` and never follow redirects outside the configured
+endpoint allow-list.
+
+`mcp_tool` schemas and effect/idempotency behavior always come from the frozen
+snapshot; its constructor has no contract override arguments. Handle-valued
+keyword calls synthesize a compiler-owned `std.record` node. Capability defaults
+are derived from the resolved frozen tool set when `capabilities` is omitted.
+`InMemoryEnv` also accepts `mcp_call=`, so an MCP-only deployment needs no
+native `tools=` map for local execution.
+
+## MCP authentication
+
+Julep ships the verifier half for application-owned MCP servers and a
+batteries-included HTTP caller. Authoring and serving the MCP server itself
+remain application responsibilities.
+
+| Symbol | Signature | Behavior |
+|---|---|---|
+| `McpAuthConfig` | `McpAuthConfig(signing_key, issuer, kid, ttl_s=300)` | Ed25519 signing config; `ttl_s` must be `1..300`. The key is the same 64-hex seed or seed-file form as `JULEP_BUNDLE_SIGNING_KEY`; `from_env()` reads `JULEP_MCP_SIGNING_KEY`, `JULEP_MCP_ISSUER`, `JULEP_MCP_KID`, and `JULEP_MCP_TTL_S`. |
+| `mint_token` | `mint_token(cfg, *, server_id, tool, scopes, idempotency_key, principal) -> str` | Creates an EdDSA JWT. `aud` is the stable logical server id, not its URL. Claims include `iss`, `aud`, typed `sub`/`tenant`/`scope`, `tool`, `idk`, `iat`, `exp`, and `jti`; the JOSE header includes `kid`. Only selected subject/tenant fields are copied from the principal. |
+| `verify_token` | `verify_token(token, *, verify_keys, audience, required_scopes=(), idempotency_key, issuer=None, leeway_s=30) -> VerifiedToken` | Pins `algorithms=["EdDSA"]`, verifies key id, audience, issuer/time claims and scopes, and requires JWT `idk` to equal the request's actual `Idempotency-Key`. |
+| `verify_keys_from_env` | `verify_keys_from_env() -> dict[str, Ed25519PublicKey]` | Parses `JULEP_MCP_VERIFY_KEYS` as comma-separated `kid:base64pub` entries. |
+| `FastMCPTokenVerifier` | `FastMCPTokenVerifier(verify_keys, audience, required_scopes=(), issuer=None, leeway_s=30)` | Adapter for the official MCP server auth provider. Pair with the middleware below because the provider interface does not expose request headers. |
+| `asgi_auth_middleware` | `asgi_auth_middleware(app, *, verify_keys, audience, required_scopes=(), issuer=None, leeway_s=30) -> ASGIApp` | Requires bearer auth and `Idempotency-Key`, verifies their binding, and stores `VerifiedToken` on the ASGI scope. |
+| `http_mcp_caller` | `http_mcp_caller(servers, auth=None) -> McpCaller` | Calls Streamable HTTP servers, always sends `Idempotency-Key` equal to the deterministic activity cid, and adds a minted bearer token when auth is configured. |
+
+This surface uses PyJWT with the allowed algorithm pinned to EdDSA and is
+installed by `julep[mcp]`. The principal mapping is never serialized wholesale.
 
 ## Staged plans and agent-loop extraction
 
@@ -332,7 +369,7 @@ The package root exports `as_flow`; the full typed wrapper lives in
 | `ExecutionPolicy` | `ExecutionPolicy(tool_timeout_s=30, reasoner_timeout_s=120, plan_timeout_s=120, sub_task_timeout_s=3600, agent_task_timeout_s=3600, idempotent_max_attempts=5, write_max_attempts=3, reasoner_max_attempts=4, initial_retry_s=1.0, retry_backoff=2.0, max_retry_interval_s=60, trace_content_refs=False, max_parallel=None)` | backend timeouts/retries/projection | policy | none | `ExecutionPolicy(reasoner_max_attempts=1).to_json()` |
 | `ExecutionPolicy.from_json` | `from_json(d: dict[str, Any] | None) -> ExecutionPolicy` | policy JSON | policy | none | `ExecutionPolicy.from_json({"maxParallel": 4})` |
 | `Env` | protocol with `run_call`, `invoke_reasoner`, `run_sub`, `run_agent`, `compile_plan`, `human_gate`, `sleep`, `recv`, `emit`, `gather`, `race_first` | interpreter effect boundary | protocol | implementation-defined | implement for a backend |
-| `InMemoryEnv` | `InMemoryEnv(manifest, emitter, *, tools=None, reasoners=None, subs=None, agents=None, planners=None, gate=None, sleeper=None, max_parallel=None, max_calls=None, mode=STRICT, registry=None, principal=None, root_run_id=None, segment_seq=0, inbound=None)` | local effect maps and limits | env | `CapabilityDenied`, `KeyError`, handler errors | `InMemoryEnv({}, ProjectionEmitter(InMemoryProjection()), tools={})` |
+| `InMemoryEnv` | `InMemoryEnv(manifest, emitter, *, tools=None, mcp_call=None, reasoners=None, subs=None, agents=None, planners=None, gate=None, sleeper=None, max_parallel=None, max_calls=None, mode=STRICT, registry=None, principal=None, root_run_id=None, segment_seq=0, inbound=None)` | local effect maps and limits | env | `CapabilityDenied`, `KeyError`, handler errors | `InMemoryEnv({}, emitter, mcp_call=fake)` |
 | `interpret` | `async interpret(node, value, env, causes=(), *, principal=None, root_run_id=None, segment_seq=None) -> Result` | IR, input, env, optional run identity | `Result(value, event_id, attrs, reported_cost)` | framework, pure, handler errors | `await interpret(flow, value, env)` |
 | `Result` | `Result(value: Any, event_id: str | None = None, attrs=None, reported_cost=None)` | interpreter result | value envelope | none | `result.value` |
 | `RunPrincipal` | `dict[str, Any]` | opaque tenant/credential reference, never secret | alias | none | `principal={"tenant": "acme"}` |
@@ -356,7 +393,7 @@ Top-level Temporal exports exist only when `HAVE_TEMPORAL` is true:
 | `TemporalSessionHandle` | `TemporalSessionHandle(wfhandle, *, in_channel="in", out_channel="out", poll_s=0.02)` | workflow handle and channels | session handle | backend errors | returned by `Agent.open(..., backend="temporal")` |
 | `build_worker` | `build_worker(client, context, *, task_queue=DEFAULT_TASK_QUEUE, min_batch_window_s=0.0, **worker_kwargs) -> Worker` | Temporal client, `WorkerContext`, queue, SDK kwargs | worker | Temporal/import/config errors | `build_worker(client, WorkerContext(llm=llm))` |
 | `run_worker` | `async run_worker(*, target_host="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, tool_urls=None, mcp_call=None, llm=None, capabilities=None, subflows=None, agents=None, blob_store=None, session_store=None, trajectory_sink=None, trajectory_blob_store=None, on_attempt=None, http_timeout_s=30.0, **worker_kwargs) -> None` | standalone worker config | never until cancelled | Temporal/runtime errors | `await run_worker(llm=llm)` |
-| `WorkerServeSettings` | `WorkerServeSettings(context_factory, address="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, api_key=None, tls=False, graceful_shutdown_s=30.0, max_concurrent_activities=None, max_concurrent_workflow_tasks=None, health_port=None)` | container worker settings | settings | none | `WorkerServeSettings.from_env(env)` |
+| `WorkerServeSettings` | `WorkerServeSettings(context_factory, address="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, ..., application=None, runtime_declarations_hash=None, redaction=None)` | container worker settings; application/hash are optional paired cross-checks | settings | `ValueError` for an unpaired cross-check | `WorkerServeSettings.from_env(env)` |
 | `serve` | `async serve(settings: WorkerServeSettings, *, shutdown_event=None) -> None` | settings and optional test shutdown event | None | `JulepError` without `temporalio`, factory errors | `await serve(WorkerServeSettings.from_env())` |
 | `HealthServer` | `HealthServer(port: int, *, host="0.0.0.0")` | probe listener | server with `/healthz`, `/readyz` | `RuntimeError` if `port` before start | `await HealthServer(8080).start()` |
 | `load_context_factory` | `load_context_factory(spec: str) -> Callable[[], Any]` | `module:attr` spec | callable | `ValueError` | `load_context_factory("app.worker:make_context")` |
@@ -447,7 +484,7 @@ CLI entry points:
 | `inspect` | `julep artifact inspect <flow_json> [--manifest <path>] [--caps <path>]` |
 | `run-local` | `julep artifact run-local <flow_json> <input_json> [--mode strict|dev]` |
 | `graph` | `julep artifact graph <flow_json>` |
-| `worker` | `julep worker [--context-factory module:attr] [--address host:port] [--namespace ns] [--task-queue queue] [--health-port port]` |
+| `worker` | `julep worker [--smoke-test-seconds seconds]` |
 
 `julep` commands and flags:
 
@@ -457,15 +494,22 @@ CLI entry points:
 | `ls` | `julep ls [selector] [--exclude expr]` |
 | `show` | `julep show <name>` |
 | `graph` | `julep graph [selector] [--exclude expr]` |
-| `run` | `julep run <name> [--input JSON] [--run-id id] [--env name]` |
+| `run` | `julep run <name-or-path.ctx> [--input JSON] [--run-id id] [--env name]` |
 | `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
-| `plan` | `julep plan [--env name] [--json]` (explicit application) |
-| `apply` | `julep apply --env name [--publish-only]` (explicit application) |
-| `status` | `julep status [selector] [--exclude expr] [--env name]` (unselected explicit application, otherwise legacy agent ledger) |
+| `plan` | `julep plan [--env name] [--json] [--mcp-snapshot]` |
+| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot]` |
+| `status` | `julep status [selector] [--exclude expr] [--env name] [--remote] [--api-url URL] [--api-key KEY] [--limit N]` |
+| `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate]` |
+| `db migrate` | `julep db migrate [--dsn DSN]` |
+| `db sweep` | `julep db sweep --older-than SECONDS [--dsn DSN]` |
+| `schedule apply` | `julep schedule apply [--env name]` |
+| `schedule ls` | `julep schedule ls [--env name]` |
+| `schedule rm` | `julep schedule rm <name> [--env name]` |
 | `worker` | `julep worker [--smoke-test-seconds seconds]` (`0` continuous; positive smoke/poll/drain) |
 | `lint` | `julep lint [selector] [--exclude expr] [--fail-severity error|warning|info]` |
 | `test` | `julep test [selector] [--exclude expr] [--dry-run]` |
-| `trace` | `julep trace <run_id>` |
+| `eval` | `julep eval <ctx_path> [--env name] [--limit N] [--tag tag] [--sample-name name] [--json path] [--baseline path] [--llm-caller module:attr]` |
+| `trace` | `julep trace <run_id> [--remote] [--api-url URL] [--api-key KEY]` |
 | `doctor` | `julep doctor` |
 | `chat` | `julep chat <name> [--env local]` |
 | `trigger` | `julep trigger <name> <event> [--channel name]` |

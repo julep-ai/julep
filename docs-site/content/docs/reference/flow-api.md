@@ -40,7 +40,7 @@ print(result.value)
 
 ## Import Paths
 
-Top-level exports cover `flow`, `think`, `cond`, `switch`, `each`,
+Top-level exports cover `flow`, `think`, `cond`, `switch`, `each`, `mcp_tool`,
 `reschedule`, raw combinators, derived combinators, DAG classes, IR classes,
 `validate`, `blocking`, and `explain`. Typed wrappers live in
 `julep.typed`; typed adapters in `julep.flow_adapters`.
@@ -107,8 +107,43 @@ Authoring-time value, not runtime data.
 | `h["key"] -> Handle` | Appends `std.pluck` with `args={"key": key}`. | `DefineError` outside `@flow`. | `clusters = source["clusters"]` |
 | `bool(h)` | Never returns. | `TypeError`; use `cond(...)`. | `cond(is_ready, h, then=a, orelse=b)` |
 | `iter(h)` | Never returns. | `TypeError`; use `each(...)`. | `each(body, h)` |
-| `h.foo` | Never returns. | `AttributeError`; use `h["foo"]`. | `h["foo"]` |
+| `h.foo` | Appends the same `std.pluck` as `h["foo"]`. | `DefineError` outside `@flow`; `AttributeError` for private/reserved names. | `episode_id = source.episodeId` |
 | `h == other`, `h != other` | Never returns. | `DefineError`; use `cond(...)`. | `cond(eq_pred, h, then=a, orelse=b)` |
+
+### MCP tool references and record binding
+
+Signature: `mcp_tool(server: str, tool: str, *, name: str | None = None) -> McpToolStep`
+
+`mcp_tool` is exported from `julep`. It declares an MCP reference for use
+inside `@flow`; it does not wrap a native Python callable. Freeze resolves the
+input schema, output schema, and behavior annotations from the captured MCP
+snapshot. Version 1 has no `effect=`, `idempotent=`, or `output=` arguments.
+
+Handle-valued keyword arguments build the tool input record directly:
+
+```python
+write_summary_surfaces = mcp_tool("episodes", "write_summary_surfaces")
+
+@flow
+def write(source, summary):
+    return write_summary_surfaces(
+        episode_id=source.episodeId,
+        summary=summary.summary,
+    )
+```
+
+The frontend lowers this call to one compiler-owned `std.record` pure followed
+by the MCP call. There are no user-visible adapter pures. Record binding is
+all-named: do not mix a positional handle with handle-valued keywords. Literal
+keyword fields may be included in the same record. `h.field` and `h["field"]`
+are equivalent field-access forms.
+
+The keyless worked example is
+[`examples/episode_summary_flow.py`](https://github.com/julep-ai/julep/blob/main/examples/episode_summary_flow.py):
+it reads through MCP, performs two `think` steps, conditionally writes through
+MCP, fans out with `each`, freezes checked-in listings with
+`deploy(batch, mcp_listings=...)`, and injects `mcp_call` plus fake reasoners
+into `adry_run`.
 
 ### Step Options
 

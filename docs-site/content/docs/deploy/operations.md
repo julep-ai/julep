@@ -359,13 +359,14 @@ export WORKER_CONTEXT_FACTORY=yourapp.worker:make_context
 export TEMPORAL_ADDRESS=localhost:7233
 export TEMPORAL_NAMESPACE=default
 export TEMPORAL_TASK_QUEUE=julep
-julep worker --task-queue julep --health-port 8080
+export WORKER_HEALTH_PORT=8080
+julep worker
 ```
 
-Healthy result: stdout starts with
-`worker: address=... namespace=... task_queue=julep health_port=8080`.
-The worker registers `FlowWorkflow`, `SessionWorkflow`, `AgentWorkflow`, and the
-activities from `julep.execution.worker.WORKFLOWS` and `ACTIVITIES`.
+Healthy result: the process remains running and the readiness probe below
+returns `200`. The worker registers `FlowWorkflow`, `SessionWorkflow`,
+`AgentWorkflow`, and the activities from
+`julep.execution.worker.WORKFLOWS` and `ACTIVITIES`.
 
 2. Check readiness before accepting traffic.
 
