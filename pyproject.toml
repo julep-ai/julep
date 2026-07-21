@@ -43,6 +43,8 @@ dbos = ["dbos>=2.18; python_version >= '3.11'"]
 http = ["httpx>=0.24"]
 # Experimental Claude Managed Agents (CMA) backend (HTTP, beta-pinned).
 cma = ["httpx>=0.24"]
+# Authenticated MCP streamable-HTTP clients and server verifier adapters.
+mcp = ["mcp>=1.9", "httpx>=0.24", "PyJWT>=2.8", "cryptography>=42"]
 # Rich dotctx layout (Jinja2 templates compiled into registered renderers).
 dotctx = ["jinja2>=3.1"]
 # Yglu-evaluated settings.yaml (mem-mcp .ctx compatibility). $env reads come
@@ -83,6 +85,8 @@ test-no-temporal = [
     "types-PyYAML>=6.0",
     "wasmtime>=45,<46",
     "cryptography>=42",
+    "PyJWT>=2.8",
+    "mcp>=1.9",
     "typer>=0.12",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]
