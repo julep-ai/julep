@@ -7,8 +7,11 @@ from contextlib import AbstractAsyncContextManager
 from types import SimpleNamespace
 from typing import Any
 
-import jwt
 import pytest
+
+pytest.importorskip("jwt")  # PyJWT ships in the `mcp` extra
+
+import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
