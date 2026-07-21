@@ -29,6 +29,7 @@ if HAVE_TEMPORAL:
 
 
 BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
+DECLARATIONS_REF = {"hash": "sha256:" + "c" * 64, "size": 123}
 
 
 def _snapshot():
@@ -75,12 +76,16 @@ def test_submit_debounced_forwards_bundle_to_start_input():
             key="k",
             item=1,
             quiet_s=1,
+            policy={"maxParallel": 7},
             bundle=BUNDLE_REF,
+            runtime_declarations_ref=DECLARATIONS_REF,
         )
     )
 
     assert out == "handle"
     assert captured["input"].bundle == BUNDLE_REF
+    assert captured["input"].runtime_declarations_ref == DECLARATIONS_REF
+    assert captured["input"].policy["maxParallel"] == 7
 
 
 async def _quiet_window_collates_a_burst(env):

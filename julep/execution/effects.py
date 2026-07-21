@@ -14,6 +14,8 @@ import json
 import logging
 import os
 import hashlib
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional, cast
 
@@ -137,6 +139,7 @@ _TRAJECTORY_BLOB_STORE: Optional[BlobStore] = None
 _TRAJECTORY_REDACTOR: Optional[Redactor] = None
 _DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
 _JULEP_META_KEY = "__julep_meta__"
+_RUNTIME_DECLARATIONS_CACHE: dict[str, int] = {}
 
 
 def _unwrap_llm(out: Any) -> tuple[Any, dict[str, Any]]:
@@ -309,6 +312,7 @@ def configure(ctx: WorkerContext) -> None:
     if ctx.llm is not None:
         ctx.llm = _adapt_llm_caller(ctx.llm)
     _CTX = ctx
+    _RUNTIME_DECLARATIONS_CACHE.clear()
     set_trajectory_sink(
         ctx.trajectory_sink,
         ctx.trajectory_blob_store or ctx.blob_store,
@@ -318,6 +322,45 @@ def configure(ctx: WorkerContext) -> None:
 
 def _registry() -> Registry:
     return _CTX.registry or DEFAULT_REGISTRY
+
+
+def _hydrate_runtime_declarations(ref: Optional[Mapping[str, Any]]) -> None:
+    """Load one release declaration blob at the activity boundary."""
+
+    if ref is None:
+        return
+    if not isinstance(ref, Mapping) or set(ref) != {"hash", "size"}:
+        raise RuntimeError("runtime declarations ref must contain exactly 'hash' and 'size'")
+    expected_hash = ref.get("hash")
+    expected_size = ref.get("size")
+    if not isinstance(expected_hash, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", expected_hash
+    ) is None:
+        raise RuntimeError("runtime declarations ref hash must be sha256:<64 lowercase hex>")
+    if not isinstance(expected_size, int) or isinstance(expected_size, bool) or expected_size < 0:
+        raise RuntimeError("runtime declarations ref size must be a non-negative integer")
+    cached_size = _RUNTIME_DECLARATIONS_CACHE.get(expected_hash)
+    if cached_size is not None:
+        if cached_size != expected_size:
+            raise RuntimeError(
+                f"runtime declarations ref size mismatch for {expected_hash}: "
+                f"expected {expected_size}, cached {cached_size}"
+            )
+        return
+
+    store_url = os.environ.get("STORE_URL", "").strip()
+    if not store_url:
+        raise RuntimeError("runtime declarations hydration requires STORE_URL")
+    blob = cas_from_url(store_url).get(expected_hash.removeprefix("sha256:"))
+    if len(blob) != expected_size:
+        raise RuntimeError(
+            f"runtime declarations blob size mismatch for {expected_hash}: "
+            f"expected {expected_size}, got {len(blob)}"
+        )
+    from ..declarations import load_declarations
+
+    load_declarations(blob, expected_hash=expected_hash, registry=_registry())
+    _RUNTIME_DECLARATIONS_CACHE[expected_hash] = expected_size
 
 
 def _notify_attempt(record: AttemptRecord) -> None:
@@ -377,6 +420,7 @@ class InvokeReasonerInput:
     # Recorded QoS tier (M0: advisory; dispatch still sync). Carried so the
     # reasoner step input reflects the resolved tier deterministically.
     qos: Optional[str] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -390,6 +434,7 @@ class ResolveQoSInput:
     segment_seq: Optional[int] = None
     node_id: Optional[str] = None
     timeout_s: Optional[float] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -399,6 +444,7 @@ class CompilePlanInput:
     cid: str
     manifest: Optional[dict[str, Any]] = None  # parent frozen manifest (for schema checks)
     principal: Optional[RunPrincipal] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -843,6 +889,7 @@ async def resolveQoS(inp: ResolveQoSInput) -> str:
     Resolved once at first execution; durable backend replay reads the recorded
     string verbatim from history instead of re-running dispatch policy.
     """
+    _hydrate_runtime_declarations(inp.runtime_declarations_ref)
     try:
         reasoner_obj = _registry().get_reasoner(inp.reasoner)
     except KeyError:
@@ -866,6 +913,7 @@ async def resolveQoS(inp: ResolveQoSInput) -> str:
 
 
 async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
+    _hydrate_runtime_declarations(inp.runtime_declarations_ref)
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     transcript: Optional[Transcript] = None
@@ -923,6 +971,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     (and surfaces as a clean ``PlanRejected``) instead of corrupting the
     deterministic workflow.
     """
+    _hydrate_runtime_declarations(inp.runtime_declarations_ref)
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
     planner = _registry().get_reasoner(inp.planner)
@@ -1056,6 +1105,7 @@ async def resolveSubflow(ref: str) -> dict[str, Any]:
         "manifestJson": spec.get("manifestJson", {}),
         "pinnedPures": spec.get("pinnedPures", spec.get("pureSourceHashes")),
         "bundle": spec.get("bundle"),
+        "runtimeDeclarationsRef": spec.get("runtimeDeclarationsRef"),
     }
 
 

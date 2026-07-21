@@ -40,7 +40,7 @@ framework:
 ```dockerfile
 COPY julep-v2 /src/julep-v2
 RUN pip install --no-cache-dir uv \
-    && pip install --no-cache-dir '/src/julep-v2[temporal,store,wasm]' \
+    && pip install --no-cache-dir '/src/julep-v2[dotctx,temporal,store,wasm]' \
     && rm -rf /src/julep-v2
 ```
 

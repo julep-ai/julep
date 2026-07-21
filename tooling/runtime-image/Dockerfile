@@ -16,11 +16,11 @@ FROM python:3.12-slim
 COPY julep-v2 /src/julep-v2
 # Install the julep framework with production runtime extras:
 # [temporal] for durable workers, [store] for S3 CAS and ed25519 signature
-# verification, and [wasm] for wasmtime plus the vendored executor.wasm package
-# data. Drop the build context afterwards so the final image contains only the
-# installed framework.
+# verification, [dotctx] for portable renderer hydration, and [wasm] for wasmtime
+# plus the vendored executor.wasm package data. Drop the build context afterwards
+# so the final image contains only the installed framework.
 RUN pip install --no-cache-dir uv \
-    && pip install --no-cache-dir '/src/julep-v2[temporal,store,wasm]' \
+    && pip install --no-cache-dir '/src/julep-v2[dotctx,temporal,store,wasm]' \
     && rm -rf /src/julep-v2
 
 ENV WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context \

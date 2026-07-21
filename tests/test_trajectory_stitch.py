@@ -195,7 +195,12 @@ class _Stop(Exception):
     """Raised by the fake continue_as_new to capture the next segment's input."""
 
 
-def _temporal_env(*, root_run_id: Optional[str], segment_seq: int = 0) -> Any:
+def _temporal_env(
+    *,
+    root_run_id: Optional[str],
+    segment_seq: int = 0,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
+) -> Any:
     async def gate(value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         return value
 
@@ -208,6 +213,7 @@ def _temporal_env(*, root_run_id: Optional[str], segment_seq: int = 0) -> Any:
         gate_waiter=gate,
         root_run_id=root_run_id,
         segment_seq=segment_seq,
+        runtime_declarations_ref=runtime_declarations_ref,
     )
 
 
@@ -240,6 +246,7 @@ def test_temporal_env_stamps_run_identity_into_effect_payloads(monkeypatch):
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_temporal_children_inherit_root_run_id(monkeypatch):
     children: list[Any] = []
+    declarations_ref = {"hash": "sha256:" + "a" * 64, "size": 123}
 
     async def fake_execute_child_workflow(fn, child_input, **kwargs):
         children.append(child_input)
@@ -248,7 +255,11 @@ def test_temporal_children_inherit_root_run_id(monkeypatch):
     monkeypatch.setattr(
         harness.workflow, "execute_child_workflow", fake_execute_child_workflow
     )
-    env = _temporal_env(root_run_id=ROOT, segment_seq=4)
+    env = _temporal_env(
+        root_run_id=ROOT,
+        segment_seq=4,
+        runtime_declarations_ref=declarations_ref,
+    )
 
     asyncio.run(env.run_sub("child", None, 5, "cid-1"))
     asyncio.run(env.run_agent("lcstitch.ctrl", 5, "cid-2"))
@@ -257,14 +268,19 @@ def test_temporal_children_inherit_root_run_id(monkeypatch):
     # Children inherit the SAME root; they begin their own segment chain at 0.
     assert isinstance(sub_input, FlowInput)
     assert sub_input.root_run_id == ROOT and sub_input.segment_seq == 0
+    # A ref child resolves its own pipeline declarations instead of inheriting
+    # the parent's per-pipeline blob.
+    assert sub_input.runtime_declarations_ref is None
     assert isinstance(agent_input, AgentInput)
     assert agent_input.root_run_id == ROOT and agent_input.segment_seq == 0
+    assert agent_input.runtime_declarations_ref == declarations_ref
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_flow_continue_as_new_keeps_root_and_increments_segment(monkeypatch):
     captured: list[Any] = []
     finishes: list[Any] = []
+    declarations_ref = {"hash": "sha256:" + "b" * 64, "size": 456}
 
     def fake_continue_as_new(next_input):
         captured.append(next_input)
@@ -286,6 +302,7 @@ def test_flow_continue_as_new_keeps_root_and_increments_segment(monkeypatch):
         max_call_limits={},
         root_run_id=None,
         segment_seq=0,
+        runtime_declarations_ref=declarations_ref,
     )
     with pytest.raises(_Stop):
         asyncio.run(FlowWorkflow().run(inp))
@@ -295,6 +312,7 @@ def test_flow_continue_as_new_keeps_root_and_increments_segment(monkeypatch):
     assert next_input.root_run_id == ROOT  # constant across the chain
     assert next_input.segment_seq == 1     # bumped for the next segment
     assert next_input.input == {"n": 1}
+    assert next_input.runtime_declarations_ref == declarations_ref
     # A continued segment is NOT settled: the finish marker must not fire.
     finish_names = [name for name, _ in finishes if name == "finishTrajectory"]
     assert finish_names == []

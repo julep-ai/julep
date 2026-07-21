@@ -41,7 +41,7 @@ from typing import Any, Optional
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from .harness import FlowInput, FlowWorkflow
+    from .harness import FlowWorkflow, build_flow_input
 
 
 @dataclass
@@ -63,6 +63,7 @@ class DebounceInput:
     principal: Optional[dict[str, Any]] = None
     # Signed CAS bundle pointers for custom pures referenced by flow_json.
     bundle: Optional[list[dict[str, str]]] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
     # Continue-as-new carriage: batch ordinal, items left over from the
     # previous segment (capped surplus + arrivals during execution), and the
     # carried batch clocks (ISO timestamps from workflow.now()).
@@ -148,7 +149,7 @@ class DebounceCollector:
         child_id = f"{workflow.info().workflow_id}:b{inp.batch_seq}"
         result = await workflow.execute_child_workflow(
             FlowWorkflow.run,
-            FlowInput(
+            build_flow_input(
                 session_id=child_id,
                 input=batch,
                 flow_json=inp.flow_json,
@@ -158,6 +159,7 @@ class DebounceCollector:
                 policy=inp.policy,
                 principal=inp.principal,
                 bundle=inp.bundle,
+                runtime_declarations_ref=inp.runtime_declarations_ref,
             ),
             id=child_id,
         )
@@ -193,6 +195,7 @@ async def submit_debounced(
     max_call_limits: Optional[dict[str, int]] = None,
     principal: Optional[dict[str, Any]] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
 ):
     """Submit one item to the debounced batch for ``key`` (signal-with-start).
 
@@ -222,6 +225,7 @@ async def submit_debounced(
             max_call_limits=max_call_limits,
             principal=principal,
             bundle=bundle,
+            runtime_declarations_ref=runtime_declarations_ref,
         ),
         id=f"debounce:{key}",
         task_queue=task_queue,

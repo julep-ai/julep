@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any
 
 import pytest
@@ -363,34 +364,92 @@ def test_application_evals_receive_the_supplied_llm_caller(monkeypatch, tmp_path
 
 def test_publish_release_is_content_addressed_and_round_trips(tmp_path) -> None:
     store = LocalDirCAS(tmp_path / "cas")
-    compiled = Application("memory", [_spec("summary")]).compile()
+    reasoner_name = "release-roundtrip-reasoner"
+    existing = DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+    compiled = Application(
+        "memory",
+        [
+            PipelineSpec(
+                "summary",
+                think(reasoner_name),
+                reasoners=(Reasoner(reasoner_name, "model-a", system="summarize"),),
+                lane="summary",
+            )
+        ],
+    ).compile()
     image = "registry.example/memory@sha256:" + "a" * 64
 
-    release = publish_application(
-        compiled,
-        store,
-        worker_image=image,
-        signing_key="0" * 64,
-    )
+    try:
+        release = publish_application(
+            compiled,
+            store,
+            worker_image=image,
+            signing_key="0" * 64,
+        )
 
-    digest = release.release_hash.removeprefix("sha256:")
-    assert store.has(digest)
-    restored = release_from_bytes(store.get(digest))
-    assert restored.release_hash == release.release_hash
-    assert restored.worker_image == image
+        digest = release.release_hash.removeprefix("sha256:")
+        assert store.has(digest)
+        assert release.schema_version == 2
+        declarations_ref = release.pipelines[0].runtime_declarations_ref
+        assert declarations_ref is not None
+        assert store.has(str(declarations_ref["hash"]).removeprefix("sha256:"))
+        assert len(store.get(str(declarations_ref["hash"]).removeprefix("sha256:"))) == (
+            declarations_ref["size"]
+        )
+        pipeline_json = release.manifest["pipelines"][0]
+        assert pipeline_json["runtimeDeclarationsRef"] == declarations_ref
+        assert "runtimeDeclarationsRef" not in pipeline_json["manifestJson"]
+
+        restored = release_from_bytes(store.get(digest))
+        assert restored.release_hash == release.release_hash
+        assert restored.worker_image == image
+        assert restored.schema_version == 2
+        assert restored.pipelines[0].runtime_declarations_ref == declarations_ref
+
+        captured: dict[str, Any] = {}
+
+        class Client:
+            async def start_workflow(self, workflow, flow_input, **kwargs):
+                captured["flow_input"] = flow_input
+                captured["kwargs"] = kwargs
+                return "handle"
+
+        result = asyncio.run(
+            restored.pipelines[0].start(
+                Client(),
+                session_id="release-roundtrip",
+                input={"document": "hello"},
+                options=WorkflowStartOptions(require_payload_encryption=False),
+            )
+        )
+        assert result == "handle"
+        assert captured["flow_input"].runtime_declarations_ref == declarations_ref
+        assert captured["kwargs"]["task_queue"] == restored.pipelines[0].task_queue
+    finally:
+        DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+        if existing is not None:
+            DEFAULT_REGISTRY.reasoners[reasoner_name] = existing
 
 
-def test_release_parser_rejects_unknown_schema_version(tmp_path) -> None:
+@pytest.mark.parametrize("schema_version", [1, 3, None])
+def test_release_parser_requires_schema_version_two(tmp_path, schema_version) -> None:
     release = publish_application(
         Application("memory", [_spec("summary")]).compile(),
         LocalDirCAS(tmp_path / "cas"),
         worker_image="registry.example/memory@sha256:" + "a" * 64,
         signing_key="0" * 64,
     )
-    payload = release.manifest_bytes.replace(b'"schemaVersion":1', b'"schemaVersion":2')
+    payload = json.loads(release.manifest_bytes)
+    if schema_version is None:
+        payload.pop("schemaVersion")
+    else:
+        payload["schemaVersion"] = schema_version
 
-    with pytest.raises(ApplicationReleaseError, match="unsupported.*version 2"):
-        release_from_bytes(payload)
+    with pytest.raises(
+        ApplicationReleaseError,
+        match=r"version 2 is required; re-publish with this julep version",
+    ):
+        release_from_bytes(json.dumps(payload).encode("utf-8"))
 
 
 def test_published_release_is_deeply_immutable(tmp_path) -> None:

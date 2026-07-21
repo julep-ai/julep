@@ -34,6 +34,7 @@ _K8S_DNS_SUBDOMAIN = re.compile(
 _K8S_DNS_SUBDOMAIN_MAX_LENGTH = 253
 _ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _WORKER_MAX_CONCURRENT_ACTIVITIES = 1
+_RELEASE_SCHEMA_VERSION = 2
 _PAYLOAD_KEYRING_KEY = "keyring"
 _PAYLOAD_ACTIVE_KEY_ID_KEY = "active-key-id"
 _RESERVED_WORKER_ENVIRONMENT = frozenset(
@@ -58,6 +59,14 @@ _RESERVED_WORKER_ENVIRONMENT = frozenset(
 
 class ApplicationReleaseError(RuntimeError):
     pass
+
+
+def _release_schema_error(version: Any) -> ApplicationReleaseError:
+    return ApplicationReleaseError(
+        f"unsupported application release schema version {version!r}; "
+        f"version {_RELEASE_SCHEMA_VERSION} is required; "
+        "re-publish with this julep version"
+    )
 
 
 class _FrozenJsonDict(dict[str, Any]):
@@ -93,6 +102,24 @@ def _thaw_json(value: Any) -> Any:
     return value
 
 
+def _normalize_runtime_declarations_ref(value: Any) -> Optional[dict[str, Any]]:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping) or set(value) != {"hash", "size"}:
+        raise ApplicationReleaseError(
+            "runtime declarations ref must contain exactly 'hash' and 'size'"
+        )
+    digest = value.get("hash")
+    size = value.get("size")
+    if not isinstance(digest, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None:
+        raise ApplicationReleaseError(
+            "runtime declarations ref hash must be sha256:<64 lowercase hex>"
+        )
+    if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+        raise ApplicationReleaseError("runtime declarations ref size must be a non-negative integer")
+    return {"hash": digest, "size": size}
+
+
 @dataclass(frozen=True)
 class PipelineRelease:
     name: str
@@ -103,6 +130,7 @@ class PipelineRelease:
     pinned_pures: dict[str, str]
     bundle_ref: Optional[list[dict[str, str]]]
     eval_packages: tuple[str, ...]
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
     max_call_limits: Mapping[str, int] = field(default_factory=dict)
     task_queue: Optional[str] = field(default=None, compare=False, repr=False)
 
@@ -116,6 +144,13 @@ class PipelineRelease:
             _freeze_json(self.bundle_ref) if self.bundle_ref is not None else None,
         )
         object.__setattr__(self, "eval_packages", tuple(self.eval_packages))
+        object.__setattr__(
+            self,
+            "runtime_declarations_ref",
+            _freeze_json(_normalize_runtime_declarations_ref(self.runtime_declarations_ref))
+            if self.runtime_declarations_ref is not None
+            else None,
+        )
         object.__setattr__(self, "max_call_limits", _freeze_json(self.max_call_limits))
 
     def to_json(self) -> dict[str, Any]:
@@ -128,6 +163,7 @@ class PipelineRelease:
             "pinnedPures": _thaw_json(self.pinned_pures),
             "bundleRef": _thaw_json(self.bundle_ref),
             "evalPackages": list(self.eval_packages),
+            "runtimeDeclarationsRef": _thaw_json(self.runtime_declarations_ref),
             "maxCallLimits": dict(sorted(self.max_call_limits.items())),
         }
 
@@ -172,6 +208,7 @@ class PipelineRelease:
                 max_call_limits=dict(self.max_call_limits),
                 principal=principal,
                 bundle=_thaw_json(self.bundle_ref),
+                runtime_declarations_ref=_thaw_json(self.runtime_declarations_ref),
                 queue_lanes=queue_lanes,
                 workflow_start_options=options.temporal_kwargs(),
             ),
@@ -185,13 +222,15 @@ class ApplicationRelease:
     worker_image: str
     pipelines: tuple[PipelineRelease, ...]
     deployment_config: Mapping[str, Any] = field(default_factory=dict)
-    schema_version: int = 1
+    schema_version: int = _RELEASE_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
-        if self.schema_version != 1:
-            raise ApplicationReleaseError(
-                f"unsupported application release schema version {self.schema_version}"
-            )
+        if (
+            not isinstance(self.schema_version, int)
+            or isinstance(self.schema_version, bool)
+            or self.schema_version != _RELEASE_SCHEMA_VERSION
+        ):
+            raise _release_schema_error(self.schema_version)
         _parse_image(self.worker_image)
         pipelines = tuple(replace(pipeline, task_queue=None) for pipeline in self.pipelines)
         object.__setattr__(self, "pipelines", pipelines)
@@ -272,6 +311,19 @@ def publish_application(
     for pipeline in compiled.pipelines:
         deployment = pipeline.deployment
         deployment.publish(store, signing_key=signing_key)
+        runtime_declarations_ref: Optional[dict[str, Any]] = None
+        if pipeline.runtime_declarations_blob is not None:
+            blob = pipeline.runtime_declarations_blob
+            digest = store.put(blob)
+            expected_digest = hashlib.sha256(blob).hexdigest()
+            if digest != expected_digest:
+                raise ApplicationReleaseError(
+                    f"declarations CAS returned {digest}, expected content digest {expected_digest}"
+                )
+            runtime_declarations_ref = {
+                "hash": f"sha256:{digest}",
+                "size": len(blob),
+            }
         pinned = {
             name: source_hash
             for name, source_hash in deployment.artifact_components["pureSourceHashes"].items()
@@ -287,6 +339,7 @@ def publish_application(
                 pinned_pures=pinned,
                 bundle_ref=deployment.bundle_ref,
                 eval_packages=tuple(pipeline.spec.eval_packages),
+                runtime_declarations_ref=runtime_declarations_ref,
                 max_call_limits=(
                     deployment.capabilities.max_call_limits()
                     if deployment.capabilities is not None
@@ -950,6 +1003,13 @@ def release_from_bytes(data: bytes) -> ApplicationRelease:
     raw = json.loads(data)
     if not isinstance(raw, dict):
         raise ApplicationReleaseError("release manifest must be a JSON object")
+    schema_version = raw.get("schemaVersion")
+    if (
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+        or schema_version != _RELEASE_SCHEMA_VERSION
+    ):
+        raise _release_schema_error(schema_version)
     pipeline_values = raw.get("pipelines")
     if not isinstance(pipeline_values, list):
         raise ApplicationReleaseError("release manifest pipelines must be a list")
@@ -958,6 +1018,7 @@ def release_from_bytes(data: bytes) -> ApplicationRelease:
         if not isinstance(value, dict):
             raise ApplicationReleaseError("release pipeline must be a JSON object")
         bundle_ref = value.get("bundleRef")
+        runtime_declarations_ref = value.get("runtimeDeclarationsRef")
         pipelines.append(
             PipelineRelease(
                 name=str(value["name"]),
@@ -972,6 +1033,11 @@ def release_from_bytes(data: bytes) -> ApplicationRelease:
                     else None
                 ),
                 eval_packages=tuple(str(item) for item in value.get("evalPackages", [])),
+                runtime_declarations_ref=(
+                    dict(runtime_declarations_ref)
+                    if isinstance(runtime_declarations_ref, dict)
+                    else runtime_declarations_ref
+                ),
                 max_call_limits={
                     str(k): int(v) for k, v in dict(value.get("maxCallLimits", {})).items()
                 },
@@ -985,7 +1051,7 @@ def release_from_bytes(data: bytes) -> ApplicationRelease:
         deployment_config=(
             dict(raw["deployment"]) if isinstance(raw.get("deployment"), dict) else {}
         ),
-        schema_version=int(raw.get("schemaVersion", 1)),
+        schema_version=_RELEASE_SCHEMA_VERSION,
     )
 
 

@@ -86,6 +86,31 @@ class RendererEntry:
 
 
 @dataclass(frozen=True)
+class RendererDependency:
+    """One ordered dependency captured into a renderer's source hash."""
+
+    kind: str
+    ref: str
+    rel: str
+    content: str
+    exists: bool
+
+
+@dataclass(frozen=True)
+class RendererDeclaration:
+    """Portable inputs for rebuilding one data-backed renderer."""
+
+    package: str
+    role: str
+    source: str
+    base_dir: Optional[str]
+    templates: Mapping[str, str]
+    files: Mapping[str, str]
+    hash_source: str
+    dependencies: tuple[RendererDependency, ...]
+
+
+@dataclass(frozen=True)
 class ToolSchemaExpectation:
     """The prompt-side tool contract a dotctx package was written against.
 
@@ -140,6 +165,7 @@ class Registry:
         self.reasoners: dict[str, Reasoner] = {}
         self.pures: dict[str, PureEntry] = {}
         self.renderers: dict[str, RendererEntry] = {}
+        self.renderer_declarations: dict[str, RendererDeclaration] = {}
         self.tool_expectations: dict[str, ToolSchemaExpectation] = {}
 
     def register_reasoner(self, reasoner: Reasoner) -> Reasoner:

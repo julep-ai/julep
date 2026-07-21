@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from julep import call, ident, mcp, native, register_pure
+from julep import call, ident, mcp, native, register_pure, think
 from julep.continuation import continue_with
 from julep.dotctx import Reasoner
 from julep.registry import DEFAULT_REGISTRY
@@ -37,6 +37,7 @@ from julep.projection import InMemoryProjection, ProjectionEmitter
 
 PRINCIPAL = {"storeId": 413, "tokenRef": "cred_abc"}
 BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
+DECLARATIONS_REF = {"hash": "sha256:" + "c" * 64, "size": 123}
 
 
 def _emitter() -> ProjectionEmitter:
@@ -268,12 +269,23 @@ def test_interpret_keyword_installs_principal():
 
 def test_resolve_subflow_returns_bundle_metadata():
     flow_json = ident().to_json()
-    configure(WorkerContext(subflows={"child": {"flowJson": flow_json, "bundle": BUNDLE_REF}}))
+    configure(
+        WorkerContext(
+            subflows={
+                "child": {
+                    "flowJson": flow_json,
+                    "bundle": BUNDLE_REF,
+                    "runtimeDeclarationsRef": DECLARATIONS_REF,
+                }
+            }
+        )
+    )
 
     out = asyncio.run(resolveSubflow("child"))
 
     assert out["flowJson"] == flow_json
     assert out["bundle"] == BUNDLE_REF
+    assert out["runtimeDeclarationsRef"] == DECLARATIONS_REF
 
 
 # --------------------------------------------------------------------------- #
@@ -383,6 +395,7 @@ def test_temporal_ref_child_starts_with_child_bundle(monkeypatch):
     assert isinstance(sub_input, FlowInput)
     assert sub_input.ref == "child"
     assert sub_input.bundle == BUNDLE_REF
+    assert sub_input.runtime_declarations_ref is None
     assert sub_input.principal == PRINCIPAL
 
 
@@ -448,6 +461,36 @@ def test_flow_workflow_bundle_without_pins_still_verifies_binding(monkeypatch):
     assert verify_payloads == [
         VerifyPuresInput(pinned={}, bundle=BUNDLE_REF, flow_json=inp.flow_json)
     ]
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_ref_flow_uses_resolved_pipeline_declarations(monkeypatch):
+    payloads = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        payloads.append((fn.__name__, payload))
+        if fn.__name__ == "resolveSubflow":
+            return {
+                "flowJson": think("child-reasoner").to_json(),
+                "manifestJson": {},
+                "maxCalls": {},
+                "runtimeDeclarationsRef": DECLARATIONS_REF,
+            }
+        if fn.__name__ == "resolveQoS":
+            return "SYNC"
+        if fn.__name__ == "invokeReasoner":
+            return "child-result"
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+
+    out = asyncio.run(FlowWorkflow().run(FlowInput(session_id="child", ref="child", input=5)))
+
+    reasoner_input = next(
+        payload for name, payload in payloads if name == "invokeReasoner"
+    )
+    assert out == "child-result"
+    assert reasoner_input.runtime_declarations_ref == DECLARATIONS_REF
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -518,6 +561,7 @@ def test_agent_sub_child_starts_with_child_bundle(monkeypatch):
     assert isinstance(sub_input, FlowInput)
     assert sub_input.ref == "child"
     assert sub_input.bundle == BUNDLE_REF
+    assert sub_input.runtime_declarations_ref is None
     assert sub_input.principal == PRINCIPAL
 
 

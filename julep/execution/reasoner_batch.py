@@ -43,6 +43,7 @@ class ReasonerCall:
     cid: str = ""
     reply_to: str = ""
     custom_id: str = ""
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -436,10 +437,18 @@ async def submit_reasoner_batch(
 async def submitReasonerBatch(inp: SubmitReasonerBatchInput) -> None:
     """Signal-with-start the batch collector from a Temporal activity."""
 
+    from . import effects
+    from .llm import _split_model
+
+    effects._hydrate_runtime_declarations(inp.call.runtime_declarations_ref)
+    provider = inp.provider
+    if not provider:
+        reasoner = effects._registry().get_reasoner(inp.call.reasoner)
+        provider, _ = _split_model(reasoner.model, "anthropic")
     ctx = get_batch_dispatch_context()
     await submit_reasoner_batch(
         ctx.client,
-        provider=inp.provider,
+        provider=provider,
         qos=inp.qos,
         principal=inp.call.principal,
         call=inp.call,
@@ -518,6 +527,8 @@ async def submitBatch(inp: SubmitBatchInput) -> str:
     calls = _coerce_calls(inp.calls)
     if not calls:
         raise ValueError("cannot submit an empty batch")
+    for call in calls:
+        effects._hydrate_runtime_declarations(call.runtime_declarations_ref)
 
     first_reasoner = effects._registry().get_reasoner(calls[0].reasoner)
     first_rendered = rendered_reasoner_for(first_reasoner, calls[0].value)
@@ -557,6 +568,8 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
 
     adapter = _provider_adapter_by_name(inp.provider)
     calls = _coerce_calls(inp.calls)
+    for call in calls:
+        effects._hydrate_runtime_declarations(call.runtime_declarations_ref)
     reasoners_by_custom_id = {
         call.custom_id: effects._registry().get_reasoner(call.reasoner) for call in calls
     }

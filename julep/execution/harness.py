@@ -98,14 +98,12 @@ with workflow.unsafe.imports_passed_through():
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
     from ..qos import QoSTier
-    from ..registry import DEFAULT_REGISTRY as _DEFAULT_REGISTRY
     from ..transcript import (
         TRANSCRIPT_SCOPES,
         split_summary_reply,
         transcript_for,
         unwrap_reply_meta,
     )
-    from .llm import _split_model
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .session_store import value_fingerprint
@@ -401,6 +399,7 @@ class FlowInput:
     # Signed CAS bundle pointers for custom pures referenced by this flow.
     # Worker-side STORE_URL and JULEP_BUNDLE_ALLOWED_SIGNERS remain authoritative.
     bundle: Optional[list[dict[str, str]]] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
     # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
     root_run_id: Optional[str] = None
     segment_seq: int = 0
@@ -421,6 +420,7 @@ class SessionInput:
     budget: Optional[dict[str, Any]] = None
     spent: float = 0.0
     bundle: Optional[list[dict[str, str]]] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
     in_channel: str = "in"
     out_channel: str = "out"
     policy: Optional[dict[str, Any]] = None
@@ -463,6 +463,7 @@ class AgentInput:
     policy: Optional[dict[str, Any]] = None
     resolve_spec: bool = True
     principal: Optional[dict[str, Any]] = None  # run principal (see FlowInput.principal)
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
     # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
     root_run_id: Optional[str] = None
     segment_seq: int = 0
@@ -517,6 +518,7 @@ class _TemporalEnv:
         root_run_id: Optional[str] = None,
         segment_seq: int = 0,
         queue_lanes: Optional[dict[str, str]] = None,
+        runtime_declarations_ref: Optional[dict[str, Any]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -525,6 +527,7 @@ class _TemporalEnv:
         self.root_run_id = root_run_id
         self.segment_seq = segment_seq
         self._queue_lanes = queue_lanes
+        self._runtime_declarations_ref = runtime_declarations_ref
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -632,6 +635,7 @@ class _TemporalEnv:
                 root_run_id=self.root_run_id,
                 segment_seq=self.segment_seq,
                 timeout_s=timeout_s,
+                runtime_declarations_ref=self._runtime_declarations_ref,
             ),
             start_to_close_timeout=timedelta(seconds=30),
             retry_policy=RetryPolicy(
@@ -653,13 +657,10 @@ class _TemporalEnv:
             custom_id = _provider_safe_custom_id(
                 f"{self._session}:{self.segment_seq}:{cid}"
             )
-            provider, _ = _split_model(
-                _DEFAULT_REGISTRY.get_reasoner(reasoner).model, "anthropic"
-            )
             await workflow.execute_activity(
                 "submitReasonerBatch",
                 _SubmitReasonerBatchInput(
-                    provider=provider,
+                    provider="",
                     qos=tier.value,
                     principal_key="",
                     call=_ReasonerCall(
@@ -670,6 +671,7 @@ class _TemporalEnv:
                         cid=cid,
                         reply_to=self._workflow_id or self._session,
                         custom_id=custom_id,
+                        runtime_declarations_ref=self._runtime_declarations_ref,
                     ),
                 ),
                 start_to_close_timeout=timedelta(seconds=30),
@@ -730,6 +732,7 @@ class _TemporalEnv:
                 op="think",
                 kind="reasoner",
                 qos=tier.value,
+                runtime_declarations_ref=self._runtime_declarations_ref,
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.reasoner_timeout_s),
             retry_policy=_reasoner_retry(self._policy),
@@ -744,6 +747,7 @@ class _TemporalEnv:
                 cid=cid,
                 manifest=self._manifest_json,
                 principal=self.principal,
+                runtime_declarations_ref=self._runtime_declarations_ref,
             ),
             start_to_close_timeout=timedelta(seconds=self._policy.plan_timeout_s),
             retry_policy=_reasoner_retry(self._policy),
@@ -902,6 +906,7 @@ class _TemporalEnv:
                 state=state_json,
                 policy=self._policy.to_json(),
                 principal=self.principal,
+                runtime_declarations_ref=self._runtime_declarations_ref,
                 root_run_id=self.root_run_id,
                 queue_lanes=(self._queue_lanes or None),
             ),
@@ -1132,6 +1137,7 @@ class FlowWorkflow:
         max_call_limits = inp.max_call_limits
         call_counts = inp.call_counts
         bundle = inp.bundle
+        runtime_declarations_ref = inp.runtime_declarations_ref
 
         # A ref-only input resolves to its frozen flow + manifest via activity
         # (kept outside the deterministic sandbox).
@@ -1152,6 +1158,10 @@ class FlowWorkflow:
                 max_call_limits = resolved.get("maxCalls")
             if bundle is None:
                 bundle = resolved.get("bundle")
+            if runtime_declarations_ref is None:
+                resolved_declarations_ref = resolved.get("runtimeDeclarationsRef")
+                if isinstance(resolved_declarations_ref, dict):
+                    runtime_declarations_ref = resolved_declarations_ref
 
         # Pure source lookup reads the worker registry, so it stays in an
         # activity. Each FlowWorkflow verifies the pins supplied with that flow;
@@ -1211,6 +1221,7 @@ class FlowWorkflow:
             root_run_id=(inp.root_run_id or inp.session_id),
             segment_seq=inp.segment_seq,
             queue_lanes=inp.queue_lanes,
+            runtime_declarations_ref=runtime_declarations_ref,
         )
         await self._start_trajectory(inp)
 
@@ -1241,6 +1252,7 @@ class FlowWorkflow:
                     root_run_id=(inp.root_run_id or inp.session_id),
                     segment_seq=inp.segment_seq + 1,
                     bundle=bundle,
+                    runtime_declarations_ref=runtime_declarations_ref,
                     queue_lanes=inp.queue_lanes,
                 )
             )
@@ -1678,6 +1690,7 @@ class SessionWorkflow:
                 budget=inp.budget,
                 spent=spent,
                 bundle=inp.bundle,
+                runtime_declarations_ref=inp.runtime_declarations_ref,
                 in_channel=inp.in_channel,
                 out_channel=inp.out_channel,
                 policy=policy.to_json(),
@@ -1832,6 +1845,7 @@ class SessionWorkflow:
             root_run_id=(inp.root_run_id or inp.session_id),
             segment_seq=inp.segment_seq,
             queue_lanes=inp.queue_lanes,
+            runtime_declarations_ref=inp.runtime_declarations_ref,
         )
 
         split_result = bool(flow.args and flow.args.get("split") is True)
@@ -2148,6 +2162,7 @@ class AgentWorkflow:
                     segment_seq=inp.segment_seq,
                     op="think",
                     kind="reasoner",
+                    runtime_declarations_ref=inp.runtime_declarations_ref,
                 ),
                 start_to_close_timeout=timedelta(seconds=policy.reasoner_timeout_s),
                 retry_policy=_reasoner_retry(policy),
@@ -2596,6 +2611,7 @@ class AgentWorkflow:
                             segment_seq=inp.segment_seq + 1,
                             queue_lanes=inp.queue_lanes,
                             subflow_queues=subflow_queues,
+                            runtime_declarations_ref=inp.runtime_declarations_ref,
                         )
                     )
                 else:
@@ -2618,6 +2634,7 @@ class AgentWorkflow:
                             segment_seq=inp.segment_seq + 1,
                             queue_lanes=inp.queue_lanes,
                             subflow_queues=subflow_queues,
+                            runtime_declarations_ref=inp.runtime_declarations_ref,
                         )
                     )
 
@@ -2631,12 +2648,13 @@ def build_flow_input(
     input: Any = None,
     flow_json: Optional[dict[str, Any]] = None,
     manifest_json: Optional[dict[str, Any]] = None,
-    policy: Optional[ExecutionPolicy] = None,
+    policy: Optional[ExecutionPolicy | Mapping[str, Any]] = None,
     pinned_pures: Optional[dict[str, str]] = None,
     max_call_limits: Optional[dict[str, int]] = None,
     principal: Optional[dict[str, Any]] = None,
     root_run_id: Optional[str] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
 ) -> FlowInput:
     """Single source of truth for deployed-run FlowInput construction.
@@ -2644,6 +2662,11 @@ def build_flow_input(
     Used by run_flow and by Julep CLI ``build_flow_start_args`` consumers
     (julep run / julep schedule) so scheduled and manual runs carry byte-identical args.
     """
+    policy_json = (
+        policy.to_json()
+        if isinstance(policy, ExecutionPolicy)
+        else dict(policy) if policy is not None else ExecutionPolicy().to_json()
+    )
     return FlowInput(
         session_id=session_id,
         input=input,
@@ -2651,10 +2674,11 @@ def build_flow_input(
         manifest_json=manifest_json,
         pinned_pures=pinned_pures,
         max_call_limits=max_call_limits,
-        policy=(policy or ExecutionPolicy()).to_json(),
+        policy=policy_json,
         principal=principal,
         root_run_id=root_run_id,
         bundle=bundle,
+        runtime_declarations_ref=runtime_declarations_ref,
         queue_lanes=queue_lanes,
     )
 
@@ -2673,6 +2697,7 @@ async def run_flow(
     principal: Optional[dict[str, Any]] = None,
     root_run_id: Optional[str] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
@@ -2697,6 +2722,7 @@ async def run_flow(
             principal=principal,
             root_run_id=root_run_id,
             bundle=bundle,
+            runtime_declarations_ref=runtime_declarations_ref,
             queue_lanes=queue_lanes,
         ),
         id=session_id,
@@ -2718,6 +2744,7 @@ async def start_flow(
     principal: Optional[dict[str, Any]] = None,
     root_run_id: Optional[str] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
     workflow_start_options: Optional[Mapping[str, Any]] = None,
 ):
@@ -2731,17 +2758,18 @@ async def start_flow(
         raise ValueError("workflow_start_options cannot override id or task_queue")
     return await client.start_workflow(
         FlowWorkflow.run,
-        FlowInput(
+        build_flow_input(
             session_id=session_id,
             input=input,
             flow_json=flow_json,
             manifest_json=manifest_json,
             pinned_pures=pinned_pures,
             max_call_limits=max_call_limits,
-            policy=(policy or ExecutionPolicy()).to_json(),
+            policy=policy,
             principal=principal,
             root_run_id=root_run_id,
             bundle=bundle,
+            runtime_declarations_ref=runtime_declarations_ref,
             queue_lanes=queue_lanes,
         ),
         id=session_id,
@@ -2768,6 +2796,7 @@ async def _start_session(
     pinned_pures: Optional[dict[str, str]] = None,
     budget: Optional[dict[str, Any]] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
 ):
     """Internal session starter for deployments validated by ``Agent._deploy_session``.
 
@@ -2786,6 +2815,7 @@ async def _start_session(
             pinned_pures=pinned_pures,
             budget=budget,
             bundle=bundle,
+            runtime_declarations_ref=runtime_declarations_ref,
             in_channel=in_channel,
             out_channel=out_channel,
             policy=(policy or ExecutionPolicy()).to_json(),
