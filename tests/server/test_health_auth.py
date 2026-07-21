@@ -20,11 +20,15 @@ def _seed_run(store, run_id: str, owner: str, started_at: float) -> None:
     ) == "created"
 
 
-def test_health_and_readiness_are_unauthenticated(server_factory) -> None:
+def test_health_is_unauthenticated_and_readiness_requires_auth(server_factory) -> None:
     harness = server_factory()
     with TestClient(harness.app) as client:
-        assert client.get("/v1/health").json() == {"status": "ok"}
-        ready = client.get("/v1/ready")
+        health = client.get("/v1/health")
+        assert health.status_code == 200
+        assert health.json() == {"status": "ok"}
+        assert client.get("/v1/ready").status_code == 401
+
+        ready = client.get("/v1/ready", headers=ALICE_HEADERS)
         assert ready.status_code == 200
         assert ready.json()["checks"] == {
             "store": "ok",
@@ -33,7 +37,7 @@ def test_health_and_readiness_are_unauthenticated(server_factory) -> None:
         }
 
         harness.gateway.is_ready = False
-        unavailable = client.get("/v1/ready")
+        unavailable = client.get("/v1/ready", headers=ALICE_HEADERS)
         assert unavailable.status_code == 503
         assert unavailable.json()["checks"]["temporal"].startswith("error:")
 

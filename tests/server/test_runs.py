@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import threading
 import time
@@ -8,6 +9,7 @@ from starlette.testclient import TestClient
 
 from julep.execution.projection_store import InMemoryExecutionStore
 from julep.projection import value_ref
+from julep.server.routes.runs import reconcile_runs_once
 
 from .conftest import (
     ADMIN_HEADERS,
@@ -154,6 +156,32 @@ def test_run_submission_validation_and_start_failure(server_factory) -> None:
         )
         assert result.status_code == 200
         assert result.json()["run"]["status"] == "start_failed"
+
+
+def test_ambiguous_start_is_left_submitting_for_reconciliation(server_factory) -> None:
+    harness = server_factory()
+    release = make_release()
+    harness.gateway.ambiguous_start = True
+
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        failed = _start(client, release.release_hash, key="ambiguous-start")
+
+    assert failed.status_code == 502
+    assert failed.json()["detail"] == (
+        "Temporal workflow start is unconfirmed; "
+        "run left submitting for reconciliation"
+    )
+    stored = harness.store.get_run_by_idempotency_key("ambiguous-start")
+    assert stored is not None
+    assert stored["status"] == "submitting"
+
+    harness.gateway.descriptions[stored["workflow_id"]] = "running"
+    asyncio.run(reconcile_runs_once(harness.store, harness.gateway))
+
+    reconciled = harness.store.get_run(stored["run_id"])
+    assert reconciled is not None
+    assert reconciled["status"] == "accepted"
 
 
 def test_projection_can_win_start_response_race_without_losing_temporal_id(

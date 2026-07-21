@@ -50,7 +50,7 @@ TRANSCRIPT_SCOPES = (ContextScope.WHOLE_SESSION, ContextScope.SUMMARY)
 
 # Envelope key invokeReasoner uses to tool a freshly produced running summary back
 # to the workflow (see split_summary_reply). Reserved; never a controller key.
-SUMMARY_KEY = "__ca_summary__"
+SUMMARY_KEY = "__julep_summary__"
 _JULEP_META_KEY = "__julep_meta__"
 
 

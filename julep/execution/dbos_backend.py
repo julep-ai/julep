@@ -81,7 +81,7 @@ from .policy import ExecutionPolicy
 # still letting an abandoned workflow drain. Override per node via ann.timeout.
 _GATE_DEFAULT_TIMEOUT_S = 7 * 24 * 3600
 
-_POLICY_ERROR_KEY = "__ca_policy_error__"
+_POLICY_ERROR_KEY = "__julep_policy_error__"
 _POLICY_ERROR_TYPES = {e.__name__: e for e in POLICY_ERRORS}
 
 

@@ -1,12 +1,13 @@
-"""Unauthenticated liveness and dependency-readiness endpoints."""
+"""Liveness and authenticated dependency-readiness endpoints."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
+from ..auth import ApiKey, require_key
 from . import cas_store, execution_store
 
 router = APIRouter(tags=["health"])
@@ -42,7 +43,10 @@ async def _temporal_ready(request: Request) -> None:
 
 
 @router.get("/ready")
-async def ready(request: Request) -> JSONResponse:
+async def ready(
+    request: Request,
+    key: Annotated[ApiKey, Depends(require_key)],
+) -> JSONResponse:
     checks: dict[str, str] = {}
 
     try:

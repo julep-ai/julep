@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import time
 
 from starlette.testclient import TestClient
 
 from julep.server.sse import terminal_projection_is_persisted
+from julep.server.routes.runs import reconcile_runs_once
 
 from .conftest import ALICE_HEADERS
 
@@ -116,3 +118,25 @@ def test_reconciled_terminal_status_is_not_projection_evidence(server_factory) -
     assert row["finished_at"] is not None
     assert terminal_projection_is_persisted(row, terminal_seen=False) is False
     assert harness.store.read_events(run_id, 0, 1) == []
+
+
+def test_reconciler_terminal_event_closes_sse(server_factory) -> None:
+    harness = server_factory()
+    run_id = "reconciled-sse-terminal"
+    workflow_id = f"run-{run_id}"
+    _create_run(harness.store, run_id)
+    harness.gateway.descriptions[workflow_id] = "terminated"
+
+    asyncio.run(reconcile_runs_once(harness.store, harness.gateway))
+
+    with TestClient(harness.app) as client:
+        response = client.get(
+            f"/v1/runs/{run_id}/events",
+            headers={**ALICE_HEADERS, "Accept": "text/event-stream"},
+        )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "event: projection" in response.text
+    assert '"event_id":"__reconciled_terminal__"' in response.text
+    assert '"reconciled":true' in response.text

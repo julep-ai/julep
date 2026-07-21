@@ -1317,7 +1317,7 @@ from .policy import ExecutionPolicy
 _GATE_DEFAULT_TIMEOUT_S = 7 * 24 * 3600
 
 _POLICY_ERRORS = (CapabilityDenied, PlanRejected, ValidationError, FreezeError, PureDriftError)
-_POLICY_ERROR_KEY = "__ca_policy_error__"
+_POLICY_ERROR_KEY = "__julep_policy_error__"
 _POLICY_ERROR_TYPES = {e.__name__: e for e in _POLICY_ERRORS}
 
 

@@ -14,6 +14,6 @@ def test_unwrap_julep_meta_leaves_plain_dict_untouched() -> None:
 
 
 def test_unwrap_julep_meta_preserves_summary_envelope() -> None:
-    summary = {"__ca_summary__": "s", "reply": "r"}
+    summary = {"__julep_summary__": "s", "reply": "r"}
 
     assert _unwrap_julep_meta(summary) == (summary, None)

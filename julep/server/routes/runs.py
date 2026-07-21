@@ -23,7 +23,7 @@ from ...projection import value_ref
 from ...trajectory import redact_secret_shaped
 from ..auth import ApiKey, merge_principal, owner_scoped, require_key
 from ..sse import EVENT_PAGE_LIMIT, event_sequence, run_event_response
-from ..temporal import TemporalGateway
+from ..temporal import TemporalGateway, TemporalStartAmbiguous
 from . import execution_store, require_owned_run, temporal_gateway
 from .releases import load_release, rehydrate_release
 
@@ -210,6 +210,14 @@ async def start_run(
             principal=principal,
             queue_lanes=body.queue_lanes,
         )
+    except TemporalStartAmbiguous as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Temporal workflow start is unconfirmed; "
+                "run left submitting for reconciliation"
+            ),
+        ) from exc
     except Exception as exc:
         store.set_run_status(run_id, "start_failed", finished_at=time.time())
         raise HTTPException(
@@ -455,6 +463,49 @@ def _normalized_temporal_status(raw: str) -> str:
     return normalized
 
 
+def _reconciled_terminal_event(
+    run_id: str,
+    workflow_id: str,
+    status: str,
+    error: Optional[str] = None,
+) -> dict[str, Any]:
+    event: dict[str, Any] = {
+        "runId": run_id,
+        "workflowId": workflow_id,
+        "segmentSeq": 0,
+        "eventId": "__reconciled_terminal__",
+        "type": "Did" if status == "completed" else "Failed",
+        "node": "__run__",
+        "cid": f"{run_id}:reconciled-terminal",
+        "ts": time.time(),
+        "causes": [],
+        "attrs": {
+            "terminal": True,
+            "status": status,
+            "reconciled": True,
+        },
+    }
+    if error is not None:
+        event["error"] = error
+    return event
+
+
+def _reconcile_terminal_run(
+    store: ExecutionStore,
+    *,
+    run_id: str,
+    workflow_id: str,
+    status: str,
+    error: Optional[str] = None,
+) -> None:
+    store.set_run_status(run_id, status, finished_at=time.time())
+    row = store.get_run(run_id)
+    if row is not None and row.get("status") == status:
+        store.insert_events(
+            [_reconciled_terminal_event(run_id, workflow_id, status, error)]
+        )
+
+
 async def reconcile_runs_once(store: ExecutionStore, gateway: TemporalGateway) -> None:
     """Repair submission and terminal-write crash windows idempotently."""
 
@@ -474,7 +525,12 @@ async def reconcile_runs_once(store: ExecutionStore, gateway: TemporalGateway) -
         elif temporal_status == "running":
             store.set_run_status(run_id, "accepted")
         elif temporal_status in TERMINAL_RUN_STATUSES:
-            store.set_run_status(run_id, temporal_status, finished_at=time.time())
+            _reconcile_terminal_run(
+                store,
+                run_id=run_id,
+                workflow_id=workflow_id,
+                status=temporal_status,
+            )
 
     for source_status in ("accepted", "running"):
         for run in store.list_runs_by_status(source_status):
@@ -489,7 +545,12 @@ async def reconcile_runs_once(store: ExecutionStore, gateway: TemporalGateway) -
             except Exception:
                 continue
             if temporal_status in TERMINAL_RUN_STATUSES:
-                store.set_run_status(run_id, temporal_status, finished_at=time.time())
+                _reconcile_terminal_run(
+                    store,
+                    run_id=run_id,
+                    workflow_id=workflow_id,
+                    status=temporal_status,
+                )
 
 
 __all__ = ["reconcile_runs_once", "router"]

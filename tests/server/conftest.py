@@ -12,6 +12,7 @@ from julep.execution.projection_store import InMemoryExecutionStore
 from julep.server.app import create_app
 from julep.server.auth import ApiKey
 from julep.server.settings import ServerSettings
+from julep.server.temporal import TemporalStartAmbiguous
 
 
 class FakeTemporalGateway:
@@ -24,6 +25,7 @@ class FakeTemporalGateway:
         self.descriptions: dict[str, str | Exception] = {}
         self.query_result: Any = []
         self.fail_start = False
+        self.ambiguous_start = False
         self.is_ready = True
 
     async def start_flow(
@@ -36,6 +38,8 @@ class FakeTemporalGateway:
         principal: dict[str, Any],
         queue_lanes: dict[str, str] | None,
     ) -> str:
+        if self.ambiguous_start:
+            raise TemporalStartAmbiguous("unconfirmed")
         if self.fail_start:
             raise RuntimeError("simulated Temporal start failure")
         self.starts.append(

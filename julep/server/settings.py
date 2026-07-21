@@ -7,6 +7,7 @@ making the ``server`` extra a dependency of the core package.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from dataclasses import dataclass, field
@@ -145,6 +146,57 @@ def _string_map(value: Any, *, name: str) -> dict[str, str]:
     return result
 
 
+def _json_object(value: str, *, name: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(value)
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError(f"{name} must be a JSON object") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{name} must be a JSON object")
+    return parsed
+
+
+def _config_or_json_object(
+    env: Mapping[str, str],
+    env_name: str,
+    config: Mapping[str, Any],
+    config_name: str,
+) -> Any:
+    if env_name in env:
+        return _json_object(env[env_name], name=env_name)
+    return config.get(config_name)
+
+
+def _secret_environment_map(value: Any, *, name: str) -> dict[str, dict[str, str]]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError(f"{name} must be a table")
+    result: dict[str, dict[str, str]] = {}
+    for raw_name, raw_source in value.items():
+        environment_name = str(raw_name).strip()
+        if not environment_name or not isinstance(raw_source, dict):
+            raise ValueError(
+                f"{name} values must contain non-empty secret_name and key strings"
+            )
+        secret_name = raw_source.get("secret_name")
+        key = raw_source.get("key")
+        if (
+            not isinstance(secret_name, str)
+            or not secret_name.strip()
+            or not isinstance(key, str)
+            or not key.strip()
+        ):
+            raise ValueError(
+                f"{name} values must contain non-empty secret_name and key strings"
+            )
+        result[environment_name] = {
+            "secret_name": secret_name.strip(),
+            "key": key.strip(),
+        }
+    return result
+
+
 def _payload_environment(
     env: Mapping[str, str], config: Mapping[str, Any]
 ) -> dict[str, str]:
@@ -203,6 +255,10 @@ class ServerSettings:
     helm_chart: Optional[str] = None
     kubernetes_namespace: str = "julep"
     worker_context_factory: Optional[str] = None
+    worker_application: Optional[str] = None
+    worker_runtime_declarations_hash: Optional[str] = None
+    worker_environment: dict[str, str] = field(default_factory=dict)
+    worker_secret_environment: dict[str, dict[str, str]] = field(default_factory=dict)
     payload_encryption_secret: Optional[str] = None
     worker_service_account: Optional[str] = None
     worker_priority_class: Optional[str] = None
@@ -358,6 +414,42 @@ class ServerSettings:
                 ),
                 name="JULEP_SERVER_WORKER_CONTEXT_FACTORY",
             ),
+            worker_application=_optional_text(
+                _value(
+                    source,
+                    "JULEP_SERVER_WORKER_APPLICATION",
+                    config,
+                    "worker_application",
+                ),
+                name="JULEP_SERVER_WORKER_APPLICATION",
+            ),
+            worker_runtime_declarations_hash=_optional_text(
+                _value(
+                    source,
+                    "JULEP_SERVER_WORKER_RUNTIME_DECLARATIONS_HASH",
+                    config,
+                    "worker_runtime_declarations_hash",
+                ),
+                name="JULEP_SERVER_WORKER_RUNTIME_DECLARATIONS_HASH",
+            ),
+            worker_environment=_string_map(
+                _config_or_json_object(
+                    source,
+                    "JULEP_SERVER_WORKER_ENVIRONMENT",
+                    config,
+                    "worker_environment",
+                ),
+                name="worker_environment",
+            ),
+            worker_secret_environment=_secret_environment_map(
+                _config_or_json_object(
+                    source,
+                    "JULEP_SERVER_WORKER_SECRET_ENVIRONMENT",
+                    config,
+                    "worker_secret_environment",
+                ),
+                name="worker_secret_environment",
+            ),
             payload_encryption_secret=_optional_text(
                 _value(
                     source,
@@ -433,6 +525,10 @@ class ServerSettings:
             temporal_address=self.temporal_address,
             temporal_namespace=self.temporal_namespace,
             worker_context_factory=self.worker_context_factory,
+            worker_application=self.worker_application,
+            worker_runtime_declarations_hash=self.worker_runtime_declarations_hash,
+            worker_environment=self.worker_environment,
+            worker_secret_environment=self.worker_secret_environment,
             payload_encryption_secret=self.payload_encryption_secret,
             worker_service_account=self.worker_service_account,
             worker_priority_class=self.worker_priority_class,

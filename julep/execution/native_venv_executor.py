@@ -158,7 +158,7 @@ class NativeVenvExecutor:
             "requiresPython": requires_python,
         }
         digest = hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()[:24]
-        return self._cache_dir / f"composable_native_venv_{digest}"
+        return self._cache_dir / f"julep_native_venv_{digest}"
 
     def _run_uv(self, command: list[str], pure_name: str, action: str) -> None:
         try:

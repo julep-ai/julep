@@ -13,6 +13,10 @@ if TYPE_CHECKING:
     from .settings import ServerSettings
 
 
+class TemporalStartAmbiguous(Exception):
+    """The Temporal start request may have been accepted by the service."""
+
+
 class TemporalGateway(Protocol):
     """The Temporal operations needed by routes and the run reconciler."""
 
@@ -89,30 +93,37 @@ class TemporalClientGateway:
                     "configure TEMPORAL_PAYLOAD_KEYS and TEMPORAL_PAYLOAD_KEY_ID"
                 )
 
-        handle = await start_flow(
-            self._client,
-            pipeline.flow_json,
-            pipeline.manifest_json,
-            session_id=workflow_id,
-            input=input,
-            task_queue=pipeline.task_queue,
-            pinned_pures=pipeline.pinned_pures,
-            max_call_limits=dict(pipeline.max_call_limits),
-            principal=principal,
-            bundle=pipeline.bundle_ref,
-            runtime_declarations_ref=pipeline.runtime_declarations_ref,
-            queue_lanes=queue_lanes,
-            workflow_start_options=options.temporal_kwargs(),
-            run_id=run_id,
-            emit_projection=True,
-            projection_batch_size=self._settings.projection_batch_size,
-            projection_batch_interval_s=self._settings.projection_batch_interval_s,
-        )
-        temporal_run_id = getattr(handle, "result_run_id", None) or getattr(
-            handle, "run_id", None
-        )
-        if not isinstance(temporal_run_id, str) or not temporal_run_id:
-            raise RuntimeError("Temporal did not return a run ID for the started workflow")
+        try:
+            handle = await start_flow(
+                self._client,
+                pipeline.flow_json,
+                pipeline.manifest_json,
+                session_id=workflow_id,
+                input=input,
+                task_queue=pipeline.task_queue,
+                pinned_pures=pipeline.pinned_pures,
+                max_call_limits=dict(pipeline.max_call_limits),
+                principal=principal,
+                bundle=pipeline.bundle_ref,
+                runtime_declarations_ref=pipeline.runtime_declarations_ref,
+                queue_lanes=queue_lanes,
+                workflow_start_options=options.temporal_kwargs(),
+                run_id=run_id,
+                emit_projection=True,
+                projection_batch_size=self._settings.projection_batch_size,
+                projection_batch_interval_s=self._settings.projection_batch_interval_s,
+            )
+            temporal_run_id = getattr(handle, "result_run_id", None) or getattr(
+                handle, "run_id", None
+            )
+            if not isinstance(temporal_run_id, str) or not temporal_run_id:
+                raise RuntimeError(
+                    "Temporal did not return a run ID for the started workflow"
+                )
+        except Exception as exc:
+            raise TemporalStartAmbiguous(
+                f"Temporal workflow start outcome is unknown: {type(exc).__name__}"
+            ) from exc
         return temporal_run_id
 
     async def cancel(self, workflow_id: str) -> None:
@@ -192,5 +203,6 @@ async def create_temporal_gateway(settings: ServerSettings) -> TemporalClientGat
 __all__ = [
     "TemporalClientGateway",
     "TemporalGateway",
+    "TemporalStartAmbiguous",
     "create_temporal_gateway",
 ]

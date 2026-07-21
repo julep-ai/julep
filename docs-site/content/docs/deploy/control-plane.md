@@ -62,8 +62,8 @@ The server table recognizes `api_keys`, `execution_store_dsn`, `cas_url`,
 
 ## Authentication and ownership
 
-Every route except `GET /v1/health` and `GET /v1/ready` requires
-`Authorization: Bearer <token>`. The keyring compares every candidate with
+Every route except `GET /v1/health` requires `Authorization: Bearer <token>`;
+`GET /v1/ready` also requires a bearer key. The keyring compares every candidate with
 `hmac.compare_digest` and yields an `ApiKey(name, principal_base, admin)`.
 
 Admin keys are required for:
@@ -94,9 +94,9 @@ Unauthenticated liveness returns `200`:
 {"status":"ok"}
 ```
 
-`GET /v1/ready` checks Postgres, CAS, and Temporal. It returns `200` with
-`status: "ready"`, or `503` with `status: "unavailable"`; `checks` maps each
-dependency to `ok` or an error class.
+Authenticated `GET /v1/ready` checks Postgres, CAS, and Temporal. It returns
+`200` with `status: "ready"`, or `503` with `status: "unavailable"`; `checks`
+maps each dependency to `ok` or an error class.
 
 ### CAS
 

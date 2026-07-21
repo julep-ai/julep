@@ -35,10 +35,15 @@ def _fail(_value: Any) -> Any:
     raise JulepError("intentional projection failure")
 
 
+def _boom(_value: Any) -> Any:
+    raise RuntimeError("intentional non-julep failure")
+
+
 register_pure("projection_egress.increment", _increment)
 register_pure("projection_egress.double", _double)
 register_pure("projection_egress.continue_once", _continue_once)
 register_pure("projection_egress.fail", _fail)
+register_pure("projection_egress.boom", _boom)
 
 
 if HAVE_TEMPORAL:
@@ -228,6 +233,40 @@ if HAVE_TEMPORAL:
         assert len(store.finalize_calls) == 1
 
 
+    async def _non_julep_failure_flow(env: WorkflowEnvironment) -> None:
+        store = RecordingStore()
+        flow = freeze(arr("projection_egress.boom"), McpSnapshot())
+        session_id = f"projection-wf-non-julep-fail-{uuid.uuid4().hex}"
+        run_id = f"projection-run-non-julep-fail-{uuid.uuid4().hex}"
+        task_queue = f"projection-egress-non-julep-fail-{uuid.uuid4().hex}"
+        set_projection_store(store)
+
+        async with build_worker(
+            env.client,
+            WorkerContext(),
+            task_queue=task_queue,
+        ):
+            with pytest.raises(WorkflowFailureError):
+                await run_flow(
+                    env.client,
+                    flow.flow.to_json(),
+                    manifest_to_json(flow.manifest),
+                    session_id=session_id,
+                    run_id=run_id,
+                    input={"x": 1},
+                    task_queue=task_queue,
+                    emit_projection=True,
+                    projection_batch_size=2,
+                    projection_batch_interval_s=0.05,
+                )
+
+        run = store.get_run(run_id)
+        assert run is not None and run["status"] == "failed"
+        assert len(store.finalize_calls) == 1
+        rows = store.read_events(run_id, after_seq=0, limit=100)
+        assert any(row["attrs"].get("terminal") is True for row in rows)
+
+
     async def _duplicate_delivery_flow(env: WorkflowEnvironment) -> None:
         store = DoubleInsertStore()
         flow = seq(
@@ -297,6 +336,7 @@ if HAVE_TEMPORAL:
             await _completed_flow(env)
             await _continue_as_new_flow(env)
             await _failed_flow(env)
+            await _non_julep_failure_flow(env)
             await _duplicate_delivery_flow(env)
             await _transient_outage_flow(env)
             await _egress_disabled_flow(env)

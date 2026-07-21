@@ -58,7 +58,7 @@ from temporalio.exceptions import ActivityError, ApplicationError
 _LOG = logging.getLogger(__name__)
 
 
-if not getattr(WorkflowUpdateFailedError, "_ca_repr_includes_cause", False):
+if not getattr(WorkflowUpdateFailedError, "_julep_repr_includes_cause", False):
     def _workflow_update_failed_repr(self: WorkflowUpdateFailedError) -> str:
         cause = getattr(self, "__cause__", None)
         if cause is None:
@@ -66,7 +66,7 @@ if not getattr(WorkflowUpdateFailedError, "_ca_repr_includes_cause", False):
         return f"{type(self).__name__}({self.args[0]!r}, cause={cause!r})"
 
     WorkflowUpdateFailedError.__repr__ = _workflow_update_failed_repr  # type: ignore[method-assign]
-    WorkflowUpdateFailedError._ca_repr_includes_cause = True  # type: ignore[attr-defined]
+    WorkflowUpdateFailedError._julep_repr_includes_cause = True  # type: ignore[attr-defined]
 
 
 def _batch_error_reason(result: Any) -> Optional[str]:
@@ -1401,6 +1401,19 @@ class FlowWorkflow:
                 )
             raise ApplicationError(
                 str(exc),
+                type=type(exc).__name__,
+                non_retryable=True,
+            ) from exc
+        except Exception as exc:
+            if inp.emit_projection:
+                await self._drain_projection(inp)
+                await self._finalize_projection(
+                    inp,
+                    status="failed",
+                    error=repr(exc),
+                )
+            raise ApplicationError(
+                repr(exc),
                 type=type(exc).__name__,
                 non_retryable=True,
             ) from exc

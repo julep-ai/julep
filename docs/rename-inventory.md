@@ -71,6 +71,10 @@ wasm	prefix	composable_executor_	julep_executor_
 wasm	token	composable-wasm-epoch	julep-wasm-epoch
 sentinel	token	__CA_RESOLVE_BEGIN__	__JULEP_RESOLVE_BEGIN__
 sentinel	token	__CA_RESOLVE_END__	__JULEP_RESOLVE_END__
+transcript	token	__ca_summary__	__julep_summary__
+dbos	token	__ca_policy_error__	__julep_policy_error__
+native-venv	prefix	composable_native_venv_	julep_native_venv_
+harness	token	_ca_repr_includes_cause	_julep_repr_includes_cause
 ```
 <!-- rename-inventory:end -->
 

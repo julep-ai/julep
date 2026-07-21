@@ -4,6 +4,7 @@ import asyncio
 
 from julep.execution.projection_store import InMemoryExecutionStore
 from julep.server.routes.runs import reconcile_runs_once
+from julep.server.sse import terminal_projection_is_persisted
 
 from .conftest import FakeTemporalGateway
 
@@ -46,6 +47,23 @@ def test_reconciler_resolves_submitting_orphans_idempotently() -> None:
 
     asyncio.run(reconcile_runs_once(running_store, running_gateway))
     assert running_store.get_run("running")["status"] == "accepted"
+
+    terminal_store = InMemoryExecutionStore()
+    terminal_gateway = FakeTemporalGateway()
+    terminal_workflow = _submitting(terminal_store, "terminal")
+    terminal_gateway.descriptions[terminal_workflow] = "terminated"
+
+    asyncio.run(reconcile_runs_once(terminal_store, terminal_gateway))
+    terminal = terminal_store.get_run("terminal")
+    assert terminal is not None
+    assert terminal["status"] == "terminated"
+    terminal_rows = terminal_store.read_events("terminal", 0, 10)
+    assert any(
+        row["attrs"]["terminal"] is True
+        and row["attrs"]["reconciled"] is True
+        for row in terminal_rows
+    )
+    assert terminal_projection_is_persisted(terminal, terminal_seen=True) is True
     asyncio.run(reconcile_runs_once(running_store, running_gateway))
     assert running_store.get_run("running")["status"] == "accepted"
 
@@ -63,7 +81,19 @@ def test_reconciler_repairs_accepted_and_running_terminal_rows() -> None:
 
     asyncio.run(reconcile_runs_once(store, gateway))
 
-    assert store.get_run("accepted")["status"] == "terminated"
-    assert store.get_run("failed")["status"] == "failed"
-    assert store.get_run("accepted")["finished_at"] is not None
-    assert store.get_run("failed")["finished_at"] is not None
+    accepted = store.get_run("accepted")
+    failed = store.get_run("failed")
+    assert accepted is not None
+    assert failed is not None
+    assert accepted["status"] == "terminated"
+    assert failed["status"] == "failed"
+    assert accepted["finished_at"] is not None
+    assert failed["finished_at"] is not None
+    for run_id, row in (("accepted", accepted), ("failed", failed)):
+        rows = store.read_events(run_id, 0, 10)
+        assert any(
+            event["attrs"]["terminal"] is True
+            and event["attrs"]["reconciled"] is True
+            for event in rows
+        )
+        assert terminal_projection_is_persisted(row, terminal_seen=True) is True
