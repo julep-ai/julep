@@ -169,6 +169,13 @@ module = ["julep.execution.*"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
+module = [
+    "julep.execution.projection_store",
+    "julep.execution.projection_sql",
+]
+ignore_errors = false
+
+[[tool.mypy.overrides]]
 module = ["julep"]
 # The root package conditionally re-exports Temporal symbols from the lenient
 # execution layer. Keep those out of the pure-core error budget for now.

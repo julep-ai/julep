@@ -42,7 +42,12 @@ schedule_app = typer.Typer(
     no_args_is_help=True,
     help="Manage Temporal cron schedules from julep.toml.",
 )
+db_app = typer.Typer(
+    no_args_is_help=True,
+    help="Manage the projection execution-store schema and retention.",
+)
 app.add_typer(schedule_app, name="schedule")
+app.add_typer(db_app, name="db")
 app.command("chat")(chat_command)
 app.command("listen")(listen_command)
 app.command("trigger")(trigger_command)
@@ -102,6 +107,61 @@ def _resolve_schedule_env(cfg: JulepConfig, env: str) -> EnvConfig:
         )
         raise typer.Exit(2)
     return resolved
+
+
+def _resolve_db_dsn(dsn: str | None) -> str:
+    resolved = dsn or _os.environ.get("JULEP_EXECUTION_STORE_DSN")
+    if not resolved:
+        typer.echo(
+            "error: provide --dsn or set JULEP_EXECUTION_STORE_DSN",
+            err=True,
+        )
+        raise typer.Exit(2)
+    return resolved
+
+
+@db_app.command("migrate")
+def db_migrate(
+    dsn: str | None = typer.Option(
+        None,
+        "--dsn",
+        help="Postgres DSN (defaults to JULEP_EXECUTION_STORE_DSN).",
+    ),
+) -> None:
+    """Apply all projection execution-store schema migrations."""
+
+    resolved_dsn = _resolve_db_dsn(dsn)
+    from julep.execution.projection_sql import MIGRATIONS
+    from julep.execution.projection_store import PostgresExecutionStore
+
+    store = PostgresExecutionStore(resolved_dsn)
+    store.apply_schema()
+    versions = ", ".join(str(version) for version, _sql in MIGRATIONS)
+    typer.echo(f"applied projection schema versions: {versions}")
+
+
+@db_app.command("sweep")
+def db_sweep(
+    older_than: float = typer.Option(
+        ...,
+        "--older-than",
+        min=0.0,
+        help="Delete projection data for terminal runs older than this many seconds.",
+    ),
+    dsn: str | None = typer.Option(
+        None,
+        "--dsn",
+        help="Postgres DSN (defaults to JULEP_EXECUTION_STORE_DSN).",
+    ),
+) -> None:
+    """Sweep expired projection data; the server operator owns retention policy."""
+
+    resolved_dsn = _resolve_db_dsn(dsn)
+    from julep.execution.projection_store import PostgresExecutionStore
+
+    store = PostgresExecutionStore(resolved_dsn)
+    deleted = store.sweep(older_than)
+    typer.echo(f"deleted {deleted} projection rows")
 
 
 @schedule_app.command("apply")

@@ -94,7 +94,7 @@ with workflow.unsafe.imports_passed_through():
     from ..errors import JulepError, SessionTurnError
     from ..ir import Ann, CallStep, EMIT_TOOL, NativeTool, Node, RECV_TOOL
     from ..kinds import Effect, Op
-    from ..projection import InMemoryProjection, ProjectionEmitter
+    from ..projection import EventType, InMemoryProjection, ProjectionEmitter
     from ..purity import executor_of as _executor_of_from_registry
     from ..purity import get_pure as _get_pure_from_registry
     from ..qos import QoSTier
@@ -107,6 +107,7 @@ with workflow.unsafe.imports_passed_through():
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
     from .session_store import value_fingerprint
+    from .projection_store import finalize_projection_run, persist_projection_batch
     from .timeouts import activity_timeout
     from .interpreter import (
         BranchThunk,
@@ -404,6 +405,13 @@ class FlowInput:
     root_run_id: Optional[str] = None
     segment_seq: int = 0
     queue_lanes: Optional[dict[str, str]] = None
+    # Durable projection egress is opt-in so old workflow histories replay with
+    # precisely the same command sequence. ``run_id`` is the API-facing id;
+    # the Temporal workflow id remains the persisted event-stream identity.
+    run_id: Optional[str] = None
+    emit_projection: bool = False
+    projection_batch_size: int = 20
+    projection_batch_interval_s: float = 2.0
 
 
 @dataclass
@@ -982,6 +990,9 @@ class FlowWorkflow:
         self._resolved_reasoners: set[str] = set()
         self._open_gates: set[str] = set()
         self._store: Optional[InMemoryProjection] = None
+        self._egress_cursor = 0
+        self._egress_done = False
+        self._egress_task: Optional[asyncio.Future[None]] = None
 
     # ----- human gate plumbing --------------------------------------------- #
     @workflow.signal(name="submitHuman")
@@ -1047,6 +1058,146 @@ class FlowWorkflow:
             "costByShape": self._store.cost_by_shape(),
             "pending": self._store.pending(),
         }
+
+    def _projection_event_payload(self, event: Any) -> dict[str, Any]:
+        """Serialize one event and attach its raw value for activity-side capture."""
+        payload = event.to_json()
+        store = self._store
+        if (
+            store is not None
+            and event.type == EventType.DID
+            and event.value_ref is not None
+            and store.values.has(event.value_ref)
+        ):
+            payload["rawValue"] = store.values.get(event.value_ref)
+        return payload
+
+    async def _flush_projection_batch(self, inp: FlowInput) -> None:
+        store = self._store
+        if store is None:
+            return
+        events = store.events()
+        pending = len(events) - self._egress_cursor
+        if pending <= 0:
+            return
+        size = min(pending, max(1, inp.projection_batch_size))
+        batch = events[self._egress_cursor : self._egress_cursor + size]
+        await workflow.execute_activity(
+            persist_projection_batch,
+            {
+                "runId": inp.run_id or inp.session_id,
+                "workflowId": workflow.info().workflow_id,
+                "segmentSeq": inp.segment_seq,
+                "events": [self._projection_event_payload(event) for event in batch],
+            },
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(
+                initial_interval=timedelta(seconds=1),
+                backoff_coefficient=2.0,
+                maximum_interval=timedelta(seconds=10),
+            ),
+        )
+        # Advance only after the activity succeeds. Activity retries therefore
+        # replay the identical batch and rely on the store's conflict key.
+        self._egress_cursor += size
+
+    async def _egress_loop(self, inp: FlowInput) -> None:
+        store = self._store
+        if store is None:
+            return
+        batch_size = max(1, inp.projection_batch_size)
+        interval_s = max(0.0, inp.projection_batch_interval_s)
+        while True:
+            # An empty buffer owns no timer. This matters for long human gates:
+            # the workflow history stays quiet until an event actually arrives.
+            await workflow.wait_condition(
+                lambda: self._egress_done
+                or len(store.events()) > self._egress_cursor
+            )
+            if self._egress_done and len(store.events()) <= self._egress_cursor:
+                return
+
+            deadline = workflow.now() + timedelta(seconds=interval_s)
+            while not self._egress_done:
+                pending = len(store.events()) - self._egress_cursor
+                if pending >= batch_size:
+                    break
+                remaining = max((deadline - workflow.now()).total_seconds(), 0.0)
+                if remaining <= 0:
+                    break
+                try:
+                    await workflow.wait_condition(
+                        lambda: self._egress_done
+                        or len(store.events()) - self._egress_cursor >= batch_size,
+                        timeout=remaining,
+                    )
+                except asyncio.TimeoutError:
+                    pass
+            await self._flush_projection_batch(inp)
+
+    async def _drain_projection(self, inp: FlowInput) -> None:
+        """Stop and drain the single egress loop; safe to call more than once."""
+        if not inp.emit_projection:
+            return
+        self._egress_done = True
+        task = self._egress_task
+        if task is not None:
+            await task
+
+    def _terminal_projection_event(
+        self,
+        inp: FlowInput,
+        *,
+        status: str,
+        error: Optional[str],
+    ) -> dict[str, Any]:
+        events = self._store.events() if self._store is not None else []
+        causes = [events[-1].event_id] if events else []
+        ts = events[-1].ts + 1.0 if events else 0.0
+        event: dict[str, Any] = {
+            "eventId": "__terminal__",
+            "type": "Did" if status == "completed" else "Failed",
+            "node": "__run__",
+            "cid": f"{inp.run_id or inp.session_id}:terminal",
+            "ts": ts,
+            "causes": causes,
+            "attrs": {"terminal": True, "status": status},
+        }
+        if error is not None:
+            event["error"] = error
+        return event
+
+    async def _finalize_projection(
+        self,
+        inp: FlowInput,
+        *,
+        status: str,
+        result: Any = None,
+        error: Optional[str] = None,
+    ) -> None:
+        payload: dict[str, Any] = {
+            "runId": inp.run_id or inp.session_id,
+            "workflowId": workflow.info().workflow_id,
+            "segmentSeq": inp.segment_seq,
+            "status": status,
+            "terminalEvent": self._terminal_projection_event(
+                inp, status=status, error=error
+            ),
+            "error": error,
+            "finishedAt": workflow.now().timestamp(),
+        }
+        if status == "completed":
+            payload["rawValue"] = result
+        await workflow.execute_activity(
+            finalize_projection_run,
+            payload,
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=RetryPolicy(
+                initial_interval=timedelta(seconds=1),
+                backoff_coefficient=2.0,
+                maximum_interval=timedelta(seconds=10),
+            ),
+        )
 
     async def _start_trajectory(self, inp: FlowInput) -> None:
         from .. import trajectory as _traj
@@ -1206,6 +1357,8 @@ class FlowWorkflow:
 
         store, emitter = _make_emitter()
         self._store = store
+        if inp.emit_projection:
+            self._egress_task = asyncio.ensure_future(self._egress_loop(inp))
         env = _TemporalEnv(
             manifest=manifest,
             emitter=emitter,
@@ -1227,13 +1380,33 @@ class FlowWorkflow:
 
         try:
             result: Result = await interpret(flow, inp.input, env)
+        except asyncio.CancelledError:
+            if inp.emit_projection:
+                try:
+                    await self._drain_projection(inp)
+                    await self._finalize_projection(inp, status="canceled")
+                except (Exception, asyncio.CancelledError) as projection_exc:
+                    _LOG.warning(
+                        "projection cancellation finalization failed (best-effort): %s",
+                        projection_exc,
+                    )
+            raise
         except JulepError as exc:
+            if inp.emit_projection:
+                await self._drain_projection(inp)
+                await self._finalize_projection(
+                    inp,
+                    status="failed",
+                    error=str(exc),
+                )
             raise ApplicationError(
                 str(exc),
                 type=type(exc).__name__,
                 non_retryable=True,
             ) from exc
         if is_continuation(result.value):
+            if inp.emit_projection:
+                await self._drain_projection(inp)
             await self._flush_structural(inp, node_ops)
             # Chain: same frozen flow, new input, cumulative call counts so
             # maxCalls budgets span the whole chain, truncated history. The
@@ -1254,7 +1427,18 @@ class FlowWorkflow:
                     bundle=bundle,
                     runtime_declarations_ref=runtime_declarations_ref,
                     queue_lanes=inp.queue_lanes,
+                    run_id=inp.run_id,
+                    emit_projection=inp.emit_projection,
+                    projection_batch_size=inp.projection_batch_size,
+                    projection_batch_interval_s=inp.projection_batch_interval_s,
                 )
+            )
+        if inp.emit_projection:
+            await self._drain_projection(inp)
+            await self._finalize_projection(
+                inp,
+                status="completed",
+                result=result.value,
             )
         await self._flush_structural(inp, node_ops)
         await self._finish_trajectory(
@@ -2656,6 +2840,10 @@ def build_flow_input(
     bundle: Optional[list[dict[str, str]]] = None,
     runtime_declarations_ref: Optional[dict[str, Any]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
+    run_id: Optional[str] = None,
+    emit_projection: bool = False,
+    projection_batch_size: int = 20,
+    projection_batch_interval_s: float = 2.0,
 ) -> FlowInput:
     """Single source of truth for deployed-run FlowInput construction.
 
@@ -2680,6 +2868,10 @@ def build_flow_input(
         bundle=bundle,
         runtime_declarations_ref=runtime_declarations_ref,
         queue_lanes=queue_lanes,
+        run_id=run_id,
+        emit_projection=emit_projection,
+        projection_batch_size=projection_batch_size,
+        projection_batch_interval_s=projection_batch_interval_s,
     )
 
 
@@ -2699,6 +2891,10 @@ async def run_flow(
     bundle: Optional[list[dict[str, str]]] = None,
     runtime_declarations_ref: Optional[dict[str, Any]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
+    run_id: Optional[str] = None,
+    emit_projection: bool = False,
+    projection_batch_size: int = 20,
+    projection_batch_interval_s: float = 2.0,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
@@ -2724,6 +2920,10 @@ async def run_flow(
             bundle=bundle,
             runtime_declarations_ref=runtime_declarations_ref,
             queue_lanes=queue_lanes,
+            run_id=run_id,
+            emit_projection=emit_projection,
+            projection_batch_size=projection_batch_size,
+            projection_batch_interval_s=projection_batch_interval_s,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -2747,6 +2947,10 @@ async def start_flow(
     runtime_declarations_ref: Optional[dict[str, Any]] = None,
     queue_lanes: Optional[dict[str, str]] = None,
     workflow_start_options: Optional[Mapping[str, Any]] = None,
+    run_id: Optional[str] = None,
+    emit_projection: bool = False,
+    projection_batch_size: int = 20,
+    projection_batch_interval_s: float = 2.0,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
@@ -2771,6 +2975,10 @@ async def start_flow(
             bundle=bundle,
             runtime_declarations_ref=runtime_declarations_ref,
             queue_lanes=queue_lanes,
+            run_id=run_id,
+            emit_projection=emit_projection,
+            projection_batch_size=projection_batch_size,
+            projection_batch_interval_s=projection_batch_interval_s,
         ),
         id=session_id,
         task_queue=task_queue,

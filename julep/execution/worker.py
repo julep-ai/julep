@@ -76,6 +76,7 @@ from .harness import (
     runSubCapture,
     startTrajectory,
 )
+from .projection_store import finalize_projection_run, persist_projection_batch
 from .serve import DEFAULT_TASK_QUEUE, payload_encryption_from_env
 from .session_store import SessionStore
 from ..cas import cas_from_url
@@ -99,6 +100,8 @@ ACTIVITIES = [
     finishTrajectory,
     flushStructural,
     runSubCapture,
+    persist_projection_batch,
+    finalize_projection_run,
     submitReasonerBatch,
     submitBatch,
     pollBatch,
