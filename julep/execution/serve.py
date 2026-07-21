@@ -33,15 +33,23 @@ import inspect
 import os
 import re
 import signal
+import sys
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional
 
 from .. import _env
 from ..errors import JulepError
+from ..trajectory import RedactionConfig, build_redactor
 from .effects import WorkerContext
+
+if sys.version_info >= (3, 11):
+    import tomllib as _tomllib
+else:
+    _tomllib = None
 
 if TYPE_CHECKING:
     from ..registry import Registry
@@ -52,6 +60,27 @@ DEFAULT_TASK_QUEUE = "julep"
 
 _TRUE = {"1", "true", "yes", "on"}
 _FALSE = {"0", "false", "no", "off"}
+
+
+def read_redaction_pyproject(root: Path) -> Optional[dict[str, Any]]:
+    """Read ``[tool.julep.redaction]`` without coupling to the authoring CLI."""
+    if _tomllib is None:
+        return None
+    try:
+        with (root / "pyproject.toml").open("rb") as handle:
+            data = _tomllib.load(handle)
+    except (OSError, ValueError):
+        return None
+    tool = data.get("tool")
+    if not isinstance(tool, dict):
+        return None
+    julep = tool.get("julep")
+    if not isinstance(julep, dict):
+        return None
+    redaction = julep.get("redaction")
+    if not isinstance(redaction, dict):
+        return None
+    return dict(redaction)
 
 
 def _env_bool(env: Mapping[str, str], name: str, default: bool) -> bool:
@@ -145,6 +174,7 @@ class WorkerServeSettings:
     payload_encryption_required: bool = False
     application: Optional[str] = None
     runtime_declarations_hash: Optional[str] = None
+    redaction: Optional[RedactionConfig] = None
 
     @classmethod
     def from_env(cls, env: Optional[Mapping[str, str]] = None) -> "WorkerServeSettings":
@@ -156,7 +186,7 @@ class WorkerServeSettings:
         ``TEMPORAL_TLS``, ``WORKER_GRACEFUL_SHUTDOWN_S``,
         ``WORKER_MAX_CONCURRENT_ACTIVITIES``,
         ``WORKER_MAX_CONCURRENT_WORKFLOW_TASKS``, ``WORKER_HEALTH_PORT``,
-        ``JULEP_WORKER_BUILD_ID``, ``JULEP_WORKER_VERSIONING``.
+        ``JULEP_WORKER_BUILD_ID``, ``JULEP_WORKER_VERSIONING``, ``JULEP_REDACTION``.
         """
         e: Mapping[str, str] = os.environ if env is None else env
         factory = e.get("WORKER_CONTEXT_FACTORY")
@@ -184,6 +214,10 @@ class WorkerServeSettings:
                 "sha256:<64 lowercase hex>"
             )
         api_key = e.get("TEMPORAL_API_KEY") or None
+        redaction_json = e.get("JULEP_REDACTION", "").strip()
+        redaction = (
+            RedactionConfig.from_json(redaction_json) if redaction_json else None
+        )
         (
             payload_keys,
             payload_key_id,
@@ -211,6 +245,7 @@ class WorkerServeSettings:
             payload_keys=payload_keys,
             payload_key_id=payload_key_id,
             payload_encryption_required=payload_encryption_required,
+            redaction=redaction,
         )
 
 
@@ -351,6 +386,14 @@ async def _resolve_context(spec: str) -> WorkerContext:
     return context
 
 
+def _install_default_redactor(
+    context: WorkerContext, settings: WorkerServeSettings
+) -> None:
+    # Only fill the default when the context factory did not set one.
+    if settings.redaction is not None and context.redactor is None:
+        context.redactor = build_redactor(settings.redaction)
+
+
 def load_application_runtime(
     spec: str,
     *,
@@ -411,6 +454,7 @@ async def serve(
 
     try:
         context = await _resolve_context(settings.context_factory)
+        _install_default_redactor(context, settings)
         if settings.application is not None:
             if settings.runtime_declarations_hash is None:
                 raise JulepError(

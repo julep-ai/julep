@@ -25,10 +25,12 @@ from julep.registry import DEFAULT_REGISTRY
 from julep.trajectory import (
     REDACTED_PLACEHOLDER,
     InMemoryTrajectoryStore,
+    RedactionConfig,
     TrajectoryRecorder,
     TrajectoryRun,
     TrajectoryStep,
     TrajectoryValue,
+    build_redactor,
     redact_secret_shaped,
     trajectory_best_effort_failures,
 )
@@ -186,6 +188,32 @@ def test_effect_capture_redacts_secret_input_by_default():
     assert step.input_ref is not None
     assert _stored(blobs, step.input_ref) == {
         "api_key": REDACTED_PLACEHOLDER,
+        "q": "hi",
+    }
+
+
+def test_configured_redactor_runs_through_effect_capture_seam():
+    sink = InMemoryTrajectoryStore()
+    blobs = InMemoryBlobStore()
+    redactor = build_redactor(
+        RedactionConfig(key_patterns=(r"^private_note$",))
+    )
+    _configure_capture(sink=sink, blobs=blobs, redactor=redactor)
+
+    asyncio.run(
+        callTool(
+            _tool_input(
+                {"api_key": "sk-live", "private_note": "sensitive", "q": "hi"},
+                cid="configured-redactor",
+            )
+        )
+    )
+
+    step = _step_by_cid(sink, "configured-redactor")
+    assert step.input_ref is not None
+    assert _stored(blobs, step.input_ref) == {
+        "api_key": REDACTED_PLACEHOLDER,
+        "private_note": REDACTED_PLACEHOLDER,
         "q": "hi",
     }
 

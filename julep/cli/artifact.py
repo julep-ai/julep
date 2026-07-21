@@ -204,10 +204,18 @@ def _cmd_graph(args: argparse.Namespace, out: TextIO) -> int:
 
 
 def _cmd_worker(args: argparse.Namespace, out: TextIO) -> int:
-    from julep.execution.serve import WorkerServeSettings, serve
+    from julep.execution.serve import (
+        WorkerServeSettings,
+        read_redaction_pyproject,
+        serve,
+    )
 
     # Flags overlay the environment, then one parser produces the settings.
     env = _env.snapshot()
+    if "JULEP_REDACTION" not in env:
+        table = read_redaction_pyproject(Path("."))
+        if table:
+            env["JULEP_REDACTION"] = json.dumps(table)
     if args.context_factory:
         env["WORKER_CONTEXT_FACTORY"] = args.context_factory
     if args.address:
