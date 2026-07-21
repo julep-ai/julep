@@ -8,13 +8,17 @@ the module remains importable in installations without psycopg.
 
 from __future__ import annotations
 
+import base64
+import binascii
+import copy
 import hashlib
+import json
 import logging
 import os
 import threading
 import time
 from collections.abc import Mapping, Sequence
-from typing import Any, Callable, Optional, Protocol, TypeVar
+from typing import Any, Callable, Literal, Optional, Protocol, TypeVar
 
 try:
     from temporalio import activity as _temporal_activity
@@ -34,7 +38,18 @@ logger = logging.getLogger("julep.execution.projection_store")
 
 MAX_INLINE_VALUE_BYTES = 64 * 1024
 MAX_READ_EVENTS_LIMIT = 1_000
+MAX_LIST_LIMIT = 100
 TERMINAL_RUN_STATUSES = frozenset({"completed", "failed", "canceled", "terminated"})
+_RETENTION_RUN_STATUSES = TERMINAL_RUN_STATUSES | {"start_failed"}
+_RUN_STATUS_PREDECESSORS: dict[str, frozenset[str]] = {
+    "accepted": frozenset({"submitting", "accepted"}),
+    "start_failed": frozenset({"submitting", "start_failed"}),
+    "running": frozenset({"accepted", "running"}),
+    **{
+        terminal: frozenset({"submitting", "accepted", "running", terminal})
+        for terminal in TERMINAL_RUN_STATUSES
+    },
+}
 
 _MISSING = object()
 _ActivityCallable = TypeVar("_ActivityCallable", bound=Callable[..., Any])
@@ -83,6 +98,47 @@ class ExecutionStore(Protocol):
 
     def get_run(self, run_id: str) -> Optional[dict[str, Any]]: ...
 
+    def create_run(
+        self,
+        *,
+        run_id: str,
+        idempotency_key: Optional[str],
+        workflow_id: str,
+        session_id: str,
+        release_hash: str,
+        pipeline: str,
+        application: str,
+        principal: Mapping[str, Any],
+        input_ref: Optional[str],
+        status: str = "submitting",
+        started_at: float,
+    ) -> Literal["created"] | dict[str, Any]: ...
+
+    def set_run_status(
+        self,
+        run_id: str,
+        status: str,
+        *,
+        temporal_run_id: Optional[str] = None,
+        started_at: Optional[float] = None,
+        finished_at: Optional[float] = None,
+    ) -> None: ...
+
+    def list_runs(
+        self,
+        *,
+        principal_subset: Optional[Mapping[str, Any]],
+        cursor: Optional[str],
+        limit: int,
+    ) -> tuple[list[dict[str, Any]], Optional[str]]: ...
+
+    def list_runs_by_status(self, status: str) -> list[dict[str, Any]]: ...
+
+    def get_run_by_idempotency_key(
+        self,
+        key: str,
+    ) -> Optional[dict[str, Any]]: ...
+
     def read_events(
         self,
         run_id: str,
@@ -91,6 +147,34 @@ class ExecutionStore(Protocol):
     ) -> list[dict[str, Any]]: ...
 
     def get_value(self, value_ref: str) -> Optional[dict[str, Any]]: ...
+
+    def put_release(
+        self,
+        release_hash: str,
+        application: str,
+        manifest: Mapping[str, Any],
+        created_at: float,
+    ) -> None: ...
+
+    def get_release(self, release_hash: str) -> Optional[dict[str, Any]]: ...
+
+    def list_releases(
+        self,
+        cursor: Optional[str],
+        limit: int,
+    ) -> tuple[list[dict[str, Any]], Optional[str]]: ...
+
+    def activate_deployment(
+        self,
+        lane: str,
+        release_hash: str,
+        activated_at: float,
+        activated_by: str,
+    ) -> None: ...
+
+    def get_deployment(self, lane: str) -> Optional[dict[str, Any]]: ...
+
+    def list_deployments(self) -> list[dict[str, Any]]: ...
 
     def sweep(self, older_than_s: float) -> int: ...
 
@@ -173,6 +257,58 @@ def _bounded_limit(limit: int) -> int:
     return max(0, min(int(limit), MAX_READ_EVENTS_LIMIT))
 
 
+def _bounded_list_limit(limit: int) -> int:
+    return max(0, min(int(limit), MAX_LIST_LIMIT))
+
+
+def _encode_cursor(timestamp: Optional[float], identifier: str) -> str:
+    payload = canonical_json([timestamp, identifier]).encode("utf-8")
+    return base64.urlsafe_b64encode(payload).decode("ascii")
+
+
+def _decode_cursor(cursor: str) -> tuple[Optional[float], str]:
+    try:
+        raw: Any = json.loads(base64.urlsafe_b64decode(cursor.encode("ascii")))
+    except (binascii.Error, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        raise ValueError("invalid execution-store cursor") from exc
+    if not isinstance(raw, list) or len(raw) != 2:
+        raise ValueError("invalid execution-store cursor")
+    timestamp = raw[0]
+    identifier = raw[1]
+    if timestamp is not None and (
+        not isinstance(timestamp, (int, float)) or isinstance(timestamp, bool)
+    ):
+        raise ValueError("invalid execution-store cursor")
+    if not isinstance(identifier, str):
+        raise ValueError("invalid execution-store cursor")
+    return None if timestamp is None else float(timestamp), identifier
+
+
+def _row_is_after_cursor(
+    timestamp: Optional[float],
+    identifier: str,
+    cursor_timestamp: Optional[float],
+    cursor_identifier: str,
+) -> bool:
+    """Return whether a row follows a cursor in descending timestamp/id order."""
+    if cursor_timestamp is None:
+        return timestamp is None and identifier < cursor_identifier
+    if timestamp is None:
+        return True
+    return timestamp < cursor_timestamp or (
+        timestamp == cursor_timestamp and identifier < cursor_identifier
+    )
+
+
+def _principal_contains(
+    principal: Any,
+    subset: Mapping[str, Any],
+) -> bool:
+    return isinstance(principal, Mapping) and all(
+        key in principal and principal[key] == value for key, value in subset.items()
+    )
+
+
 class InMemoryExecutionStore:
     """Thread-safe, insertion-ordered execution store for tests and local use."""
 
@@ -180,6 +316,8 @@ class InMemoryExecutionStore:
         self._runs: dict[str, dict[str, Any]] = {}
         self._events: dict[tuple[str, int, str], dict[str, Any]] = {}
         self._values: dict[str, dict[str, Any]] = {}
+        self._releases: dict[str, dict[str, Any]] = {}
+        self._deployments: dict[str, dict[str, Any]] = {}
         self._next_event_seq = 1
         self._lock = threading.RLock()
 
@@ -191,12 +329,16 @@ class InMemoryExecutionStore:
         with self._lock:
             for row in rows:
                 key = _event_key(row)
-                if key in self._events:
-                    continue
-                stored = dict(row)
-                stored["seq"] = self._next_event_seq
-                self._next_event_seq += 1
-                self._events[key] = stored
+                if key not in self._events:
+                    stored = copy.deepcopy(row)
+                    stored["seq"] = self._next_event_seq
+                    self._next_event_seq += 1
+                    self._events[key] = stored
+                run = self._runs.get(str(row["run_id"]))
+                if run is not None and run.get("status") == "accepted":
+                    # A persisted workflow event is stronger evidence than a
+                    # Temporal describe poll: this execution is actively running.
+                    run["status"] = "running"
 
     def put_value(
         self,
@@ -282,7 +424,158 @@ class InMemoryExecutionStore:
     def get_run(self, run_id: str) -> Optional[dict[str, Any]]:
         with self._lock:
             run = self._runs.get(run_id)
-            return None if run is None else dict(run)
+            return None if run is None else copy.deepcopy(run)
+
+    def create_run(
+        self,
+        *,
+        run_id: str,
+        idempotency_key: Optional[str],
+        workflow_id: str,
+        session_id: str,
+        release_hash: str,
+        pipeline: str,
+        application: str,
+        principal: Mapping[str, Any],
+        input_ref: Optional[str],
+        status: str = "submitting",
+        started_at: float,
+    ) -> Literal["created"] | dict[str, Any]:
+        row = {
+            "run_id": run_id,
+            "idempotency_key": idempotency_key,
+            "workflow_id": workflow_id,
+            "temporal_run_id": None,
+            "session_id": session_id,
+            "release_hash": release_hash,
+            "pipeline": pipeline,
+            "application": application,
+            "status": status,
+            "principal": copy.deepcopy(dict(principal)),
+            "input_ref": input_ref,
+            "result_ref": None,
+            "error": None,
+            "started_at": float(started_at),
+            "finished_at": None,
+        }
+        with self._lock:
+            existing = self._runs.get(run_id)
+            if existing is not None:
+                return copy.deepcopy(existing)
+            if idempotency_key is not None:
+                for candidate in self._runs.values():
+                    if candidate.get("idempotency_key") == idempotency_key:
+                        return copy.deepcopy(candidate)
+            self._runs[run_id] = row
+        return "created"
+
+    def set_run_status(
+        self,
+        run_id: str,
+        status: str,
+        *,
+        temporal_run_id: Optional[str] = None,
+        started_at: Optional[float] = None,
+        finished_at: Optional[float] = None,
+    ) -> None:
+        predecessors = _RUN_STATUS_PREDECESSORS.get(status)
+        if predecessors is None:
+            raise ValueError(f"unsupported run status transition target {status!r}")
+        with self._lock:
+            run = self._runs.get(run_id)
+            if run is None:
+                return
+            if run.get("status") in predecessors:
+                run["status"] = status
+            if temporal_run_id is not None:
+                run["temporal_run_id"] = temporal_run_id
+            if started_at is not None:
+                run["started_at"] = float(started_at)
+            if finished_at is not None and run.get("finished_at") is None:
+                run["finished_at"] = float(finished_at)
+
+    def list_runs(
+        self,
+        *,
+        principal_subset: Optional[Mapping[str, Any]],
+        cursor: Optional[str],
+        limit: int,
+    ) -> tuple[list[dict[str, Any]], Optional[str]]:
+        bounded = _bounded_list_limit(limit)
+        if bounded == 0:
+            return [], None
+        decoded_cursor = None if cursor is None else _decode_cursor(cursor)
+        with self._lock:
+            candidates = [
+                run
+                for run in self._runs.values()
+                if principal_subset is None
+                or _principal_contains(run.get("principal"), principal_subset)
+            ]
+            candidates.sort(
+                key=lambda run: (
+                    run.get("started_at") is not None,
+                    0.0
+                    if run.get("started_at") is None
+                    else float(run["started_at"]),
+                    str(run["run_id"]),
+                ),
+                reverse=True,
+            )
+            if decoded_cursor is not None:
+                cursor_timestamp, cursor_run_id = decoded_cursor
+                candidates = [
+                    run
+                    for run in candidates
+                    if _row_is_after_cursor(
+                        None
+                        if run.get("started_at") is None
+                        else float(run["started_at"]),
+                        str(run["run_id"]),
+                        cursor_timestamp,
+                        cursor_run_id,
+                    )
+                ]
+            page = candidates[: bounded + 1]
+            has_more = len(page) > bounded
+            page = page[:bounded]
+            rows = [copy.deepcopy(run) for run in page]
+            next_cursor = None
+            if has_more:
+                last = page[-1]
+                last_started_at = last.get("started_at")
+                next_cursor = _encode_cursor(
+                    None if last_started_at is None else float(last_started_at),
+                    str(last["run_id"]),
+                )
+        return rows, next_cursor
+
+    def list_runs_by_status(self, status: str) -> list[dict[str, Any]]:
+        with self._lock:
+            candidates = [
+                run for run in self._runs.values() if run.get("status") == status
+            ]
+            candidates.sort(
+                key=lambda run: (
+                    run.get("started_at") is not None,
+                    0.0
+                    if run.get("started_at") is None
+                    else float(run["started_at"]),
+                    str(run["run_id"]),
+                ),
+                reverse=True,
+            )
+            return [copy.deepcopy(run) for run in candidates]
+
+    def get_run_by_idempotency_key(
+        self,
+        key: str,
+    ) -> Optional[dict[str, Any]]:
+        with self._lock:
+            for run in self._runs.values():
+                if run.get("idempotency_key") == key:
+                    return copy.deepcopy(run)
+        return None
 
     def read_events(
         self,
@@ -306,6 +599,99 @@ class InMemoryExecutionStore:
             value = self._values.get(value_ref)
             return None if value is None else dict(value)
 
+    def put_release(
+        self,
+        release_hash: str,
+        application: str,
+        manifest: Mapping[str, Any],
+        created_at: float,
+    ) -> None:
+        row = {
+            "release_hash": release_hash,
+            "application": application,
+            "manifest": copy.deepcopy(dict(manifest)),
+            "created_at": float(created_at),
+        }
+        with self._lock:
+            self._releases.setdefault(release_hash, row)
+
+    def get_release(self, release_hash: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            release = self._releases.get(release_hash)
+            return None if release is None else copy.deepcopy(release)
+
+    def list_releases(
+        self,
+        cursor: Optional[str],
+        limit: int,
+    ) -> tuple[list[dict[str, Any]], Optional[str]]:
+        bounded = _bounded_list_limit(limit)
+        if bounded == 0:
+            return [], None
+        decoded_cursor = None if cursor is None else _decode_cursor(cursor)
+        with self._lock:
+            candidates = sorted(
+                self._releases.values(),
+                key=lambda release: (
+                    float(release["created_at"]),
+                    str(release["release_hash"]),
+                ),
+                reverse=True,
+            )
+            if decoded_cursor is not None:
+                cursor_timestamp, cursor_release_hash = decoded_cursor
+                if cursor_timestamp is None:
+                    raise ValueError("invalid release cursor")
+                candidates = [
+                    release
+                    for release in candidates
+                    if _row_is_after_cursor(
+                        float(release["created_at"]),
+                        str(release["release_hash"]),
+                        cursor_timestamp,
+                        cursor_release_hash,
+                    )
+                ]
+            page = candidates[: bounded + 1]
+            has_more = len(page) > bounded
+            page = page[:bounded]
+            rows = [copy.deepcopy(release) for release in page]
+            next_cursor = None
+            if has_more:
+                last = page[-1]
+                next_cursor = _encode_cursor(
+                    float(last["created_at"]),
+                    str(last["release_hash"]),
+                )
+        return rows, next_cursor
+
+    def activate_deployment(
+        self,
+        lane: str,
+        release_hash: str,
+        activated_at: float,
+        activated_by: str,
+    ) -> None:
+        row = {
+            "lane": lane,
+            "release_hash": release_hash,
+            "activated_at": float(activated_at),
+            "activated_by": activated_by,
+        }
+        with self._lock:
+            self._deployments[lane] = row
+
+    def get_deployment(self, lane: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            deployment = self._deployments.get(lane)
+            return None if deployment is None else dict(deployment)
+
+    def list_deployments(self) -> list[dict[str, Any]]:
+        with self._lock:
+            return [
+                dict(self._deployments[lane]) for lane in sorted(self._deployments)
+            ]
+
     def sweep(self, older_than_s: float) -> int:
         if older_than_s < 0:
             raise ValueError("older_than_s must be non-negative")
@@ -314,7 +700,7 @@ class InMemoryExecutionStore:
             expired_run_ids = {
                 run_id
                 for run_id, run in self._runs.items()
-                if run.get("status") in TERMINAL_RUN_STATUSES
+                if run.get("status") in _RETENTION_RUN_STATUSES
                 and run.get("finished_at") is not None
                 and float(run["finished_at"]) < cutoff
             }
@@ -333,11 +719,17 @@ class InMemoryExecutionStore:
                 for run_id in expired_run_ids
                 if self._runs[run_id].get("result_ref") is not None
             )
+            candidate_refs.update(
+                str(self._runs[run_id]["input_ref"])
+                for run_id in expired_run_ids
+                if self._runs[run_id].get("input_ref") is not None
+            )
 
             for key in event_keys:
                 del self._events[key]
             for run_id in expired_run_ids:
                 self._runs[run_id]["result_ref"] = None
+                self._runs[run_id]["input_ref"] = None
 
             referenced_refs = {
                 str(event["value_ref"])
@@ -348,6 +740,11 @@ class InMemoryExecutionStore:
                 str(run["result_ref"])
                 for run in self._runs.values()
                 if run.get("result_ref") is not None
+            )
+            referenced_refs.update(
+                str(run["input_ref"])
+                for run in self._runs.values()
+                if run.get("input_ref") is not None
             )
             deleted_values = 0
             for value_ref in candidate_refs - referenced_refs:
@@ -387,6 +784,32 @@ class PostgresExecutionStore:
             result_ref = EXCLUDED.result_ref,
             error = EXCLUDED.error,
             finished_at = EXCLUDED.finished_at
+    """
+    _CREATE_RUN_SQL = """
+        INSERT INTO runs (
+            run_id, idempotency_key, workflow_id, temporal_run_id, session_id,
+            release_hash, pipeline, application, status, principal, input_ref,
+            result_ref, error, started_at, finished_at
+        ) VALUES (
+            %s, %s, %s, NULL, %s, %s, %s, %s, %s, %s, %s, NULL, NULL, %s, NULL
+        )
+        ON CONFLICT DO NOTHING
+        RETURNING run_id
+    """
+    _INSERT_RELEASE_SQL = """
+        INSERT INTO releases (
+            release_hash, application, manifest, created_at
+        ) VALUES (%s, %s, %s, %s)
+        ON CONFLICT (release_hash) DO NOTHING
+    """
+    _ACTIVATE_DEPLOYMENT_SQL = """
+        INSERT INTO deployments (
+            lane, release_hash, activated_at, activated_by
+        ) VALUES (%s, %s, %s, %s)
+        ON CONFLICT (lane) DO UPDATE SET
+            release_hash = EXCLUDED.release_hash,
+            activated_at = EXCLUDED.activated_at,
+            activated_by = EXCLUDED.activated_by
     """
 
     def __init__(self, dsn: str) -> None:
@@ -471,6 +894,16 @@ class PostgresExecutionStore:
             with conn.cursor() as cur:
                 for row in rows:
                     self._insert_event(cur, row)
+                cur.execute(
+                    """
+                    UPDATE runs SET status = 'running'
+                    WHERE run_id = ANY(%s) AND status = ANY(%s)
+                    """,
+                    (
+                        sorted({str(row["run_id"]) for row in rows}),
+                        ["accepted"],
+                    ),
+                )
 
     def put_value(
         self,
@@ -544,6 +977,187 @@ class PostgresExecutionStore:
                 row = cur.fetchone()
         return None if row is None else dict(row)
 
+    def create_run(
+        self,
+        *,
+        run_id: str,
+        idempotency_key: Optional[str],
+        workflow_id: str,
+        session_id: str,
+        release_hash: str,
+        pipeline: str,
+        application: str,
+        principal: Mapping[str, Any],
+        input_ref: Optional[str],
+        status: str = "submitting",
+        started_at: float,
+    ) -> Literal["created"] | dict[str, Any]:
+        from psycopg.types.json import Jsonb
+
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    cur.execute(
+                        self._CREATE_RUN_SQL,
+                        (
+                            run_id,
+                            idempotency_key,
+                            workflow_id,
+                            session_id,
+                            release_hash,
+                            pipeline,
+                            application,
+                            status,
+                            Jsonb(dict(principal)),
+                            input_ref,
+                            float(started_at),
+                        ),
+                    )
+                    if cur.fetchone() is not None:
+                        return "created"
+                    if idempotency_key is None:
+                        cur.execute(
+                            "SELECT * FROM runs WHERE run_id = %s",
+                            (run_id,),
+                        )
+                    else:
+                        cur.execute(
+                            """
+                            SELECT * FROM runs
+                            WHERE run_id = %s OR idempotency_key = %s
+                            ORDER BY CASE WHEN run_id = %s THEN 0 ELSE 1 END
+                            LIMIT 1
+                            """,
+                            (run_id, idempotency_key, run_id),
+                        )
+                    existing = cur.fetchone()
+        if existing is None:
+            raise RuntimeError("run conflict did not resolve to an existing row")
+        return dict(existing)
+
+    def set_run_status(
+        self,
+        run_id: str,
+        status: str,
+        *,
+        temporal_run_id: Optional[str] = None,
+        started_at: Optional[float] = None,
+        finished_at: Optional[float] = None,
+    ) -> None:
+        predecessors = _RUN_STATUS_PREDECESSORS.get(status)
+        if predecessors is None:
+            raise ValueError(f"unsupported run status transition target {status!r}")
+        assignments = ["status = CASE WHEN status = ANY(%s) THEN %s ELSE status END"]
+        params: list[Any] = [list(predecessors), status]
+        if temporal_run_id is not None:
+            assignments.append("temporal_run_id = %s")
+            params.append(temporal_run_id)
+        if started_at is not None:
+            assignments.append("started_at = %s")
+            params.append(float(started_at))
+        if finished_at is not None:
+            assignments.append("finished_at = COALESCE(finished_at, %s)")
+            params.append(float(finished_at))
+        params.append(run_id)
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"UPDATE runs SET {', '.join(assignments)} WHERE run_id = %s",
+                    tuple(params),
+                )
+
+    def list_runs(
+        self,
+        *,
+        principal_subset: Optional[Mapping[str, Any]],
+        cursor: Optional[str],
+        limit: int,
+    ) -> tuple[list[dict[str, Any]], Optional[str]]:
+        from psycopg.types.json import Jsonb
+
+        bounded = _bounded_list_limit(limit)
+        if bounded == 0:
+            return [], None
+        decoded_cursor = None if cursor is None else _decode_cursor(cursor)
+        conditions: list[str] = []
+        params: list[Any] = []
+        if principal_subset is not None:
+            conditions.append(
+                "principal IS NOT NULL "
+                "AND jsonb_typeof(principal) = 'object' "
+                "AND NOT EXISTS ("
+                "SELECT 1 FROM jsonb_each(%s::jsonb) AS expected(key, value) "
+                "WHERE principal -> expected.key IS DISTINCT FROM expected.value"
+                ")"
+            )
+            params.append(Jsonb(dict(principal_subset)))
+        if decoded_cursor is not None:
+            cursor_timestamp, cursor_run_id = decoded_cursor
+            if cursor_timestamp is None:
+                conditions.append("started_at IS NULL AND run_id < %s")
+                params.append(cursor_run_id)
+            else:
+                conditions.append(
+                    "(started_at < %s OR (started_at = %s AND run_id < %s) "
+                    "OR started_at IS NULL)"
+                )
+                params.extend((cursor_timestamp, cursor_timestamp, cursor_run_id))
+        where_clause = "" if not conditions else " WHERE " + " AND ".join(conditions)
+        params.append(bounded + 1)
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM runs"
+                    + where_clause
+                    + " ORDER BY started_at DESC NULLS LAST, run_id DESC LIMIT %s",
+                    tuple(params),
+                )
+                fetched = cur.fetchall()
+        has_more = len(fetched) > bounded
+        fetched = fetched[:bounded]
+        rows = [dict(row) for row in fetched]
+        next_cursor = None
+        if has_more:
+            last = fetched[-1]
+            last_started_at = last["started_at"]
+            next_cursor = _encode_cursor(
+                None if last_started_at is None else float(last_started_at),
+                str(last["run_id"]),
+            )
+        return rows, next_cursor
+
+    def list_runs_by_status(self, status: str) -> list[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT * FROM runs
+                    WHERE status = %s
+                    ORDER BY started_at DESC NULLS LAST, run_id DESC
+                    """,
+                    (status,),
+                )
+                rows = cur.fetchall()
+        return [dict(row) for row in rows]
+
+    def get_run_by_idempotency_key(
+        self,
+        key: str,
+    ) -> Optional[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM runs WHERE idempotency_key = %s",
+                    (key,),
+                )
+                row = cur.fetchone()
+        return None if row is None else dict(row)
+
     def read_events(
         self,
         run_id: str,
@@ -583,6 +1197,116 @@ class PostgresExecutionStore:
                 row = cur.fetchone()
         return None if row is None else dict(row)
 
+    def put_release(
+        self,
+        release_hash: str,
+        application: str,
+        manifest: Mapping[str, Any],
+        created_at: float,
+    ) -> None:
+        from psycopg.types.json import Jsonb
+
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    self._INSERT_RELEASE_SQL,
+                    (
+                        release_hash,
+                        application,
+                        Jsonb(dict(manifest)),
+                        float(created_at),
+                    ),
+                )
+
+    def get_release(self, release_hash: str) -> Optional[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM releases WHERE release_hash = %s",
+                    (release_hash,),
+                )
+                row = cur.fetchone()
+        return None if row is None else dict(row)
+
+    def list_releases(
+        self,
+        cursor: Optional[str],
+        limit: int,
+    ) -> tuple[list[dict[str, Any]], Optional[str]]:
+        bounded = _bounded_list_limit(limit)
+        if bounded == 0:
+            return [], None
+        decoded_cursor = None if cursor is None else _decode_cursor(cursor)
+        params: list[Any] = []
+        where_clause = ""
+        if decoded_cursor is not None:
+            cursor_timestamp, cursor_release_hash = decoded_cursor
+            if cursor_timestamp is None:
+                raise ValueError("invalid release cursor")
+            where_clause = (
+                " WHERE created_at < %s "
+                "OR (created_at = %s AND release_hash < %s)"
+            )
+            params.extend((cursor_timestamp, cursor_timestamp, cursor_release_hash))
+        params.append(bounded + 1)
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM releases"
+                    + where_clause
+                    + " ORDER BY created_at DESC, release_hash DESC LIMIT %s",
+                    tuple(params),
+                )
+                fetched = cur.fetchall()
+        has_more = len(fetched) > bounded
+        fetched = fetched[:bounded]
+        rows = [dict(row) for row in fetched]
+        next_cursor = None
+        if has_more:
+            last = fetched[-1]
+            next_cursor = _encode_cursor(
+                float(last["created_at"]),
+                str(last["release_hash"]),
+            )
+        return rows, next_cursor
+
+    def activate_deployment(
+        self,
+        lane: str,
+        release_hash: str,
+        activated_at: float,
+        activated_by: str,
+    ) -> None:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    self._ACTIVATE_DEPLOYMENT_SQL,
+                    (lane, release_hash, float(activated_at), activated_by),
+                )
+
+    def get_deployment(self, lane: str) -> Optional[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM deployments WHERE lane = %s",
+                    (lane,),
+                )
+                row = cur.fetchone()
+        return None if row is None else dict(row)
+
+    def list_deployments(self) -> list[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM deployments ORDER BY lane")
+                rows = cur.fetchall()
+        return [dict(row) for row in rows]
+
     def sweep(self, older_than_s: float) -> int:
         if older_than_s < 0:
             raise ValueError("older_than_s must be non-negative")
@@ -607,12 +1331,20 @@ class PostgresExecutionStore:
                             WHERE status = ANY(%s)
                               AND finished_at < %s
                               AND result_ref IS NOT NULL
+                            UNION
+                            SELECT input_ref AS value_ref
+                            FROM runs
+                            WHERE status = ANY(%s)
+                              AND finished_at < %s
+                              AND input_ref IS NOT NULL
                         ) AS expired_refs
                         """,
                         (
-                            list(TERMINAL_RUN_STATUSES),
+                            list(_RETENTION_RUN_STATUSES),
                             cutoff,
-                            list(TERMINAL_RUN_STATUSES),
+                            list(_RETENTION_RUN_STATUSES),
+                            cutoff,
+                            list(_RETENTION_RUN_STATUSES),
                             cutoff,
                         ),
                     )
@@ -625,15 +1357,15 @@ class PostgresExecutionStore:
                             WHERE status = ANY(%s) AND finished_at < %s
                         )
                         """,
-                        (list(TERMINAL_RUN_STATUSES), cutoff),
+                        (list(_RETENTION_RUN_STATUSES), cutoff),
                     )
                     deleted_events = int(cur.rowcount)
                     cur.execute(
                         """
-                        UPDATE runs SET result_ref = NULL
+                        UPDATE runs SET result_ref = NULL, input_ref = NULL
                         WHERE status = ANY(%s) AND finished_at < %s
                         """,
-                        (list(TERMINAL_RUN_STATUSES), cutoff),
+                        (list(_RETENTION_RUN_STATUSES), cutoff),
                     )
 
                     deleted_values = 0
@@ -649,6 +1381,10 @@ class PostgresExecutionStore:
                               AND NOT EXISTS (
                                   SELECT 1 FROM runs AS run
                                   WHERE run.result_ref = value.value_ref
+                              )
+                              AND NOT EXISTS (
+                                  SELECT 1 FROM runs AS run
+                                  WHERE run.input_ref = value.value_ref
                               )
                             """,
                             (candidate_refs,),

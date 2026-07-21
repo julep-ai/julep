@@ -46,6 +46,16 @@ cma = ["httpx>=0.24"]
 # Authenticated MCP streamable-HTTP clients, server verifier adapters, and
 # live MCP tools/list snapshots at freeze time.
 mcp = ["mcp>=1.9", "httpx>=0.24", "PyJWT>=2.8", "cryptography>=42"]
+# FastAPI control plane for release publication, deployment routing, and runs.
+server = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sse-starlette>=2",
+    "psycopg[binary,pool]>=3.2",
+    "temporalio>=1.21",
+    "cryptography>=42",
+    "httpx>=0.24",
+]
 # Rich dotctx layout (Jinja2 templates compiled into registered renderers).
 dotctx = ["jinja2>=3.1"]
 # Yglu-evaluated settings.yaml (mem-mcp .ctx compatibility). $env reads come
@@ -88,6 +98,10 @@ test-no-temporal = [
     "mcp>=1.9",
     "cryptography>=42",
     "PyJWT>=2.8",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sse-starlette>=2",
+    "psycopg[binary,pool]>=3.2",
     "typer>=0.12",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]

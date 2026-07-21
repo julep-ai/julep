@@ -46,8 +46,13 @@ db_app = typer.Typer(
     no_args_is_help=True,
     help="Manage the projection execution-store schema and retention.",
 )
+serve_app = typer.Typer(
+    no_args_is_help=True,
+    help="Run Julep service processes.",
+)
 app.add_typer(schedule_app, name="schedule")
 app.add_typer(db_app, name="db")
+app.add_typer(serve_app, name="serve")
 app.command("chat")(chat_command)
 app.command("listen")(listen_command)
 app.command("trigger")(trigger_command)
@@ -162,6 +167,57 @@ def db_sweep(
     store = PostgresExecutionStore(resolved_dsn)
     deleted = store.sweep(older_than)
     typer.echo(f"deleted {deleted} projection rows")
+
+
+@serve_app.command("api")
+def serve_api(
+    host: str | None = typer.Option(
+        None,
+        "--host",
+        help="Listen host (defaults to JULEP_SERVER_HOST or 127.0.0.1).",
+    ),
+    port: int | None = typer.Option(
+        None,
+        "--port",
+        min=1,
+        max=65535,
+        help="Listen port (defaults to JULEP_SERVER_PORT or 8080).",
+    ),
+    migrate: bool = typer.Option(
+        False,
+        "--migrate",
+        help="Apply execution-store schema migrations before serving.",
+    ),
+) -> None:
+    """Run the FastAPI control plane."""
+
+    # Keep the server dependency group optional for every other CLI command.
+    from dataclasses import replace
+
+    try:
+        import uvicorn
+
+        from julep.server.app import create_app
+        from julep.server.settings import ServerSettings
+
+        settings = ServerSettings.from_env()
+        if host is not None or port is not None:
+            settings = replace(
+                settings,
+                host=host if host is not None else settings.host,
+                port=port if port is not None else settings.port,
+            )
+        if migrate:
+            store = settings.build_store()
+            try:
+                store.apply_schema()
+            finally:
+                store.close()
+        api = create_app(settings=settings)
+    except (ImportError, RuntimeError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(2) from None
+    uvicorn.run(api, host=settings.host, port=settings.port)
 
 
 @schedule_app.command("apply")

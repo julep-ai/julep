@@ -101,6 +101,21 @@ CREATE TABLE IF NOT EXISTS deployments (
 )
 """
 
+CREATE_RUNS_STARTED_INDEX_SQL = """
+CREATE INDEX IF NOT EXISTS runs_started_run_id_idx
+ON runs (started_at DESC NULLS LAST, run_id DESC)
+"""
+
+CREATE_RUNS_STATUS_STARTED_INDEX_SQL = """
+CREATE INDEX IF NOT EXISTS runs_status_started_run_id_idx
+ON runs (status, started_at DESC NULLS LAST, run_id DESC)
+"""
+
+CREATE_RELEASES_CREATED_INDEX_SQL = """
+CREATE INDEX IF NOT EXISTS releases_created_release_hash_idx
+ON releases (created_at DESC, release_hash DESC)
+"""
+
 
 MIGRATIONS: tuple[tuple[int, str], ...] = (
     (1, CREATE_RUNS_SQL),
@@ -113,6 +128,9 @@ MIGRATIONS: tuple[tuple[int, str], ...] = (
     (3, CREATE_PROJECTION_VALUES_SQL),
     (4, CREATE_RELEASES_SQL),
     (5, CREATE_DEPLOYMENTS_SQL),
+    (6, CREATE_RUNS_STARTED_INDEX_SQL),
+    (7, CREATE_RUNS_STATUS_STARTED_INDEX_SQL),
+    (8, CREATE_RELEASES_CREATED_INDEX_SQL),
 )
 
 
