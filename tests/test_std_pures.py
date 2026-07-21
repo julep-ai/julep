@@ -20,6 +20,7 @@ STD_PURES = (
     "std.pack",
     "std.unpack",
     "std.bind",
+    "std.record",
     "std.each_pack",
     "std.branch_predicate",
     "std.branch_selector",
@@ -39,6 +40,7 @@ EXPECTED_STD_SOURCE_HASHES = {
     "std.pack": "pure:9a0d3873bbef3f97",
     "std.unpack": "pure:82b536c49d7cee7e",
     "std.bind": "pure:9936960359bdf9a3",
+    "std.record": "pure:5cbff8464f82262f",
     "std.each_pack": "pure:d40a26dcb92b73a8",
     "std.branch_predicate": "pure:bee903d8d036cbe7",
     "std.branch_selector": "pure:a65863c731e19705",
@@ -177,6 +179,40 @@ def test_std_bind_merges_consts_and_rejects_collisions_deterministically() -> No
             "std.bind",
             {"limit": 5, "store_id": "s1"},
             {"consts": {"store_id": "s2", "limit": 10}},
+        )
+
+
+def test_std_record_builds_named_values_consts_and_deduplicated_aliases() -> None:
+    assert _run_std(
+        "std.record",
+        [{"id": "c1"}, "needle"],
+        {
+            "fields": [
+                ["collection", 0],
+                ["query", 1],
+                ["same_collection", 0],
+                ["limit", None],
+            ],
+            "consts": {"limit": 10},
+        },
+    ) == {
+        "collection": {"id": "c1"},
+        "same_collection": {"id": "c1"},
+        "query": "needle",
+        "limit": 10,
+    }
+
+    assert _run_std(
+        "std.record",
+        ["one", "value"],
+        {"fields": [["items", 0]], "consts": {}},
+    ) == {"items": ["one", "value"]}
+
+    with pytest.raises(ValueError, match="std.record expected 2 values, got 1"):
+        _run_std(
+            "std.record",
+            ["only-one"],
+            {"fields": [["first", 0], ["second", 1]], "consts": {}},
         )
 
 

@@ -132,6 +132,55 @@ def std_bind(value: Any, *, consts: dict[str, Any]) -> dict[str, Any]:
     return merged
 
 
+def std_record(
+    value: Any,
+    *,
+    fields: list[list[str | int | None]],
+    consts: dict[str, Any],
+) -> dict[str, Any]:
+    """Wire-format-stable std.record; body frozen once artifacts reference it.
+
+    Builds a named record from the positional multi-input layout. Each ordered
+    ``fields`` entry is ``[name, input_index]``; a null index selects ``name``
+    from ``consts``. Repeated indexes preserve aliases while graph inputs stay
+    deduplicated. Deliberate behavior changes require registering a new std name.
+    """
+    parsed: list[tuple[str, int | None]] = []
+    input_count = 0
+    for position, field_spec in enumerate(fields):
+        if len(field_spec) != 2:
+            raise ValueError(f"std.record invalid field spec at index {position}")
+        name, input_index = field_spec
+        if not isinstance(name, str) or (
+            input_index is not None
+            and (
+                not isinstance(input_index, int)
+                or isinstance(input_index, bool)
+                or input_index < 0
+            )
+        ):
+            raise ValueError(f"std.record invalid field spec at index {position}")
+        parsed.append((name, input_index))
+        if input_index is not None:
+            input_count = max(input_count, input_index + 1)
+
+    values = [] if input_count == 0 else [value] if input_count == 1 else value
+    if len(values) != input_count:
+        raise ValueError(f"std.record expected {input_count} values, got {len(values)}")
+
+    record: dict[str, Any] = {}
+    for position, (name, input_index) in enumerate(parsed):
+        if input_index is None:
+            if name not in consts:
+                raise ValueError(f"std.record missing const for field {name!r}")
+            record[name] = consts[name]
+        elif input_index >= input_count:
+            raise ValueError(f"std.record invalid field spec at index {position}")
+        else:
+            record[name] = values[input_index]
+    return record
+
+
 def std_each_pack(
     value: Any,
     *,
@@ -207,6 +256,7 @@ DEFAULT_REGISTRY.register_pure("std.collect", std_collect)
 DEFAULT_REGISTRY.register_pure("std.pack", std_pack)
 DEFAULT_REGISTRY.register_pure("std.unpack", std_unpack)
 DEFAULT_REGISTRY.register_pure("std.bind", std_bind)
+DEFAULT_REGISTRY.register_pure("std.record", std_record)
 DEFAULT_REGISTRY.register_pure("std.each_pack", std_each_pack)
 DEFAULT_REGISTRY.register_pure("std.branch_predicate", std_branch_predicate)
 DEFAULT_REGISTRY.register_pure("std.branch_selector", std_branch_selector)

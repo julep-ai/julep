@@ -153,6 +153,7 @@ from .deploy import (
     deploy as deploy,
     snapshot_from_listings as snapshot_from_listings,
 )
+from .mcp_step import McpToolStep as McpToolStep, mcp_tool as mcp_tool
 from .app import (
     Application as Application,
     ApplicationDefinitionError as ApplicationDefinitionError,
@@ -316,10 +317,10 @@ _BASE_EXPORTS = [
     "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
     # ir
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
-    "NativeTool", "McpTool", "ChannelRef",
+    "NativeTool", "McpTool", "McpToolStep", "ChannelRef",
     "HUMAN_GATE_TOOL", "SLEEP_TOOL", "RECV_TOOL", "EMIT_TOOL",
     # dsl
-    "call", "native", "mcp", "think", "reasoner_from_ctx", "ident", "arr", "sub",
+    "call", "native", "mcp", "mcp_tool", "think", "reasoner_from_ctx", "ident", "arr", "sub",
     "seq", "par", "fanout", "each", "alt", "cond", "switch", "switch_on", "reschedule",
     "iter_up_to", "stage", "app",
     "Contract",

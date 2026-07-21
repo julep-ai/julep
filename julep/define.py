@@ -5,7 +5,7 @@ runs the user's function once at definition time with :class:`Handle` values:
 registered tools, registered pures, ``think(...)``, ``cond(...)``,
 ``switch(...)``, ``each(...)``, and ``reschedule(...)`` append graph steps rather
 than executing runtime work. Handles support only the deterministic dataflow
-operators ``h1 | h2`` (``std.merge``) and ``h["key"]`` (``std.pluck``). Lowering
+operators ``h1 | h2`` (``std.merge``) and ``h["key"]``/``h.key`` (``std.pluck``). Lowering
 always goes through :mod:`julep.dag` and the compiler; this frontend
 does not emit wire-format IR directly.
 
@@ -92,6 +92,7 @@ class _CallSite:
     output_name: Optional[str]
     span: SourceSpan
     callee: Optional[str] = None
+    target: Any = None
 
 
 class _SourceMap:
@@ -153,7 +154,17 @@ class _SourceMap:
             for keyword in node.keywords:
                 if keyword.value is not None:
                     sites.extend(self._expr_call_sites(keyword.value, target_name, is_outer=False))
-            sites.append((node, _CallSite(output_name, self._span(node), self._call_name(node))))
+            sites.append(
+                (
+                    node,
+                    _CallSite(
+                        output_name,
+                        self._span(node),
+                        self._call_name(node),
+                        self._resolve_call_target(node),
+                    ),
+                )
+            )
             return sites
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
             sites = self._expr_call_sites(node.left, target_name, is_outer=False)
@@ -161,6 +172,10 @@ class _SourceMap:
             sites.append((node, _CallSite(output_name, self._span(node), "std.merge")))
             return sites
         if isinstance(node, ast.Subscript):
+            sites = self._expr_call_sites(node.value, target_name, is_outer=False)
+            sites.append((node, _CallSite(output_name, self._span(node), "std.pluck")))
+            return sites
+        if isinstance(node, ast.Attribute):
             sites = self._expr_call_sites(node.value, target_name, is_outer=False)
             sites.append((node, _CallSite(output_name, self._span(node), "std.pluck")))
             return sites
@@ -208,7 +223,7 @@ class _SourceMap:
     def _expr_produces_handle(self, expr: ast.AST, handle_names: set[str]) -> bool:
         if isinstance(expr, ast.Name):
             return expr.id in handle_names
-        if isinstance(expr, (ast.Call, ast.BinOp, ast.Subscript)):
+        if isinstance(expr, (ast.Call, ast.BinOp, ast.Subscript, ast.Attribute)):
             return any(isinstance(node, ast.Name) and node.id in handle_names for node in ast.walk(expr))
         return False
 
@@ -216,7 +231,13 @@ class _SourceMap:
         target = self._resolve_call_target(call)
         if target is None:
             return False
-        return _is_control_helper(target) or _is_tool(target) or _is_pure(target) or isinstance(target, FlowDef)
+        return (
+            _is_control_helper(target)
+            or _is_tool(target)
+            or _is_mcp_step(target)
+            or _is_pure(target)
+            or isinstance(target, FlowDef)
+        )
 
     def _top_level_method_helper(self, call: ast.Call, handle_names: set[str]) -> Optional[tuple[str, str]]:
         if not isinstance(call.func, ast.Attribute):
@@ -270,12 +291,17 @@ class _SourceMap:
             return self._span_for_line(frame.f_lineno)
         return fallback
 
-    def call_site(self, frame: Optional[FrameType], ref: str) -> _CallSite:
+    def call_site(
+        self,
+        frame: Optional[FrameType],
+        ref: str,
+        target: Any = None,
+    ) -> _CallSite:
         if frame is not None:
             sites = self._by_line.get(frame.f_lineno)
             if sites:
                 for index, site in enumerate(sites):
-                    if _site_matches_ref(site, ref):
+                    if (target is not None and site.target is target) or _site_matches_ref(site, ref):
                         return sites.pop(index)
                 return sites.pop(0)
             return _CallSite(None, self._span_for_line(frame.f_lineno))
@@ -337,6 +363,13 @@ class _BuildContext:
         self.bound_names.add(name)
         return name
 
+    def internal_output_name(self, ref: str, *, avoid: Optional[str] = None) -> str:
+        while True:
+            name = self.source_map.fallback_name(ref)
+            if name != avoid and name not in self.bound_names:
+                self.bound_names.add(name)
+                return name
+
     def validate_current_handle(self, handle: "Handle", span: Optional[SourceSpan]) -> None:
         if handle.graph is self.graph:
             return
@@ -397,10 +430,9 @@ class Handle:
     def __getattr__(self, name: str) -> object:
         if name in _TOP_LEVEL_HELPERS:
             raise _top_level_helper_error(self.label, name, self.source)
-        raise AttributeError(
-            f"Handle attribute access is not runtime data{_source_suffix(self.source)}; "
-            f"got {self.label}.{name}. Use {self.label}[{name!r}] for std.pluck."
-        )
+        if name.startswith("_") or name.endswith("_"):
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+        return self[name]
 
     def __bool__(self) -> bool:
         source = _active_source(self.source)
@@ -866,12 +898,28 @@ def apply_if_authoring(fn: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -
             "Handle escaped its @flow definition; "
             "a tool or pure was called outside @flow authoring"
         )
-    if not args or not isinstance(args[0], Handle):
+    handle_kwargs = any(isinstance(value, Handle) for value in kwargs.values())
+    if handle_kwargs and args:
+        site = _call_site(
+            _current_context(),
+            getattr(fn, "name", getattr(fn, "__name__", type(fn).__name__)),
+        )
+        raise DefineError(
+            "step application cannot mix a positional Handle with Handle keyword arguments"
+            f"{_source_suffix(site.span)}; record binding is all-named, so pass every input "
+            "as a keyword"
+        )
+    if not args and not handle_kwargs:
         raise DefineError(
             "step application needs a Handle as the first argument; "
             "pass runtime data through @flow parameters"
         )
-    handle = args[0]
+    if args and not isinstance(args[0], Handle):
+        raise DefineError(
+            "step application needs a Handle as the first argument; "
+            "pass runtime data through @flow parameters"
+        )
+    handle = args[0] if args else None
     if len(args) > 1:
         site = _call_site(_current_context(), getattr(fn, "name", getattr(fn, "__name__", type(fn).__name__)))
         raise DefineError(
@@ -880,12 +928,14 @@ def apply_if_authoring(fn: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -
             "fix: merge them into one record first with 'a | b' (std.merge), or reshape with a pure, "
             "then call on the single handle."
         )
+    if _is_mcp_step(fn):
+        return _append_step(dag.StepKind.TOOL, fn.name, handle, target=fn, **kwargs)
     if _is_tool(fn):
         return _append_step(dag.StepKind.TOOL, fn.name, handle, target=fn, **kwargs)
     if _is_pure(fn):
         return _append_step(dag.StepKind.PURE, fn.name, handle, target=fn, **kwargs)
     if isinstance(fn, FlowDef):
-        return _apply_flowdef(fn, handle)
+        return _apply_flowdef(fn, _ensure_handle(handle))
     raise DefineError(
         "unregistered callable "
         f"{getattr(fn, '__name__', type(fn).__name__)!r}; "
@@ -896,31 +946,69 @@ def apply_if_authoring(fn: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -
 def _append_step(
     kind: dag.StepKind,
     ref: str,
-    handle: Handle,
+    handle: Optional[Handle],
     *,
     target: Any,
     **kwargs: Any,
 ) -> Handle:
     ctx = _current_context()
-    site = _call_site(ctx, ref)
+    site = _call_site(ctx, ref, target)
     span = site.span
-    ctx.validate_current_handle(handle, span)
     explicit_name = _pop_optional_name(kwargs)
     ann = _ann_from_kwargs(kwargs)
     consts = {key: value for key, value in kwargs.items() if not isinstance(value, Handle)}
     handle_kwargs = {key: value for key, value in kwargs.items() if isinstance(value, Handle)}
+    if handle is not None:
+        ctx.validate_current_handle(handle, span)
     if handle_kwargs:
-        raise DefineError(
-            f"step {ref!r} got Handle keyword arguments{_source_suffix(span)}; "
-            "use h1 | h2 to build the flowing input"
+        if handle is not None:
+            raise DefineError(
+                f"step {ref!r} cannot mix a positional Handle with Handle keyword arguments"
+                f"{_source_suffix(span)}; record binding is all-named"
+            )
+        input_labels: list[str] = []
+        fields: list[list[str | int | None]] = []
+        input_indexes: dict[str, int] = {}
+        for key, value in kwargs.items():
+            if not isinstance(value, Handle):
+                _validate_json_value(key, value, span)
+                fields.append([key, None])
+                continue
+            ctx.validate_current_handle(value, span)
+            index = input_indexes.get(value.label)
+            if index is None:
+                index = len(input_labels)
+                input_indexes[value.label] = index
+                input_labels.append(value.label)
+            fields.append([key, index])
+        record_output = ctx.internal_output_name(
+            f"{ref}_record",
+            avoid=explicit_name or site.output_name,
         )
-    current = handle
-    if consts:
+        ctx.graph.add_step(
+            dag.StepKind.PURE,
+            "std.record",
+            inputs=input_labels,
+            output=record_output,
+            source=span,
+            args={"fields": fields, "consts": consts},
+        )
+        current = Handle(record_output, ctx.graph, span)
+    else:
+        if handle is None:
+            raise DefineError(
+                f"step {ref!r} needs a Handle input{_source_suffix(span)}; "
+                "pass it positionally or bind named Handle fields"
+            )
+        current = handle
         for key, value in consts.items():
             _validate_json_value(key, value, span)
+    if consts and not handle_kwargs:
         if kind is not dag.StepKind.PURE:
-            bind_output = ctx.source_map.fallback_name(f"{ref}_bind")
-            ctx.bound_names.add(bind_output)
+            bind_output = ctx.internal_output_name(
+                f"{ref}_bind",
+                avoid=explicit_name or site.output_name,
+            )
             ctx.graph.add_step(
                 dag.StepKind.PURE,
                 "std.bind",
@@ -939,7 +1027,11 @@ def _append_step(
         contract=getattr(target, "contract", None),
         ann=ann,
         source=span,
-        args=consts if kind is dag.StepKind.PURE and consts else None,
+        args=(
+            consts
+            if kind is dag.StepKind.PURE and consts and not handle_kwargs
+            else None
+        ),
         tool=target if kind is dag.StepKind.TOOL else None,
     )
     return Handle(output, ctx.graph, span)
@@ -1017,6 +1109,7 @@ def _copy_step(
             ann=step.ann,
             source=step.source,
             args=None if step.args is None else dict(step.args),
+            tool_ref=step.tool_ref,
         )
         return
     if step.kind is dag.StepKind.COND:
@@ -1180,6 +1273,7 @@ def _copy_step_node_with_external_renames(
             reducer=step.reducer,
             const_captures=None if step.const_captures is None else dict(step.const_captures),
             branch_subject=branch_subject,
+            tool_ref=step.tool_ref,
         ),
         True,
     )
@@ -1196,6 +1290,7 @@ def _append_copied_step(graph: dag.Graph, step: dag.StepNode) -> None:
             ann=step.ann,
             source=step.source,
             args=None if step.args is None else dict(step.args),
+            tool_ref=step.tool_ref,
         )
         return
     if step.kind is dag.StepKind.COND:
@@ -1285,8 +1380,8 @@ def _current_context() -> _BuildContext:
     return _CTX_STACK[-1]
 
 
-def _call_site(ctx: _BuildContext, ref: str) -> _CallSite:
-    return ctx.source_map.call_site(ctx.frame(), ref)
+def _call_site(ctx: _BuildContext, ref: str, target: Any = None) -> _CallSite:
+    return ctx.source_map.call_site(ctx.frame(), ref, target)
 
 
 def _single_input(handle: Handle, input_name: str) -> list[str]:
@@ -1550,6 +1645,12 @@ def _is_tool(value: Any) -> bool:
     from .agent import Tool
 
     return isinstance(value, Tool)
+
+
+def _is_mcp_step(value: Any) -> bool:
+    from .mcp_step import McpToolStep
+
+    return isinstance(value, McpToolStep)
 
 
 def _is_pure(value: Any) -> bool:

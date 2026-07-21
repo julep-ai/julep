@@ -46,6 +46,29 @@ def test_pipeline_threads_value():
     assert out.value == 12  # (5+1)*2
 
 
+def test_mcp_call_seam_receives_identity_cid_and_principal():
+    seen = {}
+
+    async def mcp_call(server, tool, value, cid, principal):
+        seen.update(server=server, tool=tool, value=value, cid=cid, principal=principal)
+        return {"result": value["query"]}
+
+    principal = {"tenant": "demo"}
+    flow = call(mcp("srv", "inc"))
+    fr, env = _env(flow, mcp_call=mcp_call, principal=principal)
+
+    out = run(interpret(fr.flow, {"query": "hello"}, env))
+
+    assert out.value == {"result": "hello"}
+    assert seen == {
+        "server": "srv",
+        "tool": "inc",
+        "value": {"query": "hello"},
+        "cid": f"{fr.flow.id}@1",
+        "principal": principal,
+    }
+
+
 def test_retryable_call_retries_to_success_with_backoff_sleeps():
     attempts = 0
     sleeps = []

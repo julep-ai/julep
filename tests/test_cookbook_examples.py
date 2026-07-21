@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from julep import blocking, call, check_approval_gates, deploy, seq
+from julep import WorkerContext, blocking, call, check_approval_gates, deploy, seq
 from julep.errors import ValidationError
 from conftest import run
 
@@ -108,7 +108,17 @@ def test_episode_summary_flow_deploys_clean_and_rolls_up_statuses_in_order() -> 
 
     assert not blocking(deployment.diagnostics)
 
-    result = run(episode_summary_flow.run_demo())
+    calls = []
+
+    async def fake_mcp_call(server, tool, value, idempotency_key, principal):
+        calls.append((server, tool, value, idempotency_key, principal))
+        return await episode_summary_flow._fake_mcp_call(
+            server, tool, value, idempotency_key, principal
+        )
+
+    worker_context = WorkerContext(mcp_call=fake_mcp_call)
+    assert worker_context.mcp_call is not None
+    result = run(episode_summary_flow.run_demo(mcp_call=worker_context.mcp_call))
 
     assert result.value["counts"] == {"success": 2, "stale_source": 1, "not_found": 1}
     assert [(r["episodeId"], r["status"]) for r in result.value["results"]] == [
@@ -117,6 +127,11 @@ def test_episode_summary_flow_deploys_clean_and_rolls_up_statuses_in_order() -> 
         ("ep-1003", "stale_source"),
         ("ep-9999", "not_found"),
     ]
+    assert [tool for _, tool, _, _, _ in calls].count("read_episode") == 4
+    assert [tool for _, tool, _, _, _ in calls].count("write_summary_surfaces") == 3
+    assert all(server == episode_summary_flow.MCP_SERVER for server, _, _, _, _ in calls)
+    assert all(principal is None for _, _, _, _, principal in calls)
+    assert len({key for _, _, _, key, _ in calls}) == len(calls)
 
 
 def test_episode_summary_flow_cas_guard_blocks_stale_write() -> None:

@@ -31,6 +31,7 @@ from julep.app_deploy import (
 from julep.cli.config import JulepConfig, EnvConfig
 from julep.cas import cas_from_url
 from julep.bundle import bundle_signer_public_key
+from julep.freeze import McpSnapshot
 
 
 @dataclass(frozen=True)
@@ -75,9 +76,35 @@ def load_application(cfg: JulepConfig) -> Application:
     return load_application_spec(cfg.application)
 
 
-def compile_application(cfg: JulepConfig, env: EnvConfig) -> CompiledApplication:
+def _snapshot_configured_servers(cfg: JulepConfig) -> McpSnapshot:
+    if not cfg.mcp_servers:
+        raise ValueError(
+            "--mcp-snapshot requires at least one server under "
+            "[tool.julep.mcp.servers] or [mcp.servers]"
+        )
+    from julep.mcp_snapshot import snapshot_servers
+
+    return snapshot_servers(cfg.mcp_servers, allowlist=cfg.mcp_allowlist)
+
+
+def compile_application(
+    cfg: JulepConfig,
+    env: EnvConfig,
+    *,
+    mcp_snapshot: bool = False,
+) -> CompiledApplication:
     snapshot_environment = {**env.vars, **env.worker_environment}
-    return load_application(cfg).compile_live(env_vars=snapshot_environment)
+    application = load_application(cfg)
+    if not mcp_snapshot:
+        return application.compile_live(env_vars=snapshot_environment)
+
+    snapshot = _snapshot_configured_servers(cfg)
+    snapshot_overrides = {
+        pipeline.name: snapshot
+        for pipeline in application.pipelines
+        if not pipeline.tools
+    }
+    return application.compile(snapshot_overrides)
 
 
 def plan_configured_application(
@@ -85,8 +112,9 @@ def plan_configured_application(
     env: EnvConfig,
     *,
     observed: Optional[ObservedApplicationState] = None,
+    mcp_snapshot: bool = False,
 ) -> ApplicationPlan:
-    compiled = compile_application(cfg, env)
+    compiled = compile_application(cfg, env, mcp_snapshot=mcp_snapshot)
     _chart, _worker_environment, deployment_config = _resolve_deployment_config(
         cfg,
         env,
@@ -180,10 +208,11 @@ def apply_configured_application(
     env: EnvConfig,
     *,
     publish_only: bool = False,
+    mcp_snapshot: bool = False,
 ) -> tuple[ApplicationRelease, tuple[LaneApplyResult, ...]]:
     if env.worker_image is None:
         raise ValueError(f"env {env.name!r} requires immutable worker_image=repository@sha256:...")
-    compiled = compile_application(cfg, env)
+    compiled = compile_application(cfg, env, mcp_snapshot=mcp_snapshot)
     signing_key = _env.get(_env.JULEP_BUNDLE_SIGNING_KEY)
     chart, worker_environment, deployment_config = _resolve_deployment_config(
         cfg,

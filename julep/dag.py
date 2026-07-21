@@ -16,7 +16,7 @@ from typing import Any, Iterable, Optional, Sequence
 
 from . import dsl
 from .contracts import CONSERVATIVE_DEFAULT, ToolContract
-from .ir import Ann, Node, SourceSpan, canonical_json
+from .ir import Ann, McpTool, Node, SourceSpan, canonical_json
 from .kinds import Effect, Op
 
 
@@ -79,6 +79,8 @@ class StepNode:
     reducer: Optional[str] = None
     const_captures: Optional[dict[str, Any]] = None
     branch_subject: Optional[str] = None
+    # Frontend-only: Graph is compiled to IR before anything is serialized.
+    tool_ref: Optional[McpTool] = None
 
 
 InputSpec = str | InputEdge | tuple[str, str]
@@ -111,6 +113,7 @@ class Graph:
         source: Optional[SourceSpan] = None,
         args: Optional[dict[str, Any]] = None,
         tool: Any = None,
+        tool_ref: Optional[McpTool] = None,
     ) -> StepNode:
         """Add a step, rejecting output-name collisions immediately."""
         step_kind = StepKind(kind)
@@ -120,12 +123,23 @@ class Graph:
 
         resolved_ref = ref
         resolved_contract = contract
-        if tool is not None:
+        resolved_tool_ref = tool_ref
+        from .mcp_step import McpToolStep
+
+        if isinstance(tool, McpToolStep):
+            resolved_ref = f"mcp:{tool.server}:{tool.tool}"
+            resolved_contract = None
+            resolved_tool_ref = McpTool(server=tool.server, tool=tool.tool)
+        elif tool is not None:
             resolved_ref = str(getattr(tool, "name", ref))
             tool_contract = getattr(tool, "contract", None)
             if isinstance(tool_contract, ToolContract):
                 resolved_contract = tool_contract
-        elif step_kind is StepKind.TOOL and resolved_contract is None:
+        elif (
+            step_kind is StepKind.TOOL
+            and resolved_contract is None
+            and resolved_tool_ref is None
+        ):
             resolved_contract = CONSERVATIVE_DEFAULT
 
         node = StepNode(
@@ -138,6 +152,7 @@ class Graph:
             source=source,
             args=args,
             order=len(self.steps),
+            tool_ref=resolved_tool_ref,
         )
         self.steps.append(node)
         self._outputs[output] = node
@@ -608,6 +623,8 @@ def _step_from_env(step: StepNode, input_name: str) -> Node:
         return _each_from_env(step)
     if step.kind is StepKind.PURE and step.ref == "std.merge" and len(step.inputs) > 1:
         return _input_projection(step, input_name)
+    if step.kind is StepKind.PURE and step.ref == "std.record":
+        return _seq([_record_input_projection(step), _leaf(step)])
     return _seq([_input_projection(step, input_name), _leaf(step)])
 
 
@@ -620,9 +637,21 @@ def _input_projection(step: StepNode, input_name: str) -> Node:
     return _arr("std.merge", {"fields": fields}, step.source)
 
 
+def _record_input_projection(step: StepNode) -> Node:
+    if not step.inputs:
+        raise GraphDefinitionError("std.record needs at least one input")
+    projections = [
+        _arr("std.pluck", {"key": edge.source}, step.source)
+        for edge in step.inputs
+    ]
+    if len(projections) == 1:
+        return projections[0]
+    return _par(projections, step.source)
+
+
 def _leaf(step: StepNode) -> Node:
     if step.kind is StepKind.TOOL:
-        return _with_source(dsl.call(step.ref, ann=step.ann), step.source)
+        return _with_source(dsl.call(step.tool_ref or step.ref, ann=step.ann), step.source)
     if step.kind is StepKind.THINK:
         return _with_source(dsl.think(step.ref, ann=step.ann), step.source)
     if step.kind is StepKind.PURE:

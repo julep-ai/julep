@@ -105,10 +105,70 @@ def test_unknown_nested_keys_are_rejected(tmp_path):
     with pytest.raises(ValueError, match=r"unknown key 'namespace'"):
         load_config(tmp_path)
 
+    (tmp_path / "julep.toml").write_text(
+        "[mcp.servers.memory]\n"
+        'url = "https://memory.example/mcp"\n'
+        'versoin = "2026.7"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match=r"unknown key 'versoin'.*did you mean 'version'"):
+        load_config(tmp_path)
+
+
+def test_mcp_servers_parse_overlay_and_provide_url_allowlist(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.julep.mcp.servers.memory]\n"
+        'url = "https://memory.example/mcp"\n'
+        'auth = "snapshot-token"\n'
+        'version = "2026.7"\n'
+        "[tool.julep.mcp.servers.memory.headers]\n"
+        'X-Tenant = "alpha"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "julep.toml").write_text(
+        "[mcp.servers.memory.headers]\n"
+        'X-Region = "us-west"\n'
+        "[mcp.servers.search]\n"
+        'url = "http://search.internal:8080/mcp"\n',
+        encoding="utf-8",
+    )
+
+    cfg = load_config(tmp_path)
+
+    assert cfg.mcp_servers["memory"].url == "https://memory.example/mcp"
+    assert cfg.mcp_servers["memory"].auth == "snapshot-token"
+    assert cfg.mcp_servers["memory"].version == "2026.7"
+    assert cfg.mcp_servers["memory"].headers == {
+        "X-Region": "us-west",
+        "X-Tenant": "alpha",
+    }
+    assert cfg.mcp_servers["search"].url == "http://search.internal:8080/mcp"
+    assert cfg.mcp_allowlist == frozenset(
+        {"https://memory.example/mcp", "http://search.internal:8080/mcp"}
+    )
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ("[mcp]\nservres = {}\n", r"unknown key 'servres'.*did you mean 'servers'"),
+        ("[mcp.servers.memory]\nurl = 'memory/mcp'\n", "absolute http\\(s\\) URL"),
+        ("[mcp.servers.memory]\nurl = 'https://user:secret@example/mcp'\n", "credentials"),
+        (
+            "[mcp.servers.memory]\nurl = 'https://example/mcp'\nauth = 123\n",
+            "auth must be a non-empty trimmed string",
+        ),
+    ],
+)
+def test_mcp_config_rejects_invalid_shapes(tmp_path, body, message):
+    (tmp_path / "julep.toml").write_text(body, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_config(tmp_path)
+
 
 def test_future_sections_are_reserved_no_ops(tmp_path):
     (tmp_path / "julep.toml").write_text(
-        "[mcp]\nenabled = true\n"
         "[pipeline]\nenabled = true\n"
         "[server]\nenabled = true\n"
         "[redaction]\nenabled = true\n",

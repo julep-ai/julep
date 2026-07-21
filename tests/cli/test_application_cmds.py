@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+from importlib import import_module
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -10,7 +12,7 @@ import yaml
 from julep import Application, PipelineSpec, ident
 from julep.cli.main import main
 from julep.cli import application as application_module
-from julep.cli.config import load_config
+from julep.cli.config import McpServerConfig, load_config
 from julep.app_deploy import LaneApplyResult, deployment_config_hash
 from julep.freeze import McpSnapshot
 
@@ -167,6 +169,118 @@ def test_compile_application_uses_selected_environment_for_live_snapshots(
             "SHARED": "worker",
         }
     ]
+
+
+def test_compile_application_uses_configured_mcp_snapshot_override(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    cfg = dataclasses.replace(
+        load_config(_application_project(tmp_path)),
+        mcp_servers={
+            "memory": McpServerConfig(
+                url="https://memory.example/mcp",
+                auth="secret",
+                version="2026.7",
+            )
+        },
+    )
+    source_calls: list[dict[str, str]] = []
+    application = Application(
+        "memory",
+        [
+            PipelineSpec(
+                "episode_summary",
+                ident(),
+                snapshot_source=lambda environment: (
+                    source_calls.append(dict(environment)) or McpSnapshot()
+                ),
+            )
+        ],
+    )
+    snapshot = McpSnapshot()
+    fetched: list[object] = []
+    monkeypatch.setattr(application_module, "load_application", lambda _cfg: application)
+    monkeypatch.setattr(
+        application_module,
+        "_snapshot_configured_servers",
+        lambda received: fetched.append(received) or snapshot,
+    )
+
+    compiled = application_module.compile_application(
+        cfg,
+        cfg.envs["local"],
+        mcp_snapshot=True,
+    )
+
+    assert fetched == [cfg]
+    assert source_calls == []
+    assert len(compiled.pipelines) == 1
+
+
+def test_configured_mcp_snapshot_requires_a_server(tmp_path: Path) -> None:
+    cfg = load_config(_application_project(tmp_path))
+
+    with pytest.raises(ValueError, match=r"--mcp-snapshot.*tool\.julep\.mcp\.servers"):
+        application_module._snapshot_configured_servers(cfg)
+
+
+def test_configured_mcp_snapshot_passes_servers_and_allowlist(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    import julep.mcp_snapshot as mcp_snapshot_module
+
+    server = McpServerConfig(url="https://memory.example/mcp", headers={"X-Tenant": "alpha"})
+    cfg = dataclasses.replace(
+        load_config(_application_project(tmp_path)),
+        mcp_servers={"memory": server},
+    )
+    expected = McpSnapshot()
+    received: list[tuple[object, object]] = []
+
+    def fake_snapshot_servers(servers, *, allowlist):
+        received.append((servers, allowlist))
+        return expected
+
+    monkeypatch.setattr(mcp_snapshot_module, "snapshot_servers", fake_snapshot_servers)
+
+    assert application_module._snapshot_configured_servers(cfg) is expected
+    assert received == [
+        (
+            {"memory": server},
+            frozenset({"https://memory.example/mcp"}),
+        )
+    ]
+
+
+def test_plan_and_apply_mcp_snapshot_flags_are_threaded(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+    received: list[tuple[str, bool]] = []
+
+    def fake_plan(_cfg, _env, *, observed=None, mcp_snapshot=False):
+        assert observed is None
+        received.append(("plan", mcp_snapshot))
+        return SimpleNamespace(to_json=lambda: {"snapshot": mcp_snapshot})
+
+    def fake_apply(_cfg, _env, *, publish_only=False, mcp_snapshot=False):
+        assert publish_only is True
+        received.append(("apply", mcp_snapshot))
+        return SimpleNamespace(release_hash="release", application_artifact_hash="artifact"), ()
+
+    monkeypatch.setattr(main_module, "plan_configured_application", fake_plan)
+    monkeypatch.setattr(main_module, "apply_configured_application", fake_apply)
+
+    assert main(["plan", "--mcp-snapshot", "--json"]) == 0
+    assert '"snapshot": true' in capsys.readouterr().out
+    assert main(["apply", "--env", "local", "--publish-only", "--mcp-snapshot"]) == 0
+    assert "release   release" in capsys.readouterr().out
+    assert received == [("plan", True), ("apply", True)]
 
 
 def test_deployment_config_preserves_pinned_oci_chart(
