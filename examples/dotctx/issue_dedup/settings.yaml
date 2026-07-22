@@ -1,0 +1,29 @@
+# This dotctx is AGENT-SHAPED: it describes a bounded tool-using loop. `load_dotctx`
+# reads it into a Reasoner, then the framework lowers the reasoner's round policy to
+# an execution shape:
+#   - no max_rounds / not agent  -> single `think`        (Pipeline)
+#   - max_rounds: N (>= 1)       -> bounded `iter_up_to` (Feedback)
+#   - agent: true                -> open-ended `app`     (Agent)
+# This example uses a BOUNDED loop (`max_rounds`), so it lowers to Feedback, not the
+# open-ended Agent shape: the safer, cost-bounded default.
+name: issue_dedup
+
+# `provider:model` selects the any-llm provider. A bare model (no `provider:`)
+# falls back to the default provider (anthropic).
+model: anthropic:claude-haiku-4-5-20251001
+
+temperature: 0.1
+
+# Re-ask once if the structured reply fails to parse.
+output_retries: 1
+
+# Bounded refinement/tool loop; >=1 => Feedback.
+max_rounds: 4
+
+# DECLARATIVE today: recorded on the Reasoner and hashed into deploy identity;
+# agent-loop ENFORCEMENT lands with native tool-calling in Phase 3/4 — julep does
+# not execute the tool loop yet.
+require_tool_call: true
+
+# The granted `search_similar_posts` tool comes from tools.pyi, the rich layout's
+# canonical tool source, so there is no `tools:` key here.

@@ -156,6 +156,22 @@ python examples/elnino/swarm.py
 
 The file prints its own reference text when run directly. Treat it as a source-reading example rather than the first program to execute. It shows a heterogeneous planning swarm, read-only forecast races, quorum reduction, subflow opacity, bounded adaptive agents, staged plan compilation, approval gates for dangerous tools, and a capability manifest that attenuates authority.
 
+## `examples/dotctx_issue_dedup.py`
+
+What it teaches: an agent-shaped rich dotctx with a bounded tool loop that lowers to Feedback.
+
+Rung: declarative rich-dotctx contract; tool-loop execution is Phase 3/4 work.
+
+Key APIs: `load_dotctx`, `reasoner_to_flow`, `Reasoner`, `max_rounds`, `require_tool_call`.
+
+Run:
+
+```bash
+python -m examples.dotctx_issue_dedup
+```
+
+This keyless no-op loads and lowers the issue-dedup contract without calling a provider. It shows why a single structured round cannot honestly stand in for the required search-first tool loop.
+
 ## Run the keyless local examples
 
 ```bash
