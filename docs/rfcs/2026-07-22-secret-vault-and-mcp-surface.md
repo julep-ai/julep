@@ -1,10 +1,8 @@
 # RFC: Secret vault (lite), MCP surface contract, and dotctx agents on AgentWorkflow
 
-- **Status:** final draft (v4, collapsed)
+- **Status:** final draft
 - **Owner:** Diwank Singh Tomer
 - **Date:** 2026-07-22
-- **Review:** independently reviewed by codex `gpt-5.6-sol` (@high full-spec, @medium §3.5);
-  all accepted findings are folded into the text below.
 - **Depends on:** the `julep3-post-port` program (control plane `/v1`, schema-v2 releases with
   `runtimeDeclarationsRef`, `mcp_tool()` + snapshot-at-freeze, `julep.mcp_auth`, redaction
   wiring, the CAS→artifacts rename)
@@ -20,7 +18,7 @@ Three gaps, surfaced by the mem-mcp port and the CMA credential-vault research:
 2. **The frozen MCP tool surface is unenforced.** Freezing snapshots `tools/list` and derives
    conservative contracts from `McpAnnotations`, but nothing checks that the live server still
    matches that surface at run time — drift surfaces as an opaque mid-run activity failure.
-   Related pre-existing bug: `_retry_policy_for` (`execution/harness.py`) chooses retry counts
+   `_retry_policy_for` (`execution/harness.py`) also chooses retry counts
    from the tool contract **without checking `FrozenTool.asserted`** — an MCP server can claim
    `idempotentHint: true` and obtain retries it is not entitled to. MCP annotations are
    untrusted hints by spec.
@@ -52,8 +50,7 @@ operator-trusted code, so the vault's job is **distribution + hygiene**, not ant
 
 ### 3.1 Data model
 
-New numbered migration in the execution store (`projection_sql.py` conventions; current
-migrations end at v8):
+New numbered migration in the execution store (`projection_sql.py` conventions):
 
 ```
 secrets(
@@ -71,10 +68,13 @@ secrets(
 **Dedicated vault key ring:** `JULEP_VAULT_KEYS` / `JULEP_VAULT_KEY_ID`, same wire format as
 the `TEMPORAL_PAYLOAD_KEYS` codec but a separate, purpose-derived ring — one key must not
 serve two security domains. AAD binds (name, generation) so ciphertext cannot be replayed
-across rows or versions. Rotation protocol: old key ids stay decode-available;
-`julep db reencrypt-secrets` re-encrypts all rows under the active key and reports progress;
-a key may be retired only when the sweep reports zero rows referencing it. Restoring the DB
-requires the ring covering every `key_id` present.
+across rows or versions. Rotation protocol: old key ids stay decode-available.
+`julep db reencrypt-secrets` is a **maintenance-window operation**: it takes an
+exclusive transaction lock on the execution-store `runs` and `secrets` tables, refuses to
+start while any run is non-terminal, re-encrypts all rows under the active key, and reports
+progress. Operators stop new submissions before invoking it. A key may be retired only when
+the sweep reports zero rows referencing it. Restoring the DB requires the ring covering every
+`key_id` present.
 
 No version history: `PUT` overwrites (generation++); `archive` nulls ciphertext, keeps the
 row; `DELETE` removes it.
@@ -124,12 +124,15 @@ Secret-capable surfaces, split by consumer class:
    the authoring-time path for freeze-time snapshot fetches.
 3. Otherwise **fail closed**, naming the secret and every chain step tried.
 
-**Value scrubbing** (key/path-pattern redaction cannot catch echoed values): resolved values
-register in a process-wide dynamic scrubber holding exact values plus base64 and URL-encoded
-variants, composed into trajectory capture, projection egress (pre-`value_ref`),
-activity-failure serialization, and MCP/HTTP transport diagnostics; request headers/bodies
-are never logged by default. Honest scope: this protects julep-controlled persistence; it
-cannot stop a remote endpoint from deliberately echoing a credential into a tool result.
+**Value scrubbing** (key/path-pattern redaction cannot catch echoed values): operator-vault
+and env values register in a process-wide dynamic scrubber holding exact values plus base64
+and URL-encoded variants. Caller-supplied run values are instead scrubbed **only in that
+run's context**; they never enter a process-global registry where one caller's short value
+could redact another run's data or accumulate forever. The applicable scrubber is composed
+into trajectory capture, projection egress (pre-`value_ref`), activity-failure serialization,
+and MCP/HTTP transport diagnostics; request headers/bodies are never logged by default.
+Honest scope: this protects julep-controlled persistence; it cannot stop a remote endpoint
+from deliberately echoing a credential into a tool result.
 
 Freezing: references pass through as strings; no resolution output flows into release or
 artifact bytes. `julep doctor` gains a dangling-reference check.
@@ -147,26 +150,39 @@ credential with the run, which removes any shared tenant storage and with it any
 julep-side authorization question: a submitter can only route a credential it already holds.
 Julep authenticates submitters; tenant identity belongs to the application.
 
-1. **Submission**: `POST /v1/runs { ..., "secrets": { "<logical-name>": "<value>" } }` —
-   real values over TLS, keyed by the same logical names config uses. Config stays
-   tenant-blind: `Authorization = "secret://tracker-token"`.
+1. **Submission and inferred bindings**:
+   `POST /v1/runs { ..., "secrets": { "<logical-name>": "<value>" } }` — real values over
+   TLS, keyed by the same logical names config uses. Config stays tenant-blind:
+   `Authorization = "secret://tracker-token"`. There is no second binding declaration: at
+   preflight, the worker derives the allowed names from whole-string `secret://` references
+   in the resolved request-time config for MCP servers referenced by the frozen release.
+   Submitted names outside that set fail the run before user/tool effects. When the control
+   plane has the same environment config it may reject them synchronously as a convenience;
+   worker preflight remains authoritative. Supplying an allowed name intentionally shadows
+   the operator vault/env value of the same name for that run.
 2. **Non-persistence contract**: the `secrets` field is stripped at ingest — it never reaches
    the stored run input (`input_ref` / projection values), `GET /v1/runs`, SSE, traces, or
    server logs. Values ride only inside `FlowInput` under the Temporal payload codec
    (AES-GCM); the server **refuses** run secrets when payload encryption is off. On the
-   worker, values register with the scrubber (§3.3).
+   worker, values are supplied to the run-scoped scrubber (§3.3), never the process-global
+   registry.
 3. **Resolution**: step 0 of the chain, ahead of vault and env.
 4. **Carriage**: the map threads `FlowInput` → child `FlowInput`s → `AgentInput` →
-   `CallToolInput` → every continue-as-new constructor. Absent field ⇒ none; old histories
-   replay unchanged; command-producing changes are patch-gated.
+   `CallToolInput`, projection/diagnostic activities that may serialize run values, and every
+   continue-as-new constructor. Each boundary constructs the scrubber from that run's map.
+   Absent field ⇒ none; old histories replay unchanged; command-producing changes are
+   patch-gated.
 5. **Cache identity**: transport/preflight caches key on server-config digest + ordered
    sink→value-hash mapping + policy — never raw values, no unordered-set collision when two
    secrets swap headers.
 6. **Pinning trade-off, documented**: values are fixed for the run's lifetime — no mid-run
    rotation or revocation; revoking a tenant credential means terminating its in-flight runs.
    Right-sized for episodic runs; long-lived runs should prefer operator-vault refs.
-7. **Direct/CLI starts**: the caller constructs `FlowInput` locally and may attach run
-   secrets the same way; `JULEP_SECRET_*` env fallback also works.
+7. **Start paths**: run secrets are supported through `/v1/runs` and the Julep CLI start
+   helper. The CLI verifies that its Temporal client uses the AES-GCM converter and refuses
+   otherwise. Raw/direct Temporal SDK starts must not attach run secrets because the
+   workflow cannot determine how its input was encoded. `JULEP_SECRET_*` remains the
+   direct/local-development fallback.
 
 ## 4. MCP surface contract
 
@@ -174,18 +190,17 @@ Julep authenticates submitters; tenant identity belongs to the application.
 
 - `FrozenTool` (and its release serialization) gains **normalized annotations** (MCP defaults
   applied per the negotiated protocol version), the **protocol version**, and **assertion
-  provenance** — today only the annotations' contribution to `definition_hash` survives.
-- **Retry authority is severed from hints** (first commit in sequence — it fixes a live bug):
-  `_retry_policy_for` must never authorize more than one attempt from an **unasserted**
-  contract. Retries > 1 require `asserted=True` (capability manifest / native declaration /
-  explicit operator override). Preflight is defense-in-depth, never retry authority.
+  provenance**.
+- **Retry authority is severed from hints:** `_retry_policy_for` must never authorize more
+  than one attempt from an **unasserted** contract. Retries > 1 require `asserted=True`
+  (capability manifest / native declaration / explicit operator override). Preflight is
+  defense-in-depth, never retry authority.
 - The surface check is **`pin`: canonical definition-hash equality per referenced tool**
   (only tools the flow actually calls). Any difference fails closed with a diff-style detail
   payload. `names` (presence only) and `off` are explicit, documented, unsafe escape hatches.
   Structural "compatibility" checking of JSON Schema is not attempted — top-level checks miss
   nested `required`, enum narrowing, bounds, `additionalProperties` flips; a checker that
-  passes those is worse than none. A provably-conservative directional mode may come later
-  behind the same alpha knob.
+  passes those is worse than none.
 
 ### 4.2 One MCP transport
 
@@ -251,12 +266,11 @@ search_similar_posts = "tracker:search-similar-posts"
 
 Packages stay mem-mcp-shaped (bare Python-identifier keys; contracts in `tools.pyi`). Freeze:
 
-1. snapshots the bound servers (existing `mcp_snapshot`);
+1. snapshots the bound servers through `mcp_snapshot`;
 2. resolves every bare key through the pipeline's `tools` map — unbound key, unknown
    server/tool ⇒ loud freeze error;
 3. validates `tools.pyi` stubs against the frozen `inputSchema` by **exact canonical-schema
-   equality** (the existing `ToolSchemaExpectation` check; name-subset matching would weaken
-   it);
+   equality** through `ToolSchemaExpectation`;
 4. records the **alias map** bare-key → wire `ToolRef` in the release. The model-visible tool
    name is the bare key, mapped to the MCP wire name at dispatch.
 
@@ -266,30 +280,28 @@ Retargeting a package to another server — or to fakes in eval — never touche
 
 `reasoner_to_flow` lowers a tool-bearing reasoner to the **`app` shape running
 `AgentWorkflow`** — bounded by `max_rounds` when set, by `[tool.julep] agent_round_cap`
-(default 32) for `agent: true`. Reasoners without tools lower exactly as today (hash
-stability: existing releases unaffected).
+(default 32) for `agent: true`. Reasoners without tools retain their current lowering and
+byte-identical release hashes.
 
 `AgentInput` is extended with the frozen alias map, tool definitions (schemas presented to
 the provider under bare names), and contracts. Inherited from AgentWorkflow: deterministic
 activity cids (the `mcp_auth` `idk` binding), READ-concurrent / write-serialized dispatch,
 `require_tool_call`, the budget guard, and the mid-loop continue-as-new seam.
 
-Two AgentWorkflow gaps close as part of this:
+The lowering also requires:
 
 - **Real output validation**: final answers validate against the reply schema with an actual
-  JSON-Schema validator, re-prompting within `output_retries` (today the loop only checks the
-  reply is a dict).
+  JSON-Schema validator, re-prompting within `output_retries`.
 - **Durable canonical transcript**: tool-call ids, names, arguments, result refs, and
   ordering persist and ride across CAN independently of prompt-context truncation.
 
-### 5.3 Declarations blob v2
+### 5.3 Declarations blob
 
-Blob schema v1 carries reasoners + renderers only, hydrated into a process-global registry.
-v2 adds alias maps, frozen tool definitions/contracts, and tool grants; hydration becomes
-**release-scoped** (keyed by declarations hash) so two releases defining the same logical
-reasoner differently coexist on one worker; hydration happens before `resolveAgentSpec`
-(which gains a declarations ref). Generic workers (no `WORKER_APPLICATION`) run zero-code
-agents from the release alone.
+The declarations blob uses schema version 2 and carries reasoners, renderers, alias maps,
+frozen tool definitions/contracts, and tool grants. Hydration is **release-scoped** (keyed by
+declarations hash) so two releases defining the same logical reasoner differently coexist on
+one worker; hydration happens before `resolveAgentSpec`, which receives a declarations ref.
+Generic workers (no `WORKER_APPLICATION`) run zero-code agents from the release alone.
 
 ### 5.4 Local/eval story
 
@@ -307,6 +319,7 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
 | `require_tool_call` violated | typed failure (existing) | run failure + transcript |
 | Final output fails schema after `output_retries` | typed validation failure | run failure + transcript |
 | `secret://` unresolvable / revoked | fail-closed error naming secret + chain | startup or call site |
+| Submitted run-secret name is unused by resolved config for the release-referenced MCP servers | `invalid_run_secret_binding` (terminal; zero user/tool effects) | synchronous 400 when known, otherwise async terminal state |
 | Run `secrets` submitted while payload encryption is off | 400 at submission | `POST /v1/runs` |
 | Vault transient outage, cached value | stale served ≤ 15 min, then fail closed | worker logs |
 | Non-worker key reads a value; worker key off-allowlist or on non-secret routes | 403 | API |
@@ -324,22 +337,25 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
   digest across CAN; cache TTL; transport-error retries.
 - **Transport**: one transport serves call/list/snapshot; discovery-scope tokens verified;
   header `secret://` resolution per call.
-- **Run secrets**: non-persistence (stored `input_ref`, `GET /v1/runs`, SSE, projection
-  values never contain submitted values — asserted against the raw store); submission refused
-  without payload encryption; step-0 precedence; threading through child flows, AgentInput,
-  CallToolInput, and both CAN paths; value-hash cache identity (header-swap collision);
-  scrubber registration; direct-start parity.
+- **Run secrets**: inferred allowed-name set from only the release-referenced MCP servers;
+  unknown-name refusal before user/tool effects; intentional shadowing of same-name vault/env
+  values; non-persistence (stored `input_ref`, `GET /v1/runs`, SSE, projection values never
+  contain submitted values — asserted against the raw store); submission refused without
+  payload encryption; step-0 precedence; threading through child flows, AgentInput,
+  CallToolInput, projection/diagnostic activities, and both CAN paths; value-hash cache
+  identity (header-swap collision); isolation between concurrent run-scoped scrubbers; CLI
+  refusal without the AES-GCM converter; raw/direct Temporal starts documented unsupported.
 - **Vault**: role parsing back-compat; route audit (worker key 403 everywhere but value
   fetch); allowlist fail-closed; AAD binding (row/generation swap fails to decrypt); key-ring
-  rotation + `reencrypt-secrets` + retirement guard; resolver chain, TTL, bounded
-  stale-if-error, immediate revocation eviction; scrubber catches exact/base64/urlencoded
-  echoes at all four boundaries.
+  rotation + maintenance-only `reencrypt-secrets` (active-run refusal, exclusive table lock,
+  retirement guard); resolver chain, TTL, bounded stale-if-error, immediate revocation
+  eviction; scrubber catches exact/base64/urlencoded echoes at all four boundaries.
 - **Agent lowering**: tool-bearing reasoner ⇒ app/AgentWorkflow with alias map (goldens);
   non-tool reasoners byte-identical; alias-mapped dispatch; READ-concurrent determinism;
   `ToolSurfaceDrift` re-raise on sequential and concurrent paths; JSON-Schema output
   validation + `output_retries`; canonical transcript across CAN.
-- **Declarations v2**: golden blob; release-scoped hydration (two conflicting releases
-  coexist); generic worker runs the issue-dedup agent from the release alone.
+- **Declarations blob**: schema-version-2 golden; release-scoped hydration (two conflicting
+  releases coexist); generic worker runs the issue-dedup agent from the release alone.
 - **Live**: issue-dedup agent, vault-referenced header, submitted through `/v1/runs` with a
   run secret, SSE to terminal; then a drift injection (tools server restarted with a changed
   schema) ⇒ typed refusal.
@@ -350,18 +366,19 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
   normalized-annotation persistence in `FrozenTool`/releases.
 - **PR-A: vault-lite** — migration, `/v1/secrets`, key roles + route audit, allowlist,
   `julep/secrets.py` resolver + scrubber, run-secrets ingest at `POST /v1/runs`
-  (strip-before-store, encryption-required), vault key ring + `db reencrypt-secrets`, doctor
-  check, docs.
+  (strip-before-store, encryption-required), vault key ring + maintenance-only
+  `db reencrypt-secrets`, doctor check, docs.
 - **PR-B: surface contract** — `McpTransport` + discovery scope, `pin` check, preflight
-  behind `workflow.patched`, policy pinning + CAN carriage, run-secret threading
-  (FlowInput/AgentInput/CallToolInput/child starts/CAN) + identity-complete cache keys, drift
-  classification + AgentWorkflow re-raise, activation advisory, docs.
+  behind `workflow.patched`, policy pinning + CAN carriage, authoritative inferred run-secret
+  binding validation, run-secret threading (FlowInput/AgentInput/CallToolInput/child starts/
+  projection diagnostics/CAN) + identity-complete cache keys, drift classification +
+  AgentWorkflow re-raise, activation advisory, docs.
 - **PR-C: dotctx agents** — binding config + freeze validation + alias map, lowering to
   app/AgentWorkflow, `AgentInput` extension, output validation + canonical transcript,
-  declarations blob v2 + release-scoped hydration, eval fakes, issue-dedup example upgrade,
-  docs. Depends on B0/B; consumes A.
+  declarations blob schema 2 + release-scoped hydration, eval fakes, issue-dedup example
+  upgrade, docs. Depends on B0/B; consumes A.
 
-## 9. Out of scope (v1)
+## 9. Out of scope
 
 Directional JSON-Schema compat mode; OAuth auto-refresh; egress proxies/placeholders;
 julep-side tenant secret storage; per-secret host binding; secret version history + webhooks;
