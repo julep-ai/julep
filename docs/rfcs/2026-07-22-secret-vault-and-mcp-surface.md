@@ -157,6 +157,37 @@ startup-time consumers on restart/reconnect (documented per surface). Audit v1: 
 (`updated_by`, `generation`, timestamps, archive records) + server log lines. Webhooks,
 history, per-secret host binding: out of scope.
 
+### 3.5 Run-scoped secret binding (multi-tenant)
+
+The common multi-tenant case: one flow, one MCP server config, but tenant A's run must call
+the tracker with tenant A's credential. Config stays tenant-agnostic
+(`Authorization = "secret://tracker-token"`); the *run* decides which concrete secret the
+logical name resolves to.
+
+1. **Secret ownership.** `secrets` gains `owner JSONB` (nullable) — the same
+   `principal_base` subset-match machinery runs already use. `PUT /v1/secrets/{name}` (admin)
+   may set it; unowned secrets are global.
+2. **Binding at submission.** `POST /v1/runs` gains
+   `secretBindings: { "<logical-name>": "<concrete-name>" }` — names only, never values.
+   The control plane validates each binding: the concrete secret exists, is not archived, and
+   the run's principal is covered by the secret's `owner` (subset match). Violations ⇒ 400/403
+   before anything starts. Because key-owned principal fields are immutable at submission,
+   tenant A cannot forge a principal that reaches `tenants/acme-b/...` secrets.
+3. **Carriage.** The validated binding map rides `FlowInput` (replay-stable, across CAN) —
+   pure name→name indirection, no secret material.
+4. **Resolution.** The worker transport resolves `secret://<logical>` by first consulting the
+   run's binding map, then the normal chain (§3.3). Transport/preflight caches key on
+   (server, concrete names + generations) so tenants never share a cached transport identity;
+   the `mcp_auth` JWT already carries the run principal's `tenant` claim, giving the
+   application-side MCP server its own defense-in-depth check.
+5. **Worker allowlist** grows glob support (`tenants/*/tracker-token`) so shared trusted
+   workers can serve all tenants while the allowlist still bounds what the worker role can
+   ever read.
+
+v2 sugar (deferred): principal-templated references —
+`secret://tenants/{principal.tenant}/tracker-token` — deriving the binding automatically from
+the run principal; pure convenience over the same validated mechanism.
+
 ## 4. MCP surface contract
 
 ### 4.1 What freeze must persist, and retry authority (findings 1, 2)
@@ -314,6 +345,7 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
 | `require_tool_call` violated | typed failure (existing) | run failure + transcript |
 | Final output fails schema after `output_retries` | typed validation failure | run failure + transcript |
 | `secret://` unresolvable / revoked | fail-closed error naming secret + chain | startup or call site |
+| Binding to unknown/archived/unowned-by-principal secret | 400/403 at submission | `POST /v1/runs` |
 | Vault transient outage, cached value | stale served ≤ 15 min, then fail closed | worker logs |
 | Non-worker key reads a value; worker key off-allowlist | 403 | API |
 | Worker key on non-secret routes | 403 | API |
@@ -331,6 +363,9 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
   digest carried across CAN; 30 s cache; transport-error retries.
 - **Transport**: one transport serves call/list/snapshot; discovery-scope tokens verified;
   header `secret://` resolution per call.
+- **Bindings**: owner subset-match enforcement (cross-tenant binding rejected at submission);
+  binding map rides FlowInput across CAN; per-run transport cache isolation (two tenants, same
+  server, different resolved headers); allowlist globs.
 - **Vault**: role parsing back-compat (`:admin` unchanged; `:worker`; junk third field errors);
   route audit (worker key 403 everywhere but value fetch); allowlist fail-closed; AAD binding
   (row/generation swap fails to decrypt); key-ring rotation + `reencrypt-secrets` sweep +
@@ -352,11 +387,13 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
 - **PR-B0 (first, small):** retry-authority fix — unasserted contracts cap at 1 attempt; +
   normalized-annotation persistence in `FrozenTool`/releases. Fixes a live issue independent of
   everything else.
-- **PR-A: vault-lite** — migration (v9+), `/v1/secrets`, key roles + route audit, allowlist,
+- **PR-A: vault-lite** — migration (v9+), `/v1/secrets` incl. `owner` + `secretBindings`
+  validation at `POST /v1/runs`, key roles + route audit, allowlist (with globs),
   `julep/secrets.py` resolver + scrubber, vault key ring + `db reencrypt-secrets`, doctor
   check, docs.
 - **PR-B: surface contract** — `McpTransport` unification + discovery scope, `pin` check,
-  preflight activity behind `workflow.patched`, policy pinning + CAN carriage, drift
+  preflight activity behind `workflow.patched`, policy pinning + CAN carriage, binding-map
+  carriage in `FlowInput` + per-run transport resolution/cache isolation, drift
   classification + AgentWorkflow re-raise, activation advisory (deployment schema add), docs.
 - **PR-C: dotctx agents** — binding config + freeze validation + alias map, lowering to
   app/AgentWorkflow, `AgentInput` extension, output validation + canonical transcript,
@@ -366,9 +403,9 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
 ## 9. Out of scope (v1)
 
 Directional JSON-Schema `compat` mode (future alpha); OAuth auto-refresh; egress
-proxies/placeholders; per-secret host/server binding; secret version history + webhooks;
-LISTEN/NOTIFY rotation push; MCP *server* authoring; sourcing `worker_secret_environment`
-(K8s) from the vault.
+proxies/placeholders; per-secret *host* binding; principal-templated secret references
+(§3.5 sugar); secret version history + webhooks; LISTEN/NOTIFY rotation push; MCP *server*
+authoring; sourcing `worker_secret_environment` (K8s) from the vault.
 
 ## 10. Open questions — resolved by review
 
