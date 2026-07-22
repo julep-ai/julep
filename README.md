@@ -80,6 +80,21 @@ and behavior contract come from the frozen MCP snapshot; handle-valued keyword
 arguments build its input record directly. `examples/episode_summary_flow.py`
 shows snapshot-backed MCP reads and writes with a local `mcp_call` fake.
 
+## Production secrets and MCP safety
+
+The self-hosted control plane includes a write-only operator vault whose values
+are encrypted at rest. Callers can also bind short-lived, per-run credentials to
+whole-string `secret://name` MCP header references; those values travel only in
+encrypted Temporal payloads and are excluded from stored run data and
+projections. Before user effects, worker-side MCP preflight checks the frozen,
+transitively reachable tool surface. New releases default to exact `pin`
+comparison, with explicit `names` and `off` escape hatches; mid-run tool removal
+or post-validation schema rejection fails terminally as typed surface drift.
+
+See the **[control-plane guide](docs-site/content/docs/deploy/control-plane.md)**
+for vault configuration, run-secret limits and binding rules, MCP policy
+behavior, and the administration API.
+
 ---
 
 ## The CLI

@@ -223,18 +223,24 @@ single-consumer and ends only on `Closed`.
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
 | `ToolContract` | `ToolContract(effect: Effect, idempotency: Idempotency)` | asserted/defaulted behavior | contract | enum `ValueError` in `from_json` | `ToolContract(Effect.READ, Idempotency.NATIVE)` |
-| `McpAnnotations` | `McpAnnotations(read_only_hint=None, destructive_hint=None, open_world_hint=None, idempotent_hint=None)` | MCP behavior hints | annotation snapshot | none | `McpAnnotations.from_mcp({"annotations": {}})` |
-| `definition_hash` | `definition_hash(ref, input_schema, output_schema=None, server_version=None, annotations=None) -> str` | provider definition data | `sha256:<hex>` | JSON serialization errors | `definition_hash(native("t"), {})` |
+| `McpAnnotations` | `McpAnnotations(read_only_hint=None, destructive_hint=None, open_world_hint=None, idempotent_hint=None)`; `normalized(protocol_version=None)` | MCP behavior hints; normalization fills MCP defaults (`false`, `true`, `true`, `false`) for stable hashing | annotation snapshot | `ValueError` for non-boolean hints | `McpAnnotations.from_mcp({"annotations": {}}).normalized("2025-06-18")` |
+| `definition_hash` | `definition_hash(ref, input_schema, output_schema=None, server_version=None, annotations=None, protocol_version=None) -> str` | provider definition data, including negotiated MCP protocol version and normalized annotations | `sha256:<hex>` | JSON serialization errors | `definition_hash(native("t"), {})` |
 | `execution_hash` | `execution_hash(tool_definition_hash: str, contract: ToolContract, asserted: bool) -> str` | definition hash plus contract | `sha256:<hex>` | none | `execution_hash(h, c, True)` |
-| `FrozenTool` | `FrozenTool(definition_hash, execution_hash, ref, input_schema, contract, output_schema=None, server_version=None, asserted=False)` | frozen manifest entry | frozen tool | none | `FrozenTool.create(native("t"), {}, c)` |
-| `FrozenTool.create` | `create(ref, input_schema, contract, output_schema=None, server_version=None, asserted=False, annotations=None) -> FrozenTool` | hashes tool definition and execution contract | frozen tool | JSON serialization errors | `FrozenTool.create(native("t"), {}, c)` |
+| `FrozenTool` | `FrozenTool(definition_hash, execution_hash, ref, input_schema, contract, output_schema=None, server_version=None, protocol_version=None, annotations=None, asserted=False, assertion_provenance=None)` | frozen manifest entry with provider definition and trusted-assertion origin | frozen tool | none | `FrozenTool.create(native("t"), {}, c)` |
+| `FrozenTool.create` | `create(ref, input_schema, contract, output_schema=None, server_version=None, asserted=False, annotations=None, protocol_version=None, assertion_provenance=None) -> FrozenTool` | normalizes MCP annotations and hashes provider definition separately from the execution contract | frozen tool | annotation/JSON serialization errors | `FrozenTool.create(native("t"), {}, c)` |
 | `manifest_to_json` | `manifest_to_json(m: ToolManifest) -> dict[str, Any]` | manifest | JSON form | none | `manifest_to_json(deployment.manifest)` |
 | `manifest_from_json` | `manifest_from_json(d: dict[str, Any]) -> ToolManifest` | manifest JSON | manifest | `KeyError`, enum `ValueError` for malformed entries | `manifest_from_json(deployment.manifest_json)` |
 | `McpToolSpec` | `McpToolSpec(input_schema, annotations=McpAnnotations(), output_schema=None)` | MCP tool schema/hints | snapshot entry | none | `McpToolSpec({})` |
-| `McpServerSnapshot` | `McpServerSnapshot(server: str, tools: dict[str, McpToolSpec], version=None)` | server tools/version | snapshot server | none | `McpServerSnapshot("s", {"t": McpToolSpec({})})` |
+| `McpServerSnapshot` | `McpServerSnapshot(server: str, tools: dict[str, McpToolSpec], version=None, protocol_version=None, server_version=None)` | server tools plus legacy identity and separately negotiated MCP/server versions | snapshot server | none | `McpServerSnapshot("s", {"t": McpToolSpec({})})` |
 | `NativeToolSpec` | `NativeToolSpec(input_schema, contract, output_schema=None)` | native tool schema/contract | snapshot entry | none | `NativeToolSpec({}, c)` |
 | `McpSnapshot` | `McpSnapshot(servers={}, native={})` | whole tool surface | snapshot | none | `snapshot_from_tools([lookup])` |
-| `CapabilityOverrides` | `CapabilityOverrides(contracts={})`; `get(key) -> ToolContract | None` | asserted contracts | overrides | none | `CapabilityOverrides({"t": c}).get("t")` |
+| `CapabilityOverrides` | `CapabilityOverrides(contracts={}, provenance={}, default_provenance="operator_override")`; `get(key)`; `provenance_for(key)` | asserted contracts and their trusted origin | overrides | none | `CapabilityOverrides({"t": c}, {"t": "capability_manifest"})` |
+| `McpSurfacePolicy` | enum `PIN="pin"`, `NAMES="names"`, `OFF="off"`; `coerce(value)` | select exact definition, presence-only, or disabled comparison | policy | `ValueError` for unknown policy | `McpSurfacePolicy.coerce("pin")` |
+| `McpSurfaceMismatch` | `McpSurfaceMismatch(server, tool, reason, frozen_definition_hash, fresh_definition_hash=None, diff=None)` | one machine-readable surface difference | mismatch; `to_json()` | none | `mismatch.reason` |
+| `McpSurfaceMismatchError` | `McpSurfaceMismatchError(mismatches)` | aggregate failed assertion; `.details` returns JSON records | exception | n/a | `except McpSurfaceMismatchError as exc: print(exc.details)` |
+| `compare_mcp_surface` | `compare_mcp_surface(frozen, fresh, *, policy=PIN) -> tuple[McpSurfaceMismatch, ...]` | compare only referenced MCP tools; extra live tools are ignored | mismatches | policy `ValueError` | `compare_mcp_surface(d.manifest, live)` |
+| `assert_mcp_surface` | `assert_mcp_surface(frozen, fresh, *, policy=PIN) -> None` | enforce selected surface policy | None | `McpSurfaceMismatchError` | `assert_mcp_surface(d.manifest, live)` |
+| `canonical_surface_digest` | `canonical_surface_digest(tools) -> str` | stable digest of the referenced MCP definition hashes | `sha256:<hex>` | none | `canonical_surface_digest(d.manifest)` |
 | `FreezeResult` | `FreezeResult(flow: Node, manifest: ToolManifest, source_map={})` | freeze output | result | none | `freeze(flow, snapshot).manifest` |
 | `freeze` | `freeze(flow: Node, snapshot: McpSnapshot, overrides=None, *, expected_tool_schemas=None) -> FreezeResult` | authored flow and snapshot | frozen flow/manifest | `FreezeError` for cycles, missing tools, schema drift | `freeze(call("lookup"), snapshot_from_tools([lookup]))` |
 | `Diagnostic` | `Diagnostic(code, node_id, message, severity="error", hint=None, help_url=None, source=None)` | validation finding | diagnostic | none | `Diagnostic("X", "$", "message")` |
@@ -271,6 +277,13 @@ single-consumer and ends only on `Closed`.
 Import live snapshot helpers from `julep.mcp_snapshot`. They use the official
 MCP SDK from `julep[mcp]` and never follow redirects outside the configured
 endpoint allow-list.
+
+For MCP tools, `freeze(...)` persists the negotiated protocol version and
+server version, applies that protocol's defaults to all four annotations, and
+hashes the normalized definition. `assertion_provenance` records why a contract
+is trusted (for example `native_declaration`, `framework_builtin`, or an
+operator/capability override); an unasserted MCP contract has no assertion
+provenance and its annotations remain untrusted hints.
 
 `mcp_tool` schemas and effect/idempotency behavior always come from the frozen
 snapshot; its constructor has no contract override arguments. Handle-valued
@@ -373,7 +386,7 @@ The package root exports `as_flow`; the full typed wrapper lives in
 | `interpret` | `async interpret(node, value, env, causes=(), *, principal=None, root_run_id=None, segment_seq=None) -> Result` | IR, input, env, optional run identity | `Result(value, event_id, attrs, reported_cost)` | framework, pure, handler errors | `await interpret(flow, value, env)` |
 | `Result` | `Result(value: Any, event_id: str | None = None, attrs=None, reported_cost=None)` | interpreter result | value envelope | none | `result.value` |
 | `RunPrincipal` | `dict[str, Any]` | opaque tenant/credential reference, never secret | alias | none | `principal={"tenant": "acme"}` |
-| `WorkerContext` | `WorkerContext(tool_urls={}, mcp_call=None, llm=None, on_attempt=None, resolve_qos=default_resolve_qos, blob_store=None, session_store=None, capabilities=None, registry=None, http_timeout_s=30.0, principal_headers=None, count_tokens=None, subflows={}, agents={}, trajectory_sink=None, trajectory_blob_store=None)` | process-global worker dependencies | context | none | `WorkerContext(llm=make_llm_caller())` |
+| `WorkerContext` | `WorkerContext(tool_urls={}, mcp_call=None, mcp_transport=None, llm=None, on_attempt=None, resolve_qos=default_resolve_qos, blob_store=None, session_store=None, capabilities=None, registry=None, http_timeout_s=30.0, principal_headers=None, count_tokens=None, subflows={}, agents={}, trajectory_sink=None, trajectory_blob_store=None, redactor=None)` | process-global worker dependencies; canonical `mcp_call` receives `(server, tool, value, idempotency_key, principal, run_secrets, input_schema_validated)` | context | none | `WorkerContext(llm=make_llm_caller(), mcp_transport=transport)` |
 
 ## Temporal, worker, DBOS, and CMA runtime
 
@@ -385,11 +398,11 @@ Top-level Temporal exports exist only when `HAVE_TEMPORAL` is true:
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
-| `FlowInput` | `FlowInput(session_id, input=None, flow_json=None, manifest_json=None, pinned_pures=None, max_call_limits=None, call_counts=None, ref=None, policy=None, principal=None, bundle=None, root_run_id=None, segment_seq=0)` | Temporal flow workflow input | dataclass | none | `FlowInput("run-1", flow_json=deployment.flow_json)` |
+| `FlowInput` | `FlowInput(session_id, input=None, flow_json=None, manifest_json=None, pinned_pures=None, max_call_limits=None, call_counts=None, ref=None, policy=None, principal=None, bundle=None, runtime_declarations_ref=None, root_run_id=None, segment_seq=0, queue_lanes=None, run_id=None, emit_projection=False, projection_batch_size=20, projection_batch_interval_s=2.0, secrets=None, mcp_preflight=None)` | Temporal flow workflow input; use start helpers rather than raw secret-bearing starts | dataclass | none | `FlowInput("run-1", flow_json=deployment.flow_json)` |
 | `SessionInput` | `SessionInput(session_id, flow_json, manifest_json, init, max_call_limits=None, call_counts=None, pinned_pures=None, budget=None, spent=0.0, bundle=None, in_channel="in", out_channel="out", policy=None, principal=None, root_run_id=None, segment_seq=0, history_threshold=None, channel_capacity=None, ...)` | Temporal session workflow input | dataclass | none | created by `Agent.open(..., backend="temporal")` |
-| `AgentInput` | `AgentInput(controller, session_id, input=None, config=None, granted_tools=None, granted_tools_unconstrained=False, granted_subflows=None, granted_contracts=None, state=None, state_cursor=None, use_session_store=False, policy=None, resolve_spec=True, principal=None, root_run_id=None, segment_seq=0)` | Temporal agent workflow input | dataclass | none | created by runtime |
-| `run_flow` | `async run_flow(client, flow_json, manifest_json, *, session_id, input=None, task_queue="julep", policy=None, pinned_pures=None, max_call_limits=None, principal=None, root_run_id=None, bundle=None) -> Any` | connected Temporal client and frozen artifact | workflow result | Temporal/runtime errors | `await run_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
-| `start_flow` | same params as `run_flow` | connected client and artifact | workflow handle | Temporal errors | `handle = await start_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
+| `AgentInput` | `AgentInput(controller, session_id, input=None, config=None, granted_tools=None, granted_tools_unconstrained=False, granted_subflows=None, granted_contracts=None, tool_defs=None, tool_aliases=None, state=None, state_cursor=None, use_session_store=False, policy=None, resolve_spec=True, principal=None, runtime_declarations_ref=None, root_run_id=None, segment_seq=0, queue_lanes=None, subflow_queues=None, secrets=None, mcp_preflight=None)` | Temporal agent workflow input; completed preflight state and run secrets are carried through child starts and continue-as-new | dataclass | none | created by runtime |
+| `run_flow` | `async run_flow(client, flow_json, manifest_json, *, session_id, input=None, task_queue="julep", policy=None, pinned_pures=None, max_call_limits=None, principal=None, root_run_id=None, bundle=None, runtime_declarations_ref=None, queue_lanes=None, run_id=None, emit_projection=False, projection_batch_size=20, projection_batch_interval_s=2.0, secrets=None, mcp_preflight=None) -> Any` | connected Temporal client and frozen artifact | workflow result | rejects secrets without verified AES-GCM conversion or binding preflight; Temporal/runtime errors | `await run_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
+| `start_flow` | same as `run_flow`, plus `workflow_start_options=None` | connected client and artifact; start options cannot override `id` or `task_queue` | workflow handle | same encryption/binding checks; Temporal errors | `handle = await start_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
 | `TemporalSessionHandle` | `TemporalSessionHandle(wfhandle, *, in_channel="in", out_channel="out", poll_s=0.02)` | workflow handle and channels | session handle | backend errors | returned by `Agent.open(..., backend="temporal")` |
 | `build_worker` | `build_worker(client, context, *, task_queue=DEFAULT_TASK_QUEUE, min_batch_window_s=0.0, **worker_kwargs) -> Worker` | Temporal client, `WorkerContext`, queue, SDK kwargs | worker | Temporal/import/config errors | `build_worker(client, WorkerContext(llm=llm))` |
 | `run_worker` | `async run_worker(*, target_host="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, tool_urls=None, mcp_call=None, llm=None, capabilities=None, subflows=None, agents=None, blob_store=None, session_store=None, trajectory_sink=None, trajectory_blob_store=None, on_attempt=None, http_timeout_s=30.0, **worker_kwargs) -> None` | standalone worker config | never until cancelled | Temporal/runtime errors | `await run_worker(llm=llm)` |
@@ -397,14 +410,36 @@ Top-level Temporal exports exist only when `HAVE_TEMPORAL` is true:
 | `serve` | `async serve(settings: WorkerServeSettings, *, shutdown_event=None) -> None` | settings and optional test shutdown event | None | `JulepError` without `temporalio`, factory errors | `await serve(WorkerServeSettings.from_env())` |
 | `HealthServer` | `HealthServer(port: int, *, host="0.0.0.0")` | probe listener | server with `/healthz`, `/readyz` | `RuntimeError` if `port` before start | `await HealthServer(8080).start()` |
 | `load_context_factory` | `load_context_factory(spec: str) -> Callable[[], Any]` | `module:attr` spec | callable | `ValueError` | `load_context_factory("app.worker:make_context")` |
-| Activity inputs | `CallToolInput`, `InvokeReasonerInput`, `ResolveQoSInput`, `CompilePlanInput`, `LoadStateInput`, `CommitStateInput`, `LoadValueInput`, `CommitValueInput`, `PutBlobInput` | dataclass payloads for activity wrappers | payload | none | `CallToolInput({"kind":"native","name":"t"}, {}, "cid")` |
-| Activities | `callTool`, `invokeReasoner`, `compilePlan`, `verifyPures`, `resolveSubflow`, `resolveRuntimeCapabilities`, `resolveAgentSpec` | activity payloads | effect results | worker context and policy errors | normally called by workflows |
+| `CallToolInput` | `CallToolInput(tool_ref, value, cid, cache=None, principal=None, run_id=None, root_run_id=None, segment_seq=None, node_id=None, op=None, kind=None, causes=(), secrets=None, frozen_input_schema=None, input_schema_validated=False)` | tool activity payload; agent calls carry the frozen schema and validation state | payload | none | `CallToolInput({"kind":"native","name":"t"}, {}, "cid")` |
+| `InvokeReasonerInput` | `InvokeReasonerInput(reasoner, value, cid, principal=None, transcript=None, ctx=None, summarizer=None, summary=None, tools=None, run_id=None, root_run_id=None, segment_seq=None, node_id=None, op=None, kind=None, causes=(), qos=None, runtime_declarations_ref=None, secrets=None)` | reasoner activity payload, including run-scoped failure scrubbing values | payload | none | normally constructed by workflows |
+| `ResolveQoSInput` | `ResolveQoSInput(reasoner, node_batchable=False, principal=None, cid=None, run_id=None, root_run_id=None, segment_seq=None, node_id=None, timeout_s=None, runtime_declarations_ref=None)` | deterministic QoS resolution payload | payload | none | normally constructed by workflows |
+| `CompilePlanInput` | `CompilePlanInput(planner, value, cid, manifest=None, principal=None, runtime_declarations_ref=None)` | staged-plan activity payload | payload | none | normally constructed by workflows |
+| State/value activity inputs | `LoadStateInput(session_id, cursor)`; `CommitStateInput(session_id, base, state, state_hash)`; `LoadValueInput(session_id, cursor)`; `CommitValueInput(session_id, base, value, value_hash)` | durable cursor payloads | payload | none | normally constructed by workflows |
+| `PutBlobInput` | `PutBlobInput(tenant, value, secrets=None)` | claim-check/blob payload with run-scoped scrubber values | payload | none | normally constructed by workflows |
+| Activities | `callTool`, `invokeReasoner`, `resolveQoS`, `compilePlan`, `verifyPures`, `resolveSubflow`, `resolveRuntimeCapabilities`, `resolveAgentSpec`, plus state/value/blob activities | activity payloads | effect results | worker context and policy errors | normally called by workflows |
 | `CMAEvent` | `CMAEvent(kind, tool=None, input=None, call_id=None, output=None, reason=None, usage=None)` | normalized managed-agent event | event | none | `CMAEvent("terminal", output="ok")` |
 | `CMAClient` | protocol `create_session(*, agent, environment, session_cid, input=None) -> CMASession` | CMA adapter seam | session | adapter errors | implement for provider |
 | `CMASession` | protocol `events`, `tool_result`, `tool_error`, `cancel` | one provider session | async event stream | adapter errors | `async for ev in session.events(): ...` |
 | `manifest_to_custom_tools` | `manifest_to_custom_tools(tool_names, *, input_schemas=None, descriptions=None) -> list[dict[str, Any]]` | granted tool names | CMA custom tools | none | `manifest_to_custom_tools(["lookup"])` |
 | `drive_cma_agent_loop` | `async drive_cma_agent_loop(*, input, cfg, session, call_tool, granted=None, contracts=None, state=None, session_cid="cma") -> dict[str, Any]` | CMA session and same gates as local loop | terminal result | CMA/tool errors | `await drive_cma_agent_loop(input=x, cfg=cfg, session=s, call_tool=fn)` |
 | `CMAAgentEnv` | `CMAAgentEnv(inner, *, client, environment=None, tools, cfg, granted=None, contracts=None, custom_tools=None)` | wraps an `Env`, replacing only `run_agent` | env | backend errors | `CMAAgentEnv(inner, client=c, tools={}, cfg=cfg)` |
+
+### Published-run secrets
+
+`PipelineRelease.start(..., secrets: dict[str, str] | None = None)` starts an
+already-published artifact with its captured MCP preflight policy.
+`julep.client.JulepClient.start_run(...)` accepts the same `secrets` mapping for
+control-plane starts; its optional `mcp_preflight="pin" | "names" | "off"`
+override is accepted by the server only for admin keys.
+
+Secret names match `[a-z0-9][a-z0-9_-]{0,63}`. A run accepts at most 32
+non-empty UTF-8 values, 16 KiB per value and 64 KiB total including names.
+Values can bind only whole-string `secret://name` request headers on MCP servers
+referenced by the release's transitive surface. Extra bindings fail before user
+effects, including under `off`. Published and helper starts require a verifiable
+AES-256-GCM Temporal data converter; raw Temporal SDK starts must not attach run
+secrets. Values are carried through child workflows and continue-as-new but are
+never copied into frozen artifacts, stored run input, projections, or events.
 
 DBOS exports are available from `julep.execution` only when
 `HAVE_DBOS` is true; they are not re-exported by the package root.
@@ -461,6 +496,8 @@ durability.
 | `PlanRejected` | `PlanRejected(reasons: Iterable[str])` | staged plan admission | `exc.reasons` |
 | `CapabilityDenied` | `CapabilityDenied(*args)` | capability compile/runtime gates | denied egress/tool |
 | `PrincipalRequired` | `PrincipalRequired(*args)` | worker-supplied callers | missing principal |
+| `ToolInputValidation` | `ToolInputValidation(server, tool)` | frozen input-schema validation before MCP network I/O | `.server`, `.tool` |
+| `ToolSurfaceDrift` | `ToolSurfaceDrift(server, tool, reason)` | missing live MCP tool or server-side schema rejection after frozen validation; non-retryable and terminal | `.server`, `.tool`, `.reason`, `to_json()` |
 | `ResilienceExhausted` | `ResilienceExhausted(attempts: list[AttemptRecord])` | resilient LLM caller | `exc.attempts` |
 | `UnsupportedShapeError` | `UnsupportedShapeError(*args)` | backend preflight | unsupported op |
 | `SessionCompileError` | `SessionCompileError(*args)` | `@session` AST lifting | non-liftable coroutine |

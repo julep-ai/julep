@@ -234,9 +234,43 @@ in MCP headers. Values travel only in AES-GCM-encrypted Temporal payloads and ar
 excluded from the stored input, run responses, events, projections, and logs;
 submission is rejected when payload encryption is disabled. Unknown/unreferenced
 names fail worker preflight before user effects. Limits are 32 entries, 16 KiB
-per UTF-8 value, and 64 KiB total. This surface does not inject LLM/provider keys.
-An admin may set `mcpPreflight` to `pin`, `names`, or `off`; secret-name binding
-validation remains active even with `off`.
+per UTF-8 value, and 64 KiB total, including names. Values are fixed for the
+run's lifetime. This surface does not inject LLM/provider keys.
+
+#### MCP preflight and drift
+
+Every new release captures an MCP preflight policy. The default, `pin`, requires
+the live canonical definition hash of every release-referenced MCP tool to
+equal its frozen hash. That identity includes input and output schemas,
+negotiated protocol and server versions, and normalized behavior annotations;
+unreferenced tools added to the server are ignored. `names` checks only that
+each referenced server and tool still exists. `off` skips live surface
+comparison. Treat `names` and especially `off` as explicit, unsafe escape
+hatches for author-managed deployments.
+
+The worker schedules preflight before any user, reasoner, or tool effect and
+walks the whole statically reachable release surface, including referenced
+subflows and subflows granted to agent nodes. A mismatch produces a terminal,
+non-retryable `tool_surface_mismatch` with machine-readable hashes and a diff.
+The initial `POST /v1/runs` can still return `accepted` because this refusal is
+worker-side; observe the terminal failure through the run record, result wait,
+or event stream.
+
+Run-secret binding validation is unconditional. Submitted names must correspond
+to whole-string references in the resolved request headers of MCP servers used
+by that transitive surface, even when policy is `off`. Thus `off` disables
+`tools/list` comparison, not secret routing validation.
+
+During an agent round, model-produced tool arguments are validated against the
+frozen input schema before network I/O. A rejection there is returned to the
+model as a tool-call observation so it can correct its arguments. If arguments
+pass that frozen schema but the live server rejects their shape, or the live
+tool is missing, Julep raises non-retryable `ToolSurfaceDrift` and terminates the
+run instead of feeding the failure back into another round.
+
+An admin may override the release policy for one submission with
+`"mcpPreflight": "pin" | "names" | "off"`. Client and worker keys receive
+`403`; omitting the field uses the release's captured policy.
 
 Submission crosses a non-atomic Postgres-insert to Temporal-start boundary.
 The state transition is `submitting` to `accepted`, then `running` after the
