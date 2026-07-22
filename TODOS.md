@@ -105,6 +105,9 @@ in the source.
   vary build-to-build. `envHash` (the deterministic identity) is stable; only the shipped
   component bytes differ. Close via an upstream componentize determinism mode or a post-link
   canonicalization/seed-pinning pass, then add a real-build determinism assertion.
+  Accepted fallback (post-port plan review, 2026-07): if byte-stability proves unreachable,
+  pin the identity to the semantic env hash (`envHash`) and document that component bytes
+  are rebuild-variable — do not block the wasm tier on byte-equality.
 - **FIXME(P4-2) major — module-top PEP 723 dropped (fail-OPEN).** `register_pure` /
   bundle source use `inspect.getsource(fn)`, which omits a module-top `# /// script`
   block, so a dep'd baked pure publishes as no-dep and imports fail late in wasm. Reject
