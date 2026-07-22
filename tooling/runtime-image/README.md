@@ -16,8 +16,8 @@ image used by the demos.
 - It does not bake in flow code, custom pures, examples, or deployment modules.
 - It is not rebuilt to publish a new flow.
 
-The flow and its custom pures arrive as a signed CAS bundle. The worker resolves
-that bundle from `STORE_URL` at startup using
+The flow and its custom pures arrive as a signed artifact store bundle. The worker resolves
+that bundle from `JULEP_ARTIFACT_STORE_URL` at startup using
 `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
 and the `JULEP_BUNDLES` / `JULEP_BUNDLE_ALLOWED_SIGNERS` environment block.
 
@@ -60,7 +60,7 @@ Operators provide:
 - `WORKER_GRACEFUL_SHUTDOWN_S`
 - `WORKER_MAX_CONCURRENT_ACTIVITIES`
 - `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS`
-- `STORE_URL`
+- `JULEP_ARTIFACT_STORE_URL`
 - `JULEP_BUNDLES`
 - `JULEP_BUNDLE_ALLOWED_SIGNERS`
 - `JULEP_PURE_NATIVE_DEPS`

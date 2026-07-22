@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import arr, deploy, pure, seq
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.execution.bundle_worker import make_context
 from julep.execution.effects import WorkerContext
 from julep.registry import Registry
@@ -42,11 +42,11 @@ def test_make_context_resolves_bundle_pures_and_returns_worker_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A generic worker resolves JULEP_BUNDLES at startup, registering bundle pures."""
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     deployment = deploy(seq(arr("bundle.genericworker.tag.v1")), read_snapshot())
     rec = deployment.publish(store, signing_key=SEED)
 
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
     monkeypatch.setenv("JULEP_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
     monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
 

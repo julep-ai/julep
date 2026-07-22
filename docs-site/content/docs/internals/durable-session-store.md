@@ -184,11 +184,11 @@ an `ExecutionPolicy` flag, only if you want the live trace queryable before a CA
 
 ### Invariants the `SessionStore` must hold
 
-1. **`session_id` ↔ Temporal workflow-id is 1:1.** This is the concurrency guard. CAS by
+1. **`session_id` ↔ Temporal workflow-id is 1:1.** This is the concurrency guard. Compare-and-swap by
    `(session_id, base)` alone does *not* stop two runs of the same session from both firing
    tool effects before the loser notices `base` moved; it only prevents a forked store
    revision. Binding `session_id` to the workflow id delegates mutual exclusion to Temporal's
-   "one running execution per workflow id" guarantee. The store CAS then exists only for
+   "one running execution per workflow id" guarantee. The store compare-and-swap then exists only for
    crash-recovery idempotency, not concurrency control.
 2. **Commit idempotency is keyed by `(session_id, base, state_hash)`, atomically.** If the
    store write succeeds but the activity's completion isn't recorded, Temporal retries
@@ -271,7 +271,7 @@ traceability.
   queryability/cross-runtime survive as architecture reasons only. → fixed; thesis + "Optional".
 - **[P0]** "Replay rebuilds state from history" needs immutable, retained, integrity-checked
   blobs; GC/overwrite breaks replay. → fixed; "blob-durability contract".
-- **[P0]** CAS by `(session_id, base)` is incomplete for concurrent runs; needs workflow-id /
+- **[P0]** Compare-and-swap by `(session_id, base)` is incomplete for concurrent runs; needs workflow-id /
   fencing uniqueness. → fixed; invariant 1.
 - **[P1]** Crash-mid-commit idempotency needs a concrete key — `(session_id, base, state_hash)`.
   → fixed; invariant 2.

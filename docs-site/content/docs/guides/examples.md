@@ -9,7 +9,7 @@ kernel examples as focused references.
 
 ## `examples/episode_summary_flow.py`
 
-What it teaches: the core `@flow` loop plus CAS-guarded writes.
+What it teaches: the core `@flow` loop plus artifact store-guarded writes.
 
 Rung: primary authoring surface with keyless `deploy(...).dry_run(...)`.
 
@@ -45,7 +45,7 @@ python examples/cluster_labeling_flow.py
 
 This example is keyless and deterministic. It reads one global macrocluster
 snapshot, fans out bounded per-cluster labeling work, then performs a single
-transactional CAS-guarded snapshot write and status tally.
+transactional artifact store-guarded snapshot write and status tally.
 
 ## `examples/support_triage.py`
 

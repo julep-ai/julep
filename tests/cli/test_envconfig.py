@@ -8,9 +8,9 @@ def test_implicit_local_env_present_by_default(tmp_path):
     local = cfg.envs["local"]
     assert isinstance(local, EnvConfig)
     assert local.name == "local"
-    # local cas defaults to `.julep/cas` (a local path URI)
-    assert local.cas is not None
-    assert local.cas.endswith(".julep/cas")
+    # local artifacts defaults to `.julep/artifacts` (a local path URI)
+    assert local.artifacts is not None
+    assert local.artifacts.endswith(".julep/artifacts")
     # local has no Temporal target
     assert local.temporal_address is None
     # canonical defaults
@@ -37,7 +37,7 @@ def test_env_table_parses_from_pyproject(tmp_path):
         'temporal_address = "temporal.staging:7233"\n'
         'temporal_namespace = "staging-ns"\n'
         'task_queue = "julep-staging"\n'
-        'cas = "s3://my-bucket/julep-prefix"\n'
+        'artifacts = "s3://my-bucket/julep-prefix"\n'
         'langfuse_host = "https://lf.staging"\n',
         encoding="utf-8",
     )
@@ -48,7 +48,7 @@ def test_env_table_parses_from_pyproject(tmp_path):
     assert staging.temporal_address == "temporal.staging:7233"
     assert staging.temporal_namespace == "staging-ns"
     assert staging.task_queue == "julep-staging"
-    assert staging.cas == "s3://my-bucket/julep-prefix"
+    assert staging.artifacts == "s3://my-bucket/julep-prefix"
     assert staging.langfuse_host == "https://lf.staging"
     # implicit local still present alongside parsed envs
     assert "local" in cfg.envs
@@ -66,7 +66,7 @@ def test_env_table_uses_canonical_defaults_for_missing_fields(tmp_path):
     assert prod.temporal_address == "temporal.prod:7233"
     assert prod.temporal_namespace == "default"
     assert prod.task_queue == "julep"
-    assert prod.cas is None
+    assert prod.artifacts is None
     assert prod.langfuse_host is None
 
 
@@ -92,15 +92,15 @@ def test_julep_toml_overrides_env_field(tmp_path):
 
 
 def test_julep_toml_can_override_implicit_local(tmp_path):
-    """A user may point the implicit local env's cas at a custom path."""
+    """A user may point the implicit local env's artifacts at a custom path."""
     (tmp_path / "julep.toml").write_text(
         "[env.local]\n"
-        'cas = "/custom/cas/dir"\n',
+        'artifacts = "/custom/artifacts/dir"\n',
         encoding="utf-8",
     )
     cfg = load_config(tmp_path)
     local = cfg.envs["local"]
     assert local.name == "local"
-    assert local.cas == "/custom/cas/dir"
+    assert local.artifacts == "/custom/artifacts/dir"
     # local stays Temporal-less even when overridden
     assert local.temporal_address is None

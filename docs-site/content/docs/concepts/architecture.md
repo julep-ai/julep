@@ -1091,7 +1091,7 @@ flowchart TD
     trace["trace -> tracetree.render_tree"]
     freeze["deploy.freeze_agent(...)\ntimeout=120.0"]
     artifact["deploy(node, snapshot, strict=False)\nflow_json + manifest_json + pins"]
-    cas["CAS publish\nLocalDirCAS or s3://"]
+    artifacts["artifact store publish\nLocalDirArtifactStore or s3://"]
     ledger["ledger.upsert_records(.julep/deploys/<env>.json)"]
     status["status.status_for_env(...)\nfreeze publish=False"]
     remote["temporal_run.run_on_env(...)"]
@@ -1102,7 +1102,7 @@ flowchart TD
     select --> lint --> resolve
     resolve --> child --> ir --> local --> cache --> trace
     select --> freeze --> child
-    child --> artifact --> cas
+    child --> artifact --> artifacts
     artifact --> ledger
     ledger --> status
     ledger --> remote --> temporal
@@ -1253,8 +1253,8 @@ strict=False)`.
 blocking diagnostic exists, and does not publish in that case.
 
 A successful freeze returns `artifact_hash`, `flow_json`, `manifest_json`,
-`bundle_ref`, and `pinned_pures`. Publishing uses `cas_from_url(cas)` for
-`s3://...` URLs and `LocalDirCAS(cas)` otherwise. Local CAS publishing sets a
+`bundle_ref`, and `pinned_pures`. Publishing uses `artifact_store_from_url(artifacts)` for
+`s3://...` URLs and `LocalDirArtifactStore(artifacts)` otherwise. Local artifact store publishing sets a
 deterministic development signing key if `JULEP_BUNDLE_SIGNING_KEY` is unset.
 
 The deploy ledger is `.julep/deploys/<env>.json`. Each `DeployRecord` embeds
@@ -1265,7 +1265,7 @@ into the per-env ledger and writes sorted, pretty JSON.
 `julep status --env <env>` reads the ledger and current source graph. It reports
 `undeployed`, `clean`, `drift`, or `error`. Drift checks call
 `freeze_agent(..., publish=False)`, which computes the same hash without
-creating CAS objects or uploading to S3. `status_exit_code(...)` returns `3`
+creating artifact store objects or uploading to S3. `status_exit_code(...)` returns `3`
 when any row is `drift` or `error`, otherwise `0`.
 
 #### Remote `run --env`
@@ -1343,7 +1343,7 @@ workflow history; DBOS durability remains DBOS workflow state. See
 - Local runs are dev-mode simulations: useful offline, not production effect
   tests.
 - Remote runs replay the ledger: no silent fallback to current source.
-- Status is read-only: `publish=False` must not mutate CAS or S3.
+- Status is read-only: `publish=False` must not mutate artifact store or S3.
 - The ledger duplicates artifact data intentionally so `run --env` does not need
   a fresh source import.
 - DBOS is a framework backend, but not currently a `julep --env` target.
@@ -1354,10 +1354,10 @@ workflow history; DBOS durability remains DBOS workflow state. See
 `load_config(root)` reads `[tool.julep]` from `pyproject.toml`, then overlays
 `julep.toml`. Verified fields are `src`, `exclude`, `[tool.julep.tags]`,
 `[tool.julep.gates].fail_severity`, and env fields `temporal_address`,
-`temporal_namespace`, `task_queue`, `cas`, and `langfuse_host`.
+`temporal_namespace`, `task_queue`, `artifacts`, and `langfuse_host`.
 
-`env.local` always exists. Its default CAS is `.julep/cas`, and it has no Temporal
-address. `julep.toml` may override `env.local.cas`.
+`env.local` always exists. Its default artifact store is `.julep/artifacts`, and it has no Temporal
+address. `julep.toml` may override `env.local.artifacts`.
 
 Common exit codes:
 

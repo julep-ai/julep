@@ -50,7 +50,7 @@ from ..transcript import (
     split_to_budget,
     summary_turn,
 )
-from ..cas import cas_from_url
+from ..artifact_store import artifact_store_from_url
 from ..worker_store import bundle_ref_entries, resolve_entries
 from .blobstore import BlobStore, parse_ref
 from .llm_result import LlmResult
@@ -348,10 +348,10 @@ def _hydrate_runtime_declarations(ref: Optional[Mapping[str, Any]]) -> None:
             )
         return
 
-    store_url = os.environ.get("STORE_URL", "").strip()
+    store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL", "").strip()
     if not store_url:
-        raise RuntimeError("runtime declarations hydration requires STORE_URL")
-    blob = cas_from_url(store_url).get(expected_hash.removeprefix("sha256:"))
+        raise RuntimeError("runtime declarations hydration requires JULEP_ARTIFACT_STORE_URL")
+    blob = artifact_store_from_url(store_url).get(expected_hash.removeprefix("sha256:"))
     if len(blob) != expected_size:
         raise RuntimeError(
             f"runtime declarations blob size mismatch for {expected_hash}: "
@@ -1064,11 +1064,11 @@ async def verifyPures(inp: Any) -> None:
     registry = _registry()
     entries = bundle_ref_entries(bundle)
     if entries:
-        store_url = os.environ.get("STORE_URL", "").strip()
+        store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL", "").strip()
         if not store_url:
-            raise PureDriftError("bundle resolution before pure verification requires STORE_URL")
+            raise PureDriftError("bundle resolution before pure verification requires JULEP_ARTIFACT_STORE_URL")
         try:
-            records = resolve_entries(cas_from_url(store_url), entries, registry=registry)
+            records = resolve_entries(artifact_store_from_url(store_url), entries, registry=registry)
         except Exception as exc:
             raise PureDriftError(f"bundle resolution before pure verification failed: {exc}") from exc
         _verify_bundle_binding(records, flow_json=flow_json, artifact_hash=artifact_hash)

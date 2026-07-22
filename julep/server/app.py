@@ -12,10 +12,10 @@ from typing import Any, Optional
 from fastapi import FastAPI
 
 from ..app_deploy import LaneReconciler
-from ..cas import CASStore
+from ..artifact_store import ArtifactStore
 from ..execution.projection_store import ExecutionStore
 from .auth import KeyRing
-from .routes.cas import router as cas_router
+from .routes.artifacts import router as artifacts_router
 from .routes.deployments import router as deployments_router
 from .routes.health import router as health_router
 from .routes.releases import router as releases_router
@@ -58,7 +58,7 @@ def create_app(
     settings: Optional[ServerSettings] = None,
     store: Optional[ExecutionStore] = None,
     gateway: Optional[TemporalGateway] = None,
-    cas: Optional[CASStore] = None,
+    artifacts: Optional[ArtifactStore] = None,
     reconciler: Optional[LaneReconciler] = None,
     enable_reconciler: bool = True,
     reconcile_interval_s: Optional[float] = None,
@@ -69,7 +69,7 @@ def create_app(
 
     resolved_settings = settings or ServerSettings.from_env()
     resolved_store = store or resolved_settings.build_store()
-    resolved_cas = cas or resolved_settings.build_cas()
+    resolved_artifact_store = artifacts or resolved_settings.build_artifact_store()
     resolved_reconciler = (
         reconciler if reconciler is not None else resolved_settings.build_reconciler()
     )
@@ -124,7 +124,7 @@ def create_app(
     app.state.store = resolved_store
     app.state.gateway = gateway
     app.state.gateway_error = None
-    app.state.cas = resolved_cas
+    app.state.artifacts = resolved_artifact_store
     app.state.keyring = keyring
     app.state.reconciler = resolved_reconciler
     app.state.deployment_reconcile_status = {}
@@ -133,7 +133,7 @@ def create_app(
     app.state.reconcile_task = None
 
     app.include_router(health_router, prefix="/v1")
-    app.include_router(cas_router, prefix="/v1")
+    app.include_router(artifacts_router, prefix="/v1")
     app.include_router(releases_router, prefix="/v1")
     app.include_router(deployments_router, prefix="/v1")
     app.include_router(runs_router, prefix="/v1")

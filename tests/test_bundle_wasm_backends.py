@@ -2,7 +2,7 @@
 all three backends.
 
 The seam is a single change in ``Registry.get_pure``: a wasm-tier pure (one
-registered through ``register_pure_from_source``, i.e. arrived from a signed CAS
+registered through ``register_pure_from_source``, i.e. arrived from a signed artifact-store
 bundle) resolves to a wasm-bound callable that runs the pure inside a fresh
 wasmtime CPython component instance. All three engine Envs route pure lookups
 through the process registry, so this module asserts that:
@@ -33,7 +33,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.execution import HAVE_DBOS
 from julep.projection import InMemoryProjection, ProjectionEmitter
 from julep.registry import Registry, _wasm_source_only
@@ -288,14 +288,14 @@ def test_temporal_flow_runs_bundle_pure_via_wasm(
     if name not in DEFAULT_REGISTRY.pures:
         DEFAULT_REGISTRY.register_pure(name, _e2e_double.fn)
 
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     deployment = deploy(seq(arr(name)), tools=[])
     rec = deployment.publish(store, signing_key=SEED)
 
-    # The worker's BundleResolvingWorkflowRunner reads STORE_URL; the resolver
+    # The worker's BundleResolvingWorkflowRunner reads JULEP_ARTIFACT_STORE_URL; the resolver
     # checks JULEP_BUNDLE_ALLOWED_SIGNERS. No JULEP_BUNDLE_NATIVE_EXEC: P3 resolution is
     # ungated and lands on the wasm tier.
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
     monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
 
     async def _run() -> Any:

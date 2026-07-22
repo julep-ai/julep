@@ -65,7 +65,7 @@ report optional runtime availability.
 | `dotctx` | rich dotctx prompt packages with Jinja2 | `pip install --pre 'julep[dotctx]'` |
 | `providers` | `any-llm` provider caller | `pip install --pre 'julep[providers]'` |
 | `otel`, `langfuse` | projection span export | `pip install --pre 'julep[otel]'` |
-| `store` | CAS bundle storage/signing helpers | `pip install --pre 'julep[store]'` |
+| `store` | artifact store bundle storage/signing helpers | `pip install --pre 'julep[store]'` |
 | `wasm` | wasm-tier bundle-sourced pures | `pip install --pre 'julep[wasm]'` |
 
 ## Core enums and constants
@@ -262,7 +262,7 @@ single-consumer and ends only on `Closed`.
 | `Deployment.refresh` | `refresh(snapshot=None) -> Deployment` | fresh snapshot or stored source | new deployment | `ValueError`, deploy errors | `deployment.refresh(new_snapshot)` |
 | `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="julep", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
 | `Deployment.adry_run` / `dry_run` | `adry_run(value, *, mcp_call=None, reasoners=None) -> Result`; sync equivalent | local value, MCP seam, and fake reasoners | interpreter result | effect handler and interpreter errors | `deployment.adry_run(batch, mcp_call=fake, reasoners={...})` |
-| `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | CAS store/url and optional signing key | bundle record | bundle/CAS/signing errors | `deployment.publish(".julep/cas")` |
+| `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | artifact store/url and optional signing key | bundle record | bundle/artifact store/signing errors | `deployment.publish(".julep/artifacts")` |
 
 `mode="dev"` returns deployments with would-block diagnostics in
 `Deployment.prod_gap`; Temporal `Deployment.run(...)` refuses dev mode.
@@ -532,10 +532,10 @@ Environment knobs verified in source:
 | `WORKER_MAX_CONCURRENT_ACTIVITIES` | worker host | SDK activity slots |
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | worker host | SDK workflow-task slots |
 | `WORKER_HEALTH_PORT` | worker host | probe port serving `/healthz` and `/readyz` |
-| `STORE_URL` | bundle worker/verification | CAS URL for bundle resolution |
+| `JULEP_ARTIFACT_STORE_URL` | bundle worker/verification | artifact store URL for bundle resolution |
 | `JULEP_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
 | `JULEP_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
-| `JULEP_BUNDLES` | bundle worker | bundle refs to load from `STORE_URL` |
+| `JULEP_BUNDLES` | bundle worker | bundle refs to load from `JULEP_ARTIFACT_STORE_URL` |
 | `JULEP_PURE_NATIVE_DEPS` | pure dependency admission | comma-separated pure names allowed to use native dependency tier |
 | `JULEP_WASM_FUEL` | wasm executor | instruction fuel, default from executor |
 | `JULEP_WASM_CACHE_DIR` | wasm executor | compiled component cache directory |

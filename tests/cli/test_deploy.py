@@ -1,11 +1,11 @@
 """Tests for the subprocess freeze+publish pipeline + deploy_agents ledger writer.
 
-Fully verifiable against a LOCAL CAS: the `sample_module` fixture provides a
+Fully verifiable against a LOCAL artifact-store: the `sample_module` fixture provides a
 `triage` @flow whose snapshot is built from its referenced tools inside the
 resolver subprocess (the only place the live agent + tools exist). `deploy_agents`
 freezes+publishes each selected agent and upserts the committed deploy ledger.
 
-The S3 path (cas = "s3://...") needs boto3 (the `store` extra) and is NOT
+The S3 path (artifacts = "s3://...") needs boto3 (the `store` extra) and is NOT
 exercised here; only the local path is asserted. The `s3://` branch is gated so a
 missing boto3 raises a clear "install the store extra" message.
 """
@@ -21,11 +21,11 @@ from julep.cli.ledger import read_ledger
 _NOW = "2026-06-23T00:00:00Z"
 
 
-def _cas_files(root: Path) -> list[Path]:
-    cas_root = root / ".julep" / "cas"
-    if not cas_root.exists():
+def _artifact_files(root: Path) -> list[Path]:
+    artifacts_root = root / ".julep" / "artifacts"
+    if not artifacts_root.exists():
         return []
-    return [p for p in cas_root.rglob("*") if p.is_file()]
+    return [p for p in artifacts_root.rglob("*") if p.is_file()]
 
 
 def test_freeze_agent_returns_hash_and_flow(sample_module: Path) -> None:
@@ -38,8 +38,8 @@ def test_freeze_agent_returns_hash_and_flow(sample_module: Path) -> None:
     assert isinstance(artifact.manifest_json, dict)
     # bundle_ref is None for a flow with no pure runtime refs (the sample case).
     assert artifact.bundle_ref is None or isinstance(artifact.bundle_ref, list)
-    # Publishing wrote the bundle blobs under the local CAS.
-    assert _cas_files(sample_module), "expected bundle objects under .julep/cas/"
+    # Publishing wrote the bundle blobs under the local artifact-store.
+    assert _artifact_files(sample_module), "expected bundle objects under .julep/artifacts/"
 
 
 def test_deploy_agents_writes_ledger_and_bundle(sample_module: Path) -> None:
@@ -60,8 +60,8 @@ def test_deploy_agents_writes_ledger_and_bundle(sample_module: Path) -> None:
     assert set(ledger) == {"triage"}
     assert ledger["triage"].artifact_hash == record.artifact_hash
 
-    # The published bundle landed under .julep/cas/.
-    assert _cas_files(sample_module), "expected bundle objects under .julep/cas/"
+    # The published bundle landed under .julep/artifacts/.
+    assert _artifact_files(sample_module), "expected bundle objects under .julep/artifacts/"
 
 
 def test_freeze_agent_unknown_surfaces_error_no_ledger(sample_module: Path) -> None:
@@ -74,12 +74,12 @@ def test_freeze_agent_unknown_surfaces_error_no_ledger(sample_module: Path) -> N
 
 
 def test_freeze_check_is_read_only_and_hash_matches_publish(sample_module: Path) -> None:
-    """publish=False computes the same artifact_hash without mutating the CAS."""
+    """publish=False computes the same artifact_hash without mutating the artifact-store."""
     cfg = load_config(sample_module)
 
     published = freeze_agent(cfg, "triage", "local", publish=True)
     assert published.error is None, published.error
-    assert _cas_files(sample_module), "publish should write CAS objects"
+    assert _artifact_files(sample_module), "publish should write artifact-store objects"
 
     # Wipe all on-disk state, then run the read-only check path.
     import shutil
@@ -90,8 +90,8 @@ def test_freeze_check_is_read_only_and_hash_matches_publish(sample_module: Path)
     assert checked.error is None, checked.error
     # Same program identity, no publish needed.
     assert checked.artifact_hash == published.artifact_hash
-    # The read-only path must not create the CAS directory at all.
-    assert not (sample_module / ".julep" / "cas").exists()
+    # The read-only path must not create the artifact-store directory at all.
+    assert not (sample_module / ".julep" / "artifacts").exists()
 
 
 def test_freeze_agent_captures_pinned_pures(sample_module: Path) -> None:

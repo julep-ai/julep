@@ -101,13 +101,13 @@ def _not_found_error(target: str, import_errors: list[str]) -> str:
 def _freeze_agent(
     found: FlowLike[Any, Any],
     modules: list[ModuleType],
-    cas: str,
+    artifacts: str,
     *,
     publish: bool = True,
     queue: Optional[str] = None,
 ) -> dict[str, Any]:
     from julep.agent import Tool, snapshot_from_tools
-    from julep.cas import LocalDirCAS, cas_from_url
+    from julep.artifact_store import LocalDirArtifactStore, artifact_store_from_url
     from julep.deploy import deploy
     from julep.ir import toolref_key
     from julep.validate import blocking
@@ -165,11 +165,11 @@ def _freeze_agent(
         result["queue"] = dep_queue
     if not publish:
         # Read-only path (`julep status`): the artifact_hash is a cached_property of
-        # artifact_components and needs no CAS mutation / S3 upload to compute.
+        # artifact_components and needs no artifact-store mutation / S3 upload to compute.
         return result
 
-    store = cas_from_url(cas) if cas.startswith("s3://") else LocalDirCAS(cas)
-    if not cas.startswith("s3://"):
+    store = artifact_store_from_url(artifacts) if artifacts.startswith("s3://") else LocalDirArtifactStore(artifacts)
+    if not artifacts.startswith("s3://"):
         _env.set_default(_env.JULEP_BUNDLE_SIGNING_KEY, _LOCAL_DEV_SIGNING_KEY)
     dep.publish(store)
     # publish() may rewrite bundle_ref (runtime refs present -> a list, else None).
@@ -209,7 +209,7 @@ def main() -> int:
                 _freeze_agent(
                     result.found,
                     result.modules,
-                    str(payload["cas"]),
+                    str(payload["artifacts"]),
                     publish=action == "freeze",
                     queue=payload.get("flow_queue"),
                 )

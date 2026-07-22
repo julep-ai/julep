@@ -76,7 +76,7 @@ def test_spike_compiled_episode_ir_matches_manual_combinators() -> None:
     )
 
 
-def test_spike_episode_slice_dry_run_rolls_up_cas_statuses() -> None:
+def test_spike_episode_slice_dry_run_rolls_up_artifact_statuses() -> None:
     async def spike_mcp_call(server, tool, value, cid, principal):
         if tool == "read_episode":
             value = {"episode_id": value}

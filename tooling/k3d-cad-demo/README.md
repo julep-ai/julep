@@ -2,7 +2,7 @@
 
 Proves the P2 headline: **author a new flow, publish it, run it on k3d — with
 zero docker in the per-flow loop.** The worker image is generic and built once;
-a new flow ships as a signed CAS bundle the worker resolves at startup. No image
+a new flow ships as a signed artifact-store bundle the worker resolves at startup. No image
 rebuild, no redeploy, no flow code on the worker.
 
 The generic runtime image is defined once at `tooling/runtime-image/Dockerfile`;
@@ -13,9 +13,9 @@ The generic runtime image is defined once at `tooling/runtime-image/Dockerfile`;
 - `examples/grade_scores_flow.py` is a deterministic batch flow whose entire
   logic is three custom pures (`normalize_record`, `grade_one`, `tally_grades`)
   plus `each` — no reasoners, no tools, no API keys.
-- `publish.py` builds the deployment and publishes a **signed** CAS bundle
-  (manifest + `flowJson` + pure source + detached ed25519 signature) into a CAS
-  dir the k3d node bind-mounts at `/cas`.
+- `publish.py` builds the deployment and publishes a **signed** artifact-store bundle
+  (manifest + `flowJson` + pure source + detached ed25519 signature) into an artifact-store
+  dir the k3d node bind-mounts at `/artifacts`.
 - The worker runs the stock `julep worker` with
   `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`.
   At startup it resolves `JULEP_BUNDLES`, verifies the signature against
@@ -35,7 +35,7 @@ bash tooling/k3d-cad-demo/up.sh
 TEMPORAL_ADDRESS=localhost:7233 uv run python tooling/k3d-cad-demo/drive.py
 ```
 
-`up.sh` starts a Temporal dev server, creates a k3d cluster with the CAS dir
+`up.sh` starts a Temporal dev server, creates a k3d cluster with the artifact-store dir
 mounted, builds + imports the generic image, publishes the bundle, and rolls out
 the worker. Re-running it is idempotent.
 
@@ -58,7 +58,7 @@ core demo runs on the plain `replicas: 1` Deployment regardless.
 ## Security model
 
 - Bundles are content-addressed and signed; workers verify every hash (manifest
-  CAS address, source blobs, per-pure `sourceHash`) and the detached signature,
+  artifact-store address, source blobs, per-pure `sourceHash`) and the detached signature,
   and fail closed on unsigned/unknown-signer/tampered bundles.
 - Bundle-sourced pures run in the **P3 wasmtime sandbox** (no clock, filesystem,
   or network; fresh instance per call), not natively in-process. Resolution is
@@ -70,7 +70,7 @@ core demo runs on the plain `replicas: 1` Deployment regardless.
   in `worker.yaml` to grant named pures access to the uv-managed native venv
   tier for deps with no WASI wheel. Empty or unset remains wasm-only.
 
-See `docs/ops/wasm-tier-runbook.md` for the signing/trust tiers and CAS retention
+See `docs/ops/wasm-tier-runbook.md` for the signing/trust tiers and artifact-store retention
 runbook.
 
 ## Clean up

@@ -6,7 +6,7 @@ Run from the repo root after up.sh reports the worker ready::
 
 The driver holds the flow code (it is the author/operator); it ships flowJson +
 pinned pure hashes as workflow input. The worker has never imported this flow —
-it materialised the three custom pures from the signed CAS bundle at startup.
+it materialised the three custom pures from the signed artifact-store bundle at startup.
 """
 
 from __future__ import annotations

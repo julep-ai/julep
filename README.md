@@ -169,7 +169,7 @@ existing Kubernetes Secret in `kubernetes_namespace` with `keyring` and
 (the EKS demo does); omit it on ordinary clusters.
 
 `julep plan --env staging` reports artifact, MCP-schema, Helm/KEDA, and runtime
-drift; `julep apply --env staging` publishes an immutable S3-CAS release and
+drift; `julep apply --env staging` publishes an immutable S3-artifact store release and
 reconciles one digest-pinned Helm release per lane and immutable release on a
 release-specific task queue, without changing traffic;
 `julep status --env staging` aggregates the release and live lane state. That

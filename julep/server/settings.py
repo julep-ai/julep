@@ -23,7 +23,7 @@ else:
 
 if TYPE_CHECKING:
     from ..app_deploy import LaneReconciler
-    from ..cas import CASStore
+    from ..artifact_store import ArtifactStore
     from ..execution.projection_store import ExecutionStore
     from .auth import ApiKey
     from .temporal import TemporalGateway
@@ -238,7 +238,7 @@ class ServerSettings:
 
     api_keys: tuple[ApiKey, ...] = ()
     execution_store_dsn: Optional[str] = field(default=None, repr=False)
-    cas_url: str = "file:///.julep/cas"
+    artifact_store_url: str = "file:///.julep/artifacts"
     temporal_address: str = "localhost:7233"
     temporal_namespace: str = "default"
     temporal_task_queue: str = "julep"
@@ -290,7 +290,7 @@ class ServerSettings:
         payload_keys, payload_key_id, payload_required = payload_encryption_from_env(
             _payload_environment(source, config)
         )
-        cas_default = (config_root / ".julep" / "cas").resolve().as_uri()
+        artifact_store_default = (config_root / ".julep" / "artifacts").resolve().as_uri()
         port = _int(
             _value(source, "JULEP_SERVER_PORT", config, "port", 8080),
             name="JULEP_SERVER_PORT",
@@ -310,9 +310,9 @@ class ServerSettings:
                 ),
                 name="JULEP_EXECUTION_STORE_DSN",
             ),
-            cas_url=_text(
-                _value(source, "JULEP_CAS_URL", config, "cas_url", cas_default),
-                name="JULEP_CAS_URL",
+            artifact_store_url=_text(
+                _value(source, "JULEP_ARTIFACT_STORE_URL", config, "artifact_store_url", artifact_store_default),
+                name="JULEP_ARTIFACT_STORE_URL",
             ),
             temporal_address=_text(
                 _value(
@@ -493,12 +493,12 @@ class ServerSettings:
 
         return PostgresExecutionStore(self.execution_store_dsn)
 
-    def build_cas(self) -> CASStore:
+    def build_artifact_store(self) -> ArtifactStore:
         """Construct the configured release/blob content-addressed store."""
 
-        from ..cas import cas_from_url
+        from ..artifact_store import artifact_store_from_url
 
-        return cas_from_url(self.cas_url)
+        return artifact_store_from_url(self.artifact_store_url)
 
     async def build_gateway(self) -> TemporalGateway:
         """Connect a real Temporal gateway lazily."""

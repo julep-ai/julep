@@ -29,9 +29,9 @@ dist/
 .codex-runs/
 *.codex-out.txt
 
-# Julep outer-loop run/CAS artifacts (deploys ledger stays tracked)
+# Julep outer-loop run/artifact store artifacts (deploys ledger stays tracked)
 .julep/runs/
-.julep/cas/
+.julep/artifacts/
 
 # Terraform
 **/.terraform/

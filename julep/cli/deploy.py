@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from julep.cli._resolve_child import _BEGIN, _END
@@ -103,14 +105,14 @@ def freeze_agent(cfg: JulepConfig, name: str, env: str, *, publish: bool = True)
         env_cfg = cfg.envs[env]
     except KeyError:
         raise ValueError(f"unknown env {env!r}") from None
-    cas = env_cfg.cas or str(cfg.root / ".julep" / "cas")
+    artifacts = env_cfg.artifacts or str(cfg.root / ".julep" / "artifacts")
     arg = json.dumps(
         {
             "action": "freeze" if publish else "freeze_check",
             "root": str(cfg.root),
             "src": cfg.src,
             "name": name,
-            "cas": cas,
+            "artifacts": artifacts,
             "flow_queue": cfg.flow_queues.get(name),
             # The env profile binds the dotctx yglu default env in the child;
             # freeze and freeze_check (status drift) use the same binding so a
@@ -119,6 +121,16 @@ def freeze_agent(cfg: JulepConfig, name: str, env: str, *, publish: bool = True)
         }
     )
     timeout = 120.0
+    source_root = str(Path(__file__).resolve().parents[2])
+    existing_pythonpath = os.environ.get("PYTHONPATH")
+    child_env = {
+        **os.environ,
+        "PYTHONPATH": (
+            source_root
+            if not existing_pythonpath
+            else os.pathsep.join((source_root, existing_pythonpath))
+        ),
+    }
     try:
         # Payload over stdin (not argv) to stay clear of the OS single-arg limit.
         proc = subprocess.run(
@@ -128,6 +140,7 @@ def freeze_agent(cfg: JulepConfig, name: str, env: str, *, publish: bool = True)
             text=True,
             timeout=timeout,
             cwd=str(cfg.root),
+            env=child_env,
         )
     except subprocess.TimeoutExpired:
         return FrozenArtifact(name=name, error=f"freeze timed out after {timeout}s")

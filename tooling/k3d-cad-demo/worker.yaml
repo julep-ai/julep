@@ -1,8 +1,8 @@
 # Generic worker Deployment. up.sh substitutes __JULEP_BUNDLES__ and __SIGNER__
 # with the values printed by publish.py, then applies the rendered manifest.
 #
-# The pod reads the published bundle from /cas (a hostPath onto the k3d node dir
-# that `k3d cluster create --volume <host>:/cas` bind-mounts from the host). The
+# The pod reads the published bundle from /artifacts (a hostPath onto the k3d node dir
+# that `k3d cluster create --volume <host>:/artifacts` bind-mounts from the host). The
 # bundle is content-addressed and signed; the worker verifies it against
 # JULEP_BUNDLE_ALLOWED_SIGNERS before accepting any task.
 apiVersion: apps/v1
@@ -29,8 +29,8 @@ spec:
               value: julep-cad-demo
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: "20"
-            - name: STORE_URL
-              value: file:///cas
+            - name: JULEP_ARTIFACT_STORE_URL
+              value: file:///artifacts
             - name: JULEP_BUNDLES
               value: "__JULEP_BUNDLES__"
             - name: JULEP_BUNDLE_ALLOWED_SIGNERS
@@ -44,8 +44,8 @@ spec:
             # in-process), so resolution is ungated -- the old P2 dev-only
             # JULEP_BUNDLE_NATIVE_EXEC=1 flag is gone.
           volumeMounts:
-            - name: cas
-              mountPath: /cas
+            - name: artifacts
+              mountPath: /artifacts
               readOnly: true
           ports:
             - containerPort: 8080
@@ -57,7 +57,7 @@ spec:
             httpGet: {path: /readyz, port: health}
             periodSeconds: 2
       volumes:
-        - name: cas
+        - name: artifacts
           hostPath:
-            path: /cas
+            path: /artifacts
             type: Directory

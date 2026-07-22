@@ -39,7 +39,7 @@ Deployments/Secrets/HPAs/KEDA `ScaledObject`s, an image that runs
 `WorkerContext` factory. Use `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`
 for an app-specific image, or
 `WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context`
-plus `STORE_URL`, `JULEP_BUNDLES`, and `JULEP_BUNDLE_ALLOWED_SIGNERS` for the generic
+plus `JULEP_ARTIFACT_STORE_URL`, `JULEP_BUNDLES`, and `JULEP_BUNDLE_ALLOWED_SIGNERS` for the generic
 signed-bundle worker.
 
 #### Procedure
@@ -246,7 +246,7 @@ kubectl rollout status deployment/"$WORKER_DEPLOY" -n "$NS" --timeout=180s
 ```
 
 Healthy result: startup bundle verification and `verifyPures` pass. Missing
-`STORE_URL`, unknown signer, or tampered bundle fails closed before the worker
+`JULEP_ARTIFACT_STORE_URL`, unknown signer, or tampered bundle fails closed before the worker
 accepts workflow tasks.
 
 Bad deployed artifact: restore the previous `.julep/deploys/${JULEP_ENV}.json` record

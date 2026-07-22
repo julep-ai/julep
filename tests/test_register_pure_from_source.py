@@ -22,20 +22,20 @@ def _expected_hash(source: str) -> str:
 
 def test_register_pure_from_source_round_trip() -> None:
     reg = Registry()
-    source = """@pure("cas.add_one")\ndef add_one(value):\n    return value + 1\n"""
+    source = """@pure("artifacts.add_one")\ndef add_one(value):\n    return value + 1\n"""
 
-    entry = reg.register_pure_from_source("cas.add_one", source)
+    entry = reg.register_pure_from_source("artifacts.add_one", source)
 
-    assert entry.name == "cas.add_one"
-    assert reg.source_hash_of("cas.add_one") == _expected_hash(source)
-    assert reg.get_pure("cas.add_one")(41) == 42
+    assert entry.name == "artifacts.add_one"
+    assert reg.source_hash_of("artifacts.add_one") == _expected_hash(source)
+    assert reg.get_pure("artifacts.add_one")(41) == 42
 
 
 def test_register_pure_from_source_keeps_shipped_text_inspectable() -> None:
     reg = Registry()
-    source = """@pure("cas.echo")\ndef echo(value):\n    return {"value": value}\n"""
+    source = """@pure("artifacts.echo")\ndef echo(value):\n    return {"value": value}\n"""
 
-    entry = reg.register_pure_from_source("cas.echo", source)
+    entry = reg.register_pure_from_source("artifacts.echo", source)
 
     # The canonical shipped text is retained verbatim on the wasm-tier entry
     # (it is what the wasm sandbox re-execs per call). It is NOT recoverable by
@@ -47,10 +47,10 @@ def test_register_pure_from_source_keeps_shipped_text_inspectable() -> None:
 
 def test_register_pure_from_source_same_source_is_noop() -> None:
     reg = Registry()
-    source = """@pure("cas.same")\ndef same(value):\n    return value\n"""
+    source = """@pure("artifacts.same")\ndef same(value):\n    return value\n"""
 
-    first = reg.register_pure_from_source("cas.same", source)
-    second = reg.register_pure_from_source("cas.same", source)
+    first = reg.register_pure_from_source("artifacts.same", source)
+    second = reg.register_pure_from_source("artifacts.same", source)
 
     assert second is first
 
@@ -62,53 +62,53 @@ def test_equal_hash_baked_pure_is_promoted_to_wasm_not_left_native() -> None:
     leave it native — otherwise a bundle pure escapes the sandbox.
     """
     reg = Registry()
-    source = """@pure("cas.baked.eq")\ndef baked_eq(value):\n    return value * 2\n"""
+    source = """@pure("artifacts.baked.eq")\ndef baked_eq(value):\n    return value * 2\n"""
 
     # Bake it natively (a trusted host fn whose source is exactly the bundle text).
     def baked_eq(value: int) -> int:
         return value * 2
 
-    baked = reg.register_pure("cas.baked.eq", baked_eq)
+    baked = reg.register_pure("artifacts.baked.eq", baked_eq)
     # Force the baked entry's source_hash to equal the bundle text's hash so this
     # is genuinely the equal-hash case (register_pure hashes the host fn source).
-    reg.pures["cas.baked.eq"] = PureEntry(
+    reg.pures["artifacts.baked.eq"] = PureEntry(
         name=baked.name,
         fn=baked.fn,
         source_hash=_text_hash(source),
         executor="native",
     )
-    assert reg.pures["cas.baked.eq"].executor == "native"
+    assert reg.pures["artifacts.baked.eq"].executor == "native"
 
-    promoted = reg.register_pure_from_source("cas.baked.eq", source)
+    promoted = reg.register_pure_from_source("artifacts.baked.eq", source)
 
     # Promoted, not a no-op: now wasm-tier with the source pinned, and get_pure
     # returns a wasm-bound callable (not the baked native fn).
     assert promoted.executor == "wasm"
     assert promoted.source == source
-    assert reg.pures["cas.baked.eq"].executor == "wasm"
-    assert reg.get_pure("cas.baked.eq") is not baked_eq
-    assert reg.get_pure("cas.baked.eq")(21) == 42
+    assert reg.pures["artifacts.baked.eq"].executor == "wasm"
+    assert reg.get_pure("artifacts.baked.eq") is not baked_eq
+    assert reg.get_pure("artifacts.baked.eq")(21) == 42
 
 
 def test_register_pure_from_source_collision_names_both_hashes_and_keeps_original() -> None:
     reg = Registry()
-    original = """@pure("cas.collision")\ndef collision(value):\n    return value + 1\n"""
-    changed = """@pure("cas.collision")\ndef collision(value):\n    return value + 2\n"""
-    first = reg.register_pure_from_source("cas.collision", original)
+    original = """@pure("artifacts.collision")\ndef collision(value):\n    return value + 1\n"""
+    changed = """@pure("artifacts.collision")\ndef collision(value):\n    return value + 2\n"""
+    first = reg.register_pure_from_source("artifacts.collision", original)
 
     with pytest.raises(ValueError) as excinfo:
-        reg.register_pure_from_source("cas.collision", changed)
+        reg.register_pure_from_source("artifacts.collision", changed)
 
     message = str(excinfo.value)
-    assert "cas.collision" in message
+    assert "artifacts.collision" in message
     assert _expected_hash(original) in message
     assert _expected_hash(changed) in message
-    assert reg.pures["cas.collision"] is first
-    assert reg.get_pure("cas.collision")(1) == 2
+    assert reg.pures["artifacts.collision"] is first
+    assert reg.get_pure("artifacts.collision")(1) == 2
 
 
 def test_plain_exec_register_pure_uses_wrong_qualname_fallback_but_source_api_does_not() -> None:
-    source = """@pure("cas.qualname")\ndef qualname(value):\n    return value\n"""
+    source = """@pure("artifacts.qualname")\ndef qualname(value):\n    return value\n"""
 
     plain = Registry()
 
@@ -122,16 +122,16 @@ def test_plain_exec_register_pure_uses_wrong_qualname_fallback_but_source_api_do
     exec(source, {"__name__": "<module>", "pure": pure})
 
     expected_wrong = _text_hash("<module>.qualname")
-    assert plain.source_hash_of("cas.qualname") == expected_wrong
+    assert plain.source_hash_of("artifacts.qualname") == expected_wrong
 
     via_source = Registry()
-    via_source.register_pure_from_source("cas.qualname", source)
-    assert via_source.source_hash_of("cas.qualname") == _expected_hash(source)
+    via_source.register_pure_from_source("artifacts.qualname", source)
+    assert via_source.source_hash_of("artifacts.qualname") == _expected_hash(source)
 
 
 def test_default_registry_register_pure_from_source_shim_forwards() -> None:
-    name = "cas.default.forward"
-    source = """@pure("cas.default.forward")\ndef default_forward(value):\n    return value * 3\n"""
+    name = "artifacts.default.forward"
+    source = """@pure("artifacts.default.forward")\ndef default_forward(value):\n    return value * 3\n"""
 
     try:
         entry = register_pure_from_source(name, source)
@@ -144,12 +144,12 @@ def test_default_registry_register_pure_from_source_shim_forwards() -> None:
 
 def test_register_pure_from_source_decorator_name_mismatch_errors_clearly() -> None:
     reg = Registry()
-    source = """@pure("cas.actual")\ndef actual(value):\n    return value\n"""
+    source = """@pure("artifacts.actual")\ndef actual(value):\n    return value\n"""
 
-    with pytest.raises(ValueError, match="did not register requested pure 'cas.expected'"):
-        reg.register_pure_from_source("cas.expected", source)
+    with pytest.raises(ValueError, match="did not register requested pure 'artifacts.expected'"):
+        reg.register_pure_from_source("artifacts.expected", source)
 
-    assert not reg.is_registered("cas.expected")
+    assert not reg.is_registered("artifacts.expected")
 
 
 def test_register_pure_from_source_failure_restores_pures_in_place() -> None:
@@ -158,25 +158,25 @@ def test_register_pure_from_source_failure_restores_pures_in_place() -> None:
     def keep(value: int) -> int:
         return value + 1
 
-    existing = reg.register_pure("cas.keep", keep)
+    existing = reg.register_pure("artifacts.keep", keep)
     pures_alias = reg.pures
-    source = """@pure("cas.actual")\ndef actual(value):\n    return value\n"""
+    source = """@pure("artifacts.actual")\ndef actual(value):\n    return value\n"""
 
-    with pytest.raises(ValueError, match="did not register requested pure 'cas.expected'"):
-        reg.register_pure_from_source("cas.expected", source)
+    with pytest.raises(ValueError, match="did not register requested pure 'artifacts.expected'"):
+        reg.register_pure_from_source("artifacts.expected", source)
 
     assert reg.pures is pures_alias
-    assert pures_alias["cas.keep"] is existing
-    assert "cas.actual" not in pures_alias
-    assert "cas.expected" not in pures_alias
+    assert pures_alias["artifacts.keep"] is existing
+    assert "artifacts.actual" not in pures_alias
+    assert "artifacts.expected" not in pures_alias
 
 
 def test_register_pure_from_source_newline_less_source_errors_clearly() -> None:
     reg = Registry()
-    source = """@pure("cas.no_newline")\ndef no_newline(value):\n    return value"""
+    source = """@pure("artifacts.no_newline")\ndef no_newline(value):\n    return value"""
 
     with pytest.raises(ValueError, match="source hash mismatch"):
-        reg.register_pure_from_source("cas.no_newline", source)
+        reg.register_pure_from_source("artifacts.no_newline", source)
 
 
 def test_baked_pure_is_native_tier_and_get_pure_returns_native_fn() -> None:
@@ -185,34 +185,34 @@ def test_baked_pure_is_native_tier_and_get_pure_returns_native_fn() -> None:
     def baked(value: int) -> int:
         return value + 5
 
-    entry = reg.register_pure("cas.tier.native", baked)
+    entry = reg.register_pure("artifacts.tier.native", baked)
 
     assert entry.executor == "native"
     assert entry.source is None
     # native tier: get_pure returns the exact native fn object (identity preserved)
-    assert reg.get_pure("cas.tier.native") is baked
+    assert reg.get_pure("artifacts.tier.native") is baked
 
 
 def test_registry_executor_of_reports_source_tiers_and_unknowns() -> None:
     reg = Registry()
-    wasm_source = """@pure("cas.tier.wasm.source")\ndef wasm_source(value):\n    return value\n"""
+    wasm_source = """@pure("artifacts.tier.wasm.source")\ndef wasm_source(value):\n    return value\n"""
     native_source = (
-        """@pure("cas.tier.native_venv.source")\n"""
+        """@pure("artifacts.tier.native_venv.source")\n"""
         "def native_source(value):\n"
         "    return value\n"
     )
 
-    reg.register_pure_from_source("cas.tier.wasm.source", wasm_source)
+    reg.register_pure_from_source("artifacts.tier.wasm.source", wasm_source)
     reg.register_pure_from_source(
-        "cas.tier.native_venv.source",
+        "artifacts.tier.native_venv.source",
         native_source,
         tier="native_venv",
     )
 
-    assert reg.executor_of("cas.tier.wasm.source") == "wasm"
-    assert reg.executor_of("cas.tier.native_venv.source") == "native_venv"
-    with pytest.raises(KeyError, match="unknown pure 'cas.tier.missing'"):
-        reg.executor_of("cas.tier.missing")
+    assert reg.executor_of("artifacts.tier.wasm.source") == "wasm"
+    assert reg.executor_of("artifacts.tier.native_venv.source") == "native_venv"
+    with pytest.raises(KeyError, match="unknown pure 'artifacts.tier.missing'"):
+        reg.executor_of("artifacts.tier.missing")
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
@@ -220,8 +220,8 @@ def test_temporal_env_blocks_native_venv_pures_but_allows_wasm_lookup() -> None:
     from julep.execution.harness import ExecutionPolicy, _TemporalEnv
     from julep.projection import InMemoryProjection, ProjectionEmitter
 
-    wasm_name = "cas.temporal.wasm.source"
-    native_name = "cas.temporal.native_venv.source"
+    wasm_name = "artifacts.temporal.wasm.source"
+    native_name = "artifacts.temporal.native_venv.source"
     wasm_source = f"""@pure({wasm_name!r})\ndef wasm_source(value):\n    return value\n"""
     native_source = (
         f"""@pure({native_name!r})\n"""
@@ -279,7 +279,7 @@ def test_register_pure_from_source_does_not_exec_module_level_code_on_host() -> 
     evil = (
         "import os\n"
         f"os.environ[{sentinel_env!r}] = 'escaped-on-host'\n"
-        '@pure("cas.evil.v1")\n'
+        '@pure("artifacts.evil.v1")\n'
         "def evil(value):\n"
         "    return value\n"
     )
@@ -288,13 +288,13 @@ def test_register_pure_from_source_does_not_exec_module_level_code_on_host() -> 
     try:
         # Success path: registers fine, but the module-level os.environ write must
         # NOT have executed on the host.
-        entry = reg.register_pure_from_source("cas.evil.v1", evil)
+        entry = reg.register_pure_from_source("artifacts.evil.v1", evil)
         assert entry.executor == "wasm"
         assert sentinel_env not in os.environ, "bundle module-level code ran on the host"
 
         # Rejecting path (name mismatch): still must not exec module-level code.
         with pytest.raises(ValueError, match="did not register requested pure"):
-            Registry().register_pure_from_source("cas.evil.mismatch.v1", evil)
+            Registry().register_pure_from_source("artifacts.evil.mismatch.v1", evil)
         assert sentinel_env not in os.environ, "bundle module-level code ran on the host"
     finally:
         os.environ.pop(sentinel_env, None)
@@ -302,16 +302,16 @@ def test_register_pure_from_source_does_not_exec_module_level_code_on_host() -> 
 
 def test_from_source_pure_is_wasm_tier_and_get_pure_returns_wasm_callable() -> None:
     reg = Registry()
-    source = """@pure("cas.tier.wasm")\ndef adder(value, **kwargs):\n    return value + 100\n"""
+    source = """@pure("artifacts.tier.wasm")\ndef adder(value, **kwargs):\n    return value + 100\n"""
 
-    entry = reg.register_pure_from_source("cas.tier.wasm", source)
+    entry = reg.register_pure_from_source("artifacts.tier.wasm", source)
 
     assert entry.executor == "wasm"
     assert entry.source == source
     # No host fn object exists: bundle source is never exec'd on the host.
     assert entry.fn is _wasm_source_only
 
-    resolved = reg.get_pure("cas.tier.wasm")
+    resolved = reg.get_pure("artifacts.tier.wasm")
     # wasm tier: get_pure returns a wasm-bound callable, NOT the sentinel fn.
     assert resolved is not entry.fn
     # ...that produces the value computed inside the wasm sandbox.
@@ -321,13 +321,13 @@ def test_from_source_pure_is_wasm_tier_and_get_pure_returns_wasm_callable() -> N
 def test_from_source_wasm_callable_matches_native_with_kwargs() -> None:
     reg = Registry()
     source = (
-        """@pure("cas.tier.kwargs")\n"""
+        """@pure("artifacts.tier.kwargs")\n"""
         """def scale(value, *, factor=1):\n"""
         """    return value * factor\n"""
     )
 
-    entry = reg.register_pure_from_source("cas.tier.kwargs", source)
-    resolved = reg.get_pure("cas.tier.kwargs")
+    entry = reg.register_pure_from_source("artifacts.tier.kwargs", source)
+    resolved = reg.get_pure("artifacts.tier.kwargs")
     assert entry.fn is _wasm_source_only
 
     # The wasm-bound callable computes the value inside the sandbox.

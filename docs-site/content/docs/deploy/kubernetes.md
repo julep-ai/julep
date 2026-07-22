@@ -52,7 +52,7 @@ and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`.
 
 Released pipelines are self-contained. Generic workers normally leave
 `WORKER_APPLICATION` and `WORKER_RUNTIME_DECLARATIONS_HASH` unset and hydrate
-the release's `runtimeDeclarationsRef` from the CAS configured by `STORE_URL`.
+the release's `runtimeDeclarationsRef` from the artifact store configured by `JULEP_ARTIFACT_STORE_URL`.
 If the two optional variables are used, they must be set together; they verify
 an image-specific application declaration and fail on mismatch.
 

@@ -1,4 +1,4 @@
-"""Startup-preload resolution for CAS bundles.
+"""Startup-preload resolution for artifact-store bundles.
 
 Bundle resolution deliberately happens at worker init, before any workflow task
 is accepted, and never inside workflow code. Temporal workflow code cannot do
@@ -17,7 +17,7 @@ from typing import Any, cast
 
 from . import _env, deps
 from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
-from .cas import CASError, CASStore, cas_from_url
+from .artifact_store import ArtifactStoreError, ArtifactStore, artifact_store_from_url
 from .registry import DEFAULT_REGISTRY, PureEntry, Registry, _text_hash
 
 _SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -221,7 +221,7 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
 
 
 def resolve_and_register(
-    store: CASStore,
+    store: ArtifactStore,
     bundle_hash: str,
     *,
     signature_digest: str | None = None,
@@ -229,7 +229,7 @@ def resolve_and_register(
     native_grant: Sequence[str] | str | None = None,
     registry: Registry = DEFAULT_REGISTRY,
 ) -> dict[str, Any]:
-    """Resolve a signed CAS bundle and register its pures by manifest tier.
+    """Resolve a signed artifact-store bundle and register its pures by manifest tier.
 
     Wasm pures execute in the wasmtime sandbox. Native dependency pures require
     an explicit JULEP_PURE_NATIVE_DEPS grant on this worker and are registered as
@@ -407,7 +407,7 @@ def _entry_env_hash(entry: PureEntry, base_component_hash: str) -> str:
     return deps.env_hash(entry.deps, entry.requires_python, base_component_hash)
 
 
-def _register_env_components(store: CASStore, verified: Sequence[_VerifiedPure]) -> None:
+def _register_env_components(store: ArtifactStore, verified: Sequence[_VerifiedPure]) -> None:
     from .execution.wasm_executor import get_wasm_executor
 
     executor = get_wasm_executor()
@@ -444,10 +444,10 @@ def _register_env_components(store: CASStore, verified: Sequence[_VerifiedPure])
             )
         try:
             component_bytes = store.get(pure_record.env_component)
-        except CASError as e:
+        except ArtifactStoreError as e:
             raise BundleResolutionError(
                 f"env component {pure_record.env_component} for pure {pure_record.name!r} "
-                "is missing or failed CAS verification"
+                "is missing or failed artifact-store verification"
             ) from e
         try:
             executor.register_env_component(pure_record.env_hash, component_bytes)
@@ -539,7 +539,7 @@ def bundle_ref_entries(raw: Any) -> list[tuple[str, str]]:
 
 
 def resolve_entries(
-    store: CASStore,
+    store: ArtifactStore,
     entries: Sequence[tuple[str, str]],
     *,
     registry: Registry = DEFAULT_REGISTRY,
@@ -562,9 +562,9 @@ def load_bundles_from_env(*, registry: Registry = DEFAULT_REGISTRY) -> list[dict
     if raw.strip() == "":
         return []
 
-    store_url = os.environ.get("STORE_URL")
+    store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL")
     if store_url is None or store_url.strip() == "":
-        raise BundleResolutionError("STORE_URL is required when JULEP_BUNDLES is set")
+        raise BundleResolutionError("JULEP_ARTIFACT_STORE_URL is required when JULEP_BUNDLES is set")
 
-    store = cas_from_url(store_url)
+    store = artifact_store_from_url(store_url)
     return resolve_entries(store, _bundle_entries(raw), registry=registry)

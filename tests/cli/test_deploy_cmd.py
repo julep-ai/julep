@@ -96,22 +96,22 @@ def test_status_unknown_env_exits_2_no_traceback(sample_module: Path, capsys, mo
     assert "unknown env" in err
 
 
-def test_status_does_not_publish_to_cas(sample_module: Path, capsys, monkeypatch) -> None:
-    """`julep status` is read-only: it must not write CAS objects on a clean check."""
+def test_status_does_not_publish_to_artifact_store(sample_module: Path, capsys, monkeypatch) -> None:
+    """`julep status` is read-only: it must not write artifact-store objects on a clean check."""
     monkeypatch.chdir(sample_module)
 
     assert main(["deploy", "triage", "--env", "local"]) == 0
     capsys.readouterr()
 
-    cas_root = sample_module / ".julep" / "cas"
+    artifacts_root = sample_module / ".julep" / "artifacts"
     import shutil
 
-    shutil.rmtree(cas_root, ignore_errors=True)
+    shutil.rmtree(artifacts_root, ignore_errors=True)
 
     code = main(["status", "--env", "local", "triage"])
     out = capsys.readouterr().out
 
     assert code == 0
     assert "clean" in out
-    # Status compared hashes without re-publishing -> no CAS dir recreated.
-    assert not cas_root.exists()
+    # Status compared hashes without re-publishing -> no artifact-store dir recreated.
+    assert not artifacts_root.exists()

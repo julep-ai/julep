@@ -79,7 +79,7 @@ from .harness import (
 from .projection_store import finalize_projection_run, persist_projection_batch
 from .serve import DEFAULT_TASK_QUEUE, payload_encryption_from_env
 from .session_store import SessionStore
-from ..cas import cas_from_url
+from ..artifact_store import artifact_store_from_url
 
 # Every activity the two workflows can dispatch.
 ACTIVITIES = [
@@ -219,8 +219,8 @@ def build_worker(
         )
     )
     if "workflow_runner" not in worker_kwargs:
-        store_url = os.environ.get("STORE_URL", "").strip()
-        store = cas_from_url(store_url) if store_url else None
+        store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL", "").strip()
+        store = artifact_store_from_url(store_url) if store_url else None
         worker_kwargs["workflow_runner"] = BundleResolvingWorkflowRunner(
             inner=SandboxedWorkflowRunner(
                 restrictions=SandboxRestrictions.default.with_passthrough_modules(

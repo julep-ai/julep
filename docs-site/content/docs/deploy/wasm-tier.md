@@ -4,7 +4,7 @@ description: "Operate the wasm tier for sandboxed pure execution: building wheel
 ---
 
 Bundle-sourced pures (registered via `register_pure_from_source` after arriving
-from a signed CAS bundle) execute inside a **wasmtime CPython sandbox** — a fresh
+from a signed artifact store bundle) execute inside a **wasmtime CPython sandbox** — a fresh
 instance per call, with no clock, filesystem, network, or entropy. A bundle pure
 with off-list dependencies may instead execute in the explicit native tier,
 behind a per-pure operator grant. Baked pures (`register_pure`) and `std.*` keep
@@ -17,8 +17,8 @@ trust surface of those bundle execution tiers.
 | --- | --- | --- | --- |
 | Baked into the worker image | `register_pure` / `@pure(...)` | native (in-process) | none (trusted code) |
 | `std.*` library | baked | native | none |
-| Signed CAS bundle, no deps or supported WASI-wheel deps | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
-| Signed CAS bundle, off-list deps with `JULEP_PURE_NATIVE_DEPS` grant | `register_pure_from_source` | **native** (`uv` venv subprocess) | none (operator-trusted bundle source) |
+| Signed artifact store bundle, no deps or supported WASI-wheel deps | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
+| Signed artifact store bundle, off-list deps with `JULEP_PURE_NATIVE_DEPS` grant | `register_pure_from_source` | **native** (`uv` venv subprocess) | none (operator-trusted bundle source) |
 
 The selection is a single seam: `Registry.get_pure(name)` returns a wasm-bound
 callable for `executor == "wasm"` entries and a native-venv callable for
@@ -151,7 +151,7 @@ Resolution verifies, in order, and refuses to register anything on any failure:
    `publicKey` present in `JULEP_BUNDLE_ALLOWED_SIGNERS` (comma-separated hex keys).
 2. **Signature.** The signature must verify against the manifest bytes, and its
    `bundleHash` must equal the requested bundle hash.
-3. **Content addressing.** Every CAS read is integrity-checked against its hash
+3. **Content addressing.** Every artifact store read is integrity-checked against its hash
    (manifest, each source blob), and `artifactHash == sha256:artifactComponents`.
 4. **Per-pure source hash.** Each pure's shipped source must hash to the
    `sourceHash` pinned in the manifest.
@@ -174,9 +174,9 @@ Unsigned bundles and signatures from unknown public keys fail closed.
   signed with the new key, then remove the old key once no live workers pin
   bundles signed by it. The allowlist supports multiple keys for this overlap.
 
-## CAS retention
+## artifact store retention
 
-Bundles are content-addressed and immutable. CAS exposes no public delete API:
+Bundles are content-addressed and immutable. artifact store exposes no public delete API:
 a `bundleHash` plus optional signature digest is a stable, replay-safe pointer.
 Garbage collection is the narrow private mark-sweep exception, implemented for
 local stores in `julep/gc.py` (P5-S1, shipped commit `ed6ffb1`).
@@ -191,9 +191,9 @@ deployment lineage and expire only bundles no deployment references.
 
 ### Lease-backed GC
 
-Leases encode the retention rule for local CAS stores. A `Lease` records
+Leases encode the retention rule for local artifact stores. A `Lease` records
 `bundle_hash`, optional `signature_digest`, and optional `name`, and persists
-under `<cas_root>/leases/` outside the sharded blob tree. The reachable set is
+under `<artifacts_root>/leases/` outside the sharded blob tree. The reachable set is
 the closure over each leased bundle manifest:
 
 | Manifest field | Retained object |
@@ -205,7 +205,7 @@ the closure over each leased bundle manifest:
 | each pure `source` | shipped pure source blob |
 | each pure `envComponent` | pre-initialized wasm env component, when present |
 
-`gc(store, lease_store, dry_run=...)` enumerates every CAS object, subtracts the
+`gc(store, lease_store, dry_run=...)` enumerates every artifact store object, subtracts the
 union of all lease closures, and reports the remainder as collectable.
 `dry_run` defaults to `True`: it reports `reachable` and `collectable` and
 deletes nothing. Pass `dry_run=False` to delete collectable objects.
@@ -215,8 +215,8 @@ malformed manifest or a missing blob, raises `GCError` and aborts the whole
 sweep before any deletion. A partial root set is never used to decide
 deletions.
 
-Only `LocalDirCAS` is enumerable and collectable today. `S3CAS` GC raises
-`GCError`; paginated list/delete is deferred. On S3-backed CAS, keep applying
+Only `LocalDirArtifactStore` is enumerable and collectable today. `S3ArtifactStore` GC raises
+`GCError`; paginated list/delete is deferred. On S3-backed artifact store, keep applying
 the retention rule manually: retain anything a live or replayable run may
 resolve. Lease GC is the automated local-store optimization of that rule.
 
@@ -224,14 +224,14 @@ resolve. Lease GC is the automated local-store optimization of that rule.
 
 The local gates exercise the full bundle→wasm path end to end (Temporal
 time-skipping server, DBOS env, CMA env, and a real signed bundle). The **live
-EKS acceptance run** — a real cluster, S3-backed CAS (`STORE_URL=s3://...`), KEDA
+EKS acceptance run** — a real cluster, S3-backed artifact store (`JULEP_ARTIFACT_STORE_URL=s3://...`), KEDA
 scale-from-zero, and a worker image built with the `wasm` extra — requires
 cluster/S3/credentials not available in CI and remains a **manual ops step**:
 
 1. Build and push the worker image with `julep[wasm]`.
-2. Publish the signed bundle to the S3 CAS; record `JULEP_BUNDLES` and the signer
+2. Publish the signed bundle to the S3 artifact store; record `JULEP_BUNDLES` and the signer
    public key.
-3. Set `STORE_URL`, `JULEP_BUNDLES`, `JULEP_BUNDLE_ALLOWED_SIGNERS` on the worker
+3. Set `JULEP_ARTIFACT_STORE_URL`, `JULEP_BUNDLES`, `JULEP_BUNDLE_ALLOWED_SIGNERS` on the worker
    Deployment (see `tooling/sandbox-k8s/worker.yaml`).
 4. Drive the grade-scores flow and assert the wasm-tier result matches the local
    baked (native) dry-run value (parity).

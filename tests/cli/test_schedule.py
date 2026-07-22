@@ -30,7 +30,7 @@ def _cloud_env(tmp_path: Path) -> EnvConfig:
         temporal_address="127.0.0.1:7233",
         temporal_namespace="default",
         task_queue="julep-staging-queue",
-        cas=str(tmp_path / ".julep" / "cas"),
+        artifacts=str(tmp_path / ".julep" / "artifacts"),
     )
 
 

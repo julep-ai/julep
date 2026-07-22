@@ -1,6 +1,6 @@
 """Immutable application releases and lane reconciliation.
 
-Release manifests are content-addressed objects stored through the same CAS
+Release manifests are content-addressed objects stored through the same artifact-store
 interface as Julep bundles.  Publishing and reconciling are separate operations:
 publishing makes a release available, while a lane reconciler installs inactive
 worker capacity.  Neither operation mutates an application's traffic route.
@@ -20,7 +20,7 @@ from typing import Any, Optional, Protocol
 
 from . import _env
 from .app import CompiledApplication
-from .cas import CASStore
+from .artifact_store import ArtifactStore
 from .deploy import WorkflowStartOptions, _start_temporal_workflow
 from .ir import canonical_json
 
@@ -286,19 +286,19 @@ class ApplicationRelease:
     def lanes(self) -> tuple[str, ...]:
         return tuple(sorted({pipeline.lane for pipeline in self.pipelines}))
 
-    def publish(self, store: CASStore) -> str:
+    def publish(self, store: ArtifactStore) -> str:
         digest = store.put(self.manifest_bytes)
         expected = self.release_hash.removeprefix("sha256:")
         if digest != expected:
             raise ApplicationReleaseError(
-                f"release CAS returned {digest}, expected content digest {expected}"
+                f"release artifact-store returned {digest}, expected content digest {expected}"
             )
         return self.release_hash
 
 
 def publish_application(
     compiled: CompiledApplication,
-    store: CASStore,
+    store: ArtifactStore,
     *,
     worker_image: str,
     deployment_config: Optional[Mapping[str, Any]] = None,
@@ -318,7 +318,7 @@ def publish_application(
             expected_digest = hashlib.sha256(blob).hexdigest()
             if digest != expected_digest:
                 raise ApplicationReleaseError(
-                    f"declarations CAS returned {digest}, expected content digest {expected_digest}"
+                    f"declarations artifact-store returned {digest}, expected content digest {expected_digest}"
                 )
             runtime_declarations_ref = {
                 "hash": f"sha256:{digest}",
@@ -998,7 +998,7 @@ def _run_command(args: Sequence[str]) -> None:
 
 
 def release_from_bytes(data: bytes) -> ApplicationRelease:
-    """Parse and validate a release manifest loaded from a CAS."""
+    """Parse and validate a release manifest loaded from a artifact-store."""
 
     raw = json.loads(data)
     if not isinstance(raw, dict):

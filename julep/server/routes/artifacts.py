@@ -1,4 +1,4 @@
-"""Credential-free-for-workers CAS proxy endpoints."""
+"""Credential-free-for-workers artifact-store proxy endpoints."""
 
 from __future__ import annotations
 
@@ -9,11 +9,11 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 
 from ..auth import ApiKey, require_admin, require_key
-from . import cas_store
+from . import artifact_store
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
-router = APIRouter(prefix="/cas", tags=["cas"])
+router = APIRouter(prefix="/artifacts", tags=["artifacts"])
 
 
 def _validate_digest(digest: str) -> None:
@@ -39,13 +39,13 @@ async def put_blob(
             detail=f"content digest mismatch: expected {sha256}, got {actual}",
         )
 
-    store = cas_store(request)
+    store = artifact_store(request)
     existed = store.has(sha256)
     stored = store.put(body)
     if stored != sha256:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="CAS returned an unexpected content digest",
+            detail="artifact-store returned an unexpected content digest",
         )
     return Response(status_code=200 if existed else 201)
 
@@ -57,7 +57,7 @@ async def head_blob(
     _key: Annotated[ApiKey, Depends(require_key)],
 ) -> Response:
     _validate_digest(sha256)
-    return Response(status_code=200 if cas_store(request).has(sha256) else 404)
+    return Response(status_code=200 if artifact_store(request).has(sha256) else 404)
 
 
 __all__ = ["router"]

@@ -69,13 +69,13 @@ def test_freeze_rejects_blocking_and_does_not_publish(monkeypatch, tmp_path) -> 
 
     monkeypatch.setattr(deploy_mod, "deploy", _fake_deploy)
 
-    result = _resolve_child._freeze_agent(_StubFlow(), modules=[], cas=str(tmp_path / "cas"))
+    result = _resolve_child._freeze_agent(_StubFlow(), modules=[], artifacts=str(tmp_path / "artifacts"))
 
     assert "error" in result
     assert "block" in result["error"]
     # The blocking deployment was never published / recorded.
     assert stub.published_with == []
-    assert not (tmp_path / "cas").exists()
+    assert not (tmp_path / "artifacts").exists()
 
 
 def test_freeze_publishes_when_no_blocking_diagnostics(monkeypatch, tmp_path) -> None:
@@ -88,14 +88,14 @@ def test_freeze_publishes_when_no_blocking_diagnostics(monkeypatch, tmp_path) ->
         return stub
 
     monkeypatch.setattr(deploy_mod, "deploy", _fake_deploy)
-    # Make snapshot_from_tools a no-op so we never touch the real CAS machinery
+    # Make snapshot_from_tools a no-op so we never touch the real artifact-store machinery
     # beyond the stub publish.
     monkeypatch.setattr(
         "julep.agent.snapshot_from_tools", lambda tools: object()
     )
-    # publish=False keeps this purely in-process (no real CAS write).
+    # publish=False keeps this purely in-process (no real artifact-store write).
     result = _resolve_child._freeze_agent(
-        _StubFlow(), modules=[], cas=str(tmp_path / "cas"), publish=False
+        _StubFlow(), modules=[], artifacts=str(tmp_path / "artifacts"), publish=False
     )
 
     assert "error" not in result

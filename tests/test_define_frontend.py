@@ -1237,7 +1237,7 @@ def test_genuinely_unregistered_qualified_callable_still_gets_existing_diagnosti
             return value
 
 
-def test_frontend_switch_on_cas_status_golden_and_all_arms() -> None:
+def test_frontend_switch_on_artifact_status_golden_and_all_arms() -> None:
     @flow
     def success(write_result: dict[str, Any]) -> dict[str, Any]:
         handled = p52_case_success(write_result)

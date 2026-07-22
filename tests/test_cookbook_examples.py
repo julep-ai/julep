@@ -134,14 +134,14 @@ def test_episode_summary_flow_deploys_clean_and_rolls_up_statuses_in_order() -> 
     assert len({key for _, _, _, key, _ in calls}) == len(calls)
 
 
-def test_episode_summary_flow_cas_guard_blocks_stale_write() -> None:
+def test_episode_summary_flow_artifact_guard_blocks_stale_write() -> None:
     run(episode_summary_flow.run_demo())
 
     store = episode_summary_flow._store
     for episode_id in ("ep-1001", "ep-1002"):
         assert store[episode_id]["summary"] is not None
         assert store[episode_id]["oneLiner"] is not None
-    # ep-1003 was edited between read and write, so the CAS write must not land.
+    # ep-1003 was edited between read and write, so the artifact-store write must not land.
     assert store["ep-1003"]["summary"] is None
     assert store["ep-1003"]["oneLiner"] is None
 
@@ -165,7 +165,7 @@ def test_cluster_labeling_flow_deploys_clean_and_rolls_up_statuses_in_order() ->
     ]
 
 
-def test_cluster_labeling_flow_cas_guard_writes_one_snapshot_or_none() -> None:
+def test_cluster_labeling_flow_artifact_guard_writes_one_snapshot_or_none() -> None:
     run(cluster_labeling_flow.run_demo())
 
     store = cluster_labeling_flow._store
@@ -175,7 +175,7 @@ def test_cluster_labeling_flow_cas_guard_writes_one_snapshot_or_none() -> None:
     assert all(label["keywords"] for label in clean_labels.values())
 
     # store-stale was edited after the global snapshot read, so the single
-    # CAS-guarded snapshot write must leave the label snapshot untouched.
+    # artifact-store-guarded snapshot write must leave the label snapshot untouched.
     assert store["store-stale"]["labels"] == {}
 
 

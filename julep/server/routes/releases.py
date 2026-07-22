@@ -18,7 +18,7 @@ from ...app_deploy import (
 )
 from ...ir import canonical_json
 from ..auth import ApiKey, require_admin, require_key
-from . import cas_store, execution_store
+from . import artifact_store, execution_store
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -111,19 +111,19 @@ async def publish_release(
             detail=str(exc),
         ) from exc
 
-    cas = cas_store(request)
-    missing = sorted(digest for digest in _referenced_digests(release) if not cas.has(digest))
+    artifacts = artifact_store(request)
+    missing = sorted(digest for digest in _referenced_digests(release) if not artifacts.has(digest))
     if missing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "release references missing CAS blobs", "digests": missing},
+            detail={"message": "release references missing artifact-store blobs", "digests": missing},
         )
 
-    manifest_digest = cas.put(release.manifest_bytes)
+    manifest_digest = artifacts.put(release.manifest_bytes)
     if manifest_digest != release.release_hash.removeprefix("sha256:"):
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="CAS returned an unexpected release-manifest digest",
+            detail="artifact-store returned an unexpected release-manifest digest",
         )
 
     store = execution_store(request)

@@ -3,7 +3,7 @@ title: "Control plane"
 description: "Self-hosted release, deployment, run, projection, and administration API."
 ---
 
-The optional control plane is a FastAPI application over Postgres, a CAS, and
+The optional control plane is a FastAPI application over Postgres, a artifact store, and
 Temporal. It publishes immutable releases, records lane activation, starts
 workflows, and serves the derived execution projection. It does not replace
 Temporal as the durability mechanism.
@@ -29,7 +29,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 |---|---|---|
 | `JULEP_API_KEYS` | empty | Comma- or whitespace-separated `name:token[:admin]` keys. |
 | `JULEP_EXECUTION_STORE_DSN` | none | PostgreSQL DSN. Required to serve the API. |
-| `JULEP_CAS_URL` | `file://<project>/.julep/cas` | Release and runtime-declaration CAS. |
+| `JULEP_ARTIFACT_STORE_URL` | `file://<project>/.julep/artifacts` | Release and runtime-declaration artifact store. |
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Temporal frontend. |
 | `TEMPORAL_NAMESPACE` | `default` | Temporal namespace. |
 | `TEMPORAL_TASK_QUEUE` | `julep` | Default task queue. |
@@ -50,7 +50,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 | `JULEP_SERVER_WORKER_SERVICE_ACCOUNT` | unset | Existing worker ServiceAccount. |
 | `JULEP_SERVER_WORKER_PRIORITY_CLASS` | unset | Existing worker PriorityClass. |
 
-The server table recognizes `api_keys`, `execution_store_dsn`, `cas_url`,
+The server table recognizes `api_keys`, `execution_store_dsn`, `artifact_store_url`,
 `temporal_address`, `temporal_namespace`, `temporal_task_queue`,
 `temporal_api_key`, `temporal_tls`, `temporal_payload_keys`/`payload_keys`,
 `temporal_payload_key_id`/`payload_key_id`,
@@ -68,7 +68,7 @@ Every route except `GET /v1/health` requires `Authorization: Bearer <token>`;
 
 Admin keys are required for:
 
-- `PUT /v1/cas/{sha256}`
+- `PUT /v1/artifacts/{sha256}`
 - `POST /v1/releases`
 - `POST /v1/deployments`
 
@@ -94,14 +94,14 @@ Unauthenticated liveness returns `200`:
 {"status":"ok"}
 ```
 
-Authenticated `GET /v1/ready` checks Postgres, CAS, and Temporal. It returns
+Authenticated `GET /v1/ready` checks Postgres, artifact store, and Temporal. It returns
 `200` with `status: "ready"`, or `503` with `status: "unavailable"`; `checks`
 maps each dependency to `ok` or an error class.
 
-### CAS
+### artifact store
 
 ```http
-PUT /v1/cas/<64-lowercase-hex> HTTP/1.1
+PUT /v1/artifacts/<64-lowercase-hex> HTTP/1.1
 Authorization: Bearer <admin-key>
 Content-Type: application/octet-stream
 
@@ -109,7 +109,7 @@ Content-Type: application/octet-stream
 ```
 
 The server recomputes SHA-256. A new blob returns `201`, an existing blob
-returns `200`, and a digest mismatch returns `400`. `HEAD /v1/cas/{sha256}`
+returns `200`, and a digest mismatch returns `400`. `HEAD /v1/artifacts/{sha256}`
 accepts any key and returns `200` when present or `404` when absent.
 
 ### Releases
@@ -124,7 +124,7 @@ Content-Type: application/json
 
 The request body is the raw release manifest. The server parses schema version
 2, recomputes `release_hash`, verifies every referenced bundle and runtime
-declaration blob in CAS, and stores the manifest. Missing blobs return `409`
+declaration blob in artifact store, and stores the manifest. Missing blobs return `409`
 with their digests. A new release returns `201`; an existing release returns
 `200`.
 

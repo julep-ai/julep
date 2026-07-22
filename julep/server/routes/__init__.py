@@ -6,7 +6,7 @@ from typing import cast
 
 from fastapi import HTTPException, Request, status
 
-from ...cas import CASStore
+from ...artifact_store import ArtifactStore
 from ...execution.projection_store import ExecutionStore
 from ..auth import ApiKey, owner_scoped
 from ..temporal import TemporalGateway
@@ -18,10 +18,10 @@ def execution_store(request: Request) -> ExecutionStore:
     return cast(ExecutionStore, request.app.state.store)
 
 
-def cas_store(request: Request) -> CASStore:
+def artifact_store(request: Request) -> ArtifactStore:
     """Return the request application's configured content-addressed store."""
 
-    return cast(CASStore, request.app.state.cas)
+    return cast(ArtifactStore, request.app.state.artifacts)
 
 
 def temporal_gateway(request: Request) -> TemporalGateway:
@@ -50,7 +50,7 @@ def require_owned_run(
 
 
 __all__ = [
-    "cas_store",
+    "artifact_store",
     "execution_store",
     "require_owned_run",
     "temporal_gateway",

@@ -2,7 +2,7 @@
 #
 # This image holds no flow code, no pures, and no example modules. It is built
 # once at framework cadence and is never rebuilt to ship a new flow. The flow
-# and its custom pures arrive as a signed CAS bundle resolved from STORE_URL at
+# and its custom pures arrive as a signed artifact store bundle resolved from JULEP_ARTIFACT_STORE_URL at
 # startup (WORKER_CONTEXT_FACTORY below plus JULEP_BUNDLES and
 # JULEP_BUNDLE_ALLOWED_SIGNERS in the Deployment env).
 #
@@ -15,7 +15,7 @@ FROM python:3.12-slim
 
 COPY julep-v2 /src/julep-v2
 # Install the julep framework with production runtime extras:
-# [temporal] for durable workers, [store] for S3 CAS and ed25519 signature
+# [temporal] for durable workers, [store] for S3 artifact store and ed25519 signature
 # verification, [dotctx] for portable renderer hydration, and [wasm] for wasmtime
 # plus the vendored executor.wasm package data. Drop the build context afterwards
 # so the final image contains only the installed framework.

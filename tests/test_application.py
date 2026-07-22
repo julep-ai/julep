@@ -21,7 +21,7 @@ from julep.app_deploy import (
     reconcile_application,
     release_from_bytes,
 )
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from julep.dotctx import Reasoner
 from julep.dsl import app as agent_app
@@ -363,7 +363,7 @@ def test_application_evals_receive_the_supplied_llm_caller(monkeypatch, tmp_path
 
 
 def test_publish_release_is_content_addressed_and_round_trips(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path / "cas")
+    store = LocalDirArtifactStore(tmp_path / "artifacts")
     reasoner_name = "release-roundtrip-reasoner"
     existing = DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
     compiled = Application(
@@ -435,7 +435,7 @@ def test_publish_release_is_content_addressed_and_round_trips(tmp_path) -> None:
 def test_release_parser_requires_schema_version_two(tmp_path, schema_version) -> None:
     release = publish_application(
         Application("memory", [_spec("summary")]).compile(),
-        LocalDirCAS(tmp_path / "cas"),
+        LocalDirArtifactStore(tmp_path / "artifacts"),
         worker_image="registry.example/memory@sha256:" + "a" * 64,
         signing_key="0" * 64,
     )
@@ -455,7 +455,7 @@ def test_release_parser_requires_schema_version_two(tmp_path, schema_version) ->
 def test_published_release_is_deeply_immutable(tmp_path) -> None:
     release = publish_application(
         Application("memory", [_spec("summary")]).compile(),
-        LocalDirCAS(tmp_path / "cas"),
+        LocalDirArtifactStore(tmp_path / "artifacts"),
         worker_image="registry.example/memory@sha256:" + "d" * 64,
         signing_key="0" * 64,
     )
@@ -476,7 +476,7 @@ def test_publish_rejects_post_compile_flow_mutation(tmp_path) -> None:
     with pytest.raises(ValueError, match="changed after compilation"):
         publish_application(
             compiled,
-            LocalDirCAS(tmp_path / "cas"),
+            LocalDirArtifactStore(tmp_path / "artifacts"),
             worker_image="registry.example/memory@sha256:" + "e" * 64,
             signing_key="0" * 64,
         )
@@ -502,7 +502,7 @@ def test_release_rejects_mutable_image_tag(tmp_path) -> None:
     with pytest.raises(ApplicationReleaseError, match="immutable"):
         publish_application(
             Application("memory", [_spec("summary")]).compile(),
-            LocalDirCAS(tmp_path),
+            LocalDirArtifactStore(tmp_path),
             worker_image="registry.example/memory:latest",
             signing_key="0" * 64,
         )
@@ -531,7 +531,7 @@ def test_deployment_config_changes_release_and_physical_queue(tmp_path) -> None:
         )
         return publish_application(
             compiled,
-            LocalDirCAS(tmp_path / "cas"),
+            LocalDirArtifactStore(tmp_path / "artifacts"),
             worker_image="registry.example/memory@sha256:" + "f" * 64,
             deployment_config=config,
             signing_key="0" * 64,
@@ -680,7 +680,7 @@ def test_deployment_config_rejects_mutable_remote_chart_reference() -> None:
 
 
 def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path / "cas")
+    store = LocalDirArtifactStore(tmp_path / "artifacts")
     compiled = Application(
         "memory",
         [_spec("summary", lane="summary"), _spec("brief", lane="brief-refresh")],
@@ -821,7 +821,7 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
     worker_environment = {"JULEP_BUNDLE_ALLOWED_SIGNERS": "aa,bb"}
     release = publish_application(
         compiled,
-        LocalDirCAS(tmp_path / "cas"),
+        LocalDirArtifactStore(tmp_path / "artifacts"),
         worker_image="registry.example/memory@sha256:" + "c" * 64,
         deployment_config=build_lane_deployment_config(
             chart=str(chart),

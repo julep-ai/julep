@@ -16,7 +16,7 @@ def make_context() -> WorkerContext:
     ctx = base_make_context()
     if not os.environ.get("JULEP_BUNDLES", "").strip():
         # A bundle preload already registered the pures, and the workflow's
-        # runtime-declarations blob hydrates its reasoners from STORE_URL.
+        # runtime-declarations blob hydrates its reasoners from JULEP_ARTIFACT_STORE_URL.
         importlib.import_module("examples.episode_summarizer.flow")
     url = os.environ["EPISODE_TOOLS_URL"]
     ctx.mcp_call = http_mcp_caller(

@@ -1,4 +1,4 @@
-"""Build and publish signed CAS bundle manifests for deployments."""
+"""Build and publish signed artifact-store bundle manifests for deployments."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from . import _env, deps
-from .cas import CASStore
+from .artifact_store import ArtifactStore
 from .ir import canonical_json
 from .registry import DEFAULT_REGISTRY, Registry, _text_hash
 
@@ -199,7 +199,7 @@ def _custom_pure_sources(
 
 def publish_bundle(
     deployment: Deployment,
-    store: CASStore,
+    store: ArtifactStore,
     *,
     signing_key: str | None = None,
     registry: Registry = DEFAULT_REGISTRY,
@@ -271,7 +271,7 @@ def publish_bundle(
         "signature": None,
     }
     manifest_bytes = _canonical_bytes(manifest)
-    # By construction, the stored manifest CAS digest is the unsigned manifest hash.
+    # By construction, the stored manifest artifact-store digest is the unsigned manifest hash.
     bundle_hash = store.put(manifest_bytes)
 
     signature_digest = store.put(

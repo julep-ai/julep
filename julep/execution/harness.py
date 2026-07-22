@@ -397,8 +397,8 @@ class FlowInput:
     # Run principal: opaque tenant/credential reference (never a secret),
     # workflow input so it is replay-stable and absent from the frozen artifact.
     principal: Optional[dict[str, Any]] = None
-    # Signed CAS bundle pointers for custom pures referenced by this flow.
-    # Worker-side STORE_URL and JULEP_BUNDLE_ALLOWED_SIGNERS remain authoritative.
+    # Signed artifact-store bundle pointers for custom pures referenced by this flow.
+    # Worker-side JULEP_ARTIFACT_STORE_URL and JULEP_BUNDLE_ALLOWED_SIGNERS remain authoritative.
     bundle: Optional[list[dict[str, str]]] = None
     runtime_declarations_ref: Optional[dict[str, Any]] = None
     # Trajectory identity: root_run_id is root session_id; segment_seq bumps on continue_as_new.
