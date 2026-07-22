@@ -794,7 +794,7 @@ async def run_live_e2e(
                         raise RuntimeError(
                             "examples.episode_summarizer.flow was imported before live model overrides"
                         )
-                    compiled = flow_module.build_application().compile()
+                    compiled = flow_module.build_compiled_application()
                     release = publish_application(
                         compiled,
                         LocalDirArtifactStore(artifact_dir),

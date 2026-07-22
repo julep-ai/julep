@@ -4,7 +4,7 @@ import subprocess
 import sys
 from typing import Any
 
-from julep.cli.main import serve_api
+from julep.cli.main import db_reencrypt_secrets, serve_api
 from julep.server.settings import ServerSettings
 
 
@@ -74,3 +74,45 @@ assert 'psycopg' not in sys.modules
         text=True,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_reencrypt_secrets_reports_progress_and_closes(monkeypatch, capsys) -> None:
+    stores: list[Any] = []
+
+    class Store:
+        def __init__(self, dsn: str) -> None:
+            assert dsn == "postgresql://vault"
+            self.migrated = False
+            self.closed = False
+            stores.append(self)
+
+        def apply_schema(self) -> None:
+            self.migrated = True
+
+        def reencrypt_secrets(self, cipher: object, progress):
+            assert cipher is sentinel
+            progress(1, 1, "tracker-token")
+            return {
+                "reencrypted": 1,
+                "active_key_id": "new",
+                "remaining_key_ids": {"new": 1},
+            }
+
+        def close(self) -> None:
+            self.closed = True
+
+    sentinel = object()
+    monkeypatch.setattr(
+        "julep.execution.projection_store.PostgresExecutionStore", Store
+    )
+    monkeypatch.setattr(
+        "julep.secrets.VaultCipher.from_env", lambda _env: sentinel
+    )
+
+    db_reencrypt_secrets(dsn="postgresql://vault")
+
+    assert stores[0].migrated is True
+    assert stores[0].closed is True
+    output = capsys.readouterr().out
+    assert "processed 1/1: tracker-token" in output
+    assert "remaining key references: new=1" in output

@@ -12,7 +12,8 @@ from julep import (
     sub, race, hedge, quorum, human_gate, HUMAN_GATE_TOOL,
     freeze, validate, blocking, register_pure,
     CapabilityManifest, ToolContract, manifest_to_json, manifest_from_json,
-    McpServerSnapshot, McpSnapshot, McpToolSpec,
+    CapabilityOverrides, McpServerSnapshot, McpSnapshot, McpToolSpec,
+    snapshot_from_listings,
     estimate_cost, admit_plan, check_race_admission,
 )
 from julep.contracts import FrozenTool, McpAnnotations, definition_hash, execution_hash
@@ -135,6 +136,51 @@ def test_manifest_json_round_trip():
         assert h == tool.execution_hash
 
 
+def test_frozen_mcp_metadata_is_normalized_and_round_trips() -> None:
+    snapshot = snapshot_from_listings(
+        {
+            "srv": {
+                "search": {
+                    "inputSchema": {"type": "object"},
+                    "annotations": {"readOnlyHint": True},
+                }
+            }
+        },
+        versions={"srv": '{"protocol":"2025-03-26","server":"2.4.0"}'},
+    )
+    frozen = freeze(call(mcp("srv", "search")), snapshot)
+    (tool,) = frozen.manifest.values()
+
+    assert tool.protocol_version == "2025-03-26"
+    assert tool.server_version == "2.4.0"
+    assert tool.annotations == McpAnnotations(
+        read_only_hint=True,
+        destructive_hint=True,
+        open_world_hint=True,
+        idempotent_hint=False,
+    )
+    assert tool.asserted is False
+    assert tool.assertion_provenance is None
+
+    (round_tripped,) = manifest_from_json(manifest_to_json(frozen.manifest)).values()
+    assert round_tripped == tool
+
+
+def test_frozen_mcp_operator_assertion_records_provenance() -> None:
+    snapshot = snapshot_from_listings({"srv": {"search": {"inputSchema": {}}}})
+    contract = ToolContract(Effect.READ, Idempotency.NATIVE)
+
+    frozen = freeze(
+        call(mcp("srv", "search")),
+        snapshot,
+        CapabilityOverrides({"srv/search": contract}),
+    )
+    (tool,) = frozen.manifest.values()
+
+    assert tool.asserted is True
+    assert tool.assertion_provenance == "operator_override"
+
+
 def test_tool_hashes_split_definition_from_execution_identity():
     ref = mcp("srv", "lookup")
     contract = ToolContract(Effect.READ, Idempotency.NATIVE)
@@ -172,6 +218,33 @@ def test_empty_annotations_hash_like_absent_annotations():
 
     assert absent.definition_hash == empty.definition_hash
     assert absent.execution_hash == empty.execution_hash
+
+
+def test_protocol_pinned_mcp_annotations_hash_after_default_normalization() -> None:
+    ref = mcp("srv", "lookup")
+    contract = ToolContract(Effect.READ, Idempotency.NATIVE)
+    partial = FrozenTool.create(
+        ref,
+        {},
+        contract,
+        annotations=McpAnnotations(read_only_hint=True),
+        protocol_version="2025-03-26",
+    )
+    explicit = FrozenTool.create(
+        ref,
+        {},
+        contract,
+        annotations=McpAnnotations(
+            read_only_hint=True,
+            destructive_hint=True,
+            open_world_hint=True,
+            idempotent_hint=False,
+        ),
+        protocol_version="2025-03-26",
+    )
+
+    assert partial.annotations == explicit.annotations
+    assert partial.definition_hash == explicit.definition_hash
 
 
 def test_hash_helpers_include_expected_identity_parts():

@@ -30,6 +30,8 @@ dependencies = [
     # NOT pull in click, so it is declared explicitly here.
     "typer>=0.12",
     "click>=8.1",
+    # Reply contracts are enforced at run time, not merely used as provider hints.
+    "jsonschema>=4.21",
 ]
 
 [project.optional-dependencies]

@@ -456,6 +456,11 @@ class Node:
     # below only when present; prompt stays out of the IR wire format.
     prompt: Optional[str] = None
     tools: Optional[Any] = None
+    # Provider-visible alias -> frozen wire ToolRef key. Definitions/contracts
+    # are populated by freeze after the aliases resolve against a snapshot.
+    tool_aliases: Optional[dict[str, str]] = None
+    tool_defs: Optional[list[dict[str, Any]]] = None
+    tool_contracts: Optional[dict[str, dict[str, Any]]] = None
     subflows: Optional[Any] = None
     budget: Optional[Any] = None
     max_rounds: Optional[int] = None
@@ -467,6 +472,8 @@ class Node:
     round_note: Optional[str] = None
     native_tools: Optional[bool] = None
     require_tool_call: Optional[bool] = None
+    output_schema: Optional[JSONSchema] = None
+    output_retries: Optional[int] = None
     subflow_queues: Optional[dict[str, str]] = None
     source: Optional["SourceSpan"] = None
 
@@ -528,6 +535,15 @@ class Node:
         if self.op == Op.APP:
             if self.tools is not None:
                 out["tools"] = self.tools
+            if self.tool_aliases is not None:
+                out["toolAliases"] = dict(sorted(self.tool_aliases.items()))
+            if self.tool_defs is not None:
+                out["toolDefs"] = self.tool_defs
+            if self.tool_contracts is not None:
+                out["toolContracts"] = {
+                    key: self.tool_contracts[key]
+                    for key in sorted(self.tool_contracts)
+                }
             if self.subflows is not None:
                 out["subflows"] = self.subflows
             if self.subflow_queues:
@@ -546,6 +562,10 @@ class Node:
                 out["nativeTools"] = True
             if self.require_tool_call:
                 out["requireToolCall"] = True
+            if self.output_schema is not None:
+                out["replySchema"] = self.output_schema
+            if self.output_retries is not None:
+                out["outputRetries"] = self.output_retries
         if self.pure is not None:
             out["pure"] = self.pure
         if self.op in (Op.ARR, Op.LOOP) and self.args is not None:
@@ -594,6 +614,9 @@ class Node:
             args=d.get("args"),
             merge=Merge.from_json(d["merge"]) if d.get("merge") else None,
             tools=d.get("tools"),
+            tool_aliases=d.get("toolAliases", d.get("tool_aliases")),
+            tool_defs=d.get("toolDefs", d.get("tool_defs")),
+            tool_contracts=d.get("toolContracts", d.get("tool_contracts")),
             subflows=d.get("subflows"),
             subflow_queues=d.get("subflowQueues"),
             budget=_budget_from_json(d["budget"]) if "budget" in d else None,
@@ -603,6 +626,8 @@ class Node:
             round_note=d.get("roundNote", d.get("round_note")),
             native_tools=d.get("nativeTools", d.get("native_tools")),
             require_tool_call=d.get("requireToolCall", d.get("require_tool_call")),
+            output_schema=d.get("replySchema", d.get("reply_schema")),
+            output_retries=d.get("outputRetries", d.get("output_retries")),
             prompt=d.get("channel"),
         )
 

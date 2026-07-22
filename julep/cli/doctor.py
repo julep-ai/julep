@@ -11,6 +11,7 @@ from pathlib import Path
 from julep._env import LEGACY_ENV_VAR_RENAMES
 from julep.cli.config import JulepConfig
 from julep.cli.model import build_module
+from julep.secrets import SECRET_REF_RE, SecretResolutionError, SecretResolver
 
 
 @dataclass(frozen=True)
@@ -95,10 +96,60 @@ def run_checks(
     where = ", ".join(cfg.src) if cfg.src else str(cfg.root)
     checks.append(Check("discovery", n > 0, f"{n} agent(s) discovered under {where}"))
 
+    source = os.environ if environ is None else environ
+    references: dict[str, list[str]] = {}
+    malformed_references: list[str] = []
+    for server_name, server in cfg.mcp_servers.items():
+        for header_name, value in server.headers.items():
+            match = SECRET_REF_RE.fullmatch(value)
+            if match is not None:
+                references.setdefault(match.group(1), []).append(
+                    f"mcp.servers.{server_name}.headers.{header_name}"
+                )
+            elif value.startswith("secret://"):
+                malformed_references.append(
+                    f"mcp.servers.{server_name}.headers.{header_name}"
+                )
+    dangling: list[str] = []
+    resolver = SecretResolver.from_env(source)
+    for secret_name in sorted(references):
+        try:
+            resolver.resolve(secret_name)
+        except SecretResolutionError:
+            dangling.append(secret_name)
+    if malformed_references:
+        checks.append(
+            Check(
+                "secrets",
+                False,
+                "malformed secret:// reference(s): "
+                + ", ".join(malformed_references),
+            )
+        )
+    elif dangling:
+        checks.append(
+            Check(
+                "secrets",
+                False,
+                "dangling secret:// reference(s): " + ", ".join(dangling),
+            )
+        )
+    else:
+        checks.append(
+            Check(
+                "secrets",
+                True,
+                (
+                    f"{len(references)} secret:// reference(s) resolved"
+                    if references
+                    else "no secret:// references"
+                ),
+            )
+        )
+
     has_git = shutil.which("git") is not None
     checks.append(Check("git", has_git, "git found" if has_git else "git not on PATH (state:modified disabled)"))
 
-    source = os.environ if environ is None else environ
     lf = bool(source.get("LANGFUSE_HOST"))
     checks.append(Check("langfuse", lf, "LANGFUSE_HOST set" if lf else "LANGFUSE_HOST unset (no deep links)"))
 

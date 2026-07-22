@@ -73,6 +73,33 @@ from .openai_responses import (
 
 logger = logging.getLogger(__name__)
 
+
+def json_schema_error(value: Any, schema: Optional[dict[str, Any]]) -> Optional[str]:
+    """Return a concise validation error for ``value``, or ``None``.
+
+    Provider structured-output modes are hints with uneven enforcement. This
+    validator is the framework-owned final authority and supports the full
+    JSON-Schema dialect selected by the schema itself.
+    """
+    if schema is None:
+        return None
+    from jsonschema.validators import validator_for
+
+    validator_cls = validator_for(schema)
+    validator_cls.check_schema(schema)
+    errors = sorted(
+        validator_cls(schema).iter_errors(value),
+        key=lambda error: tuple(str(part) for part in error.absolute_path),
+    )
+    if not errors:
+        return None
+    error = errors[0]
+    # jsonschema's human message and instance path can both contain rejected
+    # caller values (including mapping keys). This string is persisted in
+    # agent observations and failures, so keep it useful but value-free.
+    validator = error.validator if isinstance(error.validator, str) else "schema"
+    return f"JSON value failed the {validator!r} schema constraint"
+
 # any-llm's ``acompletion``-shaped callable: keyword-driven, returns an
 # OpenAI-typed completion (``.choices[0].message.{content,parsed}``).
 AnyCompletion = Callable[..., Awaitable[Any]]
@@ -536,6 +563,18 @@ async def complete_reasoner(
                         tool_call["tool"] = tool_name_reverse.get(tool, tool)
         return parsed
 
+    def _final_output_schema_error(parsed: Any, native_calls: Any) -> Optional[str]:
+        # A native tool-call turn is an intermediate controller action, not the
+        # reasoner's final reply. Its arguments are validated separately against
+        # the selected frozen tool input schema by AgentWorkflow.
+        if native_calls or (
+            isinstance(parsed, dict)
+            and isinstance(parsed.get("tool_calls"), list)
+            and bool(parsed["tool_calls"])
+        ):
+            return None
+        return json_schema_error(parsed, schema)
+
     pc_marker_placed = False
 
     async def call(*, native: bool, retry_note: Optional[str] = None) -> Any:
@@ -641,20 +680,18 @@ async def complete_reasoner(
         else _parse_completion_reply(completion, expect_json=schema is not None)
     )
     reply = _restore_tool_calls(reply)
-    while (
-        schema is not None
-        and not isinstance(reply, dict)
-        and retries_used < reasoner.output_retries
-    ):
+    validation_error = _final_output_schema_error(reply, native_tool_calls)
+    while schema is not None and validation_error is not None and retries_used < reasoner.output_retries:
         retries_used += 1
         logger.warning(
-            "reply for %s did not parse as JSON object; re-ask %d/%d",
-            reasoner.name, retries_used, reasoner.output_retries,
+            "reply for %s failed JSON-Schema validation (%s); re-ask %d/%d",
+            reasoner.name, validation_error, retries_used, reasoner.output_retries,
         )
         completion = await dispatch_once(
             retry_note=(
                 "Your previous reply was not a single valid JSON object matching "
-                "the required schema. Reply again with ONLY the JSON object."
+                f"the required schema ({validation_error}). Reply again with ONLY "
+                "the corrected JSON object."
             )
         )
         apt, act, att = _usage_of(completion)
@@ -668,6 +705,7 @@ async def complete_reasoner(
             else _parse_completion_reply(completion, expect_json=True)
         )
         reply = _restore_tool_calls(reply)
+        validation_error = _final_output_schema_error(reply, native_tool_calls)
     ended = time.time()
     pc = reasoner.prompt_cache
     pc_requested: Optional[str]

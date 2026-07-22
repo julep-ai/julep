@@ -6,7 +6,7 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
@@ -91,7 +91,13 @@ def _synth_application_name(root: Path) -> str:
 def resolve_application(cfg: JulepConfig, env: EnvConfig) -> Application:
     env_vars = {**env.vars, **env.worker_environment}
     ctx_specs = [
-        pipeline_spec_from_ctx(pipeline, root=cfg.root, env_vars=env_vars)
+        pipeline_spec_from_ctx(
+            pipeline,
+            root=cfg.root,
+            env_vars=env_vars,
+            agent_round_cap=cfg.agent_round_cap,
+            mcp_servers=cfg.mcp_servers,
+        )
         for _name, pipeline in sorted(cfg.pipelines.items())
     ]
     if cfg.application is not None:
@@ -133,7 +139,10 @@ def compile_application(
     snapshot_environment = {**env.vars, **env.worker_environment}
     application = resolve_application(cfg, env)
     if not mcp_snapshot:
-        return application.compile_live(env_vars=snapshot_environment)
+        return replace(
+            application.compile_live(env_vars=snapshot_environment),
+            mcp_preflight_policy=cfg.mcp_preflight,
+        )
 
     snapshot = _snapshot_configured_servers(cfg)
     snapshot_overrides = {
@@ -141,7 +150,10 @@ def compile_application(
         for pipeline in application.pipelines
         if not pipeline.tools
     }
-    return application.compile(snapshot_overrides)
+    return replace(
+        application.compile(snapshot_overrides),
+        mcp_preflight_policy=cfg.mcp_preflight,
+    )
 
 
 def plan_configured_application(

@@ -20,6 +20,7 @@ from .routes.deployments import router as deployments_router
 from .routes.health import router as health_router
 from .routes.releases import router as releases_router
 from .routes.runs import reconcile_runs_once, router as runs_router
+from .routes.secrets import router as secrets_router
 from .settings import ServerSettings
 from .sse import DEFAULT_HEARTBEAT_SECONDS, DEFAULT_POLL_SECONDS
 from .temporal import TemporalGateway
@@ -86,6 +87,7 @@ def create_app(
         raise ValueError("sse_poll_seconds must be positive")
 
     keyring = KeyRing.from_settings(resolved_settings)
+    vault_cipher = resolved_settings.build_vault_cipher()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -126,6 +128,7 @@ def create_app(
     app.state.gateway_error = None
     app.state.artifacts = resolved_artifact_store
     app.state.keyring = keyring
+    app.state.vault_cipher = vault_cipher
     app.state.reconciler = resolved_reconciler
     app.state.deployment_reconcile_status = {}
     app.state.sse_heartbeat_seconds = sse_heartbeat_seconds
@@ -137,6 +140,7 @@ def create_app(
     app.include_router(releases_router, prefix="/v1")
     app.include_router(deployments_router, prefix="/v1")
     app.include_router(runs_router, prefix="/v1")
+    app.include_router(secrets_router, prefix="/v1")
     return app
 
 

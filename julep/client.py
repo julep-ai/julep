@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import httpx
 
@@ -74,6 +74,8 @@ class JulepClient:
         release: str | None = None,
         session_id: str | None = None,
         principal: dict[str, Any] | None = None,
+        secrets: dict[str, str] | None = None,
+        mcp_preflight: Literal["pin", "names", "off"] | None = None,
         queue_lanes: dict[str, str] | None = None,
         idempotency_key: str | None = None,
         run_id: str | None = None,
@@ -85,6 +87,8 @@ class JulepClient:
             ("release", release),
             ("sessionId", session_id),
             ("principal", principal),
+            ("secrets", secrets),
+            ("mcpPreflight", mcp_preflight),
             ("queueLanes", queue_lanes),
             ("runId", run_id),
         ):

@@ -45,8 +45,20 @@ def test_temporal_retry_policy_clamps_ann_backoff_to_sdk_floor() -> None:
         ToolContract(effect=Effect.READ, idempotency=Idempotency.NATIVE),
         harness.ExecutionPolicy(),
         Ann(backoff_rate=0.5),
+        asserted=True,
     )
 
     assert retry_policy.maximum_attempts != 1
     assert retry_policy.backoff_coefficient >= 1.0
     retry_policy._validate()
+
+
+def test_temporal_retry_policy_denies_unasserted_hint_even_with_annotation_override() -> None:
+    retry_policy = harness._retry_policy_for(
+        ToolContract(effect=Effect.READ, idempotency=Idempotency.NATIVE),
+        harness.ExecutionPolicy(),
+        Ann(max_attempts=9),
+        asserted=False,
+    )
+
+    assert retry_policy.maximum_attempts == 1

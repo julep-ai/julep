@@ -267,7 +267,7 @@ is `python -m julep.cli.artifact`.
 
 ## `julep run`
 
-Synopsis: `julep run <NAME|PATH.ctx> [--input JSON] [--run-id RUN_ID] [--env ENV]`
+Synopsis: `julep run <NAME|PATH.ctx> [--input JSON] [--run-id RUN_ID] [--env ENV] [--secret NAME=VALUE]...`
 
 Execute one agent. `local` resolves live source and runs the in-memory
 interpreter with echo stubs; non-local envs replay the deployed ledger record
@@ -279,6 +279,7 @@ through Temporal.
 | `--input JSON` | `null` | JSON-encoded input. |
 | `--run-id RUN_ID` | `""` | Local default `julep-<name>-local`; non-local default `julep-<name>-<env>-<12hex>`. |
 | `--env ENV` | `local` | Configured environment. |
+| `--secret NAME=VALUE` | none | Repeatable run-scoped MCP-header secret; deployed Temporal runs only. |
 
 ```bash
 julep run triage --input '"TICKET-9"' --run-id r-cmd-1
@@ -294,7 +295,8 @@ output: {"output": {"hit": "TICKET-9"}}
 
 ```bash
 julep deploy triage --env staging
-julep run triage --env staging --input '{"ticket":"TICKET-9"}'
+julep run triage --env staging --input '{"ticket":"TICKET-9"}' \
+  --secret tracker-token="$TRACKER_TOKEN"
 ```
 
 ```text
@@ -306,7 +308,9 @@ resolve/runtime errors print `error: ...`, cache status `error`, and exit `1`;
 successful `RunOutcome` runs cache status `done`, print `output: ...`, and may
 print `langfuse: ...`. Non-local `run_on_env(...)` raises if `temporal_address`,
 Temporal support, or a deploy ledger record is missing; the command does not
-wrap those exceptions. Cache path: `.julep/runs/<run-id>.json`.
+wrap those exceptions. Run secrets require the AES-GCM Temporal converter;
+raw/direct Temporal SDK starts must not attach them. Local runs use
+`JULEP_SECRET_*` instead. Cache path: `.julep/runs/<run-id>.json`.
 
 For a `.ctx` path, the command loads dotctx, lowers it with
 `reasoner_to_flow`, freezes it, and runs the local eval harness. It resolves
@@ -481,6 +485,18 @@ Synopsis: `julep db sweep --older-than SECONDS [--dsn DSN]`
 Delete projection rows for terminal runs older than the non-negative threshold.
 The operator owns retention policy. The DSN resolution matches `db migrate`.
 
+## `julep db reencrypt-secrets`
+
+Synopsis: `julep db reencrypt-secrets [--dsn DSN]`
+
+Re-encrypt every live vault row under `JULEP_VAULT_KEY_ID`, using the dedicated
+`JULEP_VAULT_KEYS` keyring. This is a maintenance-window command: stop new
+submissions first. It takes exclusive `runs` and `secrets` table locks and
+refuses to run while any workflow is non-terminal. Progress and remaining key
+reference counts are printed; archived metadata markers move to the active key
+id, and an old key may be removed only after its count reaches zero. The DSN
+resolution matches `db migrate`.
+
 ## `julep schedule apply|ls|rm`
 
 Schedules are declared under `[tool.julep.schedule.<name>]` or
@@ -625,7 +641,8 @@ the baseline, and `4` means a broken eval configuration or unknown environment.
 
 Synopsis: `julep doctor`
 
-Preflight discovery, git, Langfuse, and Temporal availability.
+Preflight discovery, dangling MCP-header `secret://` references, git,
+Langfuse, and Temporal availability.
 
 | Arg/flag | Default | Meaning |
 |---|---|---|

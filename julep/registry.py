@@ -121,6 +121,17 @@ class ToolSchemaExpectation:
     key: str                        # toolref key: native name or "server/tool"
     input_schema: dict[str, Any]    # expected JSON Schema for the tool input
     ctx_path: str                   # the .ctx package that recorded it
+    description: str = ""           # provider-visible tools.pyi docstring summary
+
+
+def scoped_tool_expectation_key(scope: str, key: str) -> str:
+    """Internal key for a package-local bare tool name.
+
+    Bare provider names deliberately belong to a dotctx package, not to the
+    process.  The NUL separator cannot occur in either authored identifier and
+    avoids accidentally treating a wire ToolRef as a scoped entry.
+    """
+    return f"{scope}\0{key}"
 
 
 def _text_hash(src: str) -> str:
@@ -167,6 +178,8 @@ class Registry:
         self.renderers: dict[str, RendererEntry] = {}
         self.renderer_declarations: dict[str, RendererDeclaration] = {}
         self.tool_expectations: dict[str, ToolSchemaExpectation] = {}
+        # Release-hydrated AgentWorkflow specs keyed by controller name.
+        self.agent_specs: dict[str, dict[str, Any]] = {}
 
     def register_reasoner(self, reasoner: Reasoner) -> Reasoner:
         if reasoner.name in self.reasoners and self.reasoners[reasoner.name] != reasoner:
@@ -410,17 +423,40 @@ class Registry:
     def renderer_source_hash_of(self, name: str) -> str:
         return self.renderers[name].source_hash
 
-    def register_tool_expectation(self, exp: ToolSchemaExpectation) -> ToolSchemaExpectation:
-        existing = self.tool_expectations.get(exp.key)
+    def register_tool_expectation(
+        self,
+        exp: ToolSchemaExpectation,
+        *,
+        scope: Optional[str] = None,
+    ) -> ToolSchemaExpectation:
+        storage_key = (
+            scoped_tool_expectation_key(scope, exp.key)
+            if scope is not None
+            else exp.key
+        )
+        existing = self.tool_expectations.get(storage_key)
         if existing is not None and existing.input_schema != exp.input_schema:
             raise ValueError(
                 f"conflicting expected schemas for tool {exp.key!r}: "
                 f"{existing.ctx_path!r} vs {exp.ctx_path!r}"
             )
-        self.tool_expectations[exp.key] = exp
+        self.tool_expectations[storage_key] = exp
+        # Retain the historical unscoped lookup for callers loading one package.
+        # A second package may reuse the same model-visible alias with a different
+        # schema; its scoped entry remains authoritative at freeze.
+        self.tool_expectations.setdefault(exp.key, exp)
         return exp
 
-    def get_tool_expectation(self, key: str) -> Optional[ToolSchemaExpectation]:
+    def get_tool_expectation(
+        self,
+        key: str,
+        *,
+        scope: Optional[str] = None,
+    ) -> Optional[ToolSchemaExpectation]:
+        if scope is not None:
+            scoped = self.tool_expectations.get(scoped_tool_expectation_key(scope, key))
+            if scoped is not None:
+                return scoped
         return self.tool_expectations.get(key)
 
     def diff_pure_hashes(

@@ -218,7 +218,10 @@ class CapabilityManifest:
             for g in self.tools.values()
             if (c := g.contract()) is not None
         }
-        return CapabilityOverrides(contracts=contracts)
+        return CapabilityOverrides(
+            contracts=contracts,
+            provenance={name: "capability_manifest" for name in contracts},
+        )
 
     def max_call_limits(self) -> dict[str, int]:
         """Per-tool maxCalls limits keyed by capability tool ref."""
@@ -304,13 +307,15 @@ class CapabilityManifest:
                 if n.tools is not None:
                     for key in n.tools:
                         tool_key = str(key)
-                        if self._has_tools and tool_key not in self.tools:
+                        wire_key = (n.tool_aliases or {}).get(tool_key, tool_key)
+                        if self._has_tools and wire_key not in self.tools:
                             out.append(Diagnostic(
                                 "CAP_APP_TOOL_DENIED",
                                 n.id,
-                                f"app inline tool {tool_key!r} is not granted by the capability manifest",
+                                f"app inline tool {tool_key!r} ({wire_key!r}) is not granted "
+                                "by the capability manifest",
                             ))
-                        if self._app_tool_approval_required(tool_key, manifest):
+                        if self._app_tool_approval_required(wire_key, manifest):
                             out.append(Diagnostic(
                                 "CAP_APP_APPROVAL_TOOL",
                                 n.id,

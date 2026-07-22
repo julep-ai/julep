@@ -8,7 +8,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 
-from ..auth import ApiKey, require_admin, require_key
+from ..auth import ApiKey, require_admin, require_client
 from . import artifact_store
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -54,7 +54,7 @@ async def put_blob(
 async def head_blob(
     sha256: str,
     request: Request,
-    _key: Annotated[ApiKey, Depends(require_key)],
+    _key: Annotated[ApiKey, Depends(require_client)],
 ) -> Response:
     _validate_digest(sha256)
     return Response(status_code=200 if artifact_store(request).has(sha256) else 404)

@@ -50,6 +50,71 @@ def test_run_call_effect_routes_mcp():
     assert seen == {"server": "kb", "tool": "search", "value": {"q": "x"}, "key": "cid-1"}
 
 
+def test_mcp_call_validates_frozen_input_schema_before_network():
+    from julep.errors import ToolInputValidation
+    from julep.execution.effects import (
+        CallToolInput, WorkerContext, callTool, configure,
+    )
+
+    calls: list[Any] = []
+
+    async def fake_mcp(server, tool, value, key, principal, secrets, validated):
+        calls.append((server, tool, value, key, principal, secrets, validated))
+        return {"ok": True}
+
+    configure(WorkerContext(mcp_call=fake_mcp))
+    inp = CallToolInput(
+        tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
+        value={"q": 7},
+        cid="cid-invalid",
+        frozen_input_schema={
+            "type": "object",
+            "properties": {"q": {"type": "string"}},
+            "required": ["q"],
+        },
+    )
+
+    with pytest.raises(ToolInputValidation):
+        asyncio.run(callTool(inp))
+    assert calls == []
+
+
+@pytest.mark.parametrize(
+    ("frozen_schema", "workflow_validated", "expected"),
+    [
+        ({"type": "object"}, False, True),
+        (None, True, True),
+        (None, False, False),
+    ],
+)
+def test_mcp_call_carries_trusted_schema_validation(
+    frozen_schema: dict[str, Any] | None,
+    workflow_validated: bool,
+    expected: bool,
+):
+    from julep.execution.effects import (
+        CallToolInput, WorkerContext, callTool, configure,
+    )
+
+    seen: list[bool] = []
+
+    async def fake_mcp(server, tool, value, key, principal, secrets, validated):
+        seen.append(validated)
+        return {"ok": True}
+
+    configure(WorkerContext(mcp_call=fake_mcp))
+    inp = CallToolInput(
+        tool_ref={"kind": "mcp", "server": "kb", "tool": "search"},
+        value={"q": "x"},
+        cid="cid-valid",
+        frozen_input_schema=frozen_schema,
+        input_schema_validated=workflow_validated,
+    )
+
+    assert asyncio.run(callTool(inp)) == {"ok": True}
+    assert seen == [expected]
+
+
 def test_toolref_json_roundtrip():
     from julep.execution.effects import toolref_json_from_key
 

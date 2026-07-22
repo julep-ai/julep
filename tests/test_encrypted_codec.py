@@ -1,22 +1,28 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 
 import pytest
 
 pytest.importorskip("temporalio")
 pytest.importorskip("cryptography")
 
-from temporalio.converter import DefaultPayloadConverter
+from temporalio.api.common.v1 import Payload
 from temporalio.api.failure.v1 import Failure
+from temporalio.converter import DefaultPayloadConverter
 
 from julep.execution.codec import (
     AES_GCM_ENCODING,
     AES_GCM_KEY_ID,
     AesGcmPayloadCodec,
+    ClaimCheckCodec,
+    PayloadCodecChain,
     PayloadEncryptionError,
+    data_converter_uses_aes_gcm,
     parse_aes_gcm_keyring,
 )
+from julep.execution.blobstore import InMemoryBlobStore
 from julep.execution.worker import encrypted_payload_converter
 
 
@@ -95,6 +101,77 @@ def test_failure_messages_and_stacks_are_encrypted() -> None:
 
     assert b"secret memory text" not in encrypted
     assert "secret memory text" in str(decoded)
+
+
+def test_claim_checked_payload_encrypts_blob_and_wire_pointer() -> None:
+    store = InMemoryBlobStore()
+    secret = b"run-secret-that-must-not-leak"
+    encoded_secret = base64.b64encode(secret)
+    original = _payload(
+        {
+            "secrets": {"API_KEY": secret.decode()},
+            "padding": "x" * 1024,
+        }
+    )
+    converter = encrypted_payload_converter(
+        {"k1": b"a" * 32},
+        active_key_id="k1",
+        blob_store=store,
+        tenant="acme",
+        threshold_bytes=1,
+    )
+    codec = converter.payload_codec
+    assert codec is not None
+
+    async def go():
+        [wire_payload] = await codec.encode([original])
+        [restored] = await codec.decode([wire_payload])
+        return wire_payload, restored
+
+    wire_payload, restored = asyncio.run(go())
+    [(ref, blob_bytes)] = store._blobs.items()
+    stored_payload = Payload.FromString(blob_bytes)
+    wire_bytes = wire_payload.SerializeToString()
+
+    assert ref.startswith("acme/sha256:")
+    assert stored_payload.metadata["encoding"] == AES_GCM_ENCODING
+    assert wire_payload.metadata["encoding"] == AES_GCM_ENCODING
+    assert secret not in blob_bytes
+    assert encoded_secret not in blob_bytes
+    assert secret not in wire_bytes
+    assert encoded_secret not in wire_bytes
+    assert ref.encode() not in wire_bytes
+    assert restored.SerializeToString() == original.SerializeToString()
+    assert data_converter_uses_aes_gcm(converter)
+
+
+def test_encrypted_claim_check_decodes_legacy_plaintext_blob() -> None:
+    store = InMemoryBlobStore()
+    keyring = {"k1": b"a" * 32}
+    original = _payload({"secret": "legacy-run-secret", "padding": "x" * 1024})
+    legacy_encryption = AesGcmPayloadCodec(keyring, active_key_id="k1")
+    legacy_codec = PayloadCodecChain(
+        [
+            ClaimCheckCodec(store, tenant="acme", threshold_bytes=1),
+            legacy_encryption,
+        ]
+    )
+    current_converter = encrypted_payload_converter(
+        keyring,
+        active_key_id="k1",
+        blob_store=store,
+        tenant="acme",
+        threshold_bytes=1,
+    )
+    current_codec = current_converter.payload_codec
+    assert current_codec is not None
+
+    async def go():
+        legacy_wire = await legacy_codec.encode([original])
+        return (await current_codec.decode(legacy_wire))[0]
+
+    restored = asyncio.run(go())
+    assert restored.SerializeToString() == original.SerializeToString()
 
 
 def test_keyring_parser_requires_named_256_bit_hex_keys() -> None:

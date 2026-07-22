@@ -25,6 +25,7 @@ _LEGACY_CONFIG_ERROR = (
 _TOP_LEVEL_ALLOWED_KEYS = frozenset(
     {
         "application",
+        "agent_round_cap",
         "llm_caller",
         "env",
         "exclude",
@@ -40,7 +41,7 @@ _TOP_LEVEL_ALLOWED_KEYS = frozenset(
     }
 )
 _GATES_ALLOWED_KEYS = frozenset({"fail_severity"})
-_MCP_ALLOWED_KEYS = frozenset({"servers"})
+_MCP_ALLOWED_KEYS = frozenset({"preflight", "servers"})
 _MCP_SERVER_ALLOWED_KEYS = frozenset({"auth", "headers", "url", "version"})
 _ENV_ALLOWED_KEYS = frozenset(
     {
@@ -65,7 +66,7 @@ _ENV_ALLOWED_KEYS = frozenset(
 )
 _WORKER_SECRET_ALLOWED_KEYS = frozenset({"key", "secret_name"})
 _SCHEDULE_ALLOWED_KEYS = frozenset({"cron", "env", "flow", "input", "paused"})
-_PIPELINE_ALLOWED_KEYS = frozenset({"ctx", "lane", "env"})
+_PIPELINE_ALLOWED_KEYS = frozenset({"ctx", "lane", "env", "tools"})
 
 
 @dataclass(frozen=True)
@@ -126,8 +127,11 @@ class JulepConfig:
     # imported directly; it is never AST-discovered.
     application: str | None = None
     llm_caller: str | None = None
+    # Safety ceiling used when a dotctx agent does not declare max_rounds.
+    agent_round_cap: int = 32
     pipelines: dict[str, CtxPipelineConfig] = field(default_factory=dict)
     mcp_servers: dict[str, McpServerConfig] = field(default_factory=dict)
+    mcp_preflight: str = "pin"
 
     @property
     def mcp_allowlist(self) -> frozenset[str]:
@@ -376,6 +380,7 @@ def _build_pipelines(
     julep_toml_pipeline: object,
 ) -> dict[str, CtxPipelineConfig]:
     tables: dict[str, dict[str, Any]] = {}
+    tool_tables: dict[str, dict[str, str]] = {}
     for raw_pipelines in (pyproject_pipeline, julep_toml_pipeline):
         if not isinstance(raw_pipelines, dict):
             continue
@@ -383,7 +388,39 @@ def _build_pipelines(
             name = str(raw_name)
             if not isinstance(raw_table, dict):
                 raise ValueError(f"pipeline {name!r} must be a table")
-            tables.setdefault(name, {}).update(raw_table)
+            merged = tables.setdefault(name, {})
+            for key, value in raw_table.items():
+                if key == "tools":
+                    if not isinstance(value, dict):
+                        raise ValueError(f"pipeline {name!r} tools must be a table")
+                    bound = tool_tables.setdefault(name, {})
+                    for raw_alias, raw_ref in value.items():
+                        alias = str(raw_alias)
+                        if not alias.isidentifier():
+                            raise ValueError(
+                                f"pipeline {name!r} tool alias {alias!r} must be a "
+                                "bare Python identifier"
+                            )
+                        if not isinstance(raw_ref, str):
+                            raise ValueError(
+                                f"pipeline {name!r} tool binding {alias!r} must be a string"
+                            )
+                        server, separator, tool = raw_ref.partition(":")
+                        if (
+                            separator != ":"
+                            or not server
+                            or not tool
+                            or server.strip() != server
+                            or tool.strip() != tool
+                            or ":" in tool
+                        ):
+                            raise ValueError(
+                                f"pipeline {name!r} tool binding {alias!r} must use "
+                                "'<server>:<tool>'"
+                            )
+                        bound[alias] = raw_ref
+                else:
+                    merged[key] = value
 
     result: dict[str, CtxPipelineConfig] = {}
     for name, table in tables.items():
@@ -403,7 +440,13 @@ def _build_pipelines(
             if not isinstance(raw_value, str):
                 raise ValueError(f"{context} env value {raw_key!r} must be a string")
             env[str(raw_key)] = raw_value
-        result[name] = CtxPipelineConfig(name=name, ctx=ctx, lane=lane, env=env)
+        result[name] = CtxPipelineConfig(
+            name=name,
+            ctx=ctx,
+            lane=lane,
+            env=env,
+            tools=tool_tables.get(name, {}),
+        )
     return result
 
 
@@ -494,6 +537,20 @@ def _build_mcp_servers(
     return result
 
 
+def _build_mcp_preflight(pyproject_mcp: object, julep_toml_mcp: object) -> str:
+    policy: object = "pin"
+    for source, raw_mcp in (
+        ("[tool.julep.mcp]", pyproject_mcp),
+        ("julep.toml [mcp]", julep_toml_mcp),
+    ):
+        mcp = _mcp_table(raw_mcp, context=source)
+        if "preflight" in mcp:
+            policy = mcp["preflight"]
+    if not isinstance(policy, str) or policy not in {"pin", "names", "off"}:
+        raise ValueError("MCP preflight must be one of 'pin', 'names', or 'off'")
+    return policy
+
+
 def load_config(root: str | Path) -> JulepConfig:
     """Read ``[tool.julep]``, then overlay a sibling ``julep.toml``."""
     root = Path(root).resolve()
@@ -533,8 +590,19 @@ def load_config(root: str | Path) -> JulepConfig:
         pyproject.get("mcp", {}),
         julep_toml.get("mcp", {}),
     )
+    mcp_preflight = _build_mcp_preflight(
+        pyproject.get("mcp", {}),
+        julep_toml.get("mcp", {}),
+    )
 
     merged: dict[str, Any] = {**pyproject, **julep_toml}
+    agent_round_cap = merged.get("agent_round_cap", 32)
+    if (
+        not isinstance(agent_round_cap, int)
+        or isinstance(agent_round_cap, bool)
+        or agent_round_cap < 1
+    ):
+        raise ValueError("agent_round_cap must be an integer >= 1")
     gates = {**pyproject_gates, **julep_toml_gates}
     return JulepConfig(
         root=root,
@@ -550,9 +618,11 @@ def load_config(root: str | Path) -> JulepConfig:
         ),
         application=(str(merged["application"]) if merged.get("application") else None),
         llm_caller=(str(merged["llm_caller"]) if merged.get("llm_caller") else None),
+        agent_round_cap=agent_round_cap,
         pipelines=_build_pipelines(
             pyproject.get("pipeline", {}),
             julep_toml.get("pipeline", {}),
         ),
         mcp_servers=mcp_servers,
+        mcp_preflight=mcp_preflight,
     )

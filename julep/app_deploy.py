@@ -132,9 +132,14 @@ class PipelineRelease:
     eval_packages: tuple[str, ...]
     runtime_declarations_ref: Optional[dict[str, Any]] = None
     max_call_limits: Mapping[str, int] = field(default_factory=dict)
+    mcp_preflight_policy: Optional[str] = None
     task_queue: Optional[str] = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
+        if self.mcp_preflight_policy not in (None, "pin", "names", "off"):
+            raise ApplicationReleaseError(
+                "MCP preflight policy must be 'pin', 'names', 'off', or absent"
+            )
         object.__setattr__(self, "flow_json", _freeze_json(self.flow_json))
         object.__setattr__(self, "manifest_json", _freeze_json(self.manifest_json))
         object.__setattr__(self, "pinned_pures", _freeze_json(self.pinned_pures))
@@ -154,7 +159,7 @@ class PipelineRelease:
         object.__setattr__(self, "max_call_limits", _freeze_json(self.max_call_limits))
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        out = {
             "name": self.name,
             "lane": self.lane,
             "artifactHash": self.artifact_hash,
@@ -166,6 +171,9 @@ class PipelineRelease:
             "runtimeDeclarationsRef": _thaw_json(self.runtime_declarations_ref),
             "maxCallLimits": dict(sorted(self.max_call_limits.items())),
         }
+        if self.mcp_preflight_policy is not None:
+            out["mcpPreflight"] = self.mcp_preflight_policy
+        return out
 
     async def start(
         self,
@@ -176,8 +184,13 @@ class PipelineRelease:
         options: WorkflowStartOptions,
         principal: Optional[dict[str, Any]] = None,
         queue_lanes: Optional[dict[str, str]] = None,
+        secrets: Optional[dict[str, str]] = None,
     ) -> Any:
         """Start this exact published artifact without recompiling live source."""
+
+        from .secrets import validate_run_secrets
+
+        validated_secrets = validate_run_secrets(secrets)
 
         if self.task_queue is None:
             raise ValueError(
@@ -190,6 +203,12 @@ class PipelineRelease:
                 f"queue pinned by the release: {self.task_queue!r}"
             )
         task_queue = self.task_queue
+        if validated_secrets and not options.require_payload_encryption:
+            raise ValueError("run secrets require the AES-GCM Temporal payload converter")
+        if validated_secrets and self.mcp_preflight_policy is None:
+            raise ValueError(
+                "this release predates run-secret binding enforcement; publish a new release"
+            )
 
         from .execution.harness import start_flow
 
@@ -207,6 +226,16 @@ class PipelineRelease:
                 pinned_pures=_thaw_json(self.pinned_pures),
                 max_call_limits=dict(self.max_call_limits),
                 principal=principal,
+                secrets=(validated_secrets or None),
+                mcp_preflight=(
+                    None
+                    if self.mcp_preflight_policy is None
+                    else {
+                        "policy": self.mcp_preflight_policy,
+                        "completed": False,
+                        "surfaceDigest": None,
+                    }
+                ),
                 bundle=_thaw_json(self.bundle_ref),
                 runtime_declarations_ref=_thaw_json(self.runtime_declarations_ref),
                 queue_lanes=queue_lanes,
@@ -345,6 +374,7 @@ def publish_application(
                     if deployment.capabilities is not None
                     else {}
                 ),
+                mcp_preflight_policy=compiled.mcp_preflight_policy,
             )
         )
     release = ApplicationRelease(
@@ -1041,6 +1071,11 @@ def release_from_bytes(data: bytes) -> ApplicationRelease:
                 max_call_limits={
                     str(k): int(v) for k, v in dict(value.get("maxCallLimits", {})).items()
                 },
+                mcp_preflight_policy=(
+                    str(value["mcpPreflight"])
+                    if "mcpPreflight" in value
+                    else None
+                ),
             )
         )
     return ApplicationRelease(

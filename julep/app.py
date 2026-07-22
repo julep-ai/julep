@@ -158,12 +158,16 @@ class CompiledApplication:
     name: str
     pipelines: tuple[CompiledPipeline[Any, Any], ...]
     runtime_declarations_hash: str
+    # New releases pin the worker-observed MCP surface by default.  Older
+    # release manifests omit this field and are decoded as preflight-off.
+    mcp_preflight_policy: str = "pin"
 
     @cached_property
     def artifact_components(self) -> dict[str, Any]:
         return {
             "application": self.name,
             "runtimeDeclarationsHash": self.runtime_declarations_hash,
+            "mcpPreflight": self.mcp_preflight_policy,
             "pipelines": [pipeline.to_json() for pipeline in self.pipelines],
         }
 
@@ -418,6 +422,7 @@ class Application:
                         declarations_blob(
                             (resolved_reasoners[name] for name in spec.reasoner_names),
                             registry=DEFAULT_REGISTRY,
+                            flow=deployment.flow,
                         )
                         if spec.reasoner_names
                         else None

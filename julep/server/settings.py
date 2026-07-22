@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from ..execution.projection_store import ExecutionStore
     from .auth import ApiKey
     from .temporal import TemporalGateway
+    from ..secrets import VaultCipher
 
 
 _TRUE = frozenset({"1", "true", "yes", "on"})
@@ -146,6 +148,31 @@ def _string_map(value: Any, *, name: str) -> dict[str, str]:
     return result
 
 
+def _string_set(value: Any, *, name: str) -> frozenset[str]:
+    if value is None or value == "":
+        return frozenset()
+    items: list[Any]
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("["):
+            try:
+                decoded = json.loads(stripped)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{name} must be a list or comma-separated string") from exc
+            if not isinstance(decoded, list):
+                raise ValueError(f"{name} must be a list or comma-separated string")
+            items = decoded
+        else:
+            items = [item for item in re.split(r"[\s,]+", stripped) if item]
+    elif isinstance(value, (list, tuple, set, frozenset)):
+        items = list(value)
+    else:
+        raise ValueError(f"{name} must be a list or comma-separated string")
+    if not all(isinstance(item, str) and item.strip() for item in items):
+        raise ValueError(f"{name} entries must be non-empty strings")
+    return frozenset(item.strip() for item in items)
+
+
 def _json_object(value: str, *, name: str) -> dict[str, Any]:
     try:
         parsed = json.loads(value)
@@ -247,6 +274,9 @@ class ServerSettings:
     payload_keys: Optional[str] = field(default=None, repr=False)
     payload_key_id: Optional[str] = None
     payload_encryption_required: bool = True
+    vault_keys: Optional[str] = field(default=None, repr=False)
+    vault_key_id: Optional[str] = None
+    worker_secret_allowlist: frozenset[str] = frozenset()
     host: str = "127.0.0.1"
     port: int = 8080
     projection_batch_size: int = 20
@@ -287,9 +317,55 @@ class ServerSettings:
             _value(source, "TEMPORAL_API_KEY", config, "temporal_api_key"),
             name="TEMPORAL_API_KEY",
         )
+        from ..secrets import SecretResolver, validate_secret_name
+
+        resolver = SecretResolver.from_env(source)
+        if temporal_api_key is not None:
+            temporal_api_key = resolver.resolve_ref(temporal_api_key)
+        payload_environment = _payload_environment(source, config)
+        if payload_environment.get("TEMPORAL_PAYLOAD_KEYS"):
+            payload_environment["TEMPORAL_PAYLOAD_KEYS"] = resolver.resolve_ref(
+                payload_environment["TEMPORAL_PAYLOAD_KEYS"]
+            )
         payload_keys, payload_key_id, payload_required = payload_encryption_from_env(
-            _payload_environment(source, config)
+            payload_environment
         )
+        vault_keys = _optional_text(
+            _value(source, "JULEP_VAULT_KEYS", config, "vault_keys"),
+            name="JULEP_VAULT_KEYS",
+        )
+        vault_key_id = _optional_text(
+            _value(source, "JULEP_VAULT_KEY_ID", config, "vault_key_id"),
+            name="JULEP_VAULT_KEY_ID",
+        )
+        if (vault_keys is None) != (vault_key_id is None):
+            raise ValueError(
+                "JULEP_VAULT_KEYS and JULEP_VAULT_KEY_ID must be set together"
+            )
+        if vault_keys is not None and payload_keys is not None:
+            from ..execution.codec import parse_aes_gcm_keyring
+            from ..secrets import parse_vault_keyring
+
+            payload_material = {
+                bytes.fromhex(value)
+                for value in parse_aes_gcm_keyring(payload_keys).values()
+            }
+            vault_material = set(parse_vault_keyring(vault_keys).values())
+            if payload_material & vault_material:
+                raise ValueError(
+                    "vault and Temporal payload encryption must use distinct key material"
+                )
+        worker_secret_allowlist = _string_set(
+            _value(
+                source,
+                "JULEP_WORKER_SECRET_ALLOWLIST",
+                config,
+                "worker_secret_allowlist",
+            ),
+            name="JULEP_WORKER_SECRET_ALLOWLIST",
+        )
+        for secret_name in worker_secret_allowlist:
+            validate_secret_name(secret_name)
         artifact_store_default = (config_root / ".julep" / "artifacts").resolve().as_uri()
         port = _int(
             _value(source, "JULEP_SERVER_PORT", config, "port", 8080),
@@ -353,6 +429,9 @@ class ServerSettings:
             payload_keys=payload_keys,
             payload_key_id=payload_key_id,
             payload_encryption_required=payload_required,
+            vault_keys=vault_keys,
+            vault_key_id=vault_key_id,
+            worker_secret_allowlist=worker_secret_allowlist,
             host=_text(
                 _value(source, "JULEP_SERVER_HOST", config, "host", "127.0.0.1"),
                 name="JULEP_SERVER_HOST",
@@ -499,6 +578,22 @@ class ServerSettings:
         from ..artifact_store import artifact_store_from_url
 
         return artifact_store_from_url(self.artifact_store_url)
+
+    def build_vault_cipher(self) -> Optional[VaultCipher]:
+        """Build the dedicated vault cipher, or ``None`` when vault use is disabled."""
+
+        if self.vault_keys is None and self.vault_key_id is None:
+            return None
+        if self.vault_keys is None or self.vault_key_id is None:
+            raise ValueError(
+                "JULEP_VAULT_KEYS and JULEP_VAULT_KEY_ID must be set together"
+            )
+        from ..secrets import VaultCipher, parse_vault_keyring
+
+        return VaultCipher(
+            parse_vault_keyring(self.vault_keys),
+            active_key_id=self.vault_key_id,
+        )
 
     async def build_gateway(self) -> TemporalGateway:
         """Connect a real Temporal gateway lazily."""

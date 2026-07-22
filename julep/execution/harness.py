@@ -91,7 +91,7 @@ with workflow.unsafe.imports_passed_through():
     from ..capabilities import Budget
     from ..continuation import continuation_value, is_continuation
     from ..contracts import ToolContract, contract_allows_retry, manifest_from_json
-    from ..errors import JulepError, SessionTurnError
+    from ..errors import JulepError, SessionTurnError, tool_surface_drift_from_cause
     from ..ir import Ann, CallStep, EMIT_TOOL, NativeTool, Node, RECV_TOOL
     from ..kinds import Effect, Op
     from ..projection import EventType, InMemoryProjection, ProjectionEmitter
@@ -106,6 +106,11 @@ with workflow.unsafe.imports_passed_through():
     )
     from .policy import ExecutionPolicy
     from .effects import toolref_json_from_key as _toolref_json_from_key
+    from .failure_scrub import (
+        application_error_from_failure,
+        redacted_failure_text,
+        secret_safe_activity,
+    )
     from .session_store import value_fingerprint
     from .projection_store import finalize_projection_run, persist_projection_batch
     from .timeouts import activity_timeout
@@ -129,8 +134,11 @@ with workflow.unsafe.imports_passed_through():
         LoadValueInput,
         PutBlobInput,
         ResolveQoSInput,
+        ResolveAgentSpecInput,
         RunSubInput,
         VerifyPuresInput,
+        ValidateAgentOutputInput,
+        ValidateJsonSchemaInput,
         callTool,
         commitState,
         commitValue,
@@ -144,6 +152,8 @@ with workflow.unsafe.imports_passed_through():
         resolveRuntimeCapabilities,
         resolveSubflow,
         verifyPures,
+        validateAgentOutput,
+        validateJsonSchema,
     )
     from ..validate import blocking, validate
     from ..session import SessionEvent
@@ -157,7 +167,36 @@ _NON_RETRYABLE = [
     "FreezeError",
     "PureDriftError",
     "PrincipalRequired",
+    "tool_surface_mismatch",
+    "invalid_run_secret_binding",
+    "ToolSurfaceDrift",
+    "ToolInputValidation",
 ]
+
+
+_MCP_PREFLIGHT_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_MCP_PREFLIGHT_CACHE_TTL_S = 30.0
+_MCP_PREFLIGHT_CACHE_MAX_ENTRIES = 256
+
+
+def _prune_mcp_preflight_cache(now: float) -> None:
+    """Drop stale entries and bound per-worker preflight cache growth."""
+    expired = [
+        key
+        for key, (cached_at, _result) in _MCP_PREFLIGHT_CACHE.items()
+        if now - cached_at > _MCP_PREFLIGHT_CACHE_TTL_S
+    ]
+    for key in expired:
+        _MCP_PREFLIGHT_CACHE.pop(key, None)
+    overflow = len(_MCP_PREFLIGHT_CACHE) - _MCP_PREFLIGHT_CACHE_MAX_ENTRIES
+    if overflow <= 0:
+        return
+    oldest = sorted(
+        _MCP_PREFLIGHT_CACHE,
+        key=lambda key: (_MCP_PREFLIGHT_CACHE[key][0], key),
+    )
+    for key in oldest[:overflow]:
+        _MCP_PREFLIGHT_CACHE.pop(key, None)
 
 
 def _reserved_channel_tool_name(node: Node) -> Optional[str]:
@@ -170,6 +209,234 @@ def _reserved_channel_tool_name(node: Node) -> Optional[str]:
     ):
         return step.tool.name
     return None
+
+
+@activity.defn(name="preflightMcp")
+@secret_safe_activity
+async def preflightMcp(inp: dict[str, Any]) -> dict[str, Any]:
+    """Validate run bindings and the frozen MCP surface on the worker path."""
+    import hashlib
+    import json
+    import time
+
+    from ..contracts import manifest_from_json
+    from ..deploy import snapshot_from_listings
+    from ..ir import McpTool, Node, Op, SubStep, canonical_json
+    from ..mcp_auth import _SECRET_REF, transport_for_mcp_caller
+    from ..mcp_surface import (
+        McpSurfaceMismatchError,
+        McpSurfacePolicy,
+        assert_mcp_surface,
+        canonical_surface_digest,
+    )
+    from . import effects as _effects
+
+    policy = McpSurfacePolicy.coerce(str(inp.get("policy", "off")))
+    now = time.monotonic()
+    _prune_mcp_preflight_cache(now)
+    # Preflight the entire statically reachable release surface, not only the
+    # root manifest.  Ref children are frozen independently and resolved from
+    # the release-scoped worker registry at runtime; walking them here keeps the
+    # workflow command sequence unchanged while still refusing drift before the
+    # root can schedule user/tool effects.
+    manifest_jsons: list[Mapping[str, Any]] = [
+        dict(inp.get("manifestJson") or {})
+    ]
+    pending_flows: list[Mapping[str, Any]] = []
+    root_flow = inp.get("flowJson")
+    if isinstance(root_flow, Mapping):
+        pending_flows.append(root_flow)
+    seen_refs: set[str] = set()
+    while pending_flows:
+        flow = Node.from_json(dict(pending_flows.pop()))
+        refs: set[str] = set()
+        for node in flow.walk():
+            if isinstance(node.step, SubStep):
+                refs.add(node.step.ref)
+            if node.op is Op.APP and isinstance(node.subflows, (list, tuple)):
+                refs.update(str(ref) for ref in node.subflows)
+        for ref in sorted(refs):
+            if ref in seen_refs:
+                continue
+            seen_refs.add(ref)
+            spec = _effects._CTX.subflows.get(ref)
+            if spec is None:
+                # Preserve existing lazy failure semantics for an unregistered
+                # branch; preflight only expands frozen children the release
+                # worker can actually resolve.
+                continue
+            child_manifest = spec.get("manifestJson")
+            if isinstance(child_manifest, Mapping):
+                manifest_jsons.append(child_manifest)
+            child_flow = spec.get("flowJson")
+            if isinstance(child_flow, Mapping):
+                pending_flows.append(child_flow)
+
+    frozen = [
+        tool
+        for manifest_json in manifest_jsons
+        for tool in manifest_from_json(dict(manifest_json)).values()
+        if isinstance(tool.ref, McpTool)
+    ]
+    if not frozen:
+        unused = sorted(dict(inp.get("secrets") or {}))
+        if unused:
+            raise ApplicationError(
+                json.dumps(
+                    {
+                        "error": "invalid_run_secret_binding",
+                        "names": unused,
+                        "allowed": [],
+                    },
+                    sort_keys=True,
+                ),
+                type="invalid_run_secret_binding",
+                non_retryable=True,
+            )
+        return {"policy": policy.value, "completed": True, "surfaceDigest": None}
+
+    frozen_digest = canonical_surface_digest(frozen)
+    run_secrets = dict(inp.get("secrets") or {})
+    if policy is McpSurfacePolicy.OFF and not run_secrets:
+        return {
+            "policy": policy.value,
+            "completed": True,
+            "surfaceDigest": frozen_digest,
+        }
+
+    transport = _effects._CTX.mcp_transport
+    if transport is None:
+        transport = transport_for_mcp_caller(_effects._CTX.mcp_call)
+    if transport is None:
+        raise RuntimeError("worker has no MCP transport configured for preflight")
+
+    servers = sorted({tool.ref.server for tool in frozen})
+
+    # Only whole-string references in the request-time config for referenced
+    # servers are valid run bindings.  Values never enter this diagnostic.
+    allowed_names: set[str] = set()
+    configs: dict[str, Any] = {}
+    for server in servers:
+        config = transport._config(server)
+        configs[server] = config
+        for value in config.headers.values():
+            match = _SECRET_REF.fullmatch(value)
+            if match is not None:
+                allowed_names.add(match.group(1))
+    unused = sorted(set(run_secrets) - allowed_names)
+    if unused:
+        raise ApplicationError(
+            json.dumps(
+                {
+                    "error": "invalid_run_secret_binding",
+                    "names": unused,
+                    "allowed": sorted(allowed_names),
+                },
+                sort_keys=True,
+            ),
+            type="invalid_run_secret_binding",
+            non_retryable=True,
+        )
+
+    if policy is McpSurfacePolicy.OFF:
+        return {
+            "policy": policy.value,
+            "completed": True,
+            "surfaceDigest": frozen_digest,
+        }
+    sinks: list[tuple[str, str]] = []
+    for server in servers:
+        config = configs[server]
+        sinks.append(
+            (
+                f"{server}:url",
+                hashlib.sha256(str(config.url).encode("utf-8")).hexdigest(),
+            )
+        )
+        if config.version is not None:
+            sinks.append(
+                (
+                    f"{server}:version",
+                    hashlib.sha256(str(config.version).encode("utf-8")).hexdigest(),
+                )
+            )
+        for header, raw_value in sorted(config.headers.items(), key=lambda item: item[0].lower()):
+            resolved = await transport._resolve_ref(raw_value, run_secrets)
+            sinks.append(
+                (
+                    f"{server}:header:{header.lower()}",
+                    hashlib.sha256(resolved.encode("utf-8")).hexdigest(),
+                )
+            )
+    cache_payload = {
+        "frozen": frozen_digest,
+        # Keep per-manifest duplicates in the cache identity. The public
+        # surface digest intentionally collapses by wire ref, but two reachable
+        # flows can pin different definitions for that same ref and must not
+        # reuse a cache entry produced for only one of them.
+        "frozenDefinitions": sorted(
+            (tool.ref.server, tool.ref.tool, tool.definition_hash)
+            for tool in frozen
+        ),
+        "policy": policy.value,
+        "sinks": sinks,
+        "principalHash": hashlib.sha256(
+            canonical_json(inp.get("principal")).encode("utf-8")
+        ).hexdigest(),
+        "auth": (
+            None
+            if transport._auth is None
+            else {"issuer": transport._auth.issuer, "kid": transport._auth.kid}
+        ),
+    }
+    cache_key = hashlib.sha256(canonical_json(cache_payload).encode("utf-8")).hexdigest()
+    cached = _MCP_PREFLIGHT_CACHE.get(cache_key)
+    if cached is not None and now - cached[0] <= _MCP_PREFLIGHT_CACHE_TTL_S:
+        return dict(cached[1])
+
+    listings = await asyncio.gather(
+        *(
+            transport.list_tools(
+                server,
+                workflow_id=str(inp["workflowId"]),
+                principal=inp.get("principal"),
+                run_secrets=run_secrets,
+            )
+            for server in servers
+        )
+    )
+    fresh = snapshot_from_listings(
+        {server: listing.tools for server, listing in zip(servers, listings, strict=True)},
+        versions={server: listing.version for server, listing in zip(servers, listings, strict=True)},
+        protocol_versions={
+            server: listing.protocol_version
+            for server, listing in zip(servers, listings, strict=True)
+        },
+        server_versions={
+            server: listing.server_version
+            for server, listing in zip(servers, listings, strict=True)
+        },
+    )
+    try:
+        assert_mcp_surface(frozen, fresh, policy=policy)
+    except McpSurfaceMismatchError as exc:
+        raise ApplicationError(
+            json.dumps(
+                {"error": "tool_surface_mismatch", "details": exc.details},
+                sort_keys=True,
+            ),
+            type="tool_surface_mismatch",
+            non_retryable=True,
+        ) from None
+
+    result = {
+        "policy": policy.value,
+        "completed": True,
+        "surfaceDigest": frozen_digest,
+    }
+    _MCP_PREFLIGHT_CACHE[cache_key] = (time.monotonic(), result)
+    _prune_mcp_preflight_cache(time.monotonic())
+    return dict(result)
 
 
 @activity.defn(name="finishTrajectory")
@@ -193,6 +460,7 @@ async def finishTrajectory(inp: dict[str, Any]) -> None:
         value=inp.get("result"),
         cid=f"{run_id}:final",
         value_kind="output",
+        secrets=inp.get("secrets"),
     )
     _traj._best_effort(lambda: sink.finish_run(run_id, status, time.time()))
 
@@ -211,6 +479,7 @@ async def startTrajectory(inp: dict[str, Any]) -> None:
             value=inp.get("input"),
             cid=inp["cid"],
             value_kind="input",
+            secrets=inp.get("secrets"),
         )
     except Exception as exc:
         def _reraise(e: BaseException = exc) -> None:
@@ -240,9 +509,10 @@ async def flushStructural(inp: dict[str, Any]) -> None:
         segment_seq=segment_seq,
         node_ops=node_ops,
     )
+    redact = _effects._scoped_redactor(inp.get("secrets"))
     for raw in events:
         def _feed(raw: dict[str, Any] = raw) -> None:
-            structural.append(ProjectionEvent.from_json(raw))
+            structural.append(ProjectionEvent.from_json(redact(raw)))
 
         _traj._best_effort(_feed)
 
@@ -266,6 +536,7 @@ async def runSubCapture(inp: dict[str, Any], output: Any) -> None:
                 op=inp.get("op"),
                 kind=inp.get("kind"),
                 causes=tuple(inp.get("causes") or ()),
+                secrets=inp.get("secrets"),
             ),
             output,
         )
@@ -294,6 +565,24 @@ def _bundle_aware_verify_pures_enabled() -> bool:
 def _bundle_bound_verify_pures_enabled() -> bool:
     try:
         return workflow.patched("bundle-bound-verify-pures-v1")
+    except Exception:
+        return False
+
+
+def _agent_frozen_tool_input_validation_enabled() -> bool:
+    """Replay gate for the validation activity added ahead of agent tool calls."""
+    try:
+        return workflow.patched("agent-frozen-tool-input-validation-v1")
+    except Exception:
+        # Direct unit invocations have no workflow runtime and exercise the
+        # legacy branch unless they explicitly opt into the patch.
+        return False
+
+
+def _mcp_preflight_enabled() -> bool:
+    """Replay gate for MCP preflight, safe for direct workflow unit calls."""
+    try:
+        return workflow.patched("mcp-preflight")
     except Exception:
         return False
 
@@ -331,13 +620,16 @@ def _retry_policy_for(
     contract: ToolContract,
     policy: ExecutionPolicy,
     ann: Optional[Ann] = None,
+    *,
+    asserted: bool = False,
 ) -> RetryPolicy:
-    """Per-tool retry policy: liberal for idempotent reads, cautious otherwise."""
+    """Per-tool retry policy, gated by trusted contract authority."""
     attempts = 1
-    if contract_allows_retry(contract):
+    if asserted and contract_allows_retry(contract):
         attempts = ann.max_attempts if ann is not None and ann.max_attempts is not None else (
             al.retry_max_attempts_for_contract(
                 contract,
+                asserted=True,
                 idempotent_max_attempts=policy.idempotent_max_attempts,
                 write_max_attempts=policy.write_max_attempts,
             )
@@ -412,6 +704,12 @@ class FlowInput:
     emit_projection: bool = False
     projection_batch_size: int = 20
     projection_batch_interval_s: float = 2.0
+    # Caller-supplied values are encrypted in Temporal history and are never
+    # copied into the execution-store run input/projection record.
+    secrets: Optional[dict[str, str]] = None
+    # Replay-stable MCP preflight state.  Absence means ``off`` for histories
+    # written before the preflight feature existed.
+    mcp_preflight: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -465,6 +763,8 @@ class AgentInput:
     granted_subflows: Optional[list[str]] = None
     granted_contracts: Optional[dict[str, dict[str, Any]]] = None
     tool_defs: Optional[list[dict[str, Any]]] = None
+    # Provider-visible alias -> frozen wire ToolRef key.
+    tool_aliases: Optional[dict[str, str]] = None
     state: Optional[dict[str, Any]] = None      # set on continue-as-new
     state_cursor: Optional[int] = None          # set on continue-as-new under the store path
     use_session_store: bool = False             # opt-in: route state through loadState/commitState
@@ -477,6 +777,10 @@ class AgentInput:
     segment_seq: int = 0
     queue_lanes: Optional[dict[str, str]] = None
     subflow_queues: Optional[dict[str, str]] = None
+    secrets: Optional[dict[str, str]] = None
+    # Completed root-run MCP preflight state. AgentWorkflow does not repeat the
+    # check; it carries the state through CAN and into any ref child it starts.
+    mcp_preflight: Optional[dict[str, Any]] = None
 
 
 def _resolve_child_queue(
@@ -527,6 +831,8 @@ class _TemporalEnv:
         segment_seq: int = 0,
         queue_lanes: Optional[dict[str, str]] = None,
         runtime_declarations_ref: Optional[dict[str, Any]] = None,
+        secrets: Optional[dict[str, str]] = None,
+        mcp_preflight: Optional[dict[str, Any]] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -536,6 +842,10 @@ class _TemporalEnv:
         self.segment_seq = segment_seq
         self._queue_lanes = queue_lanes
         self._runtime_declarations_ref = runtime_declarations_ref
+        self.secrets = dict(secrets or {})
+        self._mcp_preflight = (
+            dict(mcp_preflight) if mcp_preflight is not None else None
+        )
         self._session = session_id
         self._manifest_json = manifest_json
         self._policy = policy
@@ -553,6 +863,11 @@ class _TemporalEnv:
     def next_cid(self, node_id: str) -> str:
         self._cid += 1
         return f"{node_id}@{self._cid}"
+
+    def redact_failure(self, value: str) -> str:
+        """Scrub deterministic run-secret echoes before projection emission."""
+
+        return redacted_failure_text(value, self.secrets)
 
     def get_pure(self, name: str):
         # Pure functions are resolved from the real worker-process registry via
@@ -599,6 +914,12 @@ class _TemporalEnv:
         # contract for retry shaping).
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
+        step = node.step
+        asserted = bool(
+            isinstance(step, CallStep)
+            and step.frozen_hash is not None
+            and self.manifest[step.frozen_hash].asserted
+        )
         timeout_s = node.ann.timeout if node.ann else None
         cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
         return await workflow.execute_activity(
@@ -615,9 +936,12 @@ class _TemporalEnv:
                 node_id=node.id,
                 op="call",
                 kind="tool",
+                secrets=(self.secrets or None),
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.tool_timeout_s),
-            retry_policy=_retry_policy_for(contract, self._policy, node.ann),
+            retry_policy=_retry_policy_for(
+                contract, self._policy, node.ann, asserted=asserted
+            ),
         )
 
     async def invoke_reasoner(
@@ -741,6 +1065,7 @@ class _TemporalEnv:
                 kind="reasoner",
                 qos=tier.value,
                 runtime_declarations_ref=self._runtime_declarations_ref,
+                secrets=(self.secrets or None),
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.reasoner_timeout_s),
             retry_policy=_reasoner_retry(self._policy),
@@ -796,6 +1121,8 @@ class _TemporalEnv:
                 root_run_id=self.root_run_id,
                 bundle=bundle,
                 queue_lanes=(self._queue_lanes or None),
+                secrets=(self.secrets or None),
+                mcp_preflight=self._mcp_preflight,
             ),
             **start_kwargs,
         )
@@ -817,6 +1144,7 @@ class _TemporalEnv:
                         "op": "sub",
                         "kind": "flow",
                         "causes": (),
+                        **({"secrets": self.secrets} if self.secrets else {}),
                     },
                     result,
                 ],
@@ -857,6 +1185,8 @@ class _TemporalEnv:
         granted_tools: Optional[list[str]] = None
         granted_subflows: Optional[list[str]] = None
         granted_contracts: Optional[dict[str, dict[str, Any]]] = None
+        tool_aliases: Optional[dict[str, str]] = None
+        tool_defs: Optional[list[dict[str, Any]]] = None
         subflow_queues: Optional[dict[str, str]] = None
         granted_tools_unconstrained = False
 
@@ -876,19 +1206,47 @@ class _TemporalEnv:
                 config["nativeTools"] = app_config["nativeTools"]
             if "requireToolCall" in app_config:
                 config["requireToolCall"] = app_config["requireToolCall"]
+            if "replySchema" in app_config:
+                config["replySchema"] = app_config["replySchema"]
+            if "outputRetries" in app_config:
+                config["outputRetries"] = app_config["outputRetries"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
+            if "toolAliases" in app_config:
+                tool_aliases = {
+                    str(alias): str(wire)
+                    for alias, wire in app_config["toolAliases"].items()
+                }
+            if "toolDefs" in app_config:
+                tool_defs = list(app_config["toolDefs"])
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
             if "subflowQueues" in app_config:
                 subflow_queues = app_config["subflowQueues"]
             if tools is not None:
-                granted_contracts = al.manifest_contracts_for_agent(
-                    self.manifest,
-                    granted_tools,
-                    self._max_call_limits,
-                )
+                if "toolContracts" in app_config:
+                    granted_contracts = {
+                        str(alias): dict(contract)
+                        for alias, contract in app_config["toolContracts"].items()
+                    }
+                    # Explicit provider aliases map to their wire grants. Legacy
+                    # APP nodes have no alias map and carry wire grants directly,
+                    # so use the grant itself as the identity mapping. In both
+                    # cases parent maxCalls limits must reach the child contract.
+                    for raw_alias in granted_tools or ():
+                        alias = str(raw_alias)
+                        wire = (tool_aliases or {}).get(alias, alias)
+                        if wire in self._max_call_limits:
+                            granted_contracts.setdefault(alias, {})["maxCalls"] = int(
+                                self._max_call_limits[wire]
+                            )
+                else:
+                    granted_contracts = al.manifest_contracts_for_agent(
+                        self.manifest,
+                        granted_tools,
+                        self._max_call_limits,
+                    )
 
         # Parity with run_sub: parent call counts seed the child agent so an
         # app node cannot reset an already-consumed maxCalls budget. Terminal
@@ -910,6 +1268,8 @@ class _TemporalEnv:
                 granted_tools_unconstrained=granted_tools_unconstrained,
                 granted_subflows=granted_subflows,
                 granted_contracts=granted_contracts,
+                tool_defs=tool_defs,
+                tool_aliases=tool_aliases,
                 subflow_queues=subflow_queues,
                 state=state_json,
                 policy=self._policy.to_json(),
@@ -917,6 +1277,8 @@ class _TemporalEnv:
                 runtime_declarations_ref=self._runtime_declarations_ref,
                 root_run_id=self.root_run_id,
                 queue_lanes=(self._queue_lanes or None),
+                secrets=(self.secrets or None),
+                mcp_preflight=self._mcp_preflight,
             ),
             id=child_id,
             task_timeout=timedelta(seconds=self._policy.agent_task_timeout_s),
@@ -993,6 +1355,7 @@ class FlowWorkflow:
         self._egress_cursor = 0
         self._egress_done = False
         self._egress_task: Optional[asyncio.Future[None]] = None
+        self._run_secrets: dict[str, str] = {}
 
     # ----- human gate plumbing --------------------------------------------- #
     @workflow.signal(name="submitHuman")
@@ -1089,6 +1452,7 @@ class FlowWorkflow:
                 "workflowId": workflow.info().workflow_id,
                 "segmentSeq": inp.segment_seq,
                 "events": [self._projection_event_payload(event) for event in batch],
+                **({"secrets": inp.secrets} if inp.secrets else {}),
             },
             start_to_close_timeout=timedelta(seconds=30),
             retry_policy=RetryPolicy(
@@ -1185,6 +1549,7 @@ class FlowWorkflow:
             ),
             "error": error,
             "finishedAt": workflow.now().timestamp(),
+            **({"secrets": inp.secrets} if inp.secrets else {}),
         }
         if status == "completed":
             payload["rawValue"] = result
@@ -1214,6 +1579,7 @@ class FlowWorkflow:
                     "segmentSeq": inp.segment_seq,
                     "input": inp.input,
                     "cid": f"{root_run_id}:root",
+                    **({"secrets": inp.secrets} if inp.secrets else {}),
                 },
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(
@@ -1245,6 +1611,11 @@ class FlowWorkflow:
                     "status": status,
                     "result": result,
                     "segmentSeq": segment_seq,
+                    **(
+                        {"secrets": self._run_secrets}
+                        if self._run_secrets
+                        else {}
+                    ),
                 },
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(
@@ -1264,6 +1635,7 @@ class FlowWorkflow:
             "segmentSeq": inp.segment_seq,
             "nodeOps": node_ops,
             "events": [e.to_json() for e in self._store.events()],
+            **({"secrets": inp.secrets} if inp.secrets else {}),
         }
         try:
             await workflow.execute_activity(
@@ -1281,6 +1653,16 @@ class FlowWorkflow:
     # ----- entrypoint ------------------------------------------------------- #
     @workflow.run
     async def run(self, inp: FlowInput) -> Any:
+        self._run_secrets = dict(inp.secrets or {})
+        if inp.secrets and inp.mcp_preflight is None:
+            # All supported roots attach an incomplete state that this workflow
+            # validates before effects. A raw Temporal start cannot prove its
+            # payload was encrypted or its names were release-bound.
+            raise ApplicationError(
+                "run secrets require workflow-owned MCP preflight binding state",
+                type="invalid_run_secret_binding",
+                non_retryable=True,
+            )
         policy = ExecutionPolicy.from_json(inp.policy)
         flow_json = inp.flow_json
         manifest_json = inp.manifest_json
@@ -1313,6 +1695,51 @@ class FlowWorkflow:
                 resolved_declarations_ref = resolved.get("runtimeDeclarationsRef")
                 if isinstance(resolved_declarations_ref, dict):
                     runtime_declarations_ref = resolved_declarations_ref
+
+        manifest = manifest_from_json(manifest_json or {})
+        store, emitter = _make_emitter()
+        self._store = store
+        if inp.emit_projection:
+            self._egress_task = asyncio.ensure_future(self._egress_loop(inp))
+
+        preflight_state = inp.mcp_preflight
+        if (
+            preflight_state is not None
+            and not bool(preflight_state.get("completed"))
+            and _mcp_preflight_enabled()
+        ):
+            try:
+                preflight_state = await workflow.execute_activity(
+                    preflightMcp,
+                    {
+                        "workflowId": workflow.info().workflow_id,
+                        "flowJson": flow_json,
+                        "manifestJson": manifest_json or {},
+                        "policy": preflight_state.get("policy", "off"),
+                        "principal": inp.principal,
+                        **({"secrets": inp.secrets} if inp.secrets else {}),
+                    },
+                    start_to_close_timeout=timedelta(seconds=60),
+                    retry_policy=RetryPolicy(
+                        initial_interval=timedelta(seconds=1),
+                        backoff_coefficient=2.0,
+                        maximum_interval=timedelta(seconds=10),
+                        maximum_attempts=3,
+                        non_retryable_error_types=_NON_RETRYABLE,
+                    ),
+                )
+                inp.mcp_preflight = preflight_state
+            except ActivityError as exc:
+                if inp.emit_projection:
+                    await self._drain_projection(inp)
+                    await self._finalize_projection(
+                        inp,
+                        status="failed",
+                        error=redacted_failure_text(
+                            exc, inp.secrets, use_repr=True
+                        ),
+                    )
+                raise
 
         # Pure source lookup reads the worker registry, so it stays in an
         # activity. Each FlowWorkflow verifies the pins supplied with that flow;
@@ -1353,12 +1780,6 @@ class FlowWorkflow:
                     non_retryable=True,
                 )
         node_ops = {n.id: n.op.value for n in nodes}
-        manifest = manifest_from_json(manifest_json or {})
-
-        store, emitter = _make_emitter()
-        self._store = store
-        if inp.emit_projection:
-            self._egress_task = asyncio.ensure_future(self._egress_loop(inp))
         env = _TemporalEnv(
             manifest=manifest,
             emitter=emitter,
@@ -1375,6 +1796,8 @@ class FlowWorkflow:
             segment_seq=inp.segment_seq,
             queue_lanes=inp.queue_lanes,
             runtime_declarations_ref=runtime_declarations_ref,
+            secrets=inp.secrets,
+            mcp_preflight=preflight_state,
         )
         await self._start_trajectory(inp)
 
@@ -1392,31 +1815,34 @@ class FlowWorkflow:
                     )
             raise
         except JulepError as exc:
+            failure = application_error_from_failure(
+                exc,
+                inp.secrets,
+                non_retryable=True,
+            )
             if inp.emit_projection:
                 await self._drain_projection(inp)
                 await self._finalize_projection(
                     inp,
                     status="failed",
-                    error=str(exc),
+                    error=failure.message,
                 )
-            raise ApplicationError(
-                str(exc),
-                type=type(exc).__name__,
-                non_retryable=True,
-            ) from exc
+            raise failure from None
         except Exception as exc:
+            failure = application_error_from_failure(
+                exc,
+                inp.secrets,
+                use_repr=True,
+                non_retryable=True,
+            )
             if inp.emit_projection:
                 await self._drain_projection(inp)
                 await self._finalize_projection(
                     inp,
                     status="failed",
-                    error=repr(exc),
+                    error=failure.message,
                 )
-            raise ApplicationError(
-                repr(exc),
-                type=type(exc).__name__,
-                non_retryable=True,
-            ) from exc
+            raise failure from None
         if is_continuation(result.value):
             if inp.emit_projection:
                 await self._drain_projection(inp)
@@ -1444,6 +1870,8 @@ class FlowWorkflow:
                     emit_projection=inp.emit_projection,
                     projection_batch_size=inp.projection_batch_size,
                     projection_batch_interval_s=inp.projection_batch_interval_s,
+                    secrets=inp.secrets,
+                    mcp_preflight=inp.mcp_preflight,
                 )
             )
         if inp.emit_projection:
@@ -2132,6 +2560,7 @@ class SessionWorkflow:
 class AgentWorkflow:
     def __init__(self) -> None:
         self._human_inbox: dict[str, Any] = {}
+        self._run_secrets: dict[str, str] = {}
 
     @workflow.signal(name="submitHuman")
     def submit_human(self, payload: dict[str, Any]) -> None:
@@ -2152,6 +2581,7 @@ class AgentWorkflow:
                     "segmentSeq": inp.segment_seq,
                     "input": inp.input,
                     "cid": f"{root_run_id}:root",
+                    **({"secrets": inp.secrets} if inp.secrets else {}),
                 },
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(
@@ -2183,6 +2613,11 @@ class AgentWorkflow:
                     "status": status,
                     "result": result,
                     "segmentSeq": segment_seq,
+                    **(
+                        {"secrets": self._run_secrets}
+                        if self._run_secrets
+                        else {}
+                    ),
                 },
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(
@@ -2195,6 +2630,35 @@ class AgentWorkflow:
 
     @workflow.run
     async def run(self, inp: AgentInput) -> dict[str, Any]:
+        try:
+            return await self._run(inp)
+        except ActivityError:
+            # Secret-bearing activities sanitize their leaf failure before the
+            # SDK builds this wrapper; retaining it preserves retry/type data.
+            raise
+        except Exception as exc:
+            # Test/local continue-as-new shims use an empty sentinel exception.
+            # It has no serializable message or cause to scrub, and preserving
+            # its type keeps the same control-flow contract as Temporal's real
+            # BaseException-based ContinueAsNewError.
+            if (
+                not exc.args
+                and exc.__cause__ is None
+                and exc.__context__ is None
+            ):
+                raise
+            raise application_error_from_failure(exc, inp.secrets) from None
+
+    async def _run(self, inp: AgentInput) -> dict[str, Any]:
+        self._run_secrets = dict(inp.secrets or {})
+        if inp.secrets and not bool((inp.mcp_preflight or {}).get("completed")):
+            # AgentWorkflow only receives secrets as a child of a root whose
+            # entire static MCP surface has already passed binding validation.
+            raise ApplicationError(
+                "run secrets require completed root MCP preflight binding state",
+                type="invalid_run_secret_binding",
+                non_retryable=True,
+            )
         # Design invariant 1 (durable-session-store): session_id <-> workflow id
         # must be 1:1 — Temporal's one-running-execution-per-workflow-id is the
         # store's only mutual-exclusion mechanism. Enforce before any effect.
@@ -2218,18 +2682,30 @@ class AgentWorkflow:
         subflow_queues = inp.subflow_queues
         contracts = dict(inp.granted_contracts or {})
         tool_defs = inp.tool_defs
+        tool_aliases = dict(inp.tool_aliases or {})
         grants_supplied = inp.granted_tools is not None or inp.granted_tools_unconstrained
         subflows_supplied = inp.granted_subflows is not None
 
         if inp.resolve_spec:
             spec = await workflow.execute_activity(
                 resolveAgentSpec,
-                inp.controller,
+                ResolveAgentSpecInput(
+                    controller=inp.controller,
+                    runtime_declarations_ref=inp.runtime_declarations_ref,
+                ),
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RetryPolicy(maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE),
             )
             spec_tool_defs = spec.get("toolDefs")
             tool_defs = spec_tool_defs if spec_tool_defs is not None else tool_defs
+            spec_tool_aliases = spec.get("toolAliases")
+            if spec_tool_aliases is not None:
+                merged_aliases = {
+                    str(alias): str(wire)
+                    for alias, wire in spec_tool_aliases.items()
+                }
+                merged_aliases.update(tool_aliases)
+                tool_aliases = merged_aliases
             merged_config = dict(spec.get("config") or {})
             merged_config.update(config)
             config = merged_config
@@ -2237,7 +2713,12 @@ class AgentWorkflow:
             if grants_supplied:
                 capability_tools = spec.get("capabilityTools")
                 if not inp.granted_tools_unconstrained and granted is not None and capability_tools is not None:
-                    granted = sorted(set(granted) & set(capability_tools))
+                    capability_set = set(capability_tools)
+                    granted = sorted(
+                        alias
+                        for alias in granted
+                        if tool_aliases.get(alias, alias) in capability_set
+                    )
             else:
                 granted = spec_granted
             merged_contracts = dict(spec.get("grantedContracts") or {})
@@ -2265,6 +2746,32 @@ class AgentWorkflow:
             )
         unconstrained = inp.granted_tools_unconstrained or granted is None
         granted_set = set(granted or [])
+        for alias in granted_set:
+            tool_aliases.setdefault(alias, alias)
+        tool_input_validation_enabled = _agent_frozen_tool_input_validation_enabled()
+        tool_schemas: Optional[dict[str, dict[str, Any]]] = None
+        if tool_input_validation_enabled:
+            try:
+                tool_schemas = (
+                    al.tool_input_schemas(tool_defs)
+                    if tool_defs is not None
+                    else None
+                )
+            except ValueError as exc:
+                raise ApplicationError(
+                    f"invalid frozen agent tool definitions: {exc}",
+                    type="ValidationError",
+                    non_retryable=True,
+                ) from exc
+            if tool_schemas is not None and not unconstrained:
+                missing_schemas = sorted(granted_set - set(tool_schemas))
+                if missing_schemas:
+                    raise ApplicationError(
+                        "frozen agent tool definitions are missing granted aliases: "
+                        + ", ".join(missing_schemas),
+                        type="ValidationError",
+                        non_retryable=True,
+                    )
 
         if inp.use_session_store and inp.state_cursor is not None:
             state_json = await workflow.execute_activity(
@@ -2285,6 +2792,30 @@ class AgentWorkflow:
         # cumulative round count, so truncation is measured from this
         # segment's entry round, not from zero.
         baseline_round = state.round
+
+        async def validate_tool_input(tool: str, value: Any) -> tuple[bool, Optional[str]]:
+            """Return (validated, error) against the release-frozen schema."""
+            if tool_schemas is None:
+                return False, None
+            schema = tool_schemas.get(tool)
+            if schema is None:
+                return False, f"tool {tool!r} has no frozen input schema"
+            error = await workflow.execute_activity(
+                validateJsonSchema,
+                ValidateJsonSchemaInput(value=value, schema=schema),
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    non_retryable_error_types=_NON_RETRYABLE,
+                ),
+            )
+            if error is not None:
+                error = redacted_failure_text(error, inp.secrets)
+                return (
+                    False,
+                    f"tool {tool!r} input failed frozen JSON-Schema validation: {error}",
+                )
+            return True, None
 
         await self._start_trajectory(inp)
 
@@ -2360,6 +2891,7 @@ class AgentWorkflow:
                     op="think",
                     kind="reasoner",
                     runtime_declarations_ref=inp.runtime_declarations_ref,
+                    secrets=(inp.secrets or None),
                 ),
                 start_to_close_timeout=timedelta(seconds=policy.reasoner_timeout_s),
                 retry_policy=_reasoner_retry(policy),
@@ -2412,6 +2944,41 @@ class AgentWorkflow:
                     ))
                     state.round += 1
                     continue
+                if cfg.output_schema is not None:
+                    validation_error = await workflow.execute_activity(
+                        validateAgentOutput,
+                        ValidateAgentOutputInput(
+                            value=action.payload,
+                            schema=cfg.output_schema,
+                        ),
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=1,
+                            non_retryable_error_types=_NON_RETRYABLE,
+                        ),
+                    )
+                    if validation_error is not None:
+                        validation_error = redacted_failure_text(
+                            validation_error, inp.secrets
+                        )
+                        terminal = al.terminal_result(
+                            "output_validation_failed",
+                            state,
+                            output=action.payload,
+                            reason=validation_error,
+                        )
+                        await self._finish_trajectory(
+                            inp.session_id,
+                            terminal,
+                            root_run_id=(inp.root_run_id or inp.session_id),
+                            status="failed",
+                            segment_seq=inp.segment_seq,
+                        )
+                        raise ApplicationError(
+                            f"final output failed JSON-Schema validation: {validation_error}",
+                            type="OutputValidationError",
+                            non_retryable=True,
+                        )
                 terminal = al.terminal_result("done", state, output=action.payload)
                 await self._finish_trajectory(
                     inp.session_id,
@@ -2475,6 +3042,45 @@ class AgentWorkflow:
                             segment_seq=inp.segment_seq,
                         )
                         return terminal
+                resolved_inputs = [
+                    entry.get("input") if entry.get("input") is not None else state.last
+                    for entry in calls
+                ]
+                schema_validated: list[bool] = []
+                invalid_inputs: list[dict[str, Any]] = []
+                for index, (entry, call_input) in enumerate(
+                    zip(calls, resolved_inputs, strict=True)
+                ):
+                    validated, validation_error = await validate_tool_input(
+                        entry["tool"], call_input
+                    )
+                    schema_validated.append(validated)
+                    if validation_error is None:
+                        continue
+                    invalid_inputs.append(
+                        {
+                            "id": entry.get("id"),
+                            "tool": entry["tool"],
+                            "input": call_input,
+                            "error": validation_error,
+                        }
+                    )
+                    state.record(
+                        al.TraceEntry(
+                            decision="tool_input_reask",
+                            ref=entry["tool"],
+                            call_id=entry.get("id") or f"call-{state.round}-{index}",
+                            arguments=call_input,
+                            error=validation_error,
+                        )
+                    )
+                if invalid_inputs:
+                    state.last = {
+                        "error": "tool_input_validation_failed",
+                        "toolCalls": invalid_inputs,
+                    }
+                    state.round += 1
+                    continue
                 for entry in calls:
                     tool = entry["tool"]
                     denial = al.charge_tool_call(state, tool, contracts)
@@ -2491,18 +3097,18 @@ class AgentWorkflow:
                 async def execute_entry(
                     index: int,
                     entry: dict[str, Any],
+                    call_input: Any,
+                    input_schema_validated: bool,
                 ) -> tuple[int, dict[str, Any], al.TraceEntry]:
                     tool = entry["tool"]
-                    call_input = entry.get("input")
-                    if call_input is None:
-                        call_input = state.last
+                    wire_tool = tool_aliases.get(tool, tool)
                     contract = al.contract_for_tool(tool, contracts)
                     error: Optional[str] = None
                     try:
                         out = await workflow.execute_activity(
                             callTool,
                             CallToolInput(
-                                tool_ref=_toolref_json_from_key(tool),
+                                tool_ref=_toolref_json_from_key(wire_tool),
                                 value=call_input,
                                 cid=f"{inp.session_id}-call-{state.round}-{index}",
                                 principal=inp.principal,
@@ -2511,18 +3117,34 @@ class AgentWorkflow:
                                 segment_seq=inp.segment_seq,
                                 op="call",
                                 kind="tool",
+                                secrets=(inp.secrets or None),
+                                input_schema_validated=input_schema_validated,
                             ),
                             start_to_close_timeout=timedelta(seconds=policy.tool_timeout_s),
-                            retry_policy=_retry_policy_for(contract, policy),
+                            retry_policy=_retry_policy_for(
+                                contract,
+                                policy,
+                                asserted=al.contract_asserted_for_tool(tool, contracts),
+                            ),
                         )
                     except ActivityError as exc:
-                        error = repr(exc)
+                        if tool_surface_drift_from_cause(exc) is not None:
+                            raise application_error_from_failure(
+                                exc, inp.secrets
+                            ) from None
+                        error = redacted_failure_text(
+                            exc, inp.secrets, use_repr=True
+                        )
                         out = {"error": error, "tool": tool}
                     output_ref: Optional[str] = None
                     if policy.trace_content_refs:
                         output_ref = await workflow.execute_activity(
                             putBlob,
-                            PutBlobInput(tenant=inp.session_id, value=out),
+                            PutBlobInput(
+                                tenant=inp.session_id,
+                                value=out,
+                                secrets=(inp.secrets or None),
+                            ),
                             start_to_close_timeout=timedelta(seconds=30),
                             retry_policy=RetryPolicy(
                                 maximum_attempts=3,
@@ -2540,7 +3162,8 @@ class AgentWorkflow:
                             decision="call",
                             ref=tool,
                             cost=al.DEFAULT_TOOL_COST,
-                            call_id=entry.get("id"),
+                            call_id=entry.get("id") or f"call-{state.round}-{index}",
+                            arguments=call_input,
                             output_ref=output_ref,
                             error=error,
                         ),
@@ -2556,13 +3179,26 @@ class AgentWorkflow:
                 ]
                 if read_items:
                     read_results = await asyncio.gather(
-                        *(execute_entry(index, entry) for index, entry in read_items)
+                        *(
+                            execute_entry(
+                                index,
+                                entry,
+                                resolved_inputs[index],
+                                schema_validated[index],
+                            )
+                            for index, entry in read_items
+                        )
                     )
                     for result in read_results:
                         results[result[0]] = result
                 for index, entry in enumerate(calls):
                     if results[index] is None:
-                        results[index] = await execute_entry(index, entry)
+                        results[index] = await execute_entry(
+                            index,
+                            entry,
+                            resolved_inputs[index],
+                            schema_validated[index],
+                        )
 
                 observations: list[dict[str, Any]] = []
                 traces: list[al.TraceEntry] = []
@@ -2578,6 +3214,7 @@ class AgentWorkflow:
 
             elif action.decision is al.Decision.CALL:
                 tool = action.payload["tool"]
+                wire_tool = tool_aliases.get(tool, tool)
                 denial = al.authorize_call(
                     tool,
                     unconstrained=unconstrained,
@@ -2593,6 +3230,30 @@ class AgentWorkflow:
                         segment_seq=inp.segment_seq,
                     )
                     return terminal
+                call_input = action.payload.get("input")
+                if call_input is None:
+                    call_input = state.last
+                schema_validated, validation_error = await validate_tool_input(
+                    tool, call_input
+                )
+                if validation_error is not None:
+                    state.last = {
+                        "error": "tool_input_validation_failed",
+                        "tool": tool,
+                        "input": call_input,
+                        "detail": validation_error,
+                    }
+                    state.record(
+                        al.TraceEntry(
+                            decision="tool_input_reask",
+                            ref=tool,
+                            call_id=action.payload.get("id") or f"call-{state.round}",
+                            arguments=call_input,
+                            error=validation_error,
+                        )
+                    )
+                    state.round += 1
+                    continue
                 denial = al.charge_tool_call(state, tool, contracts)
                 if denial is not None:
                     terminal = al.terminal_result("denied", state, reason=denial.reason)
@@ -2603,16 +3264,13 @@ class AgentWorkflow:
                         segment_seq=inp.segment_seq,
                     )
                     return terminal
-                call_input = action.payload.get("input")
-                if call_input is None:
-                    call_input = state.last
                 contract = al.contract_for_tool(tool, contracts)
                 error: Optional[str] = None
                 try:
                     out = await workflow.execute_activity(
                         callTool,
                         CallToolInput(
-                            tool_ref=_toolref_json_from_key(tool),
+                            tool_ref=_toolref_json_from_key(wire_tool),
                             value=call_input,
                             cid=f"{inp.session_id}-call-{state.round}",
                             principal=inp.principal,
@@ -2621,12 +3279,24 @@ class AgentWorkflow:
                             segment_seq=inp.segment_seq,
                             op="call",
                             kind="tool",
+                            secrets=(inp.secrets or None),
+                            input_schema_validated=schema_validated,
                         ),
                         start_to_close_timeout=timedelta(seconds=policy.tool_timeout_s),
-                        retry_policy=_retry_policy_for(contract, policy),
+                        retry_policy=_retry_policy_for(
+                            contract,
+                            policy,
+                            asserted=al.contract_asserted_for_tool(tool, contracts),
+                        ),
                     )
                 except ActivityError as exc:
-                    error = repr(exc)
+                    if tool_surface_drift_from_cause(exc) is not None:
+                        raise application_error_from_failure(
+                            exc, inp.secrets
+                        ) from None
+                    error = redacted_failure_text(
+                        exc, inp.secrets, use_repr=True
+                    )
                     out = {"error": error, "tool": tool}
                 state.charge(cost)
                 state.last = out
@@ -2634,7 +3304,11 @@ class AgentWorkflow:
                 if policy.trace_content_refs:
                     output_ref = await workflow.execute_activity(
                         putBlob,
-                        PutBlobInput(tenant=inp.session_id, value=out),
+                        PutBlobInput(
+                            tenant=inp.session_id,
+                            value=out,
+                            secrets=(inp.secrets or None),
+                        ),
                         start_to_close_timeout=timedelta(seconds=30),
                         retry_policy=RetryPolicy(
                             maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE
@@ -2645,6 +3319,12 @@ class AgentWorkflow:
                         decision="call",
                         ref=tool,
                         cost=cost,
+                        call_id=(
+                            action.payload.get("id") or f"call-{state.round}"
+                            if cfg.native_tools
+                            else action.payload.get("id")
+                        ),
+                        arguments=call_input if cfg.native_tools else None,
                         output_ref=output_ref,
                         error=error,
                     )
@@ -2708,6 +3388,8 @@ class AgentWorkflow:
                         root_run_id=(inp.root_run_id or inp.session_id),
                         bundle=child_bundle,
                         queue_lanes=(inp.queue_lanes or None),
+                        secrets=(inp.secrets or None),
+                        mcp_preflight=inp.mcp_preflight,
                     ),
                     **start_kwargs,
                 )
@@ -2732,6 +3414,7 @@ class AgentWorkflow:
                                 "op": "sub",
                                 "kind": "flow",
                                 "causes": (),
+                                **({"secrets": inp.secrets} if inp.secrets else {}),
                             },
                             out,
                         ],
@@ -2752,7 +3435,11 @@ class AgentWorkflow:
                 if policy.trace_content_refs:
                     output_ref = await workflow.execute_activity(
                         putBlob,
-                        PutBlobInput(tenant=inp.session_id, value=out),
+                        PutBlobInput(
+                            tenant=inp.session_id,
+                            value=out,
+                            secrets=(inp.secrets or None),
+                        ),
                         start_to_close_timeout=timedelta(seconds=30),
                         retry_policy=RetryPolicy(
                             maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE
@@ -2798,6 +3485,7 @@ class AgentWorkflow:
                             granted_subflows=granted_subflows,
                             granted_contracts=contracts,
                             tool_defs=tool_defs,
+                            tool_aliases=tool_aliases,
                             state=None,
                             state_cursor=cursor,
                             use_session_store=True,
@@ -2809,6 +3497,8 @@ class AgentWorkflow:
                             queue_lanes=inp.queue_lanes,
                             subflow_queues=subflow_queues,
                             runtime_declarations_ref=inp.runtime_declarations_ref,
+                            secrets=(inp.secrets or None),
+                            mcp_preflight=inp.mcp_preflight,
                         )
                     )
                 else:
@@ -2823,6 +3513,7 @@ class AgentWorkflow:
                             granted_subflows=granted_subflows,
                             granted_contracts=contracts,
                             tool_defs=tool_defs,
+                            tool_aliases=tool_aliases,
                             state=state.to_json(),
                             policy=policy.to_json(),
                             resolve_spec=False,
@@ -2832,6 +3523,8 @@ class AgentWorkflow:
                             queue_lanes=inp.queue_lanes,
                             subflow_queues=subflow_queues,
                             runtime_declarations_ref=inp.runtime_declarations_ref,
+                            secrets=(inp.secrets or None),
+                            mcp_preflight=inp.mcp_preflight,
                         )
                     )
 
@@ -2839,6 +3532,25 @@ class AgentWorkflow:
 # --------------------------------------------------------------------------- #
 # Client helper.
 # --------------------------------------------------------------------------- #
+def _require_encrypted_client_for_run_secrets(client: Any, secrets: Any) -> None:
+    if not secrets:
+        return
+    from .codec import data_converter_uses_aes_gcm
+
+    config_method = getattr(client, "config", None)
+    if not callable(config_method):
+        raise ValueError(
+            "run secrets require a verifiable Temporal client using the "
+            "AES-256-GCM data converter"
+        )
+    config = config_method(active_config=True)
+    converter = config.get("data_converter") if isinstance(config, dict) else None
+    if not data_converter_uses_aes_gcm(converter):
+        raise ValueError(
+            "run secrets require the AES-256-GCM Temporal payload converter"
+        )
+
+
 def build_flow_input(
     *,
     session_id: str,
@@ -2857,12 +3569,24 @@ def build_flow_input(
     emit_projection: bool = False,
     projection_batch_size: int = 20,
     projection_batch_interval_s: float = 2.0,
+    secrets: Optional[dict[str, str]] = None,
+    mcp_preflight: Optional[dict[str, Any]] = None,
 ) -> FlowInput:
     """Single source of truth for deployed-run FlowInput construction.
 
     Used by run_flow and by Julep CLI ``build_flow_start_args`` consumers
     (julep run / julep schedule) so scheduled and manual runs carry byte-identical args.
     """
+    from ..secrets import validate_run_secrets
+
+    validated_secrets = validate_run_secrets(secrets)
+    initial_preflight = None
+    if mcp_preflight is not None:
+        initial_preflight = dict(mcp_preflight)
+        # This helper constructs a new root execution. Only workflow-owned
+        # child/CAN constructors may carry an already-completed preflight.
+        initial_preflight["completed"] = False
+        initial_preflight["surfaceDigest"] = None
     policy_json = (
         policy.to_json()
         if isinstance(policy, ExecutionPolicy)
@@ -2885,6 +3609,8 @@ def build_flow_input(
         emit_projection=emit_projection,
         projection_batch_size=projection_batch_size,
         projection_batch_interval_s=projection_batch_interval_s,
+        secrets=(validated_secrets or None),
+        mcp_preflight=initial_preflight,
     )
 
 
@@ -2908,6 +3634,8 @@ async def run_flow(
     emit_projection: bool = False,
     projection_batch_size: int = 20,
     projection_batch_interval_s: float = 2.0,
+    secrets: Optional[dict[str, str]] = None,
+    mcp_preflight: Optional[dict[str, Any]] = None,
 ) -> Any:
     """Start :class:`FlowWorkflow` for a frozen flow and await its result.
 
@@ -2918,6 +3646,9 @@ async def run_flow(
     tenant/credential reference (never a secret) — see
     :data:`~julep.execution.effects.RunPrincipal`.
     """
+    _require_encrypted_client_for_run_secrets(client, secrets)
+    if secrets and mcp_preflight is None:
+        raise ValueError("run secrets require MCP preflight binding enforcement")
     return await client.execute_workflow(
         FlowWorkflow.run,
         build_flow_input(
@@ -2937,6 +3668,8 @@ async def run_flow(
             emit_projection=emit_projection,
             projection_batch_size=projection_batch_size,
             projection_batch_interval_s=projection_batch_interval_s,
+            secrets=secrets,
+            mcp_preflight=mcp_preflight,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -2964,12 +3697,17 @@ async def start_flow(
     emit_projection: bool = False,
     projection_batch_size: int = 20,
     projection_batch_interval_s: float = 2.0,
+    secrets: Optional[dict[str, str]] = None,
+    mcp_preflight: Optional[dict[str, Any]] = None,
 ):
     """Like :func:`run_flow` but returns the :class:`WorkflowHandle` immediately.
 
     Use the handle to signal a human gate (``handle.signal("submitHuman", {...})``)
     or query the projection (``handle.query("projection")``) while the run is live.
     """
+    _require_encrypted_client_for_run_secrets(client, secrets)
+    if secrets and mcp_preflight is None:
+        raise ValueError("run secrets require MCP preflight binding enforcement")
     start_options = dict(workflow_start_options or {})
     if "id" in start_options or "task_queue" in start_options:
         raise ValueError("workflow_start_options cannot override id or task_queue")
@@ -2992,6 +3730,8 @@ async def start_flow(
             emit_projection=emit_projection,
             projection_batch_size=projection_batch_size,
             projection_batch_interval_s=projection_batch_interval_s,
+            secrets=secrets,
+            mcp_preflight=mcp_preflight,
         ),
         id=session_id,
         task_queue=task_queue,
@@ -3232,6 +3972,7 @@ __all__ = [
     "startTrajectory",
     "flushStructural",
     "runSubCapture",
+    "preflightMcp",
     "build_flow_input",
     "run_flow",
     "start_flow",

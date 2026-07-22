@@ -51,6 +51,8 @@ from .activities import (
     resolveQoS,
     resolveRuntimeCapabilities,
     resolveSubflow,
+    validateAgentOutput,
+    validateJsonSchema,
     verifyPures,
 )
 from .blobstore import BlobStore
@@ -73,6 +75,7 @@ from .harness import (
     SessionWorkflow,
     finishTrajectory,
     flushStructural,
+    preflightMcp,
     runSubCapture,
     startTrajectory,
 )
@@ -96,12 +99,15 @@ ACTIVITIES = [
     resolveQoS,
     resolveAgentSpec,
     resolveRuntimeCapabilities,
+    validateAgentOutput,
+    validateJsonSchema,
     startTrajectory,
     finishTrajectory,
     flushStructural,
     runSubCapture,
     persist_projection_batch,
     finalize_projection_run,
+    preflightMcp,
     submitReasonerBatch,
     submitBatch,
     pollBatch,
@@ -149,9 +155,9 @@ def encrypted_payload_converter(
 ) -> DataConverter:
     """Build the shared client/worker converter for encrypted Temporal payloads.
 
-    When a blob store is supplied, claim checking runs first and its small
-    pointer is encrypted before reaching Temporal. The referenced S3 object is
-    expected to use bucket-level KMS encryption.
+    When a blob store is supplied, oversized payloads are encrypted before
+    offload and the resulting small pointer is encrypted before reaching
+    Temporal. Bucket-level KMS encryption remains useful defense in depth.
     """
 
     import dataclasses
@@ -168,6 +174,7 @@ def encrypted_payload_converter(
                     blob_store,
                     tenant=tenant,
                     threshold_bytes=threshold_bytes,
+                    blob_encryption_codec=encryption,
                 ),
                 encryption,
             ]
@@ -195,8 +202,9 @@ def build_worker(
     ``worker_kwargs`` pass straight through to :class:`temporalio.worker.Worker`
     (e.g. ``max_concurrent_activities``, ``interceptors`` for the projection tail).
     If ``context.mcp_call`` is set, it must be async
-    ``(server, tool, value, idempotency_key, principal) -> result``; legacy
-    4-argument callers are wrapped by ``configure`` and keep working.
+    ``(server, tool, value, idempotency_key, principal, run_secrets,
+    input_schema_validated) -> result``; legacy 4/5/6-argument callers are
+    wrapped by ``configure`` and keep working.
 
     The default workflow sandbox passes ``julep`` through so
     workflow-side registry lookups (pures, reasoners) see the worker process's real
@@ -264,10 +272,22 @@ async def run_worker(
     finer control (custom client, shared client across workers, lifecycle
     management) use :func:`build_worker` with your own :class:`Client`.
     ``mcp_call`` must be async
-    ``(server, tool, value, idempotency_key, principal) -> result`` (legacy
-    4-argument callers are wrapped by ``configure``); the idempotency key is the
-    stable activation ``cid`` reused on activity retry.
+    ``(server, tool, value, idempotency_key, principal, run_secrets,
+    input_schema_validated) -> result`` (legacy 4/5/6-argument callers are
+    wrapped by ``configure``); the idempotency key is the stable activation
+    ``cid`` reused on activity retry.
     """
+    from ..secrets import (
+        SecretResolver,
+        materialize_secret_environment,
+        operator_secret_redactor,
+    )
+    from ..trajectory import redact_secret_shaped
+
+    secret_resolver = SecretResolver.from_env(os.environ)
+    os.environ.update(
+        materialize_secret_environment(os.environ, resolver=secret_resolver)
+    )
     connect_kwargs: dict[str, Any] = {"namespace": namespace}
     payload_keys, payload_key_id, _required = payload_encryption_from_env(os.environ)
     if payload_keys is not None:
@@ -296,6 +316,7 @@ async def run_worker(
         trajectory_sink=trajectory_sink,
         trajectory_blob_store=trajectory_blob_store,
         on_attempt=on_attempt,
+        redactor=operator_secret_redactor(redact_secret_shaped),
     )
     worker = build_worker(client, context, task_queue=task_queue, **worker_kwargs)
     await worker.run()

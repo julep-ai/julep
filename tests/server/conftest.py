@@ -37,6 +37,7 @@ class FakeTemporalGateway:
         input: Any,
         principal: dict[str, Any],
         queue_lanes: dict[str, str] | None,
+        secrets: dict[str, str] | None,
     ) -> str:
         if self.ambiguous_start:
             raise TemporalStartAmbiguous("unconfirmed")
@@ -49,6 +50,7 @@ class FakeTemporalGateway:
                 "run_id": run_id,
                 "input": input,
                 "principal": principal,
+                "secrets": secrets,
                 "queue_lanes": queue_lanes,
             }
         )
@@ -98,6 +100,7 @@ def server_factory(tmp_path: Path):
         reconciler: Any = None,
         queue_by_lane: dict[str, str] | None = None,
         enable_reconciler: bool = False,
+        payload_encryption_required: bool = True,
     ) -> ServerHarness:
         nonlocal counter
         counter += 1
@@ -109,8 +112,13 @@ def server_factory(tmp_path: Path):
                 ApiKey("alice", "alice-token"),
                 ApiKey("bob", "bob-token"),
                 ApiKey("admin", "admin-token", admin=True),
+                ApiKey("worker", "worker-token", role="worker"),
             ),
+            vault_keys="vault=" + "11" * 32,
+            vault_key_id="vault",
+            worker_secret_allowlist=frozenset({"tracker-token", "other-token"}),
             queue_by_lane=queue_by_lane or {},
+            payload_encryption_required=payload_encryption_required,
             config_root=tmp_path,
         )
         app = create_app(
@@ -134,6 +142,7 @@ def make_release(
     marker: str = "a",
     bundle_ref: list[dict[str, str]] | None = None,
     runtime_declarations_ref: dict[str, Any] | None = None,
+    mcp_preflight_policy: str | None = "pin",
 ) -> ApplicationRelease:
     return ApplicationRelease(
         application="memory",
@@ -151,6 +160,7 @@ def make_release(
                 eval_packages=(),
                 runtime_declarations_ref=runtime_declarations_ref,
                 max_call_limits={},
+                mcp_preflight_policy=mcp_preflight_policy,
             ),
         ),
     )
@@ -159,3 +169,4 @@ def make_release(
 ALICE_HEADERS = {"Authorization": "Bearer alice-token"}
 BOB_HEADERS = {"Authorization": "Bearer bob-token"}
 ADMIN_HEADERS = {"Authorization": "Bearer admin-token"}
+WORKER_HEADERS = {"Authorization": "Bearer worker-token"}

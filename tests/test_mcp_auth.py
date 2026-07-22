@@ -19,13 +19,17 @@ from julep.mcp_auth import (
     FastMCPTokenVerifier,
     McpAuthConfig,
     McpAuthError,
+    McpTransport,
     VerifiedToken,
     asgi_auth_middleware,
+    classify_mcp_surface_drift,
     http_mcp_caller,
     mint_token,
+    transport_for_mcp_caller,
     verify_keys_from_env,
     verify_token,
 )
+from julep.errors import ToolSurfaceDrift
 
 
 SEED = bytes(range(32))
@@ -268,8 +272,6 @@ def test_http_mcp_caller_sets_headers_and_normalizes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     pytest.importorskip("mcp")
-    import julep.mcp_auth as mcp_auth
-
     captured: dict[str, Any] = {}
 
     class Transport(AbstractAsyncContextManager[tuple[object, object, object]]):
@@ -279,8 +281,8 @@ def test_http_mcp_caller_sets_headers_and_normalizes(
         async def __aexit__(self, *args: Any) -> None:
             return None
 
-    def transport(url: str, *, headers: dict[str, str]) -> Transport:
-        captured.update(url=url, headers=headers)
+    def transport(url: str, **kwargs: Any) -> Transport:
+        captured.update(url=url, headers=kwargs["headers"])
         return Transport()
 
     class Session(AbstractAsyncContextManager["Session"]):
@@ -300,8 +302,25 @@ def test_http_mcp_caller_sets_headers_and_normalizes(
             captured.update(tool=tool, arguments=arguments)
             return SimpleNamespace(data=None, structuredContent={"result": 7})
 
-    monkeypatch.setattr(mcp_auth, "_mcp_client_components", lambda: (Session, transport))
+    class FakeHttpx:
+        class AsyncClient:
+            def __init__(self, **_kwargs: Any) -> None:
+                pass
+
+    import julep.mcp_snapshot as mcp_snapshot
+
+    monkeypatch.setattr(
+        mcp_snapshot,
+        "_load_sdk",
+        lambda: mcp_snapshot._McpSdk(
+            client_session=Session,
+            stream_client=transport,
+            modern_stream=False,
+            httpx=FakeHttpx,
+        ),
+    )
     caller = http_mcp_caller({"memory": "https://mcp.example.test"}, config())
+    assert transport_for_mcp_caller(caller) is not None
     result = asyncio.run(caller("memory", "search", {"q": "x"}, "cid-123", {"sub": "u"}))
 
     assert result == {"result": 7}
@@ -326,3 +345,262 @@ def test_http_mcp_caller_rejects_unknown_server() -> None:
     caller = http_mcp_caller({"memory": "https://mcp.example.test"})
     with pytest.raises(RuntimeError, match="unknown MCP server"):
         asyncio.run(caller("other", "search", {}, "cid", None))
+
+
+def test_transport_run_secret_shadows_operator_resolver() -> None:
+    class Resolver:
+        def __init__(self) -> None:
+            self.values: list[str] = []
+
+        def resolve_ref(self, value: str) -> str:
+            self.values.append(value)
+            return "operator-value"
+
+    resolver = Resolver()
+    transport = McpTransport(
+        {
+            "memory": {
+                "url": "https://mcp.example.test",
+                "headers": {"X-Token": "secret://tracker-token"},
+            }
+        },
+        secret_resolver=resolver,
+    )
+    configured = transport._config("memory")
+
+    run_headers = asyncio.run(
+        transport._headers(
+            configured,
+            tool="search",
+            scopes={"search"},
+            idempotency_key="cid-run",
+            principal=None,
+            run_secrets={"tracker-token": "tenant-value"},
+        )
+    )
+    operator_headers = asyncio.run(
+        transport._headers(
+            configured,
+            tool="search",
+            scopes={"search"},
+            idempotency_key="cid-operator",
+            principal=None,
+            run_secrets=None,
+        )
+    )
+
+    assert run_headers["X-Token"] == "tenant-value"
+    assert operator_headers["X-Token"] == "operator-value"
+    assert resolver.values == ["secret://tracker-token"]
+
+
+def test_transport_rejects_malformed_whole_secret_reference() -> None:
+    transport = McpTransport(
+        {
+            "memory": {
+                "url": "https://mcp.example.test",
+                "headers": {"X-Token": "secret://Bad_Name"},
+            }
+        }
+    )
+
+    with pytest.raises(RuntimeError, match="invalid MCP secret reference"):
+        asyncio.run(transport._resolve_ref("secret://Bad_Name", None))
+    assert (
+        asyncio.run(transport._resolve_ref("Bearer secret://tracker-token", None))
+        == "Bearer secret://tracker-token"
+    )
+
+
+def test_transport_discovery_token_has_dedicated_scope_and_deterministic_idk(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import julep.mcp_snapshot as mcp_snapshot
+
+    captured: dict[str, Any] = {}
+
+    class Transport(AbstractAsyncContextManager[tuple[object, object, object]]):
+        async def __aenter__(self) -> tuple[object, object, object]:
+            return object(), object(), object()
+
+        async def __aexit__(self, *args: Any) -> None:
+            return None
+
+    def stream(url: str, **kwargs: Any) -> Transport:
+        captured.update(url=url, headers=kwargs["headers"])
+        return Transport()
+
+    class Session(AbstractAsyncContextManager["Session"]):
+        def __init__(self, _read: object, _write: object) -> None:
+            pass
+
+        async def __aenter__(self) -> Session:
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            return None
+
+        async def initialize(self) -> Any:
+            return SimpleNamespace(
+                protocolVersion="2025-03-26",
+                serverInfo=SimpleNamespace(version="2.4.0"),
+            )
+
+        async def list_tools(self, *, cursor: str | None = None) -> Any:
+            assert cursor is None
+            return SimpleNamespace(tools=[], nextCursor=None)
+
+    class FakeHttpx:
+        class AsyncClient:
+            def __init__(self, **_kwargs: Any) -> None:
+                pass
+
+    monkeypatch.setattr(
+        mcp_snapshot,
+        "_load_sdk",
+        lambda: mcp_snapshot._McpSdk(Session, stream, False, FakeHttpx),
+    )
+    transport = McpTransport(
+        {"memory": "https://mcp.example.test"},
+        auth=config(),
+    )
+
+    listing = asyncio.run(transport.list_tools("memory", workflow_id="wf-123"))
+
+    assert listing.protocol_version == "2025-03-26"
+    idempotency_key = captured["headers"]["Idempotency-Key"]
+    assert idempotency_key == "preflight:wf-123:memory"
+    token = captured["headers"]["Authorization"].removeprefix("Bearer ")
+    verified = verify_token(
+        token,
+        verify_keys={"key-1": PUBLIC_KEY},
+        audience="memory",
+        required_scopes={"tools/list"},
+        idempotency_key=idempotency_key,
+    )
+    assert verified.tool == "tools/list"
+
+
+@pytest.mark.parametrize(
+    ("message", "validated", "reason"),
+    [
+        ("Unknown tool: search", False, "tool_not_found"),
+        ("Input validation error: 'q' is required", True, "input_schema_rejected"),
+    ],
+)
+def test_mcp_error_result_classifies_surface_drift(
+    message: str, validated: bool, reason: str
+) -> None:
+    result = SimpleNamespace(
+        isError=True,
+        content=[SimpleNamespace(text=message)],
+    )
+
+    assert classify_mcp_surface_drift(
+        result, input_schema_validated=validated
+    ) == reason
+
+
+def test_schema_rejection_is_not_drift_without_frozen_validation() -> None:
+    result = SimpleNamespace(
+        isError=True,
+        content=[SimpleNamespace(text="Input validation error: 'q' is required")],
+    )
+
+    assert classify_mcp_surface_drift(result) is None
+
+
+@pytest.mark.parametrize(
+    ("message", "validated", "reason"),
+    [
+        ("tool 'search' not found", False, "tool_not_found"),
+        ("invalid arguments for tool search", True, "input_schema_rejected"),
+    ],
+)
+def test_nested_exception_group_classifies_surface_drift(
+    message: str,
+    validated: bool,
+    reason: str,
+) -> None:
+    wrapper = RuntimeError("wrapper")
+    wrapper.__cause__ = RuntimeError(message)
+    exception_group = vars(__import__("builtins"))["ExceptionGroup"]
+    error = exception_group("transport group", [wrapper])
+
+    assert classify_mcp_surface_drift(
+        error,
+        input_schema_validated=validated,
+    ) == reason
+
+
+def test_drift_classifier_ignores_success_and_business_errors() -> None:
+    successful = SimpleNamespace(
+        isError=False,
+        content=[SimpleNamespace(text="Unknown tool appears in documentation")],
+    )
+    business_error = SimpleNamespace(
+        isError=True,
+        content=[SimpleNamespace(text="customer record not found")],
+    )
+
+    assert classify_mcp_surface_drift(successful) is None
+    assert classify_mcp_surface_drift(business_error) is None
+
+
+def test_transport_raises_typed_drift_for_error_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import julep.mcp_snapshot as mcp_snapshot
+
+    class Stream(AbstractAsyncContextManager[tuple[object, object, object]]):
+        async def __aenter__(self) -> tuple[object, object, object]:
+            return object(), object(), object()
+
+        async def __aexit__(self, *args: Any) -> None:
+            return None
+
+    class Session(AbstractAsyncContextManager["Session"]):
+        def __init__(self, _read: object, _write: object) -> None:
+            pass
+
+        async def __aenter__(self) -> Session:
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            return None
+
+        async def initialize(self) -> None:
+            return None
+
+        async def call_tool(self, _tool: str, *, arguments: Any) -> Any:
+            del arguments
+            return SimpleNamespace(
+                isError=True,
+                content=[SimpleNamespace(text="Unknown tool: removed")],
+            )
+
+    class FakeHttpx:
+        class AsyncClient:
+            def __init__(self, **_kwargs: Any) -> None:
+                pass
+
+    monkeypatch.setattr(
+        mcp_snapshot,
+        "_load_sdk",
+        lambda: mcp_snapshot._McpSdk(
+            Session,
+            lambda _url, **_kwargs: Stream(),
+            False,
+            FakeHttpx,
+        ),
+    )
+    transport = McpTransport({"memory": "https://mcp.example.test"})
+
+    with pytest.raises(ToolSurfaceDrift) as raised:
+        asyncio.run(transport.call_tool("memory", "removed", {}, "cid", None))
+
+    assert raised.value.to_json() == {
+        "server": "memory",
+        "tool": "removed",
+        "reason": "tool_not_found",
+    }

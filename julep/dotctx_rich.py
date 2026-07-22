@@ -1210,7 +1210,13 @@ def load_rich_dotctx(
             expectations[key] = stub.input_schema
             descriptions[key] = stub.description
             registry.register_tool_expectation(
-                ToolSchemaExpectation(key=key, input_schema=stub.input_schema, ctx_path=path)
+                ToolSchemaExpectation(
+                    key=key,
+                    input_schema=stub.input_schema,
+                    ctx_path=path,
+                    description=stub.description,
+                ),
+                scope=package,
             )
 
     settings_tools: Sequence[Any] = settings.get("tools") or ()

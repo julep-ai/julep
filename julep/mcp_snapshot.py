@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import builtins
-import json
 import re
 from collections.abc import AsyncIterator, Collection, Mapping
 from contextlib import asynccontextmanager
@@ -36,12 +35,6 @@ class _ServerConfig:
     url: str
     headers: dict[str, str]
     version: str | None
-
-
-@dataclass(frozen=True)
-class _FetchedServer:
-    tools: dict[str, dict[str, Any]]
-    version: str
 
 
 @dataclass(frozen=True)
@@ -264,91 +257,6 @@ async def _connect(
         yield streams
 
 
-async def _fetch_server(
-    sdk: _McpSdk,
-    config: _ServerConfig,
-    *,
-    timeout_s: float,
-) -> _FetchedServer:
-    stage = "connection"
-    try:
-        async with _connect(sdk, config, timeout_s=timeout_s) as (read, write, _session_id):
-            async with sdk.client_session(read, write) as session:
-                stage = "initialize"
-                initialized = await asyncio.wait_for(session.initialize(), timeout=timeout_s)
-                protocol_raw = _field(initialized, "protocolVersion", "protocol_version")
-                server_info = _field(initialized, "serverInfo", "server_info")
-                server_version_raw = _field(server_info, "version")
-                if (
-                    not isinstance(protocol_raw, (str, int))
-                    or server_info is None
-                    or not isinstance(server_version_raw, str)
-                ):
-                    raise McpSnapshotError(
-                        f"MCP server {config.server!r} returned invalid initialization metadata"
-                    )
-                protocol = str(protocol_raw)
-                server_version = server_version_raw
-                if config.version is not None and server_version != config.version:
-                    raise McpSnapshotError(
-                        f"MCP server {config.server!r} did not match its configured version pin"
-                    )
-
-                tools: dict[str, dict[str, Any]] = {}
-                cursor: str | None = None
-                seen_cursors: set[str] = set()
-                while True:
-                    stage = "tools/list"
-                    page = await asyncio.wait_for(
-                        session.list_tools(cursor=cursor), timeout=timeout_s
-                    )
-                    page_tools = _field(page, "tools")
-                    if not isinstance(page_tools, list):
-                        raise McpSnapshotError(
-                            f"MCP server {config.server!r} returned an invalid tools/list page"
-                        )
-                    for tool in page_tools:
-                        name, listing = _tool_listing(tool, server=config.server)
-                        if name in tools:
-                            raise McpSnapshotError(
-                                f"MCP server {config.server!r} returned duplicate tool name {name!r}"
-                            )
-                        tools[name] = listing
-                    next_cursor = _field(page, "nextCursor", "next_cursor")
-                    if next_cursor is None:
-                        break
-                    if not isinstance(next_cursor, str) or next_cursor in seen_cursors:
-                        raise McpSnapshotError(
-                            f"MCP server {config.server!r} returned an invalid pagination cursor"
-                        )
-                    seen_cursors.add(next_cursor)
-                    cursor = next_cursor
-
-                version = json.dumps(
-                    {"protocol": protocol, "server": server_version},
-                    sort_keys=True,
-                    separators=(",", ":"),
-                )
-                return _FetchedServer(tools=tools, version=version)
-    except (asyncio.TimeoutError, TimeoutError):
-        raise McpSnapshotError(
-            f"MCP snapshot timed out for server {config.server!r} during {stage}"
-        ) from None
-    except McpSnapshotError:
-        raise
-    except Exception as exc:
-        snapshot_error = _nested_exception(exc, McpSnapshotError)
-        if isinstance(snapshot_error, McpSnapshotError):
-            raise snapshot_error from None
-        if _nested_exception(exc, TimeoutError) is not None:
-            raise McpSnapshotError(
-                f"MCP snapshot timed out for server {config.server!r} during {stage}"
-            ) from None
-        raise McpSnapshotError(
-            f"MCP snapshot failed for server {config.server!r} during {stage}"
-        ) from None
-
-
 async def _fetch_all(
     servers: Mapping[str, Any],
     *,
@@ -358,20 +266,38 @@ async def _fetch_all(
 ) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
     if not servers:
         return {}, {}
-    allowed_urls = _allowlist(allowlist)
-    configs = [
-        _server_config(server, raw, auth=auth, allowed_urls=allowed_urls)
-        for server, raw in servers.items()
-    ]
-    sdk = _load_sdk()
-    fetched = await asyncio.gather(
-        *(_fetch_server(sdk, config, timeout_s=timeout_s) for config in configs)
-    )
+    # Discovery and runtime calls share one configured transport.  This is the
+    # authoring-time adapter: it supplies a stable synthetic workflow id for the
+    # discovery-scope idempotency key and translates transport errors to the
+    # long-standing snapshot exception type.
+    from .mcp_auth import McpTransport, McpTransportError
+
+    try:
+        transport = McpTransport(
+            servers,
+            bearer_auth=auth,
+            timeout_s=timeout_s,
+            allowlist=allowlist,
+        )
+        server_names = list(servers)
+        fetched = await asyncio.gather(
+            *(
+                transport.list_tools(server, workflow_id="freeze")
+                for server in server_names
+            )
+        )
+    except McpSnapshotError:
+        raise
+    except McpTransportError as error:
+        message = str(error).replace("MCP request", "MCP snapshot", 1)
+        raise McpSnapshotError(message) from None
     listings = {
-        config.server: result.tools for config, result in zip(configs, fetched, strict=True)
+        server: result.tools
+        for server, result in zip(server_names, fetched, strict=True)
     }
     versions = {
-        config.server: result.version for config, result in zip(configs, fetched, strict=True)
+        server: result.version
+        for server, result in zip(server_names, fetched, strict=True)
     }
     return listings, versions
 

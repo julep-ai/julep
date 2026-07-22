@@ -482,7 +482,13 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
 # --------------------------------------------------------------------------- #
 # Lowering a Reasoner to IR (the shape-bearing step).
 # --------------------------------------------------------------------------- #
-def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None) -> Node:
+def reasoner_to_flow(
+    reasoner: Reasoner,
+    *,
+    ctx: Optional[ContextPolicy] = None,
+    tool_aliases: Optional[Mapping[str, str]] = None,
+    agent_round_cap: int = 32,
+) -> Node:
     """Lower a registered reasoner to the IR node its round policy implies.
 
     Sub before agent before bounded loop before single call, so an explicitly
@@ -490,9 +496,50 @@ def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None)
     """
     policy = ctx or ContextPolicy(scope=reasoner.context_scope)
 
+    if agent_round_cap < 1:
+        raise ValueError("agent_round_cap must be >= 1")
+
     if reasoner.sub_contract is not None:
         return sub(reasoner.name, reasoner.sub_contract,
                    summary_policy=reasoner.sub_contract.summary_policy)
+
+    # Tool-bearing reasoners run on the one durable native-tool loop. The
+    # provider sees tools.pyi's bare names; dispatch resolves those aliases to
+    # frozen wire ToolRefs. A finite reasoner bound wins, otherwise the project
+    # safety cap applies.
+    if reasoner.tools:
+        aliases = dict(tool_aliases or {key: key for key in reasoner.tools})
+        missing = sorted(set(reasoner.tools) - set(aliases))
+        extra = sorted(set(aliases) - set(reasoner.tools))
+        if missing or extra:
+            details: list[str] = []
+            if missing:
+                details.append("missing " + ", ".join(missing))
+            if extra:
+                details.append("unknown " + ", ".join(extra))
+            raise ValueError("tool alias map does not match reasoner grants: " + "; ".join(details))
+        bound = (
+            reasoner.max_rounds
+            if reasoner.max_rounds is not None and reasoner.max_rounds >= 1
+            else agent_round_cap
+        )
+        app_ctx = ctx
+        if app_ctx is None and reasoner.context_scope in (
+            ContextScope.SUMMARY,
+            ContextScope.WHOLE_SESSION,
+        ):
+            app_ctx = ContextPolicy(scope=reasoner.context_scope)
+        return app(
+            reasoner.name,
+            tools=list(reasoner.tools),
+            tool_aliases=aliases,
+            max_rounds=bound,
+            ctx=app_ctx,
+            native_tools=True,
+            require_tool_call=reasoner.require_tool_call,
+            output_schema=reasoner.reply_schema,
+            output_retries=reasoner.output_retries,
+        )
 
     if reasoner.is_agent or (reasoner.max_rounds is not None and reasoner.max_rounds <= 0):
         # Open-ended controller loop. The reasoner name is the controller ref.
@@ -504,7 +551,7 @@ def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None)
             ContextScope.WHOLE_SESSION,
         ):
             app_ctx = ContextPolicy(scope=reasoner.context_scope)
-        return app(reasoner.name, ctx=app_ctx)
+        return app(reasoner.name, ctx=app_ctx, max_rounds=agent_round_cap)
 
     if reasoner.max_rounds is not None and reasoner.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.

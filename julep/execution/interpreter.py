@@ -120,8 +120,18 @@ def call_contract(node: Node, manifest: ToolManifest):
     return CONSERVATIVE_DEFAULT
 
 
+def call_contract_asserted(node: Node, manifest: ToolManifest) -> bool:
+    """Whether a call's retry-relevant contract came from trusted authority."""
+
+    step = node.step
+    assert isinstance(step, CallStep)
+    return step.frozen_hash is not None and bind(node, manifest).asserted
+
+
 def _retry_attempts_for_call(node: Node, manifest: ToolManifest) -> int:
     if node.ann is None or node.ann.max_attempts is None:
+        return 1
+    if not call_contract_asserted(node, manifest):
         return 1
     if not contract_allows_retry(call_contract(node, manifest)):
         return 1
@@ -225,6 +235,16 @@ async def interpret(
     shape = surface_shape(node).value
     planned = env.emitter.plan(node.id, cid, causes=causes, shape=shape)
 
+    def projection_failure(value: str) -> str:
+        redact = getattr(env, "redact_failure", None)
+        if not callable(redact):
+            return value
+        try:
+            redacted = redact(value)
+        except Exception:
+            return "[REDACTED]"
+        return redacted if isinstance(redacted, str) else "[REDACTED]"
+
     try:
         out = await _eval(node, value, env, cid, planned)
     except PureExecutionError as err:
@@ -235,7 +255,10 @@ async def interpret(
         # span-bearing-diagnostics contract: a sandbox trap must be at least as
         # informative in the span as an ordinary native-pure error.
         env.emitter.fail(
-            node.id, cid, f"{err.error_type}: {err.message}", causes=(planned,)
+            node.id,
+            cid,
+            projection_failure(f"{err.error_type}: {err.message}"),
+            causes=(planned,),
         )
         raise
     except SessionClosed:
@@ -247,7 +270,12 @@ async def interpret(
         env.emitter.fail(node.id, cid, "framework-error", causes=(planned,))
         raise
     except Exception as e:  # noqa: BLE001 — record then re-raise for the engine
-        env.emitter.fail(node.id, cid, repr(e), causes=(planned,))
+        env.emitter.fail(
+            node.id,
+            cid,
+            projection_failure(repr(e)),
+            causes=(planned,),
+        )
         raise
 
     did = env.emitter.did(
@@ -595,6 +623,9 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
         key: encoded[key]
         for key in (
             "tools",
+            "toolAliases",
+            "toolDefs",
+            "toolContracts",
             "subflows",
             "subflowQueues",
             "budget",
@@ -604,6 +635,8 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
             "roundNote",
             "nativeTools",
             "requireToolCall",
+            "replySchema",
+            "outputRetries",
         )
         if key in encoded
     }
@@ -794,7 +827,14 @@ class InMemoryEnv:
         self.root_run_id = root_run_id
         self.segment_seq = segment_seq
         self._tools = tools or {}
-        self._mcp_call = mcp_call
+        if mcp_call is None:
+            self._mcp_call = None
+        else:
+            # Keep local/dry-run behavior on the same canonical MCP seam while
+            # retaining compatibility with legacy 4/5/6-argument fakes.
+            from .effects import _adapt_mcp_caller
+
+            self._mcp_call = _adapt_mcp_caller(mcp_call)
         self._reasoners = reasoners or {}
         self._subs = subs or {}
         self._agents = agents or {}
@@ -854,7 +894,15 @@ class InMemoryEnv:
         assert isinstance(step, CallStep)
         ref = bind(node, self.manifest).ref if step.frozen_hash is not None else step.tool
         if isinstance(ref, McpTool) and self._mcp_call is not None:
-            return await self._mcp_call(ref.server, ref.tool, value, cid, self.principal)
+            return await self._mcp_call(
+                ref.server,
+                ref.tool,
+                value,
+                cid,
+                self.principal,
+                None,
+                False,
+            )
         raise KeyError(f"no in-memory tool for {key!r}")
 
     async def invoke_reasoner(
@@ -889,10 +937,70 @@ class InMemoryEnv:
         cid: str,
         app_config: Optional[dict[str, Any]] = None,
     ) -> Any:
-        if controller not in self._agents:
-            raise KeyError(f"no in-memory agent for {controller!r}")
-        out = self._agents[controller](value)
-        return await out if inspect.isawaitable(out) else out
+        if controller in self._agents:
+            out = self._agents[controller](value)
+            return await out if inspect.isawaitable(out) else out
+        if controller not in self._reasoners:
+            raise KeyError(f"no in-memory reasoner or agent for {controller!r}")
+
+        from ..agent_loop import AgentConfig, drive_agent_loop, tool_input_schemas
+
+        authored = dict(app_config or {})
+        cfg = AgentConfig.from_json(authored)
+        grants = set(str(name) for name in authored.get("tools", ()))
+        aliases = {
+            str(alias): str(wire)
+            for alias, wire in authored.get("toolAliases", {}).items()
+        }
+        contracts = {
+            str(alias): dict(contract)
+            for alias, contract in authored.get("toolContracts", {}).items()
+        }
+        schemas = (
+            tool_input_schemas(authored.get("toolDefs"))
+            if authored.get("toolDefs") is not None
+            else None
+        )
+
+        async def invoke_controller(payload: dict[str, Any]) -> Any:
+            out = self._reasoners[controller](payload)
+            return await out if inspect.isawaitable(out) else out
+
+        async def call_tool(
+            alias: str,
+            args: Any,
+            *,
+            call_index: Optional[int] = None,
+        ) -> Any:
+            del call_index
+            wire = aliases.get(alias, alias)
+            fn = self._tools.get(alias) or self._tools.get(wire)
+            if fn is not None:
+                out = fn(args)
+                return await out if inspect.isawaitable(out) else out
+            if "/" in wire and self._mcp_call is not None:
+                server, tool = wire.split("/", 1)
+                return await self._mcp_call(
+                    server,
+                    tool,
+                    args,
+                    self.next_cid(f"agent:{controller}:{alias}"),
+                    self.principal,
+                    None,
+                    schemas is not None and alias in schemas,
+                )
+            raise KeyError(f"no in-memory fake or MCP caller for tool alias {alias!r}")
+
+        return await drive_agent_loop(
+            input=value,
+            cfg=cfg,
+            invoke_controller=invoke_controller,
+            call_tool=call_tool,
+            granted=grants,
+            contracts=contracts,
+            tool_schemas=schemas,
+            get_pure=self.get_pure,
+        )
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         if planner not in self._planners:

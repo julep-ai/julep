@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from ...app_deploy import ApplicationRelease, ApplicationReleaseError, LaneReconciler
-from ..auth import ApiKey, require_admin, require_key
+from ..auth import ApiKey, require_admin, require_client
 from . import execution_store
 from .releases import load_release
 
@@ -117,7 +117,7 @@ async def activate_deployment(
 @router.get("")
 async def list_deployments(
     request: Request,
-    _key: Annotated[ApiKey, Depends(require_key)],
+    _key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, list[dict[str, Any]]]:
     statuses = cast(dict[str, dict[str, Any]], request.app.state.deployment_reconcile_status)
     rows: list[dict[str, Any]] = []

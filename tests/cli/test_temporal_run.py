@@ -157,6 +157,29 @@ def test_cloud_env_replays_deployed_flow_via_run_flow(tmp_path: Path) -> None:
     assert fake.calls and fake.calls[0].kwargs["task_queue"] == "julep-staging-queue"
 
 
+def test_cloud_env_rejects_oversized_run_secret_map_before_start(tmp_path: Path) -> None:
+    cfg = _cloud_cfg(tmp_path)
+    _deploy_triage(tmp_path)
+    called = False
+
+    def unexpected_start(*_args: Any, **_kwargs: Any) -> Any:
+        nonlocal called
+        called = True
+        return None
+
+    with pytest.raises(ValueError, match="32 entries"):
+        run_on_env(
+            cfg,
+            "triage",
+            cfg.envs["staging"],
+            None,
+            client=_FakeClient(result=None),
+            run_flow=unexpected_start,
+            secrets={f"secret-{index}": "x" for index in range(33)},
+        )
+    assert called is False
+
+
 def test_cloud_replay_passes_pinned_pures_from_ledger(tmp_path: Path) -> None:
     cfg = _cloud_cfg(tmp_path)
     flow_json: dict[str, Any] = {"name": "triage", "nodes": ["lookup"]}

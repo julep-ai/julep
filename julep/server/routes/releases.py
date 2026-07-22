@@ -17,7 +17,7 @@ from ...app_deploy import (
     release_from_bytes,
 )
 from ...ir import canonical_json
-from ..auth import ApiKey, require_admin, require_key
+from ..auth import ApiKey, require_admin, require_client
 from . import artifact_store, execution_store
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -143,7 +143,7 @@ async def publish_release(
 @router.get("")
 async def list_releases(
     request: Request,
-    _key: Annotated[ApiKey, Depends(require_key)],
+    _key: Annotated[ApiKey, Depends(require_client)],
     cursor: Optional[str] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> dict[str, Any]:
@@ -158,7 +158,7 @@ async def list_releases(
 async def get_release(
     release_hash: str,
     request: Request,
-    _key: Annotated[ApiKey, Depends(require_key)],
+    _key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, Any]:
     row, _release = load_release(request, release_hash)
     return row

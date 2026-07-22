@@ -71,6 +71,7 @@ from .interpreter import (
     BranchThunk,
     Result,
     call_contract,
+    call_contract_asserted,
     call_ref_key,
     gather_bounded,
     interpret,
@@ -336,6 +337,9 @@ def _call_tool_input(inp: dict) -> CallToolInput:
         op=inp.get("op"),
         kind=inp.get("kind"),
         causes=tuple(inp.get("causes") or ()),
+        secrets=inp.get("secrets"),
+        frozen_input_schema=inp.get("frozen_input_schema"),
+        input_schema_validated=bool(inp.get("input_schema_validated", False)),
     )
 
 
@@ -457,10 +461,12 @@ class DbosEnv:
     async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
-        if contract_allows_retry(contract):
+        asserted = call_contract_asserted(node, self.manifest)
+        if asserted and contract_allows_retry(contract):
             attempts = node.ann.max_attempts if node.ann and node.ann.max_attempts is not None else (
                 al.retry_max_attempts_for_contract(
                     contract,
+                    asserted=True,
                     idempotent_max_attempts=self._policy.idempotent_max_attempts,
                     write_max_attempts=self._policy.write_max_attempts,
                 )
@@ -565,6 +571,8 @@ class DbosEnv:
         granted_tools: Optional[list[str]] = None
         granted_subflows: Optional[list[str]] = None
         granted_contracts: Optional[dict[str, dict[str, Any]]] = None
+        tool_aliases: Optional[dict[str, str]] = None
+        tool_defs: Optional[list[dict[str, Any]]] = None
         granted_tools_unconstrained = False
 
         if app_config is not None:
@@ -586,6 +594,13 @@ class DbosEnv:
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
+            if "toolAliases" in app_config:
+                tool_aliases = {
+                    str(alias): str(wire)
+                    for alias, wire in app_config["toolAliases"].items()
+                }
+            if "toolDefs" in app_config:
+                tool_defs = list(app_config["toolDefs"])
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
             if tools is not None:
@@ -614,6 +629,8 @@ class DbosEnv:
             "grantedToolsUnconstrained": granted_tools_unconstrained,
             "grantedSubflows": granted_subflows,
             "grantedContracts": granted_contracts,
+            "toolAliases": tool_aliases,
+            "toolDefs": tool_defs,
             "state": state_json,
             "policy": self._policy.to_json(),
             "resolveSpec": True,
@@ -753,6 +770,10 @@ async def agent_workflow(inp: dict) -> Any:
     granted_subflows = inp.get("grantedSubflows")
     contracts = dict(inp.get("grantedContracts") or {})
     tool_defs = inp.get("toolDefs")
+    tool_aliases = {
+        str(alias): str(wire)
+        for alias, wire in (inp.get("toolAliases") or {}).items()
+    }
     grants_supplied = (
         inp.get("grantedTools") is not None or bool(inp.get("grantedToolsUnconstrained"))
     )
@@ -762,6 +783,14 @@ async def agent_workflow(inp: dict) -> Any:
         spec = await resolveAgentSpecStep(inp["controller"])
         spec_tool_defs = spec.get("toolDefs")
         tool_defs = spec_tool_defs if spec_tool_defs is not None else tool_defs
+        spec_tool_aliases = spec.get("toolAliases")
+        if spec_tool_aliases is not None:
+            merged_aliases = {
+                str(alias): str(wire)
+                for alias, wire in spec_tool_aliases.items()
+            }
+            merged_aliases.update(tool_aliases)
+            tool_aliases = merged_aliases
         merged_config = dict(spec.get("config") or {})
         merged_config.update(config)
         config = merged_config
@@ -773,7 +802,12 @@ async def agent_workflow(inp: dict) -> Any:
                 and granted is not None
                 and capability_tools is not None
             ):
-                granted = sorted(set(granted) & set(capability_tools))
+                capability_set = set(capability_tools)
+                granted = sorted(
+                    alias
+                    for alias in granted
+                    if tool_aliases.get(alias, alias) in capability_set
+                )
         else:
             granted = spec_granted
         merged_contracts = dict(spec.get("grantedContracts") or {})
@@ -796,6 +830,9 @@ async def agent_workflow(inp: dict) -> Any:
         )
     unconstrained = bool(inp.get("grantedToolsUnconstrained")) or granted is None
     granted_set = set(granted or [])
+    for alias in granted_set:
+        tool_aliases.setdefault(alias, alias)
+    tool_schemas = al.tool_input_schemas(tool_defs) if tool_defs is not None else None
     state = (
         al.AgentState.from_json(inp["state"]) if inp.get("state")
         else al.AgentState(last=inp.get("input"))
@@ -854,13 +891,16 @@ async def agent_workflow(inp: dict) -> Any:
         call_index: Optional[int] = None,
     ) -> Any:
         contract = al.contract_for_tool(tool, contracts)
+        wire_tool = tool_aliases.get(tool, tool)
         attempts = (
             al.retry_max_attempts_for_contract(
                 contract,
+                asserted=al.contract_asserted_for_tool(tool, contracts),
                 idempotent_max_attempts=policy.idempotent_max_attempts,
                 write_max_attempts=policy.write_max_attempts,
             )
-            if contract_allows_retry(contract)
+            if al.contract_asserted_for_tool(tool, contracts)
+            and contract_allows_retry(contract)
             else 1
         )
         step = callToolIdempotent if max(1, attempts) > 1 else callToolNoRetry
@@ -868,7 +908,7 @@ async def agent_workflow(inp: dict) -> Any:
         if call_index is not None:
             cid = f"{cid}-{call_index}"
         out = await step({
-            "tool_ref": toolref_json_from_key(tool), "value": value,
+            "tool_ref": toolref_json_from_key(wire_tool), "value": value,
             "cid": cid, "cache": None,
             "principal": principal,
             "run_id": session,
@@ -876,6 +916,7 @@ async def agent_workflow(inp: dict) -> Any:
             "segment_seq": segment_seq,
             "op": "call",
             "kind": "tool",
+            "input_schema_validated": tool_schemas is not None and tool in tool_schemas,
         })
         return decode_policy_error(out)
 
@@ -903,6 +944,7 @@ async def agent_workflow(inp: dict) -> Any:
         granted=None if unconstrained else granted_set,
         granted_subflows=None if granted_subflows is None else set(granted_subflows),
         contracts=contracts,
+        tool_schemas=tool_schemas,
         mode=cfg.mode,
         prod_gap=prod_gap,
         run_input=inp.get("input"),
@@ -942,6 +984,7 @@ async def agent_workflow(inp: dict) -> Any:
                 "grantedSubflows": granted_subflows,
                 "grantedContracts": contracts,
                 "toolDefs": tool_defs,
+                "toolAliases": tool_aliases,
                 "state": state.to_json(),
                 "policy": policy.to_json(),
                 "resolveSpec": False,
@@ -1124,6 +1167,7 @@ async def run_agent_dbos(
     granted_subflows: Optional[list[str]] = None,
     granted_contracts: Optional[dict[str, dict[str, Any]]] = None,
     tool_defs: Optional[list[dict[str, Any]]] = None,
+    tool_aliases: Optional[dict[str, str]] = None,
     policy: Optional[ExecutionPolicy] = None,
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
@@ -1150,6 +1194,7 @@ async def run_agent_dbos(
         "grantedSubflows": granted_subflows,
         "grantedContracts": granted_contracts,
         "toolDefs": tool_defs,
+        "toolAliases": tool_aliases,
         "state": None,
         "policy": (policy or ExecutionPolicy()).to_json(),
         "resolveSpec": resolve_spec,

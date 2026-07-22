@@ -8,7 +8,7 @@ from julep import (
     Ann, ContextScope,
     arr, call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
-    HAVE_TEMPORAL,
+    HAVE_TEMPORAL, CapabilityOverrides, ToolContract, Effect, Idempotency,
 )
 from julep.errors import CapabilityDenied
 from julep.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
@@ -69,6 +69,27 @@ def test_mcp_call_seam_receives_identity_cid_and_principal():
     }
 
 
+def test_direct_mcp_call_does_not_claim_agent_schema_validation():
+    seen = {}
+
+    async def mcp_call(
+        server, tool, value, cid, principal, run_secrets, input_schema_validated
+    ):
+        seen.update(
+            run_secrets=run_secrets,
+            input_schema_validated=input_schema_validated,
+        )
+        return value
+
+    flow = call(mcp("srv", "inc"))
+    fr, env = _env(flow, mcp_call=mcp_call)
+
+    out = run(interpret(fr.flow, {"query": "hello"}, env))
+
+    assert out.value == {"query": "hello"}
+    assert seen == {"run_secrets": None, "input_schema_validated": False}
+
+
 def test_retryable_call_retries_to_success_with_backoff_sleeps():
     attempts = 0
     sleeps = []
@@ -87,7 +108,19 @@ def test_retryable_call_retries_to_success_with_backoff_sleeps():
         mcp("srv", "inc"),
         ann=Ann(max_attempts=3, retry_interval_s=0.5, backoff_rate=2.0),
     )
-    fr, env = _env(flow, tools={"srv/inc": flaky}, sleeper=sleeper)
+    fr = freeze(
+        flow,
+        read_snapshot("inc"),
+        CapabilityOverrides(
+            {"srv/inc": ToolContract(Effect.READ, Idempotency.NATIVE)}
+        ),
+    )
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/inc": flaky},
+        sleeper=sleeper,
+    )
 
     out = run(interpret(fr.flow, "x", env))
 
@@ -100,6 +133,22 @@ def test_interpreter_retry_backoff_clamps_ann_to_legal_floor():
     node = call(mcp("srv", "inc"), ann=Ann(backoff_rate=0.5))
 
     assert _retry_backoff_for_call(node) == 1.0
+
+
+def test_unasserted_mcp_hint_never_retries() -> None:
+    attempts = 0
+
+    def fails(value):
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError(f"unasserted {value}")
+
+    flow = call(mcp("srv", "inc"), ann=Ann(max_attempts=5))
+    fr, env = _env(flow, tools={"srv/inc": fails})
+
+    with pytest.raises(RuntimeError, match="unasserted"):
+        run(interpret(fr.flow, "x", env))
+    assert attempts == 1
 
 
 def test_non_retryable_contract_ignores_ann_retry_policy():

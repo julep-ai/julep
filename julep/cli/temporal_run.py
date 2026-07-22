@@ -34,9 +34,16 @@ class FlowStartArgs:
     bundle: list[dict[str, Any]] | None
     pinned_pures: dict[str, str] | None
     queue_lanes: dict[str, str] | None = None
+    mcp_preflight: dict[str, Any] | None = None
 
 
-def build_flow_start_args(record: DeployRecord, env: EnvConfig, input: Any) -> FlowStartArgs:
+def build_flow_start_args(
+    record: DeployRecord,
+    env: EnvConfig,
+    input: Any,
+    *,
+    mcp_preflight_policy: str = "pin",
+) -> FlowStartArgs:
     """Single reader of a deploy record + env into workflow-start primitives.
 
     Used by BOTH the deployed-run seam (``run_on_env``) and ``julep schedule apply``,
@@ -54,6 +61,11 @@ def build_flow_start_args(record: DeployRecord, env: EnvConfig, input: Any) -> F
         bundle=record.bundle_ref,
         pinned_pures=record.pinned_pures or None,
         queue_lanes=(env.queues or None),
+        mcp_preflight={
+            "policy": mcp_preflight_policy,
+            "completed": False,
+            "surfaceDigest": None,
+        },
     )
 
 
@@ -73,6 +85,7 @@ def build_flow_input_kwargs(sa: FlowStartArgs, *, session_id: str) -> dict[str, 
         "pinned_pures": sa.pinned_pures,
         "bundle": sa.bundle,
         "queue_lanes": sa.queue_lanes,
+        "mcp_preflight": sa.mcp_preflight,
     }
 
 
@@ -85,10 +98,20 @@ def run_on_env(
     run_id: str | None = None,
     client: Any | None = None,
     run_flow: Callable[..., Any] | None = None,
+    secrets: dict[str, str] | None = None,
 ) -> Any:
     """Run an agent locally or through the deployed Temporal environment."""
 
+    from julep.secrets import validate_run_secrets
+
+    validated_secrets = validate_run_secrets(secrets)
+
     if env.name == "local":
+        if validated_secrets:
+            raise ValueError(
+                "caller-supplied run secrets require a deployed Temporal environment; "
+                "use JULEP_SECRET_* for local runs"
+            )
         return run_agent_local(
             cfg, name, value, run_id=run_id or _local_run_id(), env_vars=env.vars
         )
@@ -114,10 +137,16 @@ def run_on_env(
     run_flow_callable = run_flow or _load_run_flow()
     temporal_client = client if client is not None else connect_temporal_client(env)
 
-    sa = build_flow_start_args(record, env, value)
+    sa = build_flow_start_args(
+        record,
+        env,
+        value,
+        mcp_preflight_policy=cfg.mcp_preflight,
+    )
     result = run_flow_callable(
         temporal_client,
         task_queue=sa.task_queue,
+        secrets=(validated_secrets or None),
         **build_flow_input_kwargs(sa, session_id=session_id),
     )
     return _await_if_needed(result)

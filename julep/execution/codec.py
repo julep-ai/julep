@@ -146,10 +146,12 @@ class ClaimCheckCodec(PayloadCodec):
         *,
         tenant: str,
         threshold_bytes: int = 131072,
+        blob_encryption_codec: AesGcmPayloadCodec | None = None,
     ) -> None:
         self._blob_store = blob_store
         self._tenant = tenant
         self._threshold_bytes = threshold_bytes
+        self._blob_encryption_codec = blob_encryption_codec
 
     async def encode(self, payloads: Sequence[Payload]) -> list[Payload]:
         encoded: list[Payload] = []
@@ -159,7 +161,10 @@ class ClaimCheckCodec(PayloadCodec):
                 encoded.append(payload)
                 continue
 
-            raw = payload.SerializeToString()
+            stored_payload = payload
+            if self._blob_encryption_codec is not None:
+                [stored_payload] = await self._blob_encryption_codec.encode([payload])
+            raw = stored_payload.SerializeToString()
             ref = await self._blob_store.put(self._tenant, raw)
             encoded.append(
                 Payload(
@@ -177,7 +182,15 @@ class ClaimCheckCodec(PayloadCodec):
             if payload.metadata.get("encoding") == REMOTE_ENCODING:
                 env = json.loads(payload.data)
                 raw = await self._blob_store.get(self._tenant, env["_ref"])
-                decoded.append(Payload.FromString(raw))
+                stored_payload = Payload.FromString(raw)
+                if (
+                    self._blob_encryption_codec is not None
+                    and stored_payload.metadata.get("encoding") == AES_GCM_ENCODING
+                ):
+                    [stored_payload] = await self._blob_encryption_codec.decode(
+                        [stored_payload]
+                    )
+                decoded.append(stored_payload)
                 continue
 
             decoded.append(payload)

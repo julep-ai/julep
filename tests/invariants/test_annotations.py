@@ -8,9 +8,12 @@ import pytest
 pytest.importorskip("temporalio")
 
 from julep import Ann, CacheHint, call, freeze, mcp, think
+from julep.contracts import ToolContract
 from julep.execution import harness
 from julep.execution.interpreter import interpret
 from julep.execution.timeouts import activity_timeout
+from julep.freeze import CapabilityOverrides
+from julep.kinds import Effect, Idempotency
 from julep.projection import InMemoryProjection, ProjectionEmitter
 from conftest import read_snapshot, run
 
@@ -94,7 +97,18 @@ def test_interpreter_forwards_call_retry_ann_to_temporal_activity(monkeypatch) -
         mcp("srv", "search"),
         ann=Ann(max_attempts=4, retry_interval_s=0.25, backoff_rate=1.5),
     )
-    fr = freeze(flow, read_snapshot("search"))
+    fr = freeze(
+        flow,
+        read_snapshot("search"),
+        CapabilityOverrides(
+            contracts={
+                "srv/search": ToolContract(
+                    effect=Effect.READ,
+                    idempotency=Idempotency.NATIVE,
+                )
+            }
+        ),
+    )
     env = _temporal_env(fr.manifest, harness.ExecutionPolicy())
 
     out = run(interpret(fr.flow, {"q": "x"}, env))

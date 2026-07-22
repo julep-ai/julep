@@ -373,6 +373,8 @@ def _load_snapshot(path: str | Path) -> McpSnapshot:
         snapshot = snapshot_from_listings(
             payload.get("listings") or {},
             versions=payload.get("versions") or {},
+            protocol_versions=payload.get("protocolVersions") or {},
+            server_versions=payload.get("serverVersions") or {},
         )
         if payload.get("native"):
             return McpSnapshot(
@@ -404,6 +406,12 @@ def _server_specs(raw: dict[str, Any]) -> dict[str, McpServerSnapshot]:
         servers[server_name] = McpServerSnapshot(
             server=server_name,
             version=server_payload.get("version"),
+            protocol_version=server_payload.get(
+                "protocolVersion", server_payload.get("protocol_version")
+            ),
+            server_version=server_payload.get(
+                "serverVersion", server_payload.get("server_version")
+            ),
             tools=tools,
         )
     return servers

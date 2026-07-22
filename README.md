@@ -94,7 +94,7 @@ julep run triage --input '"TICKET-42"'    # execute locally, stream the trace tr
 julep lint +triage                        # validate an agent and everything it depends on
 julep test triage                         # run pytest for the selected agents
 julep trace <run-id>                      # render a cached run's trace tree + Langfuse link
-julep doctor                              # preflight: discovery, git, Langfuse, Temporal
+julep doctor                              # preflight: discovery, secret refs, git, Langfuse, Temporal
 julep deploy triage --env staging         # freeze → publish → record in the deploy ledger
 julep serve api --migrate                 # run the self-hosted FastAPI control plane
 ```

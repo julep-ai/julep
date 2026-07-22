@@ -23,6 +23,7 @@ from julep.app import Application, ApplicationDefinitionError, PipelineSpec
 from julep.dotctx import Reasoner
 from julep.dsl import think
 from julep.execution.effects import WorkerContext
+from julep.secrets import REDACTED as VALUE_REDACTED, register_secret_value
 from julep.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
@@ -106,7 +107,12 @@ def test_install_default_redactor_respects_factory_override() -> None:
 
     factory_context = WorkerContext(redactor=factory_redactor)
     _install_default_redactor(factory_context, settings)
-    assert factory_context.redactor is factory_redactor
+    assert factory_context.redactor is not None
+    assert factory_context.redactor("visible") == {"factory": "visible"}
+    register_secret_value("operator-secret-for-redactor-test")
+    assert factory_context.redactor("operator-secret-for-redactor-test") == {
+        "factory": VALUE_REDACTED
+    }
 
 
 def test_read_redaction_pyproject(tmp_path: Path) -> None:
@@ -213,6 +219,26 @@ def test_api_key_implies_tls_unless_overridden():
     assert s.tls is False and s.api_key == "k"
     s = WorkerServeSettings.from_env({"WORKER_CONTEXT_FACTORY": "m:f", "TEMPORAL_TLS": "ON"})
     assert s.tls is True
+
+
+def test_worker_settings_resolve_startup_secret_references() -> None:
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "TEMPORAL_API_KEY": "secret://temporal-key",
+            "JULEP_SECRET_TEMPORAL_KEY": "temporal-secret",
+            "TEMPORAL_PAYLOAD_KEYS": "secret://payload-ring",
+            "JULEP_SECRET_PAYLOAD_RING": "primary=" + "11" * 32,
+            "TEMPORAL_PAYLOAD_KEY_ID": "primary",
+            "MEMORY_TOOLS_TOKEN": "secret://tools-token",
+            "JULEP_SECRET_TOOLS_TOKEN": "runtime-token",
+        }
+    )
+    assert settings.api_key == "temporal-secret"
+    assert settings.payload_keys == "primary=" + "11" * 32
+    assert settings.materialized_secret_environment["MEMORY_TOOLS_TOKEN"] == (
+        "runtime-token"
+    )
 
 
 def test_bad_env_values_fail_loudly():

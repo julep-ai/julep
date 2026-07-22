@@ -25,6 +25,7 @@ from julep.execution.projection_store import (
 )
 from julep.ir import canonical_json
 from julep.projection import value_ref
+from julep.secrets import VaultCipher
 from julep.trajectory import REDACTED_PLACEHOLDER, redact_secret_shaped
 
 
@@ -121,6 +122,28 @@ def test_insert_events_is_idempotent(execution_store: Any) -> None:
     rows = execution_store.read_events("run-1", after_seq=0, limit=100)
     assert len(rows) == 1
     assert _field(rows[0], "event_id", "eventId") == "event-idempotent"
+
+
+def test_vault_record_contract_round_trips_on_execution_store(execution_store: Any) -> None:
+    cipher = VaultCipher(
+        {"test": bytes.fromhex("44" * 32)}, active_key_id="test"
+    )
+    metadata = execution_store.put_secret(
+        "projection-test-token", "store-secret", "admin", cipher
+    )
+    assert metadata["generation"] == 1
+    assert "ciphertext" not in metadata
+    row = execution_store.get_secret("projection-test-token")
+    assert row is not None
+    assert cipher.decrypt(
+        row["name"], row["generation"], bytes(row["ciphertext"]), row["key_id"]
+    ) == "store-secret"
+    assert execution_store.list_secrets() == [metadata]
+
+    archived = execution_store.archive_secret("projection-test-token", "admin")
+    assert archived is not None and archived["archived_at"] is not None
+    assert execution_store.get_secret("projection-test-token")["ciphertext"] is None
+    assert execution_store.delete_secret("projection-test-token") is True
 
 
 def test_activity_redacts_before_hashing_and_drops_on_redactor_failure(

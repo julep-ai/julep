@@ -18,6 +18,7 @@ import os
 import threading
 import time
 from collections.abc import Mapping, Sequence
+from datetime import datetime, timezone
 from typing import Any, Callable, Literal, Optional, Protocol, TypeVar
 
 try:
@@ -29,7 +30,6 @@ from ..ir import canonical_json
 from ..trajectory import (
     _REDACTION_DROP,
     redact_for_capture,
-    redact_secret_shaped,
 )
 from . import effects
 from .projection_sql import apply_projection_schema
@@ -53,6 +53,22 @@ _RUN_STATUS_PREDECESSORS: dict[str, frozenset[str]] = {
 
 _MISSING = object()
 _ActivityCallable = TypeVar("_ActivityCallable", bound=Callable[..., Any])
+
+
+class SecretCipher(Protocol):
+    """Small vault cipher seam kept independent of the server package."""
+
+    active_key_id: str
+
+    def encrypt(self, name: str, generation: int, value: str) -> tuple[bytes, str]: ...
+
+    def decrypt(
+        self,
+        name: str,
+        generation: int,
+        ciphertext: bytes,
+        key_id: str,
+    ) -> str: ...
 
 
 def _activity_defn(*, name: str) -> Callable[[_ActivityCallable], _ActivityCallable]:
@@ -175,6 +191,30 @@ class ExecutionStore(Protocol):
     def get_deployment(self, lane: str) -> Optional[dict[str, Any]]: ...
 
     def list_deployments(self) -> list[dict[str, Any]]: ...
+
+    def put_secret(
+        self,
+        name: str,
+        value: str,
+        updated_by: str,
+        cipher: SecretCipher,
+    ) -> dict[str, Any]: ...
+
+    def get_secret(self, name: str) -> Optional[dict[str, Any]]: ...
+
+    def list_secrets(self) -> list[dict[str, Any]]: ...
+
+    def archive_secret(self, name: str, updated_by: str) -> Optional[dict[str, Any]]: ...
+
+    def delete_secret(self, name: str) -> bool: ...
+
+    def secret_key_counts(self) -> dict[str, int]: ...
+
+    def reencrypt_secrets(
+        self,
+        cipher: SecretCipher,
+        progress: Optional[Callable[[int, int, str], None]] = None,
+    ) -> dict[str, Any]: ...
 
     def sweep(self, older_than_s: float) -> int: ...
 
@@ -309,6 +349,20 @@ def _principal_contains(
     )
 
 
+def _secret_metadata(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the write-only vault record shape without ciphertext."""
+
+    return {
+        "name": str(row["name"]),
+        "key_id": str(row["key_id"]),
+        "generation": int(row["generation"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "updated_by": str(row["updated_by"]),
+        "archived_at": row.get("archived_at"),
+    }
+
+
 class InMemoryExecutionStore:
     """Thread-safe, insertion-ordered execution store for tests and local use."""
 
@@ -318,6 +372,7 @@ class InMemoryExecutionStore:
         self._values: dict[str, dict[str, Any]] = {}
         self._releases: dict[str, dict[str, Any]] = {}
         self._deployments: dict[str, dict[str, Any]] = {}
+        self._secrets: dict[str, dict[str, Any]] = {}
         self._next_event_seq = 1
         self._lock = threading.RLock()
 
@@ -691,6 +746,116 @@ class InMemoryExecutionStore:
             return [
                 dict(self._deployments[lane]) for lane in sorted(self._deployments)
             ]
+
+    def put_secret(
+        self,
+        name: str,
+        value: str,
+        updated_by: str,
+        cipher: SecretCipher,
+    ) -> dict[str, Any]:
+        with self._lock:
+            previous = self._secrets.get(name)
+            generation = 1 if previous is None else int(previous["generation"]) + 1
+            ciphertext, key_id = cipher.encrypt(name, generation, value)
+            now = datetime.now(timezone.utc)
+            row = {
+                "name": name,
+                "ciphertext": bytes(ciphertext),
+                "key_id": key_id,
+                "generation": generation,
+                "created_at": now if previous is None else previous["created_at"],
+                "updated_at": now,
+                "updated_by": updated_by,
+                "archived_at": None,
+            }
+            self._secrets[name] = row
+            return _secret_metadata(row)
+
+    def get_secret(self, name: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._secrets.get(name)
+            return None if row is None else copy.deepcopy(row)
+
+    def list_secrets(self) -> list[dict[str, Any]]:
+        with self._lock:
+            return [
+                _secret_metadata(self._secrets[name])
+                for name in sorted(self._secrets)
+            ]
+
+    def archive_secret(self, name: str, updated_by: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._secrets.get(name)
+            if row is None:
+                return None
+            now = datetime.now(timezone.utc)
+            row.update(
+                ciphertext=None,
+                archived_at=now,
+                updated_at=now,
+                updated_by=updated_by,
+            )
+            return _secret_metadata(row)
+
+    def delete_secret(self, name: str) -> bool:
+        with self._lock:
+            return self._secrets.pop(name, None) is not None
+
+    def secret_key_counts(self) -> dict[str, int]:
+        with self._lock:
+            counts: dict[str, int] = {}
+            for row in self._secrets.values():
+                key_id = str(row["key_id"])
+                counts[key_id] = counts.get(key_id, 0) + 1
+            return dict(sorted(counts.items()))
+
+    def reencrypt_secrets(
+        self,
+        cipher: SecretCipher,
+        progress: Optional[Callable[[int, int, str], None]] = None,
+    ) -> dict[str, Any]:
+        with self._lock:
+            active_runs = sorted(
+                run_id
+                for run_id, row in self._runs.items()
+                if row.get("status") not in _RETENTION_RUN_STATUSES
+            )
+            if active_runs:
+                raise RuntimeError(
+                    "cannot re-encrypt secrets while non-terminal runs exist: "
+                    + ", ".join(active_runs[:5])
+                )
+            rows = [self._secrets[name] for name in sorted(self._secrets)]
+            total = len(rows)
+            reencrypted = 0
+            for index, row in enumerate(rows, start=1):
+                if row["ciphertext"] is None:
+                    # Archived records retain audit metadata but no key-dependent
+                    # bytes. Move their marker so the old key can reach zero refs.
+                    row["key_id"] = cipher.active_key_id
+                else:
+                    value = cipher.decrypt(
+                        str(row["name"]),
+                        int(row["generation"]),
+                        bytes(row["ciphertext"]),
+                        str(row["key_id"]),
+                    )
+                    ciphertext, key_id = cipher.encrypt(
+                        str(row["name"]), int(row["generation"]), value
+                    )
+                    row["ciphertext"] = bytes(ciphertext)
+                    row["key_id"] = key_id
+                    reencrypted += 1
+                if progress is not None:
+                    progress(index, total, str(row["name"]))
+            return {
+                "total": total,
+                "reencrypted": reencrypted,
+                "metadata_updated": total - reencrypted,
+                "active_key_id": cipher.active_key_id,
+                "remaining_key_ids": self.secret_key_counts(),
+            }
 
     def sweep(self, older_than_s: float) -> int:
         if older_than_s < 0:
@@ -1307,6 +1472,205 @@ class PostgresExecutionStore:
                 rows = cur.fetchall()
         return [dict(row) for row in rows]
 
+    def put_secret(
+        self,
+        name: str,
+        value: str,
+        updated_by: str,
+        cipher: SecretCipher,
+    ) -> dict[str, Any]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    # Serialize writers for one logical name even before its first row
+                    # exists. Generation is authenticated AAD, so selecting it and
+                    # encrypting must be one atomic operation.
+                    cur.execute(
+                        "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                        (name,),
+                    )
+                    cur.execute(
+                        "SELECT generation FROM secrets WHERE name = %s FOR UPDATE",
+                        (name,),
+                    )
+                    previous = cur.fetchone()
+                    generation = (
+                        1 if previous is None else int(previous["generation"]) + 1
+                    )
+                    ciphertext, key_id = cipher.encrypt(name, generation, value)
+                    cur.execute(
+                        """
+                        INSERT INTO secrets (
+                            name, ciphertext, key_id, generation, created_at,
+                            updated_at, updated_by, archived_at
+                        ) VALUES (
+                            %s, %s, %s, %s, clock_timestamp(),
+                            clock_timestamp(), %s, NULL
+                        )
+                        ON CONFLICT (name) DO UPDATE SET
+                            ciphertext = EXCLUDED.ciphertext,
+                            key_id = EXCLUDED.key_id,
+                            generation = EXCLUDED.generation,
+                            updated_at = EXCLUDED.updated_at,
+                            updated_by = EXCLUDED.updated_by,
+                            archived_at = NULL
+                        RETURNING *
+                        """,
+                        (name, ciphertext, key_id, generation, updated_by),
+                    )
+                    row = cur.fetchone()
+        assert row is not None
+        return _secret_metadata(dict(row))
+
+    def get_secret(self, name: str) -> Optional[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM secrets WHERE name = %s", (name,))
+                row = cur.fetchone()
+        return None if row is None else dict(row)
+
+    def list_secrets(self) -> list[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM secrets ORDER BY name")
+                rows = cur.fetchall()
+        return [_secret_metadata(dict(row)) for row in rows]
+
+    def archive_secret(self, name: str, updated_by: str) -> Optional[dict[str, Any]]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE secrets SET
+                        ciphertext = NULL,
+                        archived_at = clock_timestamp(),
+                        updated_at = clock_timestamp(),
+                        updated_by = %s
+                    WHERE name = %s
+                    RETURNING *
+                    """,
+                    (updated_by, name),
+                )
+                row = cur.fetchone()
+        return None if row is None else _secret_metadata(dict(row))
+
+    def delete_secret(self, name: str) -> bool:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM secrets WHERE name = %s", (name,))
+                return bool(cur.rowcount)
+
+    def secret_key_counts(self) -> dict[str, int]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT key_id, count(*) AS count
+                    FROM secrets
+                    GROUP BY key_id
+                    ORDER BY key_id
+                    """
+                )
+                rows = cur.fetchall()
+        return {str(row["key_id"]): int(row["count"]) for row in rows}
+
+    def reencrypt_secrets(
+        self,
+        cipher: SecretCipher,
+        progress: Optional[Callable[[int, int, str], None]] = None,
+    ) -> dict[str, Any]:
+        pool = self._pool_instance()
+        with pool.connection() as conn:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    # This is intentionally a maintenance-window operation. The
+                    # lock blocks both run submissions and vault writes for the
+                    # complete sweep; operators stop submitters before invoking it.
+                    cur.execute(
+                        "LOCK TABLE runs, secrets IN ACCESS EXCLUSIVE MODE"
+                    )
+                    cur.execute(
+                        """
+                        SELECT run_id FROM runs
+                        WHERE NOT (status = ANY(%s))
+                        ORDER BY run_id
+                        LIMIT 5
+                        """,
+                        (sorted(_RETENTION_RUN_STATUSES),),
+                    )
+                    active_runs = [str(row["run_id"]) for row in cur.fetchall()]
+                    if active_runs:
+                        raise RuntimeError(
+                            "cannot re-encrypt secrets while non-terminal runs exist: "
+                            + ", ".join(active_runs)
+                        )
+                    cur.execute(
+                        """
+                        SELECT name, ciphertext, key_id, generation
+                        FROM secrets
+                        ORDER BY name
+                        """
+                    )
+                    rows = cur.fetchall()
+                    total = len(rows)
+                    reencrypted = 0
+                    for index, row in enumerate(rows, start=1):
+                        name = str(row["name"])
+                        generation = int(row["generation"])
+                        if row["ciphertext"] is None:
+                            cur.execute(
+                                """
+                                UPDATE secrets SET key_id = %s
+                                WHERE name = %s AND generation = %s
+                                """,
+                                (cipher.active_key_id, name, generation),
+                            )
+                        else:
+                            value = cipher.decrypt(
+                                name,
+                                generation,
+                                bytes(row["ciphertext"]),
+                                str(row["key_id"]),
+                            )
+                            ciphertext, key_id = cipher.encrypt(
+                                name, generation, value
+                            )
+                            cur.execute(
+                                """
+                                UPDATE secrets SET ciphertext = %s, key_id = %s
+                                WHERE name = %s AND generation = %s
+                                """,
+                                (ciphertext, key_id, name, generation),
+                            )
+                            reencrypted += 1
+                        if progress is not None:
+                            progress(index, total, name)
+                    cur.execute(
+                        """
+                        SELECT key_id, count(*) AS count
+                        FROM secrets
+                        GROUP BY key_id
+                        ORDER BY key_id
+                        """
+                    )
+                    remaining = {
+                        str(row["key_id"]): int(row["count"])
+                        for row in cur.fetchall()
+                    }
+        return {
+            "total": total,
+            "reencrypted": reencrypted,
+            "metadata_updated": total - reencrypted,
+            "active_key_id": cipher.active_key_id,
+            "remaining_key_ids": remaining,
+        }
+
     def sweep(self, older_than_s: float) -> int:
         if older_than_s < 0:
             raise ValueError("older_than_s must be non-negative")
@@ -1451,8 +1815,11 @@ class _CapturedValue:
         self.oversize = oversize
 
 
-def _capture_value(raw_value: Any) -> Optional[_CapturedValue]:
-    redactor = effects._CTX.redactor or redact_secret_shaped
+def _capture_value(
+    raw_value: Any,
+    secrets: Optional[Mapping[str, str]] = None,
+) -> Optional[_CapturedValue]:
+    redactor = effects._scoped_redactor(secrets)
     redacted = redact_for_capture(redactor, raw_value)
     if redacted is _REDACTION_DROP:
         return None
@@ -1466,6 +1833,21 @@ def _capture_value(raw_value: Any) -> Optional[_CapturedValue]:
         byte_len=len(canonical_bytes),
         oversize=oversize,
     )
+
+
+def _redact_projection_metadata(
+    event: Mapping[str, Any],
+    secrets: Optional[Mapping[str, str]],
+) -> dict[str, Any]:
+    """Scrub non-value diagnostic fields before projection persistence."""
+    out = dict(event)
+    redactor = effects._scoped_redactor(secrets)
+    for key in ("error", "attrs"):
+        if key not in out:
+            continue
+        redacted = redact_for_capture(redactor, out[key])
+        out[key] = None if redacted is _REDACTION_DROP else redacted
+    return out
 
 
 @_activity_defn(name="persistProjectionBatch")
@@ -1483,7 +1865,12 @@ async def persist_projection_batch(inp: dict[str, Any]) -> None:
     for candidate in inp.get("events", []):
         if not isinstance(candidate, Mapping):
             raise TypeError("projection event must be a mapping")
-        captured = _capture_value(candidate["rawValue"]) if "rawValue" in candidate else None
+        candidate = _redact_projection_metadata(candidate, inp.get("secrets"))
+        captured = (
+            _capture_value(candidate["rawValue"], inp.get("secrets"))
+            if "rawValue" in candidate
+            else None
+        )
         # Never retain an in-workflow hash.  A missing/dropped raw value always
         # rewrites the persisted reference to NULL.
         persisted_ref = None if captured is None else captured.value_ref
@@ -1517,6 +1904,10 @@ async def finalize_projection_run(inp: dict[str, Any]) -> None:
     terminal_candidate = inp.get("terminalEvent")
     if terminal_candidate is not None and not isinstance(terminal_candidate, Mapping):
         raise TypeError("terminal projection event must be a mapping")
+    if terminal_candidate is not None:
+        terminal_candidate = _redact_projection_metadata(
+            terminal_candidate, inp.get("secrets")
+        )
 
     raw_present = "rawValue" in inp or (
         terminal_candidate is not None and "rawValue" in terminal_candidate
@@ -1528,7 +1919,7 @@ async def finalize_projection_run(inp: dict[str, Any]) -> None:
         if terminal_candidate is not None and "rawValue" in terminal_candidate
         else None
     )
-    captured = _capture_value(raw_value) if raw_present else None
+    captured = _capture_value(raw_value, inp.get("secrets")) if raw_present else None
     persisted_ref = None if captured is None else captured.value_ref
 
     run_id = str(inp["runId"])
@@ -1551,6 +1942,13 @@ async def finalize_projection_run(inp: dict[str, Any]) -> None:
     finished_at_value = inp.get("finishedAt")
     if finished_at_value is None:
         finished_at_value = time.time()
+    raw_error = inp.get("error")
+    if raw_error is not None:
+        raw_error = redact_for_capture(
+            effects._scoped_redactor(inp.get("secrets")), str(raw_error)
+        )
+        if raw_error is _REDACTION_DROP:
+            raw_error = None
     store.finalize_run(
         run_id=run_id,
         workflow_id=workflow_id,
@@ -1560,6 +1958,6 @@ async def finalize_projection_run(inp: dict[str, Any]) -> None:
         result_payload=None if captured is None else captured.payload,
         result_byte_len=0 if captured is None else captured.byte_len,
         result_oversize=False if captured is None else captured.oversize,
-        error=None if inp.get("error") is None else str(inp["error"]),
+        error=None if raw_error is None else str(raw_error),
         finished_at=float(finished_at_value),
     )

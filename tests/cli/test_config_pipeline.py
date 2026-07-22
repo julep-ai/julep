@@ -58,3 +58,27 @@ def test_julep_toml_overlays_pipeline_per_name(tmp_path: Path) -> None:
     assert pipeline.ctx == "base.ctx"
     assert pipeline.lane == "override"
 
+
+def test_pipeline_tool_bindings_agent_cap_and_mcp_preflight_parse(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        """\
+[tool.julep]
+agent_round_cap = 19
+
+[tool.julep.mcp]
+preflight = "names"
+
+[tool.julep.pipeline.issue_dedup]
+ctx = "issue_dedup.ctx"
+
+[tool.julep.pipeline.issue_dedup.tools]
+search_similar_posts = "tracker:search-similar-posts"
+""",
+        encoding="utf-8",
+    )
+    cfg = load_config(tmp_path)
+    assert cfg.agent_round_cap == 19
+    assert cfg.mcp_preflight == "names"
+    assert cfg.pipelines["issue_dedup"].tools == {
+        "search_similar_posts": "tracker:search-similar-posts"
+    }

@@ -6,7 +6,8 @@ import asyncio
 import time
 import uuid
 from collections.abc import Mapping
-from typing import Annotated, Any, Optional, cast
+from dataclasses import replace
+from typing import Annotated, Any, Literal, Optional, cast
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -20,8 +21,9 @@ from ...execution.projection_store import (
 )
 from ...ir import canonical_json
 from ...projection import value_ref
+from ...secrets import scrubber_for_values, validate_run_secrets
 from ...trajectory import redact_secret_shaped
-from ..auth import ApiKey, merge_principal, owner_scoped, require_key
+from ..auth import ApiKey, merge_principal, owner_scoped, require_client
 from ..sse import EVENT_PAGE_LIMIT, event_sequence, run_event_response
 from ..temporal import TemporalGateway, TemporalStartAmbiguous
 from . import execution_store, require_owned_run, temporal_gateway
@@ -41,6 +43,10 @@ class RunRequest(BaseModel):
     principal: Optional[dict[str, Any]] = None
     queue_lanes: Optional[dict[str, str]] = Field(default=None, alias="queueLanes")
     run_id: Optional[str] = Field(default=None, alias="runId")
+    secrets: Optional[dict[str, str]] = None
+    mcp_preflight: Optional[Literal["pin", "names", "off"]] = Field(
+        default=None, alias="mcpPreflight"
+    )
 
 
 class HumanSignalRequest(BaseModel):
@@ -106,10 +112,19 @@ def _deterministic_run_id(idempotency_key: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"julep:run:{idempotency_key}"))
 
 
-def _input_claim(payload: Any) -> tuple[str, Any, int, bool]:
+def _input_claim(
+    payload: Any,
+    *,
+    secrets: Optional[Mapping[str, str]] = None,
+) -> tuple[str, Any, int, bool]:
     # The workflow receives the caller's exact input, while the durable claim
     # applies the same default secret-shaped redaction floor as projection data.
-    stored_payload = redact_secret_shaped(payload)
+    redact = (
+        redact_secret_shaped
+        if not secrets
+        else scrubber_for_values(secrets.values(), base=redact_secret_shaped)
+    )
+    stored_payload = redact(payload)
     ref = value_ref(stored_payload)
     encoded = canonical_json(stored_payload).encode("utf-8")
     byte_len = len(encoded)
@@ -124,11 +139,25 @@ def _run_json_response(row: Mapping[str, Any], status_code: int) -> JSONResponse
 async def start_run(
     body: RunRequest,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
     idempotency_key: Annotated[Optional[str], Header(alias="Idempotency-Key")] = None,
 ) -> JSONResponse:
     if not body.pipeline.strip():
         raise HTTPException(status_code=400, detail="pipeline must be non-empty")
+    if body.secrets:
+        settings = request.app.state.settings
+        if not settings.payload_encryption_required:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="run secrets require Temporal payload encryption",
+            )
+        try:
+            validate_run_secrets(body.secrets)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(exc),
+            ) from exc
     idempotency_key = (idempotency_key.strip() or None) if idempotency_key else None
     requested_run_id = (body.run_id.strip() or None) if body.run_id else None
     if idempotency_key is None and requested_run_id is None:
@@ -162,8 +191,29 @@ async def start_run(
         body.release,
         body.pipeline,
     )
+    if body.secrets and pipeline.mcp_preflight_policy is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "this release predates run-secret binding enforcement; "
+                "publish a new release before supplying secrets"
+            ),
+        )
+    if body.mcp_preflight is not None:
+        if key.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="admin API key required to override MCP preflight policy",
+            )
+        pipeline = replace(
+            pipeline,
+            mcp_preflight_policy=body.mcp_preflight,
+        )
 
-    input_ref, stored_input, input_byte_len, input_oversize = _input_claim(body.input)
+    input_ref, stored_input, input_byte_len, input_oversize = _input_claim(
+        body.input,
+        secrets=body.secrets,
+    )
     created = store.create_run(
         run_id=run_id,
         idempotency_key=idempotency_key,
@@ -209,6 +259,7 @@ async def start_run(
             input=body.input,
             principal=principal,
             queue_lanes=body.queue_lanes,
+            secrets=dict(body.secrets) if body.secrets else None,
         )
     except TemporalStartAmbiguous as exc:
         raise HTTPException(
@@ -243,7 +294,7 @@ async def start_run(
 @router.get("")
 async def list_runs(
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
     cursor: Optional[str] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> dict[str, Any]:
@@ -263,7 +314,7 @@ async def list_runs(
 async def get_run(
     run_id: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, object]:
     return require_owned_run(request, key, run_id)
 
@@ -296,7 +347,7 @@ async def _control_run(
 async def cancel_run(
     run_id: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, str]:
     return await _control_run(request, key, run_id, "cancel")
 
@@ -305,7 +356,7 @@ async def cancel_run(
 async def terminate_run(
     run_id: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, str]:
     return await _control_run(request, key, run_id, "terminate")
 
@@ -344,7 +395,7 @@ def _run_references_value(
 async def run_events(
     run_id: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
     after_seq: Annotated[int, Query(ge=0, alias="after")] = 0,
     limit: Annotated[int, Query(ge=1, le=EVENT_PAGE_LIMIT)] = EVENT_PAGE_LIMIT,
 ) -> Response:
@@ -376,7 +427,7 @@ async def run_events(
 async def run_result(
     run_id: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
     wait_s: Annotated[float, Query(ge=0.0, le=60.0)] = 0.0,
 ) -> Response:
     store = execution_store(request)
@@ -402,7 +453,7 @@ async def get_run_value(
     run_id: str,
     value_ref: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, Any]:
     run = require_owned_run(request, key, run_id)
     store = execution_store(request)
@@ -418,7 +469,7 @@ async def get_run_value(
 async def get_open_gates(
     run_id: str,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, Any]:
     run = require_owned_run(request, key, run_id)
     workflow_id = run.get("workflow_id")
@@ -433,7 +484,7 @@ async def signal_human_gate(
     run_id: str,
     body: HumanSignalRequest,
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> dict[str, str]:
     run = require_owned_run(request, key, run_id)
     workflow_id = run.get("workflow_id")

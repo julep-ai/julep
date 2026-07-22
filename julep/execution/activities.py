@@ -7,7 +7,8 @@ the pair that imports temporalio, so it stays behind the HAVE_TEMPORAL guard.
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
 
 from temporalio import activity
 
@@ -24,14 +25,35 @@ from .effects import (
     McpCaller as McpCaller,
     PutBlobInput as PutBlobInput,
     ResolveQoSInput as ResolveQoSInput,
+    ResolveAgentSpecInput as ResolveAgentSpecInput,
     RunPrincipal as RunPrincipal,
     RunSubInput as RunSubInput,
     VerifyPuresInput as VerifyPuresInput,
+    ValidateAgentOutputInput as ValidateAgentOutputInput,
+    ValidateJsonSchemaInput as ValidateJsonSchemaInput,
     WorkerContext as WorkerContext,
     configure as configure,
     set_trajectory_sink as set_trajectory_sink,
 )
 from . import effects
+from .failure_scrub import activity_application_error_from_failure
+
+
+_T = TypeVar("_T")
+
+
+async def _run_secret_safe(
+    inp: Any,
+    effect: Callable[[Any], Awaitable[_T]],
+) -> _T:
+    """Keep an activity failure's original run-secret echo out of history."""
+
+    try:
+        return await effect(inp)
+    except Exception as exc:
+        secrets = getattr(inp, "secrets", None)
+        # ``from None`` is essential: Temporal serializes exception causes.
+        raise activity_application_error_from_failure(exc, secrets) from None
 
 
 def __getattr__(name: str) -> Any:
@@ -62,22 +84,24 @@ async def commitValue(inp: CommitValueInput) -> int:
 
 @activity.defn(name="putBlob")
 async def putBlob(inp: PutBlobInput) -> str:
-    return await effects.putBlob(inp)
+    return await _run_secret_safe(inp, effects.putBlob)
 
 
 @activity.defn(name="callTool")
 async def callTool(inp: CallToolInput) -> Any:
-    return await effects.callTool(inp)
+    return await _run_secret_safe(inp, effects.callTool)
 
 
 @activity.defn(name="invokeReasoner")
 async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
-    return await effects.invokeReasoner(inp)
+    return await _run_secret_safe(inp, effects.invokeReasoner)
 
 
 @activity.defn(name="compilePlan")
 async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
-    return await effects.compilePlan(inp)
+    # Planner/provider failures can reflect operator credentials even though
+    # CompilePlanInput intentionally carries no run-secret map.
+    return await _run_secret_safe(inp, effects.compilePlan)
 
 
 @activity.defn(name="verifyPures")
@@ -101,5 +125,15 @@ async def resolveRuntimeCapabilities() -> dict[str, Any]:
 
 
 @activity.defn(name="resolveAgentSpec")
-async def resolveAgentSpec(controller: str) -> dict[str, Any]:
-    return await effects.resolveAgentSpec(controller)
+async def resolveAgentSpec(inp: ResolveAgentSpecInput | str) -> dict[str, Any]:
+    return await effects.resolveAgentSpec(inp)
+
+
+@activity.defn(name="validateAgentOutput")
+async def validateAgentOutput(inp: ValidateAgentOutputInput) -> str | None:
+    return await effects.validateAgentOutput(inp)
+
+
+@activity.defn(name="validateJsonSchema")
+async def validateJsonSchema(inp: ValidateJsonSchemaInput) -> str | None:
+    return await effects.validateJsonSchema(inp)

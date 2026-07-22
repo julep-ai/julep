@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional, Protocol
@@ -165,9 +165,15 @@ def interpret_reasoner_reply(
         return RoundAction(Decision.ESCALATE, reply.get("escalate") or "escalated by controller")
 
     if "tool" in reply:
+        payload = {
+            "tool": reply["tool"],
+            "input": reply.get("input", reply.get("args")),
+        }
+        if reply.get("id") is not None:
+            payload["id"] = reply["id"]
         return RoundAction(
             Decision.CALL,
-            {"tool": reply["tool"], "input": reply.get("input", reply.get("args"))},
+            payload,
         )
 
     if "sub" in reply:
@@ -228,6 +234,8 @@ class AgentConfig:
     native_tools: bool = False
     require_tool_call: bool = False
     round_note: Optional[str] = None
+    output_schema: Optional[dict[str, Any]] = None
+    output_retries: int = 0
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentConfig":
@@ -249,6 +257,8 @@ class AgentConfig:
                 d.get("requireToolCall", d.get("require_tool_call", False))
             ),
             round_note=d.get("roundNote", d.get("round_note")),
+            output_schema=d.get("replySchema", d.get("reply_schema")),
+            output_retries=int(d.get("outputRetries", d.get("output_retries", 0))),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -278,6 +288,10 @@ class AgentConfig:
             out["requireToolCall"] = True
         if self.round_note is not None:
             out["roundNote"] = self.round_note
+        if self.output_schema is not None:
+            out["replySchema"] = self.output_schema
+        if self.output_retries:
+            out["outputRetries"] = self.output_retries
         return out
 
     @staticmethod
@@ -286,6 +300,32 @@ class AgentConfig:
         for k, v in overrides.items():
             setattr(cfg, k, v)
         return cfg
+
+
+def tool_input_schemas(
+    tool_defs: Optional[Sequence[Mapping[str, Any]]],
+) -> dict[str, dict[str, Any]]:
+    """Extract the frozen provider-name -> input-schema map.
+
+    Tool definitions cross release/workflow boundaries as JSON, so validate the
+    small provider shape once before model rounds begin instead of silently
+    dispatching an unvalidated call when metadata is malformed.
+    """
+    schemas: dict[str, dict[str, Any]] = {}
+    for index, definition in enumerate(tool_defs or ()):
+        function = definition.get("function")
+        if not isinstance(function, Mapping):
+            raise ValueError(f"toolDefs[{index}].function must be an object")
+        name = function.get("name")
+        parameters = function.get("parameters")
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"toolDefs[{index}].function.name must be a non-empty string")
+        if not isinstance(parameters, dict):
+            raise ValueError(f"toolDefs[{index}].function.parameters must be an object")
+        if name in schemas:
+            raise ValueError(f"toolDefs defines {name!r} more than once")
+        schemas[name] = parameters
+    return schemas
 
 
 @dataclass
@@ -300,6 +340,9 @@ class TraceEntry:
     output_ref: Optional[str] = None
     schema_ref: Optional[str] = None
     call_id: Optional[str] = None
+    # Canonical call arguments live in durable loop state independently of
+    # provider prompt truncation. ``input_ref`` remains the optional blob ref.
+    arguments: Any = None
     error: Optional[str] = None
 
     def to_json(self) -> dict[str, Any]:
@@ -316,6 +359,8 @@ class TraceEntry:
             out["schemaRef"] = self.schema_ref
         if self.call_id is not None:
             out["callId"] = self.call_id
+        if self.arguments is not None:
+            out["arguments"] = self.arguments
         if self.error is not None:
             out["error"] = self.error
         return out
@@ -329,6 +374,7 @@ class TraceEntry:
             output_ref=d.get("outputRef", d.get("output_ref")),
             schema_ref=d.get("schemaRef", d.get("schema_ref")),
             call_id=d.get("callId", d.get("call_id")),
+            arguments=d.get("arguments"),
             error=d.get("error"),
         )
 
@@ -514,6 +560,18 @@ def contract_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> ToolC
     )
 
 
+def contract_asserted_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> bool:
+    """Whether the carried contract has trusted retry authority.
+
+    Missing fields are legacy/unasserted and therefore fail closed.  An MCP
+    hint can describe a read or idempotent operation, but it cannot grant the
+    framework permission to repeat a call.
+    """
+
+    raw = (contracts or {}).get(tool) or {}
+    return raw.get("asserted") is True
+
+
 def approval_required_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> bool:
     """True when a carried contract/grant requires human approval."""
     raw = (contracts or {}).get(tool) or {}
@@ -573,6 +631,7 @@ def authorize_subflow(
 def retry_max_attempts_for_contract(
     contract: ToolContract,
     *,
+    asserted: bool = False,
     idempotent_max_attempts: int,
     write_max_attempts: int,
 ) -> int:
@@ -582,7 +641,7 @@ def retry_max_attempts_for_contract(
     retained for policy JSON compatibility, but non-idempotent writes collapse
     to one attempt.
     """
-    if contract_allows_retry(contract):
+    if asserted and contract_allows_retry(contract):
         return idempotent_max_attempts
     return 1
 
@@ -599,6 +658,9 @@ def manifest_contracts_for_agent(
         key = toolref_key(frozen.ref)
         if wanted is None or key in wanted:
             payload = frozen.contract.to_json()
+            payload["asserted"] = frozen.asserted
+            if frozen.assertion_provenance is not None:
+                payload["assertionProvenance"] = frozen.assertion_provenance
             if max_call_limits is not None and key in max_call_limits:
                 payload["maxCalls"] = int(max_call_limits[key])
             contracts[key] = payload
@@ -626,6 +688,7 @@ async def drive_agent_loop(
     granted: Optional[set[str]] = None,
     granted_subflows: Optional[set[str]] = None,
     contracts: Optional[AgentContractMap] = None,
+    tool_schemas: Optional[Mapping[str, dict[str, Any]]] = None,
     state: Optional[AgentState] = None,
     get_pure: Optional[Callable[[str], Callable[..., Any]]] = None,
 ) -> dict[str, Any]:
@@ -639,7 +702,7 @@ async def drive_agent_loop(
         cfg=cfg, invoke_controller=invoke_controller, call_tool=call_tool,
         run_subflow=run_subflow, granted=granted, granted_subflows=granted_subflows,
         contracts=contracts, mode=mode, prod_gap=prod_gap, run_input=input,
-        get_pure=get_pure,
+        get_pure=get_pure, tool_schemas=tool_schemas,
     )
     return await drive(step, state, halt=pre_round(cfg), finalize=make_finalize(prod_gap))
 
@@ -714,6 +777,7 @@ __all__ = [
     "interpret_reasoner_reply",
     "action_cost",
     "AgentConfig",
+    "tool_input_schemas",
     "AgentState",
     "STATE_SCHEMA_VERSION",
     "TraceEntry",
@@ -726,6 +790,7 @@ __all__ = [
     "coerce_round_note",
     "precheck_controller",
     "contract_for_tool",
+    "contract_asserted_for_tool",
     "approval_required_for_tool",
     "authorize_call",
     "max_calls_for_tool",

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import threading
 import time
+from urllib.parse import quote
 
 from starlette.testclient import TestClient
 
@@ -156,6 +158,171 @@ def test_run_submission_validation_and_start_failure(server_factory) -> None:
         )
         assert result.status_code == 200
         assert result.json()["run"]["status"] == "start_failed"
+
+
+def test_run_secrets_are_forwarded_but_never_persisted(server_factory) -> None:
+    harness = server_factory()
+    release = make_release()
+    submitted = "tenant token:that/must-not-persist"
+    encoded = base64.b64encode(submitted.encode()).decode()
+    urlencoded = quote(submitted, safe="")
+    run_input = {
+        "raw": submitted,
+        "encoded": encoded,
+        "urlencoded": urlencoded,
+        f"raw-key:{submitted}": "one",
+        f"encoded-key:{encoded}": "two",
+        f"url-key:{urlencoded}": "three",
+    }
+
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        response = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "input": run_input,
+                "secrets": {"tracker-token": submitted},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "run-secret"},
+        )
+
+    assert response.status_code == 201, response.text
+    row = response.json()
+    assert harness.gateway.starts[0]["secrets"] == {"tracker-token": submitted}
+    assert harness.gateway.starts[0]["input"] == run_input
+    stored_input = harness.store.get_value(row["input_ref"])
+    assert stored_input is not None
+    serialized = json.dumps(stored_input, sort_keys=True)
+    assert submitted not in serialized
+    assert encoded not in serialized
+    assert urlencoded not in serialized
+    assert submitted not in json.dumps(row, sort_keys=True)
+
+
+def test_run_secret_submission_validates_names_values_and_encryption(server_factory) -> None:
+    release = make_release()
+    harness = server_factory()
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        invalid_name = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {"Not Allowed": "value"},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "invalid-name"},
+        )
+        empty_value = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {"tracker-token": ""},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "empty-value"},
+        )
+        too_many = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {f"secret-{index}": "x" for index in range(33)},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "too-many-secrets"},
+        )
+        too_large = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {"tracker-token": "x" * (16 * 1024 + 1)},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "too-large-secret"},
+        )
+        too_large_total = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {
+                    f"secret-{index}": "x" * (16 * 1024)
+                    for index in range(4)
+                },
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "too-large-total"},
+        )
+
+    assert invalid_name.status_code == 400
+    assert empty_value.status_code == 400
+    assert too_many.status_code == 400
+    assert too_large.status_code == 400
+    assert too_large_total.status_code == 400
+
+    plaintext = server_factory(payload_encryption_required=False)
+    with TestClient(plaintext.app) as client:
+        _publish(client, release)
+        response = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {"tracker-token": "value"},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "plaintext"},
+        )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "run secrets require Temporal payload encryption"
+    assert plaintext.gateway.starts == []
+
+
+def test_mcp_preflight_override_requires_admin(server_factory) -> None:
+    harness = server_factory()
+    release = make_release()
+    payload = {
+        "release": release.release_hash,
+        "pipeline": "summary",
+        "mcpPreflight": "off",
+    }
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        denied = client.post(
+            "/v1/runs",
+            json=payload,
+            headers={**ALICE_HEADERS, "Idempotency-Key": "client-override"},
+        )
+        accepted = client.post(
+            "/v1/runs",
+            json=payload,
+            headers={**ADMIN_HEADERS, "Idempotency-Key": "admin-override"},
+        )
+
+    assert denied.status_code == 403
+    assert accepted.status_code == 201
+    assert harness.gateway.starts[0]["pipeline"].mcp_preflight_policy == "off"
+
+
+def test_old_release_rejects_run_secrets_instead_of_ignoring_them(server_factory) -> None:
+    harness = server_factory()
+    release = make_release(mcp_preflight_policy=None)
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        response = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "secrets": {"tracker-token": "value"},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "old-release-secret"},
+        )
+
+    assert response.status_code == 400
+    assert "predates run-secret" in response.json()["detail"]
+    assert harness.gateway.starts == []
 
 
 def test_ambiguous_start_is_left_submitting_for_reconciliation(server_factory) -> None:

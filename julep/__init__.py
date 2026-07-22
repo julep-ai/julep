@@ -132,6 +132,14 @@ from .freeze import (
     NativeToolSpec as NativeToolSpec,
     freeze as freeze,
 )
+from .mcp_surface import (
+    McpSurfaceMismatch as McpSurfaceMismatch,
+    McpSurfaceMismatchError as McpSurfaceMismatchError,
+    McpSurfacePolicy as McpSurfacePolicy,
+    assert_mcp_surface as assert_mcp_surface,
+    canonical_surface_digest as canonical_surface_digest,
+    compare_mcp_surface as compare_mcp_surface,
+)
 from .validate import Diagnostic as Diagnostic, blocking as blocking, validate as validate
 from .diagnostics import explain as explain
 from .capabilities import (
@@ -281,6 +289,8 @@ from .errors import (
     RaceAllFailed as RaceAllFailed,
     ResilienceExhausted as ResilienceExhausted,
     UnsupportedShapeError as UnsupportedShapeError,
+    ToolSurfaceDrift as ToolSurfaceDrift,
+    ToolInputValidation as ToolInputValidation,
     ValidationError as ValidationError,
 )
 
@@ -338,6 +348,8 @@ _BASE_EXPORTS = [
     # compile
     "freeze", "FreezeResult", "McpSnapshot", "McpServerSnapshot", "McpToolSpec",
     "NativeToolSpec", "CapabilityOverrides",
+    "McpSurfacePolicy", "McpSurfaceMismatch", "McpSurfaceMismatchError",
+    "compare_mcp_surface", "assert_mcp_surface", "canonical_surface_digest",
     "validate", "Diagnostic", "blocking", "explain",
     "CapabilityManifest", "Budget", "ToolGrant", "check_approval_gates",
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
@@ -370,7 +382,8 @@ _BASE_EXPORTS = [
     # errors
     "JulepError", "ValidationError", "FreezeError", "AdmissionError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
-    "PrincipalRequired", "ResilienceExhausted", "UnsupportedShapeError",
+    "PrincipalRequired", "ResilienceExhausted", "UnsupportedShapeError", "ToolSurfaceDrift",
+    "ToolInputValidation",
     # execution (pure)
     "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "RunPrincipal", "WorkerContext", "interpret",
     "HAVE_DBOS", "HAVE_TEMPORAL",

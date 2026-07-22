@@ -30,6 +30,11 @@ consumes projection SSE through the terminal event, fetches the result, and rend
 remote Julep trace. It uses real Anthropic API calls for three short found episodes;
 the missing fourth id exercises the no-model not-found branch.
 
+The example uses MCP preflight policy `names`: its compact frozen `TOOL_LISTINGS` is
+hand-authored, while FastMCP owns live descriptive schema and version metadata. Run
+start still requires all three frozen tool names, without treating harmless generated
+metadata differences as surface drift.
+
 Prerequisites are an `ANTHROPIC_API_KEY`, the `temporal` CLI, and PostgreSQL. Point at
 an existing database with `EPISODE_E2E_PG_DSN`; otherwise the harness uses Docker
 to start and remove `postgres:16`.

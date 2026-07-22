@@ -153,6 +153,7 @@ def test_fetch_listings_paginates_and_passes_legacy_auth_headers(
     assert transport_options["headers"] == {
         "X-Tenant": "acme",
         "Authorization": "Bearer secret-token",
+        "Idempotency-Key": "preflight:freeze:memory",
     }
     assert transport_options["timeout"] == 10.0
     assert transport_options["sse_read_timeout"] == 10.0
@@ -175,10 +176,14 @@ def test_snapshot_servers_pins_protocol_and_server_version(
 
     server = snapshot.servers["memory"]
     assert server.version == '{"protocol":"2025-03-26","server":"2.4.0"}'
+    assert server.protocol_version == "2025-03-26"
+    assert server.server_version == "2.4.0"
     assert server.tools["search"].input_schema["type"] == "object"
     assert server.tools["search"].annotations.read_only_hint is True
     assert state.http_client_kwargs is not None
-    assert state.http_client_kwargs["headers"] == {}
+    assert state.http_client_kwargs["headers"] == {
+        "Idempotency-Key": "preflight:freeze:memory"
+    }
     assert state.http_client_kwargs["timeout"].value == 10.0
     assert state.http_client_kwargs["follow_redirects"] is False
     assert list(state.transport_calls[0][1]) == ["http_client"]

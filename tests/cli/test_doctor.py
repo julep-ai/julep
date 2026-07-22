@@ -13,6 +13,39 @@ def test_checks_report_discovery(sample_module):
     assert discovery.ok  # sample module discovers 3 agents
 
 
+def test_checks_report_dangling_and_resolved_secret_references(sample_module):
+    pyproject = sample_module / "pyproject.toml"
+    pyproject.write_text(
+        pyproject.read_text(encoding="utf-8")
+        + """
+[tool.julep.mcp.servers.tracker]
+url = "https://tracker.example/mcp"
+[tool.julep.mcp.servers.tracker.headers]
+Authorization = "secret://tracker-token"
+""",
+        encoding="utf-8",
+    )
+    config = load_config(sample_module)
+    missing = next(
+        check
+        for check in run_checks(config, environ={})
+        if check.name == "secrets"
+    )
+    assert missing.ok is False
+    assert "tracker-token" in missing.detail
+
+    resolved = next(
+        check
+        for check in run_checks(
+            config,
+            environ={"JULEP_SECRET_TRACKER_TOKEN": "local-value"},
+        )
+        if check.name == "secrets"
+    )
+    assert resolved.ok is True
+    assert "1 secret:// reference(s) resolved" in resolved.detail
+
+
 def test_legacy_checks_report_config_state_and_environment(tmp_path):
     (tmp_path / "ca.toml").write_text("", encoding="utf-8")
     (tmp_path / "pyproject.toml").write_text("[tool.ca]\n", encoding="utf-8")

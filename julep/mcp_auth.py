@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import asyncio
 import base64
+import inspect
 import json
 import os
 import re
 import time
 import uuid
-from collections.abc import Awaitable, Callable, Iterable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 import jwt
+
+from .errors import ToolSurfaceDrift
 
 if TYPE_CHECKING:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -24,6 +28,7 @@ if TYPE_CHECKING:
 
 
 _SEED_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
+_SECRET_REF = re.compile(r"^secret://([a-z0-9][a-z0-9_-]{0,63})$")
 _SCOPE_KEY = "julep.mcp_auth"
 
 
@@ -266,10 +271,461 @@ def _plain_tool_result(result: Any) -> Any:
     return content
 
 
+def _remote_error_text(value: Any) -> str:
+    """Extract enough remote error text to classify drift without returning it."""
+
+    parts: list[str] = []
+    seen: set[int] = set()
+
+    def collect(current: Any) -> None:
+        identity = id(current)
+        if identity in seen:
+            return
+        seen.add(identity)
+
+        error = (
+            current.get("error")
+            if isinstance(current, Mapping)
+            else getattr(current, "error", None)
+        )
+        if error is not None:
+            message = (
+                error.get("message")
+                if isinstance(error, Mapping)
+                else getattr(error, "message", None)
+            )
+            data = (
+                error.get("data")
+                if isinstance(error, Mapping)
+                else getattr(error, "data", None)
+            )
+            if isinstance(message, str):
+                parts.append(message)
+            if data is not None:
+                parts.append(str(data))
+            if isinstance(error, BaseException):
+                collect(error)
+
+        if isinstance(current, BaseException):
+            parts.append(str(current))
+            for nested in getattr(current, "exceptions", ()):
+                if isinstance(nested, BaseException):
+                    collect(nested)
+            for nested in (
+                getattr(current, "__cause__", None),
+                getattr(current, "__context__", None),
+            ):
+                if isinstance(nested, BaseException):
+                    collect(nested)
+
+        content = (
+            current.get("content")
+            if isinstance(current, Mapping)
+            else getattr(current, "content", None)
+        )
+        if isinstance(content, list):
+            for item in content:
+                text = (
+                    item.get("text")
+                    if isinstance(item, Mapping)
+                    else getattr(item, "text", None)
+                )
+                if isinstance(text, str):
+                    parts.append(text)
+
+    collect(value)
+    return " ".join(parts).casefold()
+
+
+def classify_mcp_surface_drift(
+    value: Any,
+    *,
+    input_schema_validated: bool = False,
+) -> str | None:
+    """Classify conservative MCP call-site drift signatures.
+
+    Only an MCP error response/exception is eligible.  Ordinary successful
+    tool output containing these words is never classified.
+    """
+
+    is_error = isinstance(value, BaseException)
+    if isinstance(value, Mapping):
+        is_error = is_error or value.get("isError", value.get("is_error")) is True
+    else:
+        is_error = is_error or getattr(value, "isError", getattr(value, "is_error", False)) is True
+    if not is_error:
+        return None
+    text = _remote_error_text(value)
+    if any(
+        signature in text
+        for signature in (
+            "unknown tool",
+            "unrecognized tool",
+            "tool not found",
+            "no such tool",
+            "tool does not exist",
+        )
+    ) or re.search(r"tool\s+['\"`]?[^\s'\"`]+['\"`]?\s+(?:was\s+)?not found", text):
+        return "tool_not_found"
+    if input_schema_validated and any(
+        signature in text
+        for signature in (
+            "input validation error",
+            "input schema validation",
+            "input schema mismatch",
+            "invalid tool arguments",
+            "invalid arguments for tool",
+            "arguments do not match",
+        )
+    ):
+        return "input_schema_rejected"
+    return None
+
+
+class McpTransportError(RuntimeError):
+    """A sanitized configuration or network failure at the MCP boundary."""
+
+
+@dataclass(frozen=True)
+class McpToolListing:
+    """One server's complete, paginated ``tools/list`` response."""
+
+    tools: dict[str, dict[str, Any]]
+    protocol_version: str
+    server_version: str
+
+    @property
+    def version(self) -> str:
+        """Legacy canonical combined version used by snapshot callers."""
+
+        return json.dumps(
+            {"protocol": self.protocol_version, "server": self.server_version},
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+
+class McpTransport:
+    """The single configured transport for MCP discovery and invocation.
+
+    Server URL/header configuration is resolved for every request, which lets
+    ``secret://`` request-time credentials rotate without restarting a worker.
+    A run-supplied value wins over the operator resolver for the same logical
+    name and remains scoped to that call.
+    """
+
+    def __init__(
+        self,
+        servers: Mapping[str, Any],
+        *,
+        auth: McpAuthConfig | None = None,
+        bearer_auth: str | Mapping[str, str] | None = None,
+        secret_resolver: Any | None = None,
+        timeout_s: float = 10.0,
+        allowlist: Collection[str] | None = None,
+    ) -> None:
+        if timeout_s <= 0:
+            raise ValueError("MCP transport timeout must be positive")
+        # Keep endpoint validation and redirect policy identical to the live
+        # snapshot path.  The import is local to avoid an import cycle.
+        from . import mcp_snapshot
+
+        allowed_urls = mcp_snapshot._allowlist(allowlist)
+        self._configs = {
+            server: mcp_snapshot._server_config(
+                server,
+                raw,
+                auth=bearer_auth,
+                allowed_urls=allowed_urls,
+            )
+            for server, raw in servers.items()
+        }
+        self._auth = auth
+        self._secret_resolver = secret_resolver
+        self._timeout_s = float(timeout_s)
+
+    def _config(self, server: str) -> Any:
+        try:
+            return self._configs[server]
+        except KeyError as error:
+            raise McpTransportError(f"unknown MCP server {server!r}") from error
+
+    async def _resolve_ref(
+        self,
+        value: str,
+        run_secrets: Mapping[str, str] | None,
+    ) -> str:
+        match = _SECRET_REF.fullmatch(value)
+        if match is None:
+            if value.startswith("secret://"):
+                raise McpTransportError("invalid MCP secret reference")
+            return value
+        name = match.group(1)
+        if run_secrets is not None and name in run_secrets:
+            resolved = run_secrets[name]
+            if not isinstance(resolved, str):
+                raise McpTransportError(f"run secret {name!r} must be a string")
+            return resolved
+        resolver = self._secret_resolver
+        if resolver is None:
+            try:
+                from .secrets import SecretResolver
+            except ImportError:
+                raise McpTransportError(f"unresolved MCP secret reference {name!r}") from None
+            resolver = SecretResolver.from_env()
+            self._secret_resolver = resolver
+        try:
+            resolve_ref = resolver.resolve_ref
+            if inspect.iscoroutinefunction(resolve_ref):
+                resolved = await resolve_ref(value)
+            else:
+                # The built-in resolver performs a blocking control-plane HTTP
+                # request on cache miss; keep it off the worker event loop.
+                resolved = await asyncio.to_thread(resolve_ref, value)
+            if inspect.isawaitable(resolved):
+                resolved = await resolved
+        except Exception as error:
+            raise McpTransportError(f"failed to resolve MCP secret reference {name!r}") from error
+        if not isinstance(resolved, str) or _SECRET_REF.fullmatch(resolved):
+            raise McpTransportError(f"unresolved MCP secret reference {name!r}")
+        return resolved
+
+    async def _headers(
+        self,
+        config: Any,
+        *,
+        tool: str,
+        scopes: Iterable[str],
+        idempotency_key: str,
+        principal: Optional[RunPrincipal],
+        run_secrets: Mapping[str, str] | None,
+    ) -> dict[str, str]:
+        headers = {
+            key: await self._resolve_ref(value, run_secrets)
+            for key, value in config.headers.items()
+        }
+        headers["Idempotency-Key"] = idempotency_key
+        if self._auth is not None and not any(
+            key.lower() == "authorization" for key in headers
+        ):
+            token = mint_token(
+                self._auth,
+                server_id=config.server,
+                tool=tool,
+                scopes=scopes,
+                idempotency_key=idempotency_key,
+                principal=principal,
+            )
+            headers["Authorization"] = f"Bearer {token}"
+        return headers
+
+    async def list_tools(
+        self,
+        server: str,
+        *,
+        workflow_id: str,
+        principal: Optional[RunPrincipal] = None,
+        run_secrets: Mapping[str, str] | None = None,
+    ) -> McpToolListing:
+        """Discover one server with a scoped, deterministic preflight identity."""
+
+        from . import mcp_snapshot
+
+        config = self._config(server)
+        idempotency_key = f"preflight:{workflow_id}:{server}"
+        headers = await self._headers(
+            config,
+            tool="tools/list",
+            scopes={"tools/list"},
+            idempotency_key=idempotency_key,
+            principal=principal,
+            run_secrets=run_secrets,
+        )
+        request_config = type(config)(
+            server=config.server,
+            url=config.url,
+            headers=headers,
+            version=config.version,
+        )
+        stage = "connection"
+        sdk = mcp_snapshot._load_sdk()
+        try:
+            async with mcp_snapshot._connect(
+                sdk, request_config, timeout_s=self._timeout_s
+            ) as (read, write, _session_id):
+                async with sdk.client_session(read, write) as session:
+                    stage = "initialize"
+                    initialized = await asyncio.wait_for(
+                        session.initialize(), timeout=self._timeout_s
+                    )
+                    protocol_raw = mcp_snapshot._field(
+                        initialized, "protocolVersion", "protocol_version"
+                    )
+                    server_info = mcp_snapshot._field(
+                        initialized, "serverInfo", "server_info"
+                    )
+                    server_version_raw = mcp_snapshot._field(server_info, "version")
+                    if (
+                        not isinstance(protocol_raw, (str, int))
+                        or server_info is None
+                        or not isinstance(server_version_raw, str)
+                    ):
+                        raise McpTransportError(
+                            f"MCP server {server!r} returned invalid initialization metadata"
+                        )
+                    protocol_version = str(protocol_raw)
+                    if config.version is not None and server_version_raw != config.version:
+                        raise McpTransportError(
+                            f"MCP server {server!r} did not match its configured version pin"
+                        )
+
+                    tools: dict[str, dict[str, Any]] = {}
+                    cursor: str | None = None
+                    seen_cursors: set[str] = set()
+                    while True:
+                        stage = "tools/list"
+                        page = await asyncio.wait_for(
+                            session.list_tools(cursor=cursor), timeout=self._timeout_s
+                        )
+                        page_tools = mcp_snapshot._field(page, "tools")
+                        if not isinstance(page_tools, list):
+                            raise McpTransportError(
+                                f"MCP server {server!r} returned an invalid tools/list page"
+                            )
+                        for raw_tool in page_tools:
+                            name, listing = mcp_snapshot._tool_listing(raw_tool, server=server)
+                            if name in tools:
+                                raise McpTransportError(
+                                    f"MCP server {server!r} returned duplicate tool name {name!r}"
+                                )
+                            tools[name] = listing
+                        next_cursor = mcp_snapshot._field(
+                            page, "nextCursor", "next_cursor"
+                        )
+                        if next_cursor is None:
+                            break
+                        if not isinstance(next_cursor, str) or next_cursor in seen_cursors:
+                            raise McpTransportError(
+                                f"MCP server {server!r} returned an invalid pagination cursor"
+                            )
+                        seen_cursors.add(next_cursor)
+                        cursor = next_cursor
+                    return McpToolListing(
+                        tools=tools,
+                        protocol_version=protocol_version,
+                        server_version=server_version_raw,
+                    )
+        except (asyncio.TimeoutError, TimeoutError):
+            raise McpTransportError(
+                f"MCP request timed out for server {server!r} during {stage}"
+            ) from None
+        except McpTransportError:
+            raise
+        except Exception as error:
+            nested = mcp_snapshot._nested_exception(error, McpTransportError)
+            if isinstance(nested, McpTransportError):
+                raise nested from None
+            if mcp_snapshot._nested_exception(error, TimeoutError) is not None:
+                raise McpTransportError(
+                    f"MCP request timed out for server {server!r} during {stage}"
+                ) from None
+            raise McpTransportError(
+                f"MCP request failed for server {server!r} during {stage}"
+            ) from None
+
+    async def call_tool(
+        self,
+        server: str,
+        tool: str,
+        value: Any,
+        idempotency_key: str,
+        principal: Optional[RunPrincipal] = None,
+        run_secrets: Mapping[str, str] | None = None,
+        input_schema_validated: bool = False,
+    ) -> Any:
+        """Invoke one MCP tool through the same configured transport as discovery."""
+
+        from . import mcp_snapshot
+
+        config = self._config(server)
+        headers = await self._headers(
+            config,
+            tool=tool,
+            scopes={tool},
+            idempotency_key=idempotency_key,
+            principal=principal,
+            run_secrets=run_secrets,
+        )
+        request_config = type(config)(
+            server=config.server,
+            url=config.url,
+            headers=headers,
+            version=config.version,
+        )
+        stage = "connection"
+        sdk = mcp_snapshot._load_sdk()
+        try:
+            async with mcp_snapshot._connect(
+                sdk, request_config, timeout_s=self._timeout_s
+            ) as (read, write, _session_id):
+                async with sdk.client_session(read, write) as session:
+                    stage = "initialize"
+                    await asyncio.wait_for(session.initialize(), timeout=self._timeout_s)
+                    stage = "tools/call"
+                    result = await asyncio.wait_for(
+                        session.call_tool(tool, arguments=value), timeout=self._timeout_s
+                    )
+                    drift_reason = classify_mcp_surface_drift(
+                        result,
+                        input_schema_validated=input_schema_validated,
+                    )
+                    if drift_reason is not None:
+                        raise ToolSurfaceDrift(server, tool, drift_reason)
+                    return _plain_tool_result(result)
+        except (asyncio.TimeoutError, TimeoutError):
+            raise McpTransportError(
+                f"MCP request timed out for server {server!r} during {stage}"
+            ) from None
+        except (McpTransportError, ToolSurfaceDrift):
+            raise
+        except Exception as error:
+            nested_drift = mcp_snapshot._nested_exception(error, ToolSurfaceDrift)
+            if isinstance(nested_drift, ToolSurfaceDrift):
+                raise nested_drift from None
+            nested_transport = mcp_snapshot._nested_exception(error, McpTransportError)
+            if isinstance(nested_transport, McpTransportError):
+                raise nested_transport from None
+            if stage == "tools/call":
+                drift_reason = classify_mcp_surface_drift(
+                    error,
+                    input_schema_validated=input_schema_validated,
+                )
+                if drift_reason is not None:
+                    raise ToolSurfaceDrift(server, tool, drift_reason) from None
+            if mcp_snapshot._nested_exception(error, TimeoutError) is not None:
+                raise McpTransportError(
+                    f"MCP request timed out for server {server!r} during {stage}"
+                ) from None
+            raise McpTransportError(
+                f"MCP request failed for server {server!r} during {stage}"
+            ) from None
+
+
 def http_mcp_caller(
-    servers: Mapping[str, str], auth: McpAuthConfig | None = None
+    servers: Mapping[str, Any],
+    auth: McpAuthConfig | None = None,
+    *,
+    secret_resolver: Any | None = None,
+    timeout_s: float = 10.0,
+    allowlist: Collection[str] | None = None,
 ) -> McpCaller:
-    server_urls = dict(servers)
+    transport = McpTransport(
+        servers,
+        auth=auth,
+        secret_resolver=secret_resolver,
+        timeout_s=timeout_s,
+        allowlist=allowlist,
+    )
 
     async def call(
         server: str,
@@ -277,31 +733,30 @@ def http_mcp_caller(
         value: Any,
         key: str,
         principal: Optional[RunPrincipal],
+        run_secrets: Mapping[str, str] | None = None,
+        input_schema_validated: bool = False,
     ) -> Any:
-        try:
-            url = server_urls[server]
-        except KeyError as error:
-            raise RuntimeError(f"unknown MCP server {server!r}") from error
-        headers = {"Idempotency-Key": key}
-        if auth is not None:
-            token = mint_token(
-                auth,
-                server_id=server,
-                tool=tool,
-                scopes={tool},
-                idempotency_key=key,
-                principal=principal,
-            )
-            headers["Authorization"] = f"Bearer {token}"
+        return await transport.call_tool(
+            server,
+            tool,
+            value,
+            key,
+            principal,
+            run_secrets,
+            input_schema_validated,
+        )
 
-        ClientSession, streamablehttp_client = _mcp_client_components()
-        async with streamablehttp_client(url, headers=headers) as (read, write, _):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                result = await session.call_tool(tool, arguments=value)
-        return _plain_tool_result(result)
-
+    # Worker preflight recovers the exact same configured transport rather than
+    # rebuilding URL/header/auth policy through a second path.
+    call.transport = transport  # type: ignore[attr-defined]
     return call
+
+
+def transport_for_mcp_caller(caller: Any) -> McpTransport | None:
+    """Return the shared transport attached by :func:`http_mcp_caller`."""
+
+    transport = getattr(caller, "transport", None)
+    return transport if isinstance(transport, McpTransport) else None
 
 
 @dataclass(frozen=True)

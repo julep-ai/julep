@@ -67,6 +67,7 @@ def test_gateway_starts_harness_with_projection_and_reject_duplicate(
             input={"question": "hello"},
             principal={"key": "alice"},
             queue_lanes={"summary": "queue"},
+            secrets={"tracker-token": "run-secret"},
         )
     )
 
@@ -78,6 +79,7 @@ def test_gateway_starts_harness_with_projection_and_reject_duplicate(
     assert kwargs["projection_batch_size"] == 7
     assert kwargs["projection_batch_interval_s"] == 0.5
     assert kwargs["principal"] == {"key": "alice"}
+    assert kwargs["secrets"] == {"tracker-token": "run-secret"}
     assert kwargs["workflow_start_options"]["id_reuse_policy"].name == "REJECT_DUPLICATE"
 
 

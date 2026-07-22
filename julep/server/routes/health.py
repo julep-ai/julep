@@ -7,7 +7,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
-from ..auth import ApiKey, require_key
+from ..auth import ApiKey, require_client
 from . import artifact_store, execution_store
 
 router = APIRouter(tags=["health"])
@@ -45,7 +45,7 @@ async def _temporal_ready(request: Request) -> None:
 @router.get("/ready")
 async def ready(
     request: Request,
-    key: Annotated[ApiKey, Depends(require_key)],
+    key: Annotated[ApiKey, Depends(require_client)],
 ) -> JSONResponse:
     checks: dict[str, str] = {}
 

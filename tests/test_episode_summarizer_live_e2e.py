@@ -50,3 +50,36 @@ def test_episode_summarizer_live_e2e(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert missing["summaryStatus"] == "not_found"
     assert missing["oneLinerStatus"] == "not_found"
+
+
+def test_episode_summarizer_hand_authored_snapshot_uses_names_preflight() -> None:
+    # Keep this import inside the test: the live test above must set model
+    # overrides before importing the flow module.
+    from examples.episode_summarizer import flow
+    from examples.episode_summarizer.tools_server import MCP_SERVER, _build_mcp
+    from julep import compare_mcp_surface, snapshot_from_listings
+
+    compiled = flow.build_compiled_application()
+    advertised = asyncio.run(_build_mcp().list_tools())
+    fresh = snapshot_from_listings(
+        {
+            MCP_SERVER: {
+                tool.name: {
+                    "inputSchema": tool.inputSchema,
+                    "outputSchema": tool.outputSchema,
+                    "annotations": (
+                        tool.annotations.model_dump(exclude_none=True)
+                        if tool.annotations is not None
+                        else {}
+                    ),
+                }
+                for tool in advertised
+            }
+        }
+    )
+    frozen = compiled.pipelines[0].deployment.manifest
+
+    assert compiled.mcp_preflight_policy == "names"
+    assert compiled.artifact_components["mcpPreflight"] == "names"
+    assert compare_mcp_surface(frozen, fresh, policy="names") == ()
+    assert compare_mcp_surface(frozen, fresh, policy="pin")

@@ -173,6 +173,57 @@ def db_sweep(
     typer.echo(f"deleted {deleted} projection rows")
 
 
+@db_app.command("reencrypt-secrets")
+def db_reencrypt_secrets(
+    dsn: str | None = typer.Option(
+        None,
+        "--dsn",
+        help="Postgres DSN (defaults to JULEP_EXECUTION_STORE_DSN).",
+    ),
+) -> None:
+    """Re-encrypt vault rows under the active key during a maintenance window."""
+
+    resolved_dsn = _resolve_db_dsn(dsn)
+    from julep.execution.projection_store import PostgresExecutionStore
+    from julep.secrets import VaultCipher
+
+    try:
+        cipher = VaultCipher.from_env(_os.environ)
+    except ValueError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(2) from exc
+
+    store = PostgresExecutionStore(resolved_dsn)
+    try:
+        store.apply_schema()
+        report = store.reencrypt_secrets(
+            cipher,
+            progress=lambda current, total, name: typer.echo(
+                f"processed {current}/{total}: {name}"
+            ),
+        )
+    except (RuntimeError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(2) from exc
+    finally:
+        store.close()
+
+    remaining = ", ".join(
+        f"{key_id}={count}"
+        for key_id, count in report["remaining_key_ids"].items()
+    ) or "none"
+    typer.echo(
+        f"re-encrypted {report['reencrypted']} secret(s) under "
+        f"{report['active_key_id']}"
+        + (
+            f"; updated {report.get('metadata_updated', 0)} archived record(s)"
+            if report.get("metadata_updated", 0)
+            else ""
+        )
+        + f"; remaining key references: {remaining}"
+    )
+
+
 @serve_app.command("api")
 def serve_api(
     host: str | None = typer.Option(
@@ -386,6 +437,11 @@ def run(
     input: str = typer.Option("null", "--input", help="JSON-encoded input value."),
     run_id: str = typer.Option("", "--run-id", help="Run id (default: julep-<name>-local)."),
     env: str = typer.Option("local", "--env", help="Environment name."),
+    secret: list[str] = typer.Option(  # noqa: B008
+        [],
+        "--secret",
+        help="Run-scoped secret as name=value (repeatable; deployed Temporal runs only).",
+    ),
 ) -> None:
     """Execute an agent locally and stream its terminal trace tree."""
     try:
@@ -393,7 +449,30 @@ def run(
     except _json.JSONDecodeError as exc:
         typer.echo(f"error: invalid --input JSON: {exc}", err=True)
         raise typer.Exit(2) from None
+    run_secrets: dict[str, str] = {}
+    if secret:
+        from julep.secrets import validate_run_secrets
+
+        try:
+            for binding in secret:
+                name, separator, value = binding.partition("=")
+                if not separator or not value:
+                    raise ValueError("--secret must use a non-empty name=value")
+                if name in run_secrets:
+                    raise ValueError(f"duplicate --secret name {name!r}")
+                run_secrets[name] = value
+            run_secrets = validate_run_secrets(run_secrets)
+        except ValueError as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(2) from None
     if name.endswith(".ctx"):
+        if run_secrets:
+            typer.echo(
+                "error: --secret is supported for deployed Temporal starts; "
+                "use JULEP_SECRET_* for local .ctx runs",
+                err=True,
+            )
+            raise typer.Exit(2)
         env_vars = _eval_env_vars(env)
         try:
             from julep.cli.ctxrun import run_ctx_local
@@ -414,7 +493,18 @@ def run(
         # a fixed 'julep-<name>-local' id: that collides/dedups across runs and is
         # mislabelled 'local'. An empty id lets run_on_env mint a unique,
         # env-scoped session id.
-        result = run_on_env(cfg, name, cfg.envs[env], parsed, run_id=run_id or None)
+        try:
+            result = run_on_env(
+                cfg,
+                name,
+                cfg.envs[env],
+                parsed,
+                run_id=run_id or None,
+                secrets=(run_secrets or None),
+            )
+        except ValueError as exc:
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(2) from None
         if isinstance(result, RunOutcome):
             if result.error is not None:
                 typer.echo(f"error: {result.error}", err=True)
@@ -434,6 +524,13 @@ def run(
         typer.echo(f"output: {_json.dumps(result, default=str)}")
         return
     rid = run_id or f"julep-{name}-local"
+    if run_secrets:
+        typer.echo(
+            "error: --secret is supported for deployed Temporal starts; "
+            "use JULEP_SECRET_* for local runs",
+            err=True,
+        )
+        raise typer.Exit(2)
     outcome = run_agent_local(cfg, name, parsed, run_id=rid, env_vars=cfg.envs[env].vars)
     if outcome.error is not None:
         typer.echo(f"error: {outcome.error}", err=True)

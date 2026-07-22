@@ -15,6 +15,7 @@ from temporalio.workflow import ParentClosePolicy
 
 from ..ir import canonical_json
 from .batch_provider import BatchReply
+from .failure_scrub import activity_redacted_failure_text, secret_safe_activity
 from .llm_result import LlmCallMeta
 
 if TYPE_CHECKING:
@@ -440,10 +441,10 @@ async def submitReasonerBatch(inp: SubmitReasonerBatchInput) -> None:
     from . import effects
     from .llm import _split_model
 
-    effects._hydrate_runtime_declarations(inp.call.runtime_declarations_ref)
+    registry = effects._hydrate_runtime_declarations(inp.call.runtime_declarations_ref)
     provider = inp.provider
     if not provider:
-        reasoner = effects._registry().get_reasoner(inp.call.reasoner)
+        reasoner = registry.get_reasoner(inp.call.reasoner)
         provider, _ = _split_model(reasoner.model, "anthropic")
     ctx = get_batch_dispatch_context()
     await submit_reasoner_batch(
@@ -517,6 +518,7 @@ def _has_batch_projection_attrs(
 
 
 @activity.defn(name="submitBatch")
+@secret_safe_activity
 async def submitBatch(inp: SubmitBatchInput) -> str:
     """Render each call, build provider requests, and submit the provider batch."""
 
@@ -527,16 +529,20 @@ async def submitBatch(inp: SubmitBatchInput) -> str:
     calls = _coerce_calls(inp.calls)
     if not calls:
         raise ValueError("cannot submit an empty batch")
-    for call in calls:
-        effects._hydrate_runtime_declarations(call.runtime_declarations_ref)
+    registries = {
+        call.custom_id: effects._hydrate_runtime_declarations(
+            call.runtime_declarations_ref
+        )
+        for call in calls
+    }
 
-    first_reasoner = effects._registry().get_reasoner(calls[0].reasoner)
+    first_reasoner = registries[calls[0].custom_id].get_reasoner(calls[0].reasoner)
     first_rendered = rendered_reasoner_for(first_reasoner, calls[0].value)
     adapter = select_batch_provider(first_rendered.model)
 
     requests: list[dict[str, Any]] = []
     for call in calls:
-        reasoner_obj = effects._registry().get_reasoner(call.reasoner)
+        reasoner_obj = registries[call.custom_id].get_reasoner(call.reasoner)
         rendered = rendered_reasoner_for(reasoner_obj, call.value)
         requests.append(
             adapter.build_request(
@@ -551,6 +557,7 @@ async def submitBatch(inp: SubmitBatchInput) -> str:
 
 
 @activity.defn(name="pollBatch")
+@secret_safe_activity
 async def pollBatch(inp: PollBatchInput) -> str:
     """Return a normalized provider batch status."""
 
@@ -559,6 +566,7 @@ async def pollBatch(inp: PollBatchInput) -> str:
 
 
 @activity.defn(name="fetchBatchResults")
+@secret_safe_activity
 async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]:
     """Fetch provider batch results and parse them through the matching reasoner."""
 
@@ -568,10 +576,15 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
 
     adapter = _provider_adapter_by_name(inp.provider)
     calls = _coerce_calls(inp.calls)
-    for call in calls:
-        effects._hydrate_runtime_declarations(call.runtime_declarations_ref)
+    registries = {
+        call.custom_id: effects._hydrate_runtime_declarations(
+            call.runtime_declarations_ref
+        )
+        for call in calls
+    }
     reasoners_by_custom_id = {
-        call.custom_id: effects._registry().get_reasoner(call.reasoner) for call in calls
+        call.custom_id: registries[call.custom_id].get_reasoner(call.reasoner)
+        for call in calls
     }
 
     out: list[dict[str, Any]] = []
@@ -583,7 +596,13 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
             try:
                 batch_reply = _parse_batch_reply(adapter, raw, reasoner_obj)
             except Exception as exc:
-                out.append({"custom_id": cid, "error": True, "reason": str(exc)})
+                out.append(
+                    {
+                        "custom_id": cid,
+                        "error": True,
+                        "reason": activity_redacted_failure_text(exc),
+                    }
+                )
             else:
                 _record_batch_attempt(
                     provider=inp.provider,
@@ -615,7 +634,13 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
         try:
             batch_reply = _parse_batch_reply(adapter, raw, reasoner_obj)
         except Exception as exc:
-            out.append({"custom_id": cid, "error": True, "reason": str(exc)})
+            out.append(
+                {
+                    "custom_id": cid,
+                    "error": True,
+                    "reason": activity_redacted_failure_text(exc),
+                }
+            )
         else:
             _record_batch_attempt(
                 provider=inp.provider,

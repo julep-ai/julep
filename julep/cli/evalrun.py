@@ -499,6 +499,7 @@ async def _run_tool_loop(
         call_tool=call_tool,
         granted=granted,
         contracts=None,
+        tool_schemas=rich.expected_tool_schemas,
     )
     return EvalOutput(result, collected_calls, turn_index)
 

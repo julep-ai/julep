@@ -502,6 +502,7 @@ CLI entry points:
 | `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate]` |
 | `db migrate` | `julep db migrate [--dsn DSN]` |
 | `db sweep` | `julep db sweep --older-than SECONDS [--dsn DSN]` |
+| `db reencrypt-secrets` | `julep db reencrypt-secrets [--dsn DSN]` |
 | `schedule apply` | `julep schedule apply [--env name]` |
 | `schedule ls` | `julep schedule ls [--env name]` |
 | `schedule rm` | `julep schedule rm <name> [--env name]` |

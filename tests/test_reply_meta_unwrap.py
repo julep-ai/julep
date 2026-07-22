@@ -86,7 +86,13 @@ def test_controller_turn_unwraps_llm_reply_meta_for_native_tool_calls() -> None:
         }
     ]
     assert [entry.to_json() for entry in state.trace] == [
-        {"decision": "call", "cost": 1.0, "ref": "t", "callId": "a"}
+        {
+            "decision": "call",
+            "cost": 1.0,
+            "ref": "t",
+            "callId": "a",
+            "arguments": {"n": 1},
+        }
     ]
 
 

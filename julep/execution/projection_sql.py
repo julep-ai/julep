@@ -116,6 +116,19 @@ CREATE INDEX IF NOT EXISTS releases_created_release_hash_idx
 ON releases (created_at DESC, release_hash DESC)
 """
 
+CREATE_SECRETS_SQL = """
+CREATE TABLE IF NOT EXISTS secrets (
+    name text PRIMARY KEY CHECK (name ~ '^[a-z0-9][a-z0-9_-]{0,63}$'),
+    ciphertext bytea,
+    key_id text NOT NULL,
+    generation bigint NOT NULL CHECK (generation > 0),
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz NOT NULL,
+    updated_by text NOT NULL,
+    archived_at timestamptz
+)
+"""
+
 
 MIGRATIONS: tuple[tuple[int, str], ...] = (
     (1, CREATE_RUNS_SQL),
@@ -131,6 +144,7 @@ MIGRATIONS: tuple[tuple[int, str], ...] = (
     (6, CREATE_RUNS_STARTED_INDEX_SQL),
     (7, CREATE_RUNS_STATUS_STARTED_INDEX_SQL),
     (8, CREATE_RELEASES_CREATED_INDEX_SQL),
+    (9, CREATE_SECRETS_SQL),
 )
 
 

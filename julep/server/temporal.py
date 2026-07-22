@@ -29,6 +29,7 @@ class TemporalGateway(Protocol):
         input: Any,
         principal: dict[str, Any],
         queue_lanes: Optional[dict[str, str]],
+        secrets: Optional[dict[str, str]],
     ) -> str: ...
 
     async def cancel(self, workflow_id: str) -> None: ...
@@ -64,6 +65,7 @@ class TemporalClientGateway:
         input: Any,
         principal: dict[str, Any],
         queue_lanes: Optional[dict[str, str]],
+        secrets: Optional[dict[str, str]],
     ) -> str:
         """Start one release-pinned flow with projection egress enabled."""
 
@@ -104,6 +106,16 @@ class TemporalClientGateway:
                 pinned_pures=pipeline.pinned_pures,
                 max_call_limits=dict(pipeline.max_call_limits),
                 principal=principal,
+                secrets=secrets,
+                mcp_preflight=(
+                    None
+                    if pipeline.mcp_preflight_policy is None
+                    else {
+                        "policy": pipeline.mcp_preflight_policy,
+                        "completed": False,
+                        "surfaceDigest": None,
+                    }
+                ),
                 bundle=pipeline.bundle_ref,
                 runtime_declarations_ref=pipeline.runtime_declarations_ref,
                 queue_lanes=queue_lanes,

@@ -6,7 +6,9 @@ from .auth import (
     merge_principal,
     owner_scoped,
     require_admin,
+    require_client,
     require_key,
+    require_worker,
 )
 from .settings import ServerSettings
 from .temporal import TemporalClientGateway, TemporalGateway, create_temporal_gateway
@@ -21,5 +23,7 @@ __all__ = [
     "merge_principal",
     "owner_scoped",
     "require_admin",
+    "require_client",
     "require_key",
+    "require_worker",
 ]

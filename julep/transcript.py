@@ -67,6 +67,8 @@ class TraceEntryView(Protocol):
     def input_ref(self) -> Optional[str]: ...
     @property
     def output_ref(self) -> Optional[str]: ...
+    @property
+    def arguments(self) -> Any: ...
 
 
 class AgentStateView(Protocol):
@@ -111,7 +113,21 @@ def transcript_for(
                 {
                     "id": entry.call_id,
                     "type": "function",
-                    "function": {"name": entry.ref or "", "arguments": ""},
+                    "function": {
+                        "name": entry.ref or "",
+                        # Old durable trace entries have no arguments field.
+                        # Preserve their legacy empty-string transcript while
+                        # new entries carry the exact canonical JSON payload.
+                        "arguments": (
+                            ""
+                            if entry.arguments is None
+                            else json.dumps(
+                                entry.arguments,
+                                sort_keys=True,
+                                separators=(",", ":"),
+                            )
+                        ),
+                    },
                 }
             ]
         if entry.input_ref is not None:

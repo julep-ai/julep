@@ -93,7 +93,7 @@ keys are rejected with a close-match suggestion.
 | `julep lint [SEL] [--fail-severity]` | Structural validation; named diagnostics with severity gating. |
 | `julep test [SEL] [--dry-run]` | Run `pytest` for the selected agents (matched by name via `-k`). |
 | `julep trace <run-id> [--remote --api-url --api-key]` | Render cached events or remote control-plane projection events. |
-| `julep doctor` | Preflight: discovery, git, Langfuse, Temporal. |
+| `julep doctor` | Preflight: discovery, dangling `secret://` refs, git, Langfuse, Temporal. |
 | `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env artifact store → record in the deploy ledger. |
 | `julep plan --env <name> [--mcp-snapshot]` | Compile code plus configured dotctx pipelines and report drift; optionally fetch configured MCP schemas. |
 | `julep apply --env <name> [--mcp-snapshot] [--publish-only]` | Publish a signed schema-v2 release and optionally reconcile lane workers. |
@@ -102,6 +102,7 @@ keys are rejected with a close-match suggestion.
 | `julep serve api [--host --port --migrate]` | Run the FastAPI control plane. |
 | `julep db migrate [--dsn]` | Apply projection-store migrations. |
 | `julep db sweep --older-than N [--dsn]` | Apply operator-controlled projection retention. |
+| `julep db reencrypt-secrets [--dsn]` | Maintenance-only vault key rotation sweep. |
 | `julep eval <path.ctx> [--llm-caller module:attr]` | Run a dotctx eval suite with threshold and baseline gates. |
 | `julep schedule apply|ls|rm [--env]` | Reconcile, inspect, or remove Temporal cron schedules. |
 | `julep chat <agent>` | Open a **local session** REPL: type a line, stream `Turn`/`Emit` events back, exit on `Closed`. |

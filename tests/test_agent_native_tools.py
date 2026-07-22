@@ -252,12 +252,14 @@ def test_call_many_executes_two_tools_and_threads_ordered_observations() -> None
             "cost": DEFAULT_TOOL_COST,
             "ref": "left",
             "callId": "call-1",
+            "arguments": {"n": 1},
         },
         {
             "decision": "call",
             "cost": DEFAULT_TOOL_COST,
             "ref": "right",
             "callId": "call-2",
+            "arguments": {"n": 2},
         },
     ]
 
@@ -448,12 +450,14 @@ def test_call_many_one_failing_tool_only_errors_that_observation() -> None:
             "cost": DEFAULT_TOOL_COST,
             "ref": "ok",
             "callId": "call-ok",
+            "arguments": 1,
         },
         {
             "decision": "call",
             "cost": DEFAULT_TOOL_COST,
             "ref": "fail",
             "callId": "call-fail",
+            "arguments": 2,
             "error": expected_error,
         },
     ]

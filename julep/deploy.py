@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import cached_property
@@ -74,16 +75,23 @@ if TYPE_CHECKING:
 
 def _merge_overrides(*overrides: Optional[CapabilityOverrides]) -> CapabilityOverrides:
     merged: dict[str, Any] = {}
+    provenance: dict[str, str] = {}
     for ov in overrides:
         if ov is not None:
-            merged.update(ov.contracts)
-    return CapabilityOverrides(contracts=merged)
+            for key, contract in ov.contracts.items():
+                merged[key] = contract
+                source = ov.provenance_for(key)
+                if source is not None:
+                    provenance[key] = source
+    return CapabilityOverrides(contracts=merged, provenance=provenance)
 
 
 def snapshot_from_listings(
     listings: dict[str, dict[str, Any]],
     *,
     versions: Optional[dict[str, str]] = None,
+    protocol_versions: Optional[dict[str, str]] = None,
+    server_versions: Optional[dict[str, str]] = None,
 ) -> McpSnapshot:
     """Build an :class:`McpSnapshot` from plain tool listings (MCP-SDK seam).
 
@@ -94,6 +102,8 @@ def snapshot_from_listings(
     optionally pins a server version into the content hash.
     """
     versions = versions or {}
+    protocol_versions = protocol_versions or {}
+    server_versions = server_versions or {}
     servers: dict[str, McpServerSnapshot] = {}
     for server, tools in listings.items():
         tool_specs: dict[str, McpToolSpec] = {}
@@ -111,8 +121,30 @@ def snapshot_from_listings(
                 ),
                 output_schema=spec.get("outputSchema", spec.get("output_schema")),
             )
+        version = versions.get(server, "1")
+        protocol_version = protocol_versions.get(server)
+        server_version = server_versions.get(server)
+        # Live snapshots historically represented both values as one canonical
+        # JSON string.  Decode that wire form while continuing to accept old
+        # author-managed snapshots whose version is just an opaque string.
+        if protocol_version is None or server_version is None:
+            try:
+                parsed_version = json.loads(version)
+            except (TypeError, ValueError):
+                parsed_version = None
+            if isinstance(parsed_version, dict):
+                protocol_raw = parsed_version.get("protocol")
+                server_raw = parsed_version.get("server")
+                if protocol_version is None and isinstance(protocol_raw, str):
+                    protocol_version = protocol_raw
+                if server_version is None and isinstance(server_raw, str):
+                    server_version = server_raw
         servers[server] = McpServerSnapshot(
-            server=server, version=versions.get(server, "1"), tools=tool_specs
+            server=server,
+            version=version,
+            protocol_version=protocol_version,
+            server_version=server_version,
+            tools=tool_specs,
         )
     return McpSnapshot(servers=servers)
 
@@ -703,6 +735,7 @@ class Deployment:
         *,
         mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
+        tools: Optional[dict[str, Callable[[Any], Any]]] = None,
     ) -> "InterpreterResult":
         """Run locally with stashed native tools, an MCP caller, and fake reasoners."""
         mcp_backed = any(isinstance(tool.ref, McpTool) for tool in self.manifest.values())
@@ -712,7 +745,7 @@ class Deployment:
                 "deploy(tools=...). Rebuild with deploy(..., tools=...) so local "
                 "dry runs can bind native tool tools."
             )
-        if mcp_backed and mcp_call is None:
+        if mcp_backed and mcp_call is None and not tools:
             raise ValueError(
                 "Deployment.dry_run() requires mcp_call=... for an MCP-backed deployment"
             )
@@ -720,14 +753,15 @@ class Deployment:
         from .execution.interpreter import InMemoryEnv, interpret  # lazy: keeps deploy import-light
         from .projection import InMemoryProjection, ProjectionEmitter
 
+        local_tools = {
+            native_tool.name: native_tool.bound_tool
+            for native_tool in (self._tools or ())
+        }
+        local_tools.update(tools or {})
         env = InMemoryEnv(
             self.manifest,
             ProjectionEmitter(InMemoryProjection()),
-            tools=(
-                {native_tool.name: native_tool.bound_tool for native_tool in self._tools}
-                if self._tools is not None
-                else None
-            ),
+            tools=local_tools or None,
             mcp_call=mcp_call,
             reasoners=reasoners,
             max_calls=(
@@ -742,9 +776,17 @@ class Deployment:
         *,
         mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
+        tools: Optional[dict[str, Callable[[Any], Any]]] = None,
     ) -> "InterpreterResult":
         """Synchronously run this deployment locally via :meth:`adry_run`."""
-        return asyncio.run(self.adry_run(value, mcp_call=mcp_call, reasoners=reasoners))
+        return asyncio.run(
+            self.adry_run(
+                value,
+                mcp_call=mcp_call,
+                reasoners=reasoners,
+                tools=tools,
+            )
+        )
 
 
 def deploy(

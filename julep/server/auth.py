@@ -9,7 +9,7 @@ import re
 import signal
 from dataclasses import dataclass, field
 from types import FrameType
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Optional, Protocol, Sequence, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Literal, Mapping, Optional, Protocol, Sequence, cast
 
 if TYPE_CHECKING:
     from .settings import ServerSettings
@@ -47,6 +47,7 @@ class ApiKey:
     token: str = field(repr=False)
     principal_base: dict[str, Any] = field(default_factory=dict)
     admin: bool = False
+    role: Literal["client", "worker", "admin"] = "client"
 
     def __post_init__(self) -> None:
         if _KEY_NAME.fullmatch(self.name) is None:
@@ -55,12 +56,21 @@ class ApiKey:
             )
         if not self.token:
             raise ValueError(f"API key {self.name!r} has an empty token")
+        if self.role not in {"client", "worker", "admin"}:
+            raise ValueError(f"API key {self.name!r} has invalid role {self.role!r}")
+        if self.admin and self.role == "worker":
+            raise ValueError("an API key cannot be both worker and admin")
+        effective_role: Literal["client", "worker", "admin"] = (
+            "admin" if self.admin else self.role
+        )
+        object.__setattr__(self, "role", effective_role)
+        object.__setattr__(self, "admin", effective_role == "admin")
         principal = self.principal_base or {"key": self.name}
         object.__setattr__(self, "principal_base", dict(principal))
 
 
 def parse_api_keys(raw: object) -> tuple[ApiKey, ...]:
-    """Parse ``name:token[:admin]`` entries separated by commas or whitespace."""
+    """Parse ``name:token[:client|worker|admin]`` static credentials."""
 
     if raw is None or raw == "":
         return ()
@@ -82,11 +92,14 @@ def parse_api_keys(raw: object) -> tuple[ApiKey, ...]:
         parts = entry.split(":")
         if len(parts) not in (2, 3) or not parts[0] or not parts[1]:
             raise ValueError(
-                "JULEP_API_KEYS entries must use name:token or name:token:admin"
+                "JULEP_API_KEYS entries must use "
+                "name:token[:client|worker|admin]"
             )
-        if len(parts) == 3 and parts[2].lower() != "admin":
+        role = "client" if len(parts) == 2 else parts[2].lower()
+        if role not in {"client", "worker", "admin"}:
             raise ValueError(
-                "the optional third JULEP_API_KEYS field must be the literal 'admin'"
+                "the optional third JULEP_API_KEYS field must be one of "
+                "'client', 'worker', or 'admin'"
             )
         name, token = parts[0], parts[1]
         if name in names:
@@ -100,7 +113,7 @@ def parse_api_keys(raw: object) -> tuple[ApiKey, ...]:
                 name=name,
                 token=token,
                 principal_base={"key": name},
-                admin=len(parts) == 3,
+                role=cast(Literal["client", "worker", "admin"], role),
             )
         )
     return tuple(keys)
@@ -224,8 +237,26 @@ def require_admin(request: Request) -> ApiKey:
     """FastAPI dependency requiring a valid admin key."""
 
     key = require_key(request)
-    if not key.admin:
+    if key.role != "admin":
         raise _forbidden("admin API key required", status_code=403)
+    return key
+
+
+def require_worker(request: Request) -> ApiKey:
+    """FastAPI dependency requiring a worker-only credential."""
+
+    key = require_key(request)
+    if key.role != "worker":
+        raise _forbidden("worker API key required", status_code=403)
+    return key
+
+
+def require_client(request: Request) -> ApiKey:
+    """Require a client/admin key, explicitly excluding worker credentials."""
+
+    key = require_key(request)
+    if key.role == "worker":
+        raise _forbidden("worker API keys cannot access this route", status_code=403)
     return key
 
 
@@ -266,5 +297,7 @@ __all__ = [
     "owner_scoped",
     "parse_api_keys",
     "require_admin",
+    "require_client",
     "require_key",
+    "require_worker",
 ]

@@ -115,7 +115,13 @@ def schedule_drift(
     return rows
 
 
-def build_schedule(record: DeployRecord, env: EnvConfig, sched: ScheduleConfig) -> Any:
+def build_schedule(
+    record: DeployRecord,
+    env: EnvConfig,
+    sched: ScheduleConfig,
+    *,
+    mcp_preflight_policy: str = "pin",
+) -> Any:
     from julep.execution.harness import (
         FlowWorkflow,
         build_flow_input,
@@ -129,7 +135,12 @@ def build_schedule(record: DeployRecord, env: EnvConfig, sched: ScheduleConfig) 
         ScheduleState,
     )
 
-    sa = build_flow_start_args(record, env, sched.input)
+    sa = build_flow_start_args(
+        record,
+        env,
+        sched.input,
+        mcp_preflight_policy=mcp_preflight_policy,
+    )
     flow_input = build_flow_input(**build_flow_input_kwargs(sa, session_id=sa.session_id))
     action = ScheduleActionStartWorkflow(
         FlowWorkflow.run,
@@ -159,7 +170,15 @@ def apply_schedules(
             )
 
     temporal_client = client if client is not None else connect_temporal_client(env)
-    return asyncio.run(_apply_all(temporal_client, records, env, schedules))
+    return asyncio.run(
+        _apply_all(
+            temporal_client,
+            records,
+            env,
+            schedules,
+            mcp_preflight_policy=cfg.mcp_preflight,
+        )
+    )
 
 
 async def _apply_all(
@@ -167,13 +186,20 @@ async def _apply_all(
     records: dict[str, DeployRecord],
     env: EnvConfig,
     schedules: list[ScheduleConfig],
+    *,
+    mcp_preflight_policy: str = "pin",
 ) -> list[tuple[str, str]]:
     from temporalio.client import ScheduleAlreadyRunningError, ScheduleUpdate
 
     results: list[tuple[str, str]] = []
     for sched in schedules:
         sid = schedule_id(env.name, sched.name)
-        obj = build_schedule(records[sched.flow], env, sched)
+        obj = build_schedule(
+            records[sched.flow],
+            env,
+            sched,
+            mcp_preflight_policy=mcp_preflight_policy,
+        )
         try:
             await client.create_schedule(sid, obj)
             action = "created"

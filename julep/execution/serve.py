@@ -175,6 +175,9 @@ class WorkerServeSettings:
     application: Optional[str] = None
     runtime_declarations_hash: Optional[str] = None
     redaction: Optional[RedactionConfig] = None
+    materialized_secret_environment: dict[str, str] = field(
+        default_factory=dict, repr=False
+    )
 
     @classmethod
     def from_env(cls, env: Optional[Mapping[str, str]] = None) -> "WorkerServeSettings":
@@ -213,16 +216,30 @@ class WorkerServeSettings:
                 "WORKER_RUNTIME_DECLARATIONS_HASH must be "
                 "sha256:<64 lowercase hex>"
             )
-        api_key = e.get("TEMPORAL_API_KEY") or None
+        from ..secrets import SecretResolver, materialize_secret_environment
+
+        secret_resolver = SecretResolver.from_env(e)
+        materialized_secret_environment = materialize_secret_environment(
+            e, resolver=secret_resolver
+        )
+        raw_api_key = e.get("TEMPORAL_API_KEY") or None
+        api_key = (
+            None if raw_api_key is None else secret_resolver.resolve_ref(raw_api_key)
+        )
         redaction_json = e.get("JULEP_REDACTION", "").strip()
         redaction = (
             RedactionConfig.from_json(redaction_json) if redaction_json else None
         )
+        payload_environment = dict(e)
+        if payload_environment.get("TEMPORAL_PAYLOAD_KEYS"):
+            payload_environment["TEMPORAL_PAYLOAD_KEYS"] = secret_resolver.resolve_ref(
+                payload_environment["TEMPORAL_PAYLOAD_KEYS"]
+            )
         (
             payload_keys,
             payload_key_id,
             payload_encryption_required,
-        ) = payload_encryption_from_env(e)
+        ) = payload_encryption_from_env(payload_environment)
         return cls(
             context_factory=factory,
             application=application,
@@ -246,6 +263,7 @@ class WorkerServeSettings:
             payload_key_id=payload_key_id,
             payload_encryption_required=payload_encryption_required,
             redaction=redaction,
+            materialized_secret_environment=materialized_secret_environment,
         )
 
 
@@ -373,9 +391,19 @@ async def _resolve_context(spec: str) -> WorkerContext:
 def _install_default_redactor(
     context: WorkerContext, settings: WorkerServeSettings
 ) -> None:
-    # Only fill the default when the context factory did not set one.
-    if settings.redaction is not None and context.redactor is None:
-        context.redactor = build_redactor(settings.redaction)
+    # The dynamic operator scrubber remains live after worker startup: secrets
+    # first resolved by a later MCP call are covered without replacing context.
+    from ..secrets import operator_secret_redactor
+    from ..trajectory import redact_secret_shaped
+
+    base = context.redactor
+    if base is None:
+        base = (
+            build_redactor(settings.redaction)
+            if settings.redaction is not None
+            else redact_secret_shaped
+        )
+    context.redactor = operator_secret_redactor(base)
 
 
 def load_application_runtime(
@@ -437,6 +465,9 @@ async def serve(
             pass  # non-main thread or platform without loop signal handlers
 
     try:
+        # Application-specific worker env is a startup-time injection surface.
+        # Values remain pinned until this process restarts.
+        os.environ.update(settings.materialized_secret_environment)
         context = await _resolve_context(settings.context_factory)
         _install_default_redactor(context, settings)
         if settings.application is not None:

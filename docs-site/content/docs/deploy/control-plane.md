@@ -27,7 +27,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `JULEP_API_KEYS` | empty | Comma- or whitespace-separated `name:token[:admin]` keys. |
+| `JULEP_API_KEYS` | empty | Comma- or whitespace-separated `name:token[:client\|worker\|admin]` keys. Omitted role means `client`. |
 | `JULEP_EXECUTION_STORE_DSN` | none | PostgreSQL DSN. Required to serve the API. |
 | `JULEP_ARTIFACT_STORE_URL` | `file://<project>/.julep/artifacts` | Release and runtime-declaration artifact store. |
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Temporal frontend. |
@@ -38,6 +38,9 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 | `TEMPORAL_PAYLOAD_KEYS` | unset | Payload-codec keyring. Set with `TEMPORAL_PAYLOAD_KEY_ID`. |
 | `TEMPORAL_PAYLOAD_KEY_ID` | unset | Active payload-codec key id. |
 | `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `true` | Require encrypted control-plane workflow starts. Set `false` only for a trusted plaintext Temporal deployment. |
+| `JULEP_VAULT_KEYS` | unset | Dedicated vault keyring: comma-separated `key-id=64hex` entries. |
+| `JULEP_VAULT_KEY_ID` | unset | Active vault key id. Set together with `JULEP_VAULT_KEYS`. |
+| `JULEP_WORKER_SECRET_ALLOWLIST` | empty | Comma/whitespace-separated logical names worker keys may fetch. Empty is fail-closed. |
 | `JULEP_SERVER_HOST` | `127.0.0.1` | Listen host. |
 | `JULEP_SERVER_PORT` | `8080` | Listen port. |
 | `JULEP_PROJECTION_BATCH_SIZE` | `20` | Projection events per activity batch. |
@@ -55,6 +58,7 @@ The server table recognizes `api_keys`, `execution_store_dsn`, `artifact_store_u
 `temporal_api_key`, `temporal_tls`, `temporal_payload_keys`/`payload_keys`,
 `temporal_payload_key_id`/`payload_key_id`,
 `temporal_payload_encryption_required`/`payload_encryption_required`, `host`,
+`vault_keys`, `vault_key_id`, `worker_secret_allowlist`,
 `port`, `projection_batch_size`, `projection_batch_interval_s`,
 `reconcile_interval_s`, `helm_chart`, `kubernetes_namespace`,
 `worker_context_factory`, `payload_encryption_secret`,
@@ -64,7 +68,12 @@ The server table recognizes `api_keys`, `execution_store_dsn`, `artifact_store_u
 
 Every route except `GET /v1/health` requires `Authorization: Bearer <token>`;
 `GET /v1/ready` also requires a bearer key. The keyring compares every candidate with
-`hmac.compare_digest` and yields an `ApiKey(name, principal_base, admin)`.
+`hmac.compare_digest` and yields an `ApiKey(name, principal_base, role)`.
+
+Client and admin keys may use ordinary authenticated routes. Worker keys are
+rejected from every route except `GET /v1/secrets/{name}/value`; admin keys
+cannot read secret values. Provision a worker-role key deliberately for that
+read path.
 
 Admin keys are required for:
 
@@ -79,6 +88,43 @@ cannot change a key-owned field. A conflicting value returns `400`.
 
 Send `SIGHUP` to reload configured keys. Tokens are excluded from diagnostics.
 Terminate TLS at the ingress; the application assumes a secure transport.
+
+## Operator secret vault
+
+Vault records are write-only operator credentials in the execution-store
+Postgres database. Values are encrypted with AES-256-GCM; the logical name and
+generation are authenticated, and plaintext is never returned by admin list or
+write responses.
+
+| Route | Role | Behavior |
+|---|---|---|
+| `PUT /v1/secrets/{name}` | admin | Body `{"value":"..."}` creates or rotates; generation increases. |
+| `GET /v1/secrets` | admin | Names, key ids, generations, timestamps, and audit actor only. |
+| `GET /v1/secrets/{name}/value` | worker | Returns value + generation only when the name is allowlisted. |
+| `POST /v1/secrets/{name}/archive` | admin | Purges ciphertext but retains metadata; reads return `410`. |
+| `DELETE /v1/secrets/{name}` | admin | Hard-deletes the record. |
+
+Names match `[a-z0-9][a-z0-9_-]{0,63}`. Configure MCP headers or supported
+startup credentials as whole-string references, for example:
+
+```toml
+[tool.julep.mcp.servers.tracker]
+url = "https://tracker.example/mcp"
+headers = { Authorization = "secret://tracker-token" }
+```
+
+Workers resolve through the control plane when `JULEP_API_URL` and a
+worker-role `JULEP_API_KEY` are set. Without that pair, local development falls
+back to `JULEP_SECRET_TRACKER_TOKEN`. Request-time MCP headers use a 60-second
+cache and can pick up rotation without restart. Startup-time settings such as
+`TEMPORAL_API_KEY`, `TEMPORAL_PAYLOAD_KEYS`, and whole-string references in
+materialized worker environment resolve once and require process restart after
+rotation. References remain literal in frozen release bytes.
+
+Resolved operator/env values are registered with the process scrubber, which
+removes raw, base64, and URL-encoded echoes from Julep-controlled trajectory
+and projection persistence. Remote tools can still deliberately return a
+credential; do not treat this hygiene boundary as an egress firewall.
 
 ## Endpoints
 
@@ -165,6 +211,7 @@ Content-Type: application/json
 {
   "pipeline": "episode-summary",
   "input": {"episode_id": "42"},
+  "secrets": {"tracker-token": "tenant-token"},
   "sessionId": "episode-42",
   "principal": {"tenant": "acme"},
   "queueLanes": {"reasoner": "summaries"}
@@ -172,7 +219,7 @@ Content-Type: application/json
 ```
 
 The body accepts `release`, `pipeline`, `input`, `sessionId`, `principal`,
-`queueLanes`, and `runId`. Supply either the `Idempotency-Key` header or
+`queueLanes`, `runId`, and `secrets`. Supply either the `Idempotency-Key` header or
 `runId`; omitting both returns `400`. When `release` is omitted, the server
 resolves the pipeline from active deployments. No match returns `404`; matches
 in more than one deployment return `409`.
@@ -181,6 +228,15 @@ The workflow id is `run-<run_id>`. Without `runId`, `run_id` is a UUIDv5 of the
 idempotency key. A fresh submission returns `201`. A duplicate returns its
 existing run with `200` for its owner; reuse by a different owner returns
 `409`.
+
+`secrets` supplies run-scoped values for whole-string `secret://name` references
+in MCP headers. Values travel only in AES-GCM-encrypted Temporal payloads and are
+excluded from the stored input, run responses, events, projections, and logs;
+submission is rejected when payload encryption is disabled. Unknown/unreferenced
+names fail worker preflight before user effects. Limits are 32 entries, 16 KiB
+per UTF-8 value, and 64 KiB total. This surface does not inject LLM/provider keys.
+An admin may set `mcpPreflight` to `pin`, `names`, or `off`; secret-name binding
+validation remains active even with `off`.
 
 Submission crosses a non-atomic Postgres-insert to Temporal-start boundary.
 The state transition is `submitting` to `accepted`, then `running` after the
@@ -238,18 +294,30 @@ Use `after` and `limit`; `limit` is at most 500.
 julep db migrate
 julep db migrate --dsn postgresql://user:pass@host/db
 julep db sweep --older-than 604800
+julep db reencrypt-secrets
 julep serve api --migrate
 ```
 
 `db migrate` applies numbered, idempotent migrations and defaults to
 `JULEP_EXECUTION_STORE_DSN`. The schema contains `runs`, `projection_events`,
-`projection_values`, `releases`, `deployments`, and `schema_migrations`.
+`projection_values`, `releases`, `deployments`, `secrets`, and
+`schema_migrations`.
 `serve api --migrate` applies the same schema before startup. Worker processes
 do not migrate the schema; run `db migrate` as an operator-controlled init job
 before enabling projection egress.
 
 `db sweep` deletes projection events and unreferenced values for terminal runs
 older than the supplied seconds. Retention is operator policy.
+
+`db reencrypt-secrets` is maintenance-only. Stop new submissions, wait for all
+runs to reach a terminal state, configure the old and new keys in
+`JULEP_VAULT_KEYS` with the new `JULEP_VAULT_KEY_ID`, then run the command. It
+takes exclusive locks on `runs` and `secrets`, refuses any non-terminal run,
+and reports every row plus remaining key references. Retire an old key only
+after its count is zero. Archived records have no ciphertext; the sweep moves
+their key-id audit marker to the active id so they do not pin an otherwise
+retirable key. A database restore requires every key id still reported by the
+store.
 
 Projection egress uses regular Temporal activities with at-least-once delivery
 and batched writes. Database conflict keys make identical retries idempotent.

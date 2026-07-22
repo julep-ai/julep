@@ -14,7 +14,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from .ir import JSONSchema, ToolRef, canonical_json, toolref_from_json, toolref_key
+from .ir import JSONSchema, McpTool, ToolRef, canonical_json, toolref_from_json, toolref_key
 from .kinds import Effect, Idempotency
 
 
@@ -80,6 +80,33 @@ class McpAnnotations:
             out["idempotentHint"] = self.idempotent_hint
         return out
 
+    def normalized(self, protocol_version: Optional[str] = None) -> "McpAnnotations":
+        """Apply the MCP defaults for a negotiated protocol version.
+
+        The four execution-behavior hints have had the same defaults for every
+        MCP protocol version that exposes them.  Keeping ``protocol_version`` in
+        this API is deliberate: a future protocol can change a default without
+        making old releases hash differently when they are decoded by a newer
+        worker.
+        """
+
+        del protocol_version
+        values = {
+            "read_only_hint": self.read_only_hint,
+            "destructive_hint": self.destructive_hint,
+            "open_world_hint": self.open_world_hint,
+            "idempotent_hint": self.idempotent_hint,
+        }
+        for name, value in values.items():
+            if value is not None and not isinstance(value, bool):
+                raise ValueError(f"MCP annotation {name!r} must be a boolean")
+        return McpAnnotations(
+            read_only_hint=False if self.read_only_hint is None else self.read_only_hint,
+            destructive_hint=True if self.destructive_hint is None else self.destructive_hint,
+            open_world_hint=True if self.open_world_hint is None else self.open_world_hint,
+            idempotent_hint=False if self.idempotent_hint is None else self.idempotent_hint,
+        )
+
 
 def contract_from_annotations(ann: McpAnnotations) -> ToolContract:
     """Seed a contract from MCP hints (blueprint §1.3 table), conservatively.
@@ -124,6 +151,7 @@ def definition_hash(
     output_schema: Optional[JSONSchema] = None,
     server_version: Optional[str] = None,
     annotations: Optional[McpAnnotations | dict[str, Any]] = None,
+    protocol_version: Optional[str] = None,
 ) -> str:
     """Provider definition identity for a frozen tool.
 
@@ -131,15 +159,27 @@ def definition_hash(
     server version, and the MCP annotation snapshot. It intentionally excludes
     deployment-local contract assertions.
     """
-    return _sha256_json(
-        {
-            "ref": toolref_key(ref),
-            "inputSchema": input_schema,
-            "outputSchema": output_schema,
-            "serverVersion": server_version,
-            "annotations": _annotations_json(annotations),
-        }
-    )
+    normalized_annotations = annotations
+    if isinstance(ref, McpTool) and protocol_version is not None:
+        if annotations is None:
+            parsed_annotations = McpAnnotations()
+        elif isinstance(annotations, McpAnnotations):
+            parsed_annotations = annotations
+        else:
+            parsed_annotations = McpAnnotations.from_mcp(annotations)
+        normalized_annotations = parsed_annotations.normalized(protocol_version)
+    definition = {
+        "ref": toolref_key(ref),
+        "inputSchema": input_schema,
+        "outputSchema": output_schema,
+        "serverVersion": server_version,
+        "annotations": _annotations_json(normalized_annotations),
+    }
+    # Preserve hashes for legacy/native definitions that predate negotiated
+    # protocol persistence.  New MCP snapshots always provide this field.
+    if protocol_version is not None:
+        definition["protocolVersion"] = protocol_version
+    return _sha256_json(definition)
 
 
 def execution_hash(
@@ -168,10 +208,16 @@ class FrozenTool:
     contract: ToolContract
     output_schema: Optional[JSONSchema] = None
     server_version: Optional[str] = None
+    protocol_version: Optional[str] = None
+    annotations: Optional[McpAnnotations] = None
     # True iff the contract was explicitly asserted (capability manifest / native
     # declaration) rather than defaulted from untrusted MCP hints. Race admission
     # (§5) treats an unasserted contract as `none`.
     asserted: bool = False
+    # Where the trusted contract assertion came from.  Unasserted MCP tools
+    # have no assertion provenance; their persisted annotations explain the
+    # conservative contract derivation instead.
+    assertion_provenance: Optional[str] = None
 
     @property
     def hash(self) -> str:
@@ -186,13 +232,27 @@ class FrozenTool:
         server_version: Optional[str] = None,
         asserted: bool = False,
         annotations: Optional[McpAnnotations | dict[str, Any]] = None,
+        protocol_version: Optional[str] = None,
+        assertion_provenance: Optional[str] = None,
     ) -> "FrozenTool":
+        annotation_value: Optional[McpAnnotations]
+        if annotations is None:
+            annotation_value = None
+        elif isinstance(annotations, McpAnnotations):
+            annotation_value = annotations
+        else:
+            annotation_value = McpAnnotations.from_mcp(annotations)
+        if isinstance(ref, McpTool) and protocol_version is not None:
+            annotation_value = (annotation_value or McpAnnotations()).normalized(
+                protocol_version
+            )
         def_hash = definition_hash(
             ref,
             input_schema,
             output_schema,
             server_version,
-            annotations,
+            annotation_value,
+            protocol_version,
         )
         exec_hash = execution_hash(def_hash, contract, asserted)
         return FrozenTool(
@@ -203,7 +263,10 @@ class FrozenTool:
             contract=contract,
             output_schema=output_schema,
             server_version=server_version,
+            protocol_version=protocol_version,
+            annotations=annotation_value,
             asserted=asserted,
+            assertion_provenance=assertion_provenance,
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -220,6 +283,12 @@ class FrozenTool:
             out["outputSchema"] = self.output_schema
         if self.server_version is not None:
             out["serverVersion"] = self.server_version
+        if self.protocol_version is not None:
+            out["protocolVersion"] = self.protocol_version
+        if self.annotations is not None:
+            out["annotations"] = self.annotations.to_json()
+        if self.assertion_provenance is not None:
+            out["assertionProvenance"] = self.assertion_provenance
         return out
 
 
@@ -250,7 +319,14 @@ def frozentool_from_json(d: dict[str, Any]) -> FrozenTool:
         contract=ToolContract.from_json(d["contract"]),
         output_schema=d.get("outputSchema"),
         server_version=d.get("serverVersion"),
+        protocol_version=d.get("protocolVersion"),
+        annotations=(
+            McpAnnotations.from_mcp(d["annotations"])
+            if d.get("annotations") is not None
+            else None
+        ),
         asserted=d.get("asserted", False),
+        assertion_provenance=d.get("assertionProvenance"),
     )
 
 

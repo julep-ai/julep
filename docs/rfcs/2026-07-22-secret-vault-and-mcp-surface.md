@@ -160,6 +160,10 @@ Julep authenticates submitters; tenant identity belongs to the application.
    plane has the same environment config it may reject them synchronously as a convenience;
    worker preflight remains authoritative. Supplying an allowed name intentionally shadows
    the operator vault/env value of the same name for that run.
+   This first version deliberately supports **MCP request-header references only**; it does
+   not inject caller-supplied values into LLM/provider credentials or arbitrary worker env.
+   Submission is capped at 32 entries, 16 KiB UTF-8 per value, and 64 KiB total (names plus
+   values).
 2. **Non-persistence contract**: the `secrets` field is stripped at ingest — it never reaches
    the stored run input (`input_ref` / projection values), `GET /v1/runs`, SSE, traces, or
    server logs. Values ride only inside `FlowInput` under the Temporal payload codec
@@ -172,7 +176,9 @@ Julep authenticates submitters; tenant identity belongs to the application.
    continue-as-new constructor. Each boundary constructs the scrubber from that run's map.
    Absent field ⇒ none; old histories replay unchanged; command-producing changes are
    patch-gated.
-5. **Cache identity**: transport/preflight caches key on server-config digest + ordered
+5. **Cache identity**: after a fetch returns its generation, resolver entries use
+   `(name, generation)` as their version/freshness token. Transport/preflight caches key on
+   server-config digest + ordered
    sink→value-hash mapping + policy — never raw values, no unordered-set collision when two
    secrets swap headers.
 6. **Pinning trade-off, documented**: values are fixed for the run's lifetime — no mid-run
@@ -230,6 +236,10 @@ MCP tools:
   effective policy is captured from the release at freeze (`[tool.julep.mcp] preflight`,
   alpha), overridable only by an authorized submission parameter; and
   `preflight = {policy, completed, surface_digest}` rides `FlowInput` across continue-as-new.
+- **Run-secret binding is unconditional:** the same first activity always validates submitted
+  names against whole-string references on release-referenced servers, including when the
+  surface policy is `off`. `off` disables live `tools/list` comparison, not secret routing
+  validation.
 
 **Activation-time advisory:** `POST /v1/deployments` runs the same check best-effort from the
 control plane when reachable, storing per-server status on the deployment record (schema
@@ -238,7 +248,10 @@ addition). Advisory only — the worker preflight is the enforcement point.
 ### 4.4 Mid-run drift
 
 No rechecks mid-run or across CAN. Call-site drift signatures (tool-not-found; server-side
-input-schema rejection) become **`ToolSurfaceDrift`**: added to the harness's non-retryable
+input-schema rejection) become **`ToolSurfaceDrift`**. Before dispatch, AgentWorkflow validates
+model arguments against the frozen `inputSchema`. Failure there is a model/tool-call error and
+returns as an observation for another round; only arguments that pass the frozen schema but are
+then schema-rejected by the live server prove drift. `ToolSurfaceDrift` is added to the harness's non-retryable
 classification and **detected through the `ActivityError` cause chain in AgentWorkflow's tool
 dispatch**, projected as a typed failure and **re-raised** — without this, AgentWorkflow
 converts tool activity errors into observations for the next model round and the drift signal
@@ -352,7 +365,9 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
   eviction; scrubber catches exact/base64/urlencoded echoes at all four boundaries.
 - **Agent lowering**: tool-bearing reasoner ⇒ app/AgentWorkflow with alias map (goldens);
   non-tool reasoners byte-identical; alias-mapped dispatch; READ-concurrent determinism;
-  `ToolSurfaceDrift` re-raise on sequential and concurrent paths; JSON-Schema output
+  frozen-input validation keeps bad model arguments as observations; live schema rejection
+  after frozen validation plus tool-not-found become `ToolSurfaceDrift`, re-raised on sequential
+  and concurrent paths; JSON-Schema output
   validation + `output_retries`; canonical transcript across CAN.
 - **Declarations blob**: schema-version-2 golden; release-scoped hydration (two conflicting
   releases coexist); generic worker runs the issue-dedup agent from the release alone.
@@ -366,7 +381,8 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
   normalized-annotation persistence in `FrozenTool`/releases.
 - **PR-A: vault-lite** — migration, `/v1/secrets`, key roles + route audit, allowlist,
   `julep/secrets.py` resolver + scrubber, run-secrets ingest at `POST /v1/runs`
-  (strip-before-store, encryption-required), vault key ring + maintenance-only
+  (strip-before-store, encryption-required; reject as unsupported until PR-B is deployed),
+  vault key ring + maintenance-only
   `db reencrypt-secrets`, doctor check, docs.
 - **PR-B: surface contract** — `McpTransport` + discovery scope, `pin` check, preflight
   behind `workflow.patched`, policy pinning + CAN carriage, authoritative inferred run-secret
@@ -383,4 +399,5 @@ servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually run
 Directional JSON-Schema compat mode; OAuth auto-refresh; egress proxies/placeholders;
 julep-side tenant secret storage; per-secret host binding; secret version history + webhooks;
 LISTEN/NOTIFY rotation push; MCP *server* authoring; sourcing `worker_secret_environment`
-(K8s) from the vault.
+(K8s) from the vault; caller-supplied run secrets for LLM/provider credentials or arbitrary
+worker environment variables.

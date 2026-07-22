@@ -46,8 +46,20 @@ def renderer(name: str) -> Callable[[Callable[[Context], str]], Callable[[Contex
 
 
 def project_context(value: Any) -> dict[str, Any]:
-    """v1 Context projection at the invoke boundary."""
-    return dict(value) if isinstance(value, Mapping) else {"value": value}
+    """Context projection at the invoke boundary.
+
+    AgentWorkflow wraps the current observation under ``input`` and adds its
+    canonical trace. When the original/current input is itself a mapping,
+    expose its business fields at top level too so an ordinary dotctx template
+    renders identically inside and outside the agent loop.
+    """
+    if not isinstance(value, Mapping):
+        return {"value": value}
+    projected = dict(value)
+    nested = value.get("input")
+    if isinstance(nested, Mapping) and "trace" in value:
+        return {**nested, **projected}
+    return projected
 
 
 def render_system(reasoner: Reasoner, ctx: Context) -> str:

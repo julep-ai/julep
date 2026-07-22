@@ -202,6 +202,9 @@ def test_deploy_override_admits_asserted_tool_into_race():
     ], "mcp_servers": {"srv": None}})
     d = deploy(race(call(mcp("srv", "read")), call(mcp("srv", "writer"))), snap, capabilities=caps)
     assert len(d.manifest) == 2
+    assert {tool.assertion_provenance for tool in d.manifest.values()} == {
+        "capability_manifest"
+    }
 
 
 def test_deploy_non_strict_returns_diagnostics():

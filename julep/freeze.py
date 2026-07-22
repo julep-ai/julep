@@ -16,7 +16,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from .contracts import (
     FrozenTool,
@@ -43,7 +43,11 @@ from .ir import (
     toolref_key,
 )
 from .kinds import Effect, Idempotency, Op
-from .registry import DEFAULT_REGISTRY, ToolSchemaExpectation
+from .registry import (
+    DEFAULT_REGISTRY,
+    ToolSchemaExpectation,
+    scoped_tool_expectation_key,
+)
 from .transforms import detect_cycles, normalize_ids
 
 
@@ -73,7 +77,12 @@ class McpToolSpec:
 class McpServerSnapshot:
     server: str
     tools: dict[str, McpToolSpec]
+    # ``version`` is the legacy, combined snapshot identity.  New live
+    # snapshots also persist the negotiated protocol and server versions
+    # separately so releases can normalize and compare definitions exactly.
     version: Optional[str] = None
+    protocol_version: Optional[str] = None
+    server_version: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -101,9 +110,16 @@ class CapabilityOverrides:
     """
 
     contracts: dict[str, ToolContract] = field(default_factory=dict)
+    provenance: dict[str, str] = field(default_factory=dict)
+    default_provenance: str = "operator_override"
 
     def get(self, key: str) -> Optional[ToolContract]:
         return self.contracts.get(key)
+
+    def provenance_for(self, key: str) -> Optional[str]:
+        if key not in self.contracts:
+            return None
+        return self.provenance.get(key, self.default_provenance)
 
 
 @dataclass(frozen=True)
@@ -121,6 +137,7 @@ def _resolve(
 ) -> FrozenTool:
     key = toolref_key(ref)
     asserted_contract = overrides.get(key)
+    asserted_provenance = overrides.provenance_for(key)
 
     # Reserved human-gate tool: synthetic, no snapshot lookup.
     if isinstance(ref, NativeTool) and ref.name == HUMAN_GATE_TOOL:
@@ -131,6 +148,7 @@ def _resolve(
             output_schema=None,
             server_version=None,
             asserted=True,
+            assertion_provenance=asserted_provenance or "framework_builtin",
         )
 
     # Reserved sleep tool: synthetic, no snapshot lookup.
@@ -142,6 +160,7 @@ def _resolve(
             output_schema=None,
             server_version=None,
             asserted=True,
+            assertion_provenance=asserted_provenance or "framework_builtin",
         )
 
     if isinstance(ref, NativeTool) and ref.name == RECV_TOOL:
@@ -152,6 +171,7 @@ def _resolve(
             output_schema=None,
             server_version=None,
             asserted=True,
+            assertion_provenance=asserted_provenance or "framework_builtin",
         )
 
     if isinstance(ref, NativeTool) and ref.name == EMIT_TOOL:
@@ -162,6 +182,7 @@ def _resolve(
             output_schema=None,
             server_version=None,
             asserted=True,
+            assertion_provenance=asserted_provenance or "framework_builtin",
         )
 
     if isinstance(ref, NativeTool):
@@ -176,6 +197,9 @@ def _resolve(
             output_schema=native_spec.output_schema,
             server_version=None,
             asserted=True,  # native tools are ours: their contract is declared
+            assertion_provenance=(
+                asserted_provenance or "native_declaration"
+            ),
         )
 
     # MCP tool.
@@ -194,14 +218,18 @@ def _resolve(
         contract = contract_from_annotations(mcp_spec.annotations)
         asserted = False
 
+    normalized_annotations = mcp_spec.annotations.normalized(server.protocol_version)
+
     return FrozenTool.create(
         ref=ref,
         input_schema=mcp_spec.input_schema,
         contract=contract,
         output_schema=mcp_spec.output_schema,
-        server_version=server.version,
+        server_version=server.server_version or server.version,
         asserted=asserted,
-        annotations=mcp_spec.annotations,
+        annotations=normalized_annotations,
+        protocol_version=server.protocol_version,
+        assertion_provenance=asserted_provenance if asserted else None,
     )
 
 
@@ -232,6 +260,19 @@ def _served_input_schema(key: str, snapshot: McpSnapshot) -> Optional[JSONSchema
     return mcp_spec.input_schema if mcp_spec is not None else None
 
 
+def _app_tool_expectation(
+    expectations: Mapping[str, ToolSchemaExpectation],
+    node: Node,
+    alias: str,
+    wire_key: str,
+) -> Optional[ToolSchemaExpectation]:
+    if node.controller is not None:
+        scoped = expectations.get(scoped_tool_expectation_key(node.controller, alias))
+        if scoped is not None:
+            return scoped
+    return expectations.get(alias) or expectations.get(wire_key)
+
+
 def _expected_tool_keys(flow: Node) -> set[str]:
     """Every toolref key the flow can reach: call leaves, app inline grants,
     and the granted tools of each registered reasoner the flow references."""
@@ -246,7 +287,8 @@ def _expected_tool_keys(flow: Node) -> set[str]:
         if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
             reasoners.add(node.controller)
         if node.op == Op.APP and node.tools:
-            keys.update(str(k) for k in node.tools)
+            aliases = node.tool_aliases or {}
+            keys.update(aliases.get(str(k), str(k)) for k in node.tools)
     for name in reasoners:
         reasoner = DEFAULT_REGISTRY.reasoners.get(name)
         if reasoner is not None:
@@ -265,7 +307,39 @@ def _check_tool_schema_drift(
     against another is exactly the class of bug freeze exists to stop."""
     if not expectations:
         return
+    checked: set[tuple[str, str]] = set()
+
+    # APP aliases compare the prompt-side bare schema with the resolved wire
+    # target. This is the important dotctx binding path: changing a config
+    # target never changes tools.pyi, but a mismatched target fails freeze.
+    for node in flow.walk():
+        if node.op != Op.APP or not node.tools:
+            continue
+        aliases = node.tool_aliases or {}
+        for raw_alias in node.tools:
+            alias = str(raw_alias)
+            wire_key = aliases.get(alias, alias)
+            expectation = _app_tool_expectation(expectations, node, alias, wire_key)
+            if expectation is None:
+                continue
+            checked.add((alias, wire_key))
+            served = _served_input_schema(wire_key, snapshot)
+            if served is None:
+                continue  # APP resolution reports the stronger missing-tool error
+            expected_hash = _schema_hash(expectation.input_schema)
+            served_hash = _schema_hash(served)
+            if expected_hash != served_hash:
+                ref = _toolref_from_key(wire_key)
+                server = ref.server if isinstance(ref, McpTool) else "<native>"
+                raise FreezeError(
+                    f"TOOL_SCHEMA_DRIFT: alias {alias!r} resolves to {wire_key!r} "
+                    f"(server {server!r}) with schema {served_hash}, but "
+                    f"{expectation.ctx_path!r} was written against {expected_hash}"
+                )
+
     for key in sorted(_expected_tool_keys(flow)):
+        if (key, key) in checked or any(wire == key for _, wire in checked):
+            continue
         expectation = expectations.get(key)
         if expectation is None:
             continue
@@ -338,9 +412,51 @@ def freeze(
     for node in frozen_flow.walk():
         if node.op != Op.APP or not node.tools:
             continue
-        for key in node.tools:
+        aliases_authored = node.tool_aliases is not None
+        aliases = node.tool_aliases or {str(key): str(key) for key in node.tools}
+        grant_names = [str(key) for key in node.tools]
+        if set(aliases) != set(grant_names):
+            missing = sorted(set(grant_names) - set(aliases))
+            extra = sorted(set(aliases) - set(grant_names))
+            details: list[str] = []
+            if missing:
+                details.append("unbound aliases: " + ", ".join(missing))
+            if extra:
+                details.append("bindings without grants: " + ", ".join(extra))
+            raise FreezeError("APP tool alias map mismatch: " + "; ".join(details))
+
+        tool_defs: list[dict[str, Any]] = []
+        tool_contracts: dict[str, dict[str, Any]] = {}
+        for alias in grant_names:
+            # Explicit aliases are provider-visible names and must satisfy the
+            # portable bare-name contract. An absent alias map is the legacy APP
+            # surface, where grants are wire ToolRefs such as ``srv/search``;
+            # keep those valid and dispatch them by identity.
+            if aliases_authored and not alias.isidentifier():
+                raise FreezeError(
+                    f"APP provider tool alias {alias!r} must be a bare Python identifier"
+                )
+            key = aliases[alias]
             tool = _resolve(_toolref_from_key(key), snapshot, overrides)
             manifest[tool.hash] = tool
+            expectation = _app_tool_expectation(expectations, node, alias, key)
+            tool_defs.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": alias,
+                        "description": expectation.description if expectation else "",
+                        "parameters": tool.input_schema,
+                    },
+                }
+            )
+            payload: dict[str, Any] = tool.contract.to_json()
+            payload["asserted"] = tool.asserted
+            tool_contracts[alias] = payload
+        if aliases_authored:
+            node.tool_aliases = aliases
+        node.tool_defs = tool_defs
+        node.tool_contracts = tool_contracts
 
     # 6. Verify recorded dotctx tool-schema expectations against the snapshot.
     _check_tool_schema_drift(frozen_flow, snapshot, expectations)

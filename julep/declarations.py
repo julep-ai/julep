@@ -6,12 +6,12 @@ import hashlib
 import json
 import re
 from collections.abc import Iterable
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Optional
 
 from .app import ApplicationDefinitionError, _reasoner_runtime_declaration
 from .dotctx import Reasoner
-from .ir import SubContract, canonical_json
-from .kinds import ContextScope
+from .ir import Node, SubContract, canonical_json
+from .kinds import ContextScope, Op
 from .registry import (
     DEFAULT_REGISTRY,
     Registry,
@@ -20,7 +20,7 @@ from .registry import (
     RendererEntry,
 )
 
-_BLOB_SCHEMA_VERSION = 1
+_BLOB_SCHEMA_VERSION = 2
 _SHA256_REF = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
@@ -95,6 +95,7 @@ def declarations_blob(
     reasoners: Iterable[Reasoner],
     *,
     registry: Registry,
+    flow: Optional[Node] = None,
 ) -> bytes:
     """Serialize the reasoners and rich renderers needed by one pipeline."""
 
@@ -137,6 +138,45 @@ def declarations_blob(
             ],
         }
 
+    agents: dict[str, dict[str, Any]] = {}
+    if flow is not None:
+        for node in flow.walk():
+            if node.op is not Op.APP or node.controller is None:
+                continue
+            encoded = node.to_json()
+            config = {
+                key: encoded[key]
+                for key in (
+                    "budget",
+                    "maxRounds",
+                    "ctx",
+                    "summarizer",
+                    "roundNote",
+                    "nativeTools",
+                    "requireToolCall",
+                    "replySchema",
+                    "outputRetries",
+                )
+                if key in encoded
+            }
+            spec: dict[str, Any] = {
+                "config": config,
+                "grantedTools": list(node.tools or ()),
+                "toolAliases": dict(node.tool_aliases or {}),
+                "toolDefs": list(node.tool_defs or ()),
+                "grantedContracts": dict(node.tool_contracts or {}),
+            }
+            if node.subflows is not None:
+                spec["grantedSubflows"] = list(node.subflows)
+            if node.subflow_queues is not None:
+                spec["subflowQueues"] = dict(node.subflow_queues)
+            existing_agent = agents.get(node.controller)
+            if existing_agent is not None and existing_agent != spec:
+                raise ApplicationDefinitionError(
+                    f"controller {node.controller!r} has conflicting APP declarations"
+                )
+            agents[node.controller] = spec
+
     payload = {
         "schemaVersion": _BLOB_SCHEMA_VERSION,
         "reasoners": {
@@ -144,6 +184,7 @@ def declarations_blob(
             for name, reasoner in sorted(reasoner_values.items())
         },
         "renderers": renderers,
+        "agents": {name: agents[name] for name in sorted(agents)},
     }
     return canonical_json(payload).encode("utf-8")
 
@@ -312,11 +353,66 @@ def _reasoner_from_json(name: str, raw: Any) -> Reasoner:
     )
 
 
-def _target_registries(registry: Registry) -> list[Registry]:
+def _target_registries(registry: Registry, *, release_scoped: bool) -> list[Registry]:
+    if release_scoped:
+        return [registry]
     targets = [DEFAULT_REGISTRY]
     if registry is not DEFAULT_REGISTRY:
         targets.append(registry)
     return targets
+
+
+def _agent_spec_from_json(name: str, raw: Any) -> dict[str, Any]:
+    value = _object(raw, label=f"agent {name!r}")
+    config = _object(value.get("config"), label=f"agent {name!r} config")
+    grants = value.get("grantedTools")
+    if not isinstance(grants, list) or not all(isinstance(item, str) for item in grants):
+        _fail(f"agent {name!r} grantedTools must be a list of strings")
+    aliases = _string_mapping(
+        value.get("toolAliases"), label=f"agent {name!r} toolAliases"
+    )
+    if set(aliases) != set(grants):
+        _fail(f"agent {name!r} toolAliases must exactly match grantedTools")
+    tool_defs = value.get("toolDefs")
+    if not isinstance(tool_defs, list) or not all(isinstance(item, dict) for item in tool_defs):
+        _fail(f"agent {name!r} toolDefs must be a list of JSON objects")
+    contracts = _object(
+        value.get("grantedContracts"), label=f"agent {name!r} grantedContracts"
+    )
+    if set(contracts) != set(grants):
+        _fail(f"agent {name!r} grantedContracts must exactly match grantedTools")
+    tool_def_names: list[str] = []
+    for index, tool_def in enumerate(tool_defs):
+        function = _object(
+            tool_def.get("function"), label=f"agent {name!r} toolDefs[{index}].function"
+        )
+        tool_def_names.append(
+            _string(function.get("name"), label=f"agent {name!r} toolDefs[{index}] name")
+        )
+        _object(
+            function.get("parameters"),
+            label=f"agent {name!r} toolDefs[{index}] parameters",
+        )
+    if set(tool_def_names) != set(grants) or len(tool_def_names) != len(grants):
+        _fail(f"agent {name!r} toolDefs must define every granted tool exactly once")
+
+    out: dict[str, Any] = {
+        "config": config,
+        "grantedTools": list(grants),
+        "toolAliases": aliases,
+        "toolDefs": list(tool_defs),
+        "grantedContracts": contracts,
+    }
+    if "grantedSubflows" in value:
+        subflows = value["grantedSubflows"]
+        if not isinstance(subflows, list) or not all(isinstance(item, str) for item in subflows):
+            _fail(f"agent {name!r} grantedSubflows must be a list of strings")
+        out["grantedSubflows"] = list(subflows)
+    if "subflowQueues" in value:
+        out["subflowQueues"] = _string_mapping(
+            value["subflowQueues"], label=f"agent {name!r} subflowQueues"
+        )
+    return out
 
 
 def load_declarations(
@@ -324,6 +420,7 @@ def load_declarations(
     *,
     expected_hash: str,
     registry: Registry,
+    release_scoped: bool = False,
 ) -> None:
     """Verify, rebuild, cross-check, and register a declarations blob."""
 
@@ -379,7 +476,12 @@ def load_declarations(
                     "match the rebuilt declaration"
                 )
 
-    targets = _target_registries(registry)
+    agent_values = _object(payload.get("agents"), label="declarations agents")
+    rebuilt_agents = {
+        name: _agent_spec_from_json(name, raw) for name, raw in agent_values.items()
+    }
+
+    targets = _target_registries(registry, release_scoped=release_scoped)
     for target in targets:
         for reasoner in rebuilt_reasoners.values():
             existing_reasoner = target.reasoners.get(reasoner.name)
@@ -397,6 +499,12 @@ def load_declarations(
                 raise ApplicationDefinitionError(
                     f"renderer {name!r} conflicts with the verified application declaration"
                 )
+        for name, spec in rebuilt_agents.items():
+            existing_agent = target.agent_specs.get(name)
+            if existing_agent is not None and existing_agent != spec:
+                raise ApplicationDefinitionError(
+                    f"agent {name!r} conflicts with the verified application declaration"
+                )
 
     for target in targets:
         for reasoner in rebuilt_reasoners.values():
@@ -404,6 +512,24 @@ def load_declarations(
         for name, entry in rebuilt_renderers.items():
             target.renderers[name] = entry
             target.renderer_declarations[name] = renderer_declarations[name]
+        target.agent_specs.update(rebuilt_agents)
+
+    # Renderer names are content-addressed, so sharing them process-wide is
+    # safe even when reasoner names are release-scoped. The prompt adapter's
+    # historical renderer lookup remains global; conflicting content under the
+    # same renderer name was rejected above.
+    if release_scoped and registry is not DEFAULT_REGISTRY:
+        for name, entry in rebuilt_renderers.items():
+            existing_renderer = DEFAULT_REGISTRY.renderers.get(name)
+            if (
+                existing_renderer is not None
+                and existing_renderer.source_hash != entry.source_hash
+            ):
+                raise ApplicationDefinitionError(
+                    f"renderer {name!r} conflicts with a loaded release declaration"
+                )
+            DEFAULT_REGISTRY.renderers[name] = entry
+            DEFAULT_REGISTRY.renderer_declarations[name] = renderer_declarations[name]
 
 
 __all__ = ["DeclarationError", "declarations_blob", "load_declarations"]

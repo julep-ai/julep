@@ -11,10 +11,12 @@ import asyncio
 import json
 import os
 from copy import deepcopy
+from dataclasses import replace
 from typing import Any
 
 from julep import (
     Application,
+    CompiledApplication,
     Deployment,
     PipelineSpec,
     Reasoner,
@@ -45,10 +47,14 @@ ONE_LINER = os.environ.get("EPISODE_ONE_LINER_MODEL", "openai:gpt-4o-mini")
 MCP_SERVER = "episodes"
 PIPELINE_NAME = "episode_summary_batch"
 LANE = "summary"
+# This example deliberately freezes against a small hand-authored listing while
+# FastMCP owns the live descriptive schema/version metadata. Require the same
+# tool vocabulary at run start without claiming byte-for-byte schema ownership.
+MCP_PREFLIGHT_POLICY = "names"
 
 
 SUMMARIZER_R = Reasoner(
-    name="episode_summarizer",
+    name="episode_summarizer.summary",
     model=SUMMARIZER,
     system=(
         "Summarize the episode text in 2-4 plain sentences covering the important "
@@ -63,7 +69,7 @@ SUMMARIZER_R = Reasoner(
 )
 
 ONE_LINER_R = Reasoner(
-    name="episode_one_liner",
+    name="episode_summarizer.one_liner",
     model=ONE_LINER,
     system=(
         "Compress the summary into one sentence of at most 140 characters. "
@@ -84,7 +90,7 @@ write_summary = mcp_tool(MCP_SERVER, "write-summary")
 write_one_liner = mcp_tool(MCP_SERVER, "write-one-liner")
 
 
-@pure("episode_found")
+@pure("episode_summarizer.episode_found")
 def episode_found(source: dict[str, Any]) -> bool:
     return bool(source.get("found"))
 
@@ -169,6 +175,15 @@ def build_application() -> Application:
                 snapshot=snapshot_from_listings(mcp_listings()),
             )
         ],
+    )
+
+
+def build_compiled_application() -> CompiledApplication:
+    """Compile the live release with its explicit version-tolerant MCP policy."""
+
+    return replace(
+        build_application().compile(),
+        mcp_preflight_policy=MCP_PREFLIGHT_POLICY,
     )
 
 

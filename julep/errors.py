@@ -45,6 +45,67 @@ class PureDriftError(JulepError):
     """Raised when a pinned pure source hash no longer matches the worker registry."""
 
 
+class ToolSurfaceDrift(JulepError):
+    """A frozen MCP call no longer exists or rejects its frozen input shape."""
+
+    def __init__(self, server: str, tool: str, reason: str) -> None:
+        self.server = server
+        self.tool = tool
+        self.reason = reason
+        super().__init__(f"MCP tool surface drift for {server}/{tool}: {reason}")
+
+    def to_json(self) -> dict[str, str]:
+        return {"server": self.server, "tool": self.tool, "reason": self.reason}
+
+
+class ToolInputValidation(JulepError):
+    """Tool arguments failed the release's frozen input schema before network IO."""
+
+    def __init__(self, server: str, tool: str) -> None:
+        self.server = server
+        self.tool = tool
+        super().__init__(f"tool input failed frozen schema validation for {server}/{tool}")
+
+
+def tool_surface_drift_from_cause(error: BaseException) -> ToolSurfaceDrift | None:
+    """Find or reconstruct typed drift through an engine exception chain.
+
+    Temporal's workflow sandbox can call this helper without importing the
+    Temporal SDK.  Activity failures expose the application error type on a
+    nested cause; direct/local backends preserve the original exception.
+    """
+
+    pending: list[BaseException] = [error]
+    seen: set[int] = set()
+    while pending:
+        current = pending.pop()
+        identity = id(current)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        if isinstance(current, ToolSurfaceDrift):
+            return current
+        error_type = getattr(current, "type", None)
+        if error_type == "ToolSurfaceDrift" or type(current).__name__ == "ToolSurfaceDrift":
+            message = str(current)
+            marker = "MCP tool surface drift for "
+            if marker in message:
+                target_and_reason = message.split(marker, 1)[1]
+                target, separator, reason = target_and_reason.partition(": ")
+                server, slash, tool = target.partition("/")
+                if separator and slash and server and tool and reason:
+                    return ToolSurfaceDrift(server, tool, reason)
+            return ToolSurfaceDrift("<activity>", "<unknown>", message)
+        for nested in (
+            getattr(current, "__cause__", None),
+            getattr(current, "__context__", None),
+            getattr(current, "cause", None),
+        ):
+            if isinstance(nested, BaseException):
+                pending.append(nested)
+    return None
+
+
 class PureExecutionError(JulepError):
     """A bundle-sourced pure raised inside the wasm sandbox.
 
@@ -114,6 +175,8 @@ POLICY_ERRORS: tuple[type[JulepError], ...] = (
     ValidationError,
     FreezeError,
     PureDriftError,
+    ToolSurfaceDrift,
+    ToolInputValidation,
     PrincipalRequired,
 )
 """Settled policy decisions that execution backends must never retry."""
