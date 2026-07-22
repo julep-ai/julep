@@ -1,9 +1,10 @@
-# RFC: Secret vault (lite), MCP surface contract, and the dotctx tool loop
+# RFC: Secret vault (lite), MCP surface contract, and dotctx agents on AgentWorkflow
 
-- **Status:** draft (initial RFC for independent review)
+- **Status:** v2 — revised after independent review (verdict on v1: needs-rework; S4 unsound,
+  S5 reframed). Review log in §11.
 - **Owner:** Diwank Singh Tomer
 - **Date:** 2026-07-22
-- **Reviewers:** codex `gpt-5.6-sol` @ high (independent design review)
+- **Reviewers:** codex `gpt-5.6-sol` @ high (adversarial, code-grounded)
 - **Depends on:** the `julep3-post-port` program (control plane `/v1`, schema-v2 releases with
   `runtimeDeclarationsRef`, `mcp_tool()` + snapshot-at-freeze, `julep.mcp_auth`, redaction wiring)
 
@@ -17,54 +18,58 @@ Two gaps surfaced by the mem-mcp port and the CMA credential-vault research:
    rotate, no local-dev story). Nothing stops a secret from being committed to config or drifting
    into logs.
 2. **The frozen MCP tool surface is unenforced.** Freezing snapshots `tools/list` and derives
-   retry/effect contracts from `McpAnnotations`, but nothing checks that the *live* server still
-   honors that surface at run time. Drift (removed tool, new required field, an
-   idempotency-annotation downgrade) currently surfaces as an opaque mid-run activity failure —
-   or worse, as a retry policy that is no longer safe.
+   conservative contracts from `McpAnnotations`, but nothing checks that the *live* server still
+   matches that surface at run time — drift surfaces as an opaque mid-run activity failure.
+   Worse (pre-existing bug, confirmed in review): `_retry_policy_for`
+   (`harness.py`) chooses retry counts from the tool contract **without checking
+   `FrozenTool.asserted`** — an MCP server can claim `idempotentHint: true` and obtain retries
+   it is not entitled to. MCP annotations are untrusted hints by spec.
 
-Relatedly, dotctx packages declare `tools:` keys that are **declarative only**; agent-shaped
-packages (`max_rounds`, `agent: true`) cannot run zero-code because julep has no tool-calling
-loop of its own (`agent: true` lowers to `app()`, which expects an application-side controller).
+Relatedly, dotctx packages declare `tools:` keys that are **declarative only**. The v1 draft
+wrongly claimed julep lacks a tool loop — it does not: `AgentWorkflow`
+(`julep/agent_loop.py`, `execution/harness.py:2132+`) is a durable, bounded, native
+tool-calling loop with deterministic activity cids, contract-aware dispatch (READ calls
+concurrent, writes serialized), `require_tool_call`, and mid-loop continue-as-new. The real gap
+is **zero-code wiring**: dotctx reasoners with tools cannot reach AgentWorkflow without
+application code, and there is no frozen binding from prompt-side tool names to wire ToolRefs.
 
 ### What we take from CMA vaults — and what we deliberately do not
 
 Adopted: write-only secret records addressed by immutable name; injection at a boundary;
-rotation propagating to running workers without restart; values never readable back through the
-write path; audit metadata.
+rotation for request-time consumers without restart; values never readable back through the
+write path; audit metadata. Rejected (trust model differs — julep workers run operator-trusted
+code, not model-driven sandboxes): egress proxies, placeholder substitution, OAuth
+auto-refresh. The vault's job: **distribution + hygiene** — central storage,
+reference-by-name, injection at the worker/server boundary, no secret material in git,
+releases, artifacts, projection, or julep-controlled logs.
 
-Rejected (trust model differs): CMA substitutes placeholders at an egress proxy because its
-sandbox runs untrusted model-driven code. Julep workers run **operator-trusted code**; the
-model-visible surface is reasoner context, and the projection already has fail-closed
-secret-shaped redaction. So: no egress proxy, no placeholder strings, no OAuth auto-refresh.
-The vault's job here is **distribution + hygiene**: central storage, reference-by-name from
-config, injection at the worker/server boundary, zero secret material in git, releases,
-artifacts, projection, or logs.
-
-## 2. Decisions already locked with the owner
+## 2. Decisions locked with the owner
 
 | Decision | Choice |
 | --- | --- |
-| Spec shape | One coupled spec (vault + MCP surface + dotctx loop) |
+| Spec shape | One coupled spec (vault + MCP surface + dotctx agents) |
 | Vault threat model | Distribution + hygiene (trusted workers; no egress proxy) |
 | Vault plumbing | Postgres store in the execution store + worker **pull**; plain-env fallback |
 | Reference syntax | Whole-string `secret://<name>` URIs |
 | dotctx tool binding | Binding-free packages: bare keys + `[tool.julep.pipeline.<name>.tools]` map |
-| Surface check default | `compat` (structural compatibility, not names-only) |
+| Surface check default | **`pin`** (canonical definition-hash equality; see §4.1 — v1 `compat` was unsound) |
 | Preflight exposure | Alpha-namespaced config knob; semantics may tighten |
-| In-flight contract | Julep assumes freeze-time surface holds for a run's lifetime; no mid-run rechecks |
-| Loop scope v1 | One julep-owned loop: bounded (`max_rounds`) + capped open-ended (`agent: true`) |
+| In-flight contract | Freeze-time surface assumed for a run's lifetime; no mid-run rechecks |
+| Loop | **Reuse AgentWorkflow** (review finding 6); no second loop implementation |
 
 ## 3. Vault-lite
 
 ### 3.1 Data model
 
-New numbered migration in the execution store (`projection_sql.py` conventions):
+New numbered migration in the execution store (`projection_sql.py` conventions; migrations
+currently end at version 8 — this is version 9+):
 
 ```
 secrets(
   name        TEXT PRIMARY KEY,          -- ^[a-z0-9][a-z0-9_-]{0,63}$
-  ciphertext  BYTEA,                     -- AES-GCM over the UTF-8 value; NULL when archived
-  key_id      TEXT NOT NULL,             -- which payload key encrypted it
+  ciphertext  BYTEA,                     -- AES-GCM; NULL when archived
+  key_id      TEXT NOT NULL,             -- vault key that encrypted this row
+  generation  BIGINT NOT NULL,           -- bumped on every PUT; cache/version token
   created_at  TIMESTAMPTZ NOT NULL,
   updated_at  TIMESTAMPTZ NOT NULL,
   updated_by  TEXT NOT NULL,             -- API key name (audit)
@@ -72,121 +77,172 @@ secrets(
 )
 ```
 
-Values are encrypted with the **existing** AES-GCM payload keys (`JULEP_PAYLOAD_KEYS`,
-`payload_key_id` selects; no new key infrastructure). No version history in v1: `PUT` overwrites;
-`archive` nulls the ciphertext and keeps the row for audit; `DELETE` removes the row.
+**Dedicated vault key ring** (review finding 12): `JULEP_VAULT_KEYS` / `JULEP_VAULT_KEY_ID`,
+same wire format as the existing `TEMPORAL_PAYLOAD_KEYS` codec but a separate, purpose-derived
+key ring — reusing the Temporal payload keys would couple two security domains. Encryption
+binds AAD = (name, generation), so ciphertext cannot be replayed across rows or versions.
+Key rotation protocol: old key ids stay decode-available; `julep db reencrypt-secrets`
+re-encrypts all rows under the active key and reports progress; a key may be retired only when
+the sweep reports zero rows referencing it. Backup/restore requirement documented: restoring
+the DB requires the key ring that covers every `key_id` present.
 
-### 3.2 API surface (`/v1`, bearer)
+No version history in v1: `PUT` overwrites (generation++); `archive` nulls ciphertext, keeps
+the row; `DELETE` removes it.
+
+### 3.2 API surface (`/v1`, bearer) and key roles
 
 | Endpoint | Role | Notes |
 | --- | --- | --- |
-| `PUT /v1/secrets/{name}` `{ "value": "..." }` | admin | Create/update. **Write-only**: value never echoed; response is metadata. |
-| `GET /v1/secrets` | admin, worker | Names + metadata (timestamps, updated_by, archived). Never values. |
-| `GET /v1/secrets/{name}/value` | **worker only** | The single read path. Admin keys are write-only by design (humans should not casually read secrets back; workers are the injection boundary). |
-| `POST /v1/secrets/{name}/archive` | admin | Purge ciphertext, keep record. |
-| `DELETE /v1/secrets/{name}` | admin | Hard delete. |
+| `PUT /v1/secrets/{name}` `{ "value": "..." }` | admin | Create/update. **Write-only**: value never echoed. |
+| `GET /v1/secrets` | admin | Names + metadata only (timestamps, updated_by, generation, archived). Workers do NOT get list access (finding 4). |
+| `GET /v1/secrets/{name}/value` | **worker** | The single read path, gated by the server-side allowlist below. Admin keys cannot read values (see §10 Q2). |
+| `POST /v1/secrets/{name}/archive` | admin | Purge ciphertext, keep record. Evicts caches (§3.3). |
+| `DELETE /v1/secrets/{name}` | admin | Hard delete. Evicts caches. |
 
-**API-key roles:** `JULEP_API_KEYS` entries grow from `name:token[:admin]` to
-`name:token[:flag,...]` with flags ⊆ `{admin, worker}`. Existing `:admin` strings parse
-unchanged. `worker` grants exactly: `GET /v1/secrets`, `GET /v1/secrets/{name}/value`. A worker
-key is NOT an admin key and cannot submit runs (default client role is a third, implicit state).
-Values never appear in server logs; the SSE/projection plane never carries them.
+**API-key roles, backward-compatible** (finding 4): `parse_api_keys` splits entries on commas
+AND whitespace, so comma-separated flag lists are unparseable. Instead the third segment stays
+a **single role token**: `name:token[:admin|:worker]`; existing `:admin` strings parse
+unchanged; anything else in the third position is an error. `ApiKey` grows
+`role: {client, worker, admin}`. Every route gets an explicit authorization dependency
+(`require_client`, `require_worker`, `require_admin`) and the existing `require_key` routes are
+audited in PR-A: a worker key is **rejected** on run submission, run queries, SSE, releases,
+deployments, and artifact upload — it can call exactly `GET /v1/secrets/{name}/value` and
+`/health`/`/ready`.
+
+**Worker read scoping** (finding 4): a global-read worker key is a skeleton key. v1 adds
+`[tool.julep.server] worker_secret_allowlist = ["tracker-token", ...]` (env
+`JULEP_WORKER_SECRET_ALLOWLIST`) — fail-closed: with no allowlist configured, worker reads are
+denied. Values never appear in server logs; the SSE/projection plane never carries them.
 
 ### 3.3 `secret://` resolution
 
-Whole-string references: a secret-capable config value equal to `secret://<name>` resolves at
-the **injection boundary**, never at parse or freeze. v1 secret-capable surfaces:
+Whole-string references resolve at the **injection boundary**, never at parse or freeze. v1
+secret-capable surfaces, split by consumer class (finding 5):
 
-- `[tool.julep.mcp.servers.*.headers]` values (both freeze-time snapshot fetch and runtime
-  `http_mcp_caller` transport headers),
-- `ServerSettings` secret-typed fields (e.g. `temporal_api_key`),
-- worker env injection values in `[tool.julep.server] worker_environment` (letting the Helm
-  path source from the vault instead of pre-created K8s secrets is a v2 extension; v1 keeps
-  `worker_secret_environment` as-is).
+- **Request-time consumers** — `[tool.julep.mcp.servers.*.headers]` values, read per call
+  through the shared MCP transport (§4.2). These get the rotation-without-restart property.
+- **Startup-time consumers** — `ServerSettings` secret-typed fields (e.g.
+  `temporal_api_key`, read once to build the long-lived Temporal connection) and materialized
+  worker env. These resolve **once at process start**; rotation requires
+  restart/reconnect, and the docs say so explicitly. No false 60-second promise.
 
 `SecretResolver` chain (new `julep/secrets.py`):
 
-1. **Control plane**: when `JULEP_API_URL` + a worker-role key are configured — `GET
-   /v1/secrets/{name}/value`, cached per-process with a 60 s TTL. On refresh failure with a
-   cached value present: keep serving the stale value and warn (rotation lag beats an outage);
-   fail only when no value was ever fetched.
-2. **Env fallback**: `JULEP_SECRET_<NAME>` (name uppercased, `-`→`_`). This is the whole
-   local-dev story: no control plane needed.
-3. Otherwise **fail closed** with an error naming the secret and both chain steps tried.
+1. **Control plane**: `GET /v1/secrets/{name}/value` when `JULEP_API_URL` + a worker-role key
+   are configured. Per-process cache with 60 s TTL keyed by (name, generation).
+   **Stale-if-error is bounded and typed** (finding 5, §10 Q1): stale values are served only
+   for *transient* failures (network, 5xx) and for at most **15 minutes**, then fail closed.
+   401/403/404/410, `archived`, and `deleted` evict the cache entry immediately and fail
+   closed — revocation must win over availability.
+2. **Env fallback**: `JULEP_SECRET_<NAME>` (uppercased, `-`→`_`). The local-dev story; also the
+   normal authoring-time path for freeze-time snapshot fetches (admin keys cannot read values,
+   so `julep plan/apply` resolves via env or a deliberately-granted worker key).
+3. Otherwise **fail closed**, naming the secret and both chain steps tried.
 
-Resolved values are registered as exact-match patterns with the worker's redactor
-(`build_redactor` composition), so an accidental echo into the projection is scrubbed.
+**Secret-value scrubbing** (finding 11 — key/path-pattern redaction cannot catch echoed
+values): resolved values register in a process-wide **dynamic value scrubber** holding exact
+values plus base64 and URL-encoded variants. The scrubber composes into: trajectory capture,
+projection egress (pre-`value_ref`), activity-failure serialization, and MCP/HTTP transport
+diagnostics; request headers/bodies are never logged by default. Scope honestly documented:
+this protects **julep-controlled persistence**; it cannot stop a remote endpoint from
+deliberately echoing a credential into a tool *result* the model then sees.
 
-Freezing: references pass through as strings; snapshot listings never contain header values; by
-construction no resolution output flows into release/artifact bytes. `julep doctor` gains a
-check for dangling `secret://` references (config names not resolvable by the chain).
+Freezing: references pass through as strings; no resolution output flows into release or
+artifact bytes. `julep doctor` gains a dangling-`secret://`-reference check.
 
 ### 3.4 Rotation and audit
 
-`PUT` + TTL expiry ⇒ running workers pick up a rotated value within ~60 s, no restart — the
-CMA property that motivated worker-pull. Audit in v1 is metadata only (`updated_by`,
-timestamps, archive records) plus server log lines; webhooks/history are out of scope.
+Request-time consumers pick up a rotated value within ~TTL (60 s) without restart;
+startup-time consumers on restart/reconnect (documented per surface). Audit v1: metadata
+(`updated_by`, `generation`, timestamps, archive records) + server log lines. Webhooks,
+history, per-secret host binding: out of scope.
 
 ## 4. MCP surface contract
 
-### 4.1 Compatibility check (`julep/mcp_surface.py`)
+### 4.1 What freeze must persist, and retry authority (findings 1, 2)
 
-`check_referenced_surface(frozen_referenced_tools, fresh_listing) -> list[Incompatibility]`,
-where the frozen side is only the tools the flow actually calls. Incompatibility classes:
+Two review corrections reshape this section:
 
-- **(a) missing** — referenced tool absent from the fresh listing;
-- **(b) new required input** — fresh `inputSchema.required` contains a property the frozen
-  schema did not require (frozen-era calls would start failing validation);
-- **(c) declared property removed/retyped** — a property the frozen schema declared is gone or
-  changed JSON type;
-- **(d) annotation safety downgrade** — `idempotentHint` true→false/absent, `readOnlyHint`
-  true→false, `destructiveHint` false/absent→true. This is the highest-severity class: frozen
-  retry/effect contracts were derived from those annotations, so a downgrade silently makes
-  retries/replays unsafe.
+- **Annotations are untrusted hints** (MCP spec: effective defaults `readOnlyHint=false`,
+  `destructiveHint=true`, `idempotentHint=false`) and today they are **not serialized** in
+  `FrozenTool` — only their contribution to `definition_hash` survives. Any annotation-aware
+  check needs data that releases do not currently carry.
+- **Structural JSON-Schema "compat" checking is unsound**: top-level checks miss nested
+  `required`, enum/const narrowing, bounds, `additionalProperties` flips, `oneOf` changes.
+  A checker that calls those "compatible" is worse than none.
 
-Additive/benign changes (new tools, new optional inputs, description text) pass. This is a
-decidable structural check; full JSON-Schema subsumption is deliberately not attempted.
+Therefore:
 
-### 4.2 Enforcement: run-start preflight (worker-side)
+1. `FrozenTool` (and its release serialization) gains **normalized annotations** (defaults
+   applied per the negotiated protocol version), the **protocol version**, and **assertion
+   provenance**. Needed for diagnostics and any future conservative compat mode.
+2. **Retry authority is severed from hints** — and this lands as the *first commit* of PR-B
+   because it fixes a live bug: `_retry_policy_for` must never authorize more than one attempt
+   from an **unasserted** contract. Retries > 1 require `asserted=True` (capability manifest /
+   native declaration / explicit operator override). Live preflight is defense-in-depth, never
+   the source of retry authority.
+3. The v1 surface check is **`pin`: canonical definition-hash equality per referenced tool**
+   (the hash already covers name, schema, and normalized annotations). Any difference —
+   including changes a human would call benign — fails closed with a diff-style detail
+   payload. `names` (presence only) and `off` are explicit, documented, unsafe escape hatches.
+   A directional, provably-conservative `compat` mode (accept a change only when every input
+   admitted by the frozen schema is admitted by the fresh one; unclassifiable ⇒ fail) is
+   future work behind the same alpha knob.
 
-A **preflight activity** runs as the first step of any run whose release references MCP tools:
+### 4.2 One MCP transport, shared by calls, snapshots, and preflight (finding 3)
 
-- Executes on the worker (the only place with the run's network path AND
-  `JULEP_MCP_SIGNING_KEY` to make the same authenticated `tools/list` the run will make).
-- Per-worker cache, 30 s TTL, so hot pipelines don't pay a listing per run.
-- Transport errors retry under the normal activity retry policy (a server that is down would
-  fail the first tool call anyway).
-- Any incompatibility ⇒ the run terminates with typed `tool_surface_mismatch`: terminal
-  `failed`, machine-readable detail (server, tool, incompatibility class, frozen vs fresh
-  fragment), **zero effects executed**. The control plane surfaces this as the run-refused
-  answer to `POST /v1/runs` consumers.
+Today snapshot discovery is author-side (`cli/application.py`, `deploy.py`) and
+`http_mcp_caller` implements only `call_tool` — there is no worker `tools/list` path, so "the
+same endpoint and auth" was aspirational. New `McpTransport` abstraction in `julep/mcp_auth.py`
+land: `list_tools()` + `call_tool()`, built from one place that resolves server URL + headers
+(+ `secret://` refs) from worker config — the *same* transport instance serves runtime calls,
+worker preflight, and (via the CLI) freeze-time snapshots. `mint_token` gains a **discovery
+scope** (`tools/list`, deterministic idempotency key `preflight:{workflow_id}:{server}`), so
+verifier-side servers can distinguish discovery from invocation.
 
-**Policy knob (alpha surface):** `[tool.julep.mcp] preflight = "compat" (default) | "names" |
-"off"`. The chosen policy is pinned into `FlowInput` at submission so replays and
-continue-as-new segments see a stable decision. Marked alpha in docs: semantics may tighten
-without a deprecation window.
+Endpoint/header config stays **worker-side config** (`[tool.julep.mcp.servers]`), not release
+content — releases stay portable across environments; the preflight compares *frozen tool
+identity* against whatever surface the configured server presents.
+
+### 4.3 Enforcement: run-start preflight (worker-side), replay-safe (finding 7)
+
+A preflight activity runs as the first *scheduled activity* of a run whose release references
+MCP tools:
+
+- Worker-side (network path + signing key); per-worker cache, 30 s TTL; transport errors
+  retry under the normal activity retry policy.
+- Mismatch ⇒ typed `tool_surface_mismatch`: terminal `failed`, machine-readable detail
+  (server, tool, frozen vs fresh definition hash, human-readable diff), **zero user/tool
+  effects** (framework setup — capability verification, trajectory init — may already have
+  run; no reasoner or tool activity has).
+- **Refusal is an asynchronous terminal state.** `POST /v1/runs` keeps returning `accepted`;
+  the refusal lands via the normal terminal path and is visible in `GET /v1/runs/{id}`,
+  `GET .../result?wait_s=`, and SSE. Documented as such — no synchronous refusal promise.
+- **Replay/versioning discipline:** absent policy field in `FlowInput` ⇒ legacy `off` (old
+  histories replay unchanged); the new activity is gated behind `workflow.patched("mcp-preflight")`;
+  the effective policy is captured **from the release** at freeze (`[tool.julep.mcp] preflight`
+  at author time), overridable only by an authorized submission parameter; and
+  `preflight = {policy, completed, surface_digest}` rides `FlowInput` across continue-as-new so
+  later segments never silently re-evaluate under different configuration.
 
 **Activation-time advisory:** `POST /v1/deployments` runs the same check best-effort from the
-control plane when the servers are reachable from there, recording per-server compat status on
-the deployment record (`GET /v1/deployments` shows it). Advisory only — the worker preflight is
-the enforcement point.
+control plane when reachable, storing per-server status on the deployment record (schema
+addition — current activation rows carry only lane/release/timestamps). Advisory only.
 
-### 4.3 Mid-run drift
+### 4.4 Mid-run drift (finding 9)
 
-No rechecks mid-run or across continue-as-new. Call-site failures that match drift signatures
-(tool-not-found; server-side input-schema rejection) are classified as **non-retryable**
-`ToolSurfaceDrift` application errors with a projection event naming what moved. The documented
-author contract: changing a server's interface ⇒ redeploy referencing flows; in-flight runs are
-assumed to run against the freeze-time surface, and drift mid-run is an explicit, typed failure
-— not a retry loop.
+No rechecks mid-run or across CAN. Call-site drift signatures (tool-not-found; server-side
+input-schema rejection) become **`ToolSurfaceDrift`**, added to the harness's non-retryable
+classification — and, critically, **detected through the `ActivityError` cause chain in
+AgentWorkflow's tool dispatch**, projected as a typed failure and **re-raised**: today
+AgentWorkflow converts tool activity errors into observations for the next model round, which
+would swallow the drift signal into the loop. Tested on both the sequential and concurrent
+(READ) dispatch paths. Author contract unchanged: interface change ⇒ redeploy referencing
+flows; in-flight runs assume the frozen surface.
 
-Manual/author-managed snapshots (`deploy(mcp_listings=)`, `--mcp-snapshot` fixtures) get the
-identical preflight; the author-responsibility tier is the same mechanism plus the freedom to
-set `preflight = "off"` and own the consequences.
+## 5. dotctx agents on AgentWorkflow (finding 6 — no second loop)
 
-## 5. dotctx MCP tools and the julep-owned loop
-
-### 5.1 Binding (Option 1: binding-free packages)
+### 5.1 Binding (unchanged surface, corrected validation)
 
 ```toml
 [tool.julep.mcp.servers.tracker]
@@ -201,105 +257,149 @@ lane = "triage"
 search_similar_posts = "tracker:search-similar-posts"
 ```
 
-The `.ctx` package stays exactly mem-mcp-shaped: bare Python-identifier keys in
-`settings.yaml tools:` and contracts in `tools.pyi`. Freeze:
+Packages stay mem-mcp-shaped (bare keys; contracts in `tools.pyi`). Freeze: snapshot bound
+servers; resolve every bare key (unbound/unknown ⇒ loud error); validate `tools.pyi` stubs
+against the frozen `inputSchema` by **exact canonical-schema equality** — the existing
+`ToolSchemaExpectation` check (`freeze.py`) already does this and MUST NOT be weakened to
+name-subset matching (finding 2); record the **alias map** bare-key → wire `ToolRef` in the
+release. The model-visible tool name is the bare key, mapped to the MCP wire name at dispatch.
 
-1. snapshots the bound servers (existing `mcp_snapshot`),
-2. resolves every bare key through the pipeline's `tools` map — unbound key, unknown
-   server/tool ⇒ loud freeze error,
-3. validates the `tools.pyi` contract against the frozen `inputSchema` (decidable
-   approximation: contract parameter names ⊆ schema properties; contract required parameters
-   match schema `required`) — mismatch ⇒ loud freeze error,
-4. records key→(server, tool, contract) in the frozen release; the **model-visible tool name is
-   the bare key** (Pythonic, matches the prompt text), mapped to the MCP wire name at dispatch.
+### 5.2 Execution: lower to the existing agent loop
 
-Retargeting a package to another server — or to fakes in eval — never touches the package.
+`reasoner_to_flow` lowers a tool-bearing reasoner to the **`app` shape running
+`AgentWorkflow`** — bounded by `max_rounds` when set, by `[tool.julep] agent_round_cap`
+(default 32) for `agent: true`. No new IR node for the loop itself; reasoners without tools
+lower exactly as today (hash stability preserved).
 
-### 5.2 Loop semantics
+`AgentInput` is extended to carry: the frozen **alias map**, frozen tool definitions
+(schemas presented to the provider under bare names), and frozen contracts. Inherited from
+AgentWorkflow, free of charge: deterministic activity cids (the `mcp_auth` `idk` binding),
+**READ-contract calls concurrent / writes serialized** (v1 keeps this — the v1-draft
+"sequential-only" idea was a regression, §10 Q4), `require_tool_call`, budget guard, and the
+existing **mid-loop continue-as-new seam** (a loop inside a new flow node would have had none —
+FlowWorkflow only CANs between root-flow returns).
 
-New execution shape `tool_loop(reasoner, bound)` produced by `reasoner_to_flow` when a reasoner
-has granted tools:
+Two AgentWorkflow gaps close as part of this (finding 10):
 
-- `max_rounds: N` ⇒ bound N; `agent: true` ⇒ bound `[tool.julep] agent_round_cap` (default
-  32). Reasoners without tools lower exactly as today (hash stability: existing releases are
-  unaffected; the new node only appears when tools are granted).
-- Each round: `invokeReasoner` activity with provider-native tool definitions (bare key names,
-  frozen `inputSchema`s) → the model returns either tool calls or a final answer.
-- Tool calls execute as the existing MCP call activities (deterministic `cid` per call — the
-  same identity that `mcp_auth` binds into the `idk` claim). v1 executes a round's calls
-  **sequentially** in declared order for determinism simplicity; parallel rounds are v2.
-- Results append to the transcript (`__julep_meta__` machinery); loop until a final answer or
-  the bound is exhausted ⇒ typed `round_budget_exhausted` failure.
-- `require_tool_call: true` ⇒ a final answer with zero tool calls made is rejected as a typed
-  failure (round 1 must call a tool).
-- The final answer validates against the reply schema with existing `output_retries` semantics.
-- The tool grants + bindings ride the schema-v2 declarations blob, so generic workers (no
-  `WORKER_APPLICATION`) reconstruct the loop config from the release alone.
+- **Real output validation**: final answers validate against the reply schema with an actual
+  JSON-Schema validator, re-prompting within `output_retries` (today the loop only checks the
+  reply is a dict; schemas are prompt-injected when tools are present).
+- **Durable canonical transcript**: tool-call ids, names, arguments, result refs, and ordering
+  persist and ride across CAN independently of prompt-context truncation (today incomplete
+  tool turns can be reconstructed lossily).
 
-### 5.3 Local/eval story
+### 5.3 Declarations blob v2 (finding 8)
 
-`dry_run`/`adry_run`/`julep eval` accept `tools={bare_key: callable}` fakes through the existing
+Blob schema v1 carries reasoners + renderers only, and hydration writes into a process-global
+registry keyed by name. For generic workers to run zero-code agents, the blob format bumps to
+**v2**: adds alias maps, frozen tool definitions/contracts, and tool grants; hydration becomes
+**release-scoped** (keyed by declarations hash) instead of process-global name identity, so two
+releases defining the same logical reasoner differently cannot conflict on one worker; and
+hydration happens before `resolveAgentSpec` (which today does not accept a declarations ref —
+it gains one).
+
+### 5.4 Local/eval story
+
+`dry_run`/`adry_run`/`julep eval` accept `tools={bare_key: callable}` fakes through the
 `mcp_call` seam; `julep run <path>.ctx` works keyless with fakes and live with config-bound
-servers. The `examples/dotctx/issue_dedup` package (landing separately) upgrades from
-"declarative tools" to an actually-running loop when this ships.
+servers. `examples/dotctx/issue_dedup` upgrades from declarative to actually running.
 
 ## 6. Error handling summary
 
 | Condition | Classification | Surfaced |
 | --- | --- | --- |
-| Referenced tool missing / schema incompatible at run start | `tool_surface_mismatch` (terminal, zero effects) | run status + detail; SSE terminal event |
-| Drift signature mid-run | `ToolSurfaceDrift`, non-retryable | run failure + projection event |
-| Round budget exhausted | `round_budget_exhausted` | run failure + transcript |
-| `require_tool_call` violated | typed failure | run failure + transcript |
-| `secret://` unresolvable | fail-closed error naming secret + chain | worker/server startup or call site |
-| Vault unreachable, cached value present | stale value served + warning | worker logs |
-| Non-worker key reads a value | 403 | API |
-| Freeze: unbound key / unknown tool / contract mismatch | freeze error | `julep plan/apply` / `deploy()` |
+| Referenced tool hash mismatch / missing at run start | `tool_surface_mismatch` (terminal; zero user/tool effects) | async terminal state: runs API, result?wait_s, SSE |
+| Drift signature mid-run | `ToolSurfaceDrift`, non-retryable, re-raised out of the agent loop | run failure + typed projection event |
+| Round budget exhausted | `round_budget_exhausted` (existing AgentWorkflow semantics) | run failure + transcript |
+| `require_tool_call` violated | typed failure (existing) | run failure + transcript |
+| Final output fails schema after `output_retries` | typed validation failure | run failure + transcript |
+| `secret://` unresolvable / revoked | fail-closed error naming secret + chain | startup or call site |
+| Vault transient outage, cached value | stale served ≤ 15 min, then fail closed | worker logs |
+| Non-worker key reads a value; worker key off-allowlist | 403 | API |
+| Worker key on non-secret routes | 403 | API |
+| Freeze: unbound key / unknown tool / stub-schema mismatch | freeze error | `julep plan/apply` / `deploy()` |
 
 ## 7. Testing
 
-- **Compat matrix** (unit): each incompatibility class + additive-change passes; annotation
-  downgrade permutations.
-- **Preflight E2E**: fixture MCP server mutated between freeze and run (remove tool, add
-  required field, retype, downgrade annotation) ⇒ refused with the right class; `names`/`off`
-  policies honored; policy pinned across continue-as-new.
-- **Vault**: role enforcement (admin write-only, worker read, client 403s); write-only responses;
-  encryption round-trip + key_id selection; resolver chain (control plane → env → fail-closed),
-  TTL refresh, stale-if-error; redactor registration; doctor dangling-ref check.
-- **Loop**: goldens for lowering (tools ⇒ `tool_loop`, bound resolution); round accounting;
-  sequential call order determinism; recorded-history replay across rounds; CAN mid-loop;
-  `require_tool_call`; reply-schema retry; `ToolSurfaceDrift` classification.
-- **Freeze binding**: unbound/unknown/mismatch errors; golden release with key→(server, tool)
-  map; generic-worker rehydration from the declarations blob.
-- **Live**: issue-dedup agent against the sample tools server with a vault-referenced header,
-  submitted through `/v1/runs`, consumed over SSE.
+- **Retry authority**: unasserted contract never yields attempts > 1 regardless of hints;
+  asserted paths unchanged (regression tests around `_retry_policy_for`).
+- **Pin check**: hash-equality matrix (identical ⇒ pass; any schema/annotation/name change ⇒
+  typed mismatch with diff); normalized-annotation persistence round-trips through release
+  JSON; `names`/`off` policies honored.
+- **Preflight**: fixture MCP server mutated between freeze and run ⇒ refused asynchronously
+  with detail; `workflow.patched` gating replays old histories cleanly; policy + completed +
+  digest carried across CAN; 30 s cache; transport-error retries.
+- **Transport**: one transport serves call/list/snapshot; discovery-scope tokens verified;
+  header `secret://` resolution per call.
+- **Vault**: role parsing back-compat (`:admin` unchanged; `:worker`; junk third field errors);
+  route audit (worker key 403 everywhere but value fetch); allowlist fail-closed; AAD binding
+  (row/generation swap fails to decrypt); key-ring rotation + `reencrypt-secrets` sweep +
+  retirement guard; resolver chain, TTL, bounded stale-if-error, immediate eviction on
+  401/403/404/410/archive/delete; scrubber catches exact/base64/urlencoded echoes at
+  trajectory, projection, activity-failure, and transport-diagnostic boundaries.
+- **Agent lowering**: tool-bearing reasoner ⇒ app/AgentWorkflow with alias map (goldens);
+  non-tool reasoners byte-identical lowering; alias-mapped dispatch; READ-concurrent
+  determinism preserved; `ToolSurfaceDrift` re-raise on sequential AND concurrent paths;
+  JSON-Schema output validation + `output_retries`; canonical transcript across CAN.
+- **Declarations v2**: golden blob; release-scoped hydration (two conflicting releases coexist
+  on one worker); generic worker (no `WORKER_APPLICATION`) runs the issue-dedup agent from the
+  release alone.
+- **Live**: issue-dedup agent, vault-referenced header, submitted through `/v1/runs`, SSE to
+  terminal; then a drift injection (restart tools server with a changed schema) ⇒ typed refusal.
 
 ## 8. Sequencing
 
-- **PR-A: vault-lite** — migration, `/v1/secrets`, key roles, `julep/secrets.py` resolver,
-  redactor registration, doctor check, docs. Independent.
-- **PR-B: MCP surface contract** — `mcp_surface.py`, preflight activity + policy knob (alpha),
-  drift classification, activation advisory, docs. Independent of A.
-- **PR-C: dotctx binding + tool loop** — binding config + freeze validation, `tool_loop`
-  execution shape, declarations-blob carriage, eval fakes, upgrade the issue-dedup example,
-  docs. Depends on B; consumes A for headers.
+- **PR-B0 (first, small):** retry-authority fix — unasserted contracts cap at 1 attempt; +
+  normalized-annotation persistence in `FrozenTool`/releases. Fixes a live issue independent of
+  everything else.
+- **PR-A: vault-lite** — migration (v9+), `/v1/secrets`, key roles + route audit, allowlist,
+  `julep/secrets.py` resolver + scrubber, vault key ring + `db reencrypt-secrets`, doctor
+  check, docs.
+- **PR-B: surface contract** — `McpTransport` unification + discovery scope, `pin` check,
+  preflight activity behind `workflow.patched`, policy pinning + CAN carriage, drift
+  classification + AgentWorkflow re-raise, activation advisory (deployment schema add), docs.
+- **PR-C: dotctx agents** — binding config + freeze validation + alias map, lowering to
+  app/AgentWorkflow, `AgentInput` extension, output validation + canonical transcript,
+  declarations blob v2 + release-scoped hydration, eval fakes, issue-dedup example upgrade,
+  docs. Depends on B0/B; consumes A for headers.
 
 ## 9. Out of scope (v1)
 
-OAuth auto-refresh; egress proxies/placeholder substitution; per-secret host/server binding;
-secret version history + webhooks; LISTEN/NOTIFY rotation push (TTL polling suffices); parallel
-tool-call execution within a round; MCP *server* authoring (application-side by design);
-sourcing `worker_secret_environment` (K8s) from the vault.
+Directional JSON-Schema `compat` mode (future alpha); OAuth auto-refresh; egress
+proxies/placeholders; per-secret host/server binding; secret version history + webhooks;
+LISTEN/NOTIFY rotation push; MCP *server* authoring; sourcing `worker_secret_environment`
+(K8s) from the vault.
 
-## 10. Open questions for review
+## 10. Open questions — resolved by review
 
-1. Stale-if-error grace: unbounded (serve stale until restart) or capped (e.g. 15 min, then
-   fail closed)?
-2. Should admin keys really be barred from `GET .../value`, or is write-only-for-admins
-   security theater given admins can mint worker keys?
-3. Preflight policy pinned in `FlowInput` at submit — right call, or should re-runs of old
-   releases pick up the *current* config default?
-4. Sequential-only tool calls per round: acceptable v1 constraint, or does any target workload
-   need parallel rounds immediately?
-5. Annotation-downgrade class (d): should `destructiveHint` absent→true count (absent is
-   conservative-unknown in MCP semantics)?
+1. **Stale-if-error**: bounded — 15 min, transient failures only; auth/not-found/archive/delete
+   evict immediately. Revocation cannot coexist with unbounded stale reads.
+2. **Admin keys barred from reads**: keep. Static-config keys mean admin need not inherit read;
+   break-glass = deliberately provisioning a worker-role key.
+3. **Policy pinning**: source of truth is the immutable release; absent field = legacy off;
+   authorized submission may override; carry effective policy + result digest across CAN.
+4. **Sequential-only rounds**: rejected — preserve AgentWorkflow's deterministic
+   READ-concurrent / write-serialized dispatch.
+5. **`destructiveHint` absent→true**: not drift (absent already means true under MCP
+   defaults); normalize annotations per negotiated protocol before comparison; annotations
+   never grant or remove retry authority either way.
+
+## 11. Review log
+
+**v1 → v2 (codex `gpt-5.6-sol@high`, adversarial review at `7def6182`):** verdict
+needs-rework (S3), unsound (S4), needs-rework (S5). All 13 findings incorporated:
+(1) retry authority severed from unasserted hints + annotation persistence [→§4.1, PR-B0];
+(2) structural compat check replaced by `pin` hash equality, `tools.pyi` validation stays
+exact-canonical [→§4.1, §5.1]; (3) `McpTransport` unification, worker `tools/list`, discovery
+scope, async refusal, "zero user/tool effects" wording [→§4.2–4.3]; (4) single role token
+(comma parsing preserved), route audit, worker read allowlist, no worker list endpoint
+[→§3.2]; (5) rotation promises split by consumer class, bounded stale-if-error, immediate
+revocation eviction, generation-keyed cache [→§3.3–3.4]; (6) S5 reframed onto AgentWorkflow;
+no second loop; mid-loop CAN inherited [→§5.2]; (7) `workflow.patched` gating, legacy-off
+default, release-pinned policy, CAN carriage [→§4.3]; (8) declarations blob v2 with bindings +
+release-scoped hydration [→§5.3]; (9) `ToolSurfaceDrift` cause-chain detection + re-raise out
+of the agent loop [→§4.4]; (10) real JSON-Schema output validation + durable canonical
+transcript [→§5.2]; (11) dynamic value scrubber at four boundaries + honest scope [→§3.3];
+(12) dedicated vault key ring, AAD binding, re-encryption + retirement protocol [→§3.1];
+(13) factual fixes (`TEMPORAL_PAYLOAD_KEYS`, config ALLOWED_KEYS additions, deployment-record
+schema addition, migration numbering) [throughout].
