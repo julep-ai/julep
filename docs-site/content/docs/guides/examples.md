@@ -158,11 +158,11 @@ The file prints its own reference text when run directly. Treat it as a source-r
 
 ## `examples/dotctx_issue_dedup.py`
 
-What it teaches: an agent-shaped rich dotctx with a bounded tool loop that lowers to Feedback.
+What it teaches: an agent-shaped rich dotctx that lowers to `app`/`AgentWorkflow` and runs a bounded native-tool loop.
 
-Rung: declarative rich-dotctx contract; tool-loop execution is Phase 3/4 work.
+Rung: executable rich-dotctx contract with a frozen MCP tool surface.
 
-Key APIs: `load_dotctx`, `reasoner_to_flow`, `Reasoner`, `max_rounds`, `require_tool_call`.
+Key APIs: `load_rich_dotctx`, `reasoner_to_flow`, `deploy`, `Reasoner`, `max_rounds`, `require_tool_call`.
 
 Run:
 
@@ -170,7 +170,7 @@ Run:
 python -m examples.dotctx_issue_dedup
 ```
 
-This keyless no-op loads and lowers the issue-dedup contract without calling a provider. It shows why a single structured round cannot honestly stand in for the required search-first tool loop.
+This keyless example freezes the declared tracker schema, then runs a deterministic two-round loop: the controller calls `search_similar_posts` first and finishes with a schema-valid decision on the second round. The fake controller and tool use the same native-tool protocol as a provider-backed `AgentWorkflow`, so replacing them with live integrations does not change the dotctx package.
 
 ## Run the keyless local examples
 

@@ -173,6 +173,28 @@ def test_preflight_pins_surface_and_caches_by_sink_value() -> None:
     assert transport.calls == 2
 
 
+def test_preflight_cache_distinguishes_header_value_swaps() -> None:
+    _MCP_PREFLIGHT_CACHE.clear()
+    transport = _Transport()
+    transport._configs["tracker"].headers = {
+        "Authorization": "secret://tracker-token",
+        "X-Tenant": "secret://tenant-token",
+    }
+    secrets = {
+        "tracker-token": "auth-value",
+        "tenant-token": "tenant-value",
+    }
+
+    _run(transport, secrets=secrets)
+    transport._configs["tracker"].headers = {
+        "Authorization": "secret://tenant-token",
+        "X-Tenant": "secret://tracker-token",
+    }
+    _run(transport, secrets=secrets)
+
+    assert transport.calls == 2
+
+
 def test_initial_flow_helper_cannot_claim_preflight_is_completed() -> None:
     flow_input = build_flow_input(
         session_id="new-root",

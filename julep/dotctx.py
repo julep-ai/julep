@@ -551,7 +551,7 @@ def reasoner_to_flow(
             ContextScope.WHOLE_SESSION,
         ):
             app_ctx = ContextPolicy(scope=reasoner.context_scope)
-        return app(reasoner.name, ctx=app_ctx, max_rounds=agent_round_cap)
+        return app(reasoner.name, ctx=app_ctx)
 
     if reasoner.max_rounds is not None and reasoner.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.

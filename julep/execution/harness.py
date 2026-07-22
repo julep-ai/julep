@@ -2961,6 +2961,26 @@ class AgentWorkflow:
                         validation_error = redacted_failure_text(
                             validation_error, inp.secrets
                         )
+                        retries = sum(
+                            1
+                            for entry in state.trace
+                            if entry.decision == "output_reask"
+                        )
+                        if retries < cfg.output_retries:
+                            message = (
+                                "final output failed JSON-Schema validation: "
+                                + validation_error
+                            )
+                            state.last = {
+                                "error": message,
+                                "reply": action.payload,
+                            }
+                            state.record(al.TraceEntry(
+                                decision="output_reask",
+                                error=message,
+                            ))
+                            state.round += 1
+                            continue
                         terminal = al.terminal_result(
                             "output_validation_failed",
                             state,

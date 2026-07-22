@@ -337,6 +337,49 @@ def _remote_error_text(value: Any) -> str:
     return " ".join(parts).casefold()
 
 
+def _remote_error_codes(value: Any) -> set[int]:
+    """Collect JSON-RPC error codes without treating tool output as an error."""
+
+    codes: set[int] = set()
+    seen: set[int] = set()
+
+    def collect(current: Any) -> None:
+        identity = id(current)
+        if identity in seen:
+            return
+        seen.add(identity)
+
+        code = (
+            current.get("code")
+            if isinstance(current, Mapping)
+            else getattr(current, "code", None)
+        )
+        if isinstance(code, int) and not isinstance(code, bool):
+            codes.add(code)
+
+        error = (
+            current.get("error")
+            if isinstance(current, Mapping)
+            else getattr(current, "error", None)
+        )
+        if error is not None:
+            collect(error)
+
+        if isinstance(current, BaseException):
+            for nested in getattr(current, "exceptions", ()):
+                if isinstance(nested, BaseException):
+                    collect(nested)
+            for nested in (
+                getattr(current, "__cause__", None),
+                getattr(current, "__context__", None),
+            ):
+                if isinstance(nested, BaseException):
+                    collect(nested)
+
+    collect(value)
+    return codes
+
+
 def classify_mcp_surface_drift(
     value: Any,
     *,
@@ -355,6 +398,11 @@ def classify_mcp_surface_drift(
         is_error = is_error or getattr(value, "isError", getattr(value, "is_error", False)) is True
     if not is_error:
         return None
+    codes = _remote_error_codes(value)
+    if -32601 in codes:
+        return "tool_not_found"
+    if input_schema_validated and -32602 in codes:
+        return "input_schema_rejected"
     text = _remote_error_text(value)
     if any(
         signature in text

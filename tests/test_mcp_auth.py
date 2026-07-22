@@ -511,6 +511,30 @@ def test_schema_rejection_is_not_drift_without_frozen_validation() -> None:
 
 
 @pytest.mark.parametrize(
+    ("code", "validated", "reason"),
+    [
+        (-32601, False, "tool_not_found"),
+        (-32602, True, "input_schema_rejected"),
+        (-32602, False, None),
+    ],
+)
+def test_json_rpc_error_codes_classify_surface_drift(
+    code: int,
+    validated: bool,
+    reason: str | None,
+) -> None:
+    result = SimpleNamespace(
+        isError=True,
+        error=SimpleNamespace(code=code, message="opaque remote error"),
+    )
+
+    assert classify_mcp_surface_drift(
+        result,
+        input_schema_validated=validated,
+    ) == reason
+
+
+@pytest.mark.parametrize(
     ("message", "validated", "reason"),
     [
         ("tool 'search' not found", False, "tool_not_found"),

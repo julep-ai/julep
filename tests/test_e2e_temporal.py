@@ -278,6 +278,44 @@ async def _human_gate_timeout(env):
     }, f"gate timeout lost original input: {out}"
 
 
+async def _generic_worker_agent_loop(env):
+    """A worker without a preloaded agent map runs an explicit AgentInput."""
+    reasoner = Reasoner(name="generic_ctrl", model="test", system="decide")
+    DEFAULT_REGISTRY.register_reasoner(reasoner)
+
+    async def generic_llm(current, value):  # noqa: ANN001
+        assert current.name == "generic_ctrl"
+        if not value.get("trace"):
+            return {"tool": "srv/double", "input": value["input"]}
+        return {"done": True, "output": value["input"]}
+
+    ctx = WorkerContext(mcp_call=_mcp, llm=generic_llm)
+    async with build_worker(
+        env.client,
+        ctx,
+        task_queue="julep-generic-agent",
+    ):
+        sid = f"generic-agent-{uuid.uuid4()}"
+        result = await env.client.execute_workflow(
+            AgentWorkflow.run,
+            AgentInput(
+                controller="generic_ctrl",
+                session_id=sid,
+                input=5,
+                config={"maxRounds": 3, "budget": {"cost": 1000}},
+                granted_tools=["srv/double"],
+                policy=ExecutionPolicy().to_json(),
+                resolve_spec=False,
+            ),
+            id=sid,
+            task_queue="julep-generic-agent",
+        )
+
+    assert result["status"] == "done", result
+    assert result["output"] == 10, result
+    assert [entry["decision"] for entry in result["trace"]] == ["call"]
+
+
 async def _agent(env):
     agents = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["srv/double"]}}
     async with _worker(env, task_queue="julep-agent", agents=agents):
@@ -1467,6 +1505,7 @@ async def _run_all():
         await _race(env)
         await _human_gate(env)
         await _human_gate_timeout(env)
+        await _generic_worker_agent_loop(env)
         await _agent(env)
         await _app_inline_grant_attenuation(env)
         await _app_max_calls_inherits_parent_counts(env)

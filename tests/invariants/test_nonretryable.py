@@ -12,6 +12,8 @@ from julep.errors import (
     FreezeError,
     PlanRejected,
     PrincipalRequired,
+    ToolInputValidation,
+    ToolSurfaceDrift,
     ValidationError,
 )
 from julep.execution import harness
@@ -25,6 +27,8 @@ def test_policy_errors_are_framework_errors_and_temporal_non_retryable() -> None
         ValidationError,
         FreezeError,
         PrincipalRequired,
+        ToolSurfaceDrift,
+        ToolInputValidation,
     ]
     expected_names = {cls.__name__ for cls in policy_errors}
 

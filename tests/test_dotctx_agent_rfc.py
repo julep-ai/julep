@@ -8,15 +8,17 @@ import pytest
 
 from julep import HAVE_TEMPORAL
 from julep.declarations import declarations_blob, load_declarations
-from julep.dotctx import Reasoner, reasoner_to_flow
+from julep.dotctx import Reasoner, reasoner_from_settings, reasoner_to_flow
 from julep.dsl import app
 from julep.errors import FreezeError
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, freeze
+from julep.ir import canonical_json
 from julep.registry import (
     Registry,
     ToolSchemaExpectation,
     scoped_tool_expectation_key,
 )
+from julep.transforms import normalize_ids
 
 
 EXPECTED = {
@@ -62,6 +64,22 @@ def _frozen():
         snapshot,
         expected_tool_schemas={"search": expectation},
     )
+
+
+def test_non_tool_dotctx_agent_preserves_legacy_app_bytes() -> None:
+    reasoner = reasoner_from_settings({
+        "name": "open-no-tools-byte-parity",
+        "model": "test:model",
+        "agent": True,
+    })
+
+    lowered = reasoner_to_flow(reasoner)
+    legacy = app(reasoner.name)
+
+    assert canonical_json(normalize_ids(lowered).to_json()) == canonical_json(
+        normalize_ids(legacy).to_json()
+    )
+    assert "maxRounds" not in lowered.to_json()
 
 
 def test_freeze_resolves_alias_and_records_exact_agent_contract() -> None:
@@ -281,6 +299,57 @@ def test_agent_workflow_dispatches_bare_alias_to_wire_tool(monkeypatch) -> None:
     }
     assert result["trace"][0]["callId"] == "tool-1"
     assert result["trace"][0]["arguments"] == {"query": "q"}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_reasks_invalid_output_within_output_retries(
+    monkeypatch,
+) -> None:
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    replies = iter([
+        {"output": {"answer": 7}},
+        {"output": {"answer": "done"}},
+    ])
+    controller_values = []
+    validations = iter(["$.answer: 7 is not of type 'string'", None])
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        if fn.__name__ == "invokeReasoner":
+            controller_values.append(payload.value)
+            return next(replies)
+        if fn.__name__ == "validateAgentOutput":
+            return next(validations)
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    inp = AgentInput(
+        controller="output-retry-agent",
+        session_id="output-retry-run",
+        input={"query": "q"},
+        config={
+            "maxRounds": 3,
+            "outputRetries": 1,
+            "replySchema": {
+                "type": "object",
+                "properties": {"answer": {"type": "string"}},
+                "required": ["answer"],
+            },
+        },
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "done"
+    assert result["output"] == {"answer": "done"}
+    assert [entry["decision"] for entry in result["trace"]] == ["output_reask"]
+    assert controller_values[1]["input"] == {
+        "error": "final output failed JSON-Schema validation: "
+        "$.answer: 7 is not of type 'string'",
+        "reply": {"answer": 7},
+    }
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
