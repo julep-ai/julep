@@ -1,4 +1,4 @@
-"""Command-line entry point for the full-stack memstore live harness."""
+"""Command-line entry point for the full-stack episode-summarizer live harness."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from .harness import (
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Publish and run the memstore episode-summary application through "
+            "Publish and run the episode-summarizer application through "
             "Postgres, Temporal, the Julep API, an authenticated MCP server, and "
             "live Anthropic models."
         )
@@ -53,7 +53,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         )
     except HarnessUnavailable as exc:
-        print(f"memstore live harness unavailable: {exc}")
+        print(f"episode-summarizer live harness unavailable: {exc}")
         return 2
 
     print(f"run_id: {result.run_id}")

@@ -1,4 +1,4 @@
-"""Worker context for the live memstore example."""
+"""Worker context for the live episode-summarizer example."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ def make_context() -> WorkerContext:
     if not os.environ.get("JULEP_BUNDLES", "").strip():
         # A bundle preload already registered the pures, and the workflow's
         # runtime-declarations blob hydrates its reasoners from STORE_URL.
-        importlib.import_module("examples.memstore.flow")
-    url = os.environ["MEMSTORE_TOOLS_URL"]
+        importlib.import_module("examples.episode_summarizer.flow")
+    url = os.environ["EPISODE_TOOLS_URL"]
     ctx.mcp_call = http_mcp_caller(
         servers={"episodes": url},
         auth=McpAuthConfig.from_env(),

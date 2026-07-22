@@ -1,4 +1,4 @@
-"""Authenticated MCP tools for the memstore episode-summary example.
+"""Authenticated MCP tools for the episode-summarizer example.
 
 The backing store deliberately lives in this module so the live harness can run
 the ASGI app in-process and inspect the writes after the workflow completes.
@@ -248,13 +248,13 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--host",
-        default=os.environ.get("MEMSTORE_TOOLS_HOST", "127.0.0.1"),
+        default=os.environ.get("EPISODE_TOOLS_HOST", "127.0.0.1"),
         help="interface to bind (default: 127.0.0.1)",
     )
     parser.add_argument(
         "--port",
         type=int,
-        default=int(os.environ.get("MEMSTORE_TOOLS_PORT", "8000")),
+        default=int(os.environ.get("EPISODE_TOOLS_PORT", "8000")),
         help="port to bind (default: 8000)",
     )
     return parser

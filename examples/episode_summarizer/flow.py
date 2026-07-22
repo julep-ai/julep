@@ -39,8 +39,8 @@ from .tools_server import (
     write_summary as _write_summary,
 )
 
-SUMMARIZER = os.environ.get("MEMSTORE_SUMMARIZER_MODEL", "anthropic:claude-sonnet-5")
-ONE_LINER = os.environ.get("MEMSTORE_ONE_LINER_MODEL", "openai:gpt-4o-mini")
+SUMMARIZER = os.environ.get("EPISODE_SUMMARIZER_MODEL", "anthropic:claude-sonnet-5")
+ONE_LINER = os.environ.get("EPISODE_ONE_LINER_MODEL", "openai:gpt-4o-mini")
 
 MCP_SERVER = "episodes"
 PIPELINE_NAME = "episode_summary_batch"
@@ -159,7 +159,7 @@ def build_deployment() -> Deployment:
 def build_application() -> Application:
     """Build the application declaration published by the live harness."""
     return Application(
-        "memstore",
+        "episode-summarizer",
         [
             PipelineSpec(
                 name=PIPELINE_NAME,
@@ -232,7 +232,7 @@ async def run_demo(
 
 def main() -> None:
     result = asyncio.run(run_demo())
-    print("Memstore episode-summary rollup:")
+    print("Episode-summary rollup:")
     print(json.dumps(result.value, indent=2))
 
 

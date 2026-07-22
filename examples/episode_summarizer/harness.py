@@ -1,4 +1,4 @@
-"""Full-stack live harness for the memstore episode-summary example."""
+"""Full-stack live harness for the episode-summarizer example."""
 
 from __future__ import annotations
 
@@ -46,8 +46,8 @@ LIVE_ONE_LINER_MODEL = "anthropic:claude-haiku-4-5-20251001"
 DEFAULT_SUMMARIZER_MODEL = "anthropic:claude-sonnet-5"
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PAYLOAD_KEY_ID = "payload-k1"
-_MCP_KEY_ID = "memstore-k1"
-_MCP_ISSUER = "memstore-harness"
+_MCP_KEY_ID = "episodes-k1"
+_MCP_ISSUER = "episode-summarizer-harness"
 
 
 class HarnessUnavailable(RuntimeError):
@@ -128,15 +128,15 @@ def _remove_postgres_container(name: str) -> None:
 @contextmanager
 def ephemeral_postgres() -> Iterator[str]:
     """Yield a configured DSN, or manage a disposable Postgres 16 container."""
-    configured = os.environ.get("JULEP_MEMSTORE_PG_DSN")
+    configured = os.environ.get("EPISODE_E2E_PG_DSN")
     if configured:
         yield configured
         return
 
     if not docker_usable():
-        raise HarnessUnavailable("no postgres: set JULEP_MEMSTORE_PG_DSN or start docker")
+        raise HarnessUnavailable("no postgres: set EPISODE_E2E_PG_DSN or start docker")
 
-    name = f"julep-memstore-e2e-{uuid.uuid4().hex[:8]}"
+    name = f"julep-episode-summarizer-e2e-{uuid.uuid4().hex[:8]}"
     port = free_port()
     command = [
         "docker",
@@ -282,11 +282,11 @@ def _child_env(*, keep_payload_keys: bool = False) -> dict[str, str]:
         "JULEP_BUNDLE_SIGNING_KEY",
         "JULEP_BUNDLES",
         "JULEP_EXECUTION_STORE_DSN",
-        "JULEP_MEMSTORE_PG_DSN",
+        "EPISODE_E2E_PG_DSN",
         "JULEP_MCP_SIGNING_KEY",
-        "MEMSTORE_SUMMARIZER_MODEL",
-        "MEMSTORE_TOOLS_URL",
-        "MEMSTORE_ONE_LINER_MODEL",
+        "EPISODE_SUMMARIZER_MODEL",
+        "EPISODE_TOOLS_URL",
+        "EPISODE_ONE_LINER_MODEL",
         "STORE_URL",
     ):
         env.pop(name, None)
@@ -350,7 +350,7 @@ class _ToolsServer:
         self.server = uvicorn.Server(config)
         self.thread = threading.Thread(
             target=self.server.run,
-            name="memstore-tools-server",
+            name="episode-summarizer-tools-server",
             daemon=True,
         )
 
@@ -397,7 +397,7 @@ async def _verify_tools_auth(url: str) -> None:
         "read-episode",
         {"episode_id": episode_id},
         "authenticated-probe",
-        {"tenant": "demo", "sub": "memstore-harness"},
+        {"tenant": "demo", "sub": "episode-summarizer-harness"},
     )
     if not isinstance(result, dict) or result.get("episodeId") != episode_id:
         raise RuntimeError("authenticated memory-tools probe returned an invalid result")
@@ -456,7 +456,7 @@ async def _start_worker(
             ready_event=ready,
             verify_connection=True,
         ),
-        name="memstore-worker",
+        name="episode-summarizer-worker",
     )
     ready_wait = asyncio.create_task(ready.wait())
     try:
@@ -681,7 +681,7 @@ async def run_live_e2e(
         raise HarnessUnavailable("the temporal CLI is required for the live harness")
 
     resolved_summarizer = (
-        summarizer_model or os.environ.get("MEMSTORE_SUMMARIZER_MODEL") or DEFAULT_SUMMARIZER_MODEL
+        summarizer_model or os.environ.get("EPISODE_SUMMARIZER_MODEL") or DEFAULT_SUMMARIZER_MODEL
     )
     if not resolved_summarizer.startswith("anthropic:"):
         raise HarnessUnavailable("the live summarizer model must use Anthropic")
@@ -689,7 +689,7 @@ async def run_live_e2e(
         raise HarnessUnavailable("the live one-liner model must use Anthropic")
 
     with _quiet_transport_logs(), ephemeral_postgres() as dsn:
-        with tempfile.TemporaryDirectory(prefix="julep-memstore-e2e-") as temp_dir:
+        with tempfile.TemporaryDirectory(prefix="julep-episode-summarizer-e2e-") as temp_dir:
             temp_root = Path(temp_dir)
             cas_dir = temp_root / "cas"
             cas_dir.mkdir()
@@ -724,11 +724,11 @@ async def run_live_e2e(
                 "JULEP_BUNDLE_ALLOWED_SIGNERS": bundle_public,
                 "JULEP_BUNDLES": "",
                 "STORE_URL": store_url,
-                "MEMSTORE_TOOLS_URL": tools_url,
-                "MEMSTORE_SUMMARIZER_MODEL": resolved_summarizer,
+                "EPISODE_TOOLS_URL": tools_url,
+                "EPISODE_SUMMARIZER_MODEL": resolved_summarizer,
                 # The code default remains OpenAI; live runs override it because
                 # this environment's OpenAI credential is intentionally invalid.
-                "MEMSTORE_ONE_LINER_MODEL": one_liner_model,
+                "EPISODE_ONE_LINER_MODEL": one_liner_model,
                 "JULEP_EXECUTION_STORE_DSN": dsn,
                 "TEMPORAL_PAYLOAD_KEYS": payload_keyring,
                 "TEMPORAL_PAYLOAD_KEY_ID": _PAYLOAD_KEY_ID,
@@ -787,18 +787,18 @@ async def run_live_e2e(
                     await tools.start()
                     await _verify_tools_auth(tools_url)
 
-                    flow_module = importlib.import_module("examples.memstore.flow")
+                    flow_module = importlib.import_module("examples.episode_summarizer.flow")
                     if flow_module.SUMMARIZER_R.model != resolved_summarizer or (
                         flow_module.ONE_LINER_R.model != one_liner_model
                     ):
                         raise RuntimeError(
-                            "examples.memstore.flow was imported before live model overrides"
+                            "examples.episode_summarizer.flow was imported before live model overrides"
                         )
                     compiled = flow_module.build_application().compile()
                     release = publish_application(
                         compiled,
                         LocalDirCAS(cas_dir),
-                        worker_image="local/memstore@sha256:" + "0" * 64,
+                        worker_image="local/episode-summarizer@sha256:" + "0" * 64,
                         deployment_config={"queues": {flow_module.LANE: flow_module.LANE}},
                         signing_key=bundle_seed,
                     )
@@ -873,7 +873,7 @@ async def run_live_e2e(
                     projection_store = PostgresExecutionStore(dsn)
                     set_projection_store(projection_store)
                     worker_settings = WorkerServeSettings(
-                        context_factory=("examples.memstore.worker_context:make_context"),
+                        context_factory=("examples.episode_summarizer.worker_context:make_context"),
                         address=temporal_address,
                         namespace="default",
                         task_queue=task_queue,
@@ -900,7 +900,7 @@ async def run_live_e2e(
                                 ],
                                 "principal": {
                                     "tenant": "demo",
-                                    "sub": "memstore-harness",
+                                    "sub": "episode-summarizer-harness",
                                 },
                             },
                             headers={"Idempotency-Key": uuid.uuid4().hex},
@@ -970,7 +970,7 @@ async def run_live_e2e(
                         projection_store=projection_store,
                     )
                     if cleanup_error is not None and active_exception is None:
-                        raise RuntimeError("memstore harness cleanup failed") from cleanup_error
+                        raise RuntimeError("episode-summarizer harness cleanup failed") from cleanup_error
 
 
 __all__ = [

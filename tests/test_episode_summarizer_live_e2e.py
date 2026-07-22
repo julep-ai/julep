@@ -1,4 +1,4 @@
-"""Live full-stack coverage for the memstore episode-summary example."""
+"""Live full-stack coverage for the episode-summarizer example."""
 
 from __future__ import annotations
 
@@ -8,13 +8,13 @@ import shutil
 
 import pytest
 
-from examples.memstore.harness import (
+from examples.episode_summarizer.harness import (
     HarnessUnavailable,
     LIVE_ONE_LINER_MODEL,
     docker_usable,
     run_live_e2e,
 )
-from examples.memstore.tools_server import EPISODE_IDS, MISSING_EPISODE_ID
+from examples.episode_summarizer.tools_server import EPISODE_IDS, MISSING_EPISODE_ID
 
 
 @pytest.mark.live
@@ -23,13 +23,13 @@ from examples.memstore.tools_server import EPISODE_IDS, MISSING_EPISODE_ID
     reason="ANTHROPIC_API_KEY is required",
 )
 @pytest.mark.skipif(shutil.which("temporal") is None, reason="temporal CLI is required")
-def test_memstore_live_e2e(monkeypatch: pytest.MonkeyPatch) -> None:
-    if not os.environ.get("JULEP_MEMSTORE_PG_DSN") and not docker_usable():
-        pytest.skip("set JULEP_MEMSTORE_PG_DSN or start docker")
+def test_episode_summarizer_live_e2e(monkeypatch: pytest.MonkeyPatch) -> None:
+    if not os.environ.get("EPISODE_E2E_PG_DSN") and not docker_usable():
+        pytest.skip("set EPISODE_E2E_PG_DSN or start docker")
 
     # Keep the OpenAI model as the sample's code default, but use the working
     # Anthropic credential for this deliberately live test.
-    monkeypatch.setenv("MEMSTORE_ONE_LINER_MODEL", LIVE_ONE_LINER_MODEL)
+    monkeypatch.setenv("EPISODE_ONE_LINER_MODEL", LIVE_ONE_LINER_MODEL)
     try:
         result = asyncio.run(run_live_e2e(one_liner_model=LIVE_ONE_LINER_MODEL))
     except HarnessUnavailable as exc:
