@@ -417,8 +417,8 @@ Healthy deployed state: `clean` and exit `0`. Drift exits `3`.
 julep run triage --env staging --input '"TICKET-42"'
 ```
 
-4. For CAS/ledger deployments, rollback is selecting the previous immutable
-   `artifact_hash` from the deploy ledger or CAS record. After the pointer swap,
+4. For artifact store/ledger deployments, rollback is selecting the previous immutable
+   `artifact_hash` from the deploy ledger or artifact store record. After the pointer swap,
    rerun `julep status triage --env staging` and a representative `julep run`.
 
 ### Escalation

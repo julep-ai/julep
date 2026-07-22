@@ -1,6 +1,6 @@
 """Content-addressed stores for code-as-data artifact distribution.
 
-CAS objects are immutable and are never deleted within workflow-history
+artifact-store objects are immutable and are never deleted within workflow-history
 retention; any future garbage collection must take leases against live artifact
 hashes before removing anything. Replay depends on these bytes remaining
 available, so this module intentionally exposes no delete API.
@@ -20,23 +20,23 @@ from urllib.parse import urlparse
 _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
 
 
-class CASError(Exception):
+class ArtifactStoreError(Exception):
     pass
 
 
-class CASNotFound(CASError):
+class ArtifactNotFound(ArtifactStoreError):
     pass
 
 
-class CASIntegrityError(CASError):
+class ArtifactIntegrityError(ArtifactStoreError):
     pass
 
 
-class CASDigestError(CASError):
+class ArtifactDigestError(ArtifactStoreError):
     pass
 
 
-class CASStore(Protocol):
+class ArtifactStore(Protocol):
     def put(self, data: bytes) -> str: ...
     def get(self, digest: str) -> bytes: ...
     def has(self, digest: str) -> bool: ...
@@ -48,11 +48,11 @@ def _digest(data: bytes) -> str:
 
 def _validate_digest(digest: str) -> None:
     if _SHA256_HEX.fullmatch(digest) is None:
-        raise CASDigestError(f"expected full lowercase sha256 hex digest, got {digest!r}")
+        raise ArtifactDigestError(f"expected full lowercase sha256 hex digest, got {digest!r}")
 
 
-class LocalDirCAS:
-    """Write-once sha256-addressed CAS backed by a local directory."""
+class LocalDirArtifactStore:
+    """Write-once sha256-addressed artifact-store backed by a local directory."""
 
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
@@ -67,7 +67,7 @@ class LocalDirCAS:
             stored = path.read_bytes()
             actual = _digest(stored)
             if actual != digest or stored != data:
-                raise CASIntegrityError(f"CAS object failed integrity check: {digest}")
+                raise ArtifactIntegrityError(f"artifact-store object failed integrity check: {digest}")
             return digest
 
         fd, tmp_name = tempfile.mkstemp(prefix=f".{digest}.", dir=path.parent)
@@ -90,11 +90,11 @@ class LocalDirCAS:
         try:
             data = path.read_bytes()
         except FileNotFoundError as e:
-            raise CASNotFound(f"CAS object not found: {digest}") from e
+            raise ArtifactNotFound(f"artifact-store object not found: {digest}") from e
 
         actual = _digest(data)
         if actual != digest:
-            raise CASIntegrityError(f"CAS object failed integrity check: {digest}")
+            raise ArtifactIntegrityError(f"artifact-store object failed integrity check: {digest}")
         return data
 
     def has(self, digest: str) -> bool:
@@ -110,13 +110,13 @@ def _make_default_client() -> Any:
         boto3 = importlib.import_module("boto3")
     except ModuleNotFoundError as e:
         raise RuntimeError(
-            "S3 CAS requires boto3; install it with pip install 'julep[store]'"
+            "S3 artifact-store requires boto3; install it with pip install 'julep[store]'"
         ) from e
     return boto3.client("s3")
 
 
-class S3CAS:
-    """Write-once sha256-addressed CAS backed by S3."""
+class S3ArtifactStore:
+    """Write-once sha256-addressed artifact-store backed by S3."""
 
     def __init__(self, bucket: str, prefix: str = "", *, client: Any | None = None) -> None:
         self.bucket = bucket
@@ -127,12 +127,12 @@ class S3CAS:
         digest = _digest(data)
         try:
             stored = self.get(digest)
-        except CASNotFound:
+        except ArtifactNotFound:
             self.client.put_object(Bucket=self.bucket, Key=self._key_for(digest), Body=data)
             return digest
 
         if stored != data:
-            raise CASIntegrityError(f"CAS object failed integrity check: {digest}")
+            raise ArtifactIntegrityError(f"artifact-store object failed integrity check: {digest}")
         return digest
 
     def get(self, digest: str) -> bytes:
@@ -141,17 +141,17 @@ class S3CAS:
             obj = self.client.get_object(Bucket=self.bucket, Key=key)
         except Exception as e:
             if self._is_not_found(e):
-                raise CASNotFound(f"CAS object not found: {digest}") from e
+                raise ArtifactNotFound(f"artifact-store object not found: {digest}") from e
             raise
 
         body = obj["Body"]
         data = body.read() if hasattr(body, "read") else body
         if not isinstance(data, bytes):
-            raise CASIntegrityError(f"CAS object body is not bytes: {digest}")
+            raise ArtifactIntegrityError(f"artifact-store object body is not bytes: {digest}")
 
         actual = _digest(data)
         if actual != digest:
-            raise CASIntegrityError(f"CAS object failed integrity check: {digest}")
+            raise ArtifactIntegrityError(f"artifact-store object failed integrity check: {digest}")
         return data
 
     def has(self, digest: str) -> bool:
@@ -185,11 +185,11 @@ class S3CAS:
         return False
 
 
-def cas_from_url(url: str) -> CASStore:
+def artifact_store_from_url(url: str) -> ArtifactStore:
     parsed = urlparse(url)
     if parsed.scheme == "file":
-        return LocalDirCAS(Path(parsed.path))
+        return LocalDirArtifactStore(Path(parsed.path))
     if parsed.scheme == "s3":
         prefix = parsed.path.lstrip("/")
-        return S3CAS(parsed.netloc, prefix)
-    raise ValueError(f"unsupported CAS URL {url!r}; supported schemes: file, s3")
+        return S3ArtifactStore(parsed.netloc, prefix)
+    raise ValueError(f"unsupported artifact-store URL {url!r}; supported schemes: file, s3")

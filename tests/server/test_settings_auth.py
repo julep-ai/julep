@@ -15,7 +15,7 @@ def test_server_settings_overlay_and_environment_precedence(tmp_path) -> None:
 [tool.julep.server]
 api_keys = ["config:config-token"]
 execution_store_dsn = "postgresql://config"
-cas_url = "file:///config-cas"
+artifact_store_url = "file:///config-artifacts"
 host = "0.0.0.0"
 port = 9000
 temporal_namespace = "config-ns"
@@ -51,7 +51,7 @@ projection_batch_size = 30
         ("bob", True),
     ]
     assert settings.execution_store_dsn == "postgresql://environment"
-    assert settings.cas_url == "file:///config-cas"
+    assert settings.artifact_store_url == "file:///config-artifacts"
     assert settings.host == "127.0.0.2"
     assert settings.port == 8088
     assert settings.temporal_namespace == "config-ns"

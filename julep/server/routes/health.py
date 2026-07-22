@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from ..auth import ApiKey, require_key
-from . import cas_store, execution_store
+from . import artifact_store, execution_store
 
 router = APIRouter(tags=["health"])
 
@@ -57,10 +57,10 @@ async def ready(
 
     try:
         # An absent sentinel is a successful, read-only reachability check.
-        cas_store(request).has("0" * 64)
-        checks["cas"] = "ok"
+        artifact_store(request).has("0" * 64)
+        checks["artifacts"] = "ok"
     except Exception as exc:
-        checks["cas"] = f"error: {type(exc).__name__}"
+        checks["artifacts"] = f"error: {type(exc).__name__}"
 
     try:
         await _temporal_ready(request)

@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep.app_deploy import publish_application
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.execution.effects import WorkerContext, configure
 from julep.execution.projection_store import (
     PostgresExecutionStore,
@@ -287,7 +287,7 @@ def _child_env(*, keep_payload_keys: bool = False) -> dict[str, str]:
         "EPISODE_SUMMARIZER_MODEL",
         "EPISODE_TOOLS_URL",
         "EPISODE_ONE_LINER_MODEL",
-        "STORE_URL",
+        "JULEP_ARTIFACT_STORE_URL",
     ):
         env.pop(name, None)
     if not keep_payload_keys:
@@ -691,9 +691,9 @@ async def run_live_e2e(
     with _quiet_transport_logs(), ephemeral_postgres() as dsn:
         with tempfile.TemporaryDirectory(prefix="julep-episode-summarizer-e2e-") as temp_dir:
             temp_root = Path(temp_dir)
-            cas_dir = temp_root / "cas"
-            cas_dir.mkdir()
-            store_url = cas_dir.resolve().as_uri()
+            artifact_dir = temp_root / "artifacts"
+            artifact_dir.mkdir()
+            store_url = artifact_dir.resolve().as_uri()
 
             mcp_seed = os.urandom(32).hex()
             mcp_private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(mcp_seed))
@@ -723,7 +723,7 @@ async def run_live_e2e(
                 "JULEP_MCP_TTL_S": "300",
                 "JULEP_BUNDLE_ALLOWED_SIGNERS": bundle_public,
                 "JULEP_BUNDLES": "",
-                "STORE_URL": store_url,
+                "JULEP_ARTIFACT_STORE_URL": store_url,
                 "EPISODE_TOOLS_URL": tools_url,
                 "EPISODE_SUMMARIZER_MODEL": resolved_summarizer,
                 # The code default remains OpenAI; live runs override it because
@@ -797,7 +797,7 @@ async def run_live_e2e(
                     compiled = flow_module.build_application().compile()
                     release = publish_application(
                         compiled,
-                        LocalDirCAS(cas_dir),
+                        LocalDirArtifactStore(artifact_dir),
                         worker_image="local/episode-summarizer@sha256:" + "0" * 64,
                         deployment_config={"queues": {flow_module.LANE: flow_module.LANE}},
                         signing_key=bundle_seed,
@@ -812,7 +812,7 @@ async def run_live_e2e(
                         {
                             "JULEP_API_KEYS": (f"admin:{admin_token}:admin,client:{client_token}"),
                             "JULEP_EXECUTION_STORE_DSN": dsn,
-                            "JULEP_CAS_URL": store_url,
+                            "JULEP_ARTIFACT_STORE_URL": store_url,
                             "TEMPORAL_ADDRESS": temporal_address,
                             "TEMPORAL_NAMESPACE": "default",
                             "TEMPORAL_TLS": "false",

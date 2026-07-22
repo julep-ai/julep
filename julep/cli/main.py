@@ -35,7 +35,7 @@ from julep.cli.temporal_run import run_on_env
 from julep.cli.tracetree import render_tree
 from julep.cli.trigger import trigger_command
 from julep.bundle import BundleError
-from julep.cas import CASError
+from julep.artifact_store import ArtifactStoreError
 from julep.projection import ProjectionEvent
 
 if TYPE_CHECKING:
@@ -402,7 +402,7 @@ def run(
         except (ValueError, FileNotFoundError) as exc:
             typer.echo(f"error: {exc}", err=True)
             raise typer.Exit(2) from None
-        typer.echo(f"artifact {ctx_outcome.artifact_hash}")
+        typer.echo(f"artifact-digest {ctx_outcome.artifact_hash}")
         typer.echo(f"output: {_json.dumps(ctx_outcome.reply, default=str)}")
         return
     cfg = load_config(Path("."))
@@ -491,7 +491,7 @@ def plan(
             cfg.envs[env],
             mcp_snapshot=mcp_snapshot,
         )
-    except (BundleError, CASError, ImportError, RuntimeError, TypeError, ValueError) as exc:
+    except (BundleError, ArtifactStoreError, ImportError, RuntimeError, TypeError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from None
     payload = application_plan.to_json()
@@ -546,7 +546,7 @@ def apply_application(
             publish_only=publish_only,
             mcp_snapshot=mcp_snapshot,
         )
-    except (BundleError, CASError, ImportError, RuntimeError, TypeError, ValueError) as exc:
+    except (BundleError, ArtifactStoreError, ImportError, RuntimeError, TypeError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from None
     typer.echo(f"release   {release.release_hash}")
@@ -598,7 +598,7 @@ def status(
                 cfg.envs[env],
                 observed=observed,
             )
-        except (BundleError, CASError, RuntimeError, TypeError, ValueError) as exc:
+        except (BundleError, ArtifactStoreError, RuntimeError, TypeError, ValueError) as exc:
             typer.echo(f"error: {exc}", err=True)
             raise typer.Exit(1) from None
         typer.echo(f"application {application_plan.application}")

@@ -32,7 +32,7 @@ def test_health_is_unauthenticated_and_readiness_requires_auth(server_factory) -
         assert ready.status_code == 200
         assert ready.json()["checks"] == {
             "store": "ok",
-            "cas": "ok",
+            "artifacts": "ok",
             "temporal": "ok",
         }
 
@@ -53,7 +53,7 @@ def test_authentication_and_admin_authorization(server_factory) -> None:
             "/v1/runs", headers={"Authorization": "Bearer wrong"}
         ).status_code == 401
         assert client.put(
-            f"/v1/cas/{digest}",
+            f"/v1/artifacts/{digest}",
             content=b"not-the-digest",
             headers=ALICE_HEADERS,
         ).status_code == 403

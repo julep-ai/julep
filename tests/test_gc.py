@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import pytest
 
 from julep import arr, deploy
-from julep.cas import CASStore, LocalDirCAS
+from julep.artifact_store import ArtifactStore, LocalDirArtifactStore
 from julep.gc import GCError, Lease, LeaseStore, gc, reachable_closure
 from julep.ir import canonical_json
 from conftest import read_snapshot
@@ -43,7 +43,7 @@ def _hex_digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _make_bundle(store: CASStore) -> _BundleFixture:
+def _make_bundle(store: ArtifactStore) -> _BundleFixture:
     source_text = "def useful_pure(value: int) -> int:\n    return value + 1\n"
     source = store.put(source_text.encode("utf-8"))
     env_component = store.put(b"wasm env component bytes")
@@ -57,7 +57,7 @@ def _make_bundle(store: CASStore) -> _BundleFixture:
             }
         )
     )
-    env_hash = _hex_digest(b"derived env hash, not a stored CAS blob")
+    env_hash = _hex_digest(b"derived env hash, not a stored artifact-store blob")
     manifest = {
         "artifactHash": f"sha256:{artifact_components}",
         "artifactComponents": artifact_components,
@@ -96,14 +96,14 @@ def _make_bundle(store: CASStore) -> _BundleFixture:
     )
 
 
-def _manifest(store: CASStore, bundle_hash: str) -> dict[str, object]:
+def _manifest(store: ArtifactStore, bundle_hash: str) -> dict[str, object]:
     raw = json.loads(store.get(bundle_hash).decode("utf-8"))
     assert isinstance(raw, dict)
     return raw
 
 
 def _malformed_bundle(
-    store: CASStore,
+    store: ArtifactStore,
     bundle: _BundleFixture,
     mutate: object,
 ) -> Lease:
@@ -126,12 +126,12 @@ def _lease(bundle: _BundleFixture) -> Lease:
     )
 
 
-def _snapshot(store: LocalDirCAS, digests: set[str]) -> dict[str, bytes]:
+def _snapshot(store: LocalDirArtifactStore, digests: set[str]) -> dict[str, bytes]:
     return {digest: store.get(digest) for digest in sorted(digests) if store.has(digest)}
 
 
 def test_lease_pins_whole_bundle_closure(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     bundle = _make_bundle(store)
     lease_store.acquire(_lease(bundle))
@@ -144,7 +144,7 @@ def test_lease_pins_whole_bundle_closure(tmp_path) -> None:
 
 
 def test_orphan_blob_collected_only_when_not_dry_run(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     orphan = store.put(b"orphan")
 
@@ -160,7 +160,7 @@ def test_orphan_blob_collected_only_when_not_dry_run(tmp_path) -> None:
 
 
 def test_dry_run_never_deletes(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     orphan = store.put(b"dry run orphan")
 
@@ -173,7 +173,7 @@ def test_dry_run_never_deletes(tmp_path) -> None:
 
 
 def test_releasing_last_lease_makes_closure_collectable(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     bundle = _make_bundle(store)
     lease_store.acquire(_lease(bundle))
@@ -189,7 +189,7 @@ def test_releasing_last_lease_makes_closure_collectable(tmp_path) -> None:
 
 
 def test_gc_refuses_zero_leases_without_escape_hatch_and_preserves_objects(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     orphan = store.put(b"zero lease orphan")
 
@@ -200,7 +200,7 @@ def test_gc_refuses_zero_leases_without_escape_hatch_and_preserves_objects(tmp_p
 
 
 def test_gc_refuses_zero_leases_even_for_dry_run(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     orphan = store.put(b"zero lease dry run orphan")
 
@@ -211,7 +211,7 @@ def test_gc_refuses_zero_leases_even_for_dry_run(tmp_path) -> None:
 
 
 def test_gc_zero_lease_escape_hatch_collects_everything(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     orphan = store.put(b"intentional full collection")
 
@@ -223,7 +223,7 @@ def test_gc_zero_lease_escape_hatch_collects_everything(tmp_path) -> None:
 
 
 def test_closure_includes_env_components_and_signatures(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     bundle = _make_bundle(store)
 
     closure = reachable_closure(store, _lease(bundle))
@@ -252,7 +252,7 @@ def test_reachable_closure_requires_manifest_replay_digests(
     mutate,
     message: str,
 ) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     bundle = _make_bundle(store)
     bad_lease = _malformed_bundle(store, bundle, mutate)
@@ -269,7 +269,7 @@ def test_reachable_closure_requires_manifest_replay_digests(
 
 
 def test_gc_is_idempotent(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     bundle = _make_bundle(store)
     lease_store.acquire(_lease(bundle))
@@ -287,7 +287,7 @@ def test_gc_is_idempotent(tmp_path) -> None:
 
 
 def test_gc_fails_safe_when_closure_incomputable(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     lease_store = LeaseStore(tmp_path)
     missing_manifest = _hex_digest(b"absent manifest")
     orphan = store.put(b"would be collectable")
@@ -300,7 +300,7 @@ def test_gc_fails_safe_when_closure_incomputable(tmp_path) -> None:
 
 
 def test_lease_store_persists_across_instances(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     bundle = _make_bundle(store)
     LeaseStore(tmp_path).acquire(_lease(bundle))
 
@@ -310,7 +310,7 @@ def test_lease_store_persists_across_instances(tmp_path) -> None:
 
 
 def test_deployment_publish_acquires_local_gc_lease_and_pins_bundle(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     deployment = deploy(arr("std.pluck", {"key": "name"}), read_snapshot())
 
     rec = deployment.publish(store, signing_key="11" * 32)

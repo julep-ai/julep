@@ -317,7 +317,7 @@ MUST NOT be mutated in place — add `.v2`.
 
 - `sourceHash` is the registry pin (`pure:` plus 16 hex chars).
 - `abi` is the call ABI used to load and execute the pure.
-- `bundleHash` is the full sha256 CAS digest of the bundle manifest.
+- `bundleHash` is the full sha256 artifact store digest of the bundle manifest.
 - `executorTier` is the tier that executes the pure. Bundle-sourced pures
   (`register_pure_from_source`) resolve to `wasm` (the wasmtime sandbox); baked
   `register_pure`/`std.*` pures stay `native`. The published `pureRuntimeRefs`
@@ -346,7 +346,7 @@ non-empty. Absent and empty refs are indistinguishable; every pre-existing
 artifact, including the golden corpus, MUST hash byte-identically.
 
 The refs-absent `artifact_hash` is the identity of the intended program and is
-what the bundle manifest pins as `artifactHash`. The manifest's CAS digest is
+what the bundle manifest pins as `artifactHash`. The manifest's artifact store digest is
 `bundleHash`; `bundleHash` enters each pure's runtime ref; the refs-present hash
 is the published identity. Two deployments differing only in `executorTier` or
 `envHash` MUST hash differently.
@@ -358,13 +358,13 @@ The bundle manifest MUST be canonical JSON with this wire shape:
 ```json
 {
   "artifactHash": "sha256:<64hex>",
-  "artifactComponents": "<64hex CAS digest>",
-  "flow": "<64hex CAS digest>",
+  "artifactComponents": "<64hex artifact store digest>",
+  "flow": "<64hex artifact store digest>",
   "pures": [
     {
       "abi": "python-source/json-v1",
       "name": "<pure name>",
-      "source": "<64hex CAS digest>",
+      "source": "<64hex artifact store digest>",
       "sourceHash": "pure:<16hex>"
     }
   ],
@@ -373,20 +373,20 @@ The bundle manifest MUST be canonical JSON with this wire shape:
 ```
 
 - `artifactHash` is the refs-absent artifact hash.
-- `artifactComponents` is the CAS digest of the canonical artifact envelope and
+- `artifactComponents` is the artifact store digest of the canonical artifact envelope and
   MUST equal the hex part of `artifactHash`.
-- `flow` is the CAS digest of canonical `flowJson`.
+- `flow` is the artifact store digest of canonical `flowJson`.
 - `pures` is the bundled pure source list and MUST be sorted by `name`.
 - `abi` is the source call ABI.
 - `envHash` is the dependency environment identity from §6.5. It is optional
   and MUST be serialized only when the pure declares PEP 723 dependencies. For
   no-dep pures it is ABSENT (key omitted, never `null`).
-- `envComponent` is the CAS digest of the pre-initialized wasm component for
+- `envComponent` is the artifact store digest of the pre-initialized wasm component for
   `envHash`. It is optional and MUST be present exactly when `envHash` is
   present. For no-dep pures it is ABSENT, so no-dep bundle manifests remain
   byte-identical to manifests published before deps-as-data env components.
 - `name` is the pure registry name.
-- `source` is the CAS digest of the source blob.
+- `source` is the artifact store digest of the source blob.
 - `sourceHash` is the registry pin over the exact source text.
 - `executorTier`, `deps`, and `requiresPython` are OPTIONAL and present together
   exactly when the pure is published to the `native` capability-granted tier
@@ -409,7 +409,7 @@ content-addressed alongside the manifest:
 
 Workers MUST verify the detached signature against a key allowlist. Unsigned
 bundles and unknown signers MUST fail closed. Workers MUST verify every content
-hash: the manifest CAS address, source blob CAS addresses, and each per-pure
+hash: the manifest artifact store address, source blob artifact store addresses, and each per-pure
 `sourceHash` over the source text. If a pure name is both baked and bundled, the
 hashes MUST agree; disagreement is an error, not precedence. Bundle resolution
 MUST happen at worker startup, before any workflow task is accepted.

@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from julep.app_deploy import ApplicationRelease, PipelineRelease
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.execution.projection_store import InMemoryExecutionStore
 from julep.server.app import create_app
 from julep.server.auth import ApiKey
@@ -82,7 +82,7 @@ class ServerHarness:
     app: Any
     store: InMemoryExecutionStore
     gateway: FakeTemporalGateway
-    cas: LocalDirCAS
+    artifacts: LocalDirArtifactStore
     settings: ServerSettings
 
 
@@ -94,7 +94,7 @@ def server_factory(tmp_path: Path):
         *,
         store: InMemoryExecutionStore | None = None,
         gateway: FakeTemporalGateway | None = None,
-        cas: LocalDirCAS | None = None,
+        artifacts: LocalDirArtifactStore | None = None,
         reconciler: Any = None,
         queue_by_lane: dict[str, str] | None = None,
         enable_reconciler: bool = False,
@@ -103,7 +103,7 @@ def server_factory(tmp_path: Path):
         counter += 1
         resolved_store = store or InMemoryExecutionStore()
         resolved_gateway = gateway or FakeTemporalGateway()
-        resolved_cas = cas or LocalDirCAS(tmp_path / f"cas-{counter}")
+        resolved_artifact_store = artifacts or LocalDirArtifactStore(tmp_path / f"artifacts-{counter}")
         settings = ServerSettings(
             api_keys=(
                 ApiKey("alice", "alice-token"),
@@ -117,14 +117,14 @@ def server_factory(tmp_path: Path):
             settings=settings,
             store=resolved_store,
             gateway=resolved_gateway,
-            cas=resolved_cas,
+            artifacts=resolved_artifact_store,
             reconciler=reconciler,
             enable_reconciler=enable_reconciler,
             reconcile_interval_s=0.01,
             sse_heartbeat_seconds=1,
             sse_poll_seconds=0.001,
         )
-        return ServerHarness(app, resolved_store, resolved_gateway, resolved_cas, settings)
+        return ServerHarness(app, resolved_store, resolved_gateway, resolved_artifact_store, settings)
 
     return build
 

@@ -5,7 +5,7 @@ A compact porting example for
 workflow labels a store-scoped macrocluster snapshot only if the cluster map is
 unchanged by the time generation finishes. This example keeps that consistency
 shape intact: one global snapshot read up front, bounded per-cluster model work,
-then one transactional CAS-guarded replacement of the whole label snapshot.
+then one transactional compare-and-swap-guarded replacement of the whole label snapshot.
 
 Structure notes:
 
@@ -23,7 +23,7 @@ Structure notes:
 * ``write_label_snapshot`` is the only write. It re-fetches merge version and
   signature, then either replaces all labels for the snapshot or writes none.
   The call sets ``retries=`` because the tool is declared idempotent and models
-  the product's retryable CAS-write contract.
+  the product's retryable compare-and-swap-write contract.
 * ``switch`` handles the universal status idiom on the new frontend surface:
   success / stale_snapshot / not_found. The production workflow also has
   disabled and empty exits; this mini-port keeps the batch small and maps the
@@ -166,7 +166,7 @@ reset_store()
 # --------------------------------------------------------------------------- #
 @tool(effect="read", idempotent=True)
 def read_macrocluster_snapshot(store_id: str) -> dict[str, Any]:
-    """Fetch the current macrocluster snapshot and its CAS guard fields."""
+    """Fetch the current macrocluster snapshot and its compare-and-swap guard fields."""
     row = _store.get(store_id)
     if row is None:
         return {

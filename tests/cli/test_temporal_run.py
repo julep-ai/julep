@@ -89,7 +89,7 @@ def _cloud_cfg(tmp_path: Path) -> JulepConfig:
                 temporal_address="temporal.staging:7233",
                 temporal_namespace="staging-ns",
                 task_queue="julep-staging-queue",
-                cas=str(tmp_path / ".julep" / "cas"),
+                artifacts=str(tmp_path / ".julep" / "artifacts"),
             )
         },
     )

@@ -1,7 +1,7 @@
 """Grade-scores batch — a deterministic code-as-data demo flow.
 
 No reasoners, no tools: the whole application is custom pures plus the ``each``
-combinator, so the published CAS bundle (``flowJson`` + pure source) *is* the
+combinator, so the published artifact store bundle (``flowJson`` + pure source) *is* the
 entire app. A generic worker that has never seen this code resolves the bundle
 at startup (``JULEP_BUNDLES``) and runs it with byte-identical, key-free output.
 

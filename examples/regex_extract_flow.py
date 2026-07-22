@@ -1,7 +1,7 @@
 """Regex email extraction batch — a deterministic code-as-data demo flow.
 
 No reasoners, no tools: the application is custom pures plus the ``each``
-combinator, so the published CAS bundle (``flowJson`` + pure source) *is* the
+combinator, so the published artifact store bundle (``flowJson`` + pure source) *is* the
 entire app. The extraction pure declares its third-party dependency (``regex``)
 with a PEP 723 ``# /// script`` block, so the bundle carries an ``envHash`` and
 the worker resolves a pre-initialized wasm env component by that hash before

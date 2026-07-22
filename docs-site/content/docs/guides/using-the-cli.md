@@ -48,7 +48,7 @@ fail_severity = "error"                # default gate threshold for `julep lint`
 temporal_address   = "temporal.example:7233"
 temporal_namespace = "default"
 task_queue         = "julep-staging"
-cas                = "s3://my-bucket/julep"   # local envs default to .julep/cas (LocalDirCAS)
+artifacts                = "s3://my-bucket/julep"   # local envs default to .julep/artifacts (LocalDirArtifactStore)
 langfuse_host      = "https://cloud.langfuse.com"
 
 [tool.julep.mcp.servers.memory]
@@ -63,7 +63,7 @@ lane = "summaries"
 MODEL = "anthropic:claude-haiku-4-5-20251001"
 ```
 
-A `local` environment always exists implicitly (LocalDirCAS at `.julep/cas`, no Temporal).
+A `local` environment always exists implicitly (LocalDirArtifactStore at `.julep/artifacts`, no Temporal).
 
 Production application commands use an explicit
 `[tool.julep] application = "module:attribute"` object rather than AST discovery.
@@ -94,7 +94,7 @@ keys are rejected with a close-match suggestion.
 | `julep test [SEL] [--dry-run]` | Run `pytest` for the selected agents (matched by name via `-k`). |
 | `julep trace <run-id> [--remote --api-url --api-key]` | Render cached events or remote control-plane projection events. |
 | `julep doctor` | Preflight: discovery, git, Langfuse, Temporal. |
-| `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env CAS → record in the deploy ledger. |
+| `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env artifact store → record in the deploy ledger. |
 | `julep plan --env <name> [--mcp-snapshot]` | Compile code plus configured dotctx pipelines and report drift; optionally fetch configured MCP schemas. |
 | `julep apply --env <name> [--mcp-snapshot] [--publish-only]` | Publish a signed schema-v2 release and optionally reconcile lane workers. |
 | `julep status [SEL] --env <name>` | Aggregate application state or inspect the legacy ledger; `--remote --api-url --api-key --limit` reads control-plane runs. |
@@ -179,7 +179,7 @@ Configured `[pipeline.<name>]` packages are also appended during `plan` and
 julep deploy triage --env staging
 ```
 - freezes the agent (`deploy(..., strict=False)`, minting a content-addressed `artifact_hash`),
-- publishes the bundle (frozen flow + manifest + pure sources) to the env's CAS (`LocalDirCAS` locally, `S3CAS` for `s3://`),
+- publishes the bundle (frozen flow + manifest + pure sources) to the env's artifact store (`LocalDirArtifactStore` locally, `S3ArtifactStore` for `s3://`),
 - appends a record to the **committed** ledger `.julep/deploys/<env>.json` (artifact hash + frozen IR + timestamp — self-describing).
 
 ```bash
@@ -193,7 +193,7 @@ julep run triage --env staging --input '"TICKET-42"'
 ```
 replays the **deployed** artifact (never re-freezes drifted source): connects to the env's Temporal and runs the frozen flow on its task queue via `run_flow`.
 
-The ledger lives in git (`.julep/deploys/` is tracked); `.julep/runs/` and `.julep/cas/` are ignored. Immutable, content-addressed artifacts make rollback a pointer swap.
+The ledger lives in git (`.julep/deploys/` is tracked); `.julep/runs/` and `.julep/artifacts/` are ignored. Immutable, content-addressed artifacts make rollback a pointer swap.
 
 > **Status:** `--env local` (deploy/status/run) is local-only and needs no extra services. `run --env <cloud>` (Temporal) and S3 publishing require the `temporal` / `store` extras and live infrastructure.
 

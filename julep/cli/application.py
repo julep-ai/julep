@@ -29,7 +29,7 @@ from julep.app_deploy import (
     reconcile_application,
 )
 from julep.cli.config import JulepConfig, EnvConfig
-from julep.cas import cas_from_url
+from julep.artifact_store import artifact_store_from_url
 from julep.bundle import bundle_signer_public_key
 from julep.ctx_pipeline import pipeline_spec_from_ctx
 from julep.freeze import McpSnapshot
@@ -217,7 +217,7 @@ def _resolve_deployment_config(
             )
     worker_environment = {
         **env.worker_environment,
-        "STORE_URL": env.release_store,
+        "JULEP_ARTIFACT_STORE_URL": env.release_store,
         _env.JULEP_BUNDLE_ALLOWED_SIGNERS: ",".join(allowed_signers),
     }
     chart = _resolve_helm_chart(cfg.root, env.helm_chart)
@@ -258,7 +258,7 @@ def apply_configured_application(
         require_private_signer=True,
     )
     assert env.release_store is not None
-    store = cas_from_url(env.release_store)
+    store = artifact_store_from_url(env.release_store)
     release = publish_application(
         compiled,
         store,

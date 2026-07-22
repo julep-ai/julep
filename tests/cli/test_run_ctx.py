@@ -65,15 +65,14 @@ def test_run_ctx_command_prints_stable_artifact(
     ]
     assert main(args) == 0
     first = capsys.readouterr().out
-    assert "artifact sha256:" in first
+    assert "artifact-digest sha256:" in first
     assert 'output: "fake reply"' in first
     assert main(args) == 0
     second = capsys.readouterr().out
-    first_hash = first.split("artifact ", 1)[1].splitlines()[0]
-    second_hash = second.split("artifact ", 1)[1].splitlines()[0]
+    first_hash = first.split("artifact-digest ", 1)[1].splitlines()[0]
+    second_hash = second.split("artifact-digest ", 1)[1].splitlines()[0]
     assert first_hash == second_hash
 
 
 def test_run_ctx_missing_path_exits_two(tmp_path: Path) -> None:
     assert main(["run", str(tmp_path / "missing.ctx")]) == 2
-

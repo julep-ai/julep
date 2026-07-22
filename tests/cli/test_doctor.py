@@ -34,6 +34,17 @@ def test_legacy_checks_report_config_state_and_environment(tmp_path):
     assert "JULEP_WASM_FUEL" in details
 
 
+def test_legacy_checks_report_retired_artifact_store_environment(tmp_path):
+    checks = legacy_checks(
+        tmp_path,
+        environ={"JULEP_CAS_URL": "file:///old", "STORE_URL": "s3://old"},
+    )
+
+    details = "\n".join(check.detail for check in checks)
+    assert "JULEP_CAS_URL is set; rename it to JULEP_ARTIFACT_STORE_URL" in details
+    assert "STORE_URL is set; rename it to JULEP_ARTIFACT_STORE_URL" in details
+
+
 def test_doctor_reports_legacy_config_without_parsing_it(tmp_path, monkeypatch, capsys):
     (tmp_path / "ca.toml").write_text("not valid TOML = [", encoding="utf-8")
     monkeypatch.chdir(tmp_path)

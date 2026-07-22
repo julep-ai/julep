@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
 from julep.bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, publish_bundle
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.ir import canonical_json
 from julep.registry import PureEntry, Registry
 from conftest import read_snapshot
@@ -49,7 +49,7 @@ def _public_key(seed: str) -> str:
     ).hex()
 
 
-def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
+def _json_from_store(store: LocalDirArtifactStore, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
 
 
@@ -61,7 +61,7 @@ def _simple_deployment():
 
 
 def test_publish_record_shape_and_stored_manifest(tmp_path: Path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     deployment = _simple_deployment()
 
     rec = deployment.publish(store, signing_key=SEED_A)
@@ -107,8 +107,8 @@ def test_publish_record_shape_and_stored_manifest(tmp_path: Path) -> None:
 
 def test_bundle_hash_is_signer_independent(tmp_path: Path) -> None:
     deployment = _simple_deployment()
-    first = deployment.publish(LocalDirCAS(tmp_path / "a"), signing_key=SEED_A)
-    second = deployment.publish(LocalDirCAS(tmp_path / "b"), signing_key=SEED_B)
+    first = deployment.publish(LocalDirArtifactStore(tmp_path / "a"), signing_key=SEED_A)
+    second = deployment.publish(LocalDirArtifactStore(tmp_path / "b"), signing_key=SEED_B)
 
     assert first["bundleHash"] == second["bundleHash"]
     assert first["signatureDigest"] != second["signatureDigest"]
@@ -116,13 +116,13 @@ def test_bundle_hash_is_signer_independent(tmp_path: Path) -> None:
 
 def test_empty_custom_set_publishes_with_empty_refs(tmp_path: Path) -> None:
     deployment = deploy(arr("std.pluck", {"key": "name"}), read_snapshot())
-    rec = deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED_A)
+    rec = deployment.publish(LocalDirArtifactStore(tmp_path), signing_key=SEED_A)
 
     assert rec["pureRuntimeRefs"] == {}
     assert rec["publishedArtifactHash"] == deployment.artifact_hash
     assert deployment.bundle_ref is None
 
-    manifest = _json_from_store(LocalDirCAS(tmp_path), rec["bundleHash"])
+    manifest = _json_from_store(LocalDirArtifactStore(tmp_path), rec["bundleHash"])
     assert manifest["pures"] == []
 
 
@@ -150,8 +150,8 @@ def test_std_pures_are_excluded_when_custom_pures_are_bundled(tmp_path: Path) ->
         seq(arr("std.pluck", {"key": "payload"}), arr("bundle.test.with_std.v1")),
         read_snapshot(),
     )
-    rec = deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED_A)
-    manifest = _json_from_store(LocalDirCAS(tmp_path), rec["bundleHash"])
+    rec = deployment.publish(LocalDirArtifactStore(tmp_path), signing_key=SEED_A)
+    manifest = _json_from_store(LocalDirArtifactStore(tmp_path), rec["bundleHash"])
 
     assert [p["name"] for p in manifest["pures"]] == ["bundle.test.with_std.v1"]
     assert set(rec["pureRuntimeRefs"]) == {"bundle.test.with_std.v1"}
@@ -161,16 +161,16 @@ def test_signing_key_can_come_from_env_or_file(tmp_path: Path, monkeypatch: pyte
     deployment = _simple_deployment()
 
     monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", SEED_A)
-    from_env = deployment.publish(LocalDirCAS(tmp_path / "env"))
-    assert _json_from_store(LocalDirCAS(tmp_path / "env"), from_env["signatureDigest"])[
+    from_env = deployment.publish(LocalDirArtifactStore(tmp_path / "env"))
+    assert _json_from_store(LocalDirArtifactStore(tmp_path / "env"), from_env["signatureDigest"])[
         "publicKey"
     ] == _public_key(SEED_A)
 
     key_file = tmp_path / "seed.txt"
     key_file.write_text(f"  {SEED_B}\n", encoding="utf-8")
     monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", str(key_file))
-    from_file = deployment.publish(LocalDirCAS(tmp_path / "file"))
-    assert _json_from_store(LocalDirCAS(tmp_path / "file"), from_file["signatureDigest"])[
+    from_file = deployment.publish(LocalDirArtifactStore(tmp_path / "file"))
+    assert _json_from_store(LocalDirArtifactStore(tmp_path / "file"), from_file["signatureDigest"])[
         "publicKey"
     ] == _public_key(SEED_B)
 
@@ -179,14 +179,14 @@ def test_missing_signing_key_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     monkeypatch.delenv("JULEP_BUNDLE_SIGNING_KEY", raising=False)
 
     with pytest.raises(BundleError, match="JULEP_BUNDLE_SIGNING_KEY"):
-        _simple_deployment().publish(LocalDirCAS(tmp_path))
+        _simple_deployment().publish(LocalDirArtifactStore(tmp_path))
 
 
 def test_missing_registry_source_errors(tmp_path: Path) -> None:
     deployment = _simple_deployment()
 
     with pytest.raises(BundleError) as excinfo:
-        publish_bundle(deployment, LocalDirCAS(tmp_path), signing_key=SEED_A, registry=Registry())
+        publish_bundle(deployment, LocalDirArtifactStore(tmp_path), signing_key=SEED_A, registry=Registry())
 
     message = str(excinfo.value)
     assert "bundle.test.normalize.v1" in message
@@ -206,7 +206,7 @@ def test_drifted_registry_source_errors(tmp_path: Path) -> None:
     )
 
     with pytest.raises(BundleError) as excinfo:
-        publish_bundle(deployment, LocalDirCAS(tmp_path), signing_key=SEED_A, registry=registry)
+        publish_bundle(deployment, LocalDirArtifactStore(tmp_path), signing_key=SEED_A, registry=registry)
 
     message = str(excinfo.value)
     assert "bundle.test.normalize.v1" in message
@@ -239,7 +239,7 @@ def test_noninspectable_registry_source_errors(tmp_path: Path) -> None:
     )
 
     with pytest.raises(BundleError, match="not inspectable"):
-        publish_bundle(deployment, LocalDirCAS(tmp_path), signing_key=SEED_A, registry=registry)
+        publish_bundle(deployment, LocalDirArtifactStore(tmp_path), signing_key=SEED_A, registry=registry)
 
 
 def test_inspected_source_must_match_registry_hash(tmp_path: Path) -> None:
@@ -260,7 +260,7 @@ def test_inspected_source_must_match_registry_hash(tmp_path: Path) -> None:
     )
 
     with pytest.raises(BundleError) as excinfo:
-        publish_bundle(deployment, LocalDirCAS(tmp_path), signing_key=SEED_A, registry=registry)
+        publish_bundle(deployment, LocalDirArtifactStore(tmp_path), signing_key=SEED_A, registry=registry)
 
     message = str(excinfo.value)
     assert "source hash mismatch" in message
@@ -268,7 +268,7 @@ def test_inspected_source_must_match_registry_hash(tmp_path: Path) -> None:
 
 
 def test_stored_manifest_hashes_unsigned_canonical_bytes(tmp_path: Path) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     rec = _simple_deployment().publish(store, signing_key=SEED_A)
 
     manifest = _json_from_store(store, rec["bundleHash"])

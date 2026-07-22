@@ -20,20 +20,20 @@ def _publish(client: TestClient, release) -> dict:
     return response.json()
 
 
-def test_cas_upload_verifies_digest_and_head(server_factory) -> None:
+def test_artifact_upload_verifies_digest_and_head(server_factory) -> None:
     harness = server_factory()
     body = b"release blob"
     digest = hashlib.sha256(body).hexdigest()
     headers = {**ADMIN_HEADERS, "Content-Type": "application/octet-stream"}
 
     with TestClient(harness.app) as client:
-        mismatch = client.put(f"/v1/cas/{'0' * 64}", content=body, headers=headers)
+        mismatch = client.put(f"/v1/artifacts/{'0' * 64}", content=body, headers=headers)
         assert mismatch.status_code == 400
-        assert client.head(f"/v1/cas/{digest}", headers=ALICE_HEADERS).status_code == 404
-        assert client.put(f"/v1/cas/{digest}", content=body, headers=headers).status_code == 201
-        assert client.put(f"/v1/cas/{digest}", content=body, headers=headers).status_code == 200
-        assert client.head(f"/v1/cas/{digest}", headers=ALICE_HEADERS).status_code == 200
-        assert harness.cas.get(digest) == body
+        assert client.head(f"/v1/artifacts/{digest}", headers=ALICE_HEADERS).status_code == 404
+        assert client.put(f"/v1/artifacts/{digest}", content=body, headers=headers).status_code == 201
+        assert client.put(f"/v1/artifacts/{digest}", content=body, headers=headers).status_code == 200
+        assert client.head(f"/v1/artifacts/{digest}", headers=ALICE_HEADERS).status_code == 200
+        assert harness.artifacts.get(digest) == body
 
 
 def test_release_validation_missing_blobs_and_recomputed_hash(server_factory) -> None:
@@ -69,7 +69,7 @@ def test_release_validation_missing_blobs_and_recomputed_hash(server_factory) ->
         assert published.status_code == 201
         row = published.json()
         assert row["release_hash"] == valid.release_hash
-        assert harness.cas.has(valid.release_hash.removeprefix("sha256:"))
+        assert harness.artifacts.has(valid.release_hash.removeprefix("sha256:"))
 
         fetched = client.get(
             f"/v1/releases/{valid.release_hash}", headers=ALICE_HEADERS

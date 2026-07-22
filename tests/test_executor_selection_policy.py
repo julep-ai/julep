@@ -4,7 +4,7 @@ The P3 contract is exactly two rules, enforced at one place
 (``Registry.get_pure`` / ``Registry.register_*``):
 
 * **Bundle-sourced -> wasm.** A pure registered via ``register_pure_from_source``
-  (i.e. it arrived from a signed CAS bundle) has ``executor == "wasm"`` and
+  (i.e. it arrived from a signed artifact-store bundle) has ``executor == "wasm"`` and
   ``get_pure`` returns a wasm-bound callable (NOT the native fn object), so it
   runs inside the wasmtime sandbox.
 * **Baked / std.* -> native, unchanged.** A pure registered via ``register_pure``

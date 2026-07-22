@@ -62,7 +62,7 @@ worker must register those on `WorkerContext.subflows`, then run the parent via
 
 `ApplicationRelease` uses `schemaVersion: 2`. Each pipeline entry carries a
 `runtimeDeclarationsRef` with a content hash and byte size. The referenced,
-hash-verified CAS blob contains the reasoners and renderers needed by that
+hash-verified artifact store blob contains the reasoners and renderers needed by that
 pipeline: inline reasoners retain their prompt strings; rich dotctx reasoners
 retain the `.ctx` package content and portable renderer declarations. The
 release manifest's tool-map shape is unchanged.
@@ -81,7 +81,7 @@ unsupported application release schema version <v>; version 2 is required; re-pu
 ```
 
 A schema-v1 release cannot be upgraded in place. Re-publish it with this Julep
-version so the declarations blob is written to CAS.
+version so the declarations blob is written to artifact store.
 
 ## Standing up a worker
 
@@ -127,8 +127,8 @@ Kubernetes/KEDA path — see [Kubernetes](/docs/deploy/kubernetes).
 
 Generic workers leave `WORKER_APPLICATION` and
 `WORKER_RUNTIME_DECLARATIONS_HASH` unset. The release supplies the declaration
-reference to reasoner-facing activities, which hydrate it from the CAS named by
-`STORE_URL`.
+reference to reasoner-facing activities, which hydrate it from the artifact store named by
+`JULEP_ARTIFACT_STORE_URL`.
 
 ## Activities
 

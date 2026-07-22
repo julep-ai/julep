@@ -61,7 +61,7 @@ class DebounceInput:
     # whole batch runs as one principal — a multi-tenant stream is one
     # collector per tenant key, by construction of `key`.
     principal: Optional[dict[str, Any]] = None
-    # Signed CAS bundle pointers for custom pures referenced by flow_json.
+    # Signed artifact-store bundle pointers for custom pures referenced by flow_json.
     bundle: Optional[list[dict[str, str]]] = None
     runtime_declarations_ref: Optional[dict[str, Any]] = None
     # Continue-as-new carriage: batch ordinal, items left over from the

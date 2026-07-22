@@ -16,7 +16,7 @@ pytest.importorskip("jinja2")
 from julep import HAVE_TEMPORAL
 from julep.app import Application, ApplicationDefinitionError, PipelineSpec
 from julep.app_deploy import WorkflowStartOptions, publish_application
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.declarations import DeclarationError, declarations_blob, load_declarations
 from julep.dotctx import Reasoner
 from julep.dotctx_rich import load_rich_dotctx
@@ -131,7 +131,7 @@ def test_rich_renderer_rebuilds_from_blob_without_source_files(tmp_path: Path) -
             )
 
 
-def test_worker_application_conflict_with_cas_declaration_is_loud() -> None:
+def test_worker_application_conflict_with_artifact_declaration_is_loud() -> None:
     name = "declarations-worker-application-conflict"
     released = Reasoner(name, "model-release", system="release")
     blob = declarations_blob([released], registry=Registry())
@@ -176,7 +176,7 @@ def test_batch_submit_hydrates_and_derives_provider_inside_activity(
     name = "declarations-batch-provider"
     reasoner = Reasoner(name, "openai:gpt-5", system="batch")
     blob = declarations_blob([reasoner], registry=Registry())
-    store = LocalDirCAS(tmp_path / "cas")
+    store = LocalDirArtifactStore(tmp_path / "artifacts")
     digest = store.put(blob)
     declarations_ref = {"hash": f"sha256:{digest}", "size": len(blob)}
     captured: dict[str, object] = {}
@@ -190,7 +190,7 @@ def test_batch_submit_hydrates_and_derives_provider_inside_activity(
     previous_context = effects._CTX
     previous_batch_context = reasoner_batch._BATCH_CTX
     with _preserve_default_registry(name):
-        monkeypatch.setenv("STORE_URL", f"file://{store.root}")
+        monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{store.root}")
         effects.configure(WorkerContext(registry=Registry()))
         install_batch_dispatch_context(BatchDispatchContext(client=Client()))
         try:
@@ -233,7 +233,7 @@ def test_published_pipeline_hydrates_on_generic_worker_with_prompt_byte_parity(
     value = {"persona": "skeptic", "question": "why?"}
     expected_system = author_registry.get_renderer(rich.renderer_names["system"])(value).encode()
     expected_user = author_registry.get_renderer(rich.renderer_names["user"])(value).encode()
-    store = LocalDirCAS(tmp_path / "cas")
+    store = LocalDirArtifactStore(tmp_path / "artifacts")
     previous_context = effects._CTX
 
     with _preserve_default_registry(rich.reasoner.name, renderer_names):
@@ -287,7 +287,7 @@ def test_published_pipeline_hydrates_on_generic_worker_with_prompt_byte_parity(
             captured["user"] = rendered_user.encode("utf-8")
             return "ok"
 
-        monkeypatch.setenv("STORE_URL", f"file://{store.root}")
+        monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{store.root}")
         monkeypatch.delenv("WORKER_APPLICATION", raising=False)
         monkeypatch.delenv("WORKER_RUNTIME_DECLARATIONS_HASH", raising=False)
         effects.configure(WorkerContext(llm=llm, registry=Registry()))

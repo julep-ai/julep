@@ -8,7 +8,7 @@ target. This module runs its ``dry_run`` twice over the same frozen artifact:
   where ``@pure(...)`` registered them as ``executor == "native"``; and
 * bundle-sourced: a fresh ``Registry`` holds the SAME three pures, registered via
   ``register_pure_from_source`` (``executor == "wasm"``) from each pure's frozen
-  source text — exactly how a signed CAS bundle materialises them on a worker.
+  source text — exactly how a signed artifact-store bundle materialises them on a worker.
 
 Both runs drive the identical ``deployment.flow`` IR through ``interpret``; only
 the executor tier of the leaf pures differs. The flow is reasoner-free and tool-free,
@@ -39,7 +39,7 @@ def _wasm_registry_for(names: tuple[str, ...]) -> Registry:
     """A registry whose ``names`` are bundle-sourced (wasm tier).
 
     The source is taken from each baked pure via ``inspect.getsource`` — the same
-    text ``deploy()`` would freeze into a CAS bundle — and re-registered through
+    text ``deploy()`` would freeze into a artifact-store bundle — and re-registered through
     ``register_pure_from_source`` so the registry routes them to the wasm tier.
     """
     reg = Registry()

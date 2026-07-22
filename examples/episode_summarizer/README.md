@@ -25,7 +25,7 @@ uv run --no-sync python -m examples.episode_summarizer.flow
 
 The live harness starts Temporal, an authenticated streamable-HTTP MCP server, the
 Julep API, and an in-process release-pinned worker. It publishes the application into
-a temporary file CAS, activates the release, submits the batch through `/v1/runs`,
+a temporary file artifact store, activates the release, submits the batch through `/v1/runs`,
 consumes projection SSE through the terminal event, fetches the result, and renders a
 remote Julep trace. It uses real Anthropic API calls for three short found episodes;
 the missing fourth id exercises the no-model not-found branch.
@@ -47,7 +47,7 @@ Useful environment variables:
 - `EPISODE_ONE_LINER_MODEL`: flow default is `openai:gpt-4o-mini`.
 
 The harness generates ephemeral MCP Ed25519, bundle Ed25519, payload AES-GCM, and API
-keys in memory. It sets `EPISODE_TOOLS_URL`, `JULEP_MCP_*`, `STORE_URL`,
+keys in memory. It sets `EPISODE_TOOLS_URL`, `JULEP_MCP_*`, `JULEP_ARTIFACT_STORE_URL`,
 `JULEP_BUNDLE_ALLOWED_SIGNERS`, and the matching server/worker payload settings for the
 duration of the run, then restores the caller's environment and tears down every
 service.

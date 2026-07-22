@@ -25,11 +25,11 @@ spec:
             - name: WORKER_MAX_CONCURRENT_ACTIVITIES
               value: "4"
             # Code-as-data (P3 wasm tier): to run bundle-sourced pures, point the
-            # worker at the CAS store and pin the signed bundle + allowed signers.
+            # worker at the artifact store and pin the signed bundle + allowed signers.
             # Bundle pures execute in the wasmtime sandbox (image needs the `wasm`
             # extra); resolution is ungated (no JULEP_BUNDLE_NATIVE_EXEC in P3).
-            # - name: STORE_URL
-            #   value: s3://my-julep-bundles            # or file:///cas for a hostPath
+            # - name: JULEP_ARTIFACT_STORE_URL
+            #   value: s3://my-julep-bundles            # or file:///artifacts for a hostPath
             # - name: JULEP_BUNDLES
             #   value: "<bundleHash>:<signatureDigest>"
             # - name: JULEP_BUNDLE_ALLOWED_SIGNERS

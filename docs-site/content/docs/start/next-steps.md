@@ -69,7 +69,7 @@ The controller remains keyless. Durability comes from Temporal.
 
 Switch to the primary define-by-construction surface. Two examples cover the core loop and fan-out patterns.
 
-- [examples/episode_summary_flow.py](https://github.com/julep-ai/julep-v2/blob/main/examples/episode_summary_flow.py) — core `@flow` loop plus CAS-guarded writes
+- [examples/episode_summary_flow.py](https://github.com/julep-ai/julep-v2/blob/main/examples/episode_summary_flow.py) — core `@flow` loop plus artifact store-guarded writes
 - [examples/cluster_labeling_flow.py](https://github.com/julep-ai/julep-v2/blob/main/examples/cluster_labeling_flow.py) — fan-out, closure captures, `switch`, retry options
 - Guide: [Authoring Flows](/docs/guides/authoring-flows)
 

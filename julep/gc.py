@@ -1,11 +1,11 @@
 """Lease-backed garbage collection for content-addressed bundles.
 
-CAS stores intentionally expose no public delete API because replay depends on
+artifact stores intentionally expose no public delete API because replay depends on
 immutable bundle bytes remaining available. This module is the narrow exception:
 it deletes only through a private mark-sweep path after computing live roots from
 persistent leases.
 
-Only ``LocalDirCAS`` is enumerable and collectable in this implementation. S3
+Only ``LocalDirArtifactStore`` is enumerable and collectable in this implementation. S3
 stores require paginated listing plus object deletes and are deliberately left
 unsupported here; attempting to GC one raises ``GCError`` with an actionable
 message before any deletion can occur.
@@ -18,11 +18,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeGuard
 
-from .cas import (
-    CASError,
-    CASStore,
-    LocalDirCAS,
-    S3CAS,
+from .artifact_store import (
+    ArtifactStoreError,
+    ArtifactStore,
+    LocalDirArtifactStore,
+    S3ArtifactStore,
     _SHA256_HEX,
     _validate_digest,
 )
@@ -57,11 +57,11 @@ class GCResult:
 
 
 class LeaseStore:
-    """Persistent leases stored outside the sharded CAS blob tree."""
+    """Persistent leases stored outside the sharded artifact-store blob tree."""
 
-    def __init__(self, cas_root: str | Path) -> None:
-        self.cas_root = Path(cas_root)
-        self.leases_root = self.cas_root / "leases"
+    def __init__(self, artifacts_root: str | Path) -> None:
+        self.artifacts_root = Path(artifacts_root)
+        self.leases_root = self.artifacts_root / "leases"
         self.leases_root.mkdir(parents=True, exist_ok=True)
 
     def acquire(self, lease: Lease) -> None:
@@ -99,16 +99,16 @@ class LeaseStore:
         return self.leases_root / f"{bundle_hash}.json"
 
 
-def acquire_lease(cas_root: str | Path, lease: Lease) -> None:
-    LeaseStore(cas_root).acquire(lease)
+def acquire_lease(artifacts_root: str | Path, lease: Lease) -> None:
+    LeaseStore(artifacts_root).acquire(lease)
 
 
-def release_lease(cas_root: str | Path, bundle_hash: str) -> None:
-    LeaseStore(cas_root).release(bundle_hash)
+def release_lease(artifacts_root: str | Path, bundle_hash: str) -> None:
+    LeaseStore(artifacts_root).release(bundle_hash)
 
 
-def reachable_closure(store: CASStore, lease: Lease) -> set[str]:
-    """Return all CAS digests reachable from a bundle lease.
+def reachable_closure(store: ArtifactStore, lease: Lease) -> set[str]:
+    """Return all artifact-store digests reachable from a bundle lease.
 
     The walk uses only the unsigned manifest blob and optional signature digest.
     If the manifest cannot be read and parsed as the expected object shape, the
@@ -121,7 +121,7 @@ def reachable_closure(store: CASStore, lease: Lease) -> set[str]:
 
     try:
         manifest_bytes = store.get(lease.bundle_hash)
-    except CASError as e:
+    except ArtifactStoreError as e:
         raise GCError(f"cannot read leased bundle manifest: {lease.bundle_hash}") from e
 
     try:
@@ -160,16 +160,16 @@ def reachable_closure(store: CASStore, lease: Lease) -> set[str]:
 # acquired) can be swept as an orphan. Publish must acquire the lease before/within the
 # publish transaction, or GC must honor a grace window for recently-written objects. See TODOS.md.
 def gc(
-    store: CASStore,
+    store: ArtifactStore,
     lease_store: LeaseStore,
     *,
     dry_run: bool = True,
     collect_all_unleased: bool = False,
 ) -> GCResult:
-    """Mark-sweep CAS objects protected by active leases.
+    """Mark-sweep artifact-store objects protected by active leases.
 
     ``dry_run`` defaults to true. If any lease closure or object enumeration
-    fails, this function raises ``GCError`` before deleting anything. ``S3CAS`` is
+    fails, this function raises ``GCError`` before deleting anything. ``S3ArtifactStore`` is
     intentionally not implemented here; use a future S3-specific lister/deleter
     that can honor pagination and prefixes.
     """
@@ -178,7 +178,7 @@ def gc(
     if not leases and not collect_all_unleased:
         raise GCError(
             "refusing to garbage-collect with zero active leases: this would delete "
-            "the entire CAS. Acquire a lease for every live bundle first, or pass "
+            "the entire artifact-store. Acquire a lease for every live bundle first, or pass "
             "collect_all_unleased=True to intentionally collect everything."
         )
 
@@ -238,18 +238,18 @@ def _is_digest(value: object) -> TypeGuard[str]:
     return isinstance(value, str) and _SHA256_HEX.fullmatch(value) is not None
 
 
-def _enumerate_objects(store: CASStore) -> set[str]:
-    if isinstance(store, LocalDirCAS):
+def _enumerate_objects(store: ArtifactStore) -> set[str]:
+    if isinstance(store, LocalDirArtifactStore):
         return _enumerate_local_objects(store)
-    if isinstance(store, S3CAS):
+    if isinstance(store, S3ArtifactStore):
         raise GCError(
-            "S3 CAS garbage collection is not implemented; add a prefix-aware "
+            "S3 artifact-store garbage collection is not implemented; add a prefix-aware "
             "list_objects_v2/delete_object implementation before collecting S3 blobs"
         )
-    raise GCError(f"CAS store type is not enumerable for GC: {type(store).__name__}")
+    raise GCError(f"artifact store type is not enumerable for GC: {type(store).__name__}")
 
 
-def _enumerate_local_objects(store: LocalDirCAS) -> set[str]:
+def _enumerate_local_objects(store: LocalDirArtifactStore) -> set[str]:
     root = store.root
     objects: set[str] = set()
     if not root.exists():
@@ -272,13 +272,13 @@ def _is_shard(value: str) -> bool:
     return len(value) == 2 and all(char in "0123456789abcdef" for char in value)
 
 
-def _delete_object(store: CASStore, digest: str) -> None:
-    if not isinstance(store, LocalDirCAS):
-        raise GCError(f"CAS store type does not support GC deletion: {type(store).__name__}")
+def _delete_object(store: ArtifactStore, digest: str) -> None:
+    if not isinstance(store, LocalDirArtifactStore):
+        raise GCError(f"artifact store type does not support GC deletion: {type(store).__name__}")
     _delete_local_object(store, digest)
 
 
-def _delete_local_object(store: LocalDirCAS, digest: str) -> None:
+def _delete_local_object(store: LocalDirArtifactStore, digest: str) -> None:
     _validate_digest(digest)
     path = store.root / digest[:2] / digest[2:4] / digest
     try:

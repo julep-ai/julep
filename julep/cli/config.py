@@ -44,7 +44,7 @@ _MCP_ALLOWED_KEYS = frozenset({"servers"})
 _MCP_SERVER_ALLOWED_KEYS = frozenset({"auth", "headers", "url", "version"})
 _ENV_ALLOWED_KEYS = frozenset(
     {
-        "cas",
+        "artifacts",
         "helm_chart",
         "kubernetes_namespace",
         "langfuse_host",
@@ -74,7 +74,7 @@ class EnvConfig:
     temporal_address: str | None = None
     temporal_namespace: str = 'default'
     task_queue: str = 'julep'
-    cas: str | None = None
+    artifacts: str | None = None
     langfuse_host: str | None = None
     # [env.<name>.vars]: the env profile bound as the dotctx yglu default env
     # inside the resolver/freeze child (never the ambient process environment).
@@ -289,7 +289,7 @@ def _build_envs(
             )
 
     local_defaults: dict[str, str | None] = {
-        'cas': str(root / '.julep' / 'cas'),
+        'artifacts': str(root / '.julep' / 'artifacts'),
         'temporal_address': None,
     }
     env_tables['local'] = {**local_defaults, **env_tables.get('local', {})}
@@ -300,7 +300,7 @@ def _build_envs(
             temporal_address=fields.get('temporal_address'),
             temporal_namespace=fields.get('temporal_namespace') or 'default',
             task_queue=fields.get('task_queue') or 'julep',
-            cas=fields.get('cas'),
+            artifacts=fields.get('artifacts'),
             langfuse_host=fields.get('langfuse_host'),
             vars=env_vars.get(name, {}),
             queues=env_queues.get(name, {}),

@@ -66,7 +66,7 @@ from .validate import Diagnostic, blocking, validate
 
 if TYPE_CHECKING:
     from .agent import Tool
-    from .cas import CASStore
+    from .artifact_store import ArtifactStore
     from .execution.effects import McpCaller
     from .execution.interpreter import Result as InterpreterResult
     from .typed import FlowLike
@@ -519,19 +519,19 @@ class Deployment:
 
     def publish(
         self,
-        store_or_url: "CASStore | str",
+        store_or_url: "ArtifactStore | str",
         *,
         signing_key: str | None = None,
     ) -> dict[str, Any]:
-        """Publish this deployment's CAS bundle and detached signature."""
+        """Publish this deployment's artifact-store bundle and detached signature."""
         from .bundle import publish_bundle
-        from .cas import LocalDirCAS, cas_from_url
+        from .artifact_store import LocalDirArtifactStore, artifact_store_from_url
         from .gc import Lease, LeaseStore
 
         self.assert_artifact_integrity()
-        store = cas_from_url(store_or_url) if isinstance(store_or_url, str) else store_or_url
+        store = artifact_store_from_url(store_or_url) if isinstance(store_or_url, str) else store_or_url
         rec = publish_bundle(self, store, signing_key=signing_key)
-        if isinstance(store, LocalDirCAS):
+        if isinstance(store, LocalDirArtifactStore):
             LeaseStore(store.root).acquire(
                 Lease(
                     bundle_hash=rec["bundleHash"],

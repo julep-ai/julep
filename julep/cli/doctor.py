@@ -73,7 +73,7 @@ def legacy_checks(
 
     source = os.environ if environ is None else environ
     for name in sorted(source):
-        if name.startswith(("CA_", "COMPOSABLE_")):
+        if name in LEGACY_ENV_VAR_RENAMES or name.startswith(("CA_", "COMPOSABLE_")):
             checks.append(
                 Check(
                     "legacy-env",

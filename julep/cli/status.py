@@ -57,7 +57,7 @@ def status_for_env(cfg: JulepConfig, env: str) -> list[AgentStatus]:
             continue
 
         # Status is read-only: compute the artifact hash WITHOUT publishing to
-        # CAS / uploading to S3 (publish=False).
+        # artifact-store / uploading to S3 (publish=False).
         artifact = freeze_agent(cfg, name, env, publish=False)
         if artifact.error is not None:
             statuses.append(

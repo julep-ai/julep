@@ -550,7 +550,7 @@ def test_build_worker_forwards_versioning_kwargs(monkeypatch):
     async def _noop_mcp(server, tool, value, idempotency_key, principal=None):
         return value
 
-    monkeypatch.delenv("STORE_URL", raising=False)
+    monkeypatch.delenv("JULEP_ARTIFACT_STORE_URL", raising=False)
     monkeypatch.setattr(worker_mod, "Worker", FakeWorker)
     with warnings.catch_warnings():
         # The JULEP_WORKER_* seam intentionally maps to Temporal's deprecated
