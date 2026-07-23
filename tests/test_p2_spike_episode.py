@@ -28,6 +28,34 @@ def _canonical_ir(node: Node) -> str:
     return canonical_json(normalize_ids(Node.from_json(node.to_json())).to_json())
 
 
+def _spike_mcp_listings() -> dict[str, dict[str, object]]:
+    """Describe the compatibility payloads accepted by ``spike_mcp_call``."""
+    listings = episode.mcp_listings()
+    tools = listings[episode.MCP_SERVER]
+    tools["read_episode"]["inputSchema"] = {"type": "string"}
+    tools["write_summary_surfaces"]["inputSchema"] = {
+        "type": "object",
+        "properties": {
+            "episodeId": {"type": "string"},
+            "found": {"type": "boolean"},
+            "text": {"type": "string"},
+            "contentHash": {"type": "string"},
+            "summary": {"type": "string"},
+            "oneLiner": {"type": "string"},
+        },
+        "required": [
+            "episodeId",
+            "found",
+            "text",
+            "contentHash",
+            "summary",
+            "oneLiner",
+        ],
+        "additionalProperties": False,
+    }
+    return listings
+
+
 def _manual_spike_episode_ir() -> Node:
     happy_path = dsl.seq(
         dsl.arr("spike.assign_source"),
@@ -92,7 +120,7 @@ def test_spike_episode_slice_dry_run_rolls_up_artifact_statuses() -> None:
     episode.reset_store()
     deployment = deploy(
         episode_slice.BATCH.to_ir(),
-        mcp_listings=episode.mcp_listings(),
+        mcp_listings=_spike_mcp_listings(),
     )
 
     result = deployment.dry_run(
