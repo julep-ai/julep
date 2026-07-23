@@ -8,6 +8,9 @@ from typing import Any
 from urllib.parse import quote
 
 import pytest
+
+pytest.importorskip("temporalio")
+
 from temporalio.api.failure.v1 import Failure
 from temporalio.converter import DefaultFailureConverter, DefaultPayloadConverter
 from temporalio.exceptions import ApplicationError

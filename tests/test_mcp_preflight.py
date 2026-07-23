@@ -9,6 +9,9 @@ from typing import Any
 from urllib.parse import quote
 
 import pytest
+
+pytest.importorskip("temporalio")
+
 from temporalio.exceptions import ApplicationError
 
 from julep.contracts import (

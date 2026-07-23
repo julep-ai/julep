@@ -621,7 +621,12 @@ class HelmLaneReconciler:
     ) -> LaneApplyResult:
         if lane not in release.lanes:
             raise ApplicationReleaseError(f"release {release.release_hash} has no lane {lane!r}")
-        repository, digest = _parse_image(release.worker_image)
+        worker_image = release.worker_image
+        if worker_image is None:
+            raise ApplicationReleaseError(
+                "lane reconciliation requires a worker image"
+            )
+        repository, digest = _parse_image(worker_image)
         self._validate_deployment_config(release, lane, task_queue=task_queue)
         release_name = lane_release_name(
             release.application,

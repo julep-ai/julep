@@ -814,6 +814,27 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
     assert all("--atomic" in command and "--wait" in command for command in upgrade_commands)
 
 
+def test_reconcile_rejects_publish_only_release_without_worker_image(tmp_path) -> None:
+    compiled = Application("memory", [_spec("summary")]).compile()
+    release = publish_application(
+        compiled,
+        LocalDirArtifactStore(tmp_path / "artifacts"),
+        worker_image=None,
+        signing_key="0" * 64,
+    )
+    reconciler = HelmLaneReconciler(
+        chart="infra/helm/julep-worker",
+        namespace="memory",
+        temporal_address="temporal:7233",
+        worker_context_factory="memory.worker:context",
+        payload_encryption_secret="temporal-payload-codec",
+        runner=lambda _args: None,
+    )
+
+    with pytest.raises(ApplicationReleaseError, match="requires a worker image"):
+        reconcile_application(release, reconciler)
+
+
 def test_helm_environment_preserves_comma_values(tmp_path) -> None:
     compiled = Application("memory", [_spec("summary")]).compile()
     chart = tmp_path / "chart"

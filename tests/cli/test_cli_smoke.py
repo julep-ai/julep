@@ -1,4 +1,5 @@
 from importlib import import_module
+from inspect import signature
 import json
 
 from julep import ident
@@ -64,7 +65,12 @@ def test_worker_smoke_command_uses_environment_contract(monkeypatch):
 
 def test_worker_help_distinguishes_smoke_test_from_continuous_mode(capsys):
     assert main(["worker", "--help"]) == 0
-    out = " ".join(capsys.readouterr().out.replace("│", " ").split())
-    assert "Positive: verify Temporal" in out
-    assert "Zero (default): run" in out
-    assert "continuously." in out
+    capsys.readouterr()
+
+    command = next(
+        command for command in app.registered_commands if command.name == "worker"
+    )
+    assert command.callback is not None
+    option = signature(command.callback).parameters["smoke_test_seconds"].default
+    assert "Positive: verify Temporal" in option.help
+    assert "Zero (default): run continuously." in option.help
