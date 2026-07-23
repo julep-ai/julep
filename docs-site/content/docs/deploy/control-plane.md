@@ -20,6 +20,10 @@ The `server` extra installs FastAPI, Uvicorn, sse-starlette,
 builds `ServerSettings.from_env()`, optionally applies the Postgres migrations,
 constructs the app, and runs Uvicorn.
 
+The supported Temporal SDK floor is `temporalio>=1.20`. For a supervised
+single-machine stack that also publishes the release and launches its workers,
+see [`julep dev up`](/docs/deploy/local#run-the-durable-stack-on-one-machine).
+
 ## Configuration
 
 Environment variables override `[server]` in `julep.toml`, which overrides
@@ -227,7 +231,11 @@ in more than one deployment return `409`.
 The workflow id is `run-<run_id>`. Without `runId`, `run_id` is a UUIDv5 of the
 idempotency key. A fresh submission returns `201`. A duplicate returns its
 existing run with `200` for its owner; reuse by a different owner returns
-`409`.
+`409`. Reusing an idempotency key for a different pipeline or effective release
+also returns structured `409` detail with `error: "idempotency_conflict"` and
+`field: "pipeline" | "release"`; the server never silently returns the other
+pipeline's run. An identical pipeline/release retry keeps the existing `200`
+response, and explicit same-`runId` resubmission semantics are unchanged.
 
 `secrets` supplies run-scoped values for whole-string `secret://name` references
 in MCP headers. Values travel only in AES-GCM-encrypted Temporal payloads and are
@@ -362,8 +370,37 @@ best-effort view, not workflow durability. See the repository's
 
 ## Clients
 
-`julep.client.JulepClient` is a small synchronous httpx client installed by
-`julep[http]`. For terminal reads:
+`julep.client.JulepClient` and `AsyncJulepClient` provide matching synchronous
+and asynchronous httpx surfaces for releases, runs, controls, result waits, and
+projection events. Install `julep[http]` (or `julep[server]`). Both accept an
+injected httpx client for in-process tests and own their client otherwise.
+
+For the common submit-and-wait path, `run_and_wait(...)` requires an
+`idempotency_key` or explicit `run_id`, uses bounded server-side result polls,
+and returns the unwrapped result payload:
+
+```python
+from julep.client import JulepClient, JulepRunFailed, JulepRunTimeout
+
+with JulepClient("https://julep.example", api_key) as client:
+    try:
+        result = client.run_and_wait(
+            pipeline="episode-summary",
+            input={"episode_id": "42"},
+            idempotency_key="summary:42:v3",
+            deadline_s=120,
+        )
+    except JulepRunFailed as exc:
+        print(exc.run_id, exc.status, exc.error)
+    except JulepRunTimeout as exc:
+        print(exc.run_id, exc.deadline_s)
+```
+
+`JulepRunFailed` covers `failed`, `canceled`, `terminated`, and
+`start_failed`. `JulepRunTimeout` is a caller deadline, not a request to cancel
+the durable run. Async callers use the same method and contract with `await`.
+
+For terminal CLI reads:
 
 ```bash
 julep status --remote --api-url https://julep.example --api-key "$JULEP_API_KEY"

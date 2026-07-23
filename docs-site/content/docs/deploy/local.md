@@ -12,10 +12,18 @@ matches what you need to test:
 | `Deployment.dry_run(...)` | Unit tests with injected tools and reasoners | None |
 | `TestClient(create_local_app(...))` | In-process control-plane and execution tests | None |
 | `julep serve api --local` | Interactive API and client development | None |
+| `julep dev up` | Durable single-machine acceptance tests | PostgreSQL, Temporal CLI, worker effects |
 
 The local API modes use an in-memory execution store, a local artifact
 directory, and interpreter-backed execution. They do not require PostgreSQL or
 Temporal. SQLite is not involved.
+
+The first four modes are **foreground** execution: they return in the caller or
+API process, favor low latency, and deliberately omit crash recovery. Use them
+for unit tests, prompt iteration, and foreground request paths. `julep dev up`
+is the **durable** path: it exercises release publication, API persistence,
+Temporal dispatch/replay, and release-scoped workers on one machine. Choosing a
+local mode is a test-scope decision, not a different flow definition.
 
 ## Run source from the CLI
 
@@ -126,6 +134,68 @@ run flow locally before it targets a durable control plane. Queue names remain
 part of release metadata, but the process-local gateway does not dispatch work
 to external queues.
 
+## Run the durable stack on one machine
+
+Use the supervised development stack when the behavior under test includes
+idempotent submission, PostgreSQL run records, Temporal retry/replay, payload
+encryption, or worker queue routing.
+
+Install the server/store/Temporal dependencies, a local PostgreSQL server, and
+the Temporal CLI. Generate independent development-only API, payload-codec,
+vault, and signing keys once, then load the same values into every process:
+
+```bash
+pip install --pre 'julep[server,store]'
+mkdir -p .julep
+julep keygen --output .julep/dev.env
+source .julep/dev.env
+
+export JULEP_EXECUTION_STORE_DSN='postgresql://postgres:postgres@127.0.0.1:5432/julep'
+```
+
+`julep keygen` writes mode `0600`, refuses to replace an existing file unless
+`--force` is supplied, and prints shell exports to stdout when `--output` is
+omitted. Use `--format json` when feeding a secret manager instead of a shell.
+The generated values are local credentials; Julep does not persist them for
+you and they should not be committed.
+
+Configure a local file release store, the worker context factory that supplies
+real effects, and the lane queues in `julep.toml`:
+
+```toml
+[env.local]
+temporal_address = "127.0.0.1:7233"
+release_store = "file:///absolute/path/to/project/.julep/releases"
+worker_context_factory = "my_project.worker:build_context"
+
+[env.local.queues]
+default = "julep-local"
+reasoner = "julep-local-reasoner"
+```
+
+Start the complete stack in the foreground:
+
+```bash
+julep dev up --env local
+```
+
+The supervisor starts Temporal's local dev server, migrates and starts the
+durable API, publishes and registers the configured application through the
+Python API, and starts one worker for every release-scoped lane queue. It waits
+for dependency readiness and tears down all child processes on exit. The API
+is loopback-only in this mode.
+
+Use `--no-start-temporal` to connect to an already-running local Temporal
+frontend, `--no-publish --no-worker` to bring up infrastructure only, and
+`--dry-run` to inspect the redacted process plan. `--api-url` defaults to
+`JULEP_API_URL`, then `http://127.0.0.1:8080`; `--api-key` defaults to
+`JULEP_API_KEY`. The selected key must match an admin entry in
+`JULEP_API_KEYS`.
+
+This mode still uses PostgreSQL and Temporal intentionally. If a test only
+needs the HTTP surface, use `create_local_app(...)` or `serve api --local`
+instead of replacing PostgreSQL with another database.
+
 ## Limitations
 
 Local API mode is an early-iteration and testing surface, not a deployment
@@ -138,6 +208,10 @@ backend:
 - It does not run Helm reconciliation or production workers.
 - Session `LOOP` artifacts are not supported; use a finite flow.
 - Use the PostgreSQL and Temporal control plane for durable, distributed runs.
+
+The foreground limitations above do not apply to `julep dev up`; that command
+runs the real durable components, but remains a single-machine development
+supervisor rather than a production process manager.
 
 See [Control plane](/docs/deploy/control-plane) for production configuration and
 [Temporal](/docs/deploy/temporal) for durable workflow execution.

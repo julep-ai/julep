@@ -184,6 +184,9 @@ pipeline-specific extras. Application reconciliation/observation shells out to
 authenticated `helm`, `kubectl`, and `temporal` CLIs (`apply --publish-only`
 skips Helm reconciliation).
 
+The Temporal-facing extras support `temporalio>=1.20`, including the minimum
+version used by the compatibility CI lane.
+
 ## `julep ls`
 
 Synopsis: `julep ls [SELECTOR] [--exclude EXPR]`
@@ -467,6 +470,52 @@ backlog, and running counts.
 Remote output prints run id, status, pipeline, and application. Remote API
 errors exit `1`; missing API URL or httpx exits `2`.
 
+## `julep keygen`
+
+Synopsis: `julep keygen [--format env|json] [--output PATH] [--force]`
+
+Generate mutually independent development API, Temporal payload-codec, vault,
+and Ed25519 bundle-signing keys for the durable local stack. Julep never stores
+the generated values on its own.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--format FORMAT` | `env` | Render shell `export` statements or a JSON object. |
+| `--output PATH` | stdout | Write the rendered values to a mode-`0600` file. |
+| `--force` | false | Replace an existing output file; without it, overwrite is refused. |
+
+The env form includes `TEMPORAL_PAYLOAD_KEYS`, `JULEP_VAULT_KEYS`, the bundle
+signing seed and allowed public signer, `JULEP_API_KEYS`, and the matching
+`JULEP_API_KEY`. Load the same output into the API and worker processes. Treat
+it as secret local configuration and do not commit it.
+
+## `julep dev up`
+
+Synopsis: `julep dev up [--env ENV] [--api-url URL] [--api-key KEY] [--start-temporal/--no-start-temporal] [--publish/--no-publish] [--worker/--no-worker] [--startup-timeout SECONDS] [--dry-run]`
+
+Supervise the durable single-machine development stack. It optionally starts
+Temporal's dev server, migrates and starts the PostgreSQL-backed API, publishes
+and registers the configured application directly through Python APIs, then
+starts one worker per release-scoped lane queue. All child processes are
+stopped on exit or startup failure.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--env ENV` | `local` | Application environment to compile and publish. |
+| `--api-url URL` | `JULEP_API_URL`, then `http://127.0.0.1:8080` | Loopback durable API URL. Paths, queries, fragments, HTTPS, and non-loopback hosts are rejected. |
+| `--api-key KEY` | `JULEP_API_KEY` | Admin key that must match `JULEP_API_KEYS`. |
+| `--start-temporal/--no-start-temporal` | start | Start a loopback `temporal server start-dev`, or connect to an existing frontend. |
+| `--publish/--no-publish` | publish | Publish and register the release before workers start. |
+| `--worker/--no-worker` | worker | Start one generic worker per published lane queue. Workers require publication. |
+| `--startup-timeout SECONDS` | `30` | Positive readiness deadline for each supervised dependency. |
+| `--dry-run` | false | Validate configuration and print a credential-redacted command plan without starting processes. |
+
+Durable dev requires `JULEP_EXECUTION_STORE_DSN`, a local `file://` release
+store, a worker context factory, payload encryption keys, an admin API key, and
+the server/store/Temporal dependencies. It uses real PostgreSQL and Temporal;
+for a service-free HTTP test surface, use `julep serve api --local` instead.
+See [Local development](/docs/deploy/local) for setup.
+
 ## `julep serve api`
 
 Synopsis: `julep serve api [--host HOST] [--port PORT] [--migrate] [--local] [--context-factory MODULE:ATTR]`
@@ -545,7 +594,11 @@ positive smoke mode on a release-specific empty queue before `apply` succeeds.
 
 Synopsis: `julep lint [SELECTOR] [--exclude EXPR] [--fail-severity LEVEL]`
 
-Resolve selected agents to IR and run structural validation.
+Resolve selected agents and configured `[pipeline.<name>]` dotctx packages to
+IR and run structural validation. Configured pipelines participate in the same
+selector namespace and tags as code agents. Lint loads their package, env,
+policy, and tool bindings without fetching MCP schemas, publishing artifacts,
+or contacting configured services.
 
 | Arg/flag | Default | Meaning |
 |---|---|---|
@@ -569,6 +622,11 @@ WARNING triage: SOME_CODE — diagnostic message
 Exit/errors: clean or below-threshold findings exit `0`; findings at or above
 the threshold exit `1`; resolver errors return `RESOLVE` and exit `2`; no
 matched agents prints `clean` and exits `0`.
+
+A dotctx pipeline whose `schema.pyi` does not define `class Output` produces
+`CTX_OUTPUT_SCHEMA_MISSING` at warning severity: the package can still run, but
+model replies are not schema-validated. Use `--fail-severity warning` to make
+that compatibility degradation fail CI.
 
 ## `julep test`
 
@@ -620,6 +678,10 @@ julep trace r-cmd-1
    ├─ call#0 [ok]
    └─ think#3 [ok] $1.0000
 ```
+
+When a model event carries usage/model metadata but no provider-reported price,
+the node renders `cost=unknown`. It is intentionally not assigned a placeholder
+dollar amount.
 
 ```text
 run 'r-err' status=error (no trace events captured)

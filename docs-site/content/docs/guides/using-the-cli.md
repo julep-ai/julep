@@ -99,6 +99,8 @@ keys are rejected with a close-match suggestion.
 | `julep apply --env <name> [--mcp-snapshot] [--publish-only] [--api-url --api-key]` | Publish a signed schema-v2 release, optionally register it with a control plane, and optionally reconcile lane workers. |
 | `julep status [SEL] --env <name>` | Aggregate application state or inspect the legacy ledger; `--remote --api-url --api-key --limit` reads control-plane runs. |
 | `julep worker [--smoke-test-seconds N]` | Run the environment-configured Temporal worker continuously (`0`) or verify/poll/drain for a positive `N`. |
+| `julep keygen [--format env|json] [--output PATH]` | Generate independent local API, payload, vault, and signing credentials; output files are mode `0600`. |
+| `julep dev up [--env local] [--dry-run]` | Supervise the PostgreSQL/Temporal durable development stack and one worker per release lane. |
 | `julep serve api [--host --port --migrate --local --context-factory]` | Run the durable or service-free local FastAPI control plane. |
 | `julep db migrate [--dsn]` | Apply projection-store migrations. |
 | `julep db sweep --older-than N [--dsn]` | Apply operator-controlled projection retention. |
@@ -142,7 +144,7 @@ julep run triage --input '"TICKET-42"'
 └─ seq#12 [ok]
    └─ seq#9 [ok]
       ├─ call#0 [ok] $1.0000      ← a @tool call
-      └─ think#3 [ok] $2.0000     ← a think() reasoner, with cost
+      └─ think#3 [ok] cost=unknown ← no provider price was reported
 
 output: {"reply": "..."}
 ```
@@ -154,6 +156,9 @@ output: {"reply": "..."}
 > reasoners (see [Your First Flow](/docs/start/first-flow)). Registered `@pure`
 > functions run for real in both.
 
+Julep renders a dollar cost only when the effect reports one. Usage or model
+metadata without a price is `cost=unknown`, never a placeholder estimate.
+
 The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.julep/runs/` so `julep trace <run-id>` can re-render them and `result:fail` can select the failures.
 
 `julep run prompts/summary.ctx --input '{"episode":"42"}'` is a separate
@@ -162,9 +167,23 @@ the local eval harness, and prints `artifact <hash>` plus `output: <json>`.
 Configured `[pipeline.<name>]` packages are also appended during `plan` and
 `apply`; a collision with a code pipeline is an error.
 
+For HTTP-level foreground tests, `julep serve api --local` runs the same routes
+with an in-memory store and interpreter, without PostgreSQL or Temporal. For a
+durable single-machine acceptance environment, generate shared credentials
+with `julep keygen`, configure a local release store and worker context factory,
+then run `julep dev up`. The latter uses real PostgreSQL persistence, Temporal
+replay, encrypted payloads, release registration, and release-scoped queues.
+See [Local development](/docs/deploy/local) for the decision guide and setup.
+
 ## Gates
 
-`julep lint` lowers each selected agent to IR and runs the structural validator, reporting named diagnostics (`CYCLE`, `UNFROZEN_CALL`, `UNKNOWN_PURE`, …) at `error`/`warning`. `--fail-severity` decouples *what is reported* from *what fails the build*:
+`julep lint` lowers each selected code agent and configured dotctx pipeline to
+IR and runs the structural validator, reporting named diagnostics (`CYCLE`,
+`UNFROZEN_CALL`, `UNKNOWN_PURE`, …) at `error`/`warning`. It validates configured
+ctx env/policy/tool bindings without contacting MCP servers. Missing
+`schema.pyi:Output` produces `CTX_OUTPUT_SCHEMA_MISSING`, because replies would
+otherwise be unvalidated. `--fail-severity` decouples *what is reported* from
+*what fails the build*:
 
 - exit `0` — clean (or all findings below the threshold)
 - exit `1` — findings at/above `--fail-severity`
