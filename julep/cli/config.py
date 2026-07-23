@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from julep.cli.queues import resolve_queue_lane as resolve_queue_lane
 from julep.ctx_pipeline import CtxPipelineConfig
+from julep.execution.policy import ExecutionPolicy
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib
@@ -66,7 +67,27 @@ _ENV_ALLOWED_KEYS = frozenset(
 )
 _WORKER_SECRET_ALLOWED_KEYS = frozenset({"key", "secret_name"})
 _SCHEDULE_ALLOWED_KEYS = frozenset({"cron", "env", "flow", "input", "paused"})
-_PIPELINE_ALLOWED_KEYS = frozenset({"ctx", "lane", "env", "tools"})
+_PIPELINE_ALLOWED_KEYS = frozenset({"ctx", "lane", "env", "tools", "policy"})
+# [pipeline.<name>.policy] keys map onto ExecutionPolicy fields (snake_case).
+_POLICY_INT_KEYS = frozenset(
+    {
+        "tool_timeout_s",
+        "reasoner_timeout_s",
+        "plan_timeout_s",
+        "sub_task_timeout_s",
+        "agent_task_timeout_s",
+        "idempotent_max_attempts",
+        "write_max_attempts",
+        "reasoner_max_attempts",
+        "max_retry_interval_s",
+    }
+)
+_POLICY_FLOAT_KEYS = frozenset({"initial_retry_s", "retry_backoff"})
+_POLICY_BOOL_KEYS = frozenset({"trace_content_refs"})
+_POLICY_OPTIONAL_INT_KEYS = frozenset({"max_parallel"})
+_POLICY_ALLOWED_KEYS = (
+    _POLICY_INT_KEYS | _POLICY_FLOAT_KEYS | _POLICY_BOOL_KEYS | _POLICY_OPTIONAL_INT_KEYS
+)
 
 
 @dataclass(frozen=True)
@@ -375,6 +396,37 @@ def _build_schedules(
     return schedules
 
 
+def _build_policy(raw: object, *, context: str) -> ExecutionPolicy | None:
+    """Map a ``[pipeline.<name>.policy]`` table onto an ExecutionPolicy."""
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"{context} policy must be a table")
+    _validate_allowed_keys(raw, _POLICY_ALLOWED_KEYS, context=f"{context} policy")
+    kwargs: dict[str, Any] = {}
+    for raw_key, value in raw.items():
+        name = str(raw_key)
+        if name in _POLICY_BOOL_KEYS:
+            if not isinstance(value, bool):
+                raise ValueError(f"{context} policy {name!r} must be a boolean")
+            kwargs[name] = value
+        elif name in _POLICY_INT_KEYS:
+            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                raise ValueError(f"{context} policy {name!r} must be an integer >= 1")
+            kwargs[name] = value
+        elif name in _POLICY_FLOAT_KEYS:
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+                raise ValueError(f"{context} policy {name!r} must be a positive number")
+            kwargs[name] = float(value)
+        else:  # max_parallel
+            if value is not None and (
+                not isinstance(value, int) or isinstance(value, bool) or value < 1
+            ):
+                raise ValueError(f"{context} policy {name!r} must be an integer >= 1 or null")
+            kwargs[name] = value
+    return ExecutionPolicy(**kwargs)
+
+
 def _build_pipelines(
     pyproject_pipeline: object,
     julep_toml_pipeline: object,
@@ -440,12 +492,14 @@ def _build_pipelines(
             if not isinstance(raw_value, str):
                 raise ValueError(f"{context} env value {raw_key!r} must be a string")
             env[str(raw_key)] = raw_value
+        policy = _build_policy(table.get("policy"), context=context)
         result[name] = CtxPipelineConfig(
             name=name,
             ctx=ctx,
             lane=lane,
             env=env,
             tools=tool_tables.get(name, {}),
+            policy=policy,
         )
     return result
 

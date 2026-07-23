@@ -22,6 +22,7 @@ from . import _env
 from .app import CompiledApplication
 from .artifact_store import ArtifactStore
 from .deploy import WorkflowStartOptions, _start_temporal_workflow
+from .execution.policy import ExecutionPolicy
 from .ir import canonical_json
 
 _IMAGE_DIGEST = re.compile(r"^(?P<repository>[^@\s]+)@(?P<digest>sha256:[0-9a-f]{64})$")
@@ -133,6 +134,7 @@ class PipelineRelease:
     runtime_declarations_ref: Optional[dict[str, Any]] = None
     max_call_limits: Mapping[str, int] = field(default_factory=dict)
     mcp_preflight_policy: Optional[str] = None
+    execution_policy: Optional[ExecutionPolicy] = None
     task_queue: Optional[str] = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -173,6 +175,8 @@ class PipelineRelease:
         }
         if self.mcp_preflight_policy is not None:
             out["mcpPreflight"] = self.mcp_preflight_policy
+        if self.execution_policy is not None:
+            out["executionPolicy"] = self.execution_policy.to_json()
         return out
 
     async def start(
@@ -223,6 +227,7 @@ class PipelineRelease:
                 session_id=session_id,
                 input=input,
                 task_queue=task_queue,
+                policy=self.execution_policy,
                 pinned_pures=_thaw_json(self.pinned_pures),
                 max_call_limits=dict(self.max_call_limits),
                 principal=principal,
@@ -248,7 +253,9 @@ class PipelineRelease:
 class ApplicationRelease:
     application: str
     application_artifact_hash: str
-    worker_image: str
+    # Optional so `--publish-only` releases (no lane reconciliation) omit the
+    # worker image entirely; lane reconciliation still requires it.
+    worker_image: Optional[str]
     pipelines: tuple[PipelineRelease, ...]
     deployment_config: Mapping[str, Any] = field(default_factory=dict)
     schema_version: int = _RELEASE_SCHEMA_VERSION
@@ -260,7 +267,8 @@ class ApplicationRelease:
             or self.schema_version != _RELEASE_SCHEMA_VERSION
         ):
             raise _release_schema_error(self.schema_version)
-        _parse_image(self.worker_image)
+        if self.worker_image is not None:
+            _parse_image(self.worker_image)
         pipelines = tuple(replace(pipeline, task_queue=None) for pipeline in self.pipelines)
         object.__setattr__(self, "pipelines", pipelines)
         object.__setattr__(
@@ -329,13 +337,14 @@ def publish_application(
     compiled: CompiledApplication,
     store: ArtifactStore,
     *,
-    worker_image: str,
+    worker_image: Optional[str] = None,
     deployment_config: Optional[Mapping[str, Any]] = None,
     signing_key: Optional[str] = None,
 ) -> ApplicationRelease:
     """Publish pipeline bundles followed by one immutable release manifest."""
 
-    _parse_image(worker_image)
+    if worker_image is not None:
+        _parse_image(worker_image)
     pipelines: list[PipelineRelease] = []
     for pipeline in compiled.pipelines:
         deployment = pipeline.deployment
@@ -375,6 +384,7 @@ def publish_application(
                     else {}
                 ),
                 mcp_preflight_policy=compiled.mcp_preflight_policy,
+                execution_policy=pipeline.spec.execution_policy,
             )
         )
     release = ApplicationRelease(
@@ -1076,12 +1086,18 @@ def release_from_bytes(data: bytes) -> ApplicationRelease:
                     if "mcpPreflight" in value
                     else None
                 ),
+                execution_policy=(
+                    ExecutionPolicy.from_json(dict(value["executionPolicy"]))
+                    if isinstance(value.get("executionPolicy"), dict)
+                    else None
+                ),
             )
         )
+    worker_image_raw = raw.get("workerImage")
     return ApplicationRelease(
         application=str(raw["application"]),
         application_artifact_hash=str(raw["applicationArtifactHash"]),
-        worker_image=str(raw["workerImage"]),
+        worker_image=(str(worker_image_raw) if worker_image_raw is not None else None),
         pipelines=tuple(pipelines),
         deployment_config=(
             dict(raw["deployment"]) if isinstance(raw.get("deployment"), dict) else {}

@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 
 from julep.app_deploy import ApplicationRelease, PipelineRelease
+from julep.execution.policy import ExecutionPolicy
 from julep.server.settings import ServerSettings
 from julep.server.temporal import TemporalClientGateway, create_temporal_gateway
 
@@ -81,6 +82,59 @@ def test_gateway_starts_harness_with_projection_and_reject_duplicate(
     assert kwargs["principal"] == {"key": "alice"}
     assert kwargs["secrets"] == {"tracker-token": "run-secret"}
     assert kwargs["workflow_start_options"]["id_reuse_policy"].name == "REJECT_DUPLICATE"
+
+
+def test_gateway_threads_release_execution_policy(monkeypatch) -> None:
+    pytest.importorskip("temporalio")
+    captured: dict[str, Any] = {}
+
+    class Handle:
+        run_id = "temporal-run"
+
+    async def fake_start_flow(client: object, flow_json: object, manifest: object, **kwargs: Any):
+        captured.update(kwargs=kwargs)
+        return Handle()
+
+    monkeypatch.setattr("julep.execution.harness.start_flow", fake_start_flow)
+    policy = ExecutionPolicy(reasoner_max_attempts=1, reasoner_timeout_s=300)
+    release = ApplicationRelease(
+        application="memory",
+        application_artifact_hash="sha256:" + "b" * 64,
+        worker_image=None,
+        pipelines=(
+            PipelineRelease(
+                name="summary",
+                lane="summary",
+                artifact_hash="sha256:" + "d" * 64,
+                flow_json={"id": "root", "op": "IDENT"},
+                manifest_json={},
+                pinned_pures={},
+                bundle_ref=None,
+                eval_packages=(),
+                max_call_limits={},
+                execution_policy=policy,
+            ),
+        ),
+        deployment_config={"queues": {"summary": "summary"}},
+    )
+    gateway = TemporalClientGateway(
+        object(),
+        ServerSettings(payload_encryption_required=False),
+    )
+
+    asyncio.run(
+        gateway.start_flow(
+            release.pipelines[0],
+            workflow_id="run-id",
+            run_id="id",
+            input={},
+            principal={"key": "alice"},
+            queue_lanes={"summary": "queue"},
+            secrets=None,
+        )
+    )
+
+    assert captured["kwargs"]["policy"] == policy
 
 
 def test_temporal_factory_passes_explicit_connection_settings(monkeypatch) -> None:

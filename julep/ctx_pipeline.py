@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 from .app import PipelineSpec
 from .dotctx import load_dotctx, reasoner_to_flow
+from .execution.policy import ExecutionPolicy
 from .freeze import McpSnapshot
 
 
@@ -19,6 +20,8 @@ class CtxPipelineConfig:
     env: dict[str, str] = field(default_factory=dict)
     # Prompt-visible bare alias -> configured MCP wire target (server:tool).
     tools: dict[str, str] = field(default_factory=dict)
+    # Release-pinned execution policy (reasoner retries, activity timeouts).
+    policy: Optional[ExecutionPolicy] = None
 
 
 def normalize_tool_bindings(bindings: Mapping[str, str]) -> dict[str, str]:
@@ -91,6 +94,7 @@ def pipeline_spec_from_ctx(
         reasoners=(reasoner,),
         lane=config.lane,
         snapshot_source=snapshot_source,
+        execution_policy=config.policy,
     )
 
 

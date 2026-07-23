@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Mapping, Optional, Seq
 from .capabilities import CapabilityManifest
 from .deploy import Deployment, _referenced_reasoners, deploy
 from .dotctx import Reasoner
+from .execution.policy import ExecutionPolicy
 from .freeze import McpSnapshot
 from .ir import Node, canonical_json
 from .registry import DEFAULT_REGISTRY, Registry
@@ -59,6 +60,9 @@ class PipelineSpec(Generic[Input, Output]):
     snapshot: Optional[McpSnapshot] = None
     snapshot_source: Optional[Callable[[Mapping[str, str]], McpSnapshot]] = None
     tools: Sequence[Tool[Any, Any]] = ()
+    # Release-pinned execution policy carried into the published release so
+    # control-plane runs execute under it. None means engine defaults.
+    execution_policy: Optional[ExecutionPolicy] = None
 
     def __post_init__(self) -> None:
         if not self.name or self.name.strip() != self.name:

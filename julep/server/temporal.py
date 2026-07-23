@@ -103,6 +103,7 @@ class TemporalClientGateway:
                 session_id=workflow_id,
                 input=input,
                 task_queue=pipeline.task_queue,
+                policy=pipeline.execution_policy,
                 pinned_pures=pipeline.pinned_pures,
                 max_call_limits=dict(pipeline.max_call_limits),
                 principal=principal,
