@@ -8,7 +8,7 @@ import subprocess as _subprocess
 import sys as _sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 import typer
@@ -369,6 +369,27 @@ def _remote_client(api_url: str | None, api_key: str | None) -> JulepClient:
     return JulepClient(url, key)
 
 
+def _register_remote_release(release: Any, api_url: str | None, api_key: str | None) -> None:
+    """POST a published release manifest to the control plane (admin-only)."""
+    client = _remote_client(api_url, api_key)
+    from julep.client import JulepClientError
+
+    try:
+        client.publish_release(release.manifest_bytes)
+    except JulepClientError as exc:
+        if exc.status_code == 403:
+            typer.echo(
+                "error: release registration requires an admin API key (403)",
+                err=True,
+            )
+        else:
+            typer.echo(f"error: release registration failed: {exc}", err=True)
+        raise typer.Exit(1) from None
+    finally:
+        client.close()
+    typer.echo(f"registered {release.release_hash}")
+
+
 @app.command("ls")
 def ls(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
@@ -630,8 +651,20 @@ def apply_application(
         "--mcp-snapshot",
         help="Fetch configured MCP tools/list schemas before publishing.",
     ),
+    api_url: str = typer.Option(
+        "",
+        "--api-url",
+        help="Register the published release with this Julep control-plane API base URL.",
+    ),
+    api_key: str = typer.Option(
+        "",
+        "--api-key",
+        help="Admin bearer key used with --api-url to register the release.",
+    ),
 ) -> None:
     """Publish an immutable release and reconcile inactive lane workers."""
+    from julep.cli.application import release_queue_lines
+
     cfg = load_config(Path("."))
     if env not in cfg.envs:
         typer.echo(f"error: unknown env {env!r}", err=True)
@@ -652,6 +685,11 @@ def apply_application(
         typer.echo(f"lane      {lane.lane:24} {lane.release_name}  {lane.task_queue}")
     if not lanes:
         typer.echo("lanes     not reconciled (--publish-only)")
+    # One queue line per lane (release-scoped), printed even in publish-only mode.
+    for lane_name, task_queue in release_queue_lines(release):
+        typer.echo(f"queue     {lane_name:24} {task_queue}")
+    if api_url or api_key:
+        _register_remote_release(release, api_url or None, api_key or None)
     typer.echo("traffic   unchanged")
 
 

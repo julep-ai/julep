@@ -57,6 +57,22 @@ class JulepClient:
     def health(self) -> dict[str, Any]:
         return cast(dict[str, Any], self._request("GET", "/v1/health").json())
 
+    def publish_release(self, manifest_bytes: bytes) -> dict[str, Any]:
+        """Register a published release manifest with the control plane.
+
+        POSTs the raw manifest bytes to ``/v1/releases`` (admin-only). Returns
+        the stored release row (201 created, 200 if already present).
+        """
+        return cast(
+            dict[str, Any],
+            self._request(
+                "POST",
+                "/v1/releases",
+                content=manifest_bytes,
+                headers={"Content-Type": "application/json"},
+            ).json(),
+        )
+
     def list_runs(self, *, cursor: str | None = None, limit: int = 50) -> dict[str, Any]:
         params: dict[str, Any] = {"limit": limit}
         if cursor is not None:

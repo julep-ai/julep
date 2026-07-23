@@ -10,9 +10,15 @@ import pytest
 pytest.importorskip("jinja2")
 
 from julep.cli import application as application_module
-from julep.cli.application import resolve_application
+from julep.cli.application import (
+    apply_configured_application,
+    release_queue_lines,
+    resolve_application,
+)
 from julep.cli.config import load_config
+from julep.app_deploy import release_from_bytes
 from julep.declarations import load_declarations
+from julep.execution.policy import ExecutionPolicy
 from julep.registry import DEFAULT_REGISTRY, Registry
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
@@ -134,6 +140,91 @@ def test_zero_code_ctx_apply_reconciles_without_worker_spec(
     assert not any(
         value.startswith("worker.runtimeDeclarationsHash=") for value in flattened
     )
+
+
+def _publish_only_env(tmp_path: Path, cfg):
+    """A minimal env with only a release store — no helm/k8s/worker-image."""
+    return dataclasses.replace(
+        cfg.envs["local"],
+        release_store=(tmp_path / "releases").as_uri(),
+    )
+
+
+def test_publish_only_works_without_deploy_sections(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _copy_summary_project(tmp_path)
+    cfg = load_config(tmp_path)
+    env = _publish_only_env(tmp_path, cfg)
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", "0" * 64)
+
+    release, results = apply_configured_application(cfg, env, publish_only=True)
+
+    assert results == ()
+    assert release.worker_image is None
+    assert dict(release.deployment_config) == {"queues": {"summary": "summary"}}
+    # The release round-trips byte-identically through the manifest codec.
+    assert release_from_bytes(release.manifest_bytes).release_hash == release.release_hash
+    assert release_from_bytes(release.manifest_bytes).worker_image is None
+    # One release-scoped queue line per lane, even with no reconciliation.
+    lines = release_queue_lines(release)
+    assert [lane for lane, _queue in lines] == ["summary"]
+    assert lines[0][1].startswith("summary-r")
+
+
+def test_publish_only_carries_pipeline_policy_into_release(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _copy_summary_project(tmp_path)
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.julep]\n"
+        "\n[tool.julep.pipeline.summary]\n"
+        'ctx = "prompts/summary.ctx"\n'
+        'lane = "summary"\n'
+        "\n[tool.julep.pipeline.summary.policy]\n"
+        "reasoner_max_attempts = 1\n"
+        "reasoner_timeout_s = 300\n",
+        encoding="utf-8",
+    )
+    cfg = load_config(tmp_path)
+    env = _publish_only_env(tmp_path, cfg)
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", "0" * 64)
+
+    release, _ = apply_configured_application(cfg, env, publish_only=True)
+
+    expected = ExecutionPolicy(reasoner_max_attempts=1, reasoner_timeout_s=300)
+    assert release.pipelines[0].execution_policy == expected
+    # The policy survives the release manifest round-trip (frozen into the release).
+    round_tripped = release_from_bytes(release.manifest_bytes)
+    assert round_tripped.pipelines[0].execution_policy == expected
+
+
+def test_apply_without_publish_only_still_requires_worker_image(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _copy_summary_project(tmp_path)
+    cfg = load_config(tmp_path)
+    env = _publish_only_env(tmp_path, cfg)
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", "0" * 64)
+
+    with pytest.raises(ValueError, match="worker_image"):
+        apply_configured_application(cfg, env, publish_only=False)
+
+
+def test_apply_without_publish_only_still_requires_temporal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _copy_summary_project(tmp_path)
+    cfg = load_config(tmp_path)
+    env = dataclasses.replace(
+        cfg.envs["local"],
+        release_store=(tmp_path / "releases").as_uri(),
+        worker_image="registry.example/julep@sha256:" + "e" * 64,
+    )
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", "0" * 64)
+
+    with pytest.raises(ValueError, match="temporal_address"):
+        apply_configured_application(cfg, env, publish_only=False)
 
 
 def test_ctx_pipeline_collision_with_code_application_is_loud(

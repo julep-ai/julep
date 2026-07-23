@@ -81,3 +81,27 @@ def test_start_run_requires_idempotency_or_run_id() -> None:
     with pytest.raises(ValueError, match="idempotency_key or run_id"):
         client.start_run(pipeline="summary")
 
+
+def test_publish_release_registers_manifest_as_admin(server_factory) -> None:
+    from .conftest import make_release
+
+    harness = server_factory()
+    release = make_release()
+    with TestClient(harness.app) as transport_client:
+        client = JulepClient(api_key="admin-token", client=transport_client)
+        row = client.publish_release(release.manifest_bytes)
+        assert row["release_hash"] == release.release_hash
+        assert harness.artifacts.has(release.release_hash.removeprefix("sha256:"))
+
+
+def test_publish_release_requires_admin_key(server_factory) -> None:
+    from .conftest import make_release
+
+    harness = server_factory()
+    release = make_release()
+    with TestClient(harness.app) as transport_client:
+        client = JulepClient(api_key="alice-token", client=transport_client)
+        with pytest.raises(JulepClientError) as caught:
+            client.publish_release(release.manifest_bytes)
+        assert caught.value.status_code == 403
+

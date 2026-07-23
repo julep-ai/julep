@@ -24,6 +24,7 @@ from julep.app_deploy import (
     build_lane_deployment_config,
     deployment_config_hash,
     lane_release_name,
+    lane_task_queue,
     plan_application,
     publish_application,
     reconcile_application,
@@ -257,6 +258,25 @@ def _resolve_deployment_config(
     return chart, worker_environment, deployment_config
 
 
+def _publish_only_deployment_config(
+    compiled: CompiledApplication,
+    env: EnvConfig,
+) -> dict[str, Any]:
+    """A minimal release config carrying only the lane->queue routing.
+
+    Publish-only releases skip Helm/K8s/Temporal reconciliation, so the release
+    manifest embeds no chart/worker/encryption settings — only the queue map the
+    control plane needs to route runs.
+    """
+    lanes = tuple(sorted(compiled.lanes))
+    unknown = sorted(set(env.queues) - set(lanes))
+    if unknown:
+        raise ValueError(
+            f"env {env.name!r} queue mapping references unknown lanes: " + ", ".join(unknown)
+        )
+    return {"queues": {lane: env.queues.get(lane, lane) for lane in lanes}}
+
+
 def apply_configured_application(
     cfg: JulepConfig,
     env: EnvConfig,
@@ -264,10 +284,26 @@ def apply_configured_application(
     publish_only: bool = False,
     mcp_snapshot: bool = False,
 ) -> tuple[ApplicationRelease, tuple[LaneApplyResult, ...]]:
+    compiled = compile_application(cfg, env, mcp_snapshot=mcp_snapshot)
+    if env.release_store is None:
+        raise ValueError(
+            f"env {env.name!r} requires release_store (normally s3://bucket/prefix)"
+        )
+    signing_key = _env.get(_env.JULEP_BUNDLE_SIGNING_KEY)
+    store = artifact_store_from_url(env.release_store)
+
+    if publish_only:
+        release = publish_application(
+            compiled,
+            store,
+            worker_image=env.worker_image,
+            deployment_config=_publish_only_deployment_config(compiled, env),
+            signing_key=signing_key,
+        )
+        return release, ()
+
     if env.worker_image is None:
         raise ValueError(f"env {env.name!r} requires immutable worker_image=repository@sha256:...")
-    compiled = compile_application(cfg, env, mcp_snapshot=mcp_snapshot)
-    signing_key = _env.get(_env.JULEP_BUNDLE_SIGNING_KEY)
     chart, worker_environment, deployment_config = _resolve_deployment_config(
         cfg,
         env,
@@ -279,8 +315,6 @@ def apply_configured_application(
         if cfg.application is not None
         else None
     )
-    assert env.release_store is not None
-    store = artifact_store_from_url(env.release_store)
     release = publish_application(
         compiled,
         store,
@@ -288,39 +322,51 @@ def apply_configured_application(
         deployment_config=deployment_config,
         signing_key=signing_key,
     )
-    results: tuple[LaneApplyResult, ...] = ()
-    if not publish_only:
-        assert env.temporal_address is not None
-        assert env.worker_context_factory is not None
-        assert env.payload_encryption_secret is not None
-        reconciler = HelmLaneReconciler(
-            chart=chart,
-            namespace=env.kubernetes_namespace,
-            temporal_address=env.temporal_address,
-            temporal_namespace=env.temporal_namespace,
-            worker_context_factory=env.worker_context_factory,
-            worker_application=cfg.application,
-            worker_runtime_declarations_hash=worker_runtime_declarations_hash,
-            worker_service_account=env.worker_service_account,
-            worker_priority_class=env.worker_priority_class,
-            payload_encryption_secret=env.payload_encryption_secret,
-            worker_environment=worker_environment,
-            worker_secret_environment=env.worker_secret_environment,
-        )
-        results = reconcile_application(release, reconciler, queue_by_lane=env.queues)
-    if not publish_only:
-        write_applied_state(
-            cfg.root,
-            env.name,
-            AppliedApplicationState(
-                application=release.application,
-                application_artifact_hash=release.application_artifact_hash,
-                release_hash=release.release_hash,
-                worker_image=release.worker_image,
-                lanes=results,
-            ),
-        )
+    assert env.temporal_address is not None
+    assert env.worker_context_factory is not None
+    assert env.payload_encryption_secret is not None
+    assert release.worker_image is not None
+    reconciler = HelmLaneReconciler(
+        chart=chart,
+        namespace=env.kubernetes_namespace,
+        temporal_address=env.temporal_address,
+        temporal_namespace=env.temporal_namespace,
+        worker_context_factory=env.worker_context_factory,
+        worker_application=cfg.application,
+        worker_runtime_declarations_hash=worker_runtime_declarations_hash,
+        worker_service_account=env.worker_service_account,
+        worker_priority_class=env.worker_priority_class,
+        payload_encryption_secret=env.payload_encryption_secret,
+        worker_environment=worker_environment,
+        worker_secret_environment=env.worker_secret_environment,
+    )
+    results = reconcile_application(release, reconciler, queue_by_lane=env.queues)
+    write_applied_state(
+        cfg.root,
+        env.name,
+        AppliedApplicationState(
+            application=release.application,
+            application_artifact_hash=release.application_artifact_hash,
+            release_hash=release.release_hash,
+            worker_image=release.worker_image,
+            lanes=results,
+        ),
+    )
     return release, results
+
+
+def release_queue_lines(release: ApplicationRelease) -> list[tuple[str, str]]:
+    """Per-lane (lane, release-scoped task queue) pairs a release routes to.
+
+    The queue is the logical lane queue rewritten to ``<queue>-r<release-hash>``;
+    printed by ``julep apply`` for every lane, including ``--publish-only``.
+    """
+    queues = release.deployment_config.get("queues", {})
+    lines: list[tuple[str, str]] = []
+    for lane in release.lanes:
+        logical = queues.get(lane, lane) if isinstance(queues, Mapping) else lane
+        lines.append((lane, lane_task_queue(str(logical), release.release_hash)))
+    return lines
 
 
 def application_state_path(root: str | Path, env: str) -> Path:
@@ -1023,6 +1069,7 @@ __all__ = [
     "observe_application",
     "plan_configured_application",
     "read_applied_state",
+    "release_queue_lines",
     "resolve_application",
     "write_applied_state",
 ]

@@ -13,8 +13,37 @@ from julep import Application, PipelineSpec, ident
 from julep.cli.main import main
 from julep.cli import application as application_module
 from julep.cli.config import McpServerConfig, load_config
-from julep.app_deploy import LaneApplyResult, deployment_config_hash
+from julep.app_deploy import (
+    ApplicationRelease,
+    LaneApplyResult,
+    PipelineRelease,
+    deployment_config_hash,
+)
+from julep.client import JulepClientError
 from julep.freeze import McpSnapshot
+
+
+def _publish_only_release() -> ApplicationRelease:
+    return ApplicationRelease(
+        application="memory",
+        application_artifact_hash="sha256:" + "a" * 64,
+        worker_image=None,
+        pipelines=(
+            PipelineRelease(
+                name="summary",
+                lane="summary",
+                artifact_hash="sha256:" + "a" * 64,
+                flow_json={"id": "root", "op": "IDENT"},
+                manifest_json={},
+                pinned_pures={},
+                bundle_ref=None,
+                eval_packages=(),
+                max_call_limits={},
+                mcp_preflight_policy="pin",
+            ),
+        ),
+        deployment_config={"queues": {"summary": "summary"}},
+    )
 
 
 def _scaled_object(release_name: str, task_queue: str) -> dict:
@@ -271,7 +300,15 @@ def test_plan_and_apply_mcp_snapshot_flags_are_threaded(
     def fake_apply(_cfg, _env, *, publish_only=False, mcp_snapshot=False):
         assert publish_only is True
         received.append(("apply", mcp_snapshot))
-        return SimpleNamespace(release_hash="release", application_artifact_hash="artifact"), ()
+        return (
+            SimpleNamespace(
+                release_hash="release",
+                application_artifact_hash="artifact",
+                lanes=(),
+                deployment_config={"queues": {}},
+            ),
+            (),
+        )
 
     monkeypatch.setattr(main_module, "plan_configured_application", fake_plan)
     monkeypatch.setattr(main_module, "apply_configured_application", fake_apply)
@@ -281,6 +318,92 @@ def test_plan_and_apply_mcp_snapshot_flags_are_threaded(
     assert main(["apply", "--env", "local", "--publish-only", "--mcp-snapshot"]) == 0
     assert "release   release" in capsys.readouterr().out
     assert received == [("plan", True), ("apply", True)]
+
+
+def test_apply_prints_queue_lines_and_registers_release(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+    release = _publish_only_release()
+    captured: dict[str, object] = {}
+
+    def fake_apply(_cfg, _env, *, publish_only=False, mcp_snapshot=False):
+        return release, ()
+
+    class FakeClient:
+        def publish_release(self, manifest_bytes):
+            captured["manifest"] = manifest_bytes
+            return {"release_hash": release.release_hash}
+
+        def close(self):
+            captured["closed"] = True
+
+    def fake_remote_client(api_url, api_key):
+        captured["url"] = api_url
+        captured["key"] = api_key
+        return FakeClient()
+
+    monkeypatch.setattr(main_module, "apply_configured_application", fake_apply)
+    monkeypatch.setattr(main_module, "_remote_client", fake_remote_client)
+
+    code = main(
+        [
+            "apply",
+            "--env",
+            "local",
+            "--publish-only",
+            "--api-url",
+            "http://control-plane",
+            "--api-key",
+            "admin-token",
+        ]
+    )
+    out = capsys.readouterr().out
+    assert code == 0
+    # A queue line per lane even in publish-only mode.
+    queue_lines = [line for line in out.splitlines() if line.startswith("queue")]
+    assert len(queue_lines) == 1
+    assert "summary" in queue_lines[0]
+    assert queue_lines[0].split()[-1].startswith("summary-r")
+    # The release manifest was registered with the control plane.
+    assert captured["manifest"] == release.manifest_bytes
+    assert captured["url"] == "http://control-plane"
+    assert captured["key"] == "admin-token"
+    assert captured.get("closed") is True
+    assert f"registered {release.release_hash}" in out
+
+
+def test_apply_surfaces_non_admin_registration_403(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+    release = _publish_only_release()
+
+    def fake_apply(_cfg, _env, *, publish_only=False, mcp_snapshot=False):
+        return release, ()
+
+    class FakeClient:
+        def publish_release(self, manifest_bytes):
+            raise JulepClientError(403, "admin API key required")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(main_module, "apply_configured_application", fake_apply)
+    monkeypatch.setattr(main_module, "_remote_client", lambda url, key: FakeClient())
+
+    code = main(
+        ["apply", "--env", "local", "--publish-only", "--api-key", "alice-token"]
+    )
+    err = capsys.readouterr().err
+    assert code == 1
+    assert "admin API key" in err
 
 
 def test_deployment_config_preserves_pinned_oci_chart(
