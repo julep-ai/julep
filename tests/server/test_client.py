@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import asyncio
 import time
 
+import httpx
 import pytest
-
-pytest.importorskip("fastapi")
-pytest.importorskip("httpx")
-
 from starlette.testclient import TestClient
 
-from julep.client import JulepClient, JulepClientError
+from julep.client import (
+    AsyncJulepClient,
+    JulepClient,
+    JulepClientError,
+    JulepRunFailed,
+    JulepRunTimeout,
+)
 from julep.projection import EventType, ProjectionEvent
+
+pytest.importorskip("fastapi")
 
 
 def _seed_run(store, run_id: str) -> None:
@@ -105,3 +111,177 @@ def test_publish_release_requires_admin_key(server_factory) -> None:
             client.publish_release(release.manifest_bytes)
         assert caught.value.status_code == 403
 
+
+def test_sync_run_and_wait_submits_polls_and_unwraps_result() -> None:
+    requests: list[httpx.Request] = []
+    results = [
+        httpx.Response(202, json={"run": {"run_id": "run-1", "status": "running"}}),
+        httpx.Response(
+            200,
+            json={
+                "run": {"run_id": "run-1", "status": "completed"},
+                "result": {"summary": "done"},
+            },
+        ),
+    ]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.method == "POST":
+            return httpx.Response(201, json={"run_id": "run-1", "status": "accepted"})
+        return results.pop(0)
+
+    transport = httpx.Client(
+        base_url="https://julep.invalid",
+        transport=httpx.MockTransport(handler),
+    )
+    client = JulepClient(api_key="secret", client=transport)
+
+    value = client.run_and_wait(
+        pipeline="summary",
+        input={"value": 1},
+        release="sha256:" + "a" * 64,
+        idempotency_key="request-1",
+        deadline_s=5,
+        poll_wait_s=2,
+    )
+
+    assert value == {"summary": "done"}
+    assert [request.url.path for request in requests] == [
+        "/v1/runs",
+        "/v1/runs/run-1/result",
+        "/v1/runs/run-1/result",
+    ]
+    assert all(
+        0 < float(request.url.params["wait_s"]) <= 2 for request in requests[1:]
+    )
+    assert requests[0].headers["Idempotency-Key"] == "request-1"
+    assert requests[0].headers["Authorization"] == "Bearer secret"
+
+
+def test_sync_start_and_wait_raises_typed_terminal_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            return httpx.Response(201, json={"run_id": "run-failed"})
+        return httpx.Response(
+            200,
+            json={
+                "run": {
+                    "run_id": "run-failed",
+                    "status": "failed",
+                    "error": "provider unavailable",
+                },
+                "result": None,
+            },
+        )
+
+    transport = httpx.Client(
+        base_url="https://julep.invalid",
+        transport=httpx.MockTransport(handler),
+    )
+    client = JulepClient(client=transport)
+
+    with pytest.raises(JulepRunFailed) as caught:
+        client.start_and_wait(
+            pipeline="summary",
+            idempotency_key="failed",
+            deadline_s=5,
+        )
+
+    assert caught.value.run_id == "run-failed"
+    assert caught.value.status == "failed"
+    assert caught.value.error == "provider unavailable"
+
+
+def test_sync_wait_deadline_expires_before_an_unbounded_poll() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        return httpx.Response(201, json={"run_id": "run-slow"})
+
+    transport = httpx.Client(
+        base_url="https://julep.invalid",
+        transport=httpx.MockTransport(handler),
+    )
+    client = JulepClient(client=transport)
+
+    with pytest.raises(JulepRunTimeout) as caught:
+        client.run_and_wait(
+            pipeline="summary",
+            idempotency_key="slow",
+            deadline_s=0,
+        )
+
+    assert caught.value.run_id == "run-slow"
+    assert caught.value.deadline_s == 0
+
+
+def test_async_start_and_wait_submits_polls_and_unwraps_result() -> None:
+    requests: list[httpx.Request] = []
+    results = [
+        httpx.Response(202, json={"run": {"run_id": "run-a", "status": "accepted"}}),
+        httpx.Response(
+            200,
+            json={
+                "run": {"run_id": "run-a", "status": "completed"},
+                "result": ["done"],
+            },
+        ),
+    ]
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.method == "POST":
+            return httpx.Response(201, json={"run_id": "run-a"})
+        return results.pop(0)
+
+    transport = httpx.AsyncClient(
+        base_url="https://julep.invalid",
+        transport=httpx.MockTransport(handler),
+    )
+    client = AsyncJulepClient(api_key="secret", client=transport)
+
+    async def exercise() -> object:
+        try:
+            return await client.start_and_wait(
+                pipeline="summary",
+                idempotency_key="async-request",
+                deadline_s=5,
+                poll_wait_s=1,
+            )
+        finally:
+            await transport.aclose()
+
+    value = asyncio.run(exercise())
+
+    assert value == ["done"]
+    assert len(requests) == 3
+    assert all(
+        0 < float(request.url.params["wait_s"]) <= 1 for request in requests[1:]
+    )
+
+
+def test_async_run_and_wait_honors_deadline() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        return httpx.Response(201, json={"run_id": "run-async-slow"})
+
+    transport = httpx.AsyncClient(
+        base_url="https://julep.invalid",
+        transport=httpx.MockTransport(handler),
+    )
+    client = AsyncJulepClient(client=transport)
+
+    async def exercise() -> None:
+        try:
+            await client.run_and_wait(
+                pipeline="summary",
+                idempotency_key="async-slow",
+                deadline_s=0,
+            )
+        finally:
+            await transport.aclose()
+
+    with pytest.raises(JulepRunTimeout) as caught:
+        asyncio.run(exercise())
+
+    assert caught.value.run_id == "run-async-slow"

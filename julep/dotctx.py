@@ -31,6 +31,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    TypeVar,
     Union,
     cast,
     get_args,
@@ -48,6 +49,14 @@ from .registry import DEFAULT_REGISTRY
 
 _REPLY_UNSET = object()
 _SUPPORTED_REPLY_FORMS = "pydantic v2 model with model_json_schema() or TypedDict"
+
+
+_KEEP: Any = object()
+_T = TypeVar("_T")
+
+
+def _replacement(value: Any, current: _T) -> _T:
+    return current if value is _KEEP else cast(_T, value)
 
 
 class MissingOutputSchemaWarning(UserWarning):
@@ -234,6 +243,57 @@ class Reasoner:
                 "supported values are '5m' or '1h'"
             )
         object.__setattr__(self, "prompt_cache", prompt_cache)
+
+    def replace(
+        self,
+        *,
+        name: str = _KEEP,
+        model: str = _KEEP,
+        system: str = _KEEP,
+        reply: Any = _KEEP,
+        tools: Sequence[str] = _KEEP,
+        temperature: Optional[float] = _KEEP,
+        max_rounds: Optional[int] = _KEEP,
+        is_agent: bool = _KEEP,
+        sub_contract: Optional[SubContract] = _KEEP,
+        context_scope: ContextScope = _KEEP,
+        system_render: Optional[str] = _KEEP,
+        user_render: Optional[str] = _KEEP,
+        max_tokens: Optional[int] = _KEEP,
+        reasoning_effort: Optional[str] = _KEEP,
+        output_retries: int = _KEEP,
+        require_tool_call: bool = _KEEP,
+        response_format: Optional[str] = _KEEP,
+        prompt_cache: Optional[str] = _KEEP,
+    ) -> Reasoner:
+        """Return a copy with selected fields replaced.
+
+        Omitting ``reply`` preserves the already-materialized reply schema;
+        passing ``reply=None`` explicitly clears it, while a Pydantic model or
+        ``TypedDict`` is materialized exactly as it is during construction.
+        """
+
+        replacement_reply = self.reply_schema if reply is _KEEP else reply
+        return Reasoner(
+            name=_replacement(name, self.name),
+            model=_replacement(model, self.model),
+            system=_replacement(system, self.system),
+            reply=replacement_reply,
+            tools=_replacement(tools, self.tools),
+            temperature=_replacement(temperature, self.temperature),
+            max_rounds=_replacement(max_rounds, self.max_rounds),
+            is_agent=_replacement(is_agent, self.is_agent),
+            sub_contract=_replacement(sub_contract, self.sub_contract),
+            context_scope=_replacement(context_scope, self.context_scope),
+            system_render=_replacement(system_render, self.system_render),
+            user_render=_replacement(user_render, self.user_render),
+            max_tokens=_replacement(max_tokens, self.max_tokens),
+            reasoning_effort=_replacement(reasoning_effort, self.reasoning_effort),
+            output_retries=_replacement(output_retries, self.output_retries),
+            require_tool_call=_replacement(require_tool_call, self.require_tool_call),
+            response_format=_replacement(response_format, self.response_format),
+            prompt_cache=_replacement(prompt_cache, self.prompt_cache),
+        )
 
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
