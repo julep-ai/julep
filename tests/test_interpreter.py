@@ -12,6 +12,7 @@ from julep import (
 )
 from julep.errors import CapabilityDenied
 from julep.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
+from julep.execution.llm_result import LlmCallMeta, LlmResult
 if HAVE_TEMPORAL:
     from julep.execution.harness import ExecutionPolicy, _TemporalEnv
 from julep.projection import EventType, InMemoryProjection, ProjectionEmitter
@@ -292,6 +293,48 @@ def test_reasoner_reported_cost_metadata_overrides_default():
     run(interpret(fr.flow, "doc", env))
 
     assert store.cost_by_shape()["Pipeline"] == pytest.approx(0.33)
+
+
+def test_unpriced_reasoner_projection_cost_is_unknown_not_estimator_default():
+    flow = think("unpriced")
+    fr, env, store = _env_and_store(
+        flow,
+        reasoners={"unpriced": lambda value: value},
+    )
+
+    run(interpret(fr.flow, "doc", env))
+
+    did = next(event for event in store.events() if event.type == EventType.DID)
+    assert did.cost is None
+    assert did.attrs["llm.cost.status"] == "unknown"
+    assert store.cost_by_shape() == {}
+
+
+def test_llm_result_reported_cost_reaches_projection():
+    flow = think("metered-meta")
+    fr, env, store = _env_and_store(
+        flow,
+        reasoners={
+            "metered-meta": lambda value: LlmResult(
+                value,
+                LlmCallMeta(
+                    served_model="openai/gpt-test",
+                    provider="openai",
+                    input_tokens=10,
+                    output_tokens=2,
+                    total_tokens=12,
+                    cost=0.00042,
+                ),
+            )
+        },
+    )
+
+    run(interpret(fr.flow, "doc", env))
+
+    did = next(event for event in store.events() if event.type == EventType.DID)
+    assert did.cost == pytest.approx(0.00042)
+    assert did.attrs["llm.cost.status"] == "reported"
+    assert store.cost_by_shape()["Pipeline"] == pytest.approx(0.00042)
 
 
 def test_alt_routes_by_pure_predicate():

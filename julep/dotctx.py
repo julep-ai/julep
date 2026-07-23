@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 import types
+import warnings
 from dataclasses import dataclass
 from typing import (
     Any,
@@ -47,6 +48,21 @@ from .registry import DEFAULT_REGISTRY
 
 _REPLY_UNSET = object()
 _SUPPORTED_REPLY_FORMS = "pydantic v2 model with model_json_schema() or TypedDict"
+
+
+class MissingOutputSchemaWarning(UserWarning):
+    """A loaded dotctx package has no reply schema to validate model output."""
+
+
+def _warn_missing_output_schema(path: str, reasoner: "Reasoner") -> "Reasoner":
+    if reasoner.reply_schema is None:
+        warnings.warn(
+            f"dotctx package {path!r} does not define class Output in schema.pyi; "
+            "model replies will not be schema-validated",
+            MissingOutputSchemaWarning,
+            stacklevel=3,
+        )
+    return reasoner
 
 
 def _unsupported_reply_type(value: object) -> TypeError:
@@ -441,14 +457,20 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
             raise ValueError(f"single-file dotctx must end in .ctx: {path!r}")
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 
-        return dotctx_rich.load_single_file_dotctx(path, env=env).reasoner
+        return _warn_missing_output_schema(
+            path,
+            dotctx_rich.load_single_file_dotctx(path, env=env).reasoner,
+        )
     if not os.path.isdir(path):
         raise FileNotFoundError(f"dotctx path does not exist: {path!r}")
 
     if is_rich_dotctx(path):
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 
-        return dotctx_rich.load_rich_dotctx(path, env=env).reasoner
+        return _warn_missing_output_schema(
+            path,
+            dotctx_rich.load_rich_dotctx(path, env=env).reasoner,
+        )
 
     settings_path = None
     for fn in ("settings.yaml", "settings.yml"):
@@ -475,8 +497,14 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
 
         settings = yaml.safe_load(text) or {}
     default_name = os.path.basename(os.path.normpath(path))
-    return reasoner_from_settings(settings, name=settings.get("name", default_name),
-                               base_dir=path)
+    return _warn_missing_output_schema(
+        path,
+        reasoner_from_settings(
+            settings,
+            name=settings.get("name", default_name),
+            base_dir=path,
+        ),
+    )
 
 
 # --------------------------------------------------------------------------- #

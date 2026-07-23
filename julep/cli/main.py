@@ -24,7 +24,7 @@ from julep.cli.chat import chat_command
 from julep.cli.deploy import deploy_agents
 from julep.cli.doctor import legacy_checks, overall_code, run_checks
 from julep.cli.langfuse_link import trace_url
-from julep.cli.lint import lint_agents
+from julep.cli.lint import include_ctx_pipelines, lint_agents
 from julep.cli.listen import listen_command
 from julep.cli.model import Module, build_module
 from julep.cli.runcache import load_run, save_run
@@ -849,13 +849,13 @@ def lint(
         None, "--fail-severity", help="error|warning|info (default: config)."
     ),
 ) -> None:
-    """Lint selected agents (structural validation + severity gating)."""
+    """Lint selected agents and configured ctx pipelines."""
     cfg = load_config(Path("."))
     if env not in cfg.envs:
         typer.echo(f"error: unknown env {env!r}", err=True)
         raise typer.Exit(2)
-    module = build_module(cfg)
-    names = [a.name for a in select(module, selector, exclude=exclude)]
+    module = include_ctx_pipelines(cfg, build_module(cfg))
+    names = sorted({a.name for a in select(module, selector, exclude=exclude)})
     floor = fail_severity.value if fail_severity is not None else cfg.fail_severity
     # --env defaults to local, preserving the deterministic default target.
     env_cfg = cfg.envs[env]

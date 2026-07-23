@@ -20,7 +20,18 @@ def render_tree(events: list[ProjectionEvent]) -> str:
         for i, span in enumerate(kids):
             last = i == len(kids) - 1
             branch = '└─ ' if last else '├─ '
-            cost = f' ${span.cost:.4f}' if span.cost else ''
+            if span.cost is not None:
+                cost = f' ${span.cost:.4f}'
+            elif (
+                span.attrs.get("llm.cost.status") == "unknown"
+                or "llm.model" in span.attrs
+                or "llm.usage" in span.attrs
+            ):
+                # Older stored events predate llm.cost.status but still carry
+                # model/usage attrs, so remote traces can render them honestly.
+                cost = " cost=unknown"
+            else:
+                cost = ''
             lines.append(f'{prefix}{branch}{span.node} [{span.status}]{cost}')
             emit(span.cid, prefix + ('   ' if last else '│  '))
 

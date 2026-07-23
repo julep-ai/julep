@@ -437,7 +437,13 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         batchable = bool(node.ann.batchable) if node.ann else False
         out = await env.invoke_reasoner(step.reasoner, value, cid, timeout_s, batchable)
         reply, attrs = _unwrap_julep_meta(out)
-        return Result(reply, attrs=attrs, reported_cost=_reported_reasoner_cost(reply))
+        reported_cost = _reported_reasoner_cost(reply, attrs)
+        reasoner_attrs = dict(attrs or {})
+        reasoner_attrs.setdefault(
+            "llm.cost.status",
+            "reported" if reported_cost is not None else "unknown",
+        )
+        return Result(reply, attrs=reasoner_attrs, reported_cost=reported_cost)
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
     raise JulepError(f"interpreter: prim with no usable step at {node.id!r}")
@@ -548,7 +554,10 @@ def _projection_cost(node: Node, reported_cost: Optional[float]) -> Optional[flo
 
     step = node.step
     if isinstance(step, ThinkStep):
-        return reported_cost if reported_cost is not None else DEFAULT_THINK_COST
+        # The staged DEFAULT_THINK_COST is a budget/admission weight, not a USD
+        # price. Projection costs must only contain a declared annotation or a
+        # provider-reported charge; otherwise trace consumers render unknown.
+        return reported_cost
     if isinstance(step, SubStep):
         return DEFAULT_SUB_COST
     if isinstance(step, CallStep):
@@ -576,7 +585,15 @@ def _unwrap_julep_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
     return value, None
 
 
-def _reported_reasoner_cost(value: Any) -> Optional[float]:
+def _reported_reasoner_cost(
+    value: Any,
+    attrs: Optional[dict[str, Any]] = None,
+) -> Optional[float]:
+    if attrs is not None:
+        meta_cost = attrs.get("llm.cost")
+        if isinstance(meta_cost, (int, float)) and not isinstance(meta_cost, bool):
+            return float(meta_cost)
+
     if not isinstance(value, dict):
         return None
 

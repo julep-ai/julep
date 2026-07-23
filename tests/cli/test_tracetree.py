@@ -13,3 +13,37 @@ def test_renders_parent_child(capsys):
     assert "n0" in tree and "n1" in tree
     assert "└─" in tree or "├─" in tree   # box-drawing tree structure
     assert "ok" in tree                    # status rendered
+
+
+def test_generation_without_reported_cost_renders_unknown():
+    projection = InMemoryProjection()
+    emitter = ProjectionEmitter(projection)
+    planned = emitter.plan("think", "c0")
+    emitter.did(
+        "think",
+        "c0",
+        value="answer",
+        causes=[planned],
+        attrs={"llm.model": "openai/gpt-test", "llm.usage": {"total": 4}},
+    )
+
+    tree = render_tree(projection.events())
+
+    assert "cost=unknown" in tree
+    assert "$2.0000" not in tree
+
+
+def test_generation_preserves_real_zero_cost():
+    projection = InMemoryProjection()
+    emitter = ProjectionEmitter(projection)
+    planned = emitter.plan("think", "c0")
+    emitter.did(
+        "think",
+        "c0",
+        value="answer",
+        cost=0.0,
+        causes=[planned],
+        attrs={"llm.model": "local/free"},
+    )
+
+    assert "$0.0000" in render_tree(projection.events())
