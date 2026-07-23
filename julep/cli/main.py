@@ -1020,7 +1020,7 @@ def lint(
         cfg,
         names,
         fail_severity=floor,
-        env_vars=env_cfg.vars,
+        env_vars={**env_cfg.vars, **env_cfg.worker_environment},
         queues=env_cfg.queues,
         queue_env=env,
     )

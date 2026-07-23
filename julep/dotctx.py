@@ -45,7 +45,7 @@ from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
 from .kinds import ContextScope, Shape, SummaryPolicy
 from .model_slugs import EFFORT_LEVELS, normalize_model_slug
-from .registry import DEFAULT_REGISTRY
+from .registry import DEFAULT_REGISTRY, Registry
 
 _REPLY_UNSET = object()
 _SUPPORTED_REPLY_FORMS = "pydantic v2 model with model_json_schema() or TypedDict"
@@ -444,8 +444,13 @@ def _model_and_effort(settings: dict[str, Any]) -> tuple[str, Optional[str], int
     return slug.model, (effort or slug.reasoning_effort), retries
 
 
-def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
-                        base_dir: Optional[str] = None) -> Reasoner:
+def reasoner_from_settings(
+    settings: dict[str, Any],
+    *,
+    name: Optional[str] = None,
+    base_dir: Optional[str] = None,
+    _registry: Registry = DEFAULT_REGISTRY,
+) -> Reasoner:
     """Build (and register) a :class:`Reasoner` from a settings mapping.
 
     ``base_dir`` lets ``system_file`` / ``schema_file`` resolve relative paths;
@@ -495,7 +500,7 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         response_format=_response_format_setting(settings),
         prompt_cache=_prompt_cache_setting(settings),
     )
-    return DEFAULT_REGISTRY.register_reasoner(reasoner)
+    return _registry.register_reasoner(reasoner)
 
 
 # Rich-layout markers: any of these turns the package over to dotctx_rich
@@ -508,7 +513,12 @@ def is_rich_dotctx(path: str) -> bool:
     return any(os.path.exists(os.path.join(path, m)) for m in _RICH_MARKERS)
 
 
-def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reasoner:
+def load_dotctx(
+    path: str,
+    *,
+    env: Optional[Mapping[str, str]] = None,
+    _registry: Registry = DEFAULT_REGISTRY,
+) -> Reasoner:
     """Read a dotctx directory — or a single ``.ctx`` file — into a Reasoner.
 
     A directory reads ``<path>/settings.yaml`` (or ``settings.yml``); the
@@ -533,7 +543,7 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
 
         return _warn_missing_output_schema(
             path,
-            dotctx_rich.load_single_file_dotctx(path, env=env).reasoner,
+            dotctx_rich.load_single_file_dotctx(path, registry=_registry, env=env).reasoner,
         )
     if not os.path.isdir(path):
         raise FileNotFoundError(f"dotctx path does not exist: {path!r}")
@@ -543,7 +553,7 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
 
         return _warn_missing_output_schema(
             path,
-            dotctx_rich.load_rich_dotctx(path, env=env).reasoner,
+            dotctx_rich.load_rich_dotctx(path, registry=_registry, env=env).reasoner,
         )
 
     settings_path = None
@@ -577,6 +587,7 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
             settings,
             name=settings.get("name", default_name),
             base_dir=path,
+            _registry=_registry,
         ),
     )
 

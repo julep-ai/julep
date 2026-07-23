@@ -12,6 +12,7 @@ from julep.cli.resolve import lint_agent
 from julep.ctx_pipeline import pipeline_spec_from_ctx
 from julep.dotctx import MissingOutputSchemaWarning, Reasoner
 from julep.ir import Node
+from julep.registry import Registry
 from julep.validate import validate
 
 _SEVERITY_ORDER = {"info": 0, "warning": 1, "error": 2}
@@ -47,6 +48,7 @@ def _lint_ctx_pipeline(
     name: str,
     *,
     env_vars: dict[str, str] | None,
+    registry: Registry,
 ) -> tuple[list[Finding], str | None]:
     """Load and structurally validate one configured ctx pipeline, without IO.
 
@@ -66,6 +68,7 @@ def _lint_ctx_pipeline(
                 env_vars=env_vars,
                 agent_round_cap=cfg.agent_round_cap,
                 mcp_servers=cfg.mcp_servers,
+                _registry=registry,
             )
     except Exception as exc:  # noqa: BLE001 - turn user package failures into diagnostics.
         return [], f"{type(exc).__name__}: {exc}"
@@ -111,6 +114,10 @@ def lint_agents(
     findings: list[Finding] = []
     gated = False
     code_names = {agent.name for agent in scan_agents(cfg)}
+    # Mirror application resolution without contaminating the process-global
+    # registry. Sharing this scratch registry across selected pipelines keeps
+    # cross-pipeline reasoner/renderer collision checks intact.
+    registry = Registry()
 
     def append_finding(finding: Finding) -> None:
         nonlocal gated
@@ -128,6 +135,7 @@ def lint_agents(
                 cfg,
                 name,
                 env_vars=env_vars,
+                registry=registry,
             )
             if error is not None:
                 return [Finding(name, "CTX_LOAD", "error", error)], 2
