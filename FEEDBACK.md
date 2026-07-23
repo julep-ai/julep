@@ -4,15 +4,16 @@ Field notes from consuming julep 3.0.0rc4 (local editable, `julep3-post-port`) a
 first real control-plane consumer. Items marked **[in-branch]** are being fixed on
 `julep3-post-port` as part of the port; the rest are open asks/wishlist.
 
-> **Status 2026-07-22 (see FEEDBACK-REPLY.md in consuming repos):** items 1–5 landed on
-> `julep3-post-port` (`043c5dfa`, `80f87b2e`, `0ab48095`); item 13 (`serve api --local`
-> + `--context-factory` + local-dev guide) has now merged into `julep3-post-port`.
-> Items 7, 9, and 16 have also landed. Still open: 6
-> (temporalio/pydantic-ai collision), 8 (`Reasoner.replace`), 10
-> (pipeline-aware lint), 14 (trace cost placeholder), 15
-> (missing-output-schema warning), and the
-> single-machine durable-stack operator recipe half of 11. Item 12 was wrong — the
-> server default is already 8080, not 8000.
+> **Status 2026-07-23 (see FEEDBACK-REPLY.md in consuming repos):** effectively the
+> whole ledger is implemented on `julep3-post-port`. Items 1–5, 7, 9, 13, 16–20 landed
+> in the run_and_wait/local-api-mode batches (`Reasoner.replace` closes 8; pipeline
+> lint + honest trace costs close 10 and 14; `MissingOutputSchemaWarning` closes 15;
+> the durable dev supervisor + local-dev guide close 20 and 11); the tool-bearing-run
+> findings 21–26 are fixed with cross-backend tests, `AgentTerminalError` (25), the
+> public `LlmCaller` contract (24), and `LocalDirBlobStore`/`JULEP_BLOB_STORE_URL`
+> (26, `5c5a2d92`). Still open: **item 6 only** (temporalio/pydantic-ai pin collision —
+> consumers carry a uv override). Item 12 was wrong — the server default is already
+> 8080, not 8000.
 
 ## Bugs / blockers hit
 
