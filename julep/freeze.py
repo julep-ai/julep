@@ -367,6 +367,8 @@ def _check_tool_schema_drift(
             expectation = expectations.get(
                 scoped_tool_expectation_key(reasoner_name, key)
             )
+            if expectation is None and key not in scoped_fallbacks:
+                expectation = expectations.get(key)
             if expectation is not None:
                 check_tool(key, expectation)
 

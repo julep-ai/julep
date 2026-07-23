@@ -9,11 +9,12 @@ import pytest
 from julep import HAVE_TEMPORAL
 from julep.declarations import declarations_blob, load_declarations
 from julep.dotctx import Reasoner, reasoner_from_settings, reasoner_to_flow
-from julep.dsl import app
+from julep.dsl import app, think
 from julep.errors import FreezeError
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, freeze
 from julep.ir import canonical_json
 from julep.registry import (
+    DEFAULT_REGISTRY,
     Registry,
     ToolSchemaExpectation,
     scoped_tool_expectation_key,
@@ -129,6 +130,98 @@ def test_freeze_rejects_non_exact_tools_pyi_schema() -> None:
                 "search": ToolSchemaExpectation("search", EXPECTED, "prompt.ctx")
             },
         )
+
+
+def test_think_reasoner_honors_explicit_unscoped_tool_expectation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    name = "explicit-unscoped-schema-reasoner"
+    tool_key = "tracker/search-posts"
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.reasoners,
+        name,
+        Reasoner(name, "test:model", tools=(tool_key,)),
+    )
+    snapshot = McpSnapshot(
+        servers={
+            "tracker": McpServerSnapshot(
+                "tracker",
+                {
+                    "search-posts": McpToolSpec(
+                        input_schema={
+                            **EXPECTED,
+                            "additionalProperties": False,
+                        }
+                    )
+                },
+            )
+        }
+    )
+
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT.*tracker/search-posts"):
+        freeze(
+            think(name),
+            snapshot,
+            expected_tool_schemas={
+                tool_key: ToolSchemaExpectation(
+                    tool_key,
+                    EXPECTED,
+                    "explicit-tools.pyi",
+                )
+            },
+        )
+
+
+def test_think_reasoner_ignores_unrelated_scoped_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    owner = "scoped-schema-owner"
+    consumer = "unrelated-schema-consumer"
+    tool_key = "review-scoped/tool"
+    expectation = ToolSchemaExpectation(
+        tool_key,
+        EXPECTED,
+        "owner-tools.pyi",
+    )
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.reasoners,
+        consumer,
+        Reasoner(consumer, "test:model", tools=(tool_key,)),
+    )
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.tool_expectations,
+        scoped_tool_expectation_key(owner, tool_key),
+        expectation,
+    )
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.tool_expectations,
+        tool_key,
+        expectation,
+    )
+    monkeypatch.setattr(
+        DEFAULT_REGISTRY,
+        "scoped_tool_fallbacks",
+        {*DEFAULT_REGISTRY.scoped_tool_fallbacks, tool_key},
+    )
+    snapshot = McpSnapshot(
+        servers={
+            "review-scoped": McpServerSnapshot(
+                "review-scoped",
+                {
+                    "tool": McpToolSpec(
+                        input_schema={
+                            **EXPECTED,
+                            "additionalProperties": False,
+                        }
+                    )
+                },
+            )
+        }
+    )
+
+    frozen = freeze(think(consumer), snapshot)
+
+    assert frozen.flow is not None
 
 
 def test_freeze_preserves_legacy_wire_grant_without_alias_map() -> None:
