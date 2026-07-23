@@ -96,10 +96,10 @@ keys are rejected with a close-match suggestion.
 | `julep doctor` | Preflight: discovery, dangling `secret://` refs, git, Langfuse, Temporal. |
 | `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env artifact store → record in the deploy ledger. |
 | `julep plan --env <name> [--mcp-snapshot]` | Compile code plus configured dotctx pipelines and report drift; optionally fetch configured MCP schemas. |
-| `julep apply --env <name> [--mcp-snapshot] [--publish-only]` | Publish a signed schema-v2 release and optionally reconcile lane workers. |
+| `julep apply --env <name> [--mcp-snapshot] [--publish-only] [--api-url --api-key]` | Publish a signed schema-v2 release, optionally register it with a control plane, and optionally reconcile lane workers. |
 | `julep status [SEL] --env <name>` | Aggregate application state or inspect the legacy ledger; `--remote --api-url --api-key --limit` reads control-plane runs. |
 | `julep worker [--smoke-test-seconds N]` | Run the environment-configured Temporal worker continuously (`0`) or verify/poll/drain for a positive `N`. |
-| `julep serve api [--host --port --migrate]` | Run the FastAPI control plane. |
+| `julep serve api [--host --port --migrate --local --context-factory]` | Run the durable or service-free local FastAPI control plane. |
 | `julep db migrate [--dsn]` | Apply projection-store migrations. |
 | `julep db sweep --older-than N [--dsn]` | Apply operator-controlled projection retention. |
 | `julep db reencrypt-secrets [--dsn]` | Maintenance-only vault key rotation sweep. |

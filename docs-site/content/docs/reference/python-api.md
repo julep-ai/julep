@@ -534,9 +534,9 @@ CLI entry points:
 | `run` | `julep run <name-or-path.ctx> [--input JSON] [--run-id id] [--env name]` |
 | `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
 | `plan` | `julep plan [--env name] [--json] [--mcp-snapshot]` |
-| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot]` |
+| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY]` |
 | `status` | `julep status [selector] [--exclude expr] [--env name] [--remote] [--api-url URL] [--api-key KEY] [--limit N]` |
-| `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate]` |
+| `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate] [--local] [--context-factory module:attr]` |
 | `db migrate` | `julep db migrate [--dsn DSN]` |
 | `db sweep` | `julep db sweep --older-than SECONDS [--dsn DSN]` |
 | `db reencrypt-secrets` | `julep db reencrypt-secrets [--dsn DSN]` |

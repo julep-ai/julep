@@ -104,6 +104,13 @@ lane = "summaries"
 
 [tool.julep.pipeline.episode_summary.env]
 MODEL = "anthropic:claude-haiku-4-5-20251001"
+
+[tool.julep.pipeline.episode_summary.tools]
+search = "memory:search"
+
+[tool.julep.pipeline.episode_summary.policy]
+reasoner_max_attempts = 1
+reasoner_timeout_s = 300
 ```
 
 Reserved top-level sections are `mcp`, `pipeline`, `server`, and `redaction`;
@@ -113,8 +120,10 @@ and `[redaction]`.
 
 MCP server keys are `url`, `auth`, `headers`, and `version`. URLs must be
 absolute HTTP(S) endpoints without embedded credentials and form the live
-snapshot allow-list. Pipeline keys are `ctx`, `lane`, and nested `env` string
-values. Server settings are documented under
+snapshot allow-list. Pipeline keys are `ctx`, `lane`, and nested `env`, `tools`,
+and `policy` tables. Tool bindings map prompt-visible aliases to
+`server:tool`; policy keys use the snake-case `ExecutionPolicy` field names.
+Server settings are documented under
 [Control plane](/docs/deploy/control-plane). Redaction keys are
 `key_patterns`, `path_patterns`, and `disable_default`; worker-side file loading
 uses `[tool.julep.redaction]` in `pyproject.toml`.
@@ -139,7 +148,7 @@ the error includes a close-match suggestion, such as `lan` to `lane` or
 | `env.<name>.artifacts` | `None` | Deploy artifact store; implicit `local` defaults to `.julep/artifacts`. |
 | `env.<name>.langfuse_host` | `None` | Parsed, but current trace links read `LANGFUSE_HOST`. |
 | `env.<name>.release_store` | `None` | Application release artifact store (`s3://...` or `file://...`). |
-| `env.<name>.worker_image` | `None` | Immutable `repository@sha256:...` image required by application `apply`. |
+| `env.<name>.worker_image` | `None` | Immutable `repository@sha256:...` image required for lane reconciliation; optional with `apply --publish-only`. |
 | `env.<name>.helm_chart` | `infra/helm/julep-worker` | Local chart path or digest-pinned OCI chart. |
 | `env.<name>.kubernetes_namespace` | `julep` | Namespace for application lane releases. |
 | `env.<name>.worker_context_factory` | `None` | Required `module:attribute` worker context factory. |
@@ -384,7 +393,7 @@ and does not change plan's success exit code.
 
 ## `julep apply`
 
-Synopsis: `julep apply --env ENV [--publish-only] [--mcp-snapshot]`
+Synopsis: `julep apply --env ENV [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY]`
 
 Compile and publish a signed, immutable application release. By default it then
 reconciles one digest-pinned Helm release and release-specific Temporal task
@@ -396,6 +405,8 @@ applied state. It never switches application traffic.
 | `--env ENV` | required | Configured application environment. |
 | `--publish-only` | false | Publish release artifacts without Helm reconciliation or local applied-state recording. |
 | `--mcp-snapshot` | false | Fetch configured MCP `tools/list` schemas before publishing. Requires `julep[mcp]`. |
+| `--api-url URL` | unset | Register the release manifest with this control-plane API after publishing. |
+| `--api-key KEY` | unset | Admin bearer key for release registration. |
 
 An explicit `snapshot=` in application code remains authoritative. The CLI
 flag applies the configured server snapshot to pipelines without native tools.
@@ -408,9 +419,10 @@ and renderer declarations, so generic workers can execute them.
 64-hex public keys must include the publishing key. An omitted allow-list is
 derived from the publishing key and injected into the worker configuration.
 
-Exit/errors: unknown env exits `2`; compile, signing, artifact store, configuration, or
-reconciliation failures exit `1`; success exits `0` and prints the release,
-artifact, lane releases/queues, and `traffic unchanged`.
+Exit/errors: unknown env exits `2`; compile, signing, artifact store,
+configuration, reconciliation, or registration failures exit `1`; success
+exits `0` and prints the release, artifact, every release-scoped lane queue,
+optional `registered <release-hash>`, and `traffic unchanged`.
 
 ## `julep status`
 
@@ -457,7 +469,7 @@ errors exit `1`; missing API URL or httpx exits `2`.
 
 ## `julep serve api`
 
-Synopsis: `julep serve api [--host HOST] [--port PORT] [--migrate]`
+Synopsis: `julep serve api [--host HOST] [--port PORT] [--migrate] [--local] [--context-factory MODULE:ATTR]`
 
 Build and run the FastAPI control plane from `ServerSettings.from_env()`.
 
@@ -466,9 +478,12 @@ Build and run the FastAPI control plane from `ServerSettings.from_env()`.
 | `--host HOST` | `JULEP_SERVER_HOST` or `127.0.0.1` | Uvicorn listen host. |
 | `--port PORT` | `JULEP_SERVER_PORT` or `8080` | Uvicorn listen port. |
 | `--migrate` | false | Apply the execution-store schema before serving. |
+| `--local` | false | Use the service-free in-memory control plane and interpreter. Cannot be combined with `--migrate`. |
+| `--context-factory MODULE:ATTR` | unset | In local mode, load a zero-argument sync or async factory returning `WorkerContext`. |
 
-Requires `julep[server]` and `JULEP_EXECUTION_STORE_DSN`. Configuration or
-optional-dependency failures exit `2`. See
+Durable mode requires `julep[server]` and `JULEP_EXECUTION_STORE_DSN`. Local
+mode needs no PostgreSQL or Temporal. Configuration or optional-dependency
+failures exit `2`. See [Local development](/docs/deploy/local) and
 [Control plane](/docs/deploy/control-plane).
 
 ## `julep db migrate`
