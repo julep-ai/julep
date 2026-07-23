@@ -971,3 +971,18 @@ def test_agent_legacy_replay_branch_dispatches_without_new_validation_activity(
     assert calls[0].value == {"query": 7}
     assert calls[0].input_schema_validated is False
     assert result["trace"][0]["decision"] == "call"
+
+
+def test_native_tools_bare_schema_reply_finishes() -> None:
+    # reply_schema + prompt guidance tell the model to return the bare Output
+    # object; in native-tools mode that IS the final answer (output-schema
+    # validation owns shape enforcement, not the action classifier).
+    from julep.agent_loop import Decision, interpret_reasoner_reply
+
+    reply = {"action": "create", "title": "t", "reason": "r"}
+    action = interpret_reasoner_reply(reply, strict=True, native_tools=True)
+    assert action.decision is Decision.FINISH
+    assert action.payload == reply
+    # Without native tools, strict mode still rejects unknown shapes.
+    fallback = interpret_reasoner_reply(reply, strict=True, native_tools=False)
+    assert fallback.decision is Decision.CONTROLLER_ERROR

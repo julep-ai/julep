@@ -192,6 +192,15 @@ def interpret_reasoner_reply(
             },
         )
 
+    if native_tools:
+        # Native tool-calling protocol: the model either calls tools or
+        # answers. A dict reply with none of the reserved action keys IS the
+        # final answer — reply_schema/prompt guidance told the model to return
+        # exactly that shape, and the loop's output-schema validation (with
+        # its re-ask budget) owns shape enforcement. Treating it as a
+        # controller error contradicted the package's own Output contract.
+        return RoundAction(Decision.FINISH, reply)
+
     return malformed()
 
 
