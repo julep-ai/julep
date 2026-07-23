@@ -41,6 +41,15 @@ def test_prepare_litellm_payload_maps_provider_reasoning_contracts() -> None:
     assert fireworks["model"] == "fireworks_ai/accounts/acme/deployments/model"
     assert fireworks["reasoning_effort"] == "low"
 
+    fireworks_slash = prepare_litellm_payload(
+        {"model": "fireworks/accounts/acme/deployments/model@high"}
+    )
+    assert fireworks_slash["model"] == "fireworks_ai/accounts/acme/deployments/model"
+    assert fireworks_slash["reasoning_effort"] == "high"
+
+    google_slash = prepare_litellm_payload({"model": "google/gemini-2.5-pro"})
+    assert google_slash["model"] == "gemini/gemini-2.5-pro"
+
 
 def test_prepare_litellm_payload_clamps_direct_openai_gpt5_temperature() -> None:
     prepared = prepare_litellm_payload(
@@ -85,6 +94,22 @@ def test_litellm_caller_is_canonical_and_injectable() -> None:
     assert seen["timeout"] == 17.0
     assert seen["tools"] == [{"type": "function", "function": {"name": "lookup"}}]
     assert seen["parallel_tool_calls"] is False
+
+
+def test_litellm_caller_normalizes_slash_slug_before_provider_dispatch() -> None:
+    seen: dict[str, Any] = {}
+
+    async def fake_acompletion(**kwargs: Any) -> Any:
+        seen.update(kwargs)
+        return _completion()
+
+    caller = litellm_caller(acompletion=fake_acompletion)
+    result = run(caller(Reasoner("summary", "openai/gpt-5@high"), "hello"))
+
+    assert result.reply == "ok"
+    assert seen["model"] == "openai/gpt-5"
+    assert seen["reasoning_effort"] == "high"
+    assert "thinking" not in seen
 
 
 def test_model_ladder_and_litellm_adapter_fail_over_as_one_execution_seam() -> None:
@@ -153,6 +178,46 @@ def test_model_ladder_advances_only_for_provider_transient_errors() -> None:
     ]
     assert [item.outcome for item in attempts] == ["transient", "ok"]
     assert [item.outcome for item in result.meta.attempts] == ["transient", "ok"]
+
+
+def test_model_ladder_inherits_effort_suffix_from_primary_on_fallback() -> None:
+    calls: list[tuple[str, str | None]] = []
+
+    async def base(reasoner: Reasoner, *_args: Any) -> str:
+        calls.append((reasoner.model, reasoner.reasoning_effort))
+        if len(calls) == 1:
+            raise HttpError(503)
+        return "ok"
+
+    caller = with_model_ladder(base, models=["anthropic:claude-sonnet-4-6"])
+    assert run(caller(Reasoner("r", "openai/gpt-5@high"), "value")) == "ok"
+    assert calls == [
+        ("openai:gpt-5", "high"),
+        ("anthropic:claude-sonnet-4-6", "high"),
+    ]
+
+
+def test_model_ladder_primary_suffix_wins_over_explicit_effort_on_fallback() -> None:
+    calls: list[tuple[str, str | None]] = []
+
+    async def base(reasoner: Reasoner, *_args: Any) -> str:
+        calls.append((reasoner.model, reasoner.reasoning_effort))
+        if len(calls) == 1:
+            raise HttpError(503)
+        return "ok"
+
+    caller = with_model_ladder(base, models=["anthropic:claude-sonnet-4-6"])
+    reasoner = Reasoner(
+        "r",
+        "openai/gpt-5@high",
+        reasoning_effort="low",
+    )
+
+    assert run(caller(reasoner, "value")) == "ok"
+    assert calls == [
+        ("openai:gpt-5", "high"),
+        ("anthropic:claude-sonnet-4-6", "high"),
+    ]
 
 
 def test_model_ladder_fails_fast_on_configuration_error() -> None:

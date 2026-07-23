@@ -40,19 +40,14 @@ def _normalize_litellm_model(model: Any) -> Any:
     normalized = model.strip()
     if not normalized:
         return model
-    if "@" in normalized:
-        candidate, suffix = normalized.rsplit("@", 1)
-        if suffix.strip().lower() in EFFORT_LEVELS:
-            normalized = candidate.strip()
-    colon = normalized.find(":")
-    slash = normalized.find("/")
-    if colon >= 0 and (slash < 0 or colon < slash):
-        provider, remainder = normalized.split(":", 1)
-        remainder = remainder.lstrip("/")
-        if provider == "fireworks" and remainder.startswith("accounts/"):
-            return f"fireworks_ai/{remainder}"
-        return f"{provider}/{remainder}"
-    return normalized
+    parsed = normalize_model_slug(normalized)
+    provider, separator, remainder = parsed.model.partition(":")
+    if not separator:
+        return parsed.model
+    remainder = remainder.lstrip("/")
+    if provider == "fireworks" and remainder.startswith("accounts/"):
+        provider = "fireworks_ai"
+    return f"{provider}/{remainder}"
 
 
 def _slug_effort(model: Any) -> Optional[str]:
@@ -182,8 +177,18 @@ def litellm_caller(
         parallel_tool_calls: Optional[bool] = None,
     ) -> Any:
         del principal  # Provider credentials are resolved by LiteLLM itself.
+        # ``complete_reasoner`` consumes canonical ``provider:model`` slugs.
+        # Normalize slash-form dotctx inputs before its provider split so
+        # ``openai/gpt-*`` cannot fall through to the Anthropic default.
+        parsed_model = normalize_model_slug(reasoner.model)
+        normalized_reasoner = reasoner.replace(
+            model=parsed_model.model,
+            reasoning_effort=(
+                parsed_model.reasoning_effort or reasoner.reasoning_effort
+            ),
+        )
         return await complete_reasoner(
-            reasoner,
+            normalized_reasoner,
             value,
             acompletion=completion,
             transcript=transcript,  # type: ignore[arg-type]
@@ -202,7 +207,12 @@ def _provider(model: str) -> str:
 
 def _reasoner_for_model(reasoner: Reasoner, model: str) -> Reasoner:
     parsed = normalize_model_slug(model)
-    effort = parsed.reasoning_effort or reasoner.reasoning_effort
+    base = normalize_model_slug(reasoner.model)
+    effort = (
+        parsed.reasoning_effort
+        or base.reasoning_effort
+        or reasoner.reasoning_effort
+    )
     return reasoner.replace(model=parsed.model, reasoning_effort=effort)
 
 
