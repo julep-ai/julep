@@ -6,7 +6,14 @@ from typing import Any
 
 import pytest
 
-from julep import CapabilityManifest, WorkflowStartOptions, deploy, ident, think
+from julep import (
+    HAVE_TEMPORAL,
+    CapabilityManifest,
+    WorkflowStartOptions,
+    deploy,
+    ident,
+    think,
+)
 from julep.app import Application, ApplicationDefinitionError, PipelineSpec
 from julep.app_deploy import (
     ApplicationReleaseError,
@@ -362,73 +369,80 @@ def test_application_evals_receive_the_supplied_llm_caller(monkeypatch, tmp_path
     assert calls == [(str(tmp_path / "evals.summary"), caller)]
 
 
-def test_publish_release_is_content_addressed_and_round_trips(tmp_path) -> None:
+@pytest.fixture
+def roundtrip_release(tmp_path, monkeypatch):
     store = LocalDirArtifactStore(tmp_path / "artifacts")
     reasoner_name = "release-roundtrip-reasoner"
-    existing = DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
+    reasoner = Reasoner(reasoner_name, "model-a", system="summarize")
+    monkeypatch.setitem(DEFAULT_REGISTRY.reasoners, reasoner_name, reasoner)
     compiled = Application(
         "memory",
         [
             PipelineSpec(
                 "summary",
                 think(reasoner_name),
-                reasoners=(Reasoner(reasoner_name, "model-a", system="summarize"),),
+                reasoners=(reasoner,),
                 lane="summary",
             )
         ],
     ).compile()
     image = "registry.example/memory@sha256:" + "a" * 64
+    release = publish_application(
+        compiled,
+        store,
+        worker_image=image,
+        signing_key="0" * 64,
+    )
+    digest = release.release_hash.removeprefix("sha256:")
+    declarations_ref = release.pipelines[0].runtime_declarations_ref
+    restored = release_from_bytes(store.get(digest))
+    return store, release, restored, digest, declarations_ref, image
 
-    try:
-        release = publish_application(
-            compiled,
-            store,
-            worker_image=image,
-            signing_key="0" * 64,
+
+def test_publish_release_is_content_addressed_and_round_trips(
+    roundtrip_release,
+) -> None:
+    store, release, restored, digest, declarations_ref, image = roundtrip_release
+
+    assert store.has(digest)
+    assert release.schema_version == 2
+    assert declarations_ref is not None
+    assert store.has(str(declarations_ref["hash"]).removeprefix("sha256:"))
+    assert len(store.get(str(declarations_ref["hash"]).removeprefix("sha256:"))) == (
+        declarations_ref["size"]
+    )
+    pipeline_json = release.manifest["pipelines"][0]
+    assert pipeline_json["runtimeDeclarationsRef"] == declarations_ref
+    assert "runtimeDeclarationsRef" not in pipeline_json["manifestJson"]
+
+    assert restored.release_hash == release.release_hash
+    assert restored.worker_image == image
+    assert restored.schema_version == 2
+    assert restored.pipelines[0].runtime_declarations_ref == declarations_ref
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_pipeline_release_start_uses_restored_release_contract(roundtrip_release) -> None:
+    _store, _release, restored, _digest, declarations_ref, _image = roundtrip_release
+    captured: dict[str, Any] = {}
+
+    class Client:
+        async def start_workflow(self, workflow, flow_input, **kwargs):
+            captured["flow_input"] = flow_input
+            captured["kwargs"] = kwargs
+            return "handle"
+
+    result = asyncio.run(
+        restored.pipelines[0].start(
+            Client(),
+            session_id="release-roundtrip",
+            input={"document": "hello"},
+            options=WorkflowStartOptions(require_payload_encryption=False),
         )
-
-        digest = release.release_hash.removeprefix("sha256:")
-        assert store.has(digest)
-        assert release.schema_version == 2
-        declarations_ref = release.pipelines[0].runtime_declarations_ref
-        assert declarations_ref is not None
-        assert store.has(str(declarations_ref["hash"]).removeprefix("sha256:"))
-        assert len(store.get(str(declarations_ref["hash"]).removeprefix("sha256:"))) == (
-            declarations_ref["size"]
-        )
-        pipeline_json = release.manifest["pipelines"][0]
-        assert pipeline_json["runtimeDeclarationsRef"] == declarations_ref
-        assert "runtimeDeclarationsRef" not in pipeline_json["manifestJson"]
-
-        restored = release_from_bytes(store.get(digest))
-        assert restored.release_hash == release.release_hash
-        assert restored.worker_image == image
-        assert restored.schema_version == 2
-        assert restored.pipelines[0].runtime_declarations_ref == declarations_ref
-
-        captured: dict[str, Any] = {}
-
-        class Client:
-            async def start_workflow(self, workflow, flow_input, **kwargs):
-                captured["flow_input"] = flow_input
-                captured["kwargs"] = kwargs
-                return "handle"
-
-        result = asyncio.run(
-            restored.pipelines[0].start(
-                Client(),
-                session_id="release-roundtrip",
-                input={"document": "hello"},
-                options=WorkflowStartOptions(require_payload_encryption=False),
-            )
-        )
-        assert result == "handle"
-        assert captured["flow_input"].runtime_declarations_ref == declarations_ref
-        assert captured["kwargs"]["task_queue"] == restored.pipelines[0].task_queue
-    finally:
-        DEFAULT_REGISTRY.reasoners.pop(reasoner_name, None)
-        if existing is not None:
-            DEFAULT_REGISTRY.reasoners[reasoner_name] = existing
+    )
+    assert result == "handle"
+    assert captured["flow_input"].runtime_declarations_ref == declarations_ref
+    assert captured["kwargs"]["task_queue"] == restored.pipelines[0].task_queue
 
 
 @pytest.mark.parametrize("schema_version", [1, 3, None])

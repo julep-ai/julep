@@ -7,6 +7,7 @@ from urllib.parse import quote
 import pytest
 
 import julep.secrets as secrets_module
+from julep import HAVE_TEMPORAL
 from julep.execution.projection_store import InMemoryExecutionStore
 from julep.secrets import (
     REDACTED,
@@ -43,6 +44,9 @@ def test_run_secret_limits_are_shared_and_byte_based() -> None:
             {f"token-{index}": "x" * (16 * 1024) for index in range(4)}
         )
 
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_build_flow_input_reuses_run_secret_limits() -> None:
     from julep.execution.harness import build_flow_input
 
     with pytest.raises(ValueError, match="16384 bytes"):
@@ -65,7 +69,8 @@ def test_vault_cipher_authenticates_name_and_generation() -> None:
         cipher.decrypt("tracker-token", 2, ciphertext, key_id)
 
 
-def test_vault_cipher_env_rejects_payload_key_reuse() -> None:
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_vault_cipher_env_rejects_temporal_payload_key_reuse() -> None:
     shared = "11" * 32
     with pytest.raises(VaultConfigurationError, match="distinct key material"):
         VaultCipher.from_env(
