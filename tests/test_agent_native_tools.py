@@ -742,3 +742,13 @@ def test_agent_open_local_session_passes_provider_tool_defs_for_native_tools() -
         await handle.close()
 
     run(main())
+
+
+def test_reserved_reply_key_sets_stay_in_sync() -> None:
+    # validate.py keeps a local copy of the reserved action vocabulary because
+    # importing it from agent_loop would cycle (agent_loop imports
+    # validate.Diagnostic). This pins the two sets together.
+    from julep.agent_loop import NATIVE_TOOLS_REPLY_RESERVED_KEYS
+    from julep.validate import _NATIVE_TOOLS_REPLY_RESERVED_KEYS
+
+    assert _NATIVE_TOOLS_REPLY_RESERVED_KEYS == NATIVE_TOOLS_REPLY_RESERVED_KEYS
