@@ -265,3 +265,13 @@ def test_reasoner_replace_reply_distinguishes_keep_clear_and_rematerialize(
     assert original.replace(model="openai:gpt-4.1").reply_schema == original.reply_schema
     assert original.replace(reply=None).reply_schema is None
     assert original.replace(reply=Decision).reply_schema == Decision.model_json_schema()
+
+
+def test_reasoner_replace_preserves_future_extension_fields() -> None:
+    original = Reasoner("replace.future", "openai:gpt-4o")
+    object.__setattr__(original, "future_field", {"enabled": True})
+
+    replacement = original.replace(model="openai:gpt-5")
+
+    assert replacement.model == "openai:gpt-5"
+    assert vars(replacement)["future_field"] == {"enabled": True}

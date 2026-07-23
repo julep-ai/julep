@@ -53,6 +53,14 @@ _SUPPORTED_REPLY_FORMS = "pydantic v2 model with model_json_schema() or TypedDic
 
 _KEEP: Any = object()
 _T = TypeVar("_T")
+_REPLACE_HANDLED_FIELDS = frozenset(
+    {
+        "name", "model", "system", "reply_schema", "tools", "temperature",
+        "max_rounds", "is_agent", "sub_contract", "context_scope",
+        "system_render", "user_render", "max_tokens", "reasoning_effort",
+        "output_retries", "require_tool_call", "response_format", "prompt_cache",
+    }
+)
 
 
 def _replacement(value: Any, current: _T) -> _T:
@@ -274,7 +282,7 @@ class Reasoner:
         """
 
         replacement_reply = self.reply_schema if reply is _KEEP else reply
-        return Reasoner(
+        replaced = Reasoner(
             name=_replacement(name, self.name),
             model=_replacement(model, self.model),
             system=_replacement(system, self.system),
@@ -294,6 +302,12 @@ class Reasoner:
             response_format=_replacement(response_format, self.response_format),
             prompt_cache=_replacement(prompt_cache, self.prompt_cache),
         )
+        # Preserve extension/future fields this version cannot yet override.
+        # Declared fields still go through the constructor above for validation.
+        for field_name, value in vars(self).items():
+            if field_name not in _REPLACE_HANDLED_FIELDS:
+                object.__setattr__(replaced, field_name, value)
+        return replaced
 
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
