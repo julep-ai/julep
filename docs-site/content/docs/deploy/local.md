@@ -69,13 +69,14 @@ are one-shot compile-and-run conveniences. All four execution methods return
 the interpreter value directly rather than a control-plane result envelope.
 
 The model seam is the canonical `LlmCaller(reasoner, value, principal,
-transcript, dispatch)`. An explicit `llm=` wins over `WorkerContext.llm`.
+transcript, dispatch, *, tools=None)`. An explicit `llm=` wins over
+`WorkerContext.llm`.
 `principal=` is forwarded to both model and MCP calls. MCP execution is never
 inferred from ambient configuration: inject `WorkerContext(mcp_call=...)`.
 QoS resolution and registry verification are also reused. A context registry
 may contain the same compiled reasoner declaration, but a differing override is
-rejected. Tool-calling agents additionally require a caller that accepts
-Julep's optional `tools=` keyword extension.
+rejected. `tools` is `None` for ordinary reasoning and the frozen
+provider-neutral tool-definition list for native-tool agent rounds.
 
 The MCP surface is snapshotted and frozen when the pipeline is prepared, and
 frozen input schemas are enforced before dispatch. This foreground seam does
@@ -176,10 +177,16 @@ julep serve api --local \
 ```
 
 Configured-context execution uses the normal effect implementations, including
-real MCP discovery, binding validation, and preflight. Echo execution makes no
-network calls: it simulates an MCP surface equal to the tools frozen into the
-release. Because echo mode has no real secret transport or binding to validate,
-it rejects runs that submit run-scoped secrets.
+real MCP discovery, binding validation, preflight, native provider tool
+definitions, and transcript materialization/budgeting for scoped agents. Echo
+execution makes no network calls: it simulates an MCP surface equal to the tools
+frozen into the release. Because echo mode has no real secret transport or
+binding to validate, it rejects runs that submit run-scoped secrets.
+
+Agent statuses `done` and `escalated` complete the HTTP run. Failed loop
+verdicts (`controller_error`, `max_rounds`, `over_budget`, `denied`, and
+`output_validation_failed`) mark the run `failed`; `/result` does not return a
+successful agent envelope for them.
 
 ## Exercise the release lifecycle
 

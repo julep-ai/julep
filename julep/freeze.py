@@ -244,31 +244,123 @@ def _toolref_from_key(key: str) -> ToolRef:
 # --------------------------------------------------------------------------- #
 # Expected-schema verification (dotctx tools.pyi contract assertions).
 # --------------------------------------------------------------------------- #
-def _strip_closed_object_markers(value: Any) -> Any:
-    """Drop ``additionalProperties: false`` (recursively) before comparison.
+_SCHEMA_MAP_KEYWORDS = frozenset({
+    "$defs",
+    "definitions",
+    "dependencies",
+    "dependentSchemas",
+    "patternProperties",
+    "properties",
+})
+_SCHEMA_SEQUENCE_KEYWORDS = frozenset({
+    "allOf",
+    "anyOf",
+    "oneOf",
+    "prefixItems",
+})
+_SUBSCHEMA_KEYWORDS = frozenset({
+    "additionalItems",
+    "additionalProperties",
+    "contains",
+    "contentSchema",
+    "else",
+    "if",
+    "items",
+    "not",
+    "propertyNames",
+    "then",
+    "unevaluatedItems",
+    "unevaluatedProperties",
+})
 
-    tools.pyi stubs cannot express ``additionalProperties``, while
-    signature-derived servers (FastMCP and the official SDK's function tools)
-    always emit ``additionalProperties: false`` — comparing verbatim would make
-    every such server drift against every dotctx expectation. Open-vs-closed is
-    the one axis this gate tolerates; property names, types, requiredness, and
-    descriptions still drift. The runtime preflight pin hashes the served
-    definition verbatim and is unaffected by this normalization.
+
+def _normalize_extra_served_closed_markers(expected: Any, served: Any) -> Any:
+    """Normalize the one authoring-only schema difference stubs cannot express.
+
+    FastMCP and SDK function tools add ``additionalProperties: false`` to
+    signature-derived object schemas, while ``tools.pyi`` has no syntax for the
+    keyword. Ignore that marker only when it is an extra key in the *served*
+    schema. Traversal follows JSON Schema-bearing keywords so instance data
+    under ``const``/``default``/``examples`` and an instance property literally
+    named ``additionalProperties`` remain byte-significant.
     """
-    if isinstance(value, dict):
-        return {
-            key: _strip_closed_object_markers(item)
-            for key, item in value.items()
-            if not (key == "additionalProperties" and item is False)
-        }
-    if isinstance(value, list):
-        return [_strip_closed_object_markers(item) for item in value]
-    return value
+    if not isinstance(expected, dict) or not isinstance(served, dict):
+        return served
+
+    normalized: dict[str, Any] = {}
+    for keyword, served_value in served.items():
+        if (
+            keyword == "additionalProperties"
+            and served_value is False
+            and keyword not in expected
+        ):
+            continue
+
+        if keyword not in expected:
+            normalized[keyword] = served_value
+            continue
+        expected_value = expected[keyword]
+
+        if keyword in _SCHEMA_MAP_KEYWORDS:
+            if isinstance(expected_value, dict) and isinstance(served_value, dict):
+                normalized[keyword] = {
+                    name: _normalize_extra_served_closed_markers(
+                        expected_value[name], subschema
+                    )
+                    if name in expected_value
+                    else subschema
+                    for name, subschema in served_value.items()
+                }
+            else:
+                normalized[keyword] = served_value
+            continue
+
+        if keyword in _SCHEMA_SEQUENCE_KEYWORDS:
+            if isinstance(expected_value, list) and isinstance(served_value, list):
+                normalized[keyword] = [
+                    _normalize_extra_served_closed_markers(
+                        expected_value[index], subschema
+                    )
+                    if index < len(expected_value)
+                    else subschema
+                    for index, subschema in enumerate(served_value)
+                ]
+            else:
+                normalized[keyword] = served_value
+            continue
+
+        if keyword in _SUBSCHEMA_KEYWORDS:
+            if isinstance(expected_value, list) and isinstance(served_value, list):
+                normalized[keyword] = [
+                    _normalize_extra_served_closed_markers(
+                        expected_value[index], subschema
+                    )
+                    if index < len(expected_value)
+                    else subschema
+                    for index, subschema in enumerate(served_value)
+                ]
+            else:
+                normalized[keyword] = _normalize_extra_served_closed_markers(
+                    expected_value, served_value
+                )
+            continue
+
+        normalized[keyword] = served_value
+
+    return normalized
 
 
 def _schema_hash(schema: JSONSchema) -> str:
-    normalized = _strip_closed_object_markers(schema)
-    return "sha256:" + hashlib.sha256(canonical_json(normalized).encode("utf-8")).hexdigest()
+    return "sha256:" + hashlib.sha256(canonical_json(schema).encode("utf-8")).hexdigest()
+
+
+def _authoring_schemas_match(expected: JSONSchema, served: JSONSchema) -> bool:
+    """Compare authoring and served schemas with directional stub tolerance."""
+    expected_json = canonical_json(expected)
+    if expected_json == canonical_json(served):
+        return True
+    normalized_served = _normalize_extra_served_closed_markers(expected, served)
+    return expected_json == canonical_json(normalized_served)
 
 
 def _served_input_schema(key: str, snapshot: McpSnapshot) -> Optional[JSONSchema]:
@@ -355,7 +447,7 @@ def _check_tool_schema_drift(
                 continue  # APP resolution reports the stronger missing-tool error
             expected_hash = _schema_hash(expectation.input_schema)
             served_hash = _schema_hash(served)
-            if expected_hash != served_hash:
+            if not _authoring_schemas_match(expectation.input_schema, served):
                 ref = _toolref_from_key(wire_key)
                 server = ref.server if isinstance(ref, McpTool) else "<native>"
                 raise FreezeError(
@@ -370,7 +462,7 @@ def _check_tool_schema_drift(
             return  # not resolved by this snapshot; missing call tools raise in _resolve
         expected_hash = _schema_hash(expectation.input_schema)
         served_hash = _schema_hash(served)
-        if expected_hash == served_hash:
+        if _authoring_schemas_match(expectation.input_schema, served):
             return
         ref = _toolref_from_key(key)
         server = ref.server if isinstance(ref, McpTool) else "<native>"

@@ -294,9 +294,10 @@ def _messages(
     if system_text:
         messages.append({"role": "system", "content": system_text})
     if transcript:
-        messages.extend(
-            _transcript_messages(_render_opening_ask(transcript, user_text))
-        )
+        # The opening ask is already rendered into the transcript by
+        # _materialize_transcript (before the token budget); render it here too
+        # and the budget would be bypassed. Just map the turns.
+        messages.extend(_transcript_messages(transcript))
     round_note: Optional[str] = None
     if isinstance(value, Mapping):
         candidate = value.get(ROUND_NOTE_KEY)
@@ -346,24 +347,26 @@ def _is_controller_value(value: Any) -> bool:
     return isinstance(value, Mapping) and "input" in value and "trace" in value
 
 
-def _render_opening_ask(
+def _render_raw_opening_ask(
     transcript: list[dict[str, Any]],
+    *,
+    original_input: Any,
     user_text: Optional[str],
 ) -> list[dict[str, Any]]:
-    """Substitute the rendered user template for the opening ask.
+    """Render a raw transcript projection's opening ask.
 
-    ``transcript_for`` records the run input verbatim as the first user turn;
-    the package's user template is the authored presentation of that same
-    input (``user_text`` renders from the original input on transcript
-    rounds). Templateless reasoners keep the raw turn. The opening ask may
-    have been elided by the token budget — then there is nothing to render.
+    Activities render this turn before enforcing the transcript budget. The
+    lower-level completion seam can also receive ``transcript_for`` output
+    directly, so render only when the first user turn still exactly matches
+    the original run input. This avoids replacing a later feedback turn in an
+    already-budgeted transcript whose opening ask was elided.
     """
     if user_text is None:
         return transcript
     for index, turn in enumerate(transcript):
         if turn.get("role") != "user":
             continue
-        if isinstance(turn.get("content"), str):
+        if turn.get("content") != original_input:
             return transcript
         return [
             *transcript[:index],
@@ -593,13 +596,23 @@ async def complete_reasoner(
 
     # Render named system/user templates here so both seams (activity + facade)
     # see the same strings; already-rendered reasoners pass through unchanged.
-    render_value = (
-        {k: v for k, v in value.items() if k not in (ROUND_NOTE_KEY, FEEDBACK_KEY)}
-        if isinstance(value, Mapping)
-        else value
-    )
+    if transcript is not None and _is_controller_value(value):
+        render_value = value["input"]
+    elif isinstance(value, Mapping):
+        reserved = {ROUND_NOTE_KEY}
+        if _is_controller_value(value):
+            reserved.add(FEEDBACK_KEY)
+        render_value = {key: item for key, item in value.items() if key not in reserved}
+    else:
+        render_value = value
     reasoner = rendered_reasoner_for(reasoner, render_value)
     user_text = rendered_user_for(reasoner, render_value)
+    if transcript is not None and _is_controller_value(value):
+        transcript = _render_raw_opening_ask(
+            transcript,
+            original_input=value["input"],
+            user_text=user_text,
+        )
     provider, model = _split_model(reasoner.model, default_provider)
     use_responses = uses_openai_responses(provider, model)
     schema = reasoner.reply_schema

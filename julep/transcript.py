@@ -17,6 +17,7 @@ the ``LlmCaller``'s business).
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from typing import Any, Callable, Optional, Protocol, Sequence, TypedDict
 
 from .ir import ContextPolicy
@@ -69,6 +70,10 @@ class TraceEntryView(Protocol):
     def output_ref(self) -> Optional[str]: ...
     @property
     def arguments(self) -> Any: ...
+    @property
+    def output(self) -> Any: ...
+    @property
+    def output_available(self) -> bool: ...
 
 
 class AgentStateView(Protocol):
@@ -86,6 +91,38 @@ def action_ref(decision: str, key: Optional[str]) -> dict[str, str]:
         server, tool = key.split("/", 1)
         return {"kind": "mcp", "server": server, "tool": tool}
     return {"kind": "native", "name": key or ""}
+
+
+def is_controller_value(value: Any) -> bool:
+    """The agent loop's controller payload: ``{"input": ..., "trace": ...}``.
+
+    The same discriminator :func:`julep.prompt.project_context` uses. Only these
+    values carry a run's original input under ``input``, so only they get their
+    opening ask rendered from the package's user template; a chat continuation's
+    plain string/mapping ask is a new turn, not the opening ask.
+    """
+    return isinstance(value, Mapping) and "input" in value and "trace" in value
+
+
+def render_opening_ask(transcript: Transcript, user_text: str) -> Transcript:
+    """Substitute ``user_text`` for the opening ask (first user turn).
+
+    ``transcript_for`` records the run input verbatim as the first user turn;
+    the package's user template is the authored presentation of that same
+    input. Substituting here — before the token budget runs — makes the budget
+    count the rendered turn and covers scalar/string original inputs too. If the
+    opening ask was already elided (no user turn survives), the transcript is
+    returned unchanged.
+    """
+    for index, turn in enumerate(transcript):
+        if turn.get("role") != "user":
+            continue
+        return [
+            *transcript[:index],
+            {**turn, "content": user_text},
+            *transcript[index + 1 :],
+        ]
+    return transcript
 
 
 def transcript_for(
@@ -138,6 +175,8 @@ def transcript_for(
             result["tool_call_id"] = entry.call_id
         if entry.output_ref is not None:
             result["content_ref"] = entry.output_ref
+        elif entry.output_available:
+            result["content"] = entry.output
         turns.append(result)
     return turns
 
@@ -232,6 +271,8 @@ __all__ = [
     "TraceEntryView",
     "AgentStateView",
     "action_ref",
+    "is_controller_value",
+    "render_opening_ask",
     "transcript_for",
     "approx_token_count",
     "turn_text",

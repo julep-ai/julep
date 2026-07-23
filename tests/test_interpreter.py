@@ -13,7 +13,7 @@ from julep import (
     HAVE_TEMPORAL, CapabilityOverrides, ToolContract, Effect, Idempotency,
     snapshot_from_listings,
 )
-from julep.errors import CapabilityDenied, ToolInputValidation
+from julep.errors import AgentTerminalError, CapabilityDenied, ToolInputValidation
 from julep.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
 from julep.execution.llm_result import LlmCallMeta, LlmResult
 if HAVE_TEMPORAL:
@@ -518,10 +518,12 @@ def test_in_memory_agent_enforces_release_max_calls_across_rounds():
         max_calls={"srv/inc": 1},
     )
 
-    out = run(interpret(fr.flow, 0, env))
+    with pytest.raises(AgentTerminalError) as exc_info:
+        run(interpret(fr.flow, 0, env))
 
-    assert out.value["status"] == "denied"
-    assert out.value["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert exc_info.value.result["status"] == "denied"
+    assert exc_info.value.result["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert model_calls == 2
     assert effect_calls == 1
     assert env.call_counts == {"srv/inc": 1}
 
@@ -566,10 +568,11 @@ def test_in_memory_agent_shares_max_calls_across_aliases_for_one_wire():
         max_calls={"srv/t": 1},
     )
 
-    out = run(interpret(fr.flow, {}, env))
+    with pytest.raises(AgentTerminalError) as exc_info:
+        run(interpret(fr.flow, {}, env))
 
-    assert out.value["status"] == "denied"
-    assert out.value["reason"] == "tool 'b' exceeded maxCalls=1"
+    assert exc_info.value.result["status"] == "denied"
+    assert exc_info.value.result["reason"] == "tool 'b' exceeded maxCalls=1"
     assert model_calls == 2
     assert effect_inputs == [{"alias": "a"}]
     assert env.call_counts == {"srv/t": 1}
@@ -614,18 +617,23 @@ def test_in_memory_agent_uses_wire_limit_when_alias_matches_native_key():
     )
     env.call_counts["search"] = 1
 
-    out = run(interpret(fr.flow, {}, env))
+    with pytest.raises(AgentTerminalError) as exc_info:
+        run(interpret(fr.flow, {}, env))
 
-    assert out.value["status"] == "denied"
-    assert out.value["reason"] == "tool 'search' exceeded maxCalls=1"
+    assert exc_info.value.result["status"] == "denied"
+    assert exc_info.value.result["reason"] == "tool 'search' exceeded maxCalls=1"
+    assert model_calls == 2
     assert effect_calls == 1
     assert env.call_counts == {"search": 1, "srv/search": 1}
 
 
 def test_in_memory_agent_inherits_calls_made_before_agent():
+    model_calls = 0
     effect_calls = 0
 
     def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
         return {"tool_calls": [{"id": "agent-call", "tool": "inc", "input": 2}]}
 
     def inc(value):
@@ -652,10 +660,12 @@ def test_in_memory_agent_inherits_calls_made_before_agent():
         max_calls={"srv/inc": 1},
     )
 
-    out = run(interpret(fr.flow, 0, env))
+    with pytest.raises(AgentTerminalError) as exc_info:
+        run(interpret(fr.flow, 0, env))
 
-    assert out.value["status"] == "denied"
-    assert out.value["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert exc_info.value.result["status"] == "denied"
+    assert exc_info.value.result["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert model_calls == 1
     assert effect_calls == 1
     assert env.call_counts == {"srv/inc": 1}
 

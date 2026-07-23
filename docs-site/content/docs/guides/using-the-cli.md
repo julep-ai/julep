@@ -75,7 +75,10 @@ included in that mapping.
 Reserved `[tool.julep]` sections are `mcp`, `pipeline`, `server`, and
 `redaction`; `llm_caller` is a top-level key. In `julep.toml`, omit the
 `tool.julep` prefix. MCP server keys are `url`, `auth`, `headers`, and
-`version`; pipeline keys are `ctx`, `lane`, and nested string-valued `env`.
+`version`; pipeline keys include `ctx`, `lane`, `context_max_tokens`, and
+`summarizer`, plus nested string-valued `env`. `context: summary` packages need
+both a hard token budget and a summarizer dotctx path; `whole_session` needs the
+budget but no summarizer.
 Server keys and precedence are listed in
 [Control plane](/docs/deploy/control-plane). Redaction supports
 `key_patterns`, `path_patterns`, and `disable_default`; the worker reads that

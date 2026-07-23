@@ -20,7 +20,7 @@ from julep import (
 from julep.contracts import McpAnnotations
 from julep.dotctx import Reasoner
 from julep.execution.effects import WorkerContext
-from julep.errors import ToolInputValidation
+from julep.errors import AgentTerminalError, ToolInputValidation
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from julep.local import (
     LocalExecutionConfigurationError,
@@ -427,14 +427,15 @@ def test_local_pipeline_agent_enforces_deployment_max_calls_across_rounds() -> N
         effect_calls += 1
         return {"found": "JULEP"}
 
-    result = prepared.run(
-        {"query": "julep"},
-        llm=llm,
-        context=WorkerContext(mcp_call=mcp_call),
-    )
+    with pytest.raises(AgentTerminalError) as exc_info:
+        prepared.run(
+            {"query": "julep"},
+            llm=llm,
+            context=WorkerContext(mcp_call=mcp_call),
+        )
 
-    assert result["status"] == "denied"
-    assert result["reason"] == "tool 'lookup' exceeded maxCalls=1"
+    assert exc_info.value.result["status"] == "denied"
+    assert exc_info.value.result["reason"] == "tool 'lookup' exceeded maxCalls=1"
     assert model_calls == 2
     assert effect_calls == 1
 

@@ -683,6 +683,11 @@ agent's history.
 - **Controller contract:** strict by default — a malformed controller reply is
   `controller_error`, not an implicit FINISH. A permissive mode MAY exist for
   demos but MUST be opt-in.
+- **Run outcome:** `done` and `escalated` are successful terminal values.
+  `controller_error`, `max_rounds`, `over_budget`, `denied`, and
+  `output_validation_failed` fail an enclosing APP and its local, Temporal, or
+  DBOS run. Generic APP boundaries raise `AgentTerminalError`; Temporal retains
+  its existing non-retryable `OutputValidationError` for the last case.
 - **Continue-as-new:** carry config, granted tools (with contracts), and state
   across segments to bound history.
 
@@ -697,12 +702,20 @@ these, it is **macro-recording**, not procedure discovery — name it honestly.
 
 A transcript is **derived, not stored**: a deterministic projection of the
 agent's trace (plus the run input) into a neutral, provider-agnostic `Turn`
-list. The *plan* (turns carrying blob refs) is computed in workflow code;
-hydration of refs, the token budget, and summarization happen in the
-`invokeReasoner` effect, where blob refs resolve outside workflow history.
+list. The *plan* is computed in workflow code. Fresh observations may be
+carried inline within one process segment; durable transcript-scoped runners
+offload them to blob refs before crossing a continuation boundary. Hydration,
+opening-template rendering, loop-feedback insertion, the token budget, and
+summarization happen in the `invokeReasoner` effect. Templates render from the
+original run input on every round; the rendered user template occupies only the
+single opening turn and is budgeted there. Tool observations and re-asks never
+become template context.
 Provider message formats are the `LlmCaller`'s business — the canonical caller
-signature is `(reasoner, value, principal, transcript)`; `configure` MUST wrap
-narrower legacy callers.
+signature is `(reasoner, value, principal, transcript, dispatch, *, tools=None)`.
+`tools` carries the frozen provider-neutral native-tool definitions for an
+agent round and is `None` otherwise. `configure` MUST wrap narrower legacy
+callers for non-tool calls and MUST reject a tool round clearly when the
+underlying caller cannot accept `tools=`.
 
 `ContextPolicy` scope on an `app` selects the shape:
 

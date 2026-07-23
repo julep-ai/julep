@@ -33,6 +33,7 @@ class _Pending:
     principal: RunPrincipal | None
     transcript: Transcript | None
     dispatch: ReasonerDispatch
+    tools: list[dict[str, Any]] | None
     future: asyncio.Future[Any]
 
 
@@ -76,6 +77,8 @@ class SyncCoalescer:
         principal: RunPrincipal | None = None,
         transcript: Transcript | None = None,
         dispatch: ReasonerDispatch | None = None,
+        *,
+        tools: list[dict[str, Any]] | None = None,
     ) -> Any:
         """Call the wrapped sync-tier ``LlmCaller`` through the coalescer."""
 
@@ -83,11 +86,20 @@ class SyncCoalescer:
             dispatch = ReasonerDispatch()
 
         if dispatch.qos == QoSTier.BATCH:
-            return await self._caller(reasoner, value, principal, transcript, dispatch)
+            if tools is None:
+                return await self._caller(reasoner, value, principal, transcript, dispatch)
+            return await self._caller(
+                reasoner,
+                value,
+                principal,
+                transcript,
+                dispatch,
+                tools=tools,
+            )
 
         loop = asyncio.get_running_loop()
         future: asyncio.Future[Any] = loop.create_future()
-        item = _Pending(reasoner, value, principal, transcript, dispatch, future)
+        item = _Pending(reasoner, value, principal, transcript, dispatch, tools, future)
 
         async with self._lock:
             self._pending.append(item)
@@ -98,6 +110,26 @@ class SyncCoalescer:
                 self._wake_flush_locked()
 
         return await future
+
+    async def __call__(
+        self,
+        reasoner: Reasoner,
+        value: Any,
+        principal: RunPrincipal | None = None,
+        transcript: Transcript | None = None,
+        dispatch: ReasonerDispatch | None = None,
+        *,
+        tools: list[dict[str, Any]] | None = None,
+    ) -> Any:
+        """Expose the coalescer itself as a canonical ``LlmCaller``."""
+        return await self.call(
+            reasoner,
+            value,
+            principal,
+            transcript,
+            dispatch,
+            tools=tools,
+        )
 
     def _wake_flush_locked(self) -> None:
         if self._flush_now is not None:
@@ -171,16 +203,7 @@ class SyncCoalescer:
     async def _dispatch(self, batch: list[_Pending]) -> None:
         try:
             results = await asyncio.gather(
-                *(
-                    self._caller(
-                        item.reasoner,
-                        item.value,
-                        item.principal,
-                        item.transcript,
-                        item.dispatch,
-                    )
-                    for item in batch
-                ),
+                *(self._call_underlying(item) for item in batch),
                 return_exceptions=True,
             )
         except Exception as exc:
@@ -196,6 +219,24 @@ class SyncCoalescer:
                 item.future.set_exception(result)
             else:
                 item.future.set_result(result)
+
+    async def _call_underlying(self, item: _Pending) -> Any:
+        if item.tools is None:
+            return await self._caller(
+                item.reasoner,
+                item.value,
+                item.principal,
+                item.transcript,
+                item.dispatch,
+            )
+        return await self._caller(
+            item.reasoner,
+            item.value,
+            item.principal,
+            item.transcript,
+            item.dispatch,
+            tools=item.tools,
+        )
 
     async def _fail_pending(self, exc: Exception) -> None:
         async with self._lock:

@@ -120,9 +120,13 @@ and `[redaction]`.
 
 MCP server keys are `url`, `auth`, `headers`, and `version`. URLs must be
 absolute HTTP(S) endpoints without embedded credentials and form the live
-snapshot allow-list. Pipeline keys are `ctx`, `lane`, and nested `env`, `tools`,
-and `policy` tables. Tool bindings map prompt-visible aliases to
-`server:tool`; policy keys use the snake-case `ExecutionPolicy` field names.
+snapshot allow-list. Pipeline keys are `ctx`, `lane`, `context_max_tokens`,
+`summarizer`, and nested `env`, `tools`, and `policy` tables. A dotctx package
+declaring `context: whole_session` or `context: summary` requires a positive
+`context_max_tokens`. Summary scope also requires `summarizer`, the path to a
+second dotctx package whose reasoner is frozen and declared with the pipeline;
+there is no implicit summarizer model. Tool bindings map prompt-visible aliases
+to `server:tool`; policy keys use the snake-case `ExecutionPolicy` field names.
 Server settings are documented under
 [Control plane](/docs/deploy/control-plane). Redaction keys are
 `key_patterns`, `path_patterns`, and `disable_default`; worker-side file loading

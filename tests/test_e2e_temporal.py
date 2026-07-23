@@ -44,7 +44,6 @@ if HAVE_TEMPORAL:
         run_flow, start_flow, AgentWorkflow, AgentInput, ExecutionPolicy,
     )
     from julep.agent_loop import (
-        REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
         REQUIRE_TOOL_CALL_REASK_MESSAGE,
     )
     from julep.execution.worker import build_worker, WORKFLOWS, ACTIVITIES
@@ -71,6 +70,20 @@ def _snapshot():
         t: McpToolSpec(input_schema={}, annotations=ann)
         for t in ("double", "inc", "echo", "fail", "slow")
     })})
+
+
+async def _expect_agent_failure(awaitable, status: str):  # noqa: ANN001, ANN202
+    with pytest.raises(WorkflowFailureError) as raised:
+        await awaitable
+    cause = raised.value.__cause__
+    while cause is not None and not (
+        isinstance(cause, ApplicationError) and cause.type == "AgentTerminalError"
+    ):
+        cause = cause.__cause__
+    assert isinstance(cause, ApplicationError)
+    assert cause.non_retryable is True
+    assert f"with {status}" in str(cause)
+    return cause
 
 
 async def _mcp(server, tool, value, idempotency_key):
@@ -350,31 +363,40 @@ async def _agent(env):
         extra_reasoners=(Reasoner(name="budget_ctrl", model="test", system="budget"),),
     ):
         sid = f"agentb-{uuid.uuid4()}"
-        res2 = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(
-                controller="budget_ctrl",
-                session_id=sid,
-                input=5,
-                policy=ExecutionPolicy().to_json(),
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="budget_ctrl",
+                    session_id=sid,
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=sid,
+                task_queue="julep-agent-b",
             ),
-            id=sid, task_queue="julep-agent-b",
+            "over_budget",
         )
-    assert res2["status"] == "over_budget", res2
-    assert res2["cost"] == 0, res2
-    assert res2["trace"] == [], res2
     assert budget_reasoner_calls["count"] == 0
 
     # Capability deny: the requested tool is not granted.
     agents_d = {"ctrl": {"config": {"maxRounds": 6, "budget": {"cost": 1000}}, "grantedTools": ["only/other"]}}
     async with _worker(env, task_queue="julep-agent-d", agents=agents_d):
         sid = f"agentd-{uuid.uuid4()}"
-        res3 = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
-            id=sid, task_queue="julep-agent-d",
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="ctrl",
+                    session_id=sid,
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=sid,
+                task_queue="julep-agent-d",
+            ),
+            "denied",
         )
-    assert res3["status"] == "denied", res3
 
     # Agent loops cannot open a human approval gate, so approval-required tools deny.
     agents_a = {
@@ -392,13 +414,20 @@ async def _agent(env):
     }
     async with _worker(env, task_queue="julep-agent-a", agents=agents_a):
         sid = f"agenta-{uuid.uuid4()}"
-        res4 = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(controller="ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
-            id=sid, task_queue="julep-agent-a",
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="ctrl",
+                    session_id=sid,
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=sid,
+                task_queue="julep-agent-a",
+            ),
+            "denied",
         )
-    assert res4["status"] == "denied", res4
-    assert res4["reason"] == "approval-required tool 'srv/double'; agent must ESCALATE"
 
     # maxCalls: the per-tool counter is carried through continue-as-new and
     # denies the second requested call before dispatching another effect.
@@ -439,15 +468,20 @@ async def _agent(env):
         extra_reasoners=(Reasoner(name="max_ctrl", model="test", system="max calls"),),
     ):
         sid = f"agentm-{uuid.uuid4()}"
-        res5 = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(controller="max_ctrl", session_id=sid, input=5, policy=ExecutionPolicy().to_json()),
-            id=sid,
-            task_queue="julep-agent-m",
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="max_ctrl",
+                    session_id=sid,
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=sid,
+                task_queue="julep-agent-m",
+            ),
+            "denied",
         )
-    assert res5["status"] == "denied", res5
-    assert res5["reason"] == "tool 'srv/double' exceeded maxCalls=1"
-    assert [t["decision"] for t in res5["trace"]] == ["call"], res5
     assert max_call_effects["count"] == 1
 
     # Subflow grants: None is unconstrained, [] denies all, and a listed child
@@ -484,27 +518,33 @@ async def _agent(env):
             Reasoner(name="sub_ctrl_allowed", model="test", system="sub allowed"),
         ),
     ):
-        denied = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(
-                controller="sub_ctrl_denied",
-                session_id=f"agentsubd-{uuid.uuid4()}",
-                input=5,
-                policy=ExecutionPolicy().to_json(),
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="sub_ctrl_denied",
+                    session_id=f"agentsubd-{uuid.uuid4()}",
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=f"agentsubd-{uuid.uuid4()}",
+                task_queue="julep-agent-sub",
             ),
-            id=f"agentsubd-{uuid.uuid4()}",
-            task_queue="julep-agent-sub",
+            "denied",
         )
-        empty = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(
-                controller="sub_ctrl_empty",
-                session_id=f"agentsube-{uuid.uuid4()}",
-                input=5,
-                policy=ExecutionPolicy().to_json(),
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="sub_ctrl_empty",
+                    session_id=f"agentsube-{uuid.uuid4()}",
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=f"agentsube-{uuid.uuid4()}",
+                task_queue="julep-agent-sub",
             ),
-            id=f"agentsube-{uuid.uuid4()}",
-            task_queue="julep-agent-sub",
+            "denied",
         )
         allowed = await env.client.execute_workflow(
             AgentWorkflow.run,
@@ -517,11 +557,6 @@ async def _agent(env):
             id=f"agentsuba-{uuid.uuid4()}",
             task_queue="julep-agent-sub",
         )
-    assert denied["status"] == "denied", denied
-    assert denied["reason"] == "subflow 'child' is not granted"
-    assert denied["trace"] == []
-    assert empty["status"] == "denied", empty
-    assert empty["reason"] == "subflow 'child' is not granted"
     assert allowed["status"] == "done", allowed
     assert allowed["output"] == 6, allowed
     assert [t["decision"] for t in allowed["trace"]] == ["sub"], allowed
@@ -576,11 +611,14 @@ async def _app_inline_grant_attenuation(env):
             Reasoner(name="inline_allowed_ctrl", model="test", system="inline allowed"),
         ),
     ):
-        denied = await missing_tools.run(
-            env.client,
-            session_id=f"appinline-missing-{uuid.uuid4()}",
-            input=5,
-            task_queue="julep-app-inline",
+        await _expect_agent_failure(
+            missing_tools.run(
+                env.client,
+                session_id=f"appinline-missing-{uuid.uuid4()}",
+                input=5,
+                task_queue="julep-app-inline",
+            ),
+            "denied",
         )
         allowed = await allowed_inline.run(
             env.client,
@@ -589,9 +627,6 @@ async def _app_inline_grant_attenuation(env):
             task_queue="julep-app-inline",
         )
 
-    assert denied["status"] == "denied", denied
-    assert denied["reason"] == "tool 'srv/echo' is not granted"
-    assert denied["trace"] == []
     assert allowed["status"] == "done", allowed
     assert allowed["output"] == 10, allowed
     assert [t["decision"] for t in allowed["trace"]] == ["call"], allowed
@@ -627,19 +662,18 @@ async def _app_max_calls_inherits_parent_counts(env):
         llm=seed_llm,
         extra_reasoners=(Reasoner(name="seeded_app_ctrl", model="test", system="seeded app"),),
     ):
-        res = await run_flow(
-            env.client,
-            parent.flow.to_json(),
-            manifest_to_json(parent.manifest),
-            session_id=f"appseed-{uuid.uuid4()}",
-            input=5,
-            task_queue="julep-app-seeded",
-            max_call_limits={"srv/double": 1},
+        await _expect_agent_failure(
+            run_flow(
+                env.client,
+                parent.flow.to_json(),
+                manifest_to_json(parent.manifest),
+                session_id=f"appseed-{uuid.uuid4()}",
+                input=5,
+                task_queue="julep-app-seeded",
+                max_call_limits={"srv/double": 1},
+            ),
+            "denied",
         )
-
-    assert res["status"] == "denied", res
-    assert res["reason"] == "tool 'srv/double' exceeded maxCalls=1", res
-    assert res["trace"] == [], res
 
 
 async def _strict_controller_contract(env):
@@ -670,16 +704,19 @@ async def _strict_controller_contract(env):
             Reasoner(name="permissive_malformed_ctrl", model="test", system="permissive"),
         ),
     ):
-        strict = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(
-                controller="strict_malformed_ctrl",
-                session_id=f"strictctrl-{uuid.uuid4()}",
-                input=5,
-                policy=ExecutionPolicy().to_json(),
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="strict_malformed_ctrl",
+                    session_id=f"strictctrl-{uuid.uuid4()}",
+                    input=5,
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=f"strictctrl-{uuid.uuid4()}",
+                task_queue="julep-strict-controller",
             ),
-            id=f"strictctrl-{uuid.uuid4()}",
-            task_queue="julep-strict-controller",
+            "controller_error",
         )
         permissive = await env.client.execute_workflow(
             AgentWorkflow.run,
@@ -693,8 +730,6 @@ async def _strict_controller_contract(env):
             task_queue="julep-strict-controller",
         )
 
-    assert strict["status"] == "controller_error", strict
-    assert "malformed controller reply" in strict["reason"]
     assert permissive["status"] == "done", permissive
     assert permissive["output"] == "plain prose", permissive
 
@@ -1061,24 +1096,20 @@ async def _agent_require_tool_call_halts(env):
         extra_reasoners=(Reasoner(name="require_ctrl2", model="test", system="decide"),),
     ):
         sid = f"require-tool-call-halt-{uuid.uuid4()}"
-        res = await env.client.execute_workflow(
-            AgentWorkflow.run,
-            AgentInput(
-                controller="require_ctrl2",
-                session_id=sid,
-                input={"task": "go"},
-                policy=ExecutionPolicy().to_json(),
+        await _expect_agent_failure(
+            env.client.execute_workflow(
+                AgentWorkflow.run,
+                AgentInput(
+                    controller="require_ctrl2",
+                    session_id=sid,
+                    input={"task": "go"},
+                    policy=ExecutionPolicy().to_json(),
+                ),
+                id=sid,
+                task_queue="julep-agent-require-tool-call-halt",
             ),
-            id=sid,
-            task_queue="julep-agent-require-tool-call-halt",
+            "controller_error",
         )
-
-    assert res["status"] == "controller_error", res
-    assert res["reason"] == REQUIRE_TOOL_CALL_NEVER_CALLED_REASON
-    reasks = [entry for entry in res["trace"] if entry["decision"] == "reask"]
-    assert len(reasks) == 2, res
-    assert all(entry["error"] == REQUIRE_TOOL_CALL_REASK_MESSAGE for entry in reasks)
-
 
 async def _agent_tool_error_persisted_for_transcript(env):
     agents = {

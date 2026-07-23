@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from .cma_session import CMASessionHandle as CMASessionHandle
 
 from .blobstore import BlobStore, InMemoryBlobStore, content_ref
-from .effects import RunPrincipal, WorkerContext, configure
+from .effects import LlmCaller, RunPrincipal, WorkerContext, configure
 from .interpreter import Env, InMemoryEnv, Result, interpret
 from .policy import ExecutionPolicy
 from .serve import (
@@ -165,6 +165,7 @@ __all__ = [
     "ExecutionPolicy",
     "InMemoryEnv",
     "Result",
+    "LlmCaller",
     "RunPrincipal",
     "WorkerContext",
     "configure",

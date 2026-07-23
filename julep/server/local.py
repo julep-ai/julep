@@ -429,11 +429,42 @@ class _LocalEffectsEnv(InMemoryEnv):
         schemas = tool_input_schemas(tool_defs) if tool_defs is not None else None
 
         async def invoke_controller(payload: dict[str, Any]) -> Any:
-            return await self.invoke_reasoner(
-                controller,
-                payload,
-                self.next_cid(f"agent:{controller}:reason"),
-                None,
+            # ``controller_turn`` carries the workflow-owned transcript plan and
+            # its materialization policy beside the model-facing value. Mirror
+            # the Temporal/DBOS activity boundary here instead of sending those
+            # reserved fields as ordinary business input.
+            transcript = payload.get("transcript")
+            transcript_keys = {"transcript", "ctx", "summarizer", "summary"}
+            value_payload = (
+                {
+                    key: item
+                    for key, item in payload.items()
+                    if key not in transcript_keys
+                }
+                if transcript is not None
+                else payload
+            )
+            return await effects.invokeReasoner(
+                InvokeReasonerInput(
+                    reasoner=controller,
+                    value=value_payload,
+                    cid=self.next_cid(f"agent:{controller}:reason"),
+                    principal=self.principal,
+                    transcript=transcript,
+                    ctx=payload.get("ctx") if transcript is not None else None,
+                    summarizer=(
+                        payload.get("summarizer") if transcript is not None else None
+                    ),
+                    summary=payload.get("summary") if transcript is not None else None,
+                    tools=tool_defs if cfg.native_tools else None,
+                    run_id=self._session_id,
+                    root_run_id=self.root_run_id,
+                    segment_seq=self.segment_seq,
+                    op="think",
+                    kind="reasoner",
+                    runtime_declarations_ref=self._runtime_declarations_ref,
+                    secrets=self._secrets,
+                )
             )
 
         async def call_tool(

@@ -17,7 +17,7 @@ import hashlib
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Optional, cast
+from typing import Any, Awaitable, Callable, Optional, Protocol, cast
 
 from .. import agent_loop as al
 from ..capabilities import CapabilityManifest, ToolGrant
@@ -29,7 +29,7 @@ from ..kinds import ContextScope, Effect, Idempotency
 from ..qos import ReasonerDispatch, QoSTier, default_resolve_qos
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..resilience import AttemptRecord, OnAttempt
-from ..prompt import rendered_reasoner_for
+from ..prompt import rendered_reasoner_for, rendered_user_for
 from ..staged import admit_plan
 from ..trajectory import (
     Redactor,
@@ -47,6 +47,8 @@ from ..transcript import (
     Transcript,
     approx_token_count,
     elision_marker,
+    is_controller_value,
+    render_opening_ask,
     split_to_budget,
     summary_turn,
 )
@@ -79,15 +81,25 @@ McpCaller = Callable[
     ],
     Awaitable[Any],
 ]
-# (reasoner, value, principal, transcript, dispatch) -> result. ``transcript`` is the
-# hydrated, budget-bounded neutral turn list for transcript-scoped app rounds
-# (None everywhere else); the caller maps it to its provider's wire format.
-# The 5-arg form is canonical; :func:`configure` wraps legacy 2-, 3-, and
-# 4-arg callers once (2-/3-arg callers fail fast if a transcript arrives).
-LlmCaller = Callable[
-    [Reasoner, Any, Optional[RunPrincipal], Optional[Transcript], ReasonerDispatch],
-    Awaitable[Any],
-]
+
+
+# ``transcript`` is the hydrated, budget-bounded neutral turn list for
+# transcript-scoped app rounds (None everywhere else); the caller maps it to
+# its provider's wire format. ``tools`` is the frozen provider-neutral native
+# tool surface for agent rounds (None everywhere else).
+class LlmCaller(Protocol):
+    """Canonical model seam used by workers and local execution."""
+
+    def __call__(
+        self,
+        reasoner: Reasoner,
+        value: Any,
+        principal: Optional[RunPrincipal],
+        transcript: Optional[Transcript],
+        dispatch: ReasonerDispatch,
+        *,
+        tools: Optional[list[dict[str, Any]]] = None,
+    ) -> Awaitable[Any]: ...
 
 
 @dataclass
@@ -104,7 +116,7 @@ class WorkerContext:
     wrapped once by :func:`configure` and keep working unchanged.
     """
 
-    tool_urls: dict[str, str] = field(default_factory=dict)   # native name -> URL
+    tool_urls: dict[str, str] = field(default_factory=dict)  # native name -> URL
     mcp_call: Optional[McpCaller] = None
     # Optional explicit discovery seam for run-start MCP preflight.  The
     # standard http_mcp_caller also exposes its transport on the callable.
@@ -211,6 +223,21 @@ def _accepts_positional(fn: Callable[..., Any], arity: int) -> bool:
     return positional >= arity
 
 
+def _accepts_keyword(fn: Callable[..., Any], keyword: str) -> bool:
+    """True when ``fn`` declares ``keyword`` or accepts arbitrary keywords."""
+    try:
+        sig = inspect.signature(fn)
+    except (TypeError, ValueError):  # uninspectable callables: assume canonical
+        return True
+    if any(param.kind is inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values()):
+        return True
+    param = sig.parameters.get(keyword)
+    return param is not None and param.kind in (
+        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        inspect.Parameter.KEYWORD_ONLY,
+    )
+
+
 def _predictive_qos_kwargs(
     fn: Callable[..., Any],
     *,
@@ -228,9 +255,7 @@ def _predictive_qos_kwargs(
         sig = inspect.signature(fn)
     except (TypeError, ValueError):
         return {}
-    if any(
-        param.kind is inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values()
-    ):
+    if any(param.kind is inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values()):
         return {"timeout_s": timeout_s, "min_batch_window_s": min_batch_window_s}
     out: dict[str, Any] = {}
     if "timeout_s" in sig.parameters:
@@ -245,6 +270,7 @@ def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
         return fn
 
     if _accepts_positional(fn, 6):
+
         async def run_secret_aware(
             server: str,
             tool: str,
@@ -260,6 +286,7 @@ def _adapt_mcp_caller(fn: Callable[..., Awaitable[Any]]) -> McpCaller:
         return run_secret_aware
 
     if _accepts_positional(fn, 5):
+
         async def principal_aware(
             server: str,
             tool: str,
@@ -293,26 +320,72 @@ def _reject_transcript(fn: Callable[..., Awaitable[Any]]) -> RuntimeError:
     return RuntimeError(
         f"this worker's LlmCaller {getattr(fn, '__name__', fn)!r} does not accept a "
         "transcript, but a transcript-scoped app round produced one; update the "
-        "caller to the canonical 5-argument form "
-        "(reasoner, value, principal, transcript, dispatch)"
+        "caller to the canonical form "
+        "(reasoner, value, principal, transcript, dispatch, *, tools=None)"
     )
 
 
+def _reject_tools(fn: Callable[..., Awaitable[Any]]) -> RuntimeError:
+    return RuntimeError(
+        f"this worker's LlmCaller {getattr(fn, '__name__', fn)!r} does not accept "
+        "tools=, but a native-tool agent round produced a frozen tool surface; "
+        "update the caller to the canonical form "
+        "(reasoner, value, principal, transcript, dispatch, *, tools=None)"
+    )
+
+
+def _llm_tool_kwargs(
+    fn: Callable[..., Awaitable[Any]],
+    *,
+    accepts_tools: bool,
+    tools: Optional[list[dict[str, Any]]],
+) -> dict[str, Any]:
+    if tools is None:
+        return {}
+    if not accepts_tools:
+        raise _reject_tools(fn)
+    return {"tools": tools}
+
+
 def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
-    """Adapt legacy callers to the 5-argument canonical LlmCaller form."""
+    """Adapt legacy callers to the canonical :class:`LlmCaller` form."""
+    accepts_tools = _accepts_keyword(fn, "tools")
+
     if _accepts_positional(fn, 5):
-        return fn
+        if accepts_tools:
+            # Already canonical. Returning it unchanged makes configure()
+            # idempotent when gateways temporarily install and later restore
+            # the same WorkerContext.
+            return cast(LlmCaller, fn)
+
+        async def canonical(
+            reasoner: Reasoner,
+            value: Any,
+            principal: Optional[RunPrincipal],
+            transcript: Optional[Transcript],
+            dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+            *,
+            tools: Optional[list[dict[str, Any]]] = None,
+        ) -> Any:
+            kwargs = _llm_tool_kwargs(fn, accepts_tools=accepts_tools, tools=tools)
+            return await fn(reasoner, value, principal, transcript, dispatch, **kwargs)
+
+        return canonical
 
     if _accepts_positional(fn, 4):
+
         async def transcript_aware(
             reasoner: Reasoner,
             value: Any,
             principal: Optional[RunPrincipal],
             transcript: Optional[Transcript],
             dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+            *,
+            tools: Optional[list[dict[str, Any]]] = None,
         ) -> Any:
             del dispatch
-            return await fn(reasoner, value, principal, transcript)
+            kwargs = _llm_tool_kwargs(fn, accepts_tools=accepts_tools, tools=tools)
+            return await fn(reasoner, value, principal, transcript, **kwargs)
 
         return transcript_aware
 
@@ -325,11 +398,14 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
             principal: Optional[RunPrincipal],
             transcript: Optional[Transcript],
             dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+            *,
+            tools: Optional[list[dict[str, Any]]] = None,
         ) -> Any:
             del dispatch
             if transcript is not None:
                 raise _reject_transcript(fn)
-            return await fn(reasoner, value, principal)
+            kwargs = _llm_tool_kwargs(fn, accepts_tools=accepts_tools, tools=tools)
+            return await fn(reasoner, value, principal, **kwargs)
 
         return principal_aware
 
@@ -339,11 +415,14 @@ def _adapt_llm_caller(fn: Callable[..., Awaitable[Any]]) -> LlmCaller:
         principal: Optional[RunPrincipal],
         transcript: Optional[Transcript],
         dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
+        *,
+        tools: Optional[list[dict[str, Any]]] = None,
     ) -> Any:
         del dispatch
         if transcript is not None:
             raise _reject_transcript(fn)
-        return await fn(reasoner, value)
+        kwargs = _llm_tool_kwargs(fn, accepts_tools=accepts_tools, tools=tools)
+        return await fn(reasoner, value, **kwargs)
 
     return legacy
 
@@ -355,8 +434,9 @@ def configure(ctx: WorkerContext) -> None:
     taking ``(reasoner, value)``, ``(reasoner, value, principal)``, or
     ``(reasoner, value, principal, transcript)``) are wrapped here, once, so they
     keep working unchanged. The canonical ``llm`` form is
-    ``(reasoner, value, principal, transcript, dispatch)``; wrapped narrower callers fail
-    fast if a transcript-scoped app round tools them a transcript.
+    ``(reasoner, value, principal, transcript, dispatch, *, tools=None)``;
+    wrapped narrower callers fail fast if a transcript-scoped app round gives
+    them a transcript or a native-tool round gives them tools they cannot accept.
     """
     global _CTX
     if ctx.mcp_call is not None:
@@ -385,9 +465,10 @@ def _hydrate_runtime_declarations(ref: Optional[Mapping[str, Any]]) -> Registry:
         raise RuntimeError("runtime declarations ref must contain exactly 'hash' and 'size'")
     expected_hash = ref.get("hash")
     expected_size = ref.get("size")
-    if not isinstance(expected_hash, str) or re.fullmatch(
-        r"sha256:[0-9a-f]{64}", expected_hash
-    ) is None:
+    if (
+        not isinstance(expected_hash, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", expected_hash) is None
+    ):
         raise RuntimeError("runtime declarations ref hash must be sha256:<64 lowercase hex>")
     if not isinstance(expected_size, int) or isinstance(expected_size, bool) or expected_size < 0:
         raise RuntimeError("runtime declarations ref size must be a non-negative integer")
@@ -439,9 +520,9 @@ def _domain_of(url: str) -> str:
 # --------------------------------------------------------------------------- #
 @dataclass
 class CallToolInput:
-    tool_ref: dict[str, Any]      # ToolRef JSON (native or mcp)
+    tool_ref: dict[str, Any]  # ToolRef JSON (native or mcp)
     value: Any
-    cid: str                      # deterministic activation id -> Idempotency-Key
+    cid: str  # deterministic activation id -> Idempotency-Key
     # Advisory CacheHint JSON. The tool/transport may honor it; the framework
     # does not provide a cache backend or change replay behavior from this hint.
     cache: Optional[dict[str, Any]] = None
@@ -473,9 +554,9 @@ class InvokeReasonerInput:
     # invokeReasoner hydrates the refs, enforces ctx.max_tokens, and (SUMMARY
     # scope) folds elided turns into the running summary via ``summarizer``.
     transcript: Optional[list[dict[str, Any]]] = None
-    ctx: Optional[dict[str, Any]] = None         # ContextPolicy JSON (scope + maxTokens)
-    summarizer: Optional[str] = None             # named summarizer reasoner (SUMMARY scope)
-    summary: Optional[str] = None                # running summary from AgentState
+    ctx: Optional[dict[str, Any]] = None  # ContextPolicy JSON (scope + maxTokens)
+    summarizer: Optional[str] = None  # named summarizer reasoner (SUMMARY scope)
+    summary: Optional[str] = None  # running summary from AgentState
     tools: Optional[list[dict[str, Any]]] = None
     run_id: Optional[str] = None
     root_run_id: Optional[str] = None
@@ -596,9 +677,7 @@ async def commitState(inp: CommitStateInput) -> int:
     if _CTX.session_store is None:
         raise RuntimeError("worker has no session store configured")
     state = al.AgentState.from_json(inp.state)
-    return await _CTX.session_store.commit(
-        inp.session_id, inp.base, state, inp.state_hash
-    )
+    return await _CTX.session_store.commit(inp.session_id, inp.base, state, inp.state_hash)
 
 
 async def loadValue(inp: LoadValueInput) -> Any:
@@ -634,7 +713,9 @@ async def putBlob(inp: PutBlobInput) -> str:
 
 def _scoped_redactor(secrets: Optional[Mapping[str, str]]) -> Redactor:
     """Compose per-run value scrubbing without mutating global state."""
-    base = _TRAJECTORY_REDACTOR or redact_secret_shaped
+    from ..secrets import operator_secret_redactor
+
+    base = operator_secret_redactor(_TRAJECTORY_REDACTOR or redact_secret_shaped)
     if not secrets:
         return base
     from ..secrets import scrubber_for_values
@@ -700,9 +781,7 @@ async def _capture_effect(
         if redacted is _REDACTION_DROP:
             return None
         try:
-            return await blob_store.put(
-                root_run_id, json.dumps(redacted, sort_keys=True).encode()
-            )
+            return await blob_store.put(root_run_id, json.dumps(redacted, sort_keys=True).encode())
         except Exception as exc:
             # Mirror trajectory._best_effort: swallow + count + log.
             from ..trajectory import _best_effort as _be
@@ -734,15 +813,11 @@ async def _capture_effect(
     values: list[TrajectoryValue] = []
     if input_ref is not None:
         values.append(
-            TrajectoryValue(
-                ref=input_ref, root_run_id=root_run_id, step_id=step_id, kind="input"
-            )
+            TrajectoryValue(ref=input_ref, root_run_id=root_run_id, step_id=step_id, kind="input")
         )
     if output_ref is not None:
         values.append(
-            TrajectoryValue(
-                ref=output_ref, root_run_id=root_run_id, step_id=step_id, kind="output"
-            )
+            TrajectoryValue(ref=output_ref, root_run_id=root_run_id, step_id=step_id, kind="output")
         )
     if values:
         _best_effort(lambda: sink.record_values(values))
@@ -797,6 +872,7 @@ async def record_marker_step(
                     root_run_id, json.dumps(redacted, sort_keys=True).encode()
                 )
             except Exception as exc:
+
                 def _reraise(e: BaseException = exc) -> None:
                     raise e
 
@@ -949,9 +1025,23 @@ def _summary_text(reply: Any, summarizer: str) -> str:
     )
 
 
+def _strip_reserved_controller_keys(value: Any) -> Any:
+    """Drop reserved loop keys before a value reaches a prompt renderer.
+
+    ROUND_NOTE_KEY / FEEDBACK_KEY are framework channels (a trailing system /
+    user turn), never business context; a custom system/user renderer must not
+    observe them projected into its Context.
+    """
+    if is_controller_value(value):
+        return {k: v for k, v in value.items() if k not in (al.ROUND_NOTE_KEY, al.FEEDBACK_KEY)}
+    return value
+
+
 async def _materialize_transcript(
     inp: InvokeReasonerInput,
     registry: Registry,
+    *,
+    opening_user_text: Optional[str] = None,
 ) -> tuple[Transcript, Optional[str]]:
     """Hydrate the transcript plan, enforce the hard token budget, and (SUMMARY
     scope) fold elided turns into the running summary via the named summarizer.
@@ -974,6 +1064,16 @@ async def _materialize_transcript(
         )
     count_tokens = _CTX.count_tokens or approx_token_count
     hydrated = [await _hydrate_turn(t) for t in inp.transcript]
+    if opening_user_text is not None and is_controller_value(inp.value):
+        hydrated = render_opening_ask(hydrated, opening_user_text)
+    if is_controller_value(inp.value) and isinstance(inp.value, Mapping):
+        if al.FEEDBACK_KEY in inp.value:
+            hydrated.append(
+                {"role": "user", "content": inp.value[al.FEEDBACK_KEY]}
+            )
+        round_note = inp.value.get(al.ROUND_NOTE_KEY)
+        if isinstance(round_note, str) and round_note:
+            hydrated.append({"role": "system", "content": round_note})
     elided, kept = split_to_budget(hydrated, policy.max_tokens, count_tokens)
 
     if policy.scope is ContextScope.WHOLE_SESSION:
@@ -1039,11 +1139,26 @@ async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
     registry = _hydrate_runtime_declarations(inp.runtime_declarations_ref)
     if _CTX.llm is None:
         raise RuntimeError("worker has no LLM caller configured")
+    model_value = _strip_reserved_controller_keys(inp.value)
+    render_value = model_value
+    if inp.transcript is not None and is_controller_value(model_value):
+        # A transcript-scoped loop carries the original run input under
+        # ``input`` on every round. Render authored business templates from
+        # that stable value, never from mutable trace/feedback controller
+        # fields or the preceding tool observation.
+        render_value = model_value["input"]
+    reasoner = rendered_reasoner_for(
+        registry.get_reasoner(inp.reasoner),
+        render_value,
+    )
     transcript: Optional[Transcript] = None
     new_summary: Optional[str] = None
     if inp.transcript is not None:
-        transcript, new_summary = await _materialize_transcript(inp, registry)
-    reasoner = rendered_reasoner_for(registry.get_reasoner(inp.reasoner), inp.value)
+        transcript, new_summary = await _materialize_transcript(
+            inp,
+            registry,
+            opening_user_text=rendered_user_for(reasoner, render_value),
+        )
     tier = QoSTier.STANDARD
     if inp.qos is not None:
         try:
@@ -1054,16 +1169,22 @@ async def invokeReasoner(inp: InvokeReasonerInput) -> Any:
         tier = QoSTier.STANDARD
     dispatch = ReasonerDispatch(qos=tier)
     if inp.tools:
-        raw = await cast(Any, _CTX.llm)(
+        raw = await _CTX.llm(
             reasoner,
-            inp.value,
+            model_value,
             inp.principal,
             transcript,
             dispatch,
             tools=inp.tools,
         )
     else:
-        raw = await _CTX.llm(reasoner, inp.value, inp.principal, transcript, dispatch)
+        raw = await _CTX.llm(
+            reasoner,
+            model_value,
+            inp.principal,
+            transcript,
+            dispatch,
+        )
     reply, llm_attrs = _unwrap_llm(raw)
     if new_summary is not None:
         # Envelope so the workflow can persist the running summary in
@@ -1118,8 +1239,7 @@ async def compilePlan(inp: CompilePlanInput) -> dict[str, Any]:
     ]
     if session_diagnostics:
         raise PlanRejected(
-            f"{diagnostic.code}: {diagnostic.message}"
-            for diagnostic in session_diagnostics
+            f"{diagnostic.code}: {diagnostic.message}" for diagnostic in session_diagnostics
         )
 
     return plan.to_json()
@@ -1130,7 +1250,9 @@ def _verify_pures_input(raw: Any) -> tuple[dict[str, str], Any, Any, Optional[st
         return raw.pinned, raw.bundle, raw.flow_json, raw.artifact_hash
     if (
         isinstance(raw, dict)
-        and set(raw).issubset({"pinned", "bundle", "flow_json", "flowJson", "artifact_hash", "artifactHash"})
+        and set(raw).issubset(
+            {"pinned", "bundle", "flow_json", "flowJson", "artifact_hash", "artifactHash"}
+        )
         and isinstance(raw.get("pinned"), dict)
     ):
         return (
@@ -1141,7 +1263,9 @@ def _verify_pures_input(raw: Any) -> tuple[dict[str, str], Any, Any, Optional[st
         )
     if isinstance(raw, dict):
         return raw, None, None, None
-    raise PureDriftError(f"verifyPures input must be pinned dict or VerifyPuresInput, got {type(raw).__name__}")
+    raise PureDriftError(
+        f"verifyPures input must be pinned dict or VerifyPuresInput, got {type(raw).__name__}"
+    )
 
 
 def _canonical_digest(value: Any) -> str:
@@ -1190,11 +1314,17 @@ async def verifyPures(inp: Any) -> None:
     if entries:
         store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL", "").strip()
         if not store_url:
-            raise PureDriftError("bundle resolution before pure verification requires JULEP_ARTIFACT_STORE_URL")
+            raise PureDriftError(
+                "bundle resolution before pure verification requires JULEP_ARTIFACT_STORE_URL"
+            )
         try:
-            records = resolve_entries(artifact_store_from_url(store_url), entries, registry=registry)
+            records = resolve_entries(
+                artifact_store_from_url(store_url), entries, registry=registry
+            )
         except Exception as exc:
-            raise PureDriftError(f"bundle resolution before pure verification failed: {exc}") from exc
+            raise PureDriftError(
+                f"bundle resolution before pure verification failed: {exc}"
+            ) from exc
         _verify_bundle_binding(records, flow_json=flow_json, artifact_hash=artifact_hash)
     for name in pinned:
         try:
@@ -1301,7 +1431,11 @@ async def resolveAgentSpec(
         registry = _registry()
     spec = registry.agent_specs.get(controller, _CTX.agents.get(controller, {}))
     config = dict(spec.get("config") or {})
-    if "budget" not in config and _CTX.capabilities is not None and _CTX.capabilities.budget is not None:
+    if (
+        "budget" not in config
+        and _CTX.capabilities is not None
+        and _CTX.capabilities.budget is not None
+    ):
         b = _CTX.capabilities.budget
         budget: dict[str, Any] = {}
         if b.cost is not None:
@@ -1327,10 +1461,7 @@ async def resolveAgentSpec(
     contracts: dict[str, dict[str, Any]] = {}
     if _CTX.capabilities is not None:
         contracts.update(
-            {
-                key: _grant_contract_payload(grant)
-                for key, grant in _CTX.capabilities.tools.items()
-            }
+            {key: _grant_contract_payload(grant) for key, grant in _CTX.capabilities.tools.items()}
         )
     contracts.update(
         {

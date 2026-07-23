@@ -31,7 +31,7 @@ from .contracts import ToolContract
 from .deploy import Deployment, deploy
 from .dotctx import Reasoner
 from .dsl import app, call, native
-from .errors import ValidationError
+from .errors import AgentTerminalError, ValidationError
 from .execution.cma import (
     CMAAgentEnv,
     CMAClient,
@@ -988,7 +988,17 @@ class Agent(FlowLike[Any, Any]):
             mode=self._mode,
             principal=principal,
         )
-        result = await interpret(deployment.flow, input, env)
+        try:
+            result = await interpret(deployment.flow, input, env)
+        except AgentTerminalError as exc:
+            # The low-level Agent facade has always returned the terminal
+            # envelope as a Result value. Generic APP, local API, and durable
+            # boundaries still fail the enclosing run; only this facade catches
+            # that boundary exception and restores its documented value seam.
+            facade_result = self._facade_result(dict(exc.result))
+            if self._langfuse_export is not None:
+                self._langfuse_export(projection.events(), self._name)
+            return facade_result
         if self._langfuse_export is not None:
             self._langfuse_export(projection.events(), self._name)
         return self._facade_result(cast("dict[str, Any]", result.value))
@@ -1044,7 +1054,10 @@ class Agent(FlowLike[Any, Any]):
             contracts=contracts,
             custom_tools=custom_tools,
         )
-        result = await interpret(deployment.flow, input, cma_env)
+        try:
+            result = await interpret(deployment.flow, input, cma_env)
+        except AgentTerminalError as exc:
+            return self._facade_result(dict(exc.result))
         return self._facade_result(cast("dict[str, Any]", result.value))
 
     def run(

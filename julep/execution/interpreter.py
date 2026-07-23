@@ -38,6 +38,7 @@ from ..errors import (
     PureExecutionError,
     RaceAllFailed,
     ToolInputValidation,
+    raise_for_agent_terminal,
 )
 from ..freeze import bind
 from ..ir import (
@@ -378,7 +379,9 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
 
     if op == Op.APP:
         assert node.controller is not None
-        out = await env.run_agent(node.controller, value, cid, _app_config(node))
+        out = raise_for_agent_terminal(
+            await env.run_agent(node.controller, value, cid, _app_config(node))
+        )
         return Result(out)
 
     raise JulepError(f"interpreter: unhandled op {op!r}")

@@ -341,8 +341,8 @@ retry work.
 | `LocalExecutionUnsupported` | subclass of `LocalPipelineError` | direct-foreground artifact requires a runtime-owned orchestration boundary | n/a |
 
 An explicit `llm=` takes precedence over `context.llm`; it uses the canonical
-five-argument `LlmCaller`. Tool-calling agents require the optional `tools=`
-keyword extension. `WorkerContext` supplies MCP calls plus QoS and registry
+`LlmCaller(reasoner, value, principal, transcript, dispatch, *, tools=None)`
+protocol. `WorkerContext` supplies MCP calls plus QoS and registry
 hooks, while `principal` is forwarded to both LLM and MCP calls. A differing
 reasoner declaration in `context.registry` is rejected rather than overriding
 the compiled artifact.
@@ -474,6 +474,7 @@ The package root exports `as_flow`; the full typed wrapper lives in
 | `interpret` | `async interpret(node, value, env, causes=(), *, principal=None, root_run_id=None, segment_seq=None) -> Result` | IR, input, env, optional run identity | `Result(value, event_id, attrs, reported_cost)` | framework, pure, handler errors | `await interpret(flow, value, env)` |
 | `Result` | `Result(value: Any, event_id: str | None = None, attrs=None, reported_cost=None)` | interpreter result | value envelope | none | `result.value` |
 | `RunPrincipal` | `dict[str, Any]` | opaque tenant/credential reference, never secret | alias | none | `principal={"tenant": "acme"}` |
+| `LlmCaller` | protocol `async (reasoner, value, principal, transcript, dispatch, *, tools=None) -> Any` | five positional runtime inputs plus the keyword-only frozen native-tool surface | provider result | provider errors; adapted legacy callers reject unsupported transcript/tool rounds clearly | `WorkerContext(llm=litellm_caller())` |
 | `WorkerContext` | `WorkerContext(tool_urls={}, mcp_call=None, mcp_transport=None, llm=None, on_attempt=None, resolve_qos=default_resolve_qos, blob_store=None, session_store=None, capabilities=None, registry=None, http_timeout_s=30.0, principal_headers=None, count_tokens=None, subflows={}, agents={}, trajectory_sink=None, trajectory_blob_store=None, redactor=None)` | process-global worker dependencies; canonical `mcp_call` receives `(server, tool, value, idempotency_key, principal, run_secrets, input_schema_validated)` | context | none | `WorkerContext(llm=make_llm_caller(), mcp_transport=transport)` |
 
 ## Temporal, worker, DBOS, and CMA runtime
@@ -578,7 +579,7 @@ needed only when `litellm_caller()` imports its default backend. Injecting
 | `make_local_reasoner` | `make_local_reasoner(*, default_provider="anthropic", acompletion=None) -> Callable[[str, Any], Awaitable[Any]]` | provider/test seam | facade `llm` callable | lazy `ImportError`, provider errors | `Agent("anthropic:m", llm=make_local_reasoner())` |
 | `make_resilient_llm_caller` | `make_resilient_llm_caller(*, policy, breaker=None, on_attempt=None, classifier=classify_error, default_provider="anthropic", acompletion=None, sleep=asyncio.sleep) -> Callable[..., Awaitable[Any]]` | fallback policy and hooks | resilient `LlmCaller` | `ResilienceExhausted`, config/provider errors | `make_resilient_llm_caller(policy=ResiliencePolicy())` |
 | `prepare_litellm_payload` | `prepare_litellm_payload(payload: Mapping[str, Any]) -> dict[str, Any]` | pure translation of Julep model slugs and reasoning controls, including Fireworks, OpenRouter, Anthropic, and GPT-5 provider requirements | LiteLLM request mapping | malformed consumer data may raise normal mapping/value errors | `prepare_litellm_payload({"model":"openai:gpt-5@low"})` |
-| `litellm_caller` | `litellm_caller(*, request_timeout_s=None, acompletion=None) -> LlmCaller` | canonical five-argument worker caller backed by LiteLLM | async caller | lazy `ImportError`, provider errors | `WorkerContext(llm=litellm_caller())` |
+| `litellm_caller` | `litellm_caller(*, request_timeout_s=None, acompletion=None) -> LlmCaller` | canonical worker caller backed by LiteLLM, including keyword-only native `tools=` | async caller | lazy `ImportError`, provider errors | `WorkerContext(llm=litellm_caller())` |
 | `with_model_ladder` | `with_model_ladder(caller, *, models: Sequence[str], classify=classify_error, on_attempt=None) -> LlmCaller` | primary reasoner model followed by stable de-duplicated fallbacks; advances only on transient/timeout failures and records attempt provenance on `LlmResult` | wrapped caller | non-transient original error or `ResilienceExhausted` | `llm = with_model_ladder(litellm_caller(), models=["openai:gpt-5-mini"])` |
 
 ## Errors and exceptions
@@ -587,6 +588,7 @@ needed only when `litellm_caller()` imports its default backend. Injecting
 |---|---|---|---|
 | `JulepError` | `JulepError(*args)` | base framework error | `except JulepError:` |
 | `ValidationError` | `ValidationError(diagnostics: list[Diagnostic])` | strict `deploy`, facade checks | `exc.diagnostics` |
+| `AgentTerminalError` | `AgentTerminalError(result: Mapping[str, Any])` | a generic `app` boundary receives `controller_error`, `max_rounds`, `over_budget`, `denied`, or `output_validation_failed` | `.status`, `.result`; marks local, Temporal, and DBOS runs failed (direct Temporal output validation retains `OutputValidationError`) |
 | `FreezeError` | `FreezeError(*args)` | `freeze`, manifest binding | unresolved tool |
 | `AdmissionError` | `AdmissionError(*args)` | race admission callers | illegal race branch |
 | `PureDriftError` | `PureDriftError(*args)` | `verifyPures` | mismatched pure source |

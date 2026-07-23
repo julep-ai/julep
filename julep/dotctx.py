@@ -599,6 +599,7 @@ def reasoner_to_flow(
     reasoner: Reasoner,
     *,
     ctx: Optional[ContextPolicy] = None,
+    summarizer: Optional[str] = None,
     tool_aliases: Optional[Mapping[str, str]] = None,
     agent_round_cap: int = 32,
 ) -> Node:
@@ -648,6 +649,7 @@ def reasoner_to_flow(
             tool_aliases=aliases,
             max_rounds=bound,
             ctx=app_ctx,
+            summarizer=summarizer,
             native_tools=True,
             require_tool_call=reasoner.require_tool_call,
             output_schema=reasoner.reply_schema,
@@ -664,7 +666,7 @@ def reasoner_to_flow(
             ContextScope.WHOLE_SESSION,
         ):
             app_ctx = ContextPolicy(scope=reasoner.context_scope)
-        return app(reasoner.name, ctx=app_ctx)
+        return app(reasoner.name, ctx=app_ctx, summarizer=summarizer)
 
     if reasoner.max_rounds is not None and reasoner.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.

@@ -282,8 +282,12 @@ Packages stay mem-mcp-shaped (bare Python-identifier keys; contracts in `tools.p
 1. snapshots the bound servers through `mcp_snapshot`;
 2. resolves every bare key through the pipeline's `tools` map — unbound key, unknown
    server/tool ⇒ loud freeze error;
-3. validates `tools.pyi` stubs against the frozen `inputSchema` by **exact canonical-schema
-   equality** through `ToolSchemaExpectation`;
+3. validates `tools.pyi` stubs against the frozen `inputSchema` by canonical-schema
+   equality through `ToolSchemaExpectation`. The authoring check directionally tolerates
+   only extra `additionalProperties: false` keywords emitted by signature-derived served
+   schemas, because `tools.pyi` cannot express that marker; an expectation that explicitly
+   closes an object still drifts from an open served schema. Runtime surface pins remain
+   byte-exact;
 4. records the **alias map** bare-key → wire `ToolRef` in the release. The model-visible tool
    name is the bare key, mapped to the MCP wire name at dispatch.
 

@@ -30,6 +30,28 @@ MODEL = "small"
     )
 
 
+def test_ctx_pipeline_summarizer_ctx_parses(tmp_path: Path) -> None:
+    (tmp_path / "julep.toml").write_text(
+        '[pipeline.foo]\nctx = "foo.ctx"\nsummarizer = "summary.ctx"\n',
+        encoding="utf-8",
+    )
+
+    assert load_config(tmp_path).pipelines["foo"].summarizer == "summary.ctx"
+
+
+@pytest.mark.parametrize("value", ['""', '"  "', "7", "true"])
+def test_ctx_pipeline_summarizer_ctx_must_be_a_nonempty_string(
+    tmp_path: Path, value: str
+) -> None:
+    (tmp_path / "julep.toml").write_text(
+        f'[pipeline.foo]\nctx = "foo.ctx"\nsummarizer = {value}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="summarizer"):
+        load_config(tmp_path)
+
+
 def test_ctx_pipeline_unknown_key_has_hint(tmp_path: Path) -> None:
     (tmp_path / "julep.toml").write_text(
         '[pipeline.foo]\nctx = "foo.ctx"\nlan = "summary"\n', encoding="utf-8"

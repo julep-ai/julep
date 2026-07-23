@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Iterable
 
 # resilience is stdlib-only and must never import errors (one-way dependency).
 from .resilience import summarize_attempts
@@ -14,6 +15,41 @@ if TYPE_CHECKING:
 
 class JulepError(Exception):
     """Base for everything this framework raises."""
+
+
+FAILED_AGENT_TERMINAL_STATUSES = frozenset(
+    {
+        "controller_error",
+        "max_rounds",
+        "over_budget",
+        "denied",
+        "output_validation_failed",
+    }
+)
+
+
+class AgentTerminalError(JulepError):
+    """An agent loop settled in a failure state rather than producing output."""
+
+    def __init__(self, result: Mapping[str, Any]) -> None:
+        self.result = dict(result)
+        self.status = str(result.get("status") or "controller_error")
+        # Keep model/tool-provided reasons on the local Python object without
+        # copying them into durable exception text. Temporal and control-plane
+        # failure metadata can safely expose the stable status; callers running
+        # in-process may inspect ``result`` explicitly.
+        super().__init__(f"agent terminated with {self.status}")
+
+
+def raise_for_agent_terminal(result: Any) -> Any:
+    """Raise for failed agent envelopes; return non-failures unchanged."""
+
+    if (
+        isinstance(result, Mapping)
+        and result.get("status") in FAILED_AGENT_TERMINAL_STATUSES
+    ):
+        raise AgentTerminalError(result)
+    return result
 
 
 class SessionTurnError(JulepError):
@@ -170,6 +206,7 @@ class PrincipalRequired(JulepError):
 
 
 POLICY_ERRORS: tuple[type[JulepError], ...] = (
+    AgentTerminalError,
     CapabilityDenied,
     PlanRejected,
     ValidationError,

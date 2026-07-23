@@ -48,14 +48,17 @@ from ..continuation import CONTINUATION_KEY, continuation_value, is_continuation
 from ..contracts import contract_allows_retry, manifest_from_json
 from ..errors import (
     CapabilityDenied,
+    FAILED_AGENT_TERMINAL_STATUSES,
     JulepError,
     POLICY_ERRORS,
     UnsupportedShapeError,
+    raise_for_agent_terminal,
 )
 from ..ir import Node
 from ..kinds import Op
 from ..projection import InMemoryProjection, ProjectionEmitter, ProjectionSink, TeeStore
 from ..trajectory import ProjectionTrajectorySink
+from ..transcript import TRANSCRIPT_SCOPES
 from ..turn import Halt, controller_turn, make_finalize, pre_round
 from . import effects
 from .effects import (
@@ -1002,7 +1005,9 @@ async def agent_workflow(inp: dict) -> Any:
                 al.terminal_result(result.status, state, output=result.output, reason=result.reason)
             )
         state = result
-        if policy.trace_content_refs:
+        if policy.trace_content_refs or (
+            cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES
+        ):
             await al.blob_round_output_refs(
                 state,
                 prev_trace_len,
@@ -1034,6 +1039,33 @@ async def agent_workflow(inp: dict) -> Any:
 # --------------------------------------------------------------------------- #
 # Client helpers.
 # --------------------------------------------------------------------------- #
+async def _finish_trajectory_best_effort(
+    *,
+    run_id: str,
+    root_run_id: str,
+    status: str,
+    segment_seq: int,
+    final_value: Any = None,
+) -> None:
+    try:
+        await finishTrajectoryStep(
+            {
+                "runId": run_id,
+                "rootRunId": root_run_id,
+                "status": status,
+                "finalValue": final_value,
+                "segmentSeq": segment_seq,
+            }
+        )
+    except Exception as exc:
+        from .. import trajectory as _traj
+
+        def _reraise(e: BaseException = exc) -> None:
+            raise e
+
+        _traj._best_effort(_reraise)
+
+
 async def run_flow_dbos(
     flow_json: dict[str, Any],
     manifest_json: dict[str, Any],
@@ -1101,31 +1133,36 @@ async def run_flow_dbos(
                 handle = await queue.enqueue_async(flow_workflow, seg_payload)
             else:
                 handle = await DBOS.start_workflow_async(flow_workflow, seg_payload)
-        out = await handle.get_result()
+        try:
+            out = await handle.get_result()
+        except Exception:
+            await _finish_trajectory_best_effort(
+                run_id=effective_root_run_id,
+                root_run_id=effective_root_run_id,
+                status="failed",
+                segment_seq=seg,
+            )
+            raise
         if not is_continuation(out):
-            try:
-                await finishTrajectoryStep({
-                    "runId": effective_root_run_id,
-                    "rootRunId": effective_root_run_id,
-                    "status": "completed",
-                    "finalValue": out,
-                    "segmentSeq": seg,
-                })
-            except Exception as exc:
-                from .. import trajectory as _traj
-
-                def _reraise(e: BaseException = exc) -> None:
-                    raise e
-
-                _traj._best_effort(_reraise)
+            await _finish_trajectory_best_effort(
+                run_id=effective_root_run_id,
+                root_run_id=effective_root_run_id,
+                status="completed",
+                segment_seq=seg,
+                final_value=out,
+            )
             return out
         call_counts = out.get("callCounts") if isinstance(out, dict) else None
         if isinstance(out, dict) and "bundle" in out:
             bundle = out.get("bundle")
         seg_input = continuation_value(out)
-    raise JulepError(
-        f"flow {session_id!r} did not settle within {max_segments} segments"
+    await _finish_trajectory_best_effort(
+        run_id=effective_root_run_id,
+        root_run_id=effective_root_run_id,
+        status="failed",
+        segment_seq=max_segments - 1,
     )
+    raise JulepError(f"flow {session_id!r} did not settle within {max_segments} segments")
 
 
 async def _run_agent_chain(
@@ -1165,32 +1202,43 @@ async def _run_agent_chain(
                 handle = await queue.enqueue_async(agent_workflow, payload)
             else:
                 handle = await DBOS.start_workflow_async(agent_workflow, payload)
-        out = await handle.get_result()
+        try:
+            out = await handle.get_result()
+        except Exception:
+            await _finish_trajectory_best_effort(
+                run_id=base_id,
+                root_run_id=payload.get("rootRunId") or base_id,
+                status="failed",
+                segment_seq=int(payload.get("segmentSeq") or seg),
+            )
+            raise
         if not is_continuation(out):
-            try:
-                # F1: an agent chain finishes ITS OWN run (base_id), stitched to
-                # the root via rootRunId -- never the root run. A child Op.APP
-                # agent inherits rootRunId from its parent, so targeting the root
-                # here would overwrite the root's final with the child's result.
-                await finishTrajectoryStep({
-                    "runId": base_id,
-                    "rootRunId": payload.get("rootRunId") or base_id,
-                    "status": "completed",
-                    "finalValue": out,
-                    "segmentSeq": int(payload.get("segmentSeq") or seg),
-                })
-            except Exception as exc:
-                from .. import trajectory as _traj
-
-                def _reraise(e: BaseException = exc) -> None:
-                    raise e
-
-                _traj._best_effort(_reraise)
-            return out
+            status = (
+                "failed"
+                if isinstance(out, dict)
+                and out.get("status") in FAILED_AGENT_TERMINAL_STATUSES
+                else "completed"
+            )
+            # F1: an agent chain finishes ITS OWN run (base_id), stitched to
+            # the root via rootRunId -- never the root run. A child Op.APP
+            # agent inherits rootRunId from its parent, so targeting the root
+            # here would overwrite the root's final with the child's result.
+            await _finish_trajectory_best_effort(
+                run_id=base_id,
+                root_run_id=payload.get("rootRunId") or base_id,
+                status=status,
+                segment_seq=int(payload.get("segmentSeq") or seg),
+                final_value=out,
+            )
+            return raise_for_agent_terminal(out)
         payload = continuation_value(out)
-    raise JulepError(
-        f"agent {base_id!r} did not settle within {max_segments} segments"
+    await _finish_trajectory_best_effort(
+        run_id=base_id,
+        root_run_id=root_run_id,
+        status="failed",
+        segment_seq=max_segments - 1,
     )
+    raise JulepError(f"agent {base_id!r} did not settle within {max_segments} segments")
 
 
 async def run_agent_dbos(

@@ -6,10 +6,10 @@ first real control-plane consumer. Items marked **[in-branch]** are being fixed 
 
 > **Status 2026-07-22 (see FEEDBACK-REPLY.md in consuming repos):** items 1–5 landed on
 > `julep3-post-port` (`043c5dfa`, `80f87b2e`, `0ab48095`); item 13 (`serve api --local`
-> + `--context-factory` + local-dev guide) landed on `feat/local-api-mode` (not yet
-> merged into `julep3-post-port`). Still open: 6 (temporalio/pydantic-ai collision),
-> 7 (idempotency 409 on pipeline/release mismatch), 8 (`Reasoner.replace`), 9 (async
-> client), 10 (pipeline-aware lint), 14 (trace cost placeholder), 15
+> + `--context-factory` + local-dev guide) has now merged into `julep3-post-port`.
+> Items 7, 9, and 16 have also landed. Still open: 6
+> (temporalio/pydantic-ai collision), 8 (`Reasoner.replace`), 10
+> (pipeline-aware lint), 14 (trace cost placeholder), 15
 > (missing-output-schema warning), and the
 > single-machine durable-stack operator recipe half of 11. Item 12 was wrong — the
 > server default is already 8080, not 8000.
@@ -105,14 +105,16 @@ first real control-plane consumer. Items marked **[in-branch]** are being fixed 
 ## Findings from the first real tool-bearing agent run (report_issue_dedup, 2026-07-23)
 
 The first live multi-round dotctx agent (real model, real MCP server, real tool calls)
-hit four gaps the test suite's fakes never exercised. 21–23 are **fixed on
-`julep3-post-port`** (`4137f728`, `9d8d2098`, `71e7d3e6`) with regression tests.
+hit five gaps the test suite's fakes never exercised. All five are fixed on
+`julep3-post-port` with regression and cross-backend tests.
 
 21. **[fixed] `TOOL_SCHEMA_DRIFT` false-positives against every FastMCP server.**
     Signature-derived servers always emit `additionalProperties: false`; `tools.pyi`
     cannot express it; verbatim hashing made every such pairing drift at freeze. The
-    authoring-time gate now normalizes only that marker; the runtime preflight pin
-    still hashes served definitions verbatim.
+    authoring-time gate now directionally ignores only an extra served marker in
+    actual JSON-Schema positions. Instance data, literal property names, and an
+    explicit expected close remain significant; the runtime preflight pin still
+    hashes served definitions verbatim.
 
 22. **[fixed] Transcript-scoped agents re-rendered the business template from each
     round's observation.** Round 2 of any templated agent died with
@@ -120,29 +122,42 @@ hit four gaps the test suite's fakes never exercised. 21–23 are **fixed on
     observation. New contract: templates always render from the ORIGINAL input; the
     opening transcript user turn carries the rendered ask; no trailing template turn;
     loop feedback (re-asks, which `transcript_for` excludes) rides a reserved
-    `FEEDBACK_KEY` as a user turn. Also added `[pipeline.<name>].context_max_tokens` —
-    there was NO config surface to satisfy `APP_CTX_NO_BUDGET` for zero-code pipelines.
+    `FEEDBACK_KEY` as a user turn. Rendering and feedback insertion now happen
+    before the hard context budget on Temporal, DBOS, shared/local execution, and
+    `serve api --local`. Scoped agents retain real tool observations inline within
+    a segment and as blob refs across durable continuations. Also added
+    `[pipeline.<name>].context_max_tokens` and a required
+    `[pipeline.<name>].summarizer` dotctx path for `context: summary`.
 
 23. **[fixed] The action classifier rejected schema-conforming final answers.**
     `reply_schema` + julep's own prompt guidance tell the model to return the bare
     `Output` object, but `interpret_reasoner_reply(strict=True)` only accepted finish
     via the `done`/`output` envelope — every real-model final answer became
     `controller_error`. In native-tools mode a dict reply with no reserved action keys
-    now finishes; output-schema validation + re-ask own shape enforcement. Blind-spot
-    note: the example e2e passes because fake callers return pre-enveloped replies —
-    an e2e with a template-rendering caller would have caught 22 and 23.
+    now finishes; scalar and array finals work as well. Output-schema validation and
+    re-ask own shape enforcement, malformed reserved action envelopes still fail,
+    and native output schemas declaring top-level action keys are rejected. A
+    configured local API acceptance test now covers template rendering, a native
+    tool round, its observation, and the bare final reply.
 
-24. **LlmCaller contract widened without the type saying so.** Agent rounds call
+24. **[fixed] LlmCaller contract widened without the type saying so.** Agent rounds call
     `llm(..., tools=...)` but `effects.LlmCaller` is still the 5-positional alias —
     rc1-era callers crash at runtime with "unexpected keyword argument 'tools'"
-    (mem-mcp's caller fixed consumer-side). Ask: include `tools` in the alias/protocol
-    and mention it in the caller docs.
+    (mem-mcp's caller fixed consumer-side). `LlmCaller` is now a public protocol
+    with keyword-only `tools=None`; the configure-time 2/3/4/5-argument adapters
+    forward it when supported and otherwise raise a targeted upgrade error.
+    `SyncCoalescer` preserves it through buffered and BATCH paths.
 
-25. **Agent runs that end in `controller_error` still surface as COMPLETED runs.**
+25. **[fixed] Agent runs that end in `controller_error` still surface as COMPLETED runs.**
     The agent's terminal envelope (`{status, output, trace, rounds, cost}`) is the run
     result, so `run_and_wait` returns success for a failed loop and consumers must
-    inspect `result["status"]`. Ask: either map agent error statuses to run failure or
-    document the envelope as the public contract (and give the client an unwrap helper).
+    inspect `result["status"]`. `controller_error`, `max_rounds`, `over_budget`,
+    `denied`, and `output_validation_failed` now raise public
+    `AgentTerminalError` at generic APP/durable boundaries and mark local,
+    Temporal, and DBOS runs/trajectories failed (Temporal keeps its existing
+    `OutputValidationError` for exhausted output validation). `done` and
+    `escalated` remain successful values; agent facades/evals retain their
+    low-level value-envelope behavior.
 
 ## Consumer plumbing that should move into julep (from the full-migration estimate, 2026-07-23)
 

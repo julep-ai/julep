@@ -66,6 +66,60 @@ def test_interpret_reasoner_reply_native_tool_calls() -> None:
     assert default_parser.decision is Decision.CONTROLLER_ERROR
 
 
+def test_native_tools_plain_final_values_finish() -> None:
+    """Provider-native rounds distinguish calls via tool_calls, not value shape."""
+
+    for reply in ("plain final answer", ["one", "two"], 7):
+        action = interpret_reasoner_reply(reply, strict=True, native_tools=True)
+        assert action.decision is Decision.FINISH
+        assert action.payload == reply
+
+        legacy = interpret_reasoner_reply(reply, strict=True, native_tools=False)
+        assert legacy.decision is Decision.CONTROLLER_ERROR
+
+
+def test_native_tools_malformed_reserved_action_does_not_finish() -> None:
+    for reply in (
+        {"done": False, "answer": "not actually done"},
+        {"done": False, "output": "contradictory"},
+        {"tool_calls": [{"tool": "", "input": {}}]},
+    ):
+        action = interpret_reasoner_reply(
+            reply,
+            strict=True,
+            native_tools=True,
+        )
+        assert action.decision is Decision.CONTROLLER_ERROR
+
+
+def test_native_tools_rejects_contradictory_action_families() -> None:
+    for reply in (
+        {"done": True, "tool": "search"},
+        {"tool_calls": [{"tool": "search", "input": {}}], "done": True},
+        {"output": "answer", "escalate": "human"},
+        {"tool": "search", "sub": "child"},
+        {"tool_calls": [{"tool": "search", "input": {}}], "tool": "search"},
+    ):
+        for strict in (True, False):
+            action = interpret_reasoner_reply(
+                reply,
+                strict=strict,
+                native_tools=True,
+            )
+            assert action.decision is Decision.CONTROLLER_ERROR
+
+
+def test_native_tools_accepts_done_with_output_as_one_finish_action() -> None:
+    action = interpret_reasoner_reply(
+        {"done": True, "output": {"answer": 42}},
+        strict=True,
+        native_tools=True,
+    )
+
+    assert action.decision is Decision.FINISH
+    assert action.payload == {"answer": 42}
+
+
 def test_action_cost_for_call_many_charges_each_call() -> None:
     action = RoundAction(
         Decision.CALL_MANY,
@@ -118,6 +172,101 @@ def test_app_ir_omits_native_tool_flags_when_false() -> None:
 
     assert "nativeTools" not in encoded
     assert "requireToolCall" not in encoded
+
+
+def test_native_tools_reply_schema_rejects_reserved_action_keys() -> None:
+    from julep.validate import blocking, validate
+
+    reserved = app(
+        "c",
+        tools=["x"],
+        native_tools=True,
+        output_schema={
+            "type": "object",
+            "properties": {"tool": {"type": "string"}},
+        },
+    )
+    assert {diag.code for diag in blocking(validate(reserved))} >= {"APP_RESERVED_REPLY_KEY"}
+
+    ordinary = app(
+        "c",
+        tools=["x"],
+        native_tools=True,
+        output_schema={
+            "type": "object",
+            "properties": {"action": {"type": "string"}},
+        },
+    )
+    assert "APP_RESERVED_REPLY_KEY" not in {diag.code for diag in blocking(validate(ordinary))}
+
+
+def test_native_tools_reply_schema_finds_composed_top_level_reserved_keys() -> None:
+    from julep.validate import blocking, validate
+
+    reserved_property = {
+        "type": "object",
+        "properties": {"tool": {"type": "string"}},
+    }
+    composed_schemas = (
+        {"oneOf": [reserved_property]},
+        {"anyOf": [reserved_property]},
+        {"allOf": [reserved_property]},
+        {"if": reserved_property},
+        {"then": reserved_property},
+        {"else": reserved_property},
+        {"dependentSchemas": {"kind": reserved_property}},
+        {
+            "$ref": "#/$defs/result",
+            "$defs": {"result": reserved_property},
+        },
+        {
+            "$ref": "#/$defs/loop",
+            "$defs": {
+                "loop": {
+                    "allOf": [
+                        {"$ref": "#/$defs/loop"},
+                        reserved_property,
+                    ]
+                }
+            },
+        },
+    )
+
+    for output_schema in composed_schemas:
+        flow = app(
+            "c",
+            tools=["x"],
+            native_tools=True,
+            output_schema=output_schema,
+        )
+        assert "APP_RESERVED_REPLY_KEY" in {diag.code for diag in blocking(validate(flow))}
+
+
+def test_native_tools_reply_schema_ignores_nested_property_value_schemas() -> None:
+    from julep.validate import blocking, validate
+
+    flow = app(
+        "c",
+        tools=["x"],
+        native_tools=True,
+        output_schema={
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "object",
+                    "properties": {"tool": {"type": "string"}},
+                }
+            },
+            "$defs": {
+                "unused": {
+                    "type": "object",
+                    "properties": {"done": {"type": "boolean"}},
+                }
+            },
+        },
+    )
+
+    assert "APP_RESERVED_REPLY_KEY" not in {diag.code for diag in blocking(validate(flow))}
 
 
 def test_app_config_surfaces_native_tool_flags_only_when_present() -> None:
@@ -308,9 +457,7 @@ def test_call_many_read_tools_run_concurrently() -> None:
         )
     )
 
-    first_finish = min(
-        index for index, event in enumerate(events) if event.endswith(":finished")
-    )
+    first_finish = min(index for index, event in enumerate(events) if event.endswith(":finished"))
     assert out["status"] == "done"
     assert events.index("read-a:started") < first_finish
     assert events.index("read-b:started") < first_finish

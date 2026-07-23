@@ -232,6 +232,16 @@ def test_activities_reexport_worker_context():
     assert A is E
 
 
+def test_llm_caller_public_reexports():
+    import julep
+    import julep.execution as execution
+    from julep.execution.effects import LlmCaller as EffectsLlmCaller
+
+    assert julep.LlmCaller is execution.LlmCaller is EffectsLlmCaller
+    assert "LlmCaller" in julep.__all__
+    assert "LlmCaller" in execution.__all__
+
+
 def test_reasoner_dispatch_defaults():
     import dataclasses
 
@@ -306,6 +316,120 @@ def test_adapt_llm_caller_5arg_receives_dispatch():
         )
     )
     assert result is QoSTier.PRIORITY
+
+
+def test_configure_twice_does_not_wrap_canonical_llm_again():
+    from conftest import run
+
+    from julep.dotctx import Reasoner
+    from julep.execution import effects
+    from julep.execution.effects import InvokeReasonerInput, WorkerContext, configure
+    from julep.qos import ReasonerDispatch
+    from julep.registry import Registry
+
+    calls = 0
+
+    async def canonical(
+        reasoner,
+        value,
+        principal,
+        transcript,
+        dispatch: ReasonerDispatch,
+        *,
+        tools=None,
+    ):
+        nonlocal calls
+        calls += 1
+        return value
+
+    registry = Registry()
+    registry.register_reasoner(Reasoner(name="canonical", model="test", system="s"))
+    context = WorkerContext(llm=canonical, registry=registry)
+    previous = effects._CTX
+    try:
+        configure(context)
+        assert context.llm is canonical
+        configure(context)
+        assert context.llm is canonical
+        result = run(
+            effects.invokeReasoner(
+                InvokeReasonerInput(reasoner="canonical", value={"q": "x"}, cid="c")
+            )
+        )
+    finally:
+        effects._CTX = previous
+
+    assert result == {"q": "x"}
+    assert calls == 1
+
+
+@pytest.mark.parametrize("arity", [2, 3, 4, 5])
+def test_adapt_llm_caller_forwards_tools_when_supported(arity: int):
+    from conftest import run
+
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import _adapt_llm_caller
+    from julep.qos import ReasonerDispatch
+
+    seen: list[dict[str, Any]] = []
+
+    async def fake_2(reasoner, value, *, tools=None):
+        seen.extend(tools or [])
+        return value
+
+    async def fake_3(reasoner, value, principal, *, tools=None):
+        seen.extend(tools or [])
+        return value
+
+    async def fake_4(reasoner, value, principal, transcript, *, tools=None):
+        seen.extend(tools or [])
+        return value
+
+    async def fake_5(reasoner, value, principal, transcript, dispatch, *, tools=None):
+        seen.extend(tools or [])
+        return value
+
+    fn = {2: fake_2, 3: fake_3, 4: fake_4, 5: fake_5}[arity]
+    tool_defs = [{"type": "function", "function": {"name": "lookup"}}]
+    adapted = _adapt_llm_caller(fn)
+
+    result = run(
+        adapted(
+            Reasoner(name="t", model="m", system="s"),
+            {"q": "x"},
+            {"tenant": "t"},
+            None,
+            ReasonerDispatch(),
+            tools=tool_defs,
+        )
+    )
+
+    assert result == {"q": "x"}
+    assert seen == tool_defs
+
+
+def test_adapt_llm_caller_rejects_tools_with_canonical_upgrade_hint():
+    from conftest import run
+
+    from julep.dotctx import Reasoner
+    from julep.execution.effects import _adapt_llm_caller
+    from julep.qos import ReasonerDispatch
+
+    async def rc1_caller(reasoner, value, principal, transcript, dispatch):
+        return value
+
+    adapted = _adapt_llm_caller(rc1_caller)
+    with pytest.raises(RuntimeError, match=r"LlmCaller .* does not accept.*tools="):
+        run(
+            adapted(
+                Reasoner(name="t", model="m", system="s"),
+                {"q": "x"},
+                None,
+                None,
+                ReasonerDispatch(),
+                tools=[{"type": "function", "function": {"name": "lookup"}}],
+            )
+        )
 
 
 def test_invoke_reasoner_passes_dispatch_qos_to_llm():

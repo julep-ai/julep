@@ -3,17 +3,15 @@ title: "Agent Transcripts"
 description: "The transcript model and how traces are recorded."
 ---
 
-> Status: design draft 2026-06-10, decided with mem-mcp (option C1 of the
-> adoption sketch; the C2 stopgap — caller-side assembly inside the
-> `LlmCaller` — is documented at the end and is what the first mem-mcp pilot
-> ships on). Builds on `docs/design/agent-loop-as-turn.md` (the reified
+> Status: shipped in 3.0.0rc4 after the mem-mcp adoption trial. Builds on
+> `docs/design/agent-loop-as-turn.md` (the reified
 > `Step`), `docs/design/durable-session-store.md` (claim-check codec,
 > `trace_content_refs`, blob durability contract), and `ContextPolicy`
 > (`julep/ir.py`).
 
 ## Thesis
 
-The agent loop tools its controller `{input, trace, last}` — the previous
+The agent loop gives its controller `{input, trace, last}` — the previous
 round's result plus a trace of *references*. For plan-then-act controllers
 that is enough. For tool-heavy multi-round agents it is not: the model needs
 to see its own working history — which tools it called with what arguments
@@ -36,8 +34,9 @@ looks like*. This design makes them mean something concrete for `app`.
 
 ### The transcript is derived, not stored
 
-No new state. A transcript is a pure projection of `AgentState.trace` (plus
-the run input), materialized at the one place values can be hydrated — the
+No duplicated durable output state. A transcript is a pure projection of
+`AgentState.trace` (plus the run input), materialized at the one place values
+can be hydrated — the
 `invoke_reasoner` effect in the worker (`execution/effects.py`), where blob refs
 resolve outside workflow history. Workflow payloads keep carrying refs; the
 claim-check limits work stays intact.
@@ -48,11 +47,11 @@ def transcript_for(state: AgentStateView, policy: ContextPolicy) -> list[Turn]
 # Turn = {"role": "assistant"|"tool", "ref": ToolRefJson|None, "content_ref"|"content": ...}
 ```
 
-`transcript_for` is deterministic given the same state and policy — it emits
-the *plan* of the transcript with refs; hydration of refs to content happens
-in the effect, under the blob-durability contract (content-addressed,
-immutable, integrity-checked — already mandatory per the session-store
-design).
+`transcript_for` is deterministic given the same state and policy. A fresh
+observation can remain inline during the current process segment; durable
+Temporal and DBOS runners claim-check transcript outputs before a continuation
+boundary. Hydration of refs happens in the effect under the blob-durability
+contract.
 
 ### `ContextPolicy` semantics for `app`
 
@@ -92,15 +91,31 @@ char-heuristic default with the real count left to the `LlmCaller`), runs
 the summarizer reasoner if the policy demands one, and passes the materialized
 transcript to the `LlmCaller`:
 
+For transcript-scoped agents, system and user templates always render from the
+original run input. The rendered opening ask replaces the raw first turn before
+the token budget is applied. Tool-input, required-tool, and output-validation
+re-asks are appended through a reserved feedback turn, also before budgeting;
+neither observations nor feedback are reinterpreted as business-template input.
+
 ```python
-LlmCaller = Callable[[Reasoner, Any, Optional[RunPrincipal], Optional[Transcript]], Awaitable[Any]]
+class LlmCaller(Protocol):
+    def __call__(
+        self,
+        reasoner: Reasoner,
+        value: Any,
+        principal: Optional[RunPrincipal],
+        transcript: Optional[Transcript],
+        dispatch: ReasonerDispatch,
+        *,
+        tools: Optional[list[dict[str, Any]]] = None,
+    ) -> Awaitable[Any]: ...
 ```
 
-(Fourth argument. The `configure`-time arity shim must wrap **both** legacy
-2-arg callers and principal-aware 3-arg callers — adopters who already moved
-to `(reasoner, value, principal)` keep working when transcripts land. The 4-arg
-form is canonical; both designs land on the same seam and sequence principal
-first.)
+The `configure`-time shim preserves legacy 2-, 3-, 4-, and 5-positional-argument
+callers on rounds that do not need a surface they cannot accept. If a legacy
+caller declares keyword-only `tools` (or `**kwargs`), the shim forwards native
+tool definitions; otherwise a native-tool round fails with an explicit upgrade
+message instead of an incidental Python keyword error.
 
 ### `continue_as_new` and summaries
 
@@ -117,16 +132,6 @@ deterministic and replay-safe. Hydration and summarization are activity work
 with normal retry semantics; the summarizer call is recorded like any
 `invokeReasoner`, so a retry re-reads the same trace refs and produces a
 recorded result. Replays never re-summarize.
-
-## The C2 stopgap (shipping path before this lands)
-
-Until C1 lands, an adopter assembles the transcript inside their `LlmCaller`:
-keep `trace_content_refs` on, fetch the run's trace entries from the blob
-store keyed by the refs in `payload["trace"]`, build provider messages, and
-enforce the token budget caller-side. This works (the mem-mcp pilot ships on
-it) but duplicates per adopter, has no `SUMMARY` support without bespoke
-plumbing, and leaks framework state shape into caller code — which is the
-argument for C1, not against the stopgap.
 
 ## Non-goals
 

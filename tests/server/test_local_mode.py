@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -9,14 +10,27 @@ import pytest
 from starlette.testclient import TestClient
 
 import julep.server as server
-from julep import Budget, arr, call, deploy, human_gate, ident, mcp, register_pure, seq, sub
+from julep import (
+    Budget,
+    ContextPolicy,
+    ContextScope,
+    arr,
+    call,
+    deploy,
+    human_gate,
+    ident,
+    mcp,
+    register_pure,
+    seq,
+    sub,
+)
 from julep.app_deploy import ApplicationRelease, PipelineRelease
 from julep.execution.effects import WorkerContext
 from julep.execution.projection_store import InMemoryExecutionStore
 from julep.freeze import McpSnapshot
 from julep.dotctx import Reasoner
 from julep.dsl import app as agent_app
-from julep.registry import Registry
+from julep.registry import DEFAULT_REGISTRY, Registry
 from julep.server.settings import ServerSettings
 
 from conftest import read_snapshot
@@ -793,10 +807,202 @@ def test_configured_agent_inherits_parent_max_calls(tmp_path: Path) -> None:
             headers=CONFIGURED_HEADERS,
         )
 
-    assert finished["run"]["status"] == "completed"
-    assert finished["result"]["status"] == "denied"
-    assert finished["result"]["reason"] == "tool 'srv/echo' exceeded maxCalls=1"
+    assert finished["run"]["status"] == "failed"
+    assert finished["result"] is None
+    assert "AgentTerminalError: agent terminated with denied" in finished["run"]["error"]
     assert effect_calls == 1
+
+
+def test_local_api_runs_transcript_scoped_native_tool_agent(tmp_path: Path) -> None:
+    _configure_context_auth(tmp_path)
+    registry = Registry()
+    system_renderer = "tests/local-scoped/system"
+    user_renderer = "tests/local-scoped/user"
+
+    def render_system(context: Mapping[str, Any]) -> str:
+        assert "trace" not in context
+        return f"Category: {context['category']}"
+
+    def render_user(context: Mapping[str, Any]) -> str:
+        assert "trace" not in context
+        return f"Investigate {context['category']}: {context['value']}"
+
+    DEFAULT_REGISTRY.register_renderer(
+        system_renderer, render_system, source="system/category"
+    )
+    DEFAULT_REGISTRY.register_renderer(
+        user_renderer, render_user, source="user/category/value"
+    )
+    registry.register_reasoner(
+        Reasoner(
+            "local.scoped-agent",
+            "test:model",
+            system_render=system_renderer,
+            user_render=user_renderer,
+        )
+    )
+    model_calls: list[dict[str, Any]] = []
+
+    async def configured_mcp(
+        _server: str,
+        _tool: str,
+        value: Any,
+        _cid: str,
+        _principal: dict[str, Any] | None,
+        _secrets: dict[str, str] | None,
+        _input_schema_validated: bool,
+    ) -> Any:
+        return {"echo": value["value"]}
+
+    async def configured_llm(
+        reasoner: Reasoner,
+        value: Any,
+        _principal: dict[str, Any] | None,
+        transcript: Any,
+        _dispatch: Any,
+        **kwargs: Any,
+    ) -> Any:
+        model_calls.append(
+            {
+                "value": value,
+                "system": reasoner.system,
+                "transcript": transcript,
+                "tools": kwargs.get("tools"),
+            }
+        )
+        if len(model_calls) == 1:
+            return {
+                "tool_calls": [
+                    {
+                        "id": "echo-1",
+                        "tool": "echo",
+                        "input": {"value": value["input"]["value"]},
+                    }
+                ]
+            }
+        return {
+            "done": True,
+            "output": {"answer": transcript[-1]["content"]["echo"]},
+        }
+
+    def context_factory() -> WorkerContext:
+        return WorkerContext(
+            mcp_call=configured_mcp,
+            llm=configured_llm,
+            registry=registry,
+        )
+
+    flow = agent_app(
+        "local.scoped-agent",
+        tools=["echo"],
+        tool_aliases={"echo": "srv/echo"},
+        max_rounds=3,
+        ctx=ContextPolicy(
+            scope=ContextScope.WHOLE_SESSION,
+            max_tokens=500,
+        ),
+        native_tools=True,
+    )
+    app = server.create_local_app(
+        project_root=tmp_path,
+        context_factory=context_factory,
+    )
+    release = _release(
+        flow,
+        snapshot=read_snapshot("echo"),
+        mcp_preflight_policy="off",
+    )
+    original = {"category": "memory", "value": "hello"}
+
+    with TestClient(app) as client:
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="transcript-native-agent",
+            input=original,
+            headers=CONFIGURED_HEADERS,
+        )
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
+
+    assert finished["run"]["status"] == "completed", finished["run"].get("error")
+    assert finished["result"]["status"] == "done"
+    assert model_calls[0]["tools"][0]["function"]["name"] == "echo"
+    assert [call["system"] for call in model_calls] == [
+        "Category: memory",
+        "Category: memory",
+    ]
+    assert model_calls[0]["transcript"] == [
+        {"role": "user", "content": "Investigate memory: hello"}
+    ]
+    assert model_calls[1]["value"]["input"] == original
+    assert model_calls[1]["value"]["trace"][0]["decision"] == "call"
+    assert model_calls[1]["transcript"][0] == {
+        "role": "user",
+        "content": "Investigate memory: hello",
+    }
+    assert model_calls[1]["transcript"][-1] == {
+        "role": "tool",
+        "ref": {"kind": "native", "name": "echo"},
+        "tool_call_id": "echo-1",
+        "content": {"echo": "hello"},
+    }
+    assert finished["result"]["output"] == {"answer": "hello"}
+
+
+def test_local_api_maps_agent_controller_error_to_failed_run_and_scrubs(
+    tmp_path: Path,
+) -> None:
+    from julep.secrets import register_secret_value
+
+    _configure_context_auth(tmp_path)
+    secret = "operator-agent-error:/must-not-leak"
+    register_secret_value(secret)
+    registry = Registry()
+    registry.register_reasoner(Reasoner("local.failing-agent", "test:model"))
+
+    async def configured_llm(
+        _reasoner: Reasoner,
+        _value: Any,
+        _principal: dict[str, Any] | None,
+        _transcript: Any,
+        _dispatch: Any,
+    ) -> Any:
+        return {"done": False, "reason": f"controller echoed {secret}"}
+
+    app = server.create_local_app(
+        project_root=tmp_path,
+        context_factory=lambda: WorkerContext(llm=configured_llm, registry=registry),
+    )
+    release = _release(agent_app("local.failing-agent", max_rounds=2))
+
+    with TestClient(app) as client:
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="agent-controller-error",
+            input={"task": "fail"},
+            headers=CONFIGURED_HEADERS,
+        )
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
+        events = client.get(
+            f"/v1/runs/{started.json()['run_id']}/events",
+            headers={**CONFIGURED_HEADERS, "Accept": "application/json"},
+        ).json()["items"]
+
+    assert finished["run"]["status"] == "failed"
+    assert finished["result"] is None
+    assert "AgentTerminalError" in finished["run"]["error"]
+    assert secret not in repr(finished)
+    assert secret not in repr(events)
+    assert any(event["type"] == "Failed" for event in events)
 
 
 def test_local_effects_agent_preserves_native_count_and_uses_wire_alias_limit(

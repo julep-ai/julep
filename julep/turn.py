@@ -24,6 +24,8 @@ from .agent_loop import (
     CallDenial,
     DEFAULT_TOOL_COST,
     Decision,
+    FEEDBACK_DECISIONS,
+    FEEDBACK_KEY,
     REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
     REQUIRE_TOOL_CALL_REASK_MESSAGE,
     ROUND_NOTE_KEY,
@@ -183,10 +185,32 @@ def controller_turn(
         return tool_count_keys.get(tool, tool)
 
     async def step(state: AgentState) -> StepResult:
-        payload: dict[str, Any] = {
-            "input": state.last,
-            "trace": [t.to_json() for t in state.trace],
-        }
+        # Transcript plan: deterministic, ref-bearing, computed in workflow code.
+        # Hydration/budget/summarization happen in the invoke_reasoner effect;
+        # the engine binding moves these keys onto InvokeReasonerInput.
+        transcript_plan = (
+            transcript_for(state, cfg.ctx, input=run_input)
+            if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES
+            else None
+        )
+        payload: dict[str, Any]
+        if transcript_plan is not None:
+            # Transcript rounds mirror the Temporal harness contract: the
+            # conversation (rendered opening ask + tool turns) lives in the
+            # transcript, so system/user templates always render from the
+            # ORIGINAL input. Loop feedback — which transcript_for deliberately
+            # excludes — rides FEEDBACK_KEY and renders as a trailing user turn.
+            payload = {
+                "input": run_input,
+                "trace": [entry.to_json() for entry in state.trace],
+            }
+            if state.trace and state.trace[-1].decision in FEEDBACK_DECISIONS:
+                payload[FEEDBACK_KEY] = state.last
+        else:
+            payload = {
+                "input": state.last,
+                "trace": [t.to_json() for t in state.trace],
+            }
         if note_fn is not None:
             # Fresh each round from loop state only; deterministic under Temporal
             # replay because the function is a registered pure.
@@ -201,11 +225,9 @@ def controller_turn(
                 # reserved key as a trailing system line; namespaced so ordinary
                 # reasoner "note" business fields are never injected.
                 payload[ROUND_NOTE_KEY] = note
-        if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
-            # Transcript plan: deterministic, ref-bearing, computed in workflow
-            # code. Hydration/budget/summarization happen in the invoke_reasoner
-            # effect; the engine binding moves these keys onto InvokeReasonerInput.
-            payload["transcript"] = transcript_for(state, cfg.ctx, input=run_input)
+        if transcript_plan is not None:
+            assert cfg.ctx is not None
+            payload["transcript"] = transcript_plan
             payload["ctx"] = cfg.ctx.to_json()
             if cfg.summarizer is not None:
                 payload["summarizer"] = cfg.summarizer
@@ -360,6 +382,8 @@ def controller_turn(
                         call_id=cast(Optional[str], entry.get("id")) or f"call-{state.round}-{index}",
                         arguments=call_input,
                         error=error,
+                        output=out,
+                        output_available=True,
                     ),
                 )
 
@@ -451,6 +475,8 @@ def controller_turn(
                     ),
                     arguments=call_input if cfg.native_tools else None,
                     error=error,
+                    output=out,
+                    output_available=True,
                 )
             )
         else:  # sub
@@ -479,6 +505,8 @@ def controller_turn(
                     shape=action.payload.get("shape"),
                     cost=cost,
                     error=error,
+                    output=out,
+                    output_available=True,
                 )
             )
 

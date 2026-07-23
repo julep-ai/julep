@@ -68,7 +68,15 @@ _ENV_ALLOWED_KEYS = frozenset(
 _WORKER_SECRET_ALLOWED_KEYS = frozenset({"key", "secret_name"})
 _SCHEDULE_ALLOWED_KEYS = frozenset({"cron", "env", "flow", "input", "paused"})
 _PIPELINE_ALLOWED_KEYS = frozenset(
-    {"ctx", "lane", "env", "tools", "policy", "context_max_tokens"}
+    {
+        "ctx",
+        "lane",
+        "env",
+        "tools",
+        "policy",
+        "context_max_tokens",
+        "summarizer",
+    }
 )
 # [pipeline.<name>.policy] keys map onto ExecutionPolicy fields (snake_case).
 _POLICY_INT_KEYS = frozenset(
@@ -504,6 +512,15 @@ def _build_pipelines(
             raise ValueError(
                 f"{context} context_max_tokens must be a positive integer"
             )
+        summarizer = table.get("summarizer")
+        if summarizer is not None and (
+            not isinstance(summarizer, str)
+            or not summarizer
+            or summarizer.strip() != summarizer
+        ):
+            raise ValueError(
+                f"{context} summarizer must be a non-empty trimmed dotctx path"
+            )
         result[name] = CtxPipelineConfig(
             name=name,
             ctx=ctx,
@@ -512,6 +529,7 @@ def _build_pipelines(
             tools=tool_tables.get(name, {}),
             policy=policy,
             context_max_tokens=context_max_tokens,
+            summarizer=summarizer,
         )
     return result
 

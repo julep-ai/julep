@@ -30,6 +30,10 @@ class CtxPipelineConfig:
     # config owns the budget (operational, model-window dependent) — there is
     # no implicit transcript budget (APP_CTX_NO_BUDGET).
     context_max_tokens: Optional[int] = None
+    # Dotctx package used for SUMMARY-scope transcript compaction. This is a
+    # package path (resolved like ``ctx``), not an implicit model name, so the
+    # summarizer declaration is frozen and shipped with the pipeline.
+    summarizer: Optional[str] = None
 
 
 def normalize_tool_bindings(bindings: Mapping[str, str]) -> dict[str, str]:
@@ -94,6 +98,7 @@ def pipeline_spec_from_ctx(
             )
 
     transcript_ctx = None
+    summarizer_reasoner = None
     if reasoner.context_scope in (ContextScope.SUMMARY, ContextScope.WHOLE_SESSION):
         if config.context_max_tokens is None:
             raise ValueError(
@@ -112,15 +117,41 @@ def pipeline_spec_from_ctx(
             "only applies to summary/whole_session scopes"
         )
 
+    if reasoner.context_scope is ContextScope.SUMMARY:
+        if config.summarizer is None:
+            raise ValueError(
+                f"pipeline {config.name!r} uses summary context but sets no "
+                "summarizer dotctx package; there is no implicit summarizer model"
+            )
+        summarizer_path = Path(config.summarizer)
+        if not summarizer_path.is_absolute():
+            summarizer_path = root / summarizer_path
+        summarizer_reasoner = load_dotctx(
+            str(summarizer_path), env=merged_env, _registry=_registry
+        )
+    elif config.summarizer is not None:
+        raise ValueError(
+            f"pipeline {config.name!r} sets summarizer but its dotctx declares "
+            f"context scope {reasoner.context_scope.value!r}; summarizer only "
+            "applies to summary scope"
+        )
+
+    declarations = [reasoner]
+    if summarizer_reasoner is not None and summarizer_reasoner.name != reasoner.name:
+        declarations.append(summarizer_reasoner)
+
     return PipelineSpec(
         name=config.name,
         flow=reasoner_to_flow(
             reasoner,
             ctx=transcript_ctx,
+            summarizer=(
+                summarizer_reasoner.name if summarizer_reasoner is not None else None
+            ),
             tool_aliases=aliases or None,
             agent_round_cap=agent_round_cap,
         ),
-        reasoners=(reasoner,),
+        reasoners=tuple(declarations),
         lane=config.lane,
         snapshot_source=snapshot_source,
         execution_policy=config.policy,

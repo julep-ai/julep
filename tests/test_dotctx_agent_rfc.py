@@ -67,6 +67,34 @@ def _frozen():
     )
 
 
+def _freeze_schema_pair(expected: dict, served: dict):
+    reasoner = Reasoner(
+        "schema-pair-agent",
+        "test:model",
+        tools=("search",),
+        max_rounds=1,
+    )
+    flow = reasoner_to_flow(
+        reasoner,
+        tool_aliases={"search": "tracker/search-posts"},
+    )
+    snapshot = McpSnapshot(
+        servers={
+            "tracker": McpServerSnapshot(
+                "tracker",
+                {"search-posts": McpToolSpec(input_schema=served)},
+            )
+        }
+    )
+    return freeze(
+        flow,
+        snapshot,
+        expected_tool_schemas={
+            "search": ToolSchemaExpectation("search", expected, "prompt.ctx")
+        },
+    )
+
+
 def test_non_tool_dotctx_agent_preserves_legacy_app_bytes() -> None:
     reasoner = reasoner_from_settings({
         "name": "open-no-tools-byte-parity",
@@ -134,6 +162,83 @@ def test_freeze_rejects_non_exact_tools_pyi_schema() -> None:
                 "search": ToolSchemaExpectation("search", EXPECTED, "prompt.ctx")
             },
         )
+
+
+def test_freeze_tolerates_only_extra_served_closed_object_markers() -> None:
+    expected = {
+        "type": "object",
+        "properties": {
+            "rows": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {"value": {"type": "string"}},
+                },
+            }
+        },
+    }
+    served = {
+        **expected,
+        "additionalProperties": False,
+        "properties": {
+            "rows": {
+                **expected["properties"]["rows"],
+                "items": {
+                    **expected["properties"]["rows"]["items"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+    }
+
+    frozen = _freeze_schema_pair(expected, served)
+
+    # Authoring-only tolerance must not rewrite the frozen runtime contract.
+    [tool] = frozen.manifest.values()
+    assert tool.input_schema == served
+
+
+def test_freeze_rejects_expected_closed_schema_served_open() -> None:
+    expected = {**EXPECTED, "additionalProperties": False}
+
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT"):
+        _freeze_schema_pair(expected, EXPECTED)
+
+
+@pytest.mark.parametrize("instance_keyword", ["const", "default", "examples"])
+def test_freeze_does_not_strip_closed_marker_from_instance_data(
+    instance_keyword: str,
+) -> None:
+    expected_value: object = {"additionalProperties": False}
+    served_value: object = {}
+    if instance_keyword == "examples":
+        expected_value = [expected_value]
+        served_value = [served_value]
+    expected = {
+        "type": "object",
+        instance_keyword: expected_value,
+    }
+    served = {
+        "type": "object",
+        instance_keyword: served_value,
+    }
+
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT"):
+        _freeze_schema_pair(expected, served)
+
+
+def test_freeze_does_not_strip_property_named_additional_properties() -> None:
+    expected = {
+        "type": "object",
+        "properties": {"additionalProperties": False},
+    }
+    served = {
+        "type": "object",
+        "properties": {},
+    }
+
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT"):
+        _freeze_schema_pair(expected, served)
 
 
 def test_think_reasoner_honors_explicit_unscoped_tool_expectation(

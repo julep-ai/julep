@@ -279,6 +279,7 @@ from .resilience import (
 # --- errors ---------------------------------------------------------------- #
 from .errors import (
     AdmissionError as AdmissionError,
+    AgentTerminalError as AgentTerminalError,
     BudgetExceeded as BudgetExceeded,
     CapabilityDenied as CapabilityDenied,
     JulepError as JulepError,
@@ -301,6 +302,7 @@ from .execution import (
     HAVE_DBOS as HAVE_DBOS,
     HAVE_TEMPORAL as HAVE_TEMPORAL,
     InMemoryEnv as InMemoryEnv,
+    LlmCaller as LlmCaller,
     Result as Result,
     RunPrincipal as RunPrincipal,
     WorkerContext as WorkerContext,
@@ -390,12 +392,12 @@ _BASE_EXPORTS = [
     "AttemptRecord", "CircuitBreaker", "ErrorClass", "ResiliencePolicy",
     "classify_error", "summarize_attempts",
     # errors
-    "JulepError", "ValidationError", "FreezeError", "AdmissionError",
+    "JulepError", "ValidationError", "FreezeError", "AdmissionError", "AgentTerminalError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
     "PrincipalRequired", "ResilienceExhausted", "UnsupportedShapeError", "ToolSurfaceDrift",
     "ToolInputValidation",
     # execution (pure)
-    "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "RunPrincipal", "WorkerContext", "interpret",
+    "Env", "ExecutionPolicy", "InMemoryEnv", "LlmCaller", "Result", "RunPrincipal", "WorkerContext", "interpret",
     "HAVE_DBOS", "HAVE_TEMPORAL",
     # foreground configured execution
     "LocalPipeline", "LocalPipelineError", "LocalPipelineNotFound",

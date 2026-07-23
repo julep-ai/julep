@@ -49,8 +49,17 @@ RunPrincipal = dict[str, Any]   # opaque to the framework; JSON-serializable
 McpCaller = Callable[[str, str, Any, str, Optional[RunPrincipal]], Awaitable[Any]]
 #                     (server, tool, value, idempotency_key, principal) -> result
 
-LlmCaller  = Callable[[Reasoner, Any, Optional[RunPrincipal]], Awaitable[Any]]
-#                     (reasoner, value, principal) -> result
+class LlmCaller(Protocol):
+    def __call__(
+        self,
+        reasoner: Reasoner,
+        value: Any,
+        principal: Optional[RunPrincipal],
+        transcript: Optional[Transcript],
+        dispatch: ReasonerDispatch,
+        *,
+        tools: Optional[list[dict[str, Any]]] = None,
+    ) -> Awaitable[Any]: ...
 ```
 
 Both callers gain the principal. Tools need it for tenant-scoped tool auth;
@@ -58,9 +67,11 @@ reasoners need it for per-tenant model routing, per-tenant API keys, and
 per-tenant spend attribution. Same mechanism, one review.
 
 **Back-compat:** `configure()` inspects the supplied callables' arity and wraps
-2-/4-argument legacy callables so they keep working unchanged. New code should
-take the principal positionally. The wrapper is registered once at `configure`
-time, not per call.
+legacy callables so they keep working for inputs they can represent. New code
+should implement the full protocol above. A legacy caller that declares
+keyword-only `tools` receives native tool definitions; one that does not fails
+with a clear upgrade error on a native-tool round. The wrapper is registered
+once at `configure` time, not per call.
 
 ### Dispatch
 

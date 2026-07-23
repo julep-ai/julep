@@ -91,7 +91,13 @@ with workflow.unsafe.imports_passed_through():
     from ..capabilities import Budget
     from ..continuation import continuation_value, is_continuation
     from ..contracts import ToolContract, contract_allows_retry, manifest_from_json
-    from ..errors import JulepError, SessionTurnError, tool_surface_drift_from_cause
+    from ..errors import (
+        FAILED_AGENT_TERMINAL_STATUSES,
+        JulepError,
+        SessionTurnError,
+        raise_for_agent_terminal,
+        tool_surface_drift_from_cause,
+    )
     from ..ir import Ann, CallStep, EMIT_TOOL, NativeTool, Node, RECV_TOOL
     from ..kinds import Effect, Op
     from ..projection import EventType, InMemoryProjection, ProjectionEmitter
@@ -179,6 +185,7 @@ _NON_RETRYABLE = [
     "invalid_run_secret_binding",
     "ToolSurfaceDrift",
     "ToolInputValidation",
+    "AgentTerminalError",
 ]
 
 
@@ -385,6 +392,14 @@ def _mcp_preflight_enabled() -> bool:
     """Replay gate for MCP preflight, safe for direct workflow unit calls."""
     try:
         return workflow.patched("mcp-preflight")
+    except Exception:
+        return False
+
+
+def _agent_terminal_failure_enabled() -> bool:
+    """Replay gate for mapping failed agent envelopes to workflow failures."""
+    try:
+        return workflow.patched("agent-terminal-failure-v1")
     except Exception:
         return False
 
@@ -1653,6 +1668,13 @@ class FlowWorkflow:
                     status="failed",
                     error=failure.message,
                 )
+            if _agent_terminal_failure_enabled():
+                await self._finish_trajectory(
+                    inp.session_id,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    status="failed",
+                    segment_seq=inp.segment_seq,
+                )
             raise failure from None
         except Exception as exc:
             failure = application_error_from_failure(
@@ -1667,6 +1689,13 @@ class FlowWorkflow:
                     inp,
                     status="failed",
                     error=failure.message,
+                )
+            if _agent_terminal_failure_enabled():
+                await self._finish_trajectory(
+                    inp.session_id,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    status="failed",
+                    segment_seq=inp.segment_seq,
                 )
             raise failure from None
         if is_continuation(result.value):
@@ -2387,6 +2416,8 @@ class AgentWorkflow:
     def __init__(self) -> None:
         self._human_inbox: dict[str, Any] = {}
         self._run_secrets: dict[str, str] = {}
+        self._trajectory_finished = False
+        self._terminal_failure_enabled = False
 
     @workflow.signal(name="submitHuman")
     def submit_human(self, payload: dict[str, Any]) -> None:
@@ -2430,6 +2461,13 @@ class AgentWorkflow:
         status: str = "completed",
         segment_seq: int = 0,
     ) -> None:
+        if (
+            status == "completed"
+            and self._terminal_failure_enabled
+            and isinstance(result, dict)
+            and result.get("status") in FAILED_AGENT_TERMINAL_STATUSES
+        ):
+            status = "failed"
         try:
             await workflow.execute_activity(
                 finishTrajectory,
@@ -2453,14 +2491,27 @@ class AgentWorkflow:
             )
         except Exception as exc:
             _LOG.warning("trajectory dispatch failed (best-effort, swallowed): %s", exc)
+        finally:
+            self._trajectory_finished = True
 
     @workflow.run
     async def run(self, inp: AgentInput) -> dict[str, Any]:
+        self._terminal_failure_enabled = _agent_terminal_failure_enabled()
         try:
-            return await self._run(inp)
+            result = await self._run(inp)
+            if self._terminal_failure_enabled:
+                raise_for_agent_terminal(result)
+            return result
         except ActivityError:
             # Secret-bearing activities sanitize their leaf failure before the
             # SDK builds this wrapper; retaining it preserves retry/type data.
+            if self._terminal_failure_enabled and not self._trajectory_finished:
+                await self._finish_trajectory(
+                    inp.session_id,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    status="failed",
+                    segment_seq=inp.segment_seq,
+                )
             raise
         except Exception as exc:
             # Test/local continue-as-new shims use an empty sentinel exception.
@@ -2473,6 +2524,13 @@ class AgentWorkflow:
                 and exc.__context__ is None
             ):
                 raise
+            if self._terminal_failure_enabled and not self._trajectory_finished:
+                await self._finish_trajectory(
+                    inp.session_id,
+                    root_run_id=(inp.root_run_id or inp.session_id),
+                    status="failed",
+                    segment_seq=inp.segment_seq,
+                )
             raise application_error_from_failure(exc, inp.secrets) from None
 
     async def _run(self, inp: AgentInput) -> dict[str, Any]:
@@ -2563,6 +2621,9 @@ class AgentWorkflow:
                 subflow_queues = dict(spec_subflow_queues)
 
         cfg = al.AgentConfig.from_json(config or {})
+        preserve_transcript_outputs = (
+            cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES
+        )
         if cfg.native_tools and not tool_defs:
             raise ApplicationError(
                 "native_tools on a durable backend needs provider tool definitions; "
@@ -2685,11 +2746,11 @@ class AgentWorkflow:
                 # always render from the ORIGINAL input. Loop feedback — which
                 # transcript_for deliberately excludes — rides the reserved
                 # feedback key and renders as a trailing user turn.
-                controller_value: dict[str, Any] = {"input": inp.input, "trace": []}
-                if state.trace and state.trace[-1].decision in (
-                    "reask",
-                    "output_reask",
-                ):
+                controller_value: dict[str, Any] = {
+                    "input": inp.input,
+                    "trace": [entry.to_json() for entry in state.trace],
+                }
+                if state.trace and state.trace[-1].decision in al.FEEDBACK_DECISIONS:
                     controller_value[al.FEEDBACK_KEY] = state.last
             else:
                 controller_value = {
@@ -3005,7 +3066,7 @@ class AgentWorkflow:
                         )
                         out = {"error": error, "tool": tool}
                     output_ref: Optional[str] = None
-                    if policy.trace_content_refs:
+                    if policy.trace_content_refs or preserve_transcript_outputs:
                         output_ref = await workflow.execute_activity(
                             putBlob,
                             PutBlobInput(
@@ -3034,6 +3095,8 @@ class AgentWorkflow:
                             arguments=call_input,
                             output_ref=output_ref,
                             error=error,
+                            output=out,
+                            output_available=True,
                         ),
                     )
 
@@ -3174,7 +3237,7 @@ class AgentWorkflow:
                 state.charge(cost)
                 state.last = out
                 output_ref: Optional[str] = None
-                if policy.trace_content_refs:
+                if policy.trace_content_refs or preserve_transcript_outputs:
                     output_ref = await workflow.execute_activity(
                         putBlob,
                         PutBlobInput(
@@ -3200,6 +3263,8 @@ class AgentWorkflow:
                         arguments=call_input if cfg.native_tools else None,
                         output_ref=output_ref,
                         error=error,
+                        output=out,
+                        output_available=True,
                     )
                 )
 
@@ -3321,7 +3386,7 @@ class AgentWorkflow:
                 state.charge(cost)
                 state.last = out
                 output_ref: Optional[str] = None
-                if policy.trace_content_refs:
+                if policy.trace_content_refs or preserve_transcript_outputs:
                     output_ref = await workflow.execute_activity(
                         putBlob,
                         PutBlobInput(
@@ -3341,6 +3406,8 @@ class AgentWorkflow:
                         shape=action.payload.get("shape"),
                         cost=cost,
                         output_ref=output_ref,
+                        output=out,
+                        output_available=True,
                     )
                 )
 

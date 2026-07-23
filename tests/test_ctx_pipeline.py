@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("jinja2")
 
 from julep.ctx_pipeline import CtxPipelineConfig, pipeline_spec_from_ctx
+from julep.registry import Registry
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -80,4 +81,57 @@ def test_context_max_tokens_rejected_for_local_scope(tmp_path: Path) -> None:
         pipeline_spec_from_ctx(
             CtxPipelineConfig(name="plain", ctx=str(pkg), context_max_tokens=8000),
             root=tmp_path,
+        )
+
+
+def test_summary_scope_requires_explicit_summarizer_ctx(tmp_path: Path) -> None:
+    pkg = _write_transcript_agent(tmp_path, context="summary")
+    with pytest.raises(ValueError, match="summarizer"):
+        pipeline_spec_from_ctx(
+            CtxPipelineConfig(
+                name="looper",
+                ctx=str(pkg),
+                context_max_tokens=8000,
+            ),
+            root=tmp_path,
+            _registry=Registry(),
+        )
+
+
+def test_summary_scope_loads_and_declares_configured_summarizer(tmp_path: Path) -> None:
+    pkg = _write_transcript_agent(tmp_path, context="summary")
+    summarizer = tmp_path / "summarizer.ctx"
+    summarizer.mkdir()
+    (summarizer / "settings.yaml").write_text(
+        "name: summary.helper\nmodel: test:model\n",
+        encoding="utf-8",
+    )
+
+    spec = pipeline_spec_from_ctx(
+        CtxPipelineConfig(
+            name="looper",
+            ctx=str(pkg),
+            context_max_tokens=8000,
+            summarizer=str(summarizer),
+        ),
+        root=tmp_path,
+        _registry=Registry(),
+    )
+
+    assert spec.flow.summarizer == "summary.helper"
+    assert spec.reasoner_names == ("looper", "summary.helper")
+
+
+def test_summarizer_ctx_rejected_outside_summary_scope(tmp_path: Path) -> None:
+    pkg = _write_transcript_agent(tmp_path, context="whole_session")
+    with pytest.raises(ValueError, match="only applies to summary"):
+        pipeline_spec_from_ctx(
+            CtxPipelineConfig(
+                name="looper",
+                ctx=str(pkg),
+                context_max_tokens=8000,
+                summarizer="summarizer.ctx",
+            ),
+            root=tmp_path,
+            _registry=Registry(),
         )
