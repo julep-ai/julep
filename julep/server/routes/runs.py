@@ -27,7 +27,7 @@ from ..auth import ApiKey, merge_principal, owner_scoped, require_client
 from ..sse import EVENT_PAGE_LIMIT, event_sequence, run_event_response
 from ..temporal import TemporalGateway, TemporalStartAmbiguous
 from . import execution_store, require_owned_run, temporal_gateway
-from .releases import load_release, rehydrate_release
+from .releases import load_release, normalize_release_hash, rehydrate_release
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 _RESULT_TERMINAL_STATUSES = TERMINAL_RUN_STATUSES | {"start_failed"}
@@ -144,6 +144,45 @@ def _run_json_response(row: Mapping[str, Any], status_code: int) -> JSONResponse
     return JSONResponse(status_code=status_code, content=dict(row))
 
 
+def _assert_idempotency_retry_matches(
+    existing: Mapping[str, Any],
+    *,
+    pipeline: str,
+    requested_release: Optional[str],
+) -> None:
+    """Reject an idempotency-key collision that is not an execution retry.
+
+    An omitted release deliberately does not participate in the comparison: a
+    retry must remain attached to its original release even if active routing
+    has changed since submission.  An explicit release is normalized before
+    this helper is called so ``<digest>`` and ``sha256:<digest>`` compare equal.
+    """
+
+    if existing.get("pipeline") != pipeline:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "idempotency_conflict",
+                "field": "pipeline",
+                "message": "idempotency key was already used for a different pipeline",
+            },
+        )
+    requested_release_hash = (
+        normalize_release_hash(requested_release)
+        if requested_release is not None
+        else None
+    )
+    if requested_release_hash is not None and existing.get("release_hash") != requested_release_hash:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "idempotency_conflict",
+                "field": "release",
+                "message": "idempotency key was already used for a different release",
+            },
+        )
+
+
 @router.post("")
 async def start_run(
     body: RunRequest,
@@ -198,11 +237,20 @@ async def start_run(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="idempotency key or runId is already in use",
             )
+        if idempotency_key is not None:
+            _assert_idempotency_retry_matches(
+                existing,
+                pipeline=body.pipeline,
+                requested_release=body.release,
+            )
         return _run_json_response(existing, 200)
 
+    requested_release_hash = (
+        normalize_release_hash(body.release) if body.release is not None else None
+    )
     _release_row, release, pipeline = _resolve_pipeline(
         request,
-        body.release,
+        requested_release_hash,
         body.pipeline,
     )
     if body.secrets and pipeline.mcp_preflight_policy is None:
@@ -246,6 +294,15 @@ async def start_run(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="idempotency key or runId is already in use",
+            )
+        if (
+            idempotency_key is not None
+            and created.get("idempotency_key") == idempotency_key
+        ):
+            _assert_idempotency_retry_matches(
+                created,
+                pipeline=body.pipeline,
+                requested_release=requested_release_hash,
             )
         return _run_json_response(created, 200)
 
