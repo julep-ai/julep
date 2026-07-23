@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import secrets
 import shlex
+import tempfile
 from collections.abc import Callable, Mapping
+from pathlib import Path
 
 
 def generate_dev_environment(
@@ -15,9 +18,10 @@ def generate_dev_environment(
 ) -> dict[str, str]:
     """Generate mutually independent local-only encryption and signing keys.
 
-    The returned mapping can be loaded into both the API and worker process.
-    No value is persisted by Julep; callers choose whether to print it, feed a
-    secret manager, or write a protected environment file.
+    The returned mapping is a supervisor input, not a shared child-process
+    environment: ``julep dev up`` partitions server, publisher, and worker
+    credentials by role. No value is persisted by Julep; callers choose whether
+    to print it, feed a secret manager, or write a protected environment file.
     """
 
     try:
@@ -84,4 +88,52 @@ def render_dev_environment(
     return "".join(f"export {name}={shlex.quote(value)}\n" for name, value in values.items())
 
 
-__all__ = ["generate_dev_environment", "render_dev_environment"]
+def write_private_file(path: str | Path, content: str, *, replace: bool = False) -> None:
+    """Write a mode-0600 secret file, atomically replacing only when requested."""
+
+    destination = Path(path)
+    if not replace:
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(destination, flags, 0o600)
+        try:
+            os.fchmod(descriptor, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                descriptor = -1
+                handle.write(content)
+                handle.flush()
+                os.fsync(handle.fileno())
+        except BaseException:
+            if descriptor >= 0:
+                os.close(descriptor)
+            try:
+                destination.unlink()
+            except OSError:
+                pass
+            raise
+        return
+
+    descriptor, temporary_name = tempfile.mkstemp(
+        dir=destination.parent,
+        prefix=f".{destination.name}.",
+        suffix=".tmp",
+    )
+    temporary = Path(temporary_name)
+    try:
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            descriptor = -1
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, destination)
+    except BaseException:
+        if descriptor >= 0:
+            os.close(descriptor)
+        try:
+            temporary.unlink()
+        except OSError:
+            pass
+        raise
+
+
+__all__ = ["generate_dev_environment", "render_dev_environment", "write_private_file"]

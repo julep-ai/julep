@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -90,3 +92,29 @@ def test_keygen_cli_writes_private_file_and_refuses_implicit_overwrite(
     )
     assert forced.exit_code == 0, forced.output
     assert destination.read_text(encoding="utf-8") != original
+
+
+def test_keygen_force_replaces_from_already_private_temporary_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "julep.env"
+    destination.write_text("old", encoding="utf-8")
+    destination.chmod(0o666)
+    real_replace = os.replace
+    source_modes: list[int] = []
+
+    def checked_replace(source: str | Path, target: str | Path) -> None:
+        source_modes.append(Path(source).stat().st_mode & 0o777)
+        real_replace(source, target)
+
+    monkeypatch.setattr("julep.cli.keygen.os.replace", checked_replace)
+
+    result = CliRunner().invoke(
+        app,
+        ["keygen", "--output", str(destination), "--force"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert source_modes == [0o600]
+    assert destination.stat().st_mode & 0o777 == 0o600

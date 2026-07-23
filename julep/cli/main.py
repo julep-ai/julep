@@ -156,7 +156,11 @@ def keygen(
 ) -> None:
     """Generate independent local payload, vault, signing, and API keys."""
 
-    from julep.cli.keygen import generate_dev_environment, render_dev_environment
+    from julep.cli.keygen import (
+        generate_dev_environment,
+        render_dev_environment,
+        write_private_file,
+    )
 
     try:
         rendered = render_dev_environment(
@@ -171,14 +175,8 @@ def keygen(
         typer.echo(rendered, nl=False)
         return
 
-    flags = _os.O_WRONLY | _os.O_CREAT
-    flags |= _os.O_TRUNC if force else _os.O_EXCL
-    flags |= getattr(_os, "O_NOFOLLOW", 0)
     try:
-        descriptor = _os.open(output, flags, 0o600)
-        with _os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(rendered)
-        output.chmod(0o600)
+        write_private_file(output, rendered, replace=force)
     except FileExistsError:
         typer.echo(
             f"error: {output} already exists; pass --force to replace it",
@@ -245,7 +243,7 @@ def dev_up(
         if env not in cfg.envs:
             raise DevStackError(f"unknown env {env!r}")
         env_cfg = cfg.envs[env]
-        source_env = {**dict(_os.environ), **env_cfg.worker_environment}
+        source_env = dict(_os.environ)
         resolved_url = api_url or source_env.get("JULEP_API_URL") or "http://127.0.0.1:8080"
         resolved_key = api_key or source_env.get("JULEP_API_KEY", "")
         plan = build_dev_stack_plan(

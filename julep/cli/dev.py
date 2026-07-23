@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import os
+import signal
 import shutil
 import socket
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -56,6 +58,129 @@ class ChildProcess(Protocol):
 
 PopenFactory = Callable[..., ChildProcess]
 ReleasePublisher = Callable[[DevStackPlan], tuple[tuple[str, str], ...]]
+
+
+_RUNTIME_ENV_NAMES = frozenset(
+    {
+        "CURL_CA_BUNDLE",
+        "HOME",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "LANG",
+        "LOGNAME",
+        "NO_PROXY",
+        "PATH",
+        "PATHEXT",
+        "PYTHONPATH",
+        "PYTHONUTF8",
+        "PYTHONIOENCODING",
+        "REQUESTS_CA_BUNDLE",
+        "SSL_CERT_DIR",
+        "SSL_CERT_FILE",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "TZ",
+        "USER",
+        "VIRTUAL_ENV",
+        "http_proxy",
+        "https_proxy",
+        "no_proxy",
+    }
+)
+_API_ENV_NAMES = frozenset(
+    {
+        "JULEP_API_KEYS",
+        "JULEP_ARTIFACT_STORE_URL",
+        "JULEP_BUNDLE_ALLOWED_SIGNERS",
+        "JULEP_EXECUTION_STORE_DSN",
+        "JULEP_PROJECTION_BATCH_INTERVAL_S",
+        "JULEP_PROJECTION_BATCH_SIZE",
+        "JULEP_SERVER_HELM_CHART",
+        "JULEP_SERVER_HOST",
+        "JULEP_SERVER_KUBERNETES_NAMESPACE",
+        "JULEP_SERVER_PORT",
+        "JULEP_SERVER_RECONCILE_INTERVAL_S",
+        "JULEP_VAULT_KEY_ID",
+        "JULEP_VAULT_KEYS",
+        "JULEP_WORKER_SECRET_ALLOWLIST",
+        "TEMPORAL_ADDRESS",
+        "TEMPORAL_API_KEY",
+        "TEMPORAL_NAMESPACE",
+        "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED",
+        "TEMPORAL_PAYLOAD_KEY_ID",
+        "TEMPORAL_PAYLOAD_KEYS",
+        "TEMPORAL_TLS",
+    }
+)
+_WORKER_ENV_NAMES = frozenset(
+    {
+        "JULEP_ARTIFACT_STORE_URL",
+        "JULEP_BUNDLE_ALLOWED_SIGNERS",
+        "JULEP_EXECUTION_STORE_DSN",
+        "JULEP_REDACTION",
+        "JULEP_WORKER_BUILD_ID",
+        "JULEP_WORKER_VERSIONING",
+        "TEMPORAL_ADDRESS",
+        "TEMPORAL_API_KEY",
+        "TEMPORAL_NAMESPACE",
+        "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED",
+        "TEMPORAL_PAYLOAD_KEY_ID",
+        "TEMPORAL_PAYLOAD_KEYS",
+        "TEMPORAL_TLS",
+        "WORKER_APPLICATION",
+        "WORKER_CONTEXT_FACTORY",
+        "WORKER_GRACEFUL_SHUTDOWN_S",
+        "WORKER_HEALTH_PORT",
+        "WORKER_MAX_CONCURRENT_ACTIVITIES",
+        "WORKER_MAX_CONCURRENT_WORKFLOW_TASKS",
+        "WORKER_RUNTIME_DECLARATIONS_HASH",
+    }
+)
+_PUBLICATION_ENV_NAMES = frozenset(
+    {
+        "JULEP_ARTIFACT_STORE_URL",
+        "JULEP_BUNDLE_SIGNING_KEY",
+    }
+)
+
+
+def _selected_environment(
+    source: Mapping[str, str],
+    names: frozenset[str] = frozenset(),
+) -> dict[str, str]:
+    """Copy only role-owned configuration plus non-secret process plumbing."""
+
+    selected = {
+        name: value
+        for name, value in source.items()
+        if name in _RUNTIME_ENV_NAMES or name.startswith("LC_") or name in names
+    }
+    return selected
+
+
+class _TerminationRequested(BaseException):
+    """Internal control flow used to clean up children on SIGTERM."""
+
+
+@contextmanager
+def _sigterm_as_exception() -> Iterator[None]:
+    """Turn SIGTERM into normal supervisor unwinding on the main thread."""
+
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+    previous = signal.getsignal(signal.SIGTERM)
+
+    def terminate(_signum: int, _frame: object) -> None:
+        raise _TerminationRequested
+
+    signal.signal(signal.SIGTERM, terminate)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
 
 
 def _server_endpoint(api_url: str) -> tuple[str, int]:
@@ -108,6 +233,10 @@ def build_dev_stack_plan(
     if host not in {"127.0.0.1", "localhost", "::1"}:
         raise DevStackError("julep dev up only supervises a loopback API")
 
+    # The caller's ambient environment is used for validation, but is not
+    # wholesale inherited by children. Provider credentials belong in the
+    # selected environment's worker_environment table and are handed only to
+    # workers below.
     effective = dict(source_env)
     # JULEP_API_KEY is a client credential, not server configuration. Keep it
     # out of child environments so worker secret resolution never receives an
@@ -155,27 +284,28 @@ def build_dev_stack_plan(
     # Split generated credentials by process. Workers need the shared payload
     # codec and a worker-role API token, but never the server's static keyring,
     # vault decryption key, or bundle-signing private key.
-    publication_environment = dict(effective)
-    api_environment = dict(effective)
-    api_environment.pop("JULEP_BUNDLE_SIGNING_KEY", None)
-    worker_environment = dict(effective)
+    publication_environment = _selected_environment(
+        effective,
+        _PUBLICATION_ENV_NAMES,
+    )
+    api_environment = _selected_environment(effective, _API_ENV_NAMES)
+    worker_environment = _selected_environment(effective, _WORKER_ENV_NAMES)
+    worker_environment.update(env.worker_environment)
     for server_only in (
         "JULEP_API_KEYS",
         "JULEP_VAULT_KEYS",
         "JULEP_VAULT_KEY_ID",
         "JULEP_BUNDLE_SIGNING_KEY",
+        "JULEP_API_KEY",
+        "JULEP_API_URL",
+        "JULEP_WORKER_API_KEY",
     ):
         worker_environment.pop(server_only, None)
     if worker_api_key:
         worker_environment["JULEP_API_URL"] = api_url
         worker_environment["JULEP_API_KEY"] = worker_api_key
 
-    temporal_environment = dict(worker_environment)
-    temporal_environment.pop("JULEP_API_URL", None)
-    temporal_environment.pop("JULEP_API_KEY", None)
-    temporal_environment.pop("JULEP_BUNDLE_ALLOWED_SIGNERS", None)
-    temporal_environment.pop("TEMPORAL_PAYLOAD_KEYS", None)
-    temporal_environment.pop("TEMPORAL_PAYLOAD_KEY_ID", None)
+    temporal_environment = _selected_environment(effective)
 
     temporal: Optional[DevCommand] = None
     if start_temporal:
@@ -322,16 +452,31 @@ def _wait_for_api(
 
 def _stop_children(children: Sequence[tuple[str, ChildProcess]]) -> None:
     for _name, child in reversed(children):
-        if child.poll() is None:
-            child.terminate()
+        try:
+            if child.poll() is None:
+                child.terminate()
+        except Exception:  # noqa: BLE001 - continue cleaning the remaining children.
+            pass
     for _name, child in reversed(children):
-        if child.poll() is not None:
+        try:
+            running = child.poll() is None
+        except Exception:  # noqa: BLE001 - make a best-effort kill below.
+            running = True
+        if not running:
             continue
         try:
             child.wait(timeout=5.0)
         except subprocess.TimeoutExpired:
-            child.kill()
-            child.wait(timeout=5.0)
+            try:
+                child.kill()
+                child.wait(timeout=5.0)
+            except Exception:  # noqa: BLE001 - no remaining cleanup avenue.
+                pass
+        except Exception:  # noqa: BLE001 - continue cleaning the remaining children.
+            try:
+                child.kill()
+            except Exception:  # noqa: BLE001 - no remaining cleanup avenue.
+                pass
 
 
 def run_dev_stack(
@@ -360,44 +505,52 @@ def run_dev_stack(
         return child
 
     try:
-        temporal_child: Optional[ChildProcess] = None
-        if plan.temporal is not None:
-            temporal_child = start(plan.temporal)
-        wait_temporal(
-            plan.temporal_address,
-            timeout_s=plan.startup_timeout_s,
-            child=temporal_child,
-        )
+        with _sigterm_as_exception():
+            temporal_child: Optional[ChildProcess] = None
+            if plan.temporal is not None:
+                temporal_child = start(plan.temporal)
+            wait_temporal(
+                plan.temporal_address,
+                timeout_s=plan.startup_timeout_s,
+                child=temporal_child,
+            )
 
-        api_child = start(plan.api)
-        wait_api(
-            plan.api_url,
-            plan.api_key,
-            timeout_s=plan.startup_timeout_s,
-            child=api_child,
-        )
-        queues = publish(plan) if plan.publish_release else ()
-        if plan.start_workers:
-            for lane, queue in queues:
-                start(
-                    DevCommand(
-                        f"worker:{lane}",
-                        plan.worker.argv,
-                        plan.worker.environment,
-                    ),
-                    extra={"TEMPORAL_TASK_QUEUE": queue},
-                )
-        print(
-            f"Julep durable dev stack ready: {plan.api_url} "
-            f"({len(queues)} worker{'s' if len(queues) != 1 else ''})"
-        )
-        while True:
-            for name, child in children:
-                returncode = child.poll()
-                if returncode is not None:
-                    raise DevStackError(f"{name} exited with status {returncode}")
-            time.sleep(poll_interval_s)
-    except KeyboardInterrupt:
+            api_child = start(plan.api)
+            wait_api(
+                plan.api_url,
+                plan.api_key,
+                timeout_s=plan.startup_timeout_s,
+                child=api_child,
+            )
+            queues = publish(plan) if plan.publish_release else ()
+            worker_count = 0
+            if plan.start_workers:
+                for lane, queue in queues:
+                    child = start(
+                        DevCommand(
+                            f"worker:{lane}",
+                            plan.worker.argv,
+                            plan.worker.environment,
+                        ),
+                        extra={"TEMPORAL_TASK_QUEUE": queue},
+                    )
+                    returncode = child.poll()
+                    if returncode is not None:
+                        raise DevStackError(
+                            f"worker:{lane} exited with status {returncode} during startup"
+                        )
+                    worker_count += 1
+            print(
+                f"Julep durable dev stack ready: {plan.api_url} "
+                f"({worker_count} worker{'s' if worker_count != 1 else ''})"
+            )
+            while True:
+                for name, child in children:
+                    returncode = child.poll()
+                    if returncode is not None:
+                        raise DevStackError(f"{name} exited with status {returncode}")
+                time.sleep(poll_interval_s)
+    except (KeyboardInterrupt, _TerminationRequested):
         return
     finally:
         _stop_children(children)

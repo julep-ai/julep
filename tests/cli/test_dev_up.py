@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import signal
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +87,71 @@ def test_build_dev_stack_plan_wires_shared_contract_and_redacts_key(tmp_path: Pa
     rendered = render_dev_stack_plan(plan)
     assert "--api-key" not in rendered
     assert source["JULEP_API_KEY"] not in rendered
+
+
+def test_build_dev_stack_plan_partitions_child_environments_by_role(
+    tmp_path: Path,
+) -> None:
+    source = _source_env()
+    source.update({"PATH": "/bin", "AMBIENT_PROVIDER_SECRET": "do-not-propagate"})
+    cfg = JulepConfig(root=tmp_path, envs={})
+    env = EnvConfig(
+        name="local",
+        release_store=(tmp_path / "artifacts").as_uri(),
+        worker_context_factory="project.worker:context",
+        worker_environment={
+            "WORKER_PROVIDER_SECRET": "worker-only",
+            "JULEP_API_KEYS": "must-not-override",
+        },
+    )
+
+    plan = build_dev_stack_plan(
+        cfg,
+        env,
+        api_url="http://127.0.0.1:8600",
+        api_key=source["JULEP_API_KEY"],
+        source_env=source,
+        python="python",
+    )
+
+    assert plan.temporal is not None
+    environments = {
+        "api": plan.api.environment,
+        "worker": plan.worker.environment,
+        "publisher": plan.publication_environment,
+        "temporal": plan.temporal.environment,
+    }
+    assert all(environment.get("PATH") == "/bin" for environment in environments.values())
+    assert all(
+        "AMBIENT_PROVIDER_SECRET" not in environment
+        for environment in environments.values()
+    )
+    assert environments["worker"]["WORKER_PROVIDER_SECRET"] == "worker-only"
+    assert all(
+        "WORKER_PROVIDER_SECRET" not in environment
+        for role, environment in environments.items()
+        if role != "worker"
+    )
+    assert "JULEP_API_KEYS" in environments["api"]
+    assert all(
+        "JULEP_API_KEYS" not in environment
+        for role, environment in environments.items()
+        if role != "api"
+    )
+    assert "JULEP_EXECUTION_STORE_DSN" in environments["api"]
+    assert "JULEP_EXECUTION_STORE_DSN" in environments["worker"]
+    assert "JULEP_EXECUTION_STORE_DSN" not in environments["publisher"]
+    assert "JULEP_EXECUTION_STORE_DSN" not in environments["temporal"]
+    assert "JULEP_BUNDLE_SIGNING_KEY" in environments["publisher"]
+    assert all(
+        "JULEP_BUNDLE_SIGNING_KEY" not in environment
+        for role, environment in environments.items()
+        if role != "publisher"
+    )
+    assert "TEMPORAL_PAYLOAD_KEYS" in environments["api"]
+    assert "TEMPORAL_PAYLOAD_KEYS" in environments["worker"]
+    assert "TEMPORAL_PAYLOAD_KEYS" not in environments["publisher"]
+    assert "TEMPORAL_PAYLOAD_KEYS" not in environments["temporal"]
 
 
 def test_build_dev_stack_plan_rejects_non_admin_key(tmp_path: Path) -> None:
@@ -215,6 +282,99 @@ def test_run_dev_stack_surfaces_worker_failure_and_stops_healthy_children(
     assert len(processes) == 2
     assert processes[0].terminated  # API is always cleaned up on worker failure.
     assert not processes[1].terminated  # The failed worker already exited.
+
+
+def test_run_dev_stack_sigterm_unwinds_and_cleans_children(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = _plan(tmp_path, start_temporal=False)
+    processes: list[_Process] = []
+
+    def popen(_argv: Any, *, cwd: Path, env: dict[str, str]) -> _Process:
+        assert cwd == tmp_path
+        process = _Process()
+        process.environment = env
+        processes.append(process)
+        return process
+
+    def terminate_process(_seconds: float) -> None:
+        signal.raise_signal(signal.SIGTERM)
+
+    monkeypatch.setattr("julep.cli.dev.time.sleep", terminate_process)
+
+    run_dev_stack(
+        plan,
+        popen=popen,
+        publish=lambda _plan: (("summary", "summary-rabc"),),
+        wait_temporal=lambda *_args, **_kwargs: None,
+        wait_api=lambda *_args, **_kwargs: None,
+    )
+
+    assert len(processes) == 2
+    assert all(process.terminated for process in processes)
+
+
+def test_run_dev_stack_cleanup_continues_after_one_child_raises(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = _plan(tmp_path, start_temporal=False)
+
+    class BrokenTerminate(_Process):
+        def terminate(self) -> None:
+            raise OSError("cannot terminate")
+
+        def wait(self, timeout: float | None = None) -> int:
+            raise subprocess.TimeoutExpired("api", timeout or 0)
+
+    processes: list[_Process] = []
+
+    def popen(_argv: Any, *, cwd: Path, env: dict[str, str]) -> _Process:
+        assert cwd == tmp_path
+        process: _Process = BrokenTerminate() if not processes else _Process()
+        process.environment = env
+        processes.append(process)
+        return process
+
+    def interrupt(_seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr("julep.cli.dev.time.sleep", interrupt)
+
+    run_dev_stack(
+        plan,
+        popen=popen,
+        publish=lambda _plan: (("summary", "summary-rabc"),),
+        wait_temporal=lambda *_args, **_kwargs: None,
+        wait_api=lambda *_args, **_kwargs: None,
+    )
+
+    assert processes[0].returncode == -9
+    assert processes[1].terminated
+
+
+def test_run_dev_stack_reports_zero_workers_when_disabled(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    plan = _plan(tmp_path, start_temporal=False, start_workers=False)
+
+    def interrupt(_seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr("julep.cli.dev.time.sleep", interrupt)
+
+    run_dev_stack(
+        plan,
+        popen=lambda *_args, **_kwargs: _Process(),
+        publish=lambda _plan: (("summary", "summary-rabc"),),
+        wait_temporal=lambda *_args, **_kwargs: None,
+        wait_api=lambda *_args, **_kwargs: None,
+    )
+
+    assert "(0 workers)" in capsys.readouterr().out
 
 
 def _write_project(tmp_path: Path) -> None:
