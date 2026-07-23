@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12"]
-        temporal: ["off", "on"]
+        temporal: ["off", "minimum", "on"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -58,8 +58,11 @@ jobs:
       - name: Install package with dev extras
         if: matrix.temporal == 'on'
         run: python -m pip install -e '.[dev]'
+      - name: Install package at the minimum supported Temporal version
+        if: matrix.temporal == 'minimum'
+        run: python -m pip install -e '.[dev]' 'temporalio==1.20.0'
       - name: Assert Temporal is present
-        if: matrix.temporal == 'on'
+        if: matrix.temporal != 'off'
         run: python -c "import julep as c; assert c.HAVE_TEMPORAL is True"
       - name: Pytest
         run: python -m pytest -q

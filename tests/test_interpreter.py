@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from julep import (
@@ -9,9 +11,11 @@ from julep import (
     arr, call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
     HAVE_TEMPORAL, CapabilityOverrides, ToolContract, Effect, Idempotency,
+    snapshot_from_listings,
 )
-from julep.errors import CapabilityDenied
+from julep.errors import CapabilityDenied, ToolInputValidation
 from julep.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
+from julep.execution.llm_result import LlmCallMeta, LlmResult
 if HAVE_TEMPORAL:
     from julep.execution.harness import ExecutionPolicy, _TemporalEnv
 from julep.projection import EventType, InMemoryProjection, ProjectionEmitter
@@ -46,6 +50,19 @@ def test_pipeline_threads_value():
     assert out.value == 12  # (5+1)*2
 
 
+def test_in_memory_tool_awaits_async_result():
+    async def async_inc(value):
+        await asyncio.sleep(0)
+        return value + 1
+
+    flow = call(mcp("srv", "inc"))
+    fr, env = _env(flow, tools={"srv/inc": async_inc})
+
+    out = run(interpret(fr.flow, 5, env))
+
+    assert out.value == 6
+
+
 def test_mcp_call_seam_receives_identity_cid_and_principal():
     seen = {}
 
@@ -69,7 +86,7 @@ def test_mcp_call_seam_receives_identity_cid_and_principal():
     }
 
 
-def test_direct_mcp_call_does_not_claim_agent_schema_validation():
+def test_direct_frozen_mcp_call_reports_schema_validation():
     seen = {}
 
     async def mcp_call(
@@ -87,7 +104,44 @@ def test_direct_mcp_call_does_not_claim_agent_schema_validation():
     out = run(interpret(fr.flow, {"query": "hello"}, env))
 
     assert out.value == {"query": "hello"}
-    assert seen == {"run_secrets": None, "input_schema_validated": False}
+    assert seen == {"run_secrets": None, "input_schema_validated": True}
+
+
+def test_direct_frozen_mcp_call_rejects_invalid_input_before_dispatch():
+    calls = 0
+
+    async def mcp_call(
+        server, tool, value, cid, principal, run_secrets, input_schema_validated
+    ):
+        nonlocal calls
+        calls += 1
+        return value
+
+    snapshot = snapshot_from_listings(
+        {
+            "srv": {
+                "typed": {
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"query": {"type": "string"}},
+                        "required": ["query"],
+                    }
+                }
+            }
+        }
+    )
+    flow = call(mcp("srv", "typed"))
+    fr = freeze(flow, snapshot)
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        mcp_call=mcp_call,
+    )
+
+    with pytest.raises(ToolInputValidation, match="srv/typed"):
+        run(interpret(fr.flow, {"query": 7}, env))
+
+    assert calls == 0
 
 
 def test_retryable_call_retries_to_success_with_backoff_sleeps():
@@ -294,6 +348,48 @@ def test_reasoner_reported_cost_metadata_overrides_default():
     assert store.cost_by_shape()["Pipeline"] == pytest.approx(0.33)
 
 
+def test_unpriced_reasoner_projection_cost_is_unknown_not_estimator_default():
+    flow = think("unpriced")
+    fr, env, store = _env_and_store(
+        flow,
+        reasoners={"unpriced": lambda value: value},
+    )
+
+    run(interpret(fr.flow, "doc", env))
+
+    did = next(event for event in store.events() if event.type == EventType.DID)
+    assert did.cost is None
+    assert did.attrs["llm.cost.status"] == "unknown"
+    assert store.cost_by_shape() == {}
+
+
+def test_llm_result_reported_cost_reaches_projection():
+    flow = think("metered-meta")
+    fr, env, store = _env_and_store(
+        flow,
+        reasoners={
+            "metered-meta": lambda value: LlmResult(
+                value,
+                LlmCallMeta(
+                    served_model="openai/gpt-test",
+                    provider="openai",
+                    input_tokens=10,
+                    output_tokens=2,
+                    total_tokens=12,
+                    cost=0.00042,
+                ),
+            )
+        },
+    )
+
+    run(interpret(fr.flow, "doc", env))
+
+    did = next(event for event in store.events() if event.type == EventType.DID)
+    assert did.cost == pytest.approx(0.00042)
+    assert did.attrs["llm.cost.status"] == "reported"
+    assert store.cost_by_shape()["Pipeline"] == pytest.approx(0.00042)
+
+
 def test_alt_routes_by_pure_predicate():
     register_pure("is_even", lambda v: v % 2 == 0)
     flow = alt("is_even", call(mcp("srv", "half")), call(mcp("srv", "inc")))
@@ -388,6 +484,182 @@ def test_app_runs_agent_handler():
     assert run(interpret(fr.flow, "go", env)).value == {"status": "done", "output": "go"}
 
 
+def test_in_memory_agent_enforces_release_max_calls_across_rounds():
+    model_calls = 0
+    effect_calls = 0
+
+    def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
+        return {
+            "tool_calls": [
+                {"id": f"call-{model_calls}", "tool": "inc", "input": model_calls}
+            ]
+        }
+
+    def inc(value):
+        nonlocal effect_calls
+        effect_calls += 1
+        return value + 1
+
+    flow = app(
+        "controller",
+        tools=["inc"],
+        tool_aliases={"inc": "srv/inc"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    fr = freeze(flow, read_snapshot("inc"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/inc": inc},
+        reasoners={"controller": controller},
+        max_calls={"srv/inc": 1},
+    )
+
+    out = run(interpret(fr.flow, 0, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert effect_calls == 1
+    assert env.call_counts == {"srv/inc": 1}
+
+
+def test_in_memory_agent_shares_max_calls_across_aliases_for_one_wire():
+    model_calls = 0
+    effect_inputs = []
+
+    def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
+        if model_calls <= 2:
+            alias = "a" if model_calls == 1 else "b"
+            return {
+                "tool_calls": [
+                    {
+                        "id": f"call-{alias}",
+                        "tool": alias,
+                        "input": {"alias": alias},
+                    }
+                ]
+            }
+        return {"done": True, "output": "unexpected"}
+
+    def effect(value):
+        effect_inputs.append(value)
+        return value
+
+    flow = app(
+        "controller",
+        tools=["a", "b"],
+        tool_aliases={"a": "srv/t", "b": "srv/t"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    fr = freeze(flow, read_snapshot("t"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/t": effect},
+        reasoners={"controller": controller},
+        max_calls={"srv/t": 1},
+    )
+
+    out = run(interpret(fr.flow, {}, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'b' exceeded maxCalls=1"
+    assert model_calls == 2
+    assert effect_inputs == [{"alias": "a"}]
+    assert env.call_counts == {"srv/t": 1}
+
+
+def test_in_memory_agent_uses_wire_limit_when_alias_matches_native_key():
+    model_calls = 0
+    effect_calls = 0
+
+    def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
+        return {
+            "tool_calls": [
+                {
+                    "id": f"search-{model_calls}",
+                    "tool": "search",
+                    "input": {"query": "q"},
+                }
+            ]
+        }
+
+    def mcp_search(value):
+        nonlocal effect_calls
+        effect_calls += 1
+        return value
+
+    flow = app(
+        "controller",
+        tools=["search"],
+        tool_aliases={"search": "srv/search"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    fr = freeze(flow, read_snapshot("search"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/search": mcp_search},
+        reasoners={"controller": controller},
+        max_calls={"search": 10, "srv/search": 1},
+    )
+    env.call_counts["search"] = 1
+
+    out = run(interpret(fr.flow, {}, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'search' exceeded maxCalls=1"
+    assert effect_calls == 1
+    assert env.call_counts == {"search": 1, "srv/search": 1}
+
+
+def test_in_memory_agent_inherits_calls_made_before_agent():
+    effect_calls = 0
+
+    def controller(_value):
+        return {"tool_calls": [{"id": "agent-call", "tool": "inc", "input": 2}]}
+
+    def inc(value):
+        nonlocal effect_calls
+        effect_calls += 1
+        return value + 1
+
+    flow = seq(
+        call(mcp("srv", "inc")),
+        app(
+            "controller",
+            tools=["inc"],
+            tool_aliases={"inc": "srv/inc"},
+            max_rounds=2,
+            native_tools=True,
+        ),
+    )
+    fr = freeze(flow, read_snapshot("inc"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/inc": inc},
+        reasoners={"controller": controller},
+        max_calls={"srv/inc": 1},
+    )
+
+    out = run(interpret(fr.flow, 0, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert effect_calls == 1
+    assert env.call_counts == {"srv/inc": 1}
+
+
 def test_stage_compiles_then_runs_plan_with_late_binding():
     # The planner returns an UNFROZEN plan; the interpreter late-binds its calls
     # by tool ref (admission would have vetted them in the real pipeline).
@@ -448,7 +720,9 @@ def test_temporal_env_inherits_call_counts_for_child_flows() -> None:
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
+def test_temporal_env_preserves_native_parent_count_and_uses_wire_alias_limit(
+    monkeypatch,
+) -> None:
     from julep.execution import harness
     from julep.execution.harness import ExecutionPolicy, _TemporalEnv
     from julep.projection import InMemoryProjection, ProjectionEmitter
@@ -456,17 +730,25 @@ def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
     async def gate_waiter(value, cid, timeout_s):  # noqa: ANN001
         return value
 
+    child_inputs = []
+
     async def fake_execute_child_workflow(*args, **kwargs):  # noqa: ANN001
+        child_inputs.append(args[1])
         return {
             "status": "done",
             "output": "ok",
-            "callCounts": {"srv/inc": 2, "srv/other": "3"},
+            "callCounts": {"search": 1, "srv/search": 1},
         }
 
     monkeypatch.setattr(
         harness.workflow,
         "execute_child_workflow",
         fake_execute_child_workflow,
+    )
+    monkeypatch.setattr(
+        harness,
+        "_agent_canonical_tool_counts_enabled",
+        lambda: True,
     )
 
     env = _TemporalEnv(
@@ -476,13 +758,26 @@ def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
         manifest_json={},
         policy=ExecutionPolicy(),
         gate_waiter=gate_waiter,
-        max_call_limits={"srv/inc": 5, "srv/other": 5},
-        call_counts={"srv/inc": 1},
+        max_call_limits={"search": 10, "srv/search": 1},
+        call_counts={"search": 1},
     )
 
-    out = run(env.run_agent("controller", "value", "cid"))
+    out = run(
+        env.run_agent(
+            "controller",
+            "value",
+            "cid",
+            {
+                "tools": ["search"],
+                "toolAliases": {"search": "srv/search"},
+                "toolContracts": {"search": {}},
+            },
+        )
+    )
     assert out["output"] == "ok"
-    assert env.call_counts_snapshot() == {"srv/inc": 2, "srv/other": 3}
+    assert child_inputs[0].state["callCounts"] == {"search": 1}
+    assert child_inputs[0].granted_contracts["search"]["maxCalls"] == 1
+    assert env.call_counts_snapshot() == {"search": 1, "srv/search": 1}
 
 
 def test_inmemory_env_awaits_async_reasoner():

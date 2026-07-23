@@ -2,6 +2,7 @@
   "title": "Deploy & Scale",
   "pages": [
     "index",
+    "local",
     "temporal",
     "control-plane",
     "kubernetes",

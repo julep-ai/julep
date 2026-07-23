@@ -169,6 +169,11 @@ def _is_excluded(relative: Path) -> bool:
     relative_text = relative.as_posix()
     if relative_text in _EXCLUDED_PATHS:
         return True
+    if relative.parts[:2] in {
+        ("docs-site", ".next"),
+        ("docs-site", "out"),
+    }:
+        return True
     if relative.parts[:2] in {("docs", "plans"), ("docs", "superpowers")}:
         return True
     if relative.suffix.casefold() in _BINARY_SUFFIXES:

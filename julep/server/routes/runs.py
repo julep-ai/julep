@@ -27,7 +27,7 @@ from ..auth import ApiKey, merge_principal, owner_scoped, require_client
 from ..sse import EVENT_PAGE_LIMIT, event_sequence, run_event_response
 from ..temporal import TemporalGateway, TemporalStartAmbiguous
 from . import execution_store, require_owned_run, temporal_gateway
-from .releases import load_release, rehydrate_release
+from .releases import load_release, normalize_release_hash, rehydrate_release
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 _RESULT_TERMINAL_STATUSES = TERMINAL_RUN_STATUSES | {"start_failed"}
@@ -144,6 +144,31 @@ def _run_json_response(row: Mapping[str, Any], status_code: int) -> JSONResponse
     return JSONResponse(status_code=status_code, content=dict(row))
 
 
+def _raise_idempotency_conflict(field: Literal["pipeline", "release"]) -> None:
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={
+            "error": "idempotency_conflict",
+            "field": field,
+            "message": f"idempotency key was already used for a different {field}",
+        },
+    )
+
+
+def _assert_idempotency_retry_matches(
+    existing: Mapping[str, Any],
+    *,
+    pipeline: str,
+    requested_release_hash: str,
+) -> None:
+    """Require the effective pipeline and release to match the original run."""
+
+    if existing.get("pipeline") != pipeline:
+        _raise_idempotency_conflict("pipeline")
+    if existing.get("release_hash") != requested_release_hash:
+        _raise_idempotency_conflict("release")
+
+
 @router.post("")
 async def start_run(
     body: RunRequest,
@@ -154,6 +179,11 @@ async def start_run(
     if not body.pipeline.strip():
         raise HTTPException(status_code=400, detail="pipeline must be non-empty")
     if body.secrets:
+        if bool(getattr(request.app.state, "local_echo_mode", False)):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="local echo execution does not accept run secrets",
+            )
         settings = request.app.state.settings
         if not settings.payload_encryption_required:
             raise HTTPException(
@@ -193,11 +223,27 @@ async def start_run(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="idempotency key or runId is already in use",
             )
+        if idempotency_key is not None:
+            if existing.get("pipeline") != body.pipeline:
+                _raise_idempotency_conflict("pipeline")
+            effective_release_hash = (
+                normalize_release_hash(body.release)
+                if body.release is not None
+                else _active_release_for_pipeline(request, body.pipeline)[1].release_hash
+            )
+            _assert_idempotency_retry_matches(
+                existing,
+                pipeline=body.pipeline,
+                requested_release_hash=effective_release_hash,
+            )
         return _run_json_response(existing, 200)
 
+    requested_release_hash = (
+        normalize_release_hash(body.release) if body.release is not None else None
+    )
     _release_row, release, pipeline = _resolve_pipeline(
         request,
-        body.release,
+        requested_release_hash,
         body.pipeline,
     )
     if body.secrets and pipeline.mcp_preflight_policy is None:
@@ -241,6 +287,15 @@ async def start_run(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="idempotency key or runId is already in use",
+            )
+        if (
+            idempotency_key is not None
+            and created.get("idempotency_key") == idempotency_key
+        ):
+            _assert_idempotency_retry_matches(
+                created,
+                pipeline=body.pipeline,
+                requested_release_hash=release.release_hash,
             )
         return _run_json_response(created, 200)
 

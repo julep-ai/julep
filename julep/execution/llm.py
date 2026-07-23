@@ -846,26 +846,7 @@ def _with_model(reasoner: Reasoner, model: str) -> Reasoner:
     """A copy of ``reasoner`` addressed at a different model (not re-registered)."""
     if model == reasoner.model:
         return reasoner
-    return Reasoner(
-        name=reasoner.name,
-        model=model,
-        system=reasoner.system,
-        tools=reasoner.tools,
-        temperature=reasoner.temperature,
-        max_rounds=reasoner.max_rounds,
-        is_agent=reasoner.is_agent,
-        sub_contract=reasoner.sub_contract,
-        context_scope=reasoner.context_scope,
-        system_render=reasoner.system_render,
-        user_render=reasoner.user_render,
-        max_tokens=reasoner.max_tokens,
-        reply=reasoner.reply_schema,
-        reasoning_effort=reasoner.reasoning_effort,
-        output_retries=reasoner.output_retries,
-        require_tool_call=reasoner.require_tool_call,
-        response_format=reasoner.response_format,
-        prompt_cache=reasoner.prompt_cache,
-    )
+    return reasoner.replace(model=model)
 
 
 def make_resilient_llm_caller(

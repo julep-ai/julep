@@ -813,9 +813,9 @@ def test_bundle_runner_is_inert_without_store(tmp_path: Path) -> None:
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_bundle_runner_forwards_current_workflow_instance_abstract_methods() -> None:
-    assert WorkflowInstance.__abstractmethods__ == frozenset(
-        {"activate", "get_serialization_context", "get_external_store_context", "get_info"}
-    )
+    abstract_methods = WorkflowInstance.__abstractmethods__
+    assert abstract_methods
+    assert abstract_methods <= _BundleResolvingInstance.__dict__.keys()
     assert _BundleResolvingInstance.__abstractmethods__ == frozenset()
 
 

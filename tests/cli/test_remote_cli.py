@@ -30,7 +30,11 @@ def _event(run_id: str, event_id: str, event_type: str) -> dict[str, object]:
         "shape": None,
         "cost": None,
         "error": None,
-        "attrs": {"terminal": True} if event_type == "Did" else {},
+        "attrs": (
+            {"terminal": True, "llm.model": "openai/gpt-test"}
+            if event_type == "Did"
+            else {}
+        ),
     }
 
 
@@ -69,7 +73,10 @@ def test_remote_status_and_trace(
         assert "completed" in status_output
 
         assert main(["trace", "--remote", run_id]) == 0
-        assert "root" in capsys.readouterr().out
+        trace_output = capsys.readouterr().out
+        assert "root" in trace_output
+        assert "cost=unknown" in trace_output
+        assert "$2.0000" not in trace_output
 
 
 def test_remote_status_requires_api_url(

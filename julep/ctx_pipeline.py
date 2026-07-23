@@ -10,6 +10,7 @@ from .app import PipelineSpec
 from .dotctx import load_dotctx, reasoner_to_flow
 from .execution.policy import ExecutionPolicy
 from .freeze import McpSnapshot
+from .registry import DEFAULT_REGISTRY, Registry
 
 
 @dataclass(frozen=True)
@@ -39,12 +40,13 @@ def pipeline_spec_from_ctx(
     env_vars: Mapping[str, str] | None = None,
     agent_round_cap: int = 32,
     mcp_servers: Mapping[str, Any] | None = None,
+    _registry: Registry = DEFAULT_REGISTRY,
 ) -> PipelineSpec[Any, Any]:
     ctx_path = Path(config.ctx)
     if not ctx_path.is_absolute():
         ctx_path = root / ctx_path
     merged_env = {**(env_vars or {}), **config.env}
-    reasoner = load_dotctx(str(ctx_path), env=merged_env)
+    reasoner = load_dotctx(str(ctx_path), env=merged_env, _registry=_registry)
     aliases = normalize_tool_bindings(config.tools)
     if reasoner.tools:
         missing = sorted(set(reasoner.tools) - set(aliases))

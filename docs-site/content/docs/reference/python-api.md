@@ -64,9 +64,14 @@ report optional runtime availability.
 | `server` | FastAPI control plane, Postgres store, SSE, Temporal gateway | `pip install --pre 'julep[server]'` |
 | `dotctx` | rich dotctx prompt packages with Jinja2 | `pip install --pre 'julep[dotctx]'` |
 | `providers` | `any-llm` provider caller | `pip install --pre 'julep[providers]'` |
+| `litellm` | public LiteLLM `LlmCaller` adapter | `pip install --pre 'julep[litellm]'` |
 | `otel`, `langfuse` | projection span export | `pip install --pre 'julep[otel]'` |
 | `store` | artifact store bundle storage/signing helpers | `pip install --pre 'julep[store]'` |
 | `wasm` | wasm-tier bundle-sourced pures | `pip install --pre 'julep[wasm]'` |
+
+The `temporal`, `server`, and development extras accept `temporalio>=1.20`.
+This keeps Julep co-installable with current pydantic-ai stacks that still cap
+the Temporal SDK below 1.21; the minimum-SDK CI lane exercises 1.20 directly.
 
 ## Core enums and constants
 
@@ -127,14 +132,21 @@ flow parameters or JSON captures.
 | `get_pure` | `get_pure(name: str) -> PureFn` | registered pure name | callable | `KeyError` if unknown | `get_pure("prompt")({"summary": "x"})` |
 | `is_registered` | `is_registered(name: str) -> bool` | pure name | bool | none | `is_registered("prompt")` |
 | `diff_pure_hashes` | `diff_pure_hashes(pinned: dict[str,str], registered: dict[str,str]) -> list[dict[str,str|None]]` | pinned and actual hash maps | drift list | none | `diff_pure_hashes({}, {})` |
-| `Reasoner` | `Reasoner(name, model, system="", tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET)` | model-call config; `reply` accepts TypedDict, Pydantic v2 model, or raw schema dict | reasoner config | `TypeError` for unsupported `reply` | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
+| `Reasoner` | `Reasoner(name, model, system="", tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET, reasoning_effort=None, output_retries=0, require_tool_call=False, response_format=None, prompt_cache=None)` | model-call config; `reply` accepts TypedDict, Pydantic v2 model, or raw schema dict | reasoner config | `TypeError` for unsupported `reply`; `ValueError` for bad cache TTL | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
+| `Reasoner.replace` | `replace(*, name=_KEEP, model=_KEEP, system=_KEEP, reply=_KEEP, tools=_KEEP, temperature=_KEEP, max_rounds=_KEEP, is_agent=_KEEP, sub_contract=_KEEP, context_scope=_KEEP, system_render=_KEEP, user_render=_KEEP, max_tokens=_KEEP, reasoning_effort=_KEEP, output_retries=_KEEP, require_tool_call=_KEEP, response_format=_KEEP, prompt_cache=_KEEP) -> Reasoner` | immutable copy-with updates; omitted `reply` preserves its materialized schema and explicit `reply=None` clears it | new reasoner | constructor validation for replaced values | `fast = base.replace(model="openai:gpt-5-mini")` |
 | `get_reasoner` | `get_reasoner(name: str) -> Reasoner` | reasoner name | config | `KeyError` if unknown | `get_reasoner("support_reply").model` |
-| `load_dotctx` | `load_dotctx(path: str) -> Reasoner` | dotctx directory | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
+| `load_dotctx` | `load_dotctx(path: str, *, env=None) -> Reasoner` | dotctx directory or file and explicit render environment | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
 | `reasoner_from_settings` | `reasoner_from_settings(settings: dict[str, Any], *, name=None, base_dir=None) -> Reasoner` | settings mapping and optional path | registered reasoner | `ValueError` if no name | `reasoner_from_settings({"name":"r","model":"m"})` |
 | `reasoner_to_flow` | `reasoner_to_flow(reasoner: Reasoner, *, ctx=None) -> Node` | reasoner and optional context | `think`, `iter_up_to`, `app`, or `sub` node | none | `reasoner_to_flow(get_reasoner("r"))` |
 | `dotctx_flow` | `dotctx_flow(path: str, *, ctx=None) -> Node` | dotctx path | lowered node | same as `load_dotctx` | `dotctx_flow("reasoners/r")` |
 | `CtxPipelineConfig` | `CtxPipelineConfig(name, ctx, lane="default", env={})` | zero-code pipeline declaration | config value | config validation occurs in `load_config` | `CtxPipelineConfig("summary", "prompts/summary.ctx")` |
-| `pipeline_spec_from_ctx` | `pipeline_spec_from_ctx(config, *, root, env_vars=None) -> PipelineSpec` | load dotctx, merge env, and lower with `reasoner_to_flow` | pipeline spec | dotctx/config errors | `pipeline_spec_from_ctx(cfg, root=Path("."))` |
+| `pipeline_spec_from_ctx` | `pipeline_spec_from_ctx(config, *, root, env_vars=None, agent_round_cap=32, mcp_servers=None) -> PipelineSpec` | load dotctx, merge env, bind configured MCP servers, and lower with `reasoner_to_flow` | pipeline spec | dotctx/config errors | `pipeline_spec_from_ctx(cfg, root=Path("."))` |
+
+Rich dotctx packages whose `schema.pyi` omits `class Output` emit
+`MissingOutputSchemaWarning`: loading remains compatible, but the returned
+reasoner has no reply schema and model output is not schema-validated. The CLI
+exposes the same condition as `CTX_OUTPUT_SCHEMA_MISSING` during configured
+pipeline lint.
 
 ## `@flow` control helpers
 
@@ -196,6 +208,23 @@ All functions return `Node` unless noted. They do no IO; `freeze(...)`,
 | `is_continuation` | `is_continuation(value: Any) -> bool` | value | bool | none | `is_continuation(continue_with(1))` |
 | `continuation_value` | `continuation_value(value: dict[str, Any]) -> Any` | sentinel dict | wrapped value | `KeyError` if missing key | `continuation_value(continue_with(1))` |
 | `run_chained` | `async run_chained(run_segment, input, *, max_segments=1000) -> Any` | async segment runner and initial input | final non-continuation value | `JulepError` when max segments exhausted | `await run_chained(lambda x: one_segment(x), 0)` |
+
+## Durable dispatch primitives
+
+Import these dispatch-boundary helpers from `julep.dispatch`. They decide how
+work starts; they are not frozen flow IR. Stable ids and batch-window evaluation
+are pure and import without Temporal. Materializing or executing the built-in
+debounce request requires `julep[temporal]`.
+
+| Symbol | Signature | Use | Returns | Raises |
+|---|---|---|---|---|
+| `dedup_workflow_id` | `dedup_workflow_id(namespace: str, *identity: Any, max_length=255) -> str` | opaque deterministic Temporal id for one logical dispatch; canonical finite JSON identity is hashed rather than exposed in listings | bounded workflow id | `TypeError` for non-finite/non-JSON identity; `ValueError` for invalid namespace/limit |
+| `BatchWindow` | `BatchWindow(quiet_s: float, max_items: int | None = None, max_wait_s: float | None = None)` | shared debounce/batch trigger policy | immutable window | `ValueError` for negative, non-finite, or invalid limits |
+| `BatchWindow.evaluate` | `evaluate(*, item_count, opened_at, last_arrival_at, now) -> BatchWindowDecision` | deterministic trigger selection using caller-supplied time | `fire`, `trigger`, `deadline`, `wait_s` | `ValueError` for inconsistent state |
+| `SignalWithStartRequest` | `SignalWithStartRequest(workflow, input, workflow_id, task_queue, signal, signal_args=(), start_options={})` | backend-neutral atomic signal-with-start description with `USE_EXISTING` conflict and `ALLOW_DUPLICATE` reuse policies | request; `await request.start(client)` returns a workflow handle | `ValueError`, missing Temporal extra at execution |
+| `build_debounce_request` | `build_debounce_request(flow_json, manifest_json, *, key, item, window, task_queue="julep", ..., scope=None, workflow_id=None, start_options=None) -> SignalWithStartRequest` | build an atomic keyed collector request; item values join the compatible open collector but are excluded from identity | request | config errors; missing Temporal extra |
+| `dispatch_debounced` | `async dispatch_debounced(client, flow_json, manifest_json, *, key, item, window, ...) -> Any` | build and execute a debounce signal-with-start | Temporal workflow handle | config/Temporal errors |
+| `signal_with_start` | `async signal_with_start(client, request) -> Any` | execute a pre-built request | Temporal workflow handle | Temporal errors |
 
 ## Sessions
 
@@ -291,6 +320,65 @@ keyword calls synthesize a compiler-owned `std.record` node. Capability defaults
 are derived from the resolved frozen tool set when `capabilities` is omitted.
 `InMemoryEnv` also accepts `mcp_call=`, so an MCP-only deployment needs no
 native `tools=` map for local execution.
+
+## Configured foreground execution
+
+These package-root exports load one configured application pipeline and execute
+its frozen deployment in the caller's process. They return the unwrapped
+interpreter value and perform no HTTP, PostgreSQL, Temporal, release, or durable
+retry work.
+
+| Symbol | Signature | Behavior | Raises |
+|---|---|---|---|
+| `prepare_local_pipeline` | `prepare_local_pipeline(pipeline: str, *, project_root: str | Path = ".", config: JulepConfig | None = None, env: str = "local") -> LocalPipeline` | resolve config/application, compile only the selected pipeline, and return a reusable object with `.artifact_hash`, `.name`, and `.environment` | `LocalPipelineNotFound`, compilation/freeze/snapshot errors |
+| `LocalPipeline.arun` | `async arun(input=None, *, llm: LlmCaller | None = None, context: WorkerContext | None = None, principal: RunPrincipal | None = None) -> Any` | execute in the current event loop and return the unwrapped value | local configuration/effect/interpreter errors |
+| `LocalPipeline.run` | `run(input=None, *, llm=None, context=None, principal=None) -> Any` | synchronous wrapper over `arun`; prepare once and reuse across calls | `LocalExecutionConfigurationError` in an active event loop |
+| `arun_local_pipeline` | `async arun_local_pipeline(pipeline, input=None, *, project_root=".", config=None, env="local", llm=None, context=None, principal=None) -> Any` | one-shot prepare and async run | same as prepare + `arun` |
+| `run_local_pipeline` | `run_local_pipeline(pipeline, input=None, *, project_root=".", config=None, env="local", llm=None, context=None, principal=None) -> Any` | one-shot prepare and sync run | same as prepare + `run` |
+| `LocalPipelineError` | subclass of `JulepError` | base class for configured foreground failures | n/a |
+| `LocalPipelineNotFound` | `LocalPipelineNotFound(kind, name, available)` | typed unknown environment/pipeline error with `.kind`, `.name`, and `.available` | n/a |
+| `LocalExecutionConfigurationError` | subclass of `LocalPipelineError` | missing/mismatched LLM, MCP, registry, or sync-loop configuration | n/a |
+| `LocalExecutionUnsupported` | subclass of `LocalPipelineError` | direct-foreground artifact requires a runtime-owned orchestration boundary | n/a |
+
+An explicit `llm=` takes precedence over `context.llm`; it uses the canonical
+five-argument `LlmCaller`. Tool-calling agents require the optional `tools=`
+keyword extension. `WorkerContext` supplies MCP calls plus QoS and registry
+hooks, while `principal` is forwarded to both LLM and MCP calls. A differing
+reasoner declaration in `context.registry` is rejected rather than overriding
+the compiled artifact.
+
+Direct foreground execution rejects session `LOOP`, transcript-scoped `APP`
+agents, staged plans, subflows, and human-gate/sleep/recv/emit reserved effects.
+It also has no run-secret input; use the local API or durable worker when the
+runtime must own those boundaries.
+
+## Control-plane clients
+
+Import the HTTP clients and their typed run errors from `julep.client`. Install
+`julep[http]` (or `julep[server]`) for httpx. `AsyncJulepClient` mirrors the
+sync client's complete release, run, result, control, and projection-event
+surface and owns an `httpx.AsyncClient` when one is not injected.
+
+| Symbol | Signature | Behavior |
+|---|---|---|
+| `JulepClient` | `JulepClient(base_url=None, api_key=None, *, client: httpx.Client | None = None, timeout=30.0)` | synchronous client; supports context-manager cleanup |
+| `AsyncJulepClient` | `AsyncJulepClient(base_url=None, api_key=None, *, client: httpx.AsyncClient | None = None, timeout=30.0)` | async method parity; supports `async with` and `aclose()` |
+| `run_and_wait` | `run_and_wait(*, pipeline, input=None, release=None, session_id=None, principal=None, secrets=None, queue_lanes=None, idempotency_key=None, run_id=None, deadline_s=300.0, poll_wait_s=20.0) -> Any` | idempotent submit, bounded `GET .../result` long polls, and the unwrapped `result` payload on `completed`; async on `AsyncJulepClient` |
+| `wait_for_run` | `wait_for_run(run_id, *, deadline_s=300.0, poll_wait_s=20.0) -> Any` | wait for an already-submitted run and unwrap success; async on `AsyncJulepClient` |
+| `JulepClientError` | `JulepClientError(status_code, detail)` | non-success HTTP response with parsed `.detail` |
+| `JulepRunFailed` | `JulepRunFailed(run_id, status, error=None)` | typed terminal error for `failed`, `canceled`, `terminated`, or `start_failed`; exposes `.run_id`, `.status`, `.error`, and `.detail` |
+| `JulepRunTimeout` | `JulepRunTimeout(run_id, deadline_s)` | caller deadline expired; exposes `.run_id` and `.deadline_s` |
+| `JulepRunProtocolError` | `JulepRunProtocolError(message, *, run_id)` | malformed or mismatched start/result envelope |
+
+`start_run` and the wait helpers require either `idempotency_key` or `run_id`.
+Reuse of an idempotency key is safe only for the same pipeline and release; a
+different pipeline or release produces an HTTP `409 idempotency_conflict`
+instead of returning an unrelated existing run.
+
+`run_and_wait` intentionally exposes the ordinary client submission contract.
+The admin-only `mcp_preflight` override remains on `start_run` and
+`start_and_wait`; use the latter when an operator explicitly needs that
+override plus a bounded wait.
 
 ## MCP authentication
 
@@ -465,7 +553,15 @@ durability.
 | `SpanData` | `SpanData(name, cid, node, start_ts, end_ts, status, parents, error=None, attrs={}, cost=None, value_ref=None, planned_event_id=None, terminal_event_id=None)` | OTel-ready span data | span record | none | `to_otel_spans(store.events())` |
 | `to_otel_spans` | `to_otel_spans(events: list[ProjectionEvent]) -> list[SpanData]` | projection events | span data | none | `to_otel_spans(store.events())` |
 
+Cost is reported only when an effect supplies an actual cost. Model spans that
+carry model or usage metadata without a price have `cost=None` and render as
+`cost=unknown`; Julep does not substitute a synthetic dollar estimate.
+
 ## Provider resilience and QoS
+
+The LiteLLM helpers below live in `julep.llm`; installing `julep[litellm]` is
+needed only when `litellm_caller()` imports its default backend. Injecting
+`acompletion=` keeps unit tests provider-free.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
@@ -481,6 +577,9 @@ durability.
 | `make_llm_caller` | `make_llm_caller(*, default_provider="anthropic", acompletion=None) -> Callable[..., Awaitable[Any]]` | provider and optional test completion fn | worker `LlmCaller` | lazy `ImportError`, provider errors | `WorkerContext(llm=make_llm_caller())` |
 | `make_local_reasoner` | `make_local_reasoner(*, default_provider="anthropic", acompletion=None) -> Callable[[str, Any], Awaitable[Any]]` | provider/test seam | facade `llm` callable | lazy `ImportError`, provider errors | `Agent("anthropic:m", llm=make_local_reasoner())` |
 | `make_resilient_llm_caller` | `make_resilient_llm_caller(*, policy, breaker=None, on_attempt=None, classifier=classify_error, default_provider="anthropic", acompletion=None, sleep=asyncio.sleep) -> Callable[..., Awaitable[Any]]` | fallback policy and hooks | resilient `LlmCaller` | `ResilienceExhausted`, config/provider errors | `make_resilient_llm_caller(policy=ResiliencePolicy())` |
+| `prepare_litellm_payload` | `prepare_litellm_payload(payload: Mapping[str, Any]) -> dict[str, Any]` | pure translation of Julep model slugs and reasoning controls, including Fireworks, OpenRouter, Anthropic, and GPT-5 provider requirements | LiteLLM request mapping | malformed consumer data may raise normal mapping/value errors | `prepare_litellm_payload({"model":"openai:gpt-5@low"})` |
+| `litellm_caller` | `litellm_caller(*, request_timeout_s=None, acompletion=None) -> LlmCaller` | canonical five-argument worker caller backed by LiteLLM | async caller | lazy `ImportError`, provider errors | `WorkerContext(llm=litellm_caller())` |
+| `with_model_ladder` | `with_model_ladder(caller, *, models: Sequence[str], classify=classify_error, on_attempt=None) -> LlmCaller` | primary reasoner model followed by stable de-duplicated fallbacks; advances only on transient/timeout failures and records attempt provenance on `LlmResult` | wrapped caller | non-transient original error or `ResilienceExhausted` | `llm = with_model_ladder(litellm_caller(), models=["openai:gpt-5-mini"])` |
 
 ## Errors and exceptions
 
@@ -534,9 +633,11 @@ CLI entry points:
 | `run` | `julep run <name-or-path.ctx> [--input JSON] [--run-id id] [--env name]` |
 | `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
 | `plan` | `julep plan [--env name] [--json] [--mcp-snapshot]` |
-| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot]` |
+| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY]` |
 | `status` | `julep status [selector] [--exclude expr] [--env name] [--remote] [--api-url URL] [--api-key KEY] [--limit N]` |
-| `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate]` |
+| `keygen` | `julep keygen [--format env|json] [--output PATH] [--force]` |
+| `dev up` | `julep dev up [--env name] [--api-url URL] [--api-key KEY] [--start-temporal/--no-start-temporal] [--publish/--no-publish] [--worker/--no-worker] [--startup-timeout SECONDS] [--dry-run]` |
+| `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate] [--local] [--context-factory module:attr]` |
 | `db migrate` | `julep db migrate [--dsn DSN]` |
 | `db sweep` | `julep db sweep --older-than SECONDS [--dsn DSN]` |
 | `db reencrypt-secrets` | `julep db reencrypt-secrets [--dsn DSN]` |
@@ -571,6 +672,8 @@ Environment knobs verified in source:
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | worker host | SDK workflow-task slots |
 | `WORKER_HEALTH_PORT` | worker host | probe port serving `/healthz` and `/readyz` |
 | `JULEP_ARTIFACT_STORE_URL` | bundle worker/verification | artifact store URL for bundle resolution |
+| `JULEP_API_KEY` | CLI/client or worker | client/admin token in the invoking shell; `dev up` gives workers only their separate worker-role token under this name |
+| `JULEP_WORKER_API_KEY` | `julep dev up` supervisor | worker-role handoff token; validated against `JULEP_API_KEYS` and never forwarded under this name |
 | `JULEP_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
 | `JULEP_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
 | `JULEP_BUNDLES` | bundle worker | bundle refs to load from `JULEP_ARTIFACT_STORE_URL` |

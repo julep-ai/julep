@@ -70,6 +70,7 @@ if TYPE_CHECKING:
     from .artifact_store import ArtifactStore
     from .execution.effects import McpCaller
     from .execution.interpreter import Result as InterpreterResult
+    from .registry import Registry
     from .typed import FlowLike
 
 
@@ -736,8 +737,11 @@ class Deployment:
         mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
         tools: Optional[dict[str, Callable[[Any], Any]]] = None,
+        principal: Optional[dict[str, Any]] = None,
+        registry: Optional[Registry] = None,
+        max_parallel: Optional[int] = None,
     ) -> "InterpreterResult":
-        """Run locally with stashed native tools, an MCP caller, and fake reasoners."""
+        """Run locally with injected effects and optional run identity context."""
         mcp_backed = any(isinstance(tool.ref, McpTool) for tool in self.manifest.values())
         if self._tools is None and not mcp_backed:
             raise ValueError(
@@ -767,6 +771,9 @@ class Deployment:
             max_calls=(
                 self.capabilities.max_call_limits() if self.capabilities is not None else {}
             ),
+            max_parallel=max_parallel,
+            registry=registry,
+            principal=principal,
         )
         return await interpret(self.flow, value, env)
 
@@ -777,6 +784,9 @@ class Deployment:
         mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
         tools: Optional[dict[str, Callable[[Any], Any]]] = None,
+        principal: Optional[dict[str, Any]] = None,
+        registry: Optional[Registry] = None,
+        max_parallel: Optional[int] = None,
     ) -> "InterpreterResult":
         """Synchronously run this deployment locally via :meth:`adry_run`."""
         return asyncio.run(
@@ -785,6 +795,9 @@ class Deployment:
                 mcp_call=mcp_call,
                 reasoners=reasoners,
                 tools=tools,
+                principal=principal,
+                registry=registry,
+                max_parallel=max_parallel,
             )
         )
 

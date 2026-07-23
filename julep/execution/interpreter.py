@@ -37,6 +37,7 @@ from ..errors import (
     JulepError,
     PureExecutionError,
     RaceAllFailed,
+    ToolInputValidation,
 )
 from ..freeze import bind
 from ..ir import (
@@ -437,7 +438,13 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         batchable = bool(node.ann.batchable) if node.ann else False
         out = await env.invoke_reasoner(step.reasoner, value, cid, timeout_s, batchable)
         reply, attrs = _unwrap_julep_meta(out)
-        return Result(reply, attrs=attrs, reported_cost=_reported_reasoner_cost(reply))
+        reported_cost = _reported_reasoner_cost(reply, attrs)
+        reasoner_attrs = dict(attrs or {})
+        reasoner_attrs.setdefault(
+            "llm.cost.status",
+            "reported" if reported_cost is not None else "unknown",
+        )
+        return Result(reply, attrs=reasoner_attrs, reported_cost=reported_cost)
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
     raise JulepError(f"interpreter: prim with no usable step at {node.id!r}")
@@ -548,7 +555,10 @@ def _projection_cost(node: Node, reported_cost: Optional[float]) -> Optional[flo
 
     step = node.step
     if isinstance(step, ThinkStep):
-        return reported_cost if reported_cost is not None else DEFAULT_THINK_COST
+        # The staged DEFAULT_THINK_COST is a budget/admission weight, not a USD
+        # price. Projection costs must only contain a declared annotation or a
+        # provider-reported charge; otherwise trace consumers render unknown.
+        return reported_cost
     if isinstance(step, SubStep):
         return DEFAULT_SUB_COST
     if isinstance(step, CallStep):
@@ -576,7 +586,15 @@ def _unwrap_julep_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
     return value, None
 
 
-def _reported_reasoner_cost(value: Any) -> Optional[float]:
+def _reported_reasoner_cost(
+    value: Any,
+    attrs: Optional[dict[str, Any]] = None,
+) -> Optional[float]:
+    if attrs is not None:
+        meta_cost = attrs.get("llm.cost")
+        if isinstance(meta_cost, (int, float)) and not isinstance(meta_cost, bool):
+            return float(meta_cost)
+
     if not isinstance(value, dict):
         return None
 
@@ -888,12 +906,21 @@ class InMemoryEnv:
         key = call_ref_key(node, self.manifest)
         fn = self._tools.get(key)
         if fn is not None:
-            return fn(value)
+            out = fn(value)
+            return await out if inspect.isawaitable(out) else out
 
         step = node.step
         assert isinstance(step, CallStep)
-        ref = bind(node, self.manifest).ref if step.frozen_hash is not None else step.tool
+        frozen = bind(node, self.manifest) if step.frozen_hash is not None else None
+        ref = frozen.ref if frozen is not None else step.tool
         if isinstance(ref, McpTool) and self._mcp_call is not None:
+            input_schema_validated = False
+            if frozen is not None:
+                from .llm import json_schema_error
+
+                if json_schema_error(value, frozen.input_schema) is not None:
+                    raise ToolInputValidation(ref.server, ref.tool)
+                input_schema_validated = True
             return await self._mcp_call(
                 ref.server,
                 ref.tool,
@@ -901,7 +928,7 @@ class InMemoryEnv:
                 cid,
                 self.principal,
                 None,
-                False,
+                input_schema_validated,
             )
         raise KeyError(f"no in-memory tool for {key!r}")
 
@@ -943,7 +970,12 @@ class InMemoryEnv:
         if controller not in self._reasoners:
             raise KeyError(f"no in-memory reasoner or agent for {controller!r}")
 
-        from ..agent_loop import AgentConfig, drive_agent_loop, tool_input_schemas
+        from ..agent_loop import (
+            AgentConfig,
+            AgentState,
+            drive_agent_loop,
+            tool_input_schemas,
+        )
 
         authored = dict(app_config or {})
         cfg = AgentConfig.from_json(authored)
@@ -956,6 +988,18 @@ class InMemoryEnv:
             str(alias): dict(contract)
             for alias, contract in authored.get("toolContracts", {}).items()
         }
+        for alias in set(contracts) | grants:
+            wire = aliases.get(alias, alias)
+            limit = self._max_calls.get(wire)
+            if limit is None:
+                continue
+            contract = contracts.setdefault(alias, {})
+            authored_limit = contract.get("maxCalls", contract.get("max_calls"))
+            contract["maxCalls"] = (
+                int(limit)
+                if authored_limit is None
+                else min(int(limit), int(authored_limit))
+            )
         schemas = (
             tool_input_schemas(authored.get("toolDefs"))
             if authored.get("toolDefs") is not None
@@ -991,16 +1035,25 @@ class InMemoryEnv:
                 )
             raise KeyError(f"no in-memory fake or MCP caller for tool alias {alias!r}")
 
-        return await drive_agent_loop(
+        result = await drive_agent_loop(
             input=value,
             cfg=cfg,
             invoke_controller=invoke_controller,
             call_tool=call_tool,
             granted=grants,
             contracts=contracts,
+            tool_count_keys=aliases,
             tool_schemas=schemas,
+            state=AgentState(last=value, call_counts=dict(self.call_counts)),
             get_pure=self.get_pure,
         )
+        carried_counts = result.get("callCounts")
+        if isinstance(carried_counts, dict):
+            for tool, raw_count in carried_counts.items():
+                count = int(raw_count)
+                key = str(tool)
+                self.call_counts[key] = max(self.call_counts.get(key, 0), count)
+        return result
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         if planner not in self._planners:

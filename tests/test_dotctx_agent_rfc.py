@@ -9,11 +9,12 @@ import pytest
 from julep import HAVE_TEMPORAL
 from julep.declarations import declarations_blob, load_declarations
 from julep.dotctx import Reasoner, reasoner_from_settings, reasoner_to_flow
-from julep.dsl import app
+from julep.dsl import app, think
 from julep.errors import FreezeError
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec, freeze
 from julep.ir import canonical_json
 from julep.registry import (
+    DEFAULT_REGISTRY,
     Registry,
     ToolSchemaExpectation,
     scoped_tool_expectation_key,
@@ -131,6 +132,98 @@ def test_freeze_rejects_non_exact_tools_pyi_schema() -> None:
         )
 
 
+def test_think_reasoner_honors_explicit_unscoped_tool_expectation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    name = "explicit-unscoped-schema-reasoner"
+    tool_key = "tracker/search-posts"
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.reasoners,
+        name,
+        Reasoner(name, "test:model", tools=(tool_key,)),
+    )
+    snapshot = McpSnapshot(
+        servers={
+            "tracker": McpServerSnapshot(
+                "tracker",
+                {
+                    "search-posts": McpToolSpec(
+                        input_schema={
+                            **EXPECTED,
+                            "additionalProperties": False,
+                        }
+                    )
+                },
+            )
+        }
+    )
+
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT.*tracker/search-posts"):
+        freeze(
+            think(name),
+            snapshot,
+            expected_tool_schemas={
+                tool_key: ToolSchemaExpectation(
+                    tool_key,
+                    EXPECTED,
+                    "explicit-tools.pyi",
+                )
+            },
+        )
+
+
+def test_think_reasoner_ignores_unrelated_scoped_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    owner = "scoped-schema-owner"
+    consumer = "unrelated-schema-consumer"
+    tool_key = "review-scoped/tool"
+    expectation = ToolSchemaExpectation(
+        tool_key,
+        EXPECTED,
+        "owner-tools.pyi",
+    )
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.reasoners,
+        consumer,
+        Reasoner(consumer, "test:model", tools=(tool_key,)),
+    )
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.tool_expectations,
+        scoped_tool_expectation_key(owner, tool_key),
+        expectation,
+    )
+    monkeypatch.setitem(
+        DEFAULT_REGISTRY.tool_expectations,
+        tool_key,
+        expectation,
+    )
+    monkeypatch.setattr(
+        DEFAULT_REGISTRY,
+        "scoped_tool_fallbacks",
+        {*DEFAULT_REGISTRY.scoped_tool_fallbacks, tool_key},
+    )
+    snapshot = McpSnapshot(
+        servers={
+            "review-scoped": McpServerSnapshot(
+                "review-scoped",
+                {
+                    "tool": McpToolSpec(
+                        input_schema={
+                            **EXPECTED,
+                            "additionalProperties": False,
+                        }
+                    )
+                },
+            )
+        }
+    )
+
+    frozen = freeze(think(consumer), snapshot)
+
+    assert frozen.flow is not None
+
+
 def test_freeze_preserves_legacy_wire_grant_without_alias_map() -> None:
     snapshot = McpSnapshot(
         servers={
@@ -239,6 +332,9 @@ def test_agent_workflow_dispatches_bare_alias_to_wire_tool(monkeypatch) -> None:
     monkeypatch.setattr(
         harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
     )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
 
     rounds = iter(
         [
@@ -299,6 +395,318 @@ def test_agent_workflow_dispatches_bare_alias_to_wire_tool(monkeypatch) -> None:
     }
     assert result["trace"][0]["callId"] == "tool-1"
     assert result["trace"][0]["arguments"] == {"query": "q"}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_shares_max_calls_across_aliases_for_one_wire(
+    monkeypatch,
+) -> None:
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    rounds = iter(
+        [
+            {
+                "tool_calls": [
+                    {"id": "tool-a", "tool": "a", "input": {"query": "a"}}
+                ]
+            },
+            {
+                "tool_calls": [
+                    {"id": "tool-b", "tool": "b", "input": {"query": "b"}}
+                ]
+            },
+            {"output": {"answer": "unexpected"}},
+        ]
+    )
+    calls = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return next(rounds)
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            calls.append(payload)
+            return []
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    contract = {
+        "effect": "read",
+        "idempotency": "native",
+        "asserted": True,
+        "maxCalls": 1,
+    }
+    inp = AgentInput(
+        controller="alias-agent",
+        session_id="alias-limit-run",
+        input={"query": "q"},
+        config={"maxRounds": 3, "nativeTools": True},
+        granted_tools=["a", "b"],
+        granted_contracts={"a": dict(contract), "b": dict(contract)},
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": alias,
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+            for alias in ("a", "b")
+        ],
+        tool_aliases={"a": "tracker/search-posts", "b": "tracker/search-posts"},
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "denied"
+    assert result["reason"] == "tool 'b' exceeded maxCalls=1"
+    assert result["callCounts"] == {"tracker/search-posts": 1}
+    assert len(calls) == 1
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_honors_preconsumed_wire_call_count(monkeypatch) -> None:
+    from julep.agent_loop import AgentState
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    calls = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return {
+                "tool_calls": [
+                    {"id": "tool-a", "tool": "a", "input": {"query": "a"}}
+                ]
+            }
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            calls.append(payload)
+            return []
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    inp = AgentInput(
+        controller="alias-agent",
+        session_id="preconsumed-limit-run",
+        input={"query": "q"},
+        config={"maxRounds": 2, "nativeTools": True},
+        granted_tools=["a"],
+        granted_contracts={
+            "a": {
+                "effect": "read",
+                "idempotency": "native",
+                "asserted": True,
+                "maxCalls": 1,
+            }
+        },
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "a",
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+        ],
+        tool_aliases={"a": "tracker/search-posts"},
+        state=AgentState(
+            last={"query": "q"},
+            call_counts={"tracker/search-posts": 1},
+        ).to_json(),
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "denied"
+    assert result["reason"] == "tool 'a' exceeded maxCalls=1"
+    assert result["callCounts"] == {"tracker/search-posts": 1}
+    assert calls == []
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_preserves_native_parent_key_distinct_from_alias_wire(
+    monkeypatch,
+) -> None:
+    from julep.agent_loop import AgentState
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    rounds = iter(
+        [
+            {
+                "tool_calls": [
+                    {
+                        "id": "mcp-search",
+                        "tool": "search",
+                        "input": {"query": "q"},
+                    }
+                ]
+            },
+            {"output": {"answer": "done"}},
+        ]
+    )
+    calls = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return next(rounds)
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            calls.append(payload)
+            return []
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    inp = AgentInput(
+        controller="search-agent",
+        session_id="native-parent-key-run",
+        input={"query": "q"},
+        config={"maxRounds": 3, "nativeTools": True},
+        granted_tools=["search"],
+        granted_contracts={
+            "search": {
+                "effect": "read",
+                "idempotency": "native",
+                "asserted": True,
+                "maxCalls": 1,
+            }
+        },
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "search",
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+        ],
+        tool_aliases={"search": "tracker/search-posts"},
+        state=AgentState(
+            last={"query": "q"},
+            call_counts={"search": 1},
+        ).to_json(),
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "done"
+    assert result["callCounts"] == {"search": 1, "tracker/search-posts": 1}
+    assert len(calls) == 1
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_subflow_inherits_canonical_wire_call_limit(monkeypatch) -> None:
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    rounds = iter(
+        [
+            {
+                "tool_calls": [
+                    {"id": "tool-a", "tool": "a", "input": {"query": "a"}}
+                ]
+            },
+            {"sub": "child", "input": {"query": "child"}},
+            {"output": {"answer": "done"}},
+        ]
+    )
+    children = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return next(rounds)
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            return []
+        if fn.__name__ == "resolveSubflow":
+            return {}
+        return None
+
+    async def fake_execute_child_workflow(*args, **kwargs):
+        del kwargs
+        children.append(args[1])
+        return {"child": "done"}
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(
+        harness.workflow,
+        "execute_child_workflow",
+        fake_execute_child_workflow,
+    )
+    inp = AgentInput(
+        controller="alias-sub-agent",
+        session_id="alias-sub-run",
+        input={"query": "q"},
+        config={"maxRounds": 4, "nativeTools": True},
+        granted_tools=["a"],
+        granted_subflows=["child"],
+        granted_contracts={
+            "a": {
+                "effect": "read",
+                "idempotency": "native",
+                "asserted": True,
+                "maxCalls": 1,
+            }
+        },
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "a",
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+        ],
+        tool_aliases={"a": "tracker/search-posts"},
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "done"
+    assert children[0].max_call_limits == {"tracker/search-posts": 1}
+    assert children[0].call_counts == {"tracker/search-posts": 1}
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

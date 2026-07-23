@@ -83,19 +83,7 @@ def rendered_user_for(reasoner: Reasoner, value: Any) -> Optional[str]:
 
 
 def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
-    return Reasoner(
-        name=reasoner.name, model=reasoner.model, system=system,
-        reply=reasoner.reply_schema, tools=reasoner.tools,
-        temperature=reasoner.temperature, max_rounds=reasoner.max_rounds,
-        is_agent=reasoner.is_agent, sub_contract=reasoner.sub_contract,
-        context_scope=reasoner.context_scope, system_render=None,
-        user_render=reasoner.user_render, max_tokens=reasoner.max_tokens,
-        reasoning_effort=reasoner.reasoning_effort,
-        output_retries=reasoner.output_retries,
-        require_tool_call=reasoner.require_tool_call,
-        response_format=reasoner.response_format,
-        prompt_cache=reasoner.prompt_cache,
-    )
+    return reasoner.replace(system=system, system_render=None)
 
 
 def rendered_reasoner_for(reasoner: Reasoner, value: Any) -> Reasoner:

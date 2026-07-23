@@ -111,6 +111,14 @@ with workflow.unsafe.imports_passed_through():
         redacted_failure_text,
         secret_safe_activity,
     )
+    from .mcp_preflight import (
+        McpPreflightError,
+        _MCP_PREFLIGHT_CACHE,
+        _MCP_PREFLIGHT_CACHE_MAX_ENTRIES,
+        _MCP_PREFLIGHT_CACHE_TTL_S,
+        _prune_mcp_preflight_cache as _prune_mcp_preflight_cache_core,
+        preflight_mcp,
+    )
     from .session_store import value_fingerprint
     from .projection_store import finalize_projection_run, persist_projection_batch
     from .timeouts import activity_timeout
@@ -174,29 +182,15 @@ _NON_RETRYABLE = [
 ]
 
 
-_MCP_PREFLIGHT_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
-_MCP_PREFLIGHT_CACHE_TTL_S = 30.0
-_MCP_PREFLIGHT_CACHE_MAX_ENTRIES = 256
-
-
 def _prune_mcp_preflight_cache(now: float) -> None:
     """Drop stale entries and bound per-worker preflight cache growth."""
-    expired = [
-        key
-        for key, (cached_at, _result) in _MCP_PREFLIGHT_CACHE.items()
-        if now - cached_at > _MCP_PREFLIGHT_CACHE_TTL_S
-    ]
-    for key in expired:
-        _MCP_PREFLIGHT_CACHE.pop(key, None)
-    overflow = len(_MCP_PREFLIGHT_CACHE) - _MCP_PREFLIGHT_CACHE_MAX_ENTRIES
-    if overflow <= 0:
-        return
-    oldest = sorted(
-        _MCP_PREFLIGHT_CACHE,
-        key=lambda key: (_MCP_PREFLIGHT_CACHE[key][0], key),
+
+    _prune_mcp_preflight_cache_core(
+        now,
+        cache=_MCP_PREFLIGHT_CACHE,
+        ttl_s=_MCP_PREFLIGHT_CACHE_TTL_S,
+        max_entries=_MCP_PREFLIGHT_CACHE_MAX_ENTRIES,
     )
-    for key in oldest[:overflow]:
-        _MCP_PREFLIGHT_CACHE.pop(key, None)
 
 
 def _reserved_channel_tool_name(node: Node) -> Optional[str]:
@@ -214,229 +208,21 @@ def _reserved_channel_tool_name(node: Node) -> Optional[str]:
 @activity.defn(name="preflightMcp")
 @secret_safe_activity
 async def preflightMcp(inp: dict[str, Any]) -> dict[str, Any]:
-    """Validate run bindings and the frozen MCP surface on the worker path."""
-    import hashlib
-    import json
-    import time
+    """Temporal activity wrapper around backend-neutral MCP preflight."""
 
-    from ..contracts import manifest_from_json
-    from ..deploy import snapshot_from_listings
-    from ..ir import McpTool, Node, Op, SubStep, canonical_json
-    from ..mcp_auth import _SECRET_REF, transport_for_mcp_caller
-    from ..mcp_surface import (
-        McpSurfaceMismatchError,
-        McpSurfacePolicy,
-        assert_mcp_surface,
-        canonical_surface_digest,
-    )
-    from . import effects as _effects
-
-    policy = McpSurfacePolicy.coerce(str(inp.get("policy", "off")))
-    now = time.monotonic()
-    _prune_mcp_preflight_cache(now)
-    # Preflight the entire statically reachable release surface, not only the
-    # root manifest.  Ref children are frozen independently and resolved from
-    # the release-scoped worker registry at runtime; walking them here keeps the
-    # workflow command sequence unchanged while still refusing drift before the
-    # root can schedule user/tool effects.
-    manifest_jsons: list[Mapping[str, Any]] = [
-        dict(inp.get("manifestJson") or {})
-    ]
-    pending_flows: list[Mapping[str, Any]] = []
-    root_flow = inp.get("flowJson")
-    if isinstance(root_flow, Mapping):
-        pending_flows.append(root_flow)
-    seen_refs: set[str] = set()
-    while pending_flows:
-        flow = Node.from_json(dict(pending_flows.pop()))
-        refs: set[str] = set()
-        for node in flow.walk():
-            if isinstance(node.step, SubStep):
-                refs.add(node.step.ref)
-            if node.op is Op.APP and isinstance(node.subflows, (list, tuple)):
-                refs.update(str(ref) for ref in node.subflows)
-        for ref in sorted(refs):
-            if ref in seen_refs:
-                continue
-            seen_refs.add(ref)
-            spec = _effects._CTX.subflows.get(ref)
-            if spec is None:
-                # Preserve existing lazy failure semantics for an unregistered
-                # branch; preflight only expands frozen children the release
-                # worker can actually resolve.
-                continue
-            child_manifest = spec.get("manifestJson")
-            if isinstance(child_manifest, Mapping):
-                manifest_jsons.append(child_manifest)
-            child_flow = spec.get("flowJson")
-            if isinstance(child_flow, Mapping):
-                pending_flows.append(child_flow)
-
-    frozen = [
-        tool
-        for manifest_json in manifest_jsons
-        for tool in manifest_from_json(dict(manifest_json)).values()
-        if isinstance(tool.ref, McpTool)
-    ]
-    if not frozen:
-        unused = sorted(dict(inp.get("secrets") or {}))
-        if unused:
-            raise ApplicationError(
-                json.dumps(
-                    {
-                        "error": "invalid_run_secret_binding",
-                        "names": unused,
-                        "allowed": [],
-                    },
-                    sort_keys=True,
-                ),
-                type="invalid_run_secret_binding",
-                non_retryable=True,
-            )
-        return {"policy": policy.value, "completed": True, "surfaceDigest": None}
-
-    frozen_digest = canonical_surface_digest(frozen)
-    run_secrets = dict(inp.get("secrets") or {})
-    if policy is McpSurfacePolicy.OFF and not run_secrets:
-        return {
-            "policy": policy.value,
-            "completed": True,
-            "surfaceDigest": frozen_digest,
-        }
-
-    transport = _effects._CTX.mcp_transport
-    if transport is None:
-        transport = transport_for_mcp_caller(_effects._CTX.mcp_call)
-    if transport is None:
-        raise RuntimeError("worker has no MCP transport configured for preflight")
-
-    servers = sorted({tool.ref.server for tool in frozen})
-
-    # Only whole-string references in the request-time config for referenced
-    # servers are valid run bindings.  Values never enter this diagnostic.
-    allowed_names: set[str] = set()
-    configs: dict[str, Any] = {}
-    for server in servers:
-        config = transport._config(server)
-        configs[server] = config
-        for value in config.headers.values():
-            match = _SECRET_REF.fullmatch(value)
-            if match is not None:
-                allowed_names.add(match.group(1))
-    unused = sorted(set(run_secrets) - allowed_names)
-    if unused:
-        raise ApplicationError(
-            json.dumps(
-                {
-                    "error": "invalid_run_secret_binding",
-                    "names": unused,
-                    "allowed": sorted(allowed_names),
-                },
-                sort_keys=True,
-            ),
-            type="invalid_run_secret_binding",
-            non_retryable=True,
-        )
-
-    if policy is McpSurfacePolicy.OFF:
-        return {
-            "policy": policy.value,
-            "completed": True,
-            "surfaceDigest": frozen_digest,
-        }
-    sinks: list[tuple[str, str]] = []
-    for server in servers:
-        config = configs[server]
-        sinks.append(
-            (
-                f"{server}:url",
-                hashlib.sha256(str(config.url).encode("utf-8")).hexdigest(),
-            )
-        )
-        if config.version is not None:
-            sinks.append(
-                (
-                    f"{server}:version",
-                    hashlib.sha256(str(config.version).encode("utf-8")).hexdigest(),
-                )
-            )
-        for header, raw_value in sorted(config.headers.items(), key=lambda item: item[0].lower()):
-            resolved = await transport._resolve_ref(raw_value, run_secrets)
-            sinks.append(
-                (
-                    f"{server}:header:{header.lower()}",
-                    hashlib.sha256(resolved.encode("utf-8")).hexdigest(),
-                )
-            )
-    cache_payload = {
-        "frozen": frozen_digest,
-        # Keep per-manifest duplicates in the cache identity. The public
-        # surface digest intentionally collapses by wire ref, but two reachable
-        # flows can pin different definitions for that same ref and must not
-        # reuse a cache entry produced for only one of them.
-        "frozenDefinitions": sorted(
-            (tool.ref.server, tool.ref.tool, tool.definition_hash)
-            for tool in frozen
-        ),
-        "policy": policy.value,
-        "sinks": sinks,
-        "principalHash": hashlib.sha256(
-            canonical_json(inp.get("principal")).encode("utf-8")
-        ).hexdigest(),
-        "auth": (
-            None
-            if transport._auth is None
-            else {"issuer": transport._auth.issuer, "kid": transport._auth.kid}
-        ),
-    }
-    cache_key = hashlib.sha256(canonical_json(cache_payload).encode("utf-8")).hexdigest()
-    cached = _MCP_PREFLIGHT_CACHE.get(cache_key)
-    if cached is not None and now - cached[0] <= _MCP_PREFLIGHT_CACHE_TTL_S:
-        return dict(cached[1])
-
-    listings = await asyncio.gather(
-        *(
-            transport.list_tools(
-                server,
-                workflow_id=str(inp["workflowId"]),
-                principal=inp.get("principal"),
-                run_secrets=run_secrets,
-            )
-            for server in servers
-        )
-    )
-    fresh = snapshot_from_listings(
-        {server: listing.tools for server, listing in zip(servers, listings, strict=True)},
-        versions={server: listing.version for server, listing in zip(servers, listings, strict=True)},
-        protocol_versions={
-            server: listing.protocol_version
-            for server, listing in zip(servers, listings, strict=True)
-        },
-        server_versions={
-            server: listing.server_version
-            for server, listing in zip(servers, listings, strict=True)
-        },
-    )
     try:
-        assert_mcp_surface(frozen, fresh, policy=policy)
-    except McpSurfaceMismatchError as exc:
+        return await preflight_mcp(
+            inp,
+            cache=_MCP_PREFLIGHT_CACHE,
+            cache_ttl_s=_MCP_PREFLIGHT_CACHE_TTL_S,
+            cache_max_entries=_MCP_PREFLIGHT_CACHE_MAX_ENTRIES,
+        )
+    except McpPreflightError as exc:
         raise ApplicationError(
-            json.dumps(
-                {"error": "tool_surface_mismatch", "details": exc.details},
-                sort_keys=True,
-            ),
-            type="tool_surface_mismatch",
-            non_retryable=True,
+            exc.detail,
+            type=exc.type,
+            non_retryable=exc.non_retryable,
         ) from None
-
-    result = {
-        "policy": policy.value,
-        "completed": True,
-        "surfaceDigest": frozen_digest,
-    }
-    _MCP_PREFLIGHT_CACHE[cache_key] = (time.monotonic(), result)
-    _prune_mcp_preflight_cache(time.monotonic())
-    return dict(result)
 
 
 @activity.defn(name="finishTrajectory")
@@ -584,6 +370,14 @@ def _agent_frozen_tool_input_validation_enabled() -> bool:
     except Exception:
         # Direct unit invocations have no workflow runtime and exercise the
         # legacy branch unless they explicitly opt into the patch.
+        return False
+
+
+def _agent_canonical_tool_counts_enabled() -> bool:
+    """Replay gate for wire-keyed maxCalls counters across provider aliases."""
+    try:
+        return workflow.patched("agent-canonical-tool-counts-v1")
+    except Exception:
         return False
 
 
@@ -1203,6 +997,7 @@ class _TemporalEnv:
         cid: str,
         app_config: Optional[dict[str, Any]] = None,
     ) -> Any:
+        canonical_tool_counts = _agent_canonical_tool_counts_enabled()
         child_id = self._child_id("agent", cid)
         config: Optional[dict[str, Any]] = None
         granted_tools: Optional[list[str]] = None
@@ -1261,8 +1056,16 @@ class _TemporalEnv:
                         alias = str(raw_alias)
                         wire = (tool_aliases or {}).get(alias, alias)
                         if wire in self._max_call_limits:
-                            granted_contracts.setdefault(alias, {})["maxCalls"] = int(
-                                self._max_call_limits[wire]
+                            contract = granted_contracts.setdefault(alias, {})
+                            authored_limit = contract.get(
+                                "maxCalls",
+                                contract.get("max_calls"),
+                            )
+                            parent_limit = int(self._max_call_limits[wire])
+                            contract["maxCalls"] = (
+                                parent_limit
+                                if authored_limit is None or not canonical_tool_counts
+                                else min(parent_limit, int(authored_limit))
                             )
                 else:
                     granted_contracts = al.manifest_contracts_for_agent(
@@ -2695,6 +2498,7 @@ class AgentWorkflow:
             )
 
         policy = ExecutionPolicy.from_json(inp.policy)
+        canonical_tool_counts = _agent_canonical_tool_counts_enabled()
 
         # Resolve config + grant metadata once, then carry it through
         # continue-as-new. Inline app config can supply grant semantics while
@@ -2810,7 +2614,6 @@ class AgentWorkflow:
             state = al.AgentState.from_json(inp.state)
         else:
             state = al.AgentState(last=inp.input)
-
         # Per-segment continue-as-new cadence: carried state keeps the
         # cumulative round count, so truncation is measured from this
         # segment's entry round, not from zero.
@@ -3126,7 +2929,16 @@ class AgentWorkflow:
                     continue
                 for entry in calls:
                     tool = entry["tool"]
-                    denial = al.charge_tool_call(state, tool, contracts)
+                    denial = al.charge_tool_call(
+                        state,
+                        tool,
+                        contracts,
+                        count_key=(
+                            tool_aliases.get(tool, tool)
+                            if canonical_tool_counts
+                            else tool
+                        ),
+                    )
                     if denial is not None:
                         terminal = al.terminal_result("denied", state, reason=denial.reason)
                         await self._finish_trajectory(
@@ -3297,7 +3109,12 @@ class AgentWorkflow:
                     )
                     state.round += 1
                     continue
-                denial = al.charge_tool_call(state, tool, contracts)
+                denial = al.charge_tool_call(
+                    state,
+                    tool,
+                    contracts,
+                    count_key=wire_tool if canonical_tool_counts else tool,
+                )
                 if denial is not None:
                     terminal = al.terminal_result("denied", state, reason=denial.reason)
                     await self._finish_trajectory(
@@ -3437,7 +3254,10 @@ class AgentWorkflow:
                         input=sub_input,
                         ref=ref,
                         policy=policy.to_json(),
-                        max_call_limits=al.max_call_limits_from_contracts(contracts),
+                        max_call_limits=al.max_call_limits_from_contracts(
+                            contracts,
+                            tool_aliases if canonical_tool_counts else None,
+                        ),
                         call_counts=dict(state.call_counts),
                         principal=inp.principal,
                         root_run_id=(inp.root_run_id or inp.session_id),

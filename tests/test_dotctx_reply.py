@@ -8,8 +8,9 @@ import pytest
 
 from julep.deploy import _reasoner_identity
 from julep.dotctx import Reasoner
+from julep.ir import SubContract, canonical_json
+from julep.kinds import ContextScope, Shape
 from julep.registry import DEFAULT_REGISTRY
-from julep.ir import canonical_json
 
 
 @pytest.fixture
@@ -188,3 +189,89 @@ def test_reply_typeddict_nested_notrequired_field_resolves_under_future_annotati
 def test_reply_rejects_unsupported_type_with_supported_forms() -> None:
     with pytest.raises(TypeError, match="pydantic.*TypedDict"):
         Reasoner(name="reply.unsupported", model="openai:gpt-4o", reply=object)
+
+
+def test_reasoner_replace_is_lossless_and_can_override_every_field() -> None:
+    original = Reasoner(
+        name="replace.original",
+        model="openai:gpt-4o",
+        system="system",
+        reply=TypedReply,
+        tools=("search",),
+        temperature=0.25,
+        max_rounds=4,
+        is_agent=True,
+        sub_contract=SubContract(Shape.FEEDBACK),
+        context_scope=ContextScope.LOCAL,
+        system_render="render.system",
+        user_render="render.user",
+        max_tokens=512,
+        reasoning_effort="high",
+        output_retries=2,
+        require_tool_call=True,
+        response_format="json_object",
+        prompt_cache="5m",
+    )
+
+    assert original.replace() == original
+
+    replacement = original.replace(
+        name="replace.new",
+        model="anthropic:claude-sonnet-4",
+        system="new system",
+        reply={"type": "string"},
+        tools=("lookup",),
+        temperature=None,
+        max_rounds=None,
+        is_agent=False,
+        sub_contract=None,
+        context_scope=ContextScope.WHOLE_SESSION,
+        system_render=None,
+        user_render=None,
+        max_tokens=None,
+        reasoning_effort=None,
+        output_retries=0,
+        require_tool_call=False,
+        response_format=None,
+        prompt_cache=None,
+    )
+
+    assert replacement.name == "replace.new"
+    assert replacement.model == "anthropic:claude-sonnet-4"
+    assert replacement.system == "new system"
+    assert replacement.reply_schema == {"type": "string"}
+    assert replacement.tools == ("lookup",)
+    assert replacement.temperature is None
+    assert replacement.max_rounds is None
+    assert replacement.is_agent is False
+    assert replacement.sub_contract is None
+    assert replacement.context_scope is ContextScope.WHOLE_SESSION
+    assert replacement.system_render is None
+    assert replacement.user_render is None
+    assert replacement.max_tokens is None
+    assert replacement.reasoning_effort is None
+    assert replacement.output_retries == 0
+    assert replacement.require_tool_call is False
+    assert replacement.response_format is None
+    assert replacement.prompt_cache is None
+
+
+def test_reasoner_replace_reply_distinguishes_keep_clear_and_rematerialize(
+    decision_model: type[object],
+) -> None:
+    Decision = decision_model
+    original = Reasoner("replace.reply", "openai:gpt-4o", reply=TypedReply)
+
+    assert original.replace(model="openai:gpt-4.1").reply_schema == original.reply_schema
+    assert original.replace(reply=None).reply_schema is None
+    assert original.replace(reply=Decision).reply_schema == Decision.model_json_schema()
+
+
+def test_reasoner_replace_preserves_future_extension_fields() -> None:
+    original = Reasoner("replace.future", "openai:gpt-4o")
+    object.__setattr__(original, "future_field", {"enabled": True})
+
+    replacement = original.replace(model="openai:gpt-5")
+
+    assert replacement.model == "openai:gpt-5"
+    assert vars(replacement)["future_field"] == {"enabled": True}
