@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from julep import (
@@ -9,8 +11,9 @@ from julep import (
     arr, call, mcp, think, seq, par, alt, iter_up_to, stage, app,
     sub, race, quorum, human_gate, Contract, freeze, register_pure,
     HAVE_TEMPORAL, CapabilityOverrides, ToolContract, Effect, Idempotency,
+    snapshot_from_listings,
 )
-from julep.errors import CapabilityDenied
+from julep.errors import CapabilityDenied, ToolInputValidation
 from julep.execution.interpreter import InMemoryEnv, _retry_backoff_for_call, interpret
 from julep.execution.llm_result import LlmCallMeta, LlmResult
 if HAVE_TEMPORAL:
@@ -47,6 +50,19 @@ def test_pipeline_threads_value():
     assert out.value == 12  # (5+1)*2
 
 
+def test_in_memory_tool_awaits_async_result():
+    async def async_inc(value):
+        await asyncio.sleep(0)
+        return value + 1
+
+    flow = call(mcp("srv", "inc"))
+    fr, env = _env(flow, tools={"srv/inc": async_inc})
+
+    out = run(interpret(fr.flow, 5, env))
+
+    assert out.value == 6
+
+
 def test_mcp_call_seam_receives_identity_cid_and_principal():
     seen = {}
 
@@ -70,7 +86,7 @@ def test_mcp_call_seam_receives_identity_cid_and_principal():
     }
 
 
-def test_direct_mcp_call_does_not_claim_agent_schema_validation():
+def test_direct_frozen_mcp_call_reports_schema_validation():
     seen = {}
 
     async def mcp_call(
@@ -88,7 +104,44 @@ def test_direct_mcp_call_does_not_claim_agent_schema_validation():
     out = run(interpret(fr.flow, {"query": "hello"}, env))
 
     assert out.value == {"query": "hello"}
-    assert seen == {"run_secrets": None, "input_schema_validated": False}
+    assert seen == {"run_secrets": None, "input_schema_validated": True}
+
+
+def test_direct_frozen_mcp_call_rejects_invalid_input_before_dispatch():
+    calls = 0
+
+    async def mcp_call(
+        server, tool, value, cid, principal, run_secrets, input_schema_validated
+    ):
+        nonlocal calls
+        calls += 1
+        return value
+
+    snapshot = snapshot_from_listings(
+        {
+            "srv": {
+                "typed": {
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"query": {"type": "string"}},
+                        "required": ["query"],
+                    }
+                }
+            }
+        }
+    )
+    flow = call(mcp("srv", "typed"))
+    fr = freeze(flow, snapshot)
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        mcp_call=mcp_call,
+    )
+
+    with pytest.raises(ToolInputValidation, match="srv/typed"):
+        run(interpret(fr.flow, {"query": 7}, env))
+
+    assert calls == 0
 
 
 def test_retryable_call_retries_to_success_with_backoff_sleeps():

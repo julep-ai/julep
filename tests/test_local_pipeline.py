@@ -10,6 +10,7 @@ from conftest import run
 from julep.contracts import McpAnnotations
 from julep.dotctx import Reasoner
 from julep.execution.effects import WorkerContext
+from julep.errors import ToolInputValidation
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from julep.local import (
     LocalExecutionConfigurationError,
@@ -125,6 +126,68 @@ def _lookup_snapshot() -> McpSnapshot:
                 },
             )
         }
+    )
+
+
+def _direct_effect_project(root: Path) -> None:
+    module_name = f"direct_effect_app_{abs(hash(str(root)))}"
+    (root / f"{module_name}.py").write_text(
+        """
+import asyncio
+
+from julep import (
+    Application,
+    PipelineSpec,
+    call,
+    mcp,
+    snapshot_from_listings,
+    tool,
+)
+
+@tool(effect="read", idempotent=True)
+async def async_upper(value):
+    await asyncio.sleep(0)
+    return value.upper()
+
+typed_snapshot = snapshot_from_listings(
+    {
+        "srv": {
+            "typed": {
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                    "required": ["query"],
+                }
+            }
+        }
+    }
+)
+
+application = Application(
+    "direct-effects",
+    [
+        PipelineSpec(
+            name="async-native",
+            flow=async_upper,
+            tools=(async_upper,),
+        ),
+        PipelineSpec(
+            name="typed-mcp",
+            flow=call(mcp("srv", "typed")),
+            snapshot=typed_snapshot,
+        ),
+    ],
+)
+""".strip(),
+        encoding="utf-8",
+    )
+    (root / "pyproject.toml").write_text(
+        """
+[tool.julep]
+src = ["."]
+application = "{module_name}:application"
+""".strip().format(module_name=module_name),
+        encoding="utf-8",
     )
 
 
@@ -324,6 +387,52 @@ def test_tool_agent_rejects_caller_without_tools_extension(
                 context=WorkerContext(mcp_call=mcp),
             )
         )
+
+
+def test_configured_local_pipeline_awaits_async_native_tool(tmp_path: Path) -> None:
+    _direct_effect_project(tmp_path)
+    prepared = prepare_local_pipeline("async-native", project_root=tmp_path)
+
+    assert prepared.run("julep") == "JULEP"
+
+
+def test_configured_local_pipeline_validates_frozen_mcp_before_dispatch(
+    tmp_path: Path,
+) -> None:
+    _direct_effect_project(tmp_path)
+    calls: list[dict[str, Any]] = []
+
+    async def mcp(
+        server: str,
+        tool: str,
+        value: Any,
+        cid: str,
+        principal: Any,
+        secrets: Any,
+        input_schema_validated: bool,
+    ) -> Any:
+        calls.append(
+            {
+                "server": server,
+                "tool": tool,
+                "value": value,
+                "cid": cid,
+                "principal": principal,
+                "secrets": secrets,
+                "validated": input_schema_validated,
+            }
+        )
+        return {"result": value["query"]}
+
+    prepared = prepare_local_pipeline("typed-mcp", project_root=tmp_path)
+    context = WorkerContext(mcp_call=mcp)
+
+    assert prepared.run({"query": "ok"}, context=context) == {"result": "ok"}
+    assert calls[0]["validated"] is True
+
+    with pytest.raises(ToolInputValidation, match="srv/typed"):
+        prepared.run({"query": 7}, context=context)
+    assert len(calls) == 1
 
 
 def test_local_pipeline_errors_are_typed_and_actionable(tmp_path: Path) -> None:

@@ -37,6 +37,7 @@ from ..errors import (
     JulepError,
     PureExecutionError,
     RaceAllFailed,
+    ToolInputValidation,
 )
 from ..freeze import bind
 from ..ir import (
@@ -905,12 +906,21 @@ class InMemoryEnv:
         key = call_ref_key(node, self.manifest)
         fn = self._tools.get(key)
         if fn is not None:
-            return fn(value)
+            out = fn(value)
+            return await out if inspect.isawaitable(out) else out
 
         step = node.step
         assert isinstance(step, CallStep)
-        ref = bind(node, self.manifest).ref if step.frozen_hash is not None else step.tool
+        frozen = bind(node, self.manifest) if step.frozen_hash is not None else None
+        ref = frozen.ref if frozen is not None else step.tool
         if isinstance(ref, McpTool) and self._mcp_call is not None:
+            input_schema_validated = False
+            if frozen is not None:
+                from .llm import json_schema_error
+
+                if json_schema_error(value, frozen.input_schema) is not None:
+                    raise ToolInputValidation(ref.server, ref.tool)
+                input_schema_validated = True
             return await self._mcp_call(
                 ref.server,
                 ref.tool,
@@ -918,7 +928,7 @@ class InMemoryEnv:
                 cid,
                 self.principal,
                 None,
-                False,
+                input_schema_validated,
             )
         raise KeyError(f"no in-memory tool for {key!r}")
 
