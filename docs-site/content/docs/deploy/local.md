@@ -134,10 +134,16 @@ The factory stores artifacts under `<project>/.julep/artifacts`. Runs, release
 records, deployment records, projections, gates, and vault rows otherwise live
 only in the process and disappear when the application exits.
 
-With no configured API keys, local mode provides the admin token `local-dev`
-when bound to a loopback host. It refuses to provide that fallback for a
-non-loopback bind. Configure explicit keys before exposing the server on another
-interface.
+With no configured API keys, echo-only local mode provides the admin token
+`local-dev` when bound to a loopback host. It refuses to provide that fallback
+for a non-loopback bind. Configured-context mode can invoke real effects and
+therefore requires explicit API keys even on loopback.
+
+Only one local-app lifespan may be active in a process at a time. Local mode
+temporarily owns process-wide effect and artifact resolution; an overlapping
+`TestClient` lifespan fails immediately instead of risking cross-app context or
+credential leakage. Use one shared app in a test process or put independent
+local apps in separate processes.
 
 ## Serve the local API
 
@@ -157,6 +163,8 @@ sync or async factory returning a `WorkerContext` to call configured tools and
 reasoners instead:
 
 ```bash
+LOCAL_JULEP_TOKEN="$(openssl rand -hex 32)"
+export JULEP_API_KEYS="local-admin:${LOCAL_JULEP_TOKEN}:admin"
 julep serve api --local \
   --context-factory my_project.worker:build_context
 ```

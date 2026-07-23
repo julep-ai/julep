@@ -23,6 +23,17 @@ from conftest import read_snapshot
 
 
 LOCAL_HEADERS = {"Authorization": "Bearer local-dev"}
+CONFIGURED_HEADERS = {"Authorization": "Bearer configured-token"}
+
+
+def _configure_context_auth(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[tool.julep.server]
+api_keys = ["configured-local:configured-token:admin"]
+""".strip(),
+        encoding="utf-8",
+    )
 
 
 def _release(
@@ -64,18 +75,23 @@ def _continue_twice(value: dict[str, int]) -> Any:
 register_pure("tests.local.continue_twice", _continue_twice)
 
 
-def _publish_and_activate(client: TestClient, release: ApplicationRelease) -> None:
+def _publish_and_activate(
+    client: TestClient,
+    release: ApplicationRelease,
+    *,
+    headers: dict[str, str] = LOCAL_HEADERS,
+) -> None:
     published = client.post(
         "/v1/releases",
         content=release.manifest_bytes,
-        headers={**LOCAL_HEADERS, "Content-Type": "application/json"},
+        headers={**headers, "Content-Type": "application/json"},
     )
     assert published.status_code == 201, published.text
 
     activated = client.post(
         "/v1/deployments",
         json={"lane": "local", "release": release.release_hash},
-        headers=LOCAL_HEADERS,
+        headers=headers,
     )
     assert activated.status_code == 200, activated.text
 
@@ -86,6 +102,7 @@ def _start(
     key: str,
     input: Any,
     secrets: dict[str, str] | None = None,
+    headers: dict[str, str] = LOCAL_HEADERS,
 ) -> Any:
     body: dict[str, Any] = {"pipeline": "main", "input": input}
     if secrets is not None:
@@ -93,7 +110,7 @@ def _start(
     return client.post(
         "/v1/runs",
         json=body,
-        headers={**LOCAL_HEADERS, "Idempotency-Key": key},
+        headers={**headers, "Idempotency-Key": key},
     )
 
 
@@ -110,10 +127,15 @@ def _wait_for_gates(client: TestClient, run_id: str) -> list[str]:
     pytest.fail("local run did not open its human gate")
 
 
-def _wait_for_result(client: TestClient, run_id: str) -> dict[str, Any]:
+def _wait_for_result(
+    client: TestClient,
+    run_id: str,
+    *,
+    headers: dict[str, str] = LOCAL_HEADERS,
+) -> dict[str, Any]:
     response = client.get(
         f"/v1/runs/{run_id}/result?wait_s=2",
-        headers=LOCAL_HEADERS,
+        headers=headers,
     )
     assert response.status_code == 200, response.text
     return cast(dict[str, Any], response.json())
@@ -152,6 +174,48 @@ def test_local_dev_key_is_loopback_only(tmp_path: Path) -> None:
         server.create_local_app(project_root=tmp_path, host="0.0.0.0")
 
 
+def test_configured_context_requires_explicit_api_keys(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="explicitly configured API keys"):
+        server.create_local_app(
+            project_root=tmp_path,
+            context_factory=lambda: WorkerContext(),
+        )
+
+
+def test_local_app_lifespans_reject_overlap_without_stealing_process_state(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first_root = tmp_path / "first"
+    second_root = tmp_path / "second"
+    first_root.mkdir()
+    second_root.mkdir()
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", "file:///before-local")
+    first_app = server.create_local_app(project_root=first_root)
+    second_app = server.create_local_app(project_root=second_root)
+
+    with TestClient(first_app) as first_client:
+        assert (
+            os.environ["JULEP_ARTIFACT_STORE_URL"] == (first_root / ".julep" / "artifacts").as_uri()
+        )
+        with pytest.raises(RuntimeError, match="only one local Julep app lifespan"):
+            with TestClient(second_app):
+                pass
+        assert (
+            os.environ["JULEP_ARTIFACT_STORE_URL"] == (first_root / ".julep" / "artifacts").as_uri()
+        )
+        assert first_client.get("/v1/ready", headers=LOCAL_HEADERS).status_code == 200
+
+    assert os.environ["JULEP_ARTIFACT_STORE_URL"] == "file:///before-local"
+    with TestClient(second_app) as second_client:
+        assert second_client.get("/v1/ready", headers=LOCAL_HEADERS).status_code == 200
+        assert (
+            os.environ["JULEP_ARTIFACT_STORE_URL"]
+            == (second_root / ".julep" / "artifacts").as_uri()
+        )
+    assert os.environ["JULEP_ARTIFACT_STORE_URL"] == "file:///before-local"
+
+
 def test_echo_flow_runs_through_publish_activate_and_run_api(tmp_path: Path) -> None:
     app = server.create_local_app(project_root=tmp_path)
     release = _release(ident())
@@ -179,6 +243,33 @@ def test_echo_flow_runs_through_publish_activate_and_run_api(tmp_path: Path) -> 
         assert any(row["type"] == "Planned" for row in rows)
         assert any(row["type"] == "Did" for row in rows)
         assert rows[-1]["attrs"]["terminal"] is True
+
+
+def test_terminal_local_run_does_not_retain_raw_projection_values(
+    tmp_path: Path,
+) -> None:
+    app = server.create_local_app(project_root=tmp_path)
+    release = _release(ident())
+    secret = "raw-local-secret-value"
+
+    with TestClient(app) as client:
+        _publish_and_activate(client, release)
+        started = _start(
+            client,
+            key="local-projection-scrub",
+            input={"api_key": secret},
+        )
+        assert started.status_code == 201, started.text
+        finished = _wait_for_result(client, started.json()["run_id"])
+        assert finished["result"] == {"api_key": "[REDACTED]"}
+
+        gateway = app.state.gateway
+        record = gateway._runs[started.json()["workflow_id"]]
+        assert record.projection is not None
+        assert vars(record.projection.values)["_values"] == {}
+        projection_json = [event.to_json() for event in record.projection.events()]
+        assert secret not in repr(projection_json)
+        assert all("valueRef" not in event for event in projection_json)
 
 
 def test_local_events_are_visible_while_waiting_for_human_signal(tmp_path: Path) -> None:
@@ -287,6 +378,7 @@ def test_echo_mode_rejects_run_secrets(tmp_path: Path) -> None:
 
 
 def test_configured_context_factory_executes_real_mcp_effect(tmp_path: Path) -> None:
+    _configure_context_auth(tmp_path)
     factory_calls = 0
     effect_calls: list[dict[str, Any]] = []
 
@@ -329,10 +421,19 @@ def test_configured_context_factory_executes_real_mcp_effect(tmp_path: Path) -> 
     payload = {"message": "use the configured caller"}
 
     with TestClient(app) as client:
-        _publish_and_activate(client, release)
-        started = _start(client, key="configured-context", input=payload)
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="configured-context",
+            input=payload,
+            headers=CONFIGURED_HEADERS,
+        )
         assert started.status_code == 201, started.text
-        finished = _wait_for_result(client, started.json()["run_id"])
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
 
     assert factory_calls == 1
     assert finished["result"] == {
@@ -344,7 +445,7 @@ def test_configured_context_factory_executes_real_mcp_effect(tmp_path: Path) -> 
     assert effect_calls[0]["tool"] == "echo"
     assert effect_calls[0]["value"] == payload
     assert effect_calls[0]["cid"]
-    assert effect_calls[0]["principal"] == {"key": "local-dev"}
+    assert effect_calls[0]["principal"] == {"key": "configured-local"}
     assert effect_calls[0]["secrets"] is None
     assert effect_calls[0]["input_schema_validated"] is True
 
@@ -419,6 +520,7 @@ def test_echo_continuations_cannot_reset_max_calls(tmp_path: Path) -> None:
 
 
 def test_configured_subflow_continuations_settle_locally(tmp_path: Path) -> None:
+    _configure_context_auth(tmp_path)
     child = arr("tests.local.continue_twice")
 
     def context_factory() -> WorkerContext:
@@ -439,16 +541,26 @@ def test_configured_subflow_continuations_settle_locally(tmp_path: Path) -> None
     release = _release(sub("child"), snapshot=McpSnapshot())
 
     with TestClient(app) as client:
-        _publish_and_activate(client, release)
-        started = _start(client, key="subflow-continuation", input={"n": 0})
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="subflow-continuation",
+            input={"n": 0},
+            headers=CONFIGURED_HEADERS,
+        )
         assert started.status_code == 201, started.text
-        finished = _wait_for_result(client, started.json()["run_id"])
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
 
     assert finished["run"]["status"] == "completed"
     assert finished["result"] == {"done": 2}
 
 
 def test_configured_app_can_reenter_its_lifespan(tmp_path: Path) -> None:
+    _configure_context_auth(tmp_path)
     factory_calls = 0
 
     async def configured_mcp(
@@ -477,17 +589,31 @@ def test_configured_app_can_reenter_its_lifespan(tmp_path: Path) -> None:
         mcp_preflight_policy="off",
     )
     with TestClient(app) as first:
-        _publish_and_activate(first, release)
-        started = _start(first, key="first-lifespan", input={"run": 1})
-        assert _wait_for_result(first, started.json()["run_id"])["result"] == {
-            "run": 1
-        }
+        _publish_and_activate(first, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            first,
+            key="first-lifespan",
+            input={"run": 1},
+            headers=CONFIGURED_HEADERS,
+        )
+        assert _wait_for_result(
+            first,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )["result"] == {"run": 1}
 
     with TestClient(app) as second:
-        started = _start(second, key="second-lifespan", input={"run": 2})
-        assert _wait_for_result(second, started.json()["run_id"])["result"] == {
-            "run": 2
-        }
+        started = _start(
+            second,
+            key="second-lifespan",
+            input={"run": 2},
+            headers=CONFIGURED_HEADERS,
+        )
+        assert _wait_for_result(
+            second,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )["result"] == {"run": 2}
 
     assert factory_calls == 2
 
@@ -496,6 +622,7 @@ def test_failed_context_startup_is_transactional(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _configure_context_auth(tmp_path)
     factory_calls = 0
 
     def context_factory() -> WorkerContext:
@@ -517,7 +644,7 @@ def test_failed_context_startup_is_transactional(
     assert os.environ["JULEP_ARTIFACT_STORE_URL"] == "file:///before-local"
 
     with TestClient(app) as client:
-        ready = client.get("/v1/ready", headers=LOCAL_HEADERS)
+        ready = client.get("/v1/ready", headers=CONFIGURED_HEADERS)
         assert ready.status_code == 200, ready.text
 
     assert factory_calls == 2
@@ -525,6 +652,7 @@ def test_failed_context_startup_is_transactional(
 
 
 def test_configured_agent_inherits_parent_max_calls(tmp_path: Path) -> None:
+    _configure_context_auth(tmp_path)
     effect_calls = 0
     registry = Registry()
     registry.register_reasoner(Reasoner("local.agent", "test:model"))
@@ -578,10 +706,19 @@ def test_configured_agent_inherits_parent_max_calls(tmp_path: Path) -> None:
     )
 
     with TestClient(app) as client:
-        _publish_and_activate(client, release)
-        started = _start(client, key="agent-max-calls", input={"value": 1})
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="agent-max-calls",
+            input={"value": 1},
+            headers=CONFIGURED_HEADERS,
+        )
         assert started.status_code == 201, started.text
-        finished = _wait_for_result(client, started.json()["run_id"])
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
 
     assert finished["run"]["status"] == "completed"
     assert finished["result"]["status"] == "denied"

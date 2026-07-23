@@ -12,6 +12,7 @@ import inspect
 import ipaddress
 import os
 import secrets as _secrets
+import threading
 import time
 import uuid
 from dataclasses import dataclass, replace
@@ -60,6 +61,29 @@ from .auth import ApiKey, KeyRing
 from .settings import ServerSettings
 
 ContextFactory = str | Callable[[], WorkerContext | Any]
+
+
+_PROCESS_STATE_LOCK = threading.Lock()
+_PROCESS_STATE_OWNER: object | None = None
+
+
+def _claim_process_state(owner: object) -> None:
+    """Reserve the process-wide effect and artifact configuration for one app."""
+
+    global _PROCESS_STATE_OWNER
+    with _PROCESS_STATE_LOCK:
+        if _PROCESS_STATE_OWNER is not None:
+            raise RuntimeError(
+                "only one local Julep app lifespan may run in a process at a time"
+            )
+        _PROCESS_STATE_OWNER = owner
+
+
+def _release_process_state(owner: object) -> None:
+    global _PROCESS_STATE_OWNER
+    with _PROCESS_STATE_LOCK:
+        if _PROCESS_STATE_OWNER is owner:
+            _PROCESS_STATE_OWNER = None
 
 
 class _ExecutionProjectionSink(ProjectionSink):
@@ -492,6 +516,8 @@ class LocalExecutionGateway:
         self._previous_context: Optional[WorkerContext] = None
         self._artifact_store_url = artifact_store_url
         self._previous_artifact_store_url: Optional[str] = None
+        self._process_state_owner = object()
+        self._owns_process_state = False
         self._started = False
         self._effects_lock = asyncio.Lock()
         self._runs: dict[str, _LocalRun] = {}
@@ -500,15 +526,17 @@ class LocalExecutionGateway:
     async def start(self) -> None:
         if self._started:
             return
+        _claim_process_state(self._process_state_owner)
+        self._owns_process_state = True
         self._started = True
-        if self._artifact_store_url is not None:
-            self._previous_artifact_store_url = os.environ.get(
-                "JULEP_ARTIFACT_STORE_URL"
-            )
-            os.environ["JULEP_ARTIFACT_STORE_URL"] = self._artifact_store_url
-        if self._context_factory is None:
-            return
         try:
+            if self._artifact_store_url is not None:
+                self._previous_artifact_store_url = os.environ.get(
+                    "JULEP_ARTIFACT_STORE_URL"
+                )
+                os.environ["JULEP_ARTIFACT_STORE_URL"] = self._artifact_store_url
+            if self._context_factory is None:
+                return
             factory: Callable[[], Any]
             if isinstance(self._context_factory, str):
                 from ..execution.serve import load_context_factory
@@ -525,6 +553,11 @@ class LocalExecutionGateway:
             effects.configure(context)
             self._context = context
         except BaseException:
+            self._restore_process_state()
+            raise
+
+    def _restore_process_state(self) -> None:
+        try:
             if self._artifact_store_url is not None:
                 if self._previous_artifact_store_url is None:
                     os.environ.pop("JULEP_ARTIFACT_STORE_URL", None)
@@ -534,11 +567,14 @@ class LocalExecutionGateway:
                     )
             if self._previous_context is not None:
                 effects.configure(self._previous_context)
+        finally:
             self._context = None
             self._previous_context = None
             self._previous_artifact_store_url = None
             self._started = False
-            raise
+            if self._owns_process_state:
+                _release_process_state(self._process_state_owner)
+                self._owns_process_state = False
 
     async def ready(self) -> bool:
         return True
@@ -703,7 +739,13 @@ class LocalExecutionGateway:
         except asyncio.CancelledError:
             status = record.stop_status or "canceled"
             record.status = status
-            self._finalize(record, status=status, result=None, cause=last_event_id)
+            self._finalize(
+                record,
+                status=status,
+                result=None,
+                cause=last_event_id,
+                secrets=secrets,
+            )
             return
         except Exception as exc:  # noqa: BLE001 - persist a terminal local run
             record.status = "failed"
@@ -778,18 +820,45 @@ class LocalExecutionGateway:
             segment_seq=record.segment_seq,
             value_ref=None if captured is None else captured.value_ref,
         )
-        self._store.finalize_run(
-            run_id=record.run_id,
-            workflow_id=record.workflow_id,
-            segment_seq=record.segment_seq,
-            status=status,
-            terminal_event=terminal,
-            result_payload=None if captured is None else captured.payload,
-            result_byte_len=0 if captured is None else captured.byte_len,
-            result_oversize=False if captured is None else captured.oversize,
-            error=None if safe_error is None else str(safe_error),
-            finished_at=time.time(),
-        )
+        try:
+            self._store.finalize_run(
+                run_id=record.run_id,
+                workflow_id=record.workflow_id,
+                segment_seq=record.segment_seq,
+                status=status,
+                terminal_event=terminal,
+                result_payload=None if captured is None else captured.payload,
+                result_byte_len=0 if captured is None else captured.byte_len,
+                result_oversize=False if captured is None else captured.oversize,
+                error=None if safe_error is None else str(safe_error),
+                finished_at=time.time(),
+            )
+        finally:
+            self._scrub_live_projection(record, secrets)
+
+    @staticmethod
+    def _scrub_live_projection(
+        record: _LocalRun,
+        secrets: Optional[Mapping[str, str]],
+    ) -> None:
+        """Retain queryable event metadata without retaining raw interpreter values."""
+
+        raw_projection = record.projection
+        # Fail closed: detach the raw value store before attempting any redaction.
+        record.projection = None
+        if raw_projection is None:
+            return
+        safe_projection = InMemoryProjection()
+        for event in raw_projection.events():
+            candidate = _redact_projection_metadata(event.to_json(), secrets)
+            if candidate.get("attrs") is None:
+                candidate.pop("attrs", None)
+            # The interpreter reference hashes the raw value. Persisted projection
+            # refs are independently derived from the redacted value, so the live
+            # query view must not retain or expose the raw reference.
+            candidate.pop("valueRef", None)
+            safe_projection.append(ProjectionEvent.from_json(candidate))
+        record.projection = safe_projection
 
     async def cancel(self, workflow_id: str) -> None:
         await self._stop(workflow_id, "canceled")
@@ -841,28 +910,20 @@ class LocalExecutionGateway:
         raise ValueError(f"unsupported local query {name!r}")
 
     async def close(self) -> None:
+        if not self._started:
+            return
         tasks: list[asyncio.Task[None]] = []
-        for record in self._runs.values():
-            task = record.task
-            if task is not None and not task.done():
-                record.stop_status = "canceled"
-                task.cancel()
-                tasks.append(task)
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-        if self._artifact_store_url is not None:
-            if self._previous_artifact_store_url is None:
-                os.environ.pop("JULEP_ARTIFACT_STORE_URL", None)
-            else:
-                os.environ["JULEP_ARTIFACT_STORE_URL"] = (
-                    self._previous_artifact_store_url
-                )
-        if self._previous_context is not None:
-            effects.configure(self._previous_context)
-        self._context = None
-        self._previous_context = None
-        self._previous_artifact_store_url = None
-        self._started = False
+        try:
+            for record in self._runs.values():
+                task = record.task
+                if task is not None and not task.done():
+                    record.stop_status = "canceled"
+                    task.cancel()
+                    tasks.append(task)
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
+        finally:
+            self._restore_process_state()
 
 
 def create_local_app(
@@ -880,6 +941,10 @@ def create_local_app(
     settings = ServerSettings.from_env(env, root=root)
     api_keys = settings.api_keys
     if not api_keys:
+        if context_factory is not None:
+            raise ValueError(
+                "local configured-context execution requires explicitly configured API keys"
+            )
         try:
             loopback = ipaddress.ip_address(host).is_loopback
         except ValueError:
