@@ -128,7 +128,7 @@ def test_run_submission_is_idempotent_and_starts_once(server_factory) -> None:
         assert len(harness.gateway.starts) == 1
 
 
-def test_run_retry_rejects_pipeline_or_explicit_release_mismatch(server_factory) -> None:
+def test_run_retry_rejects_pipeline_or_effective_release_mismatch(server_factory) -> None:
     harness = server_factory()
     release = make_release(marker="a")
     other_release = make_release(marker="b")
@@ -161,8 +161,7 @@ def test_run_retry_rejects_pipeline_or_explicit_release_mismatch(server_factory)
             "message": "idempotency key was already used for a different release",
         }
 
-        # A hash without the optional scheme is the same explicit release, and
-        # omitting release entirely preserves the original routing-stable retry.
+        # A hash without the optional scheme is the same explicit release.
         same_release = client.post(
             "/v1/runs",
             json={
@@ -174,6 +173,10 @@ def test_run_retry_rejects_pipeline_or_explicit_release_mismatch(server_factory)
         assert same_release.status_code == 200
         assert same_release.json() == first.json()
 
+        harness.store.activate_deployment(
+            "summary", release.release_hash, time.time(), "admin"
+        )
+        # An omitted release resolves through active routing before comparison.
         unpinned_retry = client.post(
             "/v1/runs",
             json={"pipeline": "summary"},
@@ -181,6 +184,18 @@ def test_run_retry_rejects_pipeline_or_explicit_release_mismatch(server_factory)
         )
         assert unpinned_retry.status_code == 200
         assert unpinned_retry.json() == first.json()
+
+        _publish(client, other_release)
+        harness.store.activate_deployment(
+            "summary", other_release.release_hash, time.time(), "admin"
+        )
+        rerouted_retry = client.post(
+            "/v1/runs",
+            json={"pipeline": "summary"},
+            headers={**ALICE_HEADERS, "Idempotency-Key": "stable-request"},
+        )
+        assert rerouted_retry.status_code == 409
+        assert rerouted_retry.json()["detail"]["field"] == "release"
         assert len(harness.gateway.starts) == 1
 
 
@@ -197,14 +212,15 @@ def test_run_retry_conflict_check_is_repeated_for_atomic_create_loser(
             return super().get_run_by_idempotency_key(idempotency_key)
 
     store = FastPathMissStore()
-    release = make_release()
+    release = make_release(marker="a")
+    other_release = make_release(marker="b")
     assert store.create_run(
         run_id="race-winner",
         idempotency_key="raced-request",
         workflow_id="run-race-winner",
         session_id="run-race-winner",
         release_hash=release.release_hash,
-        pipeline="other",
+        pipeline="summary",
         application=release.application,
         principal={"key": "alice"},
         input_ref=None,
@@ -215,10 +231,12 @@ def test_run_retry_conflict_check_is_repeated_for_atomic_create_loser(
 
     with TestClient(harness.app) as client:
         _publish(client, release)
-        response = _start(client, release.release_hash, key="raced-request")
+        _publish(client, other_release)
+        response = _start(client, other_release.release_hash, key="raced-request")
 
     assert response.status_code == 409
     assert response.json()["detail"]["error"] == "idempotency_conflict"
+    assert response.json()["detail"]["field"] == "release"
     assert harness.gateway.starts == []
 
 
