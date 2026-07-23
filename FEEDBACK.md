@@ -159,6 +159,15 @@ hit five gaps the test suite's fakes never exercised. All five are fixed on
     `escalated` remain successful values; agent facades/evals retain their
     low-level value-envelope behavior.
 
+26. **Transcript-scoped agents now require a worker blob store, but julep ships only
+    `InMemoryBlobStore`.** After the transcript hardening, `invokeReasoner` refuses to
+    run without `WorkerContext.blob_store` ("worker has no blob store configured"), yet
+    there is no durable implementation (file://, S3) and no `WorkerServeSettings` env
+    for it — every consumer must hand-wire the in-memory reference impl and accept its
+    single-process/no-retention caveats. Ask: a file-backed store + a
+    `JULEP_BLOB_STORE_URL` env mirroring the artifact-store pattern, and a loud doc
+    note that in-memory is single-worker-per-queue only.
+
 ## Consumer plumbing that should move into julep (from the full-migration estimate, 2026-07-23)
 
 Wave-1 left ~1.2–1.8k LOC of projected consumer-side glue for a full mem-mcp migration.
