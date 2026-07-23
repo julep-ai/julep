@@ -605,15 +605,23 @@ def charge_tool_call(
     state: AgentState,
     tool: str,
     contracts: Optional[AgentContractMap],
+    *,
+    count_key: Optional[str] = None,
 ) -> Optional[CallDenial]:
-    """Increment the deterministic per-tool call counter, or return a denial."""
+    """Increment one deterministic tool budget counter, or return a denial.
+
+    ``tool`` is the provider-visible name used for contracts and diagnostics.
+    ``count_key`` is its canonical capability identity when multiple provider
+    aliases dispatch to the same wire tool.
+    """
     limit = max_calls_for_tool(tool, contracts)
     if limit is None:
         return None
-    count = state.call_counts.get(tool, 0)
+    key = tool if count_key is None else count_key
+    count = state.call_counts.get(key, 0)
     if count >= limit:
         return CallDenial(reason=f"tool {tool!r} exceeded maxCalls={limit}")
-    state.call_counts[tool] = count + 1
+    state.call_counts[key] = count + 1
     return None
 
 
@@ -669,12 +677,16 @@ def manifest_contracts_for_agent(
 
 def max_call_limits_from_contracts(
     contracts: Optional[dict[str, dict[str, Any]]],
+    tool_aliases: Optional[Mapping[str, str]] = None,
 ) -> Optional[dict[str, int]]:
+    """Extract limits, optionally canonicalized to wire-tool identities."""
     limits: dict[str, int] = {}
     for tool, raw in (contracts or {}).items():
         limit = raw.get("maxCalls", raw.get("max_calls"))
         if limit is not None:
-            limits[tool] = int(limit)
+            key = (tool_aliases or {}).get(tool, tool)
+            value = int(limit)
+            limits[key] = min(limits.get(key, value), value)
     return limits or None
 
 
@@ -688,6 +700,7 @@ async def drive_agent_loop(
     granted: Optional[set[str]] = None,
     granted_subflows: Optional[set[str]] = None,
     contracts: Optional[AgentContractMap] = None,
+    tool_count_keys: Optional[Mapping[str, str]] = None,
     tool_schemas: Optional[Mapping[str, dict[str, Any]]] = None,
     state: Optional[AgentState] = None,
     get_pure: Optional[Callable[[str], Callable[..., Any]]] = None,
@@ -701,7 +714,8 @@ async def drive_agent_loop(
     step = controller_turn(
         cfg=cfg, invoke_controller=invoke_controller, call_tool=call_tool,
         run_subflow=run_subflow, granted=granted, granted_subflows=granted_subflows,
-        contracts=contracts, mode=mode, prod_gap=prod_gap, run_input=input,
+        contracts=contracts, tool_count_keys=tool_count_keys, mode=mode,
+        prod_gap=prod_gap, run_input=input,
         get_pure=get_pure, tool_schemas=tool_schemas,
     )
     return await drive(step, state, halt=pre_round(cfg), finalize=make_finalize(prod_gap))

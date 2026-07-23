@@ -309,6 +309,11 @@ def _assert_foreground_supported(flow: Any) -> None:
                 "foreground execution does not support transcript-scoped agents; "
                 "use the local API or a durable worker"
             )
+        if node.op is Op.APP and node.subflows:
+            raise LocalExecutionUnsupported(
+                "foreground execution does not resolve agent subflows; use the "
+                "local API or a durable worker"
+            )
         if isinstance(node.step, SubStep):
             raise LocalExecutionUnsupported(
                 "foreground execution does not resolve subflows; use the local API "
@@ -346,11 +351,20 @@ def _reasoner_handlers(
                     "pipeline's compiled declaration"
                 )
 
+    ordinary_reasoners = {
+        node.step.reasoner
+        for node in flow.walk()
+        if isinstance(node.step, ThinkStep)
+    }
     controller_tools: dict[str, tuple[dict[str, Any], ...]] = {}
     for node in flow.walk():
         if node.op is not Op.APP or node.controller is None:
             continue
-        definitions = tuple(dict(definition) for definition in (node.tool_defs or ()))
+        definitions = (
+            tuple(dict(definition) for definition in (node.tool_defs or ()))
+            if node.native_tools
+            else ()
+        )
         previous = controller_tools.get(node.controller)
         if node.controller in controller_tools and previous != definitions:
             raise LocalExecutionConfigurationError(
@@ -358,6 +372,13 @@ def _reasoner_handlers(
                 "different frozen tool surfaces"
             )
         controller_tools[node.controller] = definitions
+
+    for name in sorted(ordinary_reasoners & controller_tools.keys()):
+        if controller_tools[name]:
+            raise LocalExecutionConfigurationError(
+                f"reasoner {name!r} is used by both ordinary foreground reasoning "
+                "and a native-tool agent; use separate reasoner names"
+            )
 
     async def invoke_named(
         name: str,

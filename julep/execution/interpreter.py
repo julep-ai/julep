@@ -990,7 +990,7 @@ class InMemoryEnv:
         }
         for alias in set(contracts) | grants:
             wire = aliases.get(alias, alias)
-            limit = self._max_calls.get(alias, self._max_calls.get(wire))
+            limit = self._max_calls.get(wire)
             if limit is None:
                 continue
             contract = contracts.setdefault(alias, {})
@@ -1035,16 +1035,6 @@ class InMemoryEnv:
                 )
             raise KeyError(f"no in-memory fake or MCP caller for tool alias {alias!r}")
 
-        initial_counts = dict(self.call_counts)
-        for alias in set(contracts) | grants:
-            wire = aliases.get(alias, alias)
-            count = max(
-                initial_counts.get(alias, 0),
-                initial_counts.get(wire, 0),
-            )
-            if count:
-                initial_counts[alias] = count
-
         result = await drive_agent_loop(
             input=value,
             cfg=cfg,
@@ -1052,16 +1042,17 @@ class InMemoryEnv:
             call_tool=call_tool,
             granted=grants,
             contracts=contracts,
+            tool_count_keys=aliases,
             tool_schemas=schemas,
-            state=AgentState(last=value, call_counts=initial_counts),
+            state=AgentState(last=value, call_counts=dict(self.call_counts)),
             get_pure=self.get_pure,
         )
         carried_counts = result.get("callCounts")
         if isinstance(carried_counts, dict):
-            for alias, raw_count in carried_counts.items():
+            for tool, raw_count in carried_counts.items():
                 count = int(raw_count)
-                wire = aliases.get(str(alias), str(alias))
-                self.call_counts[wire] = max(self.call_counts.get(wire, 0), count)
+                key = str(tool)
+                self.call_counts[key] = max(self.call_counts.get(key, 0), count)
         return result
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:

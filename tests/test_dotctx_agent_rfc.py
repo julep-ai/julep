@@ -239,6 +239,9 @@ def test_agent_workflow_dispatches_bare_alias_to_wire_tool(monkeypatch) -> None:
     monkeypatch.setattr(
         harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
     )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
 
     rounds = iter(
         [
@@ -299,6 +302,318 @@ def test_agent_workflow_dispatches_bare_alias_to_wire_tool(monkeypatch) -> None:
     }
     assert result["trace"][0]["callId"] == "tool-1"
     assert result["trace"][0]["arguments"] == {"query": "q"}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_shares_max_calls_across_aliases_for_one_wire(
+    monkeypatch,
+) -> None:
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    rounds = iter(
+        [
+            {
+                "tool_calls": [
+                    {"id": "tool-a", "tool": "a", "input": {"query": "a"}}
+                ]
+            },
+            {
+                "tool_calls": [
+                    {"id": "tool-b", "tool": "b", "input": {"query": "b"}}
+                ]
+            },
+            {"output": {"answer": "unexpected"}},
+        ]
+    )
+    calls = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return next(rounds)
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            calls.append(payload)
+            return []
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    contract = {
+        "effect": "read",
+        "idempotency": "native",
+        "asserted": True,
+        "maxCalls": 1,
+    }
+    inp = AgentInput(
+        controller="alias-agent",
+        session_id="alias-limit-run",
+        input={"query": "q"},
+        config={"maxRounds": 3, "nativeTools": True},
+        granted_tools=["a", "b"],
+        granted_contracts={"a": dict(contract), "b": dict(contract)},
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": alias,
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+            for alias in ("a", "b")
+        ],
+        tool_aliases={"a": "tracker/search-posts", "b": "tracker/search-posts"},
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "denied"
+    assert result["reason"] == "tool 'b' exceeded maxCalls=1"
+    assert result["callCounts"] == {"tracker/search-posts": 1}
+    assert len(calls) == 1
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_honors_preconsumed_wire_call_count(monkeypatch) -> None:
+    from julep.agent_loop import AgentState
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    calls = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return {
+                "tool_calls": [
+                    {"id": "tool-a", "tool": "a", "input": {"query": "a"}}
+                ]
+            }
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            calls.append(payload)
+            return []
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    inp = AgentInput(
+        controller="alias-agent",
+        session_id="preconsumed-limit-run",
+        input={"query": "q"},
+        config={"maxRounds": 2, "nativeTools": True},
+        granted_tools=["a"],
+        granted_contracts={
+            "a": {
+                "effect": "read",
+                "idempotency": "native",
+                "asserted": True,
+                "maxCalls": 1,
+            }
+        },
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "a",
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+        ],
+        tool_aliases={"a": "tracker/search-posts"},
+        state=AgentState(
+            last={"query": "q"},
+            call_counts={"tracker/search-posts": 1},
+        ).to_json(),
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "denied"
+    assert result["reason"] == "tool 'a' exceeded maxCalls=1"
+    assert result["callCounts"] == {"tracker/search-posts": 1}
+    assert calls == []
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_workflow_preserves_native_parent_key_distinct_from_alias_wire(
+    monkeypatch,
+) -> None:
+    from julep.agent_loop import AgentState
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    rounds = iter(
+        [
+            {
+                "tool_calls": [
+                    {
+                        "id": "mcp-search",
+                        "tool": "search",
+                        "input": {"query": "q"},
+                    }
+                ]
+            },
+            {"output": {"answer": "done"}},
+        ]
+    )
+    calls = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return next(rounds)
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            calls.append(payload)
+            return []
+        return None
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    inp = AgentInput(
+        controller="search-agent",
+        session_id="native-parent-key-run",
+        input={"query": "q"},
+        config={"maxRounds": 3, "nativeTools": True},
+        granted_tools=["search"],
+        granted_contracts={
+            "search": {
+                "effect": "read",
+                "idempotency": "native",
+                "asserted": True,
+                "maxCalls": 1,
+            }
+        },
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "search",
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+        ],
+        tool_aliases={"search": "tracker/search-posts"},
+        state=AgentState(
+            last={"query": "q"},
+            call_counts={"search": 1},
+        ).to_json(),
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "done"
+    assert result["callCounts"] == {"search": 1, "tracker/search-posts": 1}
+    assert len(calls) == 1
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_agent_subflow_inherits_canonical_wire_call_limit(monkeypatch) -> None:
+    from julep.execution import harness
+    from julep.execution.harness import AgentInput, AgentWorkflow
+
+    monkeypatch.setattr(
+        harness, "_agent_frozen_tool_input_validation_enabled", lambda: True
+    )
+    monkeypatch.setattr(
+        harness, "_agent_canonical_tool_counts_enabled", lambda: True
+    )
+    rounds = iter(
+        [
+            {
+                "tool_calls": [
+                    {"id": "tool-a", "tool": "a", "input": {"query": "a"}}
+                ]
+            },
+            {"sub": "child", "input": {"query": "child"}},
+            {"output": {"answer": "done"}},
+        ]
+    )
+    children = []
+
+    async def fake_execute_activity(fn, payload=None, **kwargs):
+        del kwargs
+        if fn.__name__ == "invokeReasoner":
+            return next(rounds)
+        if fn.__name__ == "validateJsonSchema":
+            return None
+        if fn.__name__ == "callTool":
+            return []
+        if fn.__name__ == "resolveSubflow":
+            return {}
+        return None
+
+    async def fake_execute_child_workflow(*args, **kwargs):
+        del kwargs
+        children.append(args[1])
+        return {"child": "done"}
+
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(
+        harness.workflow,
+        "execute_child_workflow",
+        fake_execute_child_workflow,
+    )
+    inp = AgentInput(
+        controller="alias-sub-agent",
+        session_id="alias-sub-run",
+        input={"query": "q"},
+        config={"maxRounds": 4, "nativeTools": True},
+        granted_tools=["a"],
+        granted_subflows=["child"],
+        granted_contracts={
+            "a": {
+                "effect": "read",
+                "idempotency": "native",
+                "asserted": True,
+                "maxCalls": 1,
+            }
+        },
+        tool_defs=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "a",
+                    "description": "",
+                    "parameters": EXPECTED,
+                },
+            }
+        ],
+        tool_aliases={"a": "tracker/search-posts"},
+        resolve_spec=False,
+    )
+
+    result = asyncio.run(AgentWorkflow().run(inp))
+
+    assert result["status"] == "done"
+    assert children[0].max_call_limits == {"tracker/search-posts": 1}
+    assert children[0].call_counts == {"tracker/search-posts": 1}
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

@@ -526,6 +526,102 @@ def test_in_memory_agent_enforces_release_max_calls_across_rounds():
     assert env.call_counts == {"srv/inc": 1}
 
 
+def test_in_memory_agent_shares_max_calls_across_aliases_for_one_wire():
+    model_calls = 0
+    effect_inputs = []
+
+    def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
+        if model_calls <= 2:
+            alias = "a" if model_calls == 1 else "b"
+            return {
+                "tool_calls": [
+                    {
+                        "id": f"call-{alias}",
+                        "tool": alias,
+                        "input": {"alias": alias},
+                    }
+                ]
+            }
+        return {"done": True, "output": "unexpected"}
+
+    def effect(value):
+        effect_inputs.append(value)
+        return value
+
+    flow = app(
+        "controller",
+        tools=["a", "b"],
+        tool_aliases={"a": "srv/t", "b": "srv/t"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    fr = freeze(flow, read_snapshot("t"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/t": effect},
+        reasoners={"controller": controller},
+        max_calls={"srv/t": 1},
+    )
+
+    out = run(interpret(fr.flow, {}, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'b' exceeded maxCalls=1"
+    assert model_calls == 2
+    assert effect_inputs == [{"alias": "a"}]
+    assert env.call_counts == {"srv/t": 1}
+
+
+def test_in_memory_agent_uses_wire_limit_when_alias_matches_native_key():
+    model_calls = 0
+    effect_calls = 0
+
+    def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
+        return {
+            "tool_calls": [
+                {
+                    "id": f"search-{model_calls}",
+                    "tool": "search",
+                    "input": {"query": "q"},
+                }
+            ]
+        }
+
+    def mcp_search(value):
+        nonlocal effect_calls
+        effect_calls += 1
+        return value
+
+    flow = app(
+        "controller",
+        tools=["search"],
+        tool_aliases={"search": "srv/search"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    fr = freeze(flow, read_snapshot("search"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/search": mcp_search},
+        reasoners={"controller": controller},
+        max_calls={"search": 10, "srv/search": 1},
+    )
+    env.call_counts["search"] = 1
+
+    out = run(interpret(fr.flow, {}, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'search' exceeded maxCalls=1"
+    assert effect_calls == 1
+    assert env.call_counts == {"search": 1, "srv/search": 1}
+
+
 def test_in_memory_agent_inherits_calls_made_before_agent():
     effect_calls = 0
 
@@ -624,7 +720,9 @@ def test_temporal_env_inherits_call_counts_for_child_flows() -> None:
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
+def test_temporal_env_preserves_native_parent_count_and_uses_wire_alias_limit(
+    monkeypatch,
+) -> None:
     from julep.execution import harness
     from julep.execution.harness import ExecutionPolicy, _TemporalEnv
     from julep.projection import InMemoryProjection, ProjectionEmitter
@@ -632,17 +730,25 @@ def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
     async def gate_waiter(value, cid, timeout_s):  # noqa: ANN001
         return value
 
+    child_inputs = []
+
     async def fake_execute_child_workflow(*args, **kwargs):  # noqa: ANN001
+        child_inputs.append(args[1])
         return {
             "status": "done",
             "output": "ok",
-            "callCounts": {"srv/inc": 2, "srv/other": "3"},
+            "callCounts": {"search": 1, "srv/search": 1},
         }
 
     monkeypatch.setattr(
         harness.workflow,
         "execute_child_workflow",
         fake_execute_child_workflow,
+    )
+    monkeypatch.setattr(
+        harness,
+        "_agent_canonical_tool_counts_enabled",
+        lambda: True,
     )
 
     env = _TemporalEnv(
@@ -652,13 +758,26 @@ def test_temporal_env_merges_child_agent_call_counts(monkeypatch) -> None:
         manifest_json={},
         policy=ExecutionPolicy(),
         gate_waiter=gate_waiter,
-        max_call_limits={"srv/inc": 5, "srv/other": 5},
-        call_counts={"srv/inc": 1},
+        max_call_limits={"search": 10, "srv/search": 1},
+        call_counts={"search": 1},
     )
 
-    out = run(env.run_agent("controller", "value", "cid"))
+    out = run(
+        env.run_agent(
+            "controller",
+            "value",
+            "cid",
+            {
+                "tools": ["search"],
+                "toolAliases": {"search": "srv/search"},
+                "toolContracts": {"search": {}},
+            },
+        )
+    )
     assert out["output"] == "ok"
-    assert env.call_counts_snapshot() == {"srv/inc": 2, "srv/other": 3}
+    assert child_inputs[0].state["callCounts"] == {"search": 1}
+    assert child_inputs[0].granted_contracts["search"]["maxCalls"] == 1
+    assert env.call_counts_snapshot() == {"search": 1, "srv/search": 1}
 
 
 def test_inmemory_env_awaits_async_reasoner():

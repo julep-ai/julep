@@ -724,3 +724,68 @@ def test_configured_agent_inherits_parent_max_calls(tmp_path: Path) -> None:
     assert finished["result"]["status"] == "denied"
     assert finished["result"]["reason"] == "tool 'srv/echo' exceeded maxCalls=1"
     assert effect_calls == 1
+
+
+def test_local_effects_agent_preserves_native_count_and_uses_wire_alias_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import asyncio
+
+    from julep import agent_loop
+    from julep.execution import effects
+    from julep.execution.harness import ExecutionPolicy
+    from julep.projection import InMemoryProjection, ProjectionEmitter
+    from julep.server.local import _LocalEffectsEnv
+
+    captured: dict[str, Any] = {}
+
+    async def resolve_agent_spec(_input: Any) -> dict[str, Any]:
+        return {}
+
+    async def drive_agent_loop(**kwargs: Any) -> dict[str, Any]:
+        captured.update(kwargs)
+        return {
+            "status": "done",
+            "output": "ok",
+            "callCounts": {"search": 1, "srv/search": 1},
+        }
+
+    async def gate(value: Any, _cid: str, _timeout_s: int | None) -> Any:
+        return value
+
+    monkeypatch.setattr(effects, "resolveAgentSpec", resolve_agent_spec)
+    monkeypatch.setattr(agent_loop, "drive_agent_loop", drive_agent_loop)
+    counts = {"search": 1}
+    env = _LocalEffectsEnv(
+        manifest={},
+        emitter=ProjectionEmitter(InMemoryProjection()),
+        session_id="local-alias",
+        manifest_json={},
+        policy=ExecutionPolicy(),
+        gate=gate,
+        max_calls={"search": 10, "srv/search": 1},
+        principal=None,
+        secrets=None,
+        runtime_declarations_ref=None,
+        root_run_id="local-alias",
+        segment_seq=0,
+        call_counts=counts,
+    )
+
+    result = asyncio.run(
+        env.run_agent(
+            "controller",
+            {},
+            "cid",
+            {
+                "tools": ["search"],
+                "toolAliases": {"search": "srv/search"},
+                "toolContracts": {"search": {}},
+            },
+        )
+    )
+
+    assert captured["contracts"]["search"]["maxCalls"] == 1
+    assert captured["state"].call_counts == {"search": 1}
+    assert result["output"] == "ok"
+    assert counts == {"search": 1, "srv/search": 1}

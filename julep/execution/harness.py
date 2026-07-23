@@ -587,6 +587,14 @@ def _agent_frozen_tool_input_validation_enabled() -> bool:
         return False
 
 
+def _agent_canonical_tool_counts_enabled() -> bool:
+    """Replay gate for wire-keyed maxCalls counters across provider aliases."""
+    try:
+        return workflow.patched("agent-canonical-tool-counts-v1")
+    except Exception:
+        return False
+
+
 def _mcp_preflight_enabled() -> bool:
     """Replay gate for MCP preflight, safe for direct workflow unit calls."""
     try:
@@ -1203,6 +1211,7 @@ class _TemporalEnv:
         cid: str,
         app_config: Optional[dict[str, Any]] = None,
     ) -> Any:
+        canonical_tool_counts = _agent_canonical_tool_counts_enabled()
         child_id = self._child_id("agent", cid)
         config: Optional[dict[str, Any]] = None
         granted_tools: Optional[list[str]] = None
@@ -1261,8 +1270,16 @@ class _TemporalEnv:
                         alias = str(raw_alias)
                         wire = (tool_aliases or {}).get(alias, alias)
                         if wire in self._max_call_limits:
-                            granted_contracts.setdefault(alias, {})["maxCalls"] = int(
-                                self._max_call_limits[wire]
+                            contract = granted_contracts.setdefault(alias, {})
+                            authored_limit = contract.get(
+                                "maxCalls",
+                                contract.get("max_calls"),
+                            )
+                            parent_limit = int(self._max_call_limits[wire])
+                            contract["maxCalls"] = (
+                                parent_limit
+                                if authored_limit is None or not canonical_tool_counts
+                                else min(parent_limit, int(authored_limit))
                             )
                 else:
                     granted_contracts = al.manifest_contracts_for_agent(
@@ -2695,6 +2712,7 @@ class AgentWorkflow:
             )
 
         policy = ExecutionPolicy.from_json(inp.policy)
+        canonical_tool_counts = _agent_canonical_tool_counts_enabled()
 
         # Resolve config + grant metadata once, then carry it through
         # continue-as-new. Inline app config can supply grant semantics while
@@ -2810,7 +2828,6 @@ class AgentWorkflow:
             state = al.AgentState.from_json(inp.state)
         else:
             state = al.AgentState(last=inp.input)
-
         # Per-segment continue-as-new cadence: carried state keeps the
         # cumulative round count, so truncation is measured from this
         # segment's entry round, not from zero.
@@ -3126,7 +3143,16 @@ class AgentWorkflow:
                     continue
                 for entry in calls:
                     tool = entry["tool"]
-                    denial = al.charge_tool_call(state, tool, contracts)
+                    denial = al.charge_tool_call(
+                        state,
+                        tool,
+                        contracts,
+                        count_key=(
+                            tool_aliases.get(tool, tool)
+                            if canonical_tool_counts
+                            else tool
+                        ),
+                    )
                     if denial is not None:
                         terminal = al.terminal_result("denied", state, reason=denial.reason)
                         await self._finish_trajectory(
@@ -3297,7 +3323,12 @@ class AgentWorkflow:
                     )
                     state.round += 1
                     continue
-                denial = al.charge_tool_call(state, tool, contracts)
+                denial = al.charge_tool_call(
+                    state,
+                    tool,
+                    contracts,
+                    count_key=wire_tool if canonical_tool_counts else tool,
+                )
                 if denial is not None:
                     terminal = al.terminal_result("denied", state, reason=denial.reason)
                     await self._finish_trajectory(
@@ -3437,7 +3468,10 @@ class AgentWorkflow:
                         input=sub_input,
                         ref=ref,
                         policy=policy.to_json(),
-                        max_call_limits=al.max_call_limits_from_contracts(contracts),
+                        max_call_limits=al.max_call_limits_from_contracts(
+                            contracts,
+                            tool_aliases if canonical_tool_counts else None,
+                        ),
                         call_counts=dict(state.call_counts),
                         principal=inp.principal,
                         root_run_id=(inp.root_run_id or inp.session_id),

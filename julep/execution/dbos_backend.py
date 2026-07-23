@@ -591,6 +591,10 @@ class DbosEnv:
                 config["nativeTools"] = app_config["nativeTools"]
             if "requireToolCall" in app_config:
                 config["requireToolCall"] = app_config["requireToolCall"]
+            if "replySchema" in app_config:
+                config["replySchema"] = app_config["replySchema"]
+            if "outputRetries" in app_config:
+                config["outputRetries"] = app_config["outputRetries"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
@@ -604,15 +608,37 @@ class DbosEnv:
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
             if tools is not None:
-                granted_contracts = al.manifest_contracts_for_agent(
-                    self.manifest,
-                    granted_tools,
-                    self._max_call_limits,
-                )
+                if "toolContracts" in app_config:
+                    granted_contracts = {
+                        str(alias): dict(contract)
+                        for alias, contract in app_config["toolContracts"].items()
+                    }
+                    for raw_alias in granted_tools or ():
+                        alias = str(raw_alias)
+                        wire = (tool_aliases or {}).get(alias, alias)
+                        limit = self._max_call_limits.get(wire)
+                        if limit is None:
+                            continue
+                        contract = granted_contracts.setdefault(alias, {})
+                        authored_limit = contract.get(
+                            "maxCalls",
+                            contract.get("max_calls"),
+                        )
+                        contract["maxCalls"] = (
+                            int(limit)
+                            if authored_limit is None
+                            else min(int(limit), int(authored_limit))
+                        )
+                else:
+                    granted_contracts = al.manifest_contracts_for_agent(
+                        self.manifest,
+                        granted_tools,
+                        self._max_call_limits,
+                    )
 
         # Parity with run_sub: parent call counts seed the child agent so an
-        # app node cannot reset an already-consumed maxCalls budget. Counts
-        # flow one-way; the child's counts are not merged back.
+        # app node cannot reset an already-consumed maxCalls budget. Terminal
+        # counts merge back below as canonical wire-keyed high-water marks.
         state_json = (
             al.AgentState(last=value, call_counts=dict(self._call_counts)).to_json()
             if self._call_counts
@@ -638,7 +664,15 @@ class DbosEnv:
             "rootRunId": self.root_run_id,
             "segmentSeq": 0,
         }
-        return await _run_agent_chain(payload, base_id=base_id)
+        out = await _run_agent_chain(payload, base_id=base_id)
+        if isinstance(out, dict) and isinstance(out.get("callCounts"), dict):
+            for tool, raw_count in out["callCounts"].items():
+                key = str(tool)
+                self._call_counts[key] = max(
+                    self._call_counts.get(key, 0),
+                    int(raw_count),
+                )
+        return out
 
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         payload = await DBOS.recv_async(
@@ -927,7 +961,9 @@ async def agent_workflow(inp: dict) -> Any:
             session_id=f"{session}-sub-{state.round}",
             emitter=emitter,
             policy=policy,
-            max_call_limits=al.max_call_limits_from_contracts(contracts) or {},
+            max_call_limits=(
+                al.max_call_limits_from_contracts(contracts, tool_aliases) or {}
+            ),
             call_counts=dict(state.call_counts),
             principal=principal,
             root_run_id=root_run_id,
@@ -944,6 +980,7 @@ async def agent_workflow(inp: dict) -> Any:
         granted=None if unconstrained else granted_set,
         granted_subflows=None if granted_subflows is None else set(granted_subflows),
         contracts=contracts,
+        tool_count_keys=tool_aliases,
         tool_schemas=tool_schemas,
         mode=cfg.mode,
         prod_gap=prod_gap,

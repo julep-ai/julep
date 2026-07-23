@@ -411,7 +411,7 @@ class _LocalEffectsEnv(InMemoryEnv):
         )
         for alias in set(contracts) | (grants or set()):
             wire = aliases.get(alias, alias)
-            limit = self._max_calls.get(alias, self._max_calls.get(wire))
+            limit = self._max_calls.get(wire)
             if limit is None:
                 continue
             contract = contracts.setdefault(alias, {})
@@ -470,15 +470,19 @@ class _LocalEffectsEnv(InMemoryEnv):
             granted=grants,
             granted_subflows=granted_subflows,
             contracts=contracts,
+            tool_count_keys=aliases,
             tool_schemas=schemas,
             state=AgentState(last=value, call_counts=dict(self.call_counts)),
             get_pure=self.get_pure,
         )
         carried_counts = result.get("callCounts")
         if isinstance(carried_counts, Mapping):
-            self.call_counts.update(
-                {str(tool): int(count) for tool, count in carried_counts.items()}
-            )
+            for tool, raw_count in carried_counts.items():
+                key = str(tool)
+                self.call_counts[key] = max(
+                    self.call_counts.get(key, 0),
+                    int(raw_count),
+                )
         return result
 
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:

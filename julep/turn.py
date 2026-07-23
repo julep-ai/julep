@@ -132,6 +132,7 @@ def controller_turn(
     granted: Optional[set[str]],
     granted_subflows: Optional[set[str]],
     contracts: Optional[AgentContractMap],
+    tool_count_keys: Optional[Mapping[str, str]] = None,
     tool_schemas: Optional[Mapping[str, dict[str, Any]]] = None,
     mode: EnforcementMode,
     prod_gap: list[str],
@@ -175,6 +176,11 @@ def controller_turn(
         if error is None:
             return None
         return f"tool {tool!r} input failed frozen JSON-Schema validation: {error}"
+
+    def tool_count_key(tool: str) -> str:
+        if tool_count_keys is None:
+            return tool
+        return tool_count_keys.get(tool, tool)
 
     async def step(state: AgentState) -> StepResult:
         payload: dict[str, Any] = {
@@ -315,12 +321,20 @@ def controller_turn(
                 return state
             for entry in calls:
                 tool = cast(str, entry["tool"])
-                denial = charge_tool_call(state, tool, contracts)
+                count_key = tool_count_key(tool)
+                denial = charge_tool_call(
+                    state,
+                    tool,
+                    contracts,
+                    count_key=count_key,
+                )
                 halt = denial_to_halt(denial)
                 if halt is not None:
                     return halt
                 if denial is not None:
-                    state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
+                    state.call_counts[count_key] = (
+                        state.call_counts.get(count_key, 0) + 1
+                    )
 
             async def execute_entry(index: int, entry: dict[str, Any]) -> CallManyResult:
                 tool = cast(str, entry["tool"])
@@ -402,12 +416,20 @@ def controller_turn(
                 )
                 state.round += 1
                 return state
-            denial = charge_tool_call(state, tool, contracts)
+            count_key = tool_count_key(tool)
+            denial = charge_tool_call(
+                state,
+                tool,
+                contracts,
+                count_key=count_key,
+            )
             halt = denial_to_halt(denial)
             if halt is not None:
                 return halt
             if denial is not None:  # DEV warn-but-allow: still count the call
-                state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
+                state.call_counts[count_key] = (
+                    state.call_counts.get(count_key, 0) + 1
+                )
             error: Optional[str] = None
             try:
                 out = await call_tool(tool, call_input)

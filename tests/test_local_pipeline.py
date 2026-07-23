@@ -15,6 +15,7 @@ from julep import (
     app,
     deploy,
     seq,
+    think,
 )
 from julep.contracts import McpAnnotations
 from julep.dotctx import Reasoner
@@ -519,8 +520,7 @@ def test_configured_local_pipeline_validates_frozen_mcp_before_dispatch(
     assert len(calls) == 1
 
 
-def test_configured_local_pipeline_rejects_mixed_controller_tool_surfaces(
-) -> None:
+def test_configured_local_pipeline_rejects_mixed_controller_tool_surfaces() -> None:
     model_called = False
     reasoner = Reasoner("shared-controller", "test:shared")
     snapshot = _lookup_snapshot()
@@ -574,6 +574,163 @@ def test_configured_local_pipeline_rejects_mixed_controller_tool_surfaces(
         match="different frozen tool surfaces",
     ):
         prepared.run({}, llm=llm, context=WorkerContext(mcp_call=mcp_call))
+    assert model_called is False
+
+
+def test_local_pipeline_rejects_toolful_agent_and_think_reasoner_reuse() -> None:
+    reasoner = Reasoner("shared-think-controller", "test:shared")
+    snapshot = _lookup_snapshot()
+    flow = seq(
+        think(reasoner.name),
+        app(
+            reasoner.name,
+            tools=["lookup"],
+            tool_aliases={"lookup": "srv/lookup"},
+            max_rounds=1,
+            native_tools=True,
+        ),
+    )
+    spec = PipelineSpec(
+        name="mixed-think-agent-surface",
+        flow=flow,
+        reasoners=(reasoner,),
+        snapshot=snapshot,
+    )
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(flow, snapshot=snapshot),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+    model_called = False
+
+    async def llm(
+        _reasoner: Any,
+        _value: Any,
+        _principal: Any,
+        _transcript: Any,
+        _dispatch: Any,
+        **_kwargs: Any,
+    ) -> Any:
+        nonlocal model_called
+        model_called = True
+        return {"done": True, "output": "unused"}
+
+    async def mcp_call(*_args: Any, **_kwargs: Any) -> Any:
+        return {"unused": True}
+
+    with pytest.raises(
+        LocalExecutionConfigurationError,
+        match="both ordinary foreground reasoning and a native-tool agent",
+    ):
+        prepared.run({}, llm=llm, context=WorkerContext(mcp_call=mcp_call))
+    assert model_called is False
+
+
+def test_local_pipeline_non_native_agent_does_not_send_provider_tools() -> None:
+    reasoner = Reasoner("legacy-controller", "test:legacy")
+    snapshot = _lookup_snapshot()
+    flow = app(
+        reasoner.name,
+        tools=["lookup"],
+        tool_aliases={"lookup": "srv/lookup"},
+        max_rounds=2,
+    )
+    spec = PipelineSpec(
+        name="legacy-agent",
+        flow=flow,
+        reasoners=(reasoner,),
+        snapshot=snapshot,
+    )
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(flow, snapshot=snapshot),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+    model_calls = 0
+    effect_calls = 0
+
+    async def strict_five_argument_llm(
+        _reasoner: Any,
+        _value: Any,
+        _principal: Any,
+        _transcript: Any,
+        _dispatch: Any,
+    ) -> Any:
+        nonlocal model_calls
+        model_calls += 1
+        if model_calls == 1:
+            return {"tool": "lookup", "input": {"query": "julep"}}
+        return {"done": True, "output": "done"}
+
+    async def mcp_call(*_args: Any, **_kwargs: Any) -> Any:
+        nonlocal effect_calls
+        effect_calls += 1
+        return {"found": "JULEP"}
+
+    result = prepared.run(
+        {"query": "julep"},
+        llm=strict_five_argument_llm,
+        context=WorkerContext(mcp_call=mcp_call),
+    )
+
+    assert result["status"] == "done"
+    assert result["output"] == "done"
+    assert model_calls == 2
+    assert effect_calls == 1
+
+
+def test_local_pipeline_rejects_agent_subflows_before_model_io() -> None:
+    reasoner = Reasoner("subflow-controller", "test:subflow")
+    snapshot = _lookup_snapshot()
+    flow = app(
+        reasoner.name,
+        subflows=["child"],
+        max_rounds=1,
+    )
+    spec = PipelineSpec(
+        name="agent-subflow",
+        flow=flow,
+        reasoners=(reasoner,),
+        snapshot=snapshot,
+    )
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(flow, snapshot=snapshot),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+    model_called = False
+
+    async def llm(
+        _reasoner: Any,
+        _value: Any,
+        _principal: Any,
+        _transcript: Any,
+        _dispatch: Any,
+    ) -> Any:
+        nonlocal model_called
+        model_called = True
+        return {"sub": "child", "input": {}}
+
+    with pytest.raises(LocalExecutionUnsupported, match="agent subflows"):
+        prepared.run({}, llm=llm)
     assert model_called is False
 
 
