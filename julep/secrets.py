@@ -620,8 +620,7 @@ class SecretResolver:
                 stale = current or cached
                 if stale is not None and now - stale.fetched_at <= self.stale_max_s:
                     logger.warning(
-                        "serving stale vault secret name=%s generation=%s age_seconds=%.1f",
-                        name,
+                        "serving stale vault secret generation=%s age_seconds=%.1f",
                         stale.resolved.generation,
                         now - stale.fetched_at,
                     )

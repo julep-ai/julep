@@ -13,6 +13,38 @@ def _runs_dir(root: str) -> Path:
     return Path(root) / ".julep" / "runs"
 
 
+def _event_for_cache(event: ProjectionEvent) -> dict[str, Any]:
+    """Project an event to the non-sensitive fields needed by ``julep trace``.
+
+    Projection attributes can include model inputs/outputs, and failure text can
+    include provider payloads. The local run cache is clear-text by design, so
+    neither belongs on disk. Preserve only structural trace data plus the
+    boolean cost-unknown signal used by the tree renderer.
+    """
+    cached: dict[str, Any] = {
+        "eventId": event.event_id,
+        "type": event.type.value,
+        "node": event.node,
+        "cid": event.cid,
+        "ts": event.ts,
+        "causes": list(event.causes),
+    }
+    for key, value in (
+        ("valueRef", event.value_ref),
+        ("shape", event.shape),
+        ("cost", event.cost),
+    ):
+        if value is not None:
+            cached[key] = value
+    if (
+        event.attrs.get("llm.cost.status") == "unknown"
+        or "llm.model" in event.attrs
+        or "llm.usage" in event.attrs
+    ):
+        cached["attrs"] = {"llm.cost.status": "unknown"}
+    return cached
+
+
 def save_run(
     root: str,
     *,
@@ -27,7 +59,7 @@ def save_run(
         "run_id": run_id,
         "agent": agent,
         "status": status,
-        "events": [event.to_json() for event in events],
+        "events": [_event_for_cache(event) for event in events],
     }
     (runs_dir / f"{run_id}.json").write_text(
         json.dumps(payload),

@@ -57,8 +57,7 @@ async def put_secret(
     )
     register_secret_value(body.value)
     logger.info(
-        "vault secret written name=%s generation=%s actor=%s",
-        resolved_name,
+        "vault secret written generation=%s actor=%s",
         row["generation"],
         key.name,
     )
@@ -100,8 +99,7 @@ async def get_secret_value(
         )
     except Exception as exc:
         logger.error(
-            "vault secret decryption failed name=%s generation=%s error=%s",
-            resolved_name,
+            "vault secret decryption failed generation=%s error=%s",
             row.get("generation"),
             type(exc).__name__,
         )
@@ -111,8 +109,7 @@ async def get_secret_value(
         ) from exc
     register_secret_value(value)
     logger.info(
-        "vault secret read name=%s generation=%s worker=%s",
-        resolved_name,
+        "vault secret read generation=%s worker=%s",
         row["generation"],
         key.name,
     )
@@ -132,7 +129,7 @@ async def archive_secret(
     row = execution_store(request).archive_secret(resolved_name, key.name)
     if row is None:
         raise HTTPException(status_code=404, detail="secret not found")
-    logger.info("vault secret archived name=%s actor=%s", resolved_name, key.name)
+    logger.info("vault secret archived actor=%s", key.name)
     return row
 
 
@@ -145,7 +142,7 @@ async def delete_secret(
     resolved_name = _name(name)
     if not execution_store(request).delete_secret(resolved_name):
         raise HTTPException(status_code=404, detail="secret not found")
-    logger.info("vault secret deleted name=%s actor=%s", resolved_name, key.name)
+    logger.info("vault secret deleted actor=%s", key.name)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

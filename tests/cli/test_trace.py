@@ -1,5 +1,6 @@
 # tests/cli/test_trace.py
 import json
+from urllib.parse import urlparse
 
 from julep.cli.main import main
 
@@ -21,7 +22,10 @@ def test_trace_prints_link_when_configured(sample_module, capsys, monkeypatch):
     capsys.readouterr()
     main(["trace", "r-trace-2"])
     out = capsys.readouterr().out
-    assert "cloud.langfuse.com" in out
+    link = out.strip().splitlines()[-1].removeprefix("langfuse: ")
+    parsed = urlparse(link)
+    assert parsed.scheme == "https"
+    assert parsed.hostname == "cloud.langfuse.com"
 
 
 def test_trace_unknown_run_returns_2(sample_module, capsys, monkeypatch):

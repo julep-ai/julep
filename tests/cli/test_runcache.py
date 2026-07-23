@@ -1,6 +1,7 @@
 # tests/cli/test_runcache.py
 from julep.cli.runcache import failed_agents, load_run, save_run
 from julep.projection import (
+    EventType,
     InMemoryProjection,
     ProjectionEmitter,
     ProjectionEvent,
@@ -42,6 +43,37 @@ def test_loaded_events_rehydrate_to_projection_events(tmp_path):
         assert got.causes == want.causes
         assert got.value_ref == want.value_ref
         assert got.cost == want.cost
+
+
+def test_run_cache_omits_event_payloads_and_failure_text(tmp_path):
+    event = ProjectionEvent(
+        event_id="event-sensitive",
+        type=EventType.FAILED,
+        node="agent",
+        cid="agent@0",
+        ts=1.0,
+        error="provider echoed secret-value",
+        attrs={
+            "llm.input": {"password": "secret-value"},
+            "llm.output": "secret-value",
+            "llm.model": "provider:model",
+        },
+    )
+
+    save_run(
+        str(tmp_path),
+        run_id="r-sensitive",
+        agent="triage",
+        status="error",
+        events=[event],
+    )
+
+    raw = (tmp_path / ".julep" / "runs" / "r-sensitive.json").read_text()
+    assert "secret-value" not in raw
+    loaded = load_run(str(tmp_path), "r-sensitive")
+    assert loaded is not None
+    assert loaded["events"][0].get("error") is None
+    assert loaded["events"][0]["attrs"] == {"llm.cost.status": "unknown"}
 
 
 def test_load_run_missing_returns_none(tmp_path):
