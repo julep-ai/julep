@@ -41,7 +41,9 @@ from julep.projection import ProjectionEvent
 if TYPE_CHECKING:
     from julep.client import JulepClient
 
-app = typer.Typer(add_completion=True, no_args_is_help=True, help="Developer CLI for julep modules.")
+app = typer.Typer(
+    add_completion=True, no_args_is_help=True, help="Developer CLI for julep modules."
+)
 schedule_app = typer.Typer(
     no_args_is_help=True,
     help="Manage Temporal cron schedules from julep.toml.",
@@ -54,9 +56,14 @@ serve_app = typer.Typer(
     no_args_is_help=True,
     help="Run Julep service processes.",
 )
+dev_app = typer.Typer(
+    no_args_is_help=True,
+    help="Run the durable local development stack.",
+)
 app.add_typer(schedule_app, name="schedule")
 app.add_typer(db_app, name="db")
 app.add_typer(serve_app, name="serve")
+app.add_typer(dev_app, name="dev")
 app.command("chat")(chat_command)
 app.command("listen")(listen_command)
 app.command("trigger")(trigger_command)
@@ -127,6 +134,147 @@ def _resolve_db_dsn(dsn: str | None) -> str:
         )
         raise typer.Exit(2)
     return resolved
+
+
+@app.command("keygen")
+def keygen(
+    output_format: str = typer.Option(
+        "env",
+        "--format",
+        help="Output format: env or json.",
+    ),
+    output: Path | None = typer.Option(  # noqa: B008
+        None,
+        "--output",
+        help="Write secrets to this file with mode 0600 instead of stdout.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Replace an existing --output file.",
+    ),
+) -> None:
+    """Generate independent local payload, vault, signing, and API keys."""
+
+    from julep.cli.keygen import generate_dev_environment, render_dev_environment
+
+    try:
+        rendered = render_dev_environment(
+            generate_dev_environment(),
+            format=output_format,
+        )
+    except (ImportError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(2) from None
+
+    if output is None:
+        typer.echo(rendered, nl=False)
+        return
+
+    flags = _os.O_WRONLY | _os.O_CREAT
+    flags |= _os.O_TRUNC if force else _os.O_EXCL
+    flags |= getattr(_os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = _os.open(output, flags, 0o600)
+        with _os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(rendered)
+        output.chmod(0o600)
+    except FileExistsError:
+        typer.echo(
+            f"error: {output} already exists; pass --force to replace it",
+            err=True,
+        )
+        raise typer.Exit(2) from None
+    except OSError as exc:
+        typer.echo(f"error: could not write {output}: {exc}", err=True)
+        raise typer.Exit(2) from None
+    typer.echo(f"wrote {output} (mode 0600)")
+
+
+@dev_app.command("up")
+def dev_up(
+    env: str = typer.Option("local", "--env", help="Application environment name."),
+    api_url: str = typer.Option(
+        "",
+        "--api-url",
+        help="Loopback control-plane URL (default: JULEP_API_URL or http://127.0.0.1:8080).",
+    ),
+    api_key: str = typer.Option(
+        "",
+        "--api-key",
+        help="Admin key (default: JULEP_API_KEY).",
+    ),
+    start_temporal: bool = typer.Option(
+        True,
+        "--start-temporal/--no-start-temporal",
+        help="Supervise a Temporal development server or use an existing one.",
+    ),
+    publish_release: bool = typer.Option(
+        True,
+        "--publish/--no-publish",
+        help="Publish and register the configured application after startup.",
+    ),
+    start_workers: bool = typer.Option(
+        True,
+        "--worker/--no-worker",
+        help="Start one worker per published release-scoped lane queue.",
+    ),
+    startup_timeout: float = typer.Option(
+        30.0,
+        "--startup-timeout",
+        min=0.001,
+        help="Seconds allowed for Temporal and API readiness.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Validate and print the supervised command plan without starting it.",
+    ),
+) -> None:
+    """Start Temporal, migrate/serve the API, publish, and run lane workers."""
+
+    from julep.cli.dev import (
+        DevStackError,
+        build_dev_stack_plan,
+        render_dev_stack_plan,
+        run_dev_stack,
+    )
+
+    try:
+        cfg = load_config(Path("."))
+        if env not in cfg.envs:
+            raise DevStackError(f"unknown env {env!r}")
+        env_cfg = cfg.envs[env]
+        source_env = {**dict(_os.environ), **env_cfg.worker_environment}
+        resolved_url = api_url or source_env.get("JULEP_API_URL") or "http://127.0.0.1:8080"
+        resolved_key = api_key or source_env.get("JULEP_API_KEY", "")
+        plan = build_dev_stack_plan(
+            cfg,
+            env_cfg,
+            api_url=resolved_url,
+            api_key=resolved_key,
+            source_env=source_env,
+            start_temporal=start_temporal,
+            publish_release=publish_release,
+            start_workers=start_workers,
+            startup_timeout_s=startup_timeout,
+        )
+        if dry_run:
+            typer.echo(render_dev_stack_plan(plan), nl=False)
+            return
+        run_dev_stack(plan)
+    except (
+        BundleError,
+        ArtifactStoreError,
+        DevStackError,
+        ImportError,
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from None
 
 
 @db_app.command("migrate")
@@ -208,10 +356,10 @@ def db_reencrypt_secrets(
     finally:
         store.close()
 
-    remaining = ", ".join(
-        f"{key_id}={count}"
-        for key_id, count in report["remaining_key_ids"].items()
-    ) or "none"
+    remaining = (
+        ", ".join(f"{key_id}={count}" for key_id, count in report["remaining_key_ids"].items())
+        or "none"
+    )
     typer.echo(
         f"re-encrypted {report['reencrypted']} secret(s) under "
         f"{report['active_key_id']}"
@@ -565,7 +713,11 @@ def run(
             if result.error is not None:
                 typer.echo(f"error: {result.error}", err=True)
                 save_run(
-                    str(cfg.root), run_id=result.run_id, agent=name, status="error", events=result.events
+                    str(cfg.root),
+                    run_id=result.run_id,
+                    agent=name,
+                    status="error",
+                    events=result.events,
                 )
                 raise typer.Exit(1)
             typer.echo(render_tree(result.events))
@@ -644,7 +796,14 @@ def plan(
             cfg.envs[env],
             mcp_snapshot=mcp_snapshot,
         )
-    except (BundleError, ArtifactStoreError, ImportError, RuntimeError, TypeError, ValueError) as exc:
+    except (
+        BundleError,
+        ArtifactStoreError,
+        ImportError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from None
     payload = application_plan.to_json()
@@ -652,16 +811,12 @@ def plan(
         typer.echo(_json.dumps(payload, indent=2, sort_keys=True))
     else:
         artifact = payload["artifact"]
-        typer.echo(
-            f"artifact  {'drift' if artifact['drift'] else 'clean':9} "
-            f"{artifact['desired']}"
-        )
+        typer.echo(f"artifact  {'drift' if artifact['drift'] else 'clean':9} {artifact['desired']}")
         for name, drift in payload["mcpSchema"].items():
             typer.echo(f"mcp       {name:24} {'drift' if drift else 'clean'}")
         image = payload["workerImage"]
         typer.echo(
-            f"image     {'drift' if image['drift'] else 'clean':9} "
-            f"{image['desired'] or '-'}"
+            f"image     {'drift' if image['drift'] else 'clean':9} {image['desired'] or '-'}"
         )
         for lane, state in payload["release"].items():
             typer.echo(f"release   {lane:24} {state}")
@@ -711,7 +866,14 @@ def apply_application(
             publish_only=publish_only,
             mcp_snapshot=mcp_snapshot,
         )
-    except (BundleError, ArtifactStoreError, ImportError, RuntimeError, TypeError, ValueError) as exc:
+    except (
+        BundleError,
+        ArtifactStoreError,
+        ImportError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from None
     typer.echo(f"release   {release.release_hash}")
@@ -786,10 +948,7 @@ def status(
             application_plan.artifact_drift
             or application_plan.worker_image_drift
             or any(application_plan.mcp_schema_drift.values())
-            or any(
-                value != "clean"
-                for value in application_plan.deployment_config_drift.values()
-            )
+            or any(value != "clean" for value in application_plan.deployment_config_drift.values())
             or any(value != "clean" for value in application_plan.release_drift.values())
             or any(value != "ready" for value in application_plan.helm_keda_drift.values())
             or any(value != "healthy" for value in application_plan.runtime_drift.values())
@@ -833,9 +992,7 @@ def worker(
             env["JULEP_REDACTION"] = _json.dumps(table)
     settings = WorkerServeSettings.from_env(env)
     if smoke_test_seconds > 0:
-        _asyncio.run(
-            smoke_test_worker(settings, poll_seconds=smoke_test_seconds)
-        )
+        _asyncio.run(smoke_test_worker(settings, poll_seconds=smoke_test_seconds))
     else:
         _asyncio.run(serve(settings))
 
@@ -878,7 +1035,9 @@ def lint(
 def test_cmd(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
     exclude: str = typer.Option("", "--exclude", help="Exclude expression."),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Print the pytest command without running."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Print the pytest command without running."
+    ),
 ) -> None:
     """Run pytest for the selected agents.
 
@@ -985,9 +1144,7 @@ def eval_cmd(
 
 @app.command("trace")
 def trace(
-    run_id: str = typer.Argument(
-        ..., help="Run id from a prior `julep run` (or a deployed run)."
-    ),
+    run_id: str = typer.Argument(..., help="Run id from a prior `julep run` (or a deployed run)."),
     remote: bool = typer.Option(False, "--remote", help="Read trace events from the remote API."),
     api_url: str = typer.Option("", "--api-url", help="Remote Julep API base URL."),
     api_key: str = typer.Option("", "--api-key", help="Remote Julep API bearer key."),
@@ -1005,8 +1162,7 @@ def trace(
             else:
                 run_data = client.get_run(run_id)
                 typer.echo(
-                    f"run {run_id!r} status={run_data.get('status')} "
-                    "(no trace events captured)"
+                    f"run {run_id!r} status={run_data.get('status')} (no trace events captured)"
                 )
         except JulepClientError as exc:
             typer.echo(f"error: {exc}", err=True)
