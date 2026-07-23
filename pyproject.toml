@@ -94,6 +94,12 @@ dev = [
     "julep[test-no-temporal]",
     "temporalio>=1.21",
 ]
+# Opt-in live provider matrix. Keep OpenRouter/xAI's additional adapters out of
+# the ordinary unit-test environment; these tests make billable network calls.
+provider-smoke = [
+    "julep[dev]",
+    "any-llm-sdk[openrouter,xai]>=1.17; python_version >= '3.11'",
+]
 
 [project.urls]
 Repository = "https://github.com/julep-ai/julep"
@@ -119,6 +125,7 @@ testpaths = ["tests"]
 addopts = "-q -m 'not live'"
 markers = [
     "live: exercises a real provider over the network; excluded from the default run/CI",
+    "provider_smoke: exercises a real model provider through a Julep Agent",
 ]
 
 [tool.ruff]
