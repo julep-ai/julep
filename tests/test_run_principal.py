@@ -542,6 +542,9 @@ def test_agent_sub_child_starts_with_child_bundle(monkeypatch):
         return "child-result"
 
     monkeypatch.setattr(harness, "_bundle_ref_child_input_enabled", lambda: True)
+    monkeypatch.setattr(
+        harness, "_ref_child_runtime_declarations_enabled", lambda: True
+    )
     monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     monkeypatch.setattr(harness.workflow, "execute_child_workflow", fake_execute_child_workflow)
 
@@ -553,6 +556,7 @@ def test_agent_sub_child_starts_with_child_bundle(monkeypatch):
         granted_subflows=["child"],
         resolve_spec=False,
         principal=PRINCIPAL,
+        runtime_declarations_ref=DECLARATIONS_REF,
     )
     out = asyncio.run(AgentWorkflow().run(inp))
 
@@ -561,8 +565,67 @@ def test_agent_sub_child_starts_with_child_bundle(monkeypatch):
     assert isinstance(sub_input, FlowInput)
     assert sub_input.ref == "child"
     assert sub_input.bundle == BUNDLE_REF
-    assert sub_input.runtime_declarations_ref is None
+    assert sub_input.runtime_declarations_ref == DECLARATIONS_REF
     assert sub_input.principal == PRINCIPAL
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+@pytest.mark.parametrize(
+    ("declarations_enabled", "expected_ref"),
+    [
+        (True, {"hash": "sha256:" + "b" * 64, "size": 456}),
+        (False, None),
+    ],
+    ids=["child-override", "replay-gated"],
+)
+def test_agent_sub_child_declaration_precedence_and_replay_gate(
+    monkeypatch,
+    declarations_enabled: bool,
+    expected_ref: dict[str, Any] | None,
+) -> None:
+    parent_ref = {"hash": "sha256:" + "a" * 64, "size": 123}
+    child_ref = {"hash": "sha256:" + "b" * 64, "size": 456}
+    children = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        if fn.__name__ == "invokeReasoner":
+            return {"sub": "child", "input": 1}
+        if fn.__name__ == "resolveSubflow":
+            return {
+                "bundle": BUNDLE_REF,
+                "runtimeDeclarationsRef": child_ref,
+            }
+        raise AssertionError(f"unexpected activity {fn.__name__}")
+
+    async def fake_execute_child_workflow(fn, child_input, **kwargs):
+        children.append(child_input)
+        return "child-result"
+
+    monkeypatch.setattr(harness, "_bundle_ref_child_input_enabled", lambda: True)
+    monkeypatch.setattr(
+        harness,
+        "_ref_child_runtime_declarations_enabled",
+        lambda: declarations_enabled,
+    )
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(
+        harness.workflow,
+        "execute_child_workflow",
+        fake_execute_child_workflow,
+    )
+    inp = AgentInput(
+        controller="ctrl",
+        session_id="sess-declarations",
+        input=5,
+        config={"maxRounds": 1, "budget": {"cost": 1000}},
+        granted_subflows=["child"],
+        resolve_spec=False,
+        runtime_declarations_ref=parent_ref,
+    )
+
+    asyncio.run(AgentWorkflow().run(inp))
+
+    assert children[0].runtime_declarations_ref == expected_ref
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

@@ -5,10 +5,12 @@ import base64
 import json
 import threading
 import time
+from dataclasses import replace
 from urllib.parse import quote
 
 from starlette.testclient import TestClient
 
+from julep.app_deploy import lane_task_queue
 from julep.execution.projection_store import InMemoryExecutionStore
 from julep.projection import value_ref
 from julep.server.routes.runs import reconcile_runs_once
@@ -106,7 +108,9 @@ def test_run_submission_is_idempotent_and_starts_once(server_factory) -> None:
         assert row["temporal_run_id"] == f"temporal-{row['run_id']}"
         assert len(harness.gateway.starts) == 1
         assert harness.gateway.starts[0]["workflow_id"] == f"run-{row['run_id']}"
-        assert harness.gateway.starts[0]["queue_lanes"] == {"summary": "summary-queue"}
+        assert harness.gateway.starts[0]["queue_lanes"] == {
+            "summary": lane_task_queue("summary", release.release_hash)
+        }
 
         duplicate = _start(client, release.release_hash)
         assert duplicate.status_code == 200
@@ -122,6 +126,77 @@ def test_run_submission_is_idempotent_and_starts_once(server_factory) -> None:
         )
         assert collision.status_code == 409
         assert len(harness.gateway.starts) == 1
+
+
+def test_run_submission_builds_release_pinned_queue_map_when_omitted(
+    server_factory,
+) -> None:
+    harness = server_factory()
+    release = replace(
+        make_release(),
+        deployment_config={"queues": {"summary": "release-summary"}},
+    )
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        response = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "input": {"question": "hello"},
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "release-queue"},
+        )
+
+    assert response.status_code == 201, response.text
+    assert harness.gateway.starts[0]["queue_lanes"] == {
+        "summary": lane_task_queue("release-summary", release.release_hash)
+    }
+
+
+def test_run_submission_pins_all_release_lanes_and_ignores_client_queue_map(
+    server_factory,
+) -> None:
+    harness = server_factory()
+    base = make_release()
+    background = replace(
+        base.pipelines[0],
+        name="background-child",
+        lane="background",
+    )
+    release = replace(
+        base,
+        pipelines=(*base.pipelines, background),
+        deployment_config={
+            "queues": {
+                "summary": "release-summary",
+                "background": "release-background",
+            }
+        },
+    )
+    with TestClient(harness.app) as client:
+        _publish(client, release)
+        response = client.post(
+            "/v1/runs",
+            json={
+                "release": release.release_hash,
+                "pipeline": "summary",
+                "queueLanes": {
+                    "summary": "attacker-summary",
+                    "background": "attacker-background",
+                },
+            },
+            headers={**ALICE_HEADERS, "Idempotency-Key": "all-release-queues"},
+        )
+
+    assert response.status_code == 201, response.text
+    assert harness.gateway.starts[0]["queue_lanes"] == {
+        "background": lane_task_queue(
+            "release-background",
+            release.release_hash,
+        ),
+        "summary": lane_task_queue("release-summary", release.release_hash),
+    }
 
 
 def test_run_submission_validation_and_start_failure(server_factory) -> None:

@@ -233,6 +233,11 @@ def _resolve_deployment_config(
         _env.JULEP_BUNDLE_ALLOWED_SIGNERS: ",".join(allowed_signers),
     }
     chart = _resolve_helm_chart(cfg.root, env.helm_chart)
+    worker_runtime_declarations_hash = (
+        compiled.runtime_declarations_hash
+        if cfg.application is not None
+        else None
+    )
     deployment_config = build_lane_deployment_config(
         chart=chart,
         namespace=env.kubernetes_namespace,
@@ -240,7 +245,7 @@ def _resolve_deployment_config(
         temporal_namespace=env.temporal_namespace,
         worker_context_factory=env.worker_context_factory,
         worker_application=cfg.application,
-        worker_runtime_declarations_hash=compiled.runtime_declarations_hash,
+        worker_runtime_declarations_hash=worker_runtime_declarations_hash,
         worker_service_account=env.worker_service_account,
         worker_priority_class=env.worker_priority_class,
         payload_encryption_secret=env.payload_encryption_secret,
@@ -269,6 +274,11 @@ def apply_configured_application(
         compiled,
         require_private_signer=True,
     )
+    worker_runtime_declarations_hash = (
+        compiled.runtime_declarations_hash
+        if cfg.application is not None
+        else None
+    )
     assert env.release_store is not None
     store = artifact_store_from_url(env.release_store)
     release = publish_application(
@@ -290,7 +300,7 @@ def apply_configured_application(
             temporal_namespace=env.temporal_namespace,
             worker_context_factory=env.worker_context_factory,
             worker_application=cfg.application,
-            worker_runtime_declarations_hash=compiled.runtime_declarations_hash,
+            worker_runtime_declarations_hash=worker_runtime_declarations_hash,
             worker_service_account=env.worker_service_account,
             worker_priority_class=env.worker_priority_class,
             payload_encryption_secret=env.payload_encryption_secret,

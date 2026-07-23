@@ -252,6 +252,16 @@ def test_temporal_children_inherit_root_run_id(monkeypatch):
         children.append(child_input)
         return "child-result"
 
+    async def fake_execute_activity(fn, payload, **kwargs):
+        if fn.__name__ == "resolveSubflow":
+            assert payload == "child"
+            return {}
+        return None
+
+    monkeypatch.setattr(
+        harness, "_ref_child_runtime_declarations_enabled", lambda: True
+    )
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
     monkeypatch.setattr(
         harness.workflow, "execute_child_workflow", fake_execute_child_workflow
     )
@@ -268,12 +278,85 @@ def test_temporal_children_inherit_root_run_id(monkeypatch):
     # Children inherit the SAME root; they begin their own segment chain at 0.
     assert isinstance(sub_input, FlowInput)
     assert sub_input.root_run_id == ROOT and sub_input.segment_seq == 0
-    # A ref child resolves its own pipeline declarations instead of inheriting
-    # the parent's per-pipeline blob.
-    assert sub_input.runtime_declarations_ref is None
+    # The parent release blob is the fallback when the ref registry does not
+    # carry a child-specific declaration blob.
+    assert sub_input.runtime_declarations_ref == declarations_ref
     assert isinstance(agent_input, AgentInput)
     assert agent_input.root_run_id == ROOT and agent_input.segment_seq == 0
     assert agent_input.runtime_declarations_ref == declarations_ref
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_temporal_ref_child_declarations_override_parent_fallback(monkeypatch):
+    parent_ref = {"hash": "sha256:" + "a" * 64, "size": 123}
+    child_ref = {"hash": "sha256:" + "b" * 64, "size": 456}
+    children: list[Any] = []
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        if fn.__name__ == "resolveSubflow":
+            assert payload == "child"
+            return {"runtimeDeclarationsRef": child_ref}
+        return None
+
+    async def fake_execute_child_workflow(fn, child_input, **kwargs):
+        children.append(child_input)
+        return "child-result"
+
+    monkeypatch.setattr(
+        harness, "_ref_child_runtime_declarations_enabled", lambda: True
+    )
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(
+        harness.workflow, "execute_child_workflow", fake_execute_child_workflow
+    )
+    env = _temporal_env(root_run_id=ROOT, runtime_declarations_ref=parent_ref)
+
+    asyncio.run(env.run_sub("child", None, 5, "cid-1"))
+
+    assert children[0].runtime_declarations_ref == child_ref
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+@pytest.mark.parametrize("bundle_enabled", [False, True], ids=["oldest", "bundle-patch"])
+def test_temporal_ref_child_declarations_are_replay_gated(
+    monkeypatch,
+    bundle_enabled: bool,
+) -> None:
+    parent_ref = {"hash": "sha256:" + "a" * 64, "size": 123}
+    child_ref = {"hash": "sha256:" + "b" * 64, "size": 456}
+    children: list[Any] = []
+    resolve_calls = 0
+
+    async def fake_execute_activity(fn, payload, **kwargs):
+        nonlocal resolve_calls
+        if fn.__name__ == "resolveSubflow":
+            resolve_calls += 1
+            return {
+                "bundle": [{"hash": "sha256:" + "c" * 64}],
+                "runtimeDeclarationsRef": child_ref,
+            }
+        return None
+
+    async def fake_execute_child_workflow(fn, child_input, **kwargs):
+        children.append(child_input)
+        return "child-result"
+
+    monkeypatch.setattr(
+        harness, "_bundle_ref_child_input_enabled", lambda: bundle_enabled
+    )
+    monkeypatch.setattr(
+        harness, "_ref_child_runtime_declarations_enabled", lambda: False
+    )
+    monkeypatch.setattr(harness.workflow, "execute_activity", fake_execute_activity)
+    monkeypatch.setattr(
+        harness.workflow, "execute_child_workflow", fake_execute_child_workflow
+    )
+    env = _temporal_env(root_run_id=ROOT, runtime_declarations_ref=parent_ref)
+
+    asyncio.run(env.run_sub("child", None, 5, "cid-1"))
+
+    assert resolve_calls == int(bundle_enabled)
+    assert children[0].runtime_declarations_ref is None
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

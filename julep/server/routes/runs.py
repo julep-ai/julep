@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, R
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...app_deploy import ApplicationRelease, PipelineRelease
+from ...app_deploy import ApplicationRelease, PipelineRelease, lane_task_queue
 from ...execution.projection_store import (
     MAX_INLINE_VALUE_BYTES,
     TERMINAL_RUN_STATUSES,
@@ -58,6 +58,15 @@ class HumanSignalRequest(BaseModel):
 
 def _find_pipeline(release: ApplicationRelease, name: str) -> Optional[PipelineRelease]:
     return next((pipeline for pipeline in release.pipelines if pipeline.name == name), None)
+
+
+def _release_queue_lanes(release: ApplicationRelease) -> dict[str, str]:
+    configured = release.deployment_config.get("queues")
+    queues = configured if isinstance(configured, Mapping) else {}
+    return {
+        lane: lane_task_queue(str(queues.get(lane, lane)), release.release_hash)
+        for lane in release.lanes
+    }
 
 
 def _active_release_for_pipeline(
@@ -258,7 +267,7 @@ async def start_run(
             run_id=run_id,
             input=body.input,
             principal=principal,
-            queue_lanes=body.queue_lanes,
+            queue_lanes=_release_queue_lanes(release),
             secrets=dict(body.secrets) if body.secrets else None,
         )
     except TemporalStartAmbiguous as exc:

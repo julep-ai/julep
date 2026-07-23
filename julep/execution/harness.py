@@ -555,6 +555,14 @@ def _bundle_ref_child_input_enabled() -> bool:
         return False
 
 
+def _ref_child_runtime_declarations_enabled() -> bool:
+    try:
+        return workflow.patched("ref-child-runtime-declarations-v1")
+    except Exception:
+        # Unit tests sometimes exercise Env methods outside a workflow runtime.
+        return False
+
+
 def _bundle_aware_verify_pures_enabled() -> bool:
     try:
         return workflow.patched("bundle-aware-verify-pures-v1")
@@ -1099,7 +1107,7 @@ class _TemporalEnv:
         # already opaque), so the child's value crosses unchanged. The child
         # inherits the parent's principal unchanged (no substitution API).
         child_id = self._child_id("sub", cid)
-        bundle = await self._bundle_for_ref_child(ref)
+        bundle, runtime_declarations_ref = await self._inputs_for_ref_child(ref)
         sub_queue = getattr(contract, "queue", None)
         resolved = _resolve_child_queue(sub_queue, self._queue_lanes)
         start_kwargs: dict[str, Any] = {
@@ -1120,6 +1128,7 @@ class _TemporalEnv:
                 principal=self.principal,
                 root_run_id=self.root_run_id,
                 bundle=bundle,
+                runtime_declarations_ref=runtime_declarations_ref,
                 queue_lanes=(self._queue_lanes or None),
                 secrets=(self.secrets or None),
                 mcp_preflight=self._mcp_preflight,
@@ -1161,9 +1170,14 @@ class _TemporalEnv:
             _traj._best_effort(_reraise)
         return result
 
-    async def _bundle_for_ref_child(self, ref: str) -> Optional[list[dict[str, str]]]:
-        if not _bundle_ref_child_input_enabled():
-            return None
+    async def _inputs_for_ref_child(
+        self,
+        ref: str,
+    ) -> tuple[Optional[list[dict[str, str]]], Optional[dict[str, Any]]]:
+        bundle_enabled = _bundle_ref_child_input_enabled()
+        declarations_enabled = _ref_child_runtime_declarations_enabled()
+        if not bundle_enabled and not declarations_enabled:
+            return None, None
         resolved = await workflow.execute_activity(
             resolveSubflow,
             ref,
@@ -1171,7 +1185,16 @@ class _TemporalEnv:
             retry_policy=RetryPolicy(maximum_attempts=3, non_retryable_error_types=_NON_RETRYABLE),
         )
         bundle = resolved.get("bundle")
-        return bundle if isinstance(bundle, list) else None
+        child_declarations_ref = resolved.get("runtimeDeclarationsRef")
+        runtime_declarations_ref = (
+            child_declarations_ref
+            if isinstance(child_declarations_ref, dict)
+            else self._runtime_declarations_ref
+        )
+        return (
+            bundle if bundle_enabled and isinstance(bundle, list) else None,
+            runtime_declarations_ref if declarations_enabled else None,
+        )
 
     async def run_agent(
         self,
@@ -3372,7 +3395,10 @@ class AgentWorkflow:
                     sub_input = state.last
                 child_id = f"{inp.session_id}-sub-{state.round}"
                 child_bundle: Optional[list[dict[str, str]]] = None
-                if _bundle_ref_child_input_enabled():
+                child_runtime_declarations_ref: Optional[dict[str, Any]] = None
+                bundle_enabled = _bundle_ref_child_input_enabled()
+                declarations_enabled = _ref_child_runtime_declarations_enabled()
+                if bundle_enabled or declarations_enabled:
                     resolved = await workflow.execute_activity(
                         resolveSubflow,
                         ref,
@@ -3383,8 +3409,17 @@ class AgentWorkflow:
                         ),
                     )
                     bundle = resolved.get("bundle")
-                    if isinstance(bundle, list):
+                    if bundle_enabled and isinstance(bundle, list):
                         child_bundle = bundle
+                    if declarations_enabled:
+                        resolved_declarations_ref = resolved.get(
+                            "runtimeDeclarationsRef"
+                        )
+                        child_runtime_declarations_ref = (
+                            resolved_declarations_ref
+                            if isinstance(resolved_declarations_ref, dict)
+                            else inp.runtime_declarations_ref
+                        )
                 resolved_queue = _resolve_child_queue(
                     (subflow_queues or {}).get(ref),
                     inp.queue_lanes,
@@ -3407,6 +3442,7 @@ class AgentWorkflow:
                         principal=inp.principal,
                         root_run_id=(inp.root_run_id or inp.session_id),
                         bundle=child_bundle,
+                        runtime_declarations_ref=child_runtime_declarations_ref,
                         queue_lanes=(inp.queue_lanes or None),
                         secrets=(inp.secrets or None),
                         mcp_preflight=inp.mcp_preflight,
