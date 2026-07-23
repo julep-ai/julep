@@ -36,7 +36,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Durable execution on Temporal (workflows, activities, worker, client helpers).
-temporal = ["temporalio>=1.21", "cryptography>=42"]
+temporal = ["temporalio>=1.20", "cryptography>=42"]
 # Durable execution on DBOS (steps, flow workflow, chaining runner).
 # dbos requires Python >=3.11; the marker keeps the extra resolvable on 3.10,
 # where importing the backend raises a clear ImportError instead.
@@ -54,7 +54,7 @@ server = [
     "uvicorn>=0.30",
     "sse-starlette>=2",
     "psycopg[binary,pool]>=3.2",
-    "temporalio>=1.21",
+    "temporalio>=1.20",
     "cryptography>=42",
     "httpx>=0.24",
 ]
@@ -68,6 +68,9 @@ yglu = ["yglu>=1.0"]
 # any-llm-sdk requires Python >=3.11; on 3.10 the LlmCaller raises a clear
 # ImportError at call time instead (the marker keeps the extra resolvable).
 providers = ["any-llm-sdk>=1.17; python_version >= '3.11'"]
+# Multi-provider LlmCaller for projects already standardized on LiteLLM.
+# The adapter imports LiteLLM lazily; core authoring remains dependency-light.
+litellm = ["litellm>=1.61,<2"]
 # OpenTelemetry span export of the projection.
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
 # Langfuse OTLP/HTTP export of the projection.
@@ -113,7 +116,7 @@ test-no-temporal = [
 # here (dev) rather than in core; end users pull the slim ``providers`` extra.
 dev = [
     "julep[test-no-temporal]",
-    "temporalio>=1.21",
+    "temporalio>=1.20",
 ]
 
 [project.urls]
