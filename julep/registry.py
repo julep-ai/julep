@@ -178,6 +178,10 @@ class Registry:
         self.renderers: dict[str, RendererEntry] = {}
         self.renderer_declarations: dict[str, RendererDeclaration] = {}
         self.tool_expectations: dict[str, ToolSchemaExpectation] = {}
+        # Compatibility aliases installed by a scoped dotctx package are kept
+        # queryable, but must not constrain unrelated top-level native calls
+        # that happen to reuse the same bare tool name.
+        self.scoped_tool_fallbacks: set[str] = set()
         # Release-hydrated AgentWorkflow specs keyed by controller name.
         self.agent_specs: dict[str, dict[str, Any]] = {}
 
@@ -444,7 +448,11 @@ class Registry:
         # Retain the historical unscoped lookup for callers loading one package.
         # A second package may reuse the same model-visible alias with a different
         # schema; its scoped entry remains authoritative at freeze.
-        self.tool_expectations.setdefault(exp.key, exp)
+        if scope is None:
+            self.scoped_tool_fallbacks.discard(exp.key)
+        elif exp.key not in self.tool_expectations:
+            self.tool_expectations[exp.key] = exp
+            self.scoped_tool_fallbacks.add(exp.key)
         return exp
 
     def get_tool_expectation(

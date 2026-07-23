@@ -14,7 +14,7 @@ admission has a real contract to check.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -300,6 +300,8 @@ def _check_tool_schema_drift(
     flow: Node,
     snapshot: McpSnapshot,
     expectations: Mapping[str, ToolSchemaExpectation],
+    *,
+    scoped_fallbacks: Collection[str] = frozenset(),
 ) -> None:
     """TOOL_SCHEMA_DRIFT: a dotctx package's expected tool schema (tools.pyi)
     must match the served schema by canonical hash when the snapshot resolves
@@ -340,6 +342,11 @@ def _check_tool_schema_drift(
     for key in sorted(_expected_tool_keys(flow)):
         if (key, key) in checked or any(wire == key for _, wire in checked):
             continue
+        if key in scoped_fallbacks:
+            # This bare-name entry exists only as a compatibility lookup for a
+            # scoped dotctx APP. It must not bind an unrelated authored/native
+            # call with the same common name (for example, ``lookup``).
+            continue
         expectation = expectations.get(key)
         if expectation is None:
             continue
@@ -375,6 +382,7 @@ def freeze(
     (``expected_tool_schemas``; defaults to the registry's recorded ones).
     """
     overrides = overrides or CapabilityOverrides()
+    using_default_expectations = expected_tool_schemas is None
     expectations: Mapping[str, ToolSchemaExpectation] = (
         expected_tool_schemas
         if expected_tool_schemas is not None
@@ -459,7 +467,16 @@ def freeze(
         node.tool_contracts = tool_contracts
 
     # 6. Verify recorded dotctx tool-schema expectations against the snapshot.
-    _check_tool_schema_drift(frozen_flow, snapshot, expectations)
+    _check_tool_schema_drift(
+        frozen_flow,
+        snapshot,
+        expectations,
+        scoped_fallbacks=(
+            DEFAULT_REGISTRY.scoped_tool_fallbacks
+            if using_default_expectations
+            else frozenset()
+        ),
+    )
 
     return FreezeResult(flow=frozen_flow, manifest=manifest, source_map=source_map)
 
