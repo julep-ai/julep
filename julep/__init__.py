@@ -306,6 +306,16 @@ from .execution import (
     WorkerContext as WorkerContext,
     interpret as interpret,
 )
+from .local import (
+    LocalExecutionConfigurationError as LocalExecutionConfigurationError,
+    LocalExecutionUnsupported as LocalExecutionUnsupported,
+    LocalPipeline as LocalPipeline,
+    LocalPipelineError as LocalPipelineError,
+    LocalPipelineNotFound as LocalPipelineNotFound,
+    arun_local_pipeline as arun_local_pipeline,
+    prepare_local_pipeline as prepare_local_pipeline,
+    run_local_pipeline as run_local_pipeline,
+)
 
 
 class _CallableApplicationModule(_ModuleType):
@@ -387,6 +397,10 @@ _BASE_EXPORTS = [
     # execution (pure)
     "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "RunPrincipal", "WorkerContext", "interpret",
     "HAVE_DBOS", "HAVE_TEMPORAL",
+    # foreground configured execution
+    "LocalPipeline", "LocalPipelineError", "LocalPipelineNotFound",
+    "LocalExecutionConfigurationError", "LocalExecutionUnsupported",
+    "prepare_local_pipeline", "run_local_pipeline", "arun_local_pipeline",
     "__version__",
 ]
 
