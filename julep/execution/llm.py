@@ -43,7 +43,7 @@ import time
 from collections.abc import Awaitable, Callable, Mapping
 from typing import Any, Optional
 
-from ..agent_loop import NATIVE_TOOLS_KEY, ROUND_NOTE_KEY
+from ..agent_loop import FEEDBACK_KEY, NATIVE_TOOLS_KEY, ROUND_NOTE_KEY
 from ..dotctx import Reasoner, get_reasoner
 from ..errors import ResilienceExhausted
 from ..prompt import rendered_reasoner_for, rendered_user_for
@@ -294,25 +294,83 @@ def _messages(
     if system_text:
         messages.append({"role": "system", "content": system_text})
     if transcript:
-        messages.extend(_transcript_messages(transcript))
+        messages.extend(
+            _transcript_messages(_render_opening_ask(transcript, user_text))
+        )
     round_note: Optional[str] = None
     if isinstance(value, Mapping):
         candidate = value.get(ROUND_NOTE_KEY)
         if isinstance(candidate, str) and candidate:
             round_note = candidate
 
-    if user_text is not None:
-        user = user_text
-    elif isinstance(value, Mapping) and ROUND_NOTE_KEY in value:
-        # Strip the reserved round-note key from the model-facing user JSON;
-        # it is delivered as the trailing system line below, never as content.
-        user = json.dumps({k: v for k, v in value.items() if k != ROUND_NOTE_KEY})
+    if transcript and _is_controller_value(value):
+        # Agent transcript rounds: the conversation (rendered opening ask +
+        # tool turns) IS the transcript — no trailing template turn. Loop
+        # feedback (re-asks) arrives under the reserved key as a user turn.
+        # Non-controller values (a chat continuation's new ask) keep the
+        # ordinary trailing user turn below.
+        if isinstance(value, Mapping) and FEEDBACK_KEY in value:
+            feedback = value[FEEDBACK_KEY]
+            messages.append({
+                "role": "user",
+                "content": (
+                    feedback
+                    if isinstance(feedback, str)
+                    else json.dumps(feedback, sort_keys=True)
+                ),
+            })
     else:
-        user = value if isinstance(value, str) else json.dumps(value)
-    messages.append({"role": "user", "content": user})
+        if user_text is not None:
+            user = user_text
+        elif isinstance(value, Mapping) and ROUND_NOTE_KEY in value:
+            # Strip the reserved round-note key from the model-facing user
+            # JSON; it is delivered as the trailing system line below.
+            user = json.dumps(
+                {k: v for k, v in value.items() if k != ROUND_NOTE_KEY}
+            )
+        else:
+            user = value if isinstance(value, str) else json.dumps(value)
+        messages.append({"role": "user", "content": user})
     if round_note is not None:
         messages.append({"role": "system", "content": round_note})
     return messages
+
+
+def _is_controller_value(value: Any) -> bool:
+    """The agent loop's controller payload: ``{"input": ..., "trace": ...}``.
+
+    Same discriminator :func:`julep.prompt.project_context` uses — only these
+    values suppress the trailing user turn on transcript rounds; a chat
+    continuation's plain string/mapping ask still lands as a user turn.
+    """
+    return isinstance(value, Mapping) and "input" in value and "trace" in value
+
+
+def _render_opening_ask(
+    transcript: list[dict[str, Any]],
+    user_text: Optional[str],
+) -> list[dict[str, Any]]:
+    """Substitute the rendered user template for the opening ask.
+
+    ``transcript_for`` records the run input verbatim as the first user turn;
+    the package's user template is the authored presentation of that same
+    input (``user_text`` renders from the original input on transcript
+    rounds). Templateless reasoners keep the raw turn. The opening ask may
+    have been elided by the token budget — then there is nothing to render.
+    """
+    if user_text is None:
+        return transcript
+    for index, turn in enumerate(transcript):
+        if turn.get("role") != "user":
+            continue
+        if isinstance(turn.get("content"), str):
+            return transcript
+        return [
+            *transcript[:index],
+            {**turn, "content": user_text},
+            *transcript[index + 1 :],
+        ]
+    return transcript
 
 
 def _prompt_cache_control(prompt_cache: str) -> dict[str, Any]:
@@ -536,7 +594,7 @@ async def complete_reasoner(
     # Render named system/user templates here so both seams (activity + facade)
     # see the same strings; already-rendered reasoners pass through unchanged.
     render_value = (
-        {k: v for k, v in value.items() if k != ROUND_NOTE_KEY}
+        {k: v for k, v in value.items() if k not in (ROUND_NOTE_KEY, FEEDBACK_KEY)}
         if isinstance(value, Mapping)
         else value
     )

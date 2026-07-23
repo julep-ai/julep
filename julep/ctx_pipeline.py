@@ -10,6 +10,8 @@ from .app import PipelineSpec
 from .dotctx import load_dotctx, reasoner_to_flow
 from .execution.policy import ExecutionPolicy
 from .freeze import McpSnapshot
+from .kinds import ContextScope
+from .ir import ContextPolicy
 from .registry import DEFAULT_REGISTRY, Registry
 
 
@@ -23,6 +25,11 @@ class CtxPipelineConfig:
     tools: dict[str, str] = field(default_factory=dict)
     # Release-pinned execution policy (reasoner retries, activity timeouts).
     policy: Optional[ExecutionPolicy] = None
+    # Transcript token budget for summary/whole_session context scopes. The
+    # package's settings.yaml declares the scope (semantic); the deployment
+    # config owns the budget (operational, model-window dependent) — there is
+    # no implicit transcript budget (APP_CTX_NO_BUDGET).
+    context_max_tokens: Optional[int] = None
 
 
 def normalize_tool_bindings(bindings: Mapping[str, str]) -> dict[str, str]:
@@ -86,10 +93,30 @@ def pipeline_spec_from_ctx(
                 allowlist=frozenset(server.url for server in selected.values()),
             )
 
+    transcript_ctx = None
+    if reasoner.context_scope in (ContextScope.SUMMARY, ContextScope.WHOLE_SESSION):
+        if config.context_max_tokens is None:
+            raise ValueError(
+                f"pipeline {config.name!r} uses context scope "
+                f"{reasoner.context_scope.value!r} but sets no context_max_tokens; "
+                "there is no implicit transcript budget"
+            )
+        transcript_ctx = ContextPolicy(
+            scope=reasoner.context_scope,
+            max_tokens=config.context_max_tokens,
+        )
+    elif config.context_max_tokens is not None:
+        raise ValueError(
+            f"pipeline {config.name!r} sets context_max_tokens but its dotctx "
+            f"declares context scope {reasoner.context_scope.value!r}; the budget "
+            "only applies to summary/whole_session scopes"
+        )
+
     return PipelineSpec(
         name=config.name,
         flow=reasoner_to_flow(
             reasoner,
+            ctx=transcript_ctx,
             tool_aliases=aliases or None,
             agent_round_cap=agent_round_cap,
         ),

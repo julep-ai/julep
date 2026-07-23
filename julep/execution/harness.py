@@ -2679,10 +2679,23 @@ class AgentWorkflow:
             if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
                 transcript_plan = transcript_for(state, cfg.ctx, input=inp.input)
 
-            controller_value: dict[str, Any] = {
-                "input": state.last,
-                "trace": [t.to_json() for t in state.trace],
-            }
+            if transcript_plan is not None:
+                # Transcript rounds: the conversation (rendered opening ask +
+                # tool turns) lives in the transcript, so system/user templates
+                # always render from the ORIGINAL input. Loop feedback — which
+                # transcript_for deliberately excludes — rides the reserved
+                # feedback key and renders as a trailing user turn.
+                controller_value: dict[str, Any] = {"input": inp.input, "trace": []}
+                if state.trace and state.trace[-1].decision in (
+                    "reask",
+                    "output_reask",
+                ):
+                    controller_value[al.FEEDBACK_KEY] = state.last
+            else:
+                controller_value = {
+                    "input": state.last,
+                    "trace": [t.to_json() for t in state.trace],
+                }
             if note_fn is not None:
                 # Fresh each round from loop state only; deterministic under
                 # Temporal replay because the function is a registered pure.

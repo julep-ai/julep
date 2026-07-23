@@ -55,6 +55,12 @@ from .validate import Diagnostic
 # as a system instruction (the prompt path opts in on THIS key only).
 ROUND_NOTE_KEY = "__round_note__"
 NATIVE_TOOLS_KEY = "__native_tools__"
+# Reserved controller-payload key carrying loop feedback (require_tool_call
+# re-asks, output-validation re-asks) on transcript-scoped rounds, where the
+# conversation itself lives in the transcript and transcript_for deliberately
+# excludes reask trace entries. The prompt path renders it as a trailing user
+# turn instead of re-rendering the business template against the feedback.
+FEEDBACK_KEY = "__loop_feedback__"
 REQUIRE_TOOL_CALL_REASK_MESSAGE = "require_tool_call: reply with a tool call, not text"
 REQUIRE_TOOL_CALL_NEVER_CALLED_REASON = (
     "require_tool_call: controller never called a tool"

@@ -67,7 +67,9 @@ _ENV_ALLOWED_KEYS = frozenset(
 )
 _WORKER_SECRET_ALLOWED_KEYS = frozenset({"key", "secret_name"})
 _SCHEDULE_ALLOWED_KEYS = frozenset({"cron", "env", "flow", "input", "paused"})
-_PIPELINE_ALLOWED_KEYS = frozenset({"ctx", "lane", "env", "tools", "policy"})
+_PIPELINE_ALLOWED_KEYS = frozenset(
+    {"ctx", "lane", "env", "tools", "policy", "context_max_tokens"}
+)
 # [pipeline.<name>.policy] keys map onto ExecutionPolicy fields (snake_case).
 _POLICY_INT_KEYS = frozenset(
     {
@@ -493,6 +495,15 @@ def _build_pipelines(
                 raise ValueError(f"{context} env value {raw_key!r} must be a string")
             env[str(raw_key)] = raw_value
         policy = _build_policy(table.get("policy"), context=context)
+        context_max_tokens = table.get("context_max_tokens")
+        if context_max_tokens is not None and (
+            isinstance(context_max_tokens, bool)
+            or not isinstance(context_max_tokens, int)
+            or context_max_tokens < 1
+        ):
+            raise ValueError(
+                f"{context} context_max_tokens must be a positive integer"
+            )
         result[name] = CtxPipelineConfig(
             name=name,
             ctx=ctx,
@@ -500,6 +511,7 @@ def _build_pipelines(
             env=env,
             tools=tool_tables.get(name, {}),
             policy=policy,
+            context_max_tokens=context_max_tokens,
         )
     return result
 
