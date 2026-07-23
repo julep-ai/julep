@@ -154,6 +154,11 @@ async def start_run(
     if not body.pipeline.strip():
         raise HTTPException(status_code=400, detail="pipeline must be non-empty")
     if body.secrets:
+        if bool(getattr(request.app.state, "local_echo_mode", False)):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="local echo execution does not accept run secrets",
+            )
         settings = request.app.state.settings
         if not settings.payload_encryption_required:
             raise HTTPException(

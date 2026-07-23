@@ -243,6 +243,16 @@ def serve_api(
         "--migrate",
         help="Apply execution-store schema migrations before serving.",
     ),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Run locally with in-memory state and no Temporal or Postgres services.",
+    ),
+    context_factory: str | None = typer.Option(
+        None,
+        "--context-factory",
+        help="WorkerContext factory as module:attribute (local mode only).",
+    ),
 ) -> None:
     """Run the FastAPI control plane."""
 
@@ -252,23 +262,48 @@ def serve_api(
     try:
         import uvicorn
 
-        from julep.server.app import create_app
         from julep.server.settings import ServerSettings
 
-        settings = ServerSettings.from_env()
+        if local and migrate:
+            raise ValueError("--migrate cannot be used with --local")
+        if context_factory is not None and not local:
+            raise ValueError("--context-factory requires --local")
+
+        if local:
+            local_env = dict(_os.environ)
+            local_env["TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED"] = "false"
+            settings = ServerSettings.from_env(local_env)
+        else:
+            settings = ServerSettings.from_env()
         if host is not None or port is not None:
             settings = replace(
                 settings,
                 host=host if host is not None else settings.host,
                 port=port if port is not None else settings.port,
             )
-        if migrate:
+        if local:
+            from julep.execution.serve import load_context_factory
+            from julep.server import create_local_app
+
+            factory = load_context_factory(context_factory) if context_factory is not None else None
+            api = create_local_app(
+                project_root=Path.cwd(),
+                host=settings.host,
+                context_factory=factory,
+            )
+        elif migrate:
+            from julep.server.app import create_app
+
             store = settings.build_store()
             try:
                 store.apply_schema()
             finally:
                 store.close()
-        api = create_app(settings=settings)
+            api = create_app(settings=settings)
+        else:
+            from julep.server.app import create_app
+
+            api = create_app(settings=settings)
     except (ImportError, RuntimeError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(2) from None

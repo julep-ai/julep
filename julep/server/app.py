@@ -13,7 +13,7 @@ from fastapi import FastAPI
 
 from ..app_deploy import LaneReconciler
 from ..artifact_store import ArtifactStore
-from ..execution.projection_store import ExecutionStore
+from ..execution.projection_store import ExecutionStore, SecretCipher
 from .auth import KeyRing
 from .routes.artifacts import router as artifacts_router
 from .routes.deployments import router as deployments_router
@@ -61,6 +61,8 @@ def create_app(
     gateway: Optional[TemporalGateway] = None,
     artifacts: Optional[ArtifactStore] = None,
     reconciler: Optional[LaneReconciler] = None,
+    keyring: Optional[KeyRing] = None,
+    vault_cipher: Optional[SecretCipher] = None,
     enable_reconciler: bool = True,
     reconcile_interval_s: Optional[float] = None,
     sse_heartbeat_seconds: int = DEFAULT_HEARTBEAT_SECONDS,
@@ -86,8 +88,10 @@ def create_app(
     if sse_poll_seconds <= 0:
         raise ValueError("sse_poll_seconds must be positive")
 
-    keyring = KeyRing.from_settings(resolved_settings)
-    vault_cipher = resolved_settings.build_vault_cipher()
+    resolved_keyring = keyring or KeyRing.from_settings(resolved_settings)
+    resolved_vault_cipher = (
+        vault_cipher if vault_cipher is not None else resolved_settings.build_vault_cipher()
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -99,7 +103,14 @@ def create_app(
                 app.state.gateway_error = f"{type(exc).__name__}: {exc}"
                 logger.warning("Temporal connection failed: %s", type(exc).__name__)
 
-        installed_sighup = keyring.install_sighup_handler()
+        current_gateway = app.state.gateway
+        start = getattr(current_gateway, "start", None)
+        if callable(start):
+            result = start()
+            if inspect.isawaitable(result):
+                await result
+
+        installed_sighup = resolved_keyring.install_sighup_handler()
         task: Optional[asyncio.Task[None]] = None
         if enable_reconciler and interval_s > 0:
             task = asyncio.create_task(
@@ -115,10 +126,10 @@ def create_app(
                 with suppress(asyncio.CancelledError):
                     await task
             if installed_sighup:
-                keyring.restore_sighup_handler()
-            current_gateway: Any = app.state.gateway
-            if current_gateway is not None:
-                await _close_optional(current_gateway)
+                resolved_keyring.restore_sighup_handler()
+            closing_gateway: Any = app.state.gateway
+            if closing_gateway is not None:
+                await _close_optional(closing_gateway)
             resolved_store.close()
 
     app = FastAPI(title="Julep Control Plane", version="1", lifespan=lifespan)
@@ -127,8 +138,8 @@ def create_app(
     app.state.gateway = gateway
     app.state.gateway_error = None
     app.state.artifacts = resolved_artifact_store
-    app.state.keyring = keyring
-    app.state.vault_cipher = vault_cipher
+    app.state.keyring = resolved_keyring
+    app.state.vault_cipher = resolved_vault_cipher
     app.state.reconciler = resolved_reconciler
     app.state.deployment_reconcile_status = {}
     app.state.sse_heartbeat_seconds = sse_heartbeat_seconds
