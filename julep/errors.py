@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Iterable
 
 # resilience is stdlib-only and must never import errors (one-way dependency).
 from .resilience import summarize_attempts
@@ -14,6 +15,41 @@ if TYPE_CHECKING:
 
 class JulepError(Exception):
     """Base for everything this framework raises."""
+
+
+FAILED_AGENT_TERMINAL_STATUSES = frozenset(
+    {
+        "controller_error",
+        "max_rounds",
+        "over_budget",
+        "denied",
+        "output_validation_failed",
+    }
+)
+
+
+class AgentTerminalError(JulepError):
+    """An agent loop settled in a failure state rather than producing output."""
+
+    def __init__(self, result: Mapping[str, Any]) -> None:
+        self.result = dict(result)
+        self.status = str(result.get("status") or "controller_error")
+        # Keep model/tool-provided reasons on the local Python object without
+        # copying them into durable exception text. Temporal and control-plane
+        # failure metadata can safely expose the stable status; callers running
+        # in-process may inspect ``result`` explicitly.
+        super().__init__(f"agent terminated with {self.status}")
+
+
+def raise_for_agent_terminal(result: Any) -> Any:
+    """Raise for failed agent envelopes; return non-failures unchanged."""
+
+    if (
+        isinstance(result, Mapping)
+        and result.get("status") in FAILED_AGENT_TERMINAL_STATUSES
+    ):
+        raise AgentTerminalError(result)
+    return result
 
 
 class SessionTurnError(JulepError):
@@ -43,6 +79,67 @@ class FreezeError(JulepError):
 
 class PureDriftError(JulepError):
     """Raised when a pinned pure source hash no longer matches the worker registry."""
+
+
+class ToolSurfaceDrift(JulepError):
+    """A frozen MCP call no longer exists or rejects its frozen input shape."""
+
+    def __init__(self, server: str, tool: str, reason: str) -> None:
+        self.server = server
+        self.tool = tool
+        self.reason = reason
+        super().__init__(f"MCP tool surface drift for {server}/{tool}: {reason}")
+
+    def to_json(self) -> dict[str, str]:
+        return {"server": self.server, "tool": self.tool, "reason": self.reason}
+
+
+class ToolInputValidation(JulepError):
+    """Tool arguments failed the release's frozen input schema before network IO."""
+
+    def __init__(self, server: str, tool: str) -> None:
+        self.server = server
+        self.tool = tool
+        super().__init__(f"tool input failed frozen schema validation for {server}/{tool}")
+
+
+def tool_surface_drift_from_cause(error: BaseException) -> ToolSurfaceDrift | None:
+    """Find or reconstruct typed drift through an engine exception chain.
+
+    Temporal's workflow sandbox can call this helper without importing the
+    Temporal SDK.  Activity failures expose the application error type on a
+    nested cause; direct/local backends preserve the original exception.
+    """
+
+    pending: list[BaseException] = [error]
+    seen: set[int] = set()
+    while pending:
+        current = pending.pop()
+        identity = id(current)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        if isinstance(current, ToolSurfaceDrift):
+            return current
+        error_type = getattr(current, "type", None)
+        if error_type == "ToolSurfaceDrift" or type(current).__name__ == "ToolSurfaceDrift":
+            message = str(current)
+            marker = "MCP tool surface drift for "
+            if marker in message:
+                target_and_reason = message.split(marker, 1)[1]
+                target, separator, reason = target_and_reason.partition(": ")
+                server, slash, tool = target.partition("/")
+                if separator and slash and server and tool and reason:
+                    return ToolSurfaceDrift(server, tool, reason)
+            return ToolSurfaceDrift("<activity>", "<unknown>", message)
+        for nested in (
+            getattr(current, "__cause__", None),
+            getattr(current, "__context__", None),
+            getattr(current, "cause", None),
+        ):
+            if isinstance(nested, BaseException):
+                pending.append(nested)
+    return None
 
 
 class PureExecutionError(JulepError):
@@ -109,11 +206,14 @@ class PrincipalRequired(JulepError):
 
 
 POLICY_ERRORS: tuple[type[JulepError], ...] = (
+    AgentTerminalError,
     CapabilityDenied,
     PlanRejected,
     ValidationError,
     FreezeError,
     PureDriftError,
+    ToolSurfaceDrift,
+    ToolInputValidation,
     PrincipalRequired,
 )
 """Settled policy decisions that execution backends must never retry."""

@@ -12,8 +12,8 @@
 
 ## Global Constraints
 
-- New distribution name: `julep`; version: `3.0.0rc1`; import: `julep`; single console script: `julep` → the Typer porcelain (`julep.ca.cli:main`). `ca` and `composable-agents` scripts are removed.
-- The `julep/ca/` module path stays (internal, invisible to end users; minimal diff). The argparse inspection CLI stays reachable as `python -m julep.cli`.
+- New distribution name: `julep`; version: `3.0.0rc1`; import: `julep`; single console script: `julep` → the Typer porcelain (`julep.cli.main:main`). `ca` and `composable-agents` scripts are removed.
+- The `julep/cli/` module path stays (internal, invisible to end users; minimal diff). The argparse inspection CLI stays reachable as `python -m julep.cli.artifact`.
 - No compat aliases anywhere: `ComposableAgentsError` → `JulepError`, no re-export of old names, no `cli` extra.
 - Brand casing in prose: "Julep" (product), "Julep 3" (this release). Positioning line: **"Julep — durable, composable AI agents. Flows that crash and resume, retry safely, and explain every step."**
 - Gates (all must pass before Phase B): `python -m pytest` (~1710 tests), `uv run mypy --strict julep` (package only), `ruff check julep`, clean-venv wheel smoke test.
@@ -33,7 +33,7 @@
 - Delete: stale `composable_agents.egg-info/`, `build/`, `dist/`
 
 **Interfaces:**
-- Produces: importable package `julep`; distribution metadata name `julep` version `3.0.0rc1`; exception base `JulepError` (all former `ComposableAgentsError` subclasses now inherit from `JulepError`); console script `julep = "julep.ca.cli:main"`. All later tasks assume these exact names.
+- Produces: importable package `julep`; distribution metadata name `julep` version `3.0.0rc1`; exception base `JulepError` (all former `ComposableAgentsError` subclasses now inherit from `JulepError`); console script `julep = "julep.cli.main:main"`. All later tasks assume these exact names.
 
 - [ ] **Step 1: Move the package and clean stale artifacts**
 
@@ -63,7 +63,7 @@ Repository = "https://github.com/julep-ai/julep"
 Issues = "https://github.com/julep-ai/julep/issues"
 
 [project.scripts]
-julep = "julep.ca.cli:main"
+julep = "julep.cli.main:main"
 # DELETE the `composable-agents` and `ca` script lines
 
 [tool.setuptools.packages.find]
@@ -307,7 +307,7 @@ uv build
 python -m venv /tmp/julep-smoke && /tmp/julep-smoke/bin/pip -q install dist/julep-3.0.0rc1-py3-none-any.whl
 /tmp/julep-smoke/bin/python -c "import julep; print(julep.__version__)"
 /tmp/julep-smoke/bin/julep --help
-/tmp/julep-smoke/bin/python -m julep.cli --help
+/tmp/julep-smoke/bin/python -m julep.cli.artifact --help
 ```
 
 Expected: `3.0.0rc1`; porcelain help listing run/lint/deploy…; inspection CLI help. Also `twine check dist/*` (or `uv publish --check-url` equivalent) → PASSED.

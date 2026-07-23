@@ -9,7 +9,7 @@ kernel examples as focused references.
 
 ## `examples/episode_summary_flow.py`
 
-What it teaches: the core `@flow` loop plus CAS-guarded writes.
+What it teaches: the core `@flow` loop plus artifact store-guarded writes.
 
 Rung: primary authoring surface with keyless `deploy(...).dry_run(...)`.
 
@@ -45,7 +45,7 @@ python examples/cluster_labeling_flow.py
 
 This example is keyless and deterministic. It reads one global macrocluster
 snapshot, fans out bounded per-cluster labeling work, then performs a single
-transactional CAS-guarded snapshot write and status tally.
+transactional artifact store-guarded snapshot write and status tally.
 
 ## `examples/support_triage.py`
 
@@ -156,6 +156,22 @@ python examples/elnino/swarm.py
 
 The file prints its own reference text when run directly. Treat it as a source-reading example rather than the first program to execute. It shows a heterogeneous planning swarm, read-only forecast races, quorum reduction, subflow opacity, bounded adaptive agents, staged plan compilation, approval gates for dangerous tools, and a capability manifest that attenuates authority.
 
+## `examples/dotctx_issue_dedup.py`
+
+What it teaches: an agent-shaped rich dotctx that lowers to `app`/`AgentWorkflow` and runs a bounded native-tool loop.
+
+Rung: executable rich-dotctx contract with a frozen MCP tool surface.
+
+Key APIs: `load_rich_dotctx`, `reasoner_to_flow`, `deploy`, `Reasoner`, `max_rounds`, `require_tool_call`.
+
+Run:
+
+```bash
+python -m examples.dotctx_issue_dedup
+```
+
+This keyless example freezes the declared tracker schema, then runs a deterministic two-round loop: the controller calls `search_similar_posts` first and finishes with a schema-valid decision on the second round. The fake controller and tool use the same native-tool protocol as a provider-backed `AgentWorkflow`, so replacing them with live integrations does not change the dotctx package.
+
 ## Run the keyless local examples
 
 ```bash
@@ -170,4 +186,4 @@ These five do not require an API key or a Temporal server. The durable example r
 
 Related docs: [Authoring Guide](/docs/guides/authoring-flows), [Getting Started](/docs/start/first-agent), [Concepts](/docs/concepts/model), [Capabilities and Safety](/docs/guides/capabilities-and-safety), [Deploy on Temporal](/docs/deploy/temporal), [SPEC](/docs/internals/specification), [Typed Flow](/docs/internals/typed-flow-calculus), [README](/docs), [docs index](/docs), and [CONTRIBUTING](/docs/development/contributing).
 
-<!-- ported-by ca-docs-site: guides/examples -->
+<!-- ported-by julep-docs-site: guides/examples -->

@@ -643,12 +643,12 @@ In `export_spans`, after creating each span, set attrs and prefer wall-clock:
         links = [Link(contexts[p]) for p in s.parents if p in contexts]
         start_ns = _ns(s.attrs.get("llm.started_at", s.start_ts))
         span = tr.start_span(s.name, start_time=start_ns, links=links)
-        span.set_attribute("ca.cid", s.cid)
-        span.set_attribute("ca.node", s.node)
+        span.set_attribute("julep.cid", s.cid)
+        span.set_attribute("julep.node", s.node)
         for k, v in s.attrs.items():
             span.set_attribute(k, v if isinstance(v, (str, int, float, bool)) else _json(v))
         if s.cost is not None:
-            span.set_attribute("ca.cost", s.cost)
+            span.set_attribute("julep.cost", s.cost)
         # ... existing status handling ...
         contexts[s.cid] = span.get_span_context()
         end_src = s.attrs.get("llm.ended_at", s.end_ts)
@@ -906,8 +906,8 @@ def span_attributes(span: SpanData, *, session_id: str, trace_name: str,
     out: dict[str, Any] = {
         "langfuse.session.id": session_id,
         "langfuse.trace.name": trace_name,
-        "ca.cid": span.cid,
-        "ca.node": span.node,
+        "julep.cid": span.cid,
+        "julep.node": span.node,
     }
     usage = span.attrs.get("llm.usage")
     model = span.attrs.get("llm.model")
@@ -930,7 +930,7 @@ def span_attributes(span: SpanData, *, session_id: str, trace_name: str,
         if "llm.output" in span.attrs:
             out["langfuse.observation.output"] = span.attrs["llm.output"]
     if span.attrs.get("llm.attempts"):
-        out["ca.llm.attempts"] = _json(span.attrs["llm.attempts"])
+        out["julep.llm.attempts"] = _json(span.attrs["llm.attempts"])
     return out
 ```
 

@@ -20,14 +20,14 @@ def test_extracts_plain_python_block(tmp_path: Path) -> None:
 
 
 def test_skip_directive(tmp_path: Path) -> None:
-    doc = _write(tmp_path, "<!-- ca:doctest skip -->\n```python\nbad(\n```\n")
+    doc = _write(tmp_path, "<!-- julep:doctest skip -->\n```python\nbad(\n```\n")
     assert extract_blocks(doc)[0].directive == "skip"
 
 
 def test_expect_output_captures_following_text_block(tmp_path: Path) -> None:
     doc = _write(
         tmp_path,
-        "<!-- ca:doctest expect-output -->\n```python\nprint('Dataflow')\n```\n\n```text\nDataflow\n```\n",
+        "<!-- julep:doctest expect-output -->\n```python\nprint('Dataflow')\n```\n\n```text\nDataflow\n```\n",
     )
     b = extract_blocks(doc)[0]
     assert b.directive == "expect-output"
@@ -35,5 +35,8 @@ def test_expect_output_captures_following_text_block(tmp_path: Path) -> None:
 
 
 def test_raises_directive(tmp_path: Path) -> None:
-    doc = _write(tmp_path, "<!-- ca:doctest raises=DefineError -->\n```python\nboom()\n```\n")
+    doc = _write(
+        tmp_path,
+        "<!-- julep:doctest raises=DefineError -->\n```python\nboom()\n```\n",
+    )
     assert extract_blocks(doc)[0].directive == "raises=DefineError"

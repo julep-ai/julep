@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import arr, deploy
 from julep.bundle import PureDepsUnbuildableError, publish_bundle
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.deps import base_component_hash, env_hash
 from julep.execution import env_builder
 from julep.registry import DEFAULT_REGISTRY, Registry
@@ -36,7 +36,7 @@ def _public_key(seed: str = SEED) -> str:
     ).hex()
 
 
-def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
+def _json_from_store(store: LocalDirArtifactStore, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
 
 
@@ -89,12 +89,12 @@ def _publish_native_bundle(
     name: str,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-) -> tuple[LocalDirCAS, dict[str, Any], dict[str, Any]]:
+) -> tuple[LocalDirArtifactStore, dict[str, Any], dict[str, Any]]:
     source = _source(name, "numpy==2")
     with _with_default_source(name, source):
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
-        store = LocalDirCAS(tmp_path)
+        store = LocalDirArtifactStore(tmp_path)
         rec = publish_bundle(
             deployment,
             store,
@@ -114,19 +114,19 @@ def test_off_list_dep_without_grant_blocks_deploy_and_publish(
     name = "native.grant.numpy.blocked.v1"
     source = _source(name, "numpy==2")
     with _with_default_source(name, source):
-        monkeypatch.delenv("CA_PURE_NATIVE_DEPS", raising=False)
+        monkeypatch.delenv("JULEP_PURE_NATIVE_DEPS", raising=False)
         with pytest.raises(PureDepsUnbuildableError) as deploy_exc:
             deploy(arr(name), read_snapshot())
         assert name in str(deploy_exc.value)
         assert "numpy==2" in str(deploy_exc.value)
-        assert "CA_PURE_NATIVE_DEPS" in str(deploy_exc.value)
+        assert "JULEP_PURE_NATIVE_DEPS" in str(deploy_exc.value)
 
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
         with pytest.raises(PureDepsUnbuildableError) as publish_exc:
             publish_bundle(
                 deployment,
-                LocalDirCAS(tmp_path),
+                LocalDirArtifactStore(tmp_path),
                 signing_key=SEED,
                 registry=DEFAULT_REGISTRY,
                 native_grant=[],
@@ -142,7 +142,7 @@ def test_granted_native_venv_source_routes_to_native_wrapper(
     name = "native.grant.route.v1"
     source = _source(name, "numpy==2")
     with _with_default_source(name, source, tier="native_venv"):
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deploy(arr(name), read_snapshot())
 
         entry = DEFAULT_REGISTRY.pures[name]
@@ -159,10 +159,10 @@ def test_supported_dep_stays_wasm_without_grant(
     name = "native.grant.regex.v1"
     _patch_synth_env_builder(monkeypatch, tmp_path)
     with _with_default_source(name, _source(name, "regex==1")):
-        monkeypatch.delenv("CA_PURE_NATIVE_DEPS", raising=False)
+        monkeypatch.delenv("JULEP_PURE_NATIVE_DEPS", raising=False)
         deployment = deploy(arr(name), read_snapshot())
-        rec = deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED)
-        manifest = _json_from_store(LocalDirCAS(tmp_path), rec["bundleHash"])
+        rec = deployment.publish(LocalDirArtifactStore(tmp_path), signing_key=SEED)
+        manifest = _json_from_store(LocalDirArtifactStore(tmp_path), rec["bundleHash"])
 
     pure_record = manifest["pures"][0]
     assert DEFAULT_REGISTRY.pures.get(name) is None
@@ -176,8 +176,8 @@ def test_no_dep_pure_does_not_emit_new_fields(tmp_path: Path) -> None:
     name = "native.grant.no_dep.v1"
     with _with_default_source(name, _source(name, None)):
         deployment = deploy(arr(name), read_snapshot())
-        rec = deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED)
-        manifest = _json_from_store(LocalDirCAS(tmp_path), rec["bundleHash"])
+        rec = deployment.publish(LocalDirArtifactStore(tmp_path), signing_key=SEED)
+        manifest = _json_from_store(LocalDirArtifactStore(tmp_path), rec["bundleHash"])
 
     pure_record = manifest["pures"][0]
     runtime_ref = rec["pureRuntimeRefs"][name]
@@ -213,7 +213,7 @@ def test_worker_resolution_requires_native_grant_and_registers_native_venv(
     assert entry.requires_python == ">=3.11"
 
     denied = Registry()
-    with pytest.raises(BundleResolutionError, match="CA_PURE_NATIVE_DEPS"):
+    with pytest.raises(BundleResolutionError, match="JULEP_PURE_NATIVE_DEPS"):
         resolve_and_register(
             store,
             rec["bundleHash"],

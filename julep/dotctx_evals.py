@@ -73,9 +73,9 @@ def stop_after_turns(max_turns: int) -> StopFn:
     def _stop(_last: Turn, turn_index: int) -> bool:
         return turn_index >= max_turns
 
-    # Marker the ca eval runner reads to honor "stop_after_turns(n) -> max_rounds
+    # Marker the Julep eval runner reads to honor "stop_after_turns(n) -> max_rounds
     # override" without introspecting the opaque StopFn closure.
-    _stop._ca_max_turns = max_turns  # type: ignore[attr-defined]
+    _stop._julep_max_turns = max_turns  # type: ignore[attr-defined]
     return _stop
 
 
@@ -282,13 +282,24 @@ _LLM_UTILS_EXPORTS = ("strip_markdown_codeblock", "extract_llm_content", "parse_
 _EVAL_MODULE_COUNTER = itertools.count()
 
 
+def _importable(name: str) -> bool:
+    """Whether ``name`` resolves to a real (non-shim) importable module."""
+    try:
+        return importlib.util.find_spec(name) is not None
+    except (ImportError, AttributeError, ValueError):
+        return False
+
+
 def _install_dotctx_shims() -> list[str]:
-    """Alias ``dotctx`` / submodules to this module for unloaded names.
+    """Alias ``dotctx`` / submodules to this module for genuinely-absent names.
 
     Returns the installed keys; the caller must hand them back to
-    :func:`_remove_dotctx_shims` in a ``finally``. Modules that are already in
-    ``sys.modules`` are never clobbered, but an installed-yet-unloaded
-    third-party ``dotctx`` package does not change this loader's return types.
+    :func:`_remove_dotctx_shims` in a ``finally``. A name is shimmed only when
+    it is neither already in ``sys.modules`` nor importable as a real module.
+    So when a real ``dotctx`` package is installed (mem-mcp's case) no shim is
+    installed at all — eval.py and transitive imports (e.g. ``from dotctx import
+    Context``) resolve against the real package, which the shim lacks — and the
+    eval runner duck-types the real ``Sample`` / ``MockToolConfig``.
     """
     here = sys.modules[__name__]
     exports = {
@@ -299,7 +310,7 @@ def _install_dotctx_shims() -> list[str]:
     }
     shims: dict[str, types.ModuleType] = {}
     for name, attrs in exports.items():
-        if name in sys.modules:
+        if name in sys.modules or _importable(name):
             continue
         shim = types.ModuleType(name)
         shim.__doc__ = "julep compat alias for mem-mcp dotctx (eval loading only)"

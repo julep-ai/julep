@@ -13,8 +13,10 @@ from temporalio import activity, workflow
 from temporalio.exceptions import ApplicationError
 from temporalio.workflow import ParentClosePolicy
 
+from ..dispatch import BatchWindow
 from ..ir import canonical_json
 from .batch_provider import BatchReply
+from .failure_scrub import activity_redacted_failure_text, secret_safe_activity
 from .llm_result import LlmCallMeta
 
 if TYPE_CHECKING:
@@ -43,6 +45,7 @@ class ReasonerCall:
     cid: str = ""
     reply_to: str = ""
     custom_id: str = ""
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -230,25 +233,25 @@ class BatchCollector:
             self._last_at = _parse_at(inp.pending_last_at) or opened
 
         # --- collect until the fire condition holds -------------------------- #
+        window = BatchWindow(
+            quiet_s=inp.quiet_s,
+            max_items=inp.max_items,
+            max_wait_s=inp.max_wait_s,
+        )
         while True:
-            if inp.max_items is not None and len(self._items) >= inp.max_items:
+            decision = window.evaluate(
+                item_count=len(self._items),
+                opened_at=opened if self._items else None,
+                last_arrival_at=self._last_at,
+                now=workflow.now(),
+            )
+            if decision.fire:
                 break
-            now = workflow.now()
-            if self._items:
-                assert self._last_at is not None
-                deadline = self._last_at + timedelta(seconds=inp.quiet_s)
-                if inp.max_wait_s is not None:
-                    deadline = min(deadline, opened + timedelta(seconds=inp.max_wait_s))
-                if now >= deadline:
-                    break
-                timeout: Optional[float] = max((deadline - now).total_seconds(), 0.0)
-            else:
-                # Signal-with-start means at least one signal is on its way.
-                timeout = None
             count = len(self._items)
             try:
                 await workflow.wait_condition(
-                    lambda count=count: len(self._items) > count, timeout=timeout
+                    lambda count=count: len(self._items) > count,
+                    timeout=decision.wait_s,
                 )
             except asyncio.TimeoutError:
                 pass  # re-evaluate the fire condition against workflow.now()
@@ -383,7 +386,7 @@ class BatchPoll:
             else:
                 attrs = dict(entry.get("attrs") or {})
                 payload = {
-                    "__ca_meta__": {
+                    "__julep_meta__": {
                         **attrs,
                         "tier": "BATCH",
                         "batch_id": batch_id,
@@ -436,10 +439,18 @@ async def submit_reasoner_batch(
 async def submitReasonerBatch(inp: SubmitReasonerBatchInput) -> None:
     """Signal-with-start the batch collector from a Temporal activity."""
 
+    from . import effects
+    from .llm import _split_model
+
+    registry = effects._hydrate_runtime_declarations(inp.call.runtime_declarations_ref)
+    provider = inp.provider
+    if not provider:
+        reasoner = registry.get_reasoner(inp.call.reasoner)
+        provider, _ = _split_model(reasoner.model, "anthropic")
     ctx = get_batch_dispatch_context()
     await submit_reasoner_batch(
         ctx.client,
-        provider=inp.provider,
+        provider=provider,
         qos=inp.qos,
         principal=inp.call.principal,
         call=inp.call,
@@ -508,6 +519,7 @@ def _has_batch_projection_attrs(
 
 
 @activity.defn(name="submitBatch")
+@secret_safe_activity
 async def submitBatch(inp: SubmitBatchInput) -> str:
     """Render each call, build provider requests, and submit the provider batch."""
 
@@ -518,14 +530,20 @@ async def submitBatch(inp: SubmitBatchInput) -> str:
     calls = _coerce_calls(inp.calls)
     if not calls:
         raise ValueError("cannot submit an empty batch")
+    registries = {
+        call.custom_id: effects._hydrate_runtime_declarations(
+            call.runtime_declarations_ref
+        )
+        for call in calls
+    }
 
-    first_reasoner = effects._registry().get_reasoner(calls[0].reasoner)
+    first_reasoner = registries[calls[0].custom_id].get_reasoner(calls[0].reasoner)
     first_rendered = rendered_reasoner_for(first_reasoner, calls[0].value)
     adapter = select_batch_provider(first_rendered.model)
 
     requests: list[dict[str, Any]] = []
     for call in calls:
-        reasoner_obj = effects._registry().get_reasoner(call.reasoner)
+        reasoner_obj = registries[call.custom_id].get_reasoner(call.reasoner)
         rendered = rendered_reasoner_for(reasoner_obj, call.value)
         requests.append(
             adapter.build_request(
@@ -540,6 +558,7 @@ async def submitBatch(inp: SubmitBatchInput) -> str:
 
 
 @activity.defn(name="pollBatch")
+@secret_safe_activity
 async def pollBatch(inp: PollBatchInput) -> str:
     """Return a normalized provider batch status."""
 
@@ -548,6 +567,7 @@ async def pollBatch(inp: PollBatchInput) -> str:
 
 
 @activity.defn(name="fetchBatchResults")
+@secret_safe_activity
 async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]:
     """Fetch provider batch results and parse them through the matching reasoner."""
 
@@ -557,8 +577,15 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
 
     adapter = _provider_adapter_by_name(inp.provider)
     calls = _coerce_calls(inp.calls)
+    registries = {
+        call.custom_id: effects._hydrate_runtime_declarations(
+            call.runtime_declarations_ref
+        )
+        for call in calls
+    }
     reasoners_by_custom_id = {
-        call.custom_id: effects._registry().get_reasoner(call.reasoner) for call in calls
+        call.custom_id: registries[call.custom_id].get_reasoner(call.reasoner)
+        for call in calls
     }
 
     out: list[dict[str, Any]] = []
@@ -570,7 +597,13 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
             try:
                 batch_reply = _parse_batch_reply(adapter, raw, reasoner_obj)
             except Exception as exc:
-                out.append({"custom_id": cid, "error": True, "reason": str(exc)})
+                out.append(
+                    {
+                        "custom_id": cid,
+                        "error": True,
+                        "reason": activity_redacted_failure_text(exc),
+                    }
+                )
             else:
                 _record_batch_attempt(
                     provider=inp.provider,
@@ -602,7 +635,13 @@ async def fetchBatchResults(inp: FetchBatchResultsInput) -> list[dict[str, Any]]
         try:
             batch_reply = _parse_batch_reply(adapter, raw, reasoner_obj)
         except Exception as exc:
-            out.append({"custom_id": cid, "error": True, "reason": str(exc)})
+            out.append(
+                {
+                    "custom_id": cid,
+                    "error": True,
+                    "reason": activity_redacted_failure_text(exc),
+                }
+            )
         else:
             _record_batch_attempt(
                 provider=inp.provider,

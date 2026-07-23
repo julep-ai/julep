@@ -37,7 +37,7 @@
 **Interfaces:**
 - Produces (consumed by Task 2):
   - `DocBlock` dataclass: `path: str`, `line: int`, `lang: str`, `code: str`, `directive: str | None` (one of `None`, `"skip"`, `"expect-output"`, or `"raises=<Name>"`), `expected_output: str | None`.
-  - `extract_blocks(path: Path) -> list[DocBlock]` — python blocks only, each with its directive (from a `<!-- ca:doctest ... -->` comment on the line immediately before the opening fence) and `expected_output` (the verbatim contents of a ```text``` fence immediately following the python fence, used only when the directive is `expect-output`).
+  - `extract_blocks(path: Path) -> list[DocBlock]` — python blocks only, each with its directive (from a `<!-- julep:doctest ... -->` comment on the line immediately before the opening fence) and `expected_output` (the verbatim contents of a ```text``` fence immediately following the python fence, used only when the directive is `expect-output`).
 
 - [ ] **Step 1: Write the failing test** (`tests/test_docs_runner.py`):
 
@@ -64,14 +64,14 @@ def test_extracts_plain_python_block(tmp_path: Path) -> None:
 
 
 def test_skip_directive(tmp_path: Path) -> None:
-    doc = _write(tmp_path, "<!-- ca:doctest skip -->\n```python\nbad(\n```\n")
+    doc = _write(tmp_path, "<!-- julep:doctest skip -->\n```python\nbad(\n```\n")
     assert extract_blocks(doc)[0].directive == "skip"
 
 
 def test_expect_output_captures_following_text_block(tmp_path: Path) -> None:
     doc = _write(
         tmp_path,
-        "<!-- ca:doctest expect-output -->\n```python\nprint('Dataflow')\n```\n\n```text\nDataflow\n```\n",
+        "<!-- julep:doctest expect-output -->\n```python\nprint('Dataflow')\n```\n\n```text\nDataflow\n```\n",
     )
     b = extract_blocks(doc)[0]
     assert b.directive == "expect-output"
@@ -79,7 +79,7 @@ def test_expect_output_captures_following_text_block(tmp_path: Path) -> None:
 
 
 def test_raises_directive(tmp_path: Path) -> None:
-    doc = _write(tmp_path, "<!-- ca:doctest raises=DefineError -->\n```python\nboom()\n```\n")
+    doc = _write(tmp_path, "<!-- julep:doctest raises=DefineError -->\n```python\nboom()\n```\n")
     assert extract_blocks(doc)[0].directive == "raises=DefineError"
 ```
 
@@ -97,7 +97,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-_PRAGMA = re.compile(r"<!--\s*ca:doctest\s+(skip|expect-output|raises=[A-Za-z_][A-Za-z0-9_]*)\s*-->")
+_PRAGMA = re.compile(r"<!--\s*julep:doctest\s+(skip|expect-output|raises=[A-Za-z_][A-Za-z0-9_]*)\s*-->")
 _FENCE = re.compile(r"^```([A-Za-z0-9_-]*)\s*$")
 
 
@@ -248,8 +248,8 @@ def test_doc_block_runs(block: DocBlock) -> None:
 ```
 
 - [ ] **Step 2: Tag the doc blocks.** Walk the v1 docs and add a pragma line immediately above each fence that is not a standalone runnable script:
-  - `start/first-flow.md`: the complete quickstart block → `<!-- ca:doctest expect-output -->` (its following ```text``` block is the expected stdout). The small inspection snippets (`deployment.surface_shape` etc., lines ~157-163, 181-183) are partial → `<!-- ca:doctest skip -->`.
-  - `guides/authoring-flows.md`: the "These are define-time errors" snippet (the `if hit:` / `for item in xs:` example) → `<!-- ca:doctest skip -->` (it is intentionally illegal and not a full program); the full quickstart block → `expect-output`.
+  - `start/first-flow.md`: the complete quickstart block → `<!-- julep:doctest expect-output -->` (its following ```text``` block is the expected stdout). The small inspection snippets (`deployment.surface_shape` etc., lines ~157-163, 181-183) are partial → `<!-- julep:doctest skip -->`.
+  - `guides/authoring-flows.md`: the "These are define-time errors" snippet (the `if hit:` / `for item in xs:` example) → `<!-- julep:doctest skip -->` (it is intentionally illegal and not a full program); the full quickstart block → `expect-output`.
   - `start/first-agent.md` and `cheatsheet.md`: tag any partial/illustrative block `skip`; leave full runnable blocks untagged (default = must run clean).
 
 - [ ] **Step 3: Run the executor — watch it RED on the stale shape**

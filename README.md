@@ -75,6 +75,26 @@ print(result.value)
 
 `@flow` runs once at definition time with data handles. Registered tools, registered pures, `think(...)`, `cond(...)`, `switch(...)`, `each(...)`, and `reschedule(...)` append graph steps instead of doing runtime work; `|` merges records and `h["key"]` plucks fields. `deploy(..., tools=..., reasoners=...)` freezes the tool and reasoner surface, and `dry_run(...)` executes locally with in-memory tools and deterministic fake reasoners. See the larger `@flow` examples in `examples/episode_summary_flow.py` and `examples/cluster_labeling_flow.py`.
 
+Use `mcp_tool(server, tool)` inside `@flow` for an MCP reference. Its schemas
+and behavior contract come from the frozen MCP snapshot; handle-valued keyword
+arguments build its input record directly. `examples/episode_summary_flow.py`
+shows snapshot-backed MCP reads and writes with a local `mcp_call` fake.
+
+## Production secrets and MCP safety
+
+The self-hosted control plane includes a write-only operator vault whose values
+are encrypted at rest. Callers can also bind short-lived, per-run credentials to
+whole-string `secret://name` MCP header references; those values travel only in
+encrypted Temporal payloads and are excluded from stored run data and
+projections. Before user effects, worker-side MCP preflight checks the frozen,
+transitively reachable tool surface. New releases default to exact `pin`
+comparison, with explicit `names` and `off` escape hatches; mid-run tool removal
+or post-validation schema rejection fails terminally as typed surface drift.
+
+See the **[control-plane guide](docs-site/content/docs/deploy/control-plane.md)**
+for vault configuration, run-secret limits and binding rules, MCP policy
+behavior, and the administration API.
+
 ---
 
 ## The CLI
@@ -89,8 +109,9 @@ julep run triage --input '"TICKET-42"'    # execute locally, stream the trace tr
 julep lint +triage                        # validate an agent and everything it depends on
 julep test triage                         # run pytest for the selected agents
 julep trace <run-id>                      # render a cached run's trace tree + Langfuse link
-julep doctor                              # preflight: discovery, git, Langfuse, Temporal
+julep doctor                              # preflight: discovery, secret refs, git, Langfuse, Temporal
 julep deploy triage --env staging         # freeze → publish → record in the deploy ledger
+julep serve api --migrate                 # run the self-hosted FastAPI control plane
 ```
 
 Selectors compose: `tag:support`, `state:modified` (Slim-CI), `+agent`/`agent+`/`@agent` graph traversal, `a,b` intersection, `--exclude`. Full reference: **[docs-site/content/docs/guides/using-the-cli.md](docs-site/content/docs/guides/using-the-cli.md)**.
@@ -133,12 +154,12 @@ and those values exist only in the worker at runtime. The callback must return
 an `McpSnapshot`; pass any credential needed for schema discovery through a
 non-secret control-plane mechanism rather than expecting a Secret value here.
 
-Point `[tool.ca].application` at that object with a `module:attribute` value.
+Point `[tool.julep].application` at that object with a `module:attribute` value.
 Each deployable environment also names the worker's explicit context factory;
 ordinary and Secret-backed worker environment can be reconciled with the lane:
 
 ```toml
-[tool.ca.env.staging]
+[tool.julep.env.staging]
 temporal_address = "temporal-frontend.temporal.svc.cluster.local:7233"
 release_store = "s3://julep-releases/julep"
 worker_image = "registry.example/memory@sha256:<digest>"
@@ -147,11 +168,11 @@ worker_service_account = "julep-worker"
 worker_priority_class = "julep-model-worker"
 payload_encryption_secret = "temporal-payload-codec"
 
-[tool.ca.env.staging.worker_environment]
+[tool.julep.env.staging.worker_environment]
 MEMORY_TOOLS_MCP_URL = "http://memory-tools/mcp-internal"
-CA_BUNDLE_ALLOWED_SIGNERS = "<64-hex-ed25519-public-key>"
+JULEP_BUNDLE_ALLOWED_SIGNERS = "<64-hex-ed25519-public-key>"
 
-[tool.ca.env.staging.worker_secret_environment.MEMORY_TOOLS_JWT_PRIVATE_KEY]
+[tool.julep.env.staging.worker_secret_environment.MEMORY_TOOLS_JWT_PRIVATE_KEY]
 secret_name = "memory-tools-jwt"
 key = "private-key"
 ```
@@ -163,17 +184,17 @@ existing Kubernetes Secret in `kubernetes_namespace` with `keyring` and
 (the EKS demo does); omit it on ordinary clusters.
 
 `julep plan --env staging` reports artifact, MCP-schema, Helm/KEDA, and runtime
-drift; `julep apply --env staging` publishes an immutable S3-CAS release and
+drift; `julep apply --env staging` publishes an immutable S3-artifact store release and
 reconciles one digest-pinned Helm release per lane and immutable release on a
 release-specific task queue, without changing traffic;
 `julep status --env staging` aggregates the release and live lane state. That
-application-level status path is selected only when `[tool.ca].application` is
+application-level status path is selected only when `[tool.julep].application` is
 configured and no selector or `--exclude` is supplied; selected status queries
 continue to inspect the legacy per-agent deploy ledger.
 
 Application publishing requires a 64-hex Ed25519 seed (or a file containing
-one) in `CA_BUNDLE_SIGNING_KEY`. In production, set the corresponding 64-hex
-public key in the non-secret `CA_BUNDLE_ALLOWED_SIGNERS` worker environment;
+one) in `JULEP_BUNDLE_SIGNING_KEY`. In production, set the corresponding 64-hex
+public key in the non-secret `JULEP_BUNDLE_ALLOWED_SIGNERS` worker environment;
 `apply` rejects a configured allow-list that does not contain the publishing
 key. Read-only `plan` and application-level `status` need that public allow-list
 (or the private key as a local fallback). Install `julep[store,temporal]` for
@@ -196,6 +217,9 @@ The base install is authoring + compile only (PyYAML). Optional extras add runti
 | `temporal` | `julep[temporal]` | durable execution on Temporal (workflows, activities, worker, client helpers) |
 | `dbos` | `julep[dbos]` | durable execution on DBOS / Postgres (steps, flow workflow, chaining runner) |
 | `http` | `julep[http]` | native HTTP tool calls from the `callTool` activity |
+| `cma` | `julep[cma]` | httpx transport for the CMA HTTP adapter |
+| `mcp` | `julep[mcp]` | official MCP SDK, httpx, PyJWT, and cryptography for MCP references, snapshots, calls, and auth |
+| `server` | `julep[server]` | FastAPI/Uvicorn control plane, SSE, Postgres store, Temporal gateway, cryptography, and httpx |
 | `dotctx` | `julep[dotctx]` | rich `.ctx` layout (Jinja2 templates compiled into registered renderers) |
 | `yglu` | `julep[yglu]` | Yglu-evaluated `settings.yaml` (mem-mcp `.ctx` compatibility) |
 | `providers` | `julep[providers]` | multi-provider `LlmCaller` via any-llm (pair with provider extras) |

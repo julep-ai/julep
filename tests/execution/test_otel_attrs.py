@@ -88,4 +88,7 @@ def test_export_sets_attrs_and_wallclock():
     otel.export_spans(events, tracer=tr)
 
     assert tr.starts[0] == int(100.0 * 1e9)
+    assert tr.spans[0].attrs["julep.cid"] == "c0"
+    assert tr.spans[0].attrs["julep.node"] == "reasoner"
+    assert tr.spans[0].attrs["julep.cost"] == 0.01
     assert tr.spans[0].attrs["llm.model"] == "m"

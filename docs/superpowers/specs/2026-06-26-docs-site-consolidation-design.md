@@ -52,7 +52,7 @@ Landing pages (`*/index.mdx`, `meta.json`) are handwritten during scaffold.
 | `guides/sessions.mdx` | `docs/sessions.md` + `docs/matrix/sessions/readme.md` | |
 | `guides/capabilities-and-safety.mdx` | `docs/capabilities-and-safety.md` | |
 | `guides/providers-and-resilience.mdx` | `docs/provider-resilience.md` + `docs/getting-started.md` (multi-provider) | |
-| `guides/using-the-cli.mdx` | `docs/cli.md` + `docs/matrix/ca-cli/readme.md` + `docs/matrix/ca-cli/runbook.md` | task-flows incl. deploy/status/drift/trace |
+| `guides/using-the-cli.mdx` | `docs/cli.md` + `docs/matrix/julep-cli/readme.md` + `docs/matrix/julep-cli/runbook.md` | task-flows incl. deploy/status/drift/trace |
 | `guides/gotchas.mdx` | `docs/gotchas.md` + `docs/matrix/flow-frontend/runbook.md` | traps + flow troubleshooting |
 | `guides/examples.mdx` | `docs/examples.md` | runnable examples index |
 | `deploy/temporal.mdx` | `docs/deploy-temporal.md` | |
@@ -62,10 +62,10 @@ Landing pages (`*/index.mdx`, `meta.json`) are handwritten during scaffold.
 | `reference/python-api.mdx` | `docs/matrix/composable-agents/reference.md` | |
 | `reference/flow-api.mdx` | `docs/matrix/flow-frontend/reference.md` | |
 | `reference/sessions-api.mdx` | `docs/matrix/sessions/reference.md` | |
-| `reference/ca-cli.mdx` | `docs/matrix/ca-cli/reference.md` | |
+| `reference/julep-cli.mdx` | `docs/matrix/julep-cli/reference.md` | |
 | `reference/cheatsheet.mdx` | `docs/cheatsheet.md` | |
 | `concepts/model.mdx` | `docs/concepts.md` | typed flows, frozen IR, shapes, capabilities, projection |
-| `concepts/architecture.mdx` | `docs/matrix/{composable-agents,flow-frontend,sessions,ca-cli}/architecture.md` | 4 subsections, system → flow → sessions → cli |
+| `concepts/architecture.mdx` | `docs/matrix/{composable-agents,flow-frontend,sessions,julep-cli}/architecture.md` | 4 subsections, system → flow → sessions → cli |
 | `concepts/dispatch-boundary.mdx` | `docs/dispatch-boundary.md` | |
 | `internals/specification.mdx` | `docs/SPEC.md` | normative |
 | `internals/typed-flow-calculus.mdx` | `docs/design/typed-flow.md` + `docs/design/algebra.hs` | embed the `.hs` as a fenced block |
@@ -121,7 +121,7 @@ Landing pages (`*/index.mdx`, `meta.json`) are handwritten during scaffold.
    - `docs/matrix/*` → drop the link or point at the merged destination above
 4. **Links to source code** (`composable_agents/...`, `examples/...`, `tests/...`,
    `pyproject.toml`): link to `https://github.com/julep-ai/julep-v2/blob/main/<path>`.
-5. **Last line** of every page: `{/* ported-by ca-docs-site: <section>/<page> */}` (MDX comment).
+5. **Last line** of every page: `{/* ported-by julep-docs-site: <section>/<page> */}` (MDX comment).
 6. Keep all runnable code examples verbatim. Do not invent APIs.
 
 ## Scaffold (handwritten, deterministic)

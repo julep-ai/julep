@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import arr, deploy, pure, seq
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.execution.bundle_worker import make_context
 from julep.execution.effects import WorkerContext
 from julep.registry import Registry
@@ -41,14 +41,14 @@ def test_make_context_resolves_bundle_pures_and_returns_worker_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A generic worker resolves CA_BUNDLES at startup, registering bundle pures."""
-    store = LocalDirCAS(tmp_path)
+    """A generic worker resolves JULEP_BUNDLES at startup, registering bundle pures."""
+    store = LocalDirArtifactStore(tmp_path)
     deployment = deploy(seq(arr("bundle.genericworker.tag.v1")), read_snapshot())
     rec = deployment.publish(store, signing_key=SEED)
 
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
-    monkeypatch.setenv("CA_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
-    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED))
 
     fresh = Registry()
     context = make_context(registry=fresh)
@@ -66,8 +66,8 @@ def test_make_context_resolves_bundle_pures_and_returns_worker_context(
 def test_make_context_with_no_bundles_is_a_clean_noop(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """No CA_BUNDLES means a generic worker still starts with an empty context."""
-    monkeypatch.delenv("CA_BUNDLES", raising=False)
+    """No JULEP_BUNDLES means a generic worker still starts with an empty context."""
+    monkeypatch.delenv("JULEP_BUNDLES", raising=False)
 
     context = make_context(registry=Registry())
 

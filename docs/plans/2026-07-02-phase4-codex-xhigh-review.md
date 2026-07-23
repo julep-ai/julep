@@ -24,7 +24,7 @@ A plan that says `ScheduleActionStartWorkflow(FlowWorkflow, args=[frozen artifac
 
 [P2] Task 11 — Versioning is aimed at a nonexistent entrypoint and misses serve env wiring  
 The actual worker seams are `build_worker(..., **worker_kwargs)` and `run_worker(..., **worker_kwargs)`, already passing kwargs through to Temporal `Worker` (`execution/worker.py:138-195`, `198-242`). The process env entrypoint is `execution/serve.py`, whose settings/env parser has no build-id or versioning fields (`execution/serve.py:82-133`) and only passes shutdown/concurrency kwargs (`execution/serve.py:291-302`).  
-Adding `start_worker(... build_id, use_worker_versioning)` would be duplicate or dead unless serve is wired. Amend Task 11 to add `CA_WORKER_BUILD_ID`/`CA_WORKER_VERSIONING` to `WorkerServeSettings` and pass them through existing `build_worker`.
+Adding `start_worker(... build_id, use_worker_versioning)` would be duplicate or dead unless serve is wired. Amend Task 11 to add `JULEP_WORKER_BUILD_ID`/`JULEP_WORKER_VERSIONING` to `WorkerServeSettings` and pass them through existing `build_worker`.
 
 [P2] Task 10 — The default redactor does not close the PII precondition  
 The cited heuristic is key-name only: `SECRET_KEY_RE` matches `token|secret|password|api_key|credential|private_key` (`validate.py:59-63`) and is currently used to reject static ARR argument keys, not arbitrary runtime values (`validate.py:315-327`). Trajectory capture stores arbitrary `input_value`/`output_value` blobs, so PII in fields like memory text, brief content, or user background will not match this default.  

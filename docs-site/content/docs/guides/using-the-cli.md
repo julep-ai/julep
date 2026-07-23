@@ -3,9 +3,10 @@ title: "Using the julep CLI"
 description: "Discover, run, lint, test, deploy, and trace a whole module of agents with one selection grammar."
 ---
 
-`julep` is the developer-facing CLI for a **module of agents**. Where the lower-level plumbing CLI (`python -m julep.cli`) operates on frozen JSON artifacts, `julep` operates on your **Python source**: point it at a directory and it discovers every `@flow` and `Agent(...)`, treats each as a node in a cross-agent dependency graph, and gives you one selection grammar to inspect, run, gate, and deploy any slice — "dbt for agents, terminal-native, local-first."
+`julep` is the developer-facing CLI for a **module of agents**. Its lower-level `julep artifact` commands operate on frozen JSON artifacts, while the other commands operate on your **Python source**: point them at a directory and Julep discovers every `@flow` and `Agent(...)`, treats each as a node in a cross-agent dependency graph, and gives you one selection grammar to inspect, run, gate, and deploy any slice — "dbt for agents, terminal-native, local-first."
 
-`julep` is porcelain over the existing APIs (`deploy`, the in-memory interpreter, `validate`, the projection→Langfuse export); it adds no new runtime.
+`julep` drives the authoring APIs, local interpreter, Temporal workers, and the
+optional self-hosted control plane.
 
 ## Install
 
@@ -29,35 +30,60 @@ An **agent** is a top-level `@flow`-decorated function or an `Agent(...)` instan
 
 ### Optional config
 
-`[tool.ca]` in `pyproject.toml`, overridden by a sibling `ca.toml` when present:
+`[tool.julep]` in `pyproject.toml`, overridden by a sibling `julep.toml` when present:
 
 ```toml
-[tool.ca]
+[tool.julep]
 src     = ["agents", "examples"]      # discovery roots (default: the current package)
 exclude = ["examples/scratch_*.py"]
+llm_caller = "app.llm:call"            # optional production caller for eval
 
-[tool.ca.tags]                         # tag agents for tag: selection
+[tool.julep.tags]                         # tag agents for tag: selection
 triage = ["support"]
 
-[tool.ca.gates]
+[tool.julep.gates]
 fail_severity = "error"                # default gate threshold for `julep lint`
 
-[tool.ca.env.staging]                  # deploy/run targets (see "Outer loop")
+[tool.julep.env.staging]                  # deploy/run targets (see "Outer loop")
 temporal_address   = "temporal.example:7233"
 temporal_namespace = "default"
-task_queue         = "ca-staging"
-cas                = "s3://my-bucket/ca"   # local envs default to .ca/cas (LocalDirCAS)
+task_queue         = "julep-staging"
+artifacts                = "s3://my-bucket/julep"   # local envs default to .julep/artifacts (LocalDirArtifactStore)
 langfuse_host      = "https://cloud.langfuse.com"
+
+[tool.julep.mcp.servers.memory]
+url = "https://memory.example/mcp"
+version = "2026.7"
+
+[tool.julep.pipeline.summary]
+ctx = "prompts/summary.ctx"
+lane = "summaries"
+
+[tool.julep.pipeline.summary.env]
+MODEL = "anthropic:claude-haiku-4-5-20251001"
 ```
 
-A `local` environment always exists implicitly (LocalDirCAS at `.ca/cas`, no Temporal).
+A `local` environment always exists implicitly (LocalDirArtifactStore at `.julep/artifacts`, no Temporal).
 
 Production application commands use an explicit
-`[tool.ca] application = "module:attribute"` object rather than AST discovery.
+`[tool.julep] application = "module:attribute"` object rather than AST discovery.
 An application's `snapshot_source(environment)` receives a read-only merge of
 the selected environment's `vars` and `worker_environment`, with worker values
 winning. Kubernetes Secret-backed worker values are references and are not
 included in that mapping.
+
+Reserved `[tool.julep]` sections are `mcp`, `pipeline`, `server`, and
+`redaction`; `llm_caller` is a top-level key. In `julep.toml`, omit the
+`tool.julep` prefix. MCP server keys are `url`, `auth`, `headers`, and
+`version`; pipeline keys include `ctx`, `lane`, `context_max_tokens`, and
+`summarizer`, plus nested string-valued `env`. `context: summary` packages need
+both a hard token budget and a summarizer dotctx path; `whole_session` needs the
+budget but no summarizer.
+Server keys and precedence are listed in
+[Control plane](/docs/deploy/control-plane). Redaction supports
+`key_patterns`, `path_patterns`, and `disable_default`; the worker reads that
+table from `[tool.julep.redaction]` in `pyproject.toml`. Unknown fixed-schema
+keys are rejected with a close-match suggestion.
 
 ## Commands
 
@@ -66,16 +92,24 @@ included in that mapping.
 | `julep ls [SEL]` | List agents (name · kind · tags). |
 | `julep show <agent>` | One agent: kind, source location, tags, cross-agent calls. |
 | `julep graph [SEL]` | The cross-agent dependency DAG as Graphviz DOT. |
-| `julep run <agent> [--input JSON] [--env]` | Execute locally and stream the terminal trace tree (or run against an env). |
+| `julep run <agent|path.ctx> [--input JSON] [--env]` | Execute an agent locally/remotely, or freeze and locally evaluate a dotctx package. |
 | `julep lint [SEL] [--fail-severity]` | Structural validation; named diagnostics with severity gating. |
 | `julep test [SEL] [--dry-run]` | Run `pytest` for the selected agents (matched by name via `-k`). |
-| `julep trace <run-id>` | Render a cached run's trace tree and print its Langfuse deep link. |
-| `julep doctor` | Preflight: discovery, git, Langfuse, Temporal. |
-| `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env CAS → record in the deploy ledger. |
-| `julep plan --env <name>` | Compile the configured application and report artifact, schema, release, Helm/KEDA, and runtime drift. |
-| `julep apply --env <name>` | Publish a signed immutable application release and reconcile inactive lane workers without switching traffic. |
-| `julep status [SEL] --env <name>` | With an application and no selector, aggregate live application release/lane state; with a selector, inspect the legacy agent deploy ledger. Exit 3 on drift. |
+| `julep trace <run-id> [--remote --api-url --api-key]` | Render cached events or remote control-plane projection events. |
+| `julep doctor` | Preflight: discovery, dangling `secret://` refs, git, Langfuse, Temporal. |
+| `julep deploy [SEL] --env <name>` | Freeze → publish bundle to the env artifact store → record in the deploy ledger. |
+| `julep plan --env <name> [--mcp-snapshot]` | Compile code plus configured dotctx pipelines and report drift; optionally fetch configured MCP schemas. |
+| `julep apply --env <name> [--mcp-snapshot] [--publish-only] [--api-url --api-key]` | Publish a signed schema-v2 release, optionally register it with a control plane, and optionally reconcile lane workers. |
+| `julep status [SEL] --env <name>` | Aggregate application state or inspect the legacy ledger; `--remote --api-url --api-key --limit` reads control-plane runs. |
 | `julep worker [--smoke-test-seconds N]` | Run the environment-configured Temporal worker continuously (`0`) or verify/poll/drain for a positive `N`. |
+| `julep keygen [--format env|json] [--output PATH]` | Generate independent local admin/worker API, payload, vault, and signing credentials; output files are mode `0600`. |
+| `julep dev up [--env local] [--dry-run]` | Supervise the PostgreSQL/Temporal durable development stack and one worker per release lane. |
+| `julep serve api [--host --port --migrate --local --context-factory]` | Run the durable or service-free local FastAPI control plane. |
+| `julep db migrate [--dsn]` | Apply projection-store migrations. |
+| `julep db sweep --older-than N [--dsn]` | Apply operator-controlled projection retention. |
+| `julep db reencrypt-secrets [--dsn]` | Maintenance-only vault key rotation sweep. |
+| `julep eval <path.ctx> [--llm-caller module:attr]` | Run a dotctx eval suite with threshold and baseline gates. |
+| `julep schedule apply|ls|rm [--env]` | Reconcile, inspect, or remove Temporal cron schedules. |
 | `julep chat <agent>` | Open a **local session** REPL: type a line, stream `Turn`/`Emit` events back, exit on `Closed`. |
 | `julep trigger <agent> <event> [--channel]` | Send one event into a session and render the resulting emits. |
 | `julep listen <agent> --forward-to URL` | Open a session and forward each emitted event to `URL` (HTTP POST). |
@@ -91,7 +125,7 @@ The same grammar drives every verb:
 | `triage` | an agent by name |
 | `tag:support` | all agents carrying a tag |
 | `path:agents/*.py` | agents defined under a path glob |
-| `state:modified` | agents whose source changed vs git `HEAD` (or `--state <ref>`) |
+| `state:modified` | agents whose source changed vs git `HEAD` |
 | `result:fail` | agents whose last local run failed |
 | `a b` | union (space) |
 | `a,b` | intersection (comma) |
@@ -113,7 +147,7 @@ julep run triage --input '"TICKET-42"'
 └─ seq#12 [ok]
    └─ seq#9 [ok]
       ├─ call#0 [ok] $1.0000      ← a @tool call
-      └─ think#3 [ok] $2.0000     ← a think() reasoner, with cost
+      └─ think#3 [ok] cost=unknown ← no provider price was reported
 
 output: {"reply": "..."}
 ```
@@ -125,11 +159,34 @@ output: {"reply": "..."}
 > reasoners (see [Your First Flow](/docs/start/first-flow)). Registered `@pure`
 > functions run for real in both.
 
-The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.ca/runs/` so `julep trace <run-id>` can re-render them and `result:fail` can select the failures.
+Julep renders a dollar cost only when the effect reports one. Usage or model
+metadata without a price is `cost=unknown`, never a placeholder estimate.
+
+The tree renders directly from in-memory projection events — fully offline. Runs are cached under `.julep/runs/` so `julep trace <run-id>` can re-render them and `result:fail` can select the failures.
+
+`julep run prompts/summary.ctx --input '{"episode":"42"}'` is a separate
+zero-code path: it loads the dotctx package, freezes the synthesized flow, runs
+the local eval harness, and prints `artifact <hash>` plus `output: <json>`.
+Configured `[pipeline.<name>]` packages are also appended during `plan` and
+`apply`; a collision with a code pipeline is an error.
+
+For HTTP-level foreground tests, `julep serve api --local` runs the same routes
+with an in-memory store and interpreter, without PostgreSQL or Temporal. For a
+durable single-machine acceptance environment, generate shared credentials
+with `julep keygen`, configure a local release store and worker context factory,
+then run `julep dev up`. The latter uses real PostgreSQL persistence, Temporal
+replay, encrypted payloads, release registration, and release-scoped queues.
+See [Local development](/docs/deploy/local) for the decision guide and setup.
 
 ## Gates
 
-`julep lint` lowers each selected agent to IR and runs the structural validator, reporting named diagnostics (`CYCLE`, `UNFROZEN_CALL`, `UNKNOWN_PURE`, …) at `error`/`warning`. `--fail-severity` decouples *what is reported* from *what fails the build*:
+`julep lint` lowers each selected code agent and configured dotctx pipeline to
+IR and runs the structural validator, reporting named diagnostics (`CYCLE`,
+`UNFROZEN_CALL`, `UNKNOWN_PURE`, …) at `error`/`warning`. It validates configured
+ctx env/policy/tool bindings without contacting MCP servers. Missing
+`schema.pyi:Output` produces `CTX_OUTPUT_SCHEMA_MISSING`, because replies would
+otherwise be unvalidated. `--fail-severity` decouples *what is reported* from
+*what fails the build*:
 
 - exit `0` — clean (or all findings below the threshold)
 - exit `1` — findings at/above `--fail-severity`
@@ -145,8 +202,8 @@ The tree renders directly from in-memory projection events — fully offline. Ru
 julep deploy triage --env staging
 ```
 - freezes the agent (`deploy(..., strict=False)`, minting a content-addressed `artifact_hash`),
-- publishes the bundle (frozen flow + manifest + pure sources) to the env's CAS (`LocalDirCAS` locally, `S3CAS` for `s3://`),
-- appends a record to the **committed** ledger `.ca/deploys/<env>.json` (artifact hash + frozen IR + timestamp — self-describing).
+- publishes the bundle (frozen flow + manifest + pure sources) to the env's artifact store (`LocalDirArtifactStore` locally, `S3ArtifactStore` for `s3://`),
+- appends a record to the **committed** ledger `.julep/deploys/<env>.json` (artifact hash + frozen IR + timestamp — self-describing).
 
 ```bash
 julep status --env staging        # triage  clean   sha256:3f14bac…     (exit 0)
@@ -159,9 +216,17 @@ julep run triage --env staging --input '"TICKET-42"'
 ```
 replays the **deployed** artifact (never re-freezes drifted source): connects to the env's Temporal and runs the frozen flow on its task queue via `run_flow`.
 
-The ledger lives in git (`.ca/deploys/` is tracked); `.ca/runs/` and `.ca/cas/` are ignored. Immutable, content-addressed artifacts make rollback a pointer swap.
+The ledger lives in git (`.julep/deploys/` is tracked); `.julep/runs/` and `.julep/artifacts/` are ignored. Immutable, content-addressed artifacts make rollback a pointer swap.
 
 > **Status:** `--env local` (deploy/status/run) is local-only and needs no extra services. `run --env <cloud>` (Temporal) and S3 publishing require the `temporal` / `store` extras and live infrastructure.
+
+For control-plane reads, set `JULEP_API_URL` and optionally `JULEP_API_KEY`, or
+pass `--api-url` and `--api-key`:
+
+```bash
+julep status --remote --limit 20
+julep trace --remote <run-id>
+```
 
 ## Sessions — chat / trigger / listen
 
@@ -183,7 +248,7 @@ julep listen support-agent --forward-to https://example.com/hook   # forward emi
 
 ## See also
 
-- [`julep` CLI reference](/docs/reference/ca-cli) — every subcommand, flag, and the full selection grammar.
+- [`julep` CLI reference](/docs/reference/julep-cli) — every subcommand, flag, and the full selection grammar.
 - [Operations](/docs/deploy/operations) — operational runbooks for deploy, status/drift, and tracing a failing run in production.
 
-<!-- ported-by ca-docs-site: guides/using-the-cli -->
+<!-- ported-by julep-docs-site: guides/using-the-cli -->

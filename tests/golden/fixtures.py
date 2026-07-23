@@ -11,11 +11,15 @@ from julep import (
     Idempotency,
     app,
     call,
+    cond,
     deploy,
     each,
+    flow,
     hedge,
     human_gate,
     mcp,
+    mcp_tool,
+    pure,
     quorum,
     race,
     seq,
@@ -26,6 +30,93 @@ from julep.contracts import ToolContract
 from julep.deploy import Deployment, snapshot_from_listings
 from julep.freeze import McpSnapshot, NativeToolSpec
 from julep.ir import Node
+
+
+_record_lookup = mcp_tool("srv", "record_lookup")
+
+
+@pure("golden.record.enabled")
+def _record_enabled(value: dict[str, object]) -> bool:
+    return bool(value.get("enabled"))
+
+
+@flow
+def _record_straight_flow(source: dict[str, object]) -> dict[str, object]:
+    collection = source["collection"]
+    query = source["query"]
+    return _record_lookup(collection=collection, query=query, limit=10)
+
+
+@flow
+def _record_cond_arm(subject: dict[str, object]) -> dict[str, object]:
+    collection = subject["collection"]
+    query = subject["query"]
+    return _record_lookup(collection=collection, query=query, branch="selected")
+
+
+@flow
+def _record_cond_flow(source: dict[str, object]) -> dict[str, object]:
+    subject = source["subject"]
+    return cond(
+        _record_enabled,
+        subject,
+        then=_record_cond_arm,
+        orelse=_record_cond_arm,
+    )
+
+
+@flow
+def _record_each_body(item: dict[str, object]) -> dict[str, object]:
+    item_id = item["id"]
+    query = item["query"]
+    return _record_lookup(item_id=item_id, query=query)
+
+
+@flow
+def _record_each_flow(source: dict[str, object]) -> list[dict[str, object]]:
+    items = source["items"]
+    return each(_record_each_body, items, max_parallel=2)
+
+
+@flow
+def _record_inline_child(source: dict[str, object]) -> dict[str, object]:
+    collection = source["collection"]
+    query = source["query"]
+    return _record_lookup(collection=collection, query=query, inline=True)
+
+
+@flow
+def _record_inline_flow(source: dict[str, object]) -> dict[str, object]:
+    return _record_inline_child(source)
+
+
+@flow
+def _record_rename_arm(
+    source: dict[str, object],
+    ctx: dict[str, object],
+) -> dict[str, object]:
+    source_id = source["id"]
+    context_id = ctx["id"]
+    return _record_lookup(source_id=source_id, context_id=context_id)
+
+
+@flow
+def _record_rename_child(source: dict[str, object]) -> dict[str, object]:
+    ctx = source["child"]
+    return cond(
+        _record_enabled,
+        source,
+        then=_record_rename_arm(ctx=ctx),
+        orelse=_record_rename_arm(ctx=ctx),
+    )
+
+
+@flow
+def _record_external_rename_flow(source: dict[str, object]) -> dict[str, object]:
+    ctx = source["parent"]
+    child_result = _record_rename_child(source)
+    parent_id = ctx["id"]
+    return _record_lookup(child_result=child_result, parent_id=parent_id)
 
 
 @dataclass(frozen=True)
@@ -200,6 +291,46 @@ def capability_manifest() -> GoldenFixture:
     )
 
 
+def record_binding_straight() -> GoldenFixture:
+    return GoldenFixture(
+        name="record_binding_straight",
+        flow=_record_straight_flow.to_ir(),
+        snapshot=_read_snapshot("record_lookup"),
+    )
+
+
+def record_binding_cond() -> GoldenFixture:
+    return GoldenFixture(
+        name="record_binding_cond",
+        flow=_record_cond_flow.to_ir(),
+        snapshot=_read_snapshot("record_lookup"),
+    )
+
+
+def record_binding_each() -> GoldenFixture:
+    return GoldenFixture(
+        name="record_binding_each",
+        flow=_record_each_flow.to_ir(),
+        snapshot=_read_snapshot("record_lookup"),
+    )
+
+
+def record_binding_inline() -> GoldenFixture:
+    return GoldenFixture(
+        name="record_binding_inline",
+        flow=_record_inline_flow.to_ir(),
+        snapshot=_read_snapshot("record_lookup"),
+    )
+
+
+def record_binding_external_rename() -> GoldenFixture:
+    return GoldenFixture(
+        name="record_binding_external_rename",
+        flow=_record_external_rename_flow.to_ir(),
+        snapshot=_read_snapshot("record_lookup"),
+    )
+
+
 FIXTURE_BUILDERS = {
     "simple_pipeline": simple_pipeline,
     "subagent_firewall": subagent_firewall,
@@ -212,4 +343,9 @@ FIXTURE_BUILDERS = {
     "agent_app": agent_app,
     "frozen_manifest": frozen_manifest,
     "capability_manifest": capability_manifest,
+    "record_binding_straight": record_binding_straight,
+    "record_binding_cond": record_binding_cond,
+    "record_binding_each": record_binding_each,
+    "record_binding_inline": record_binding_inline,
+    "record_binding_external_rename": record_binding_external_rename,
 }

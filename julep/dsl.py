@@ -18,6 +18,7 @@ import itertools
 import os
 from typing import Any, Optional, Sequence, Union
 
+from . import _env
 from .ir import (
     Ann,
     CallStep,
@@ -35,7 +36,7 @@ from .kinds import ContextScope, Op, Shape, SummaryPolicy
 
 _counter = itertools.count()
 _PACKAGE_ROOT = os.path.dirname(__file__)
-_SOURCE_CAPTURE = os.environ.get("COMPOSABLE_AGENTS_SOURCE_CAPTURE") == "1"
+_SOURCE_CAPTURE = _env.get(_env.JULEP_SOURCE_CAPTURE) == "1"
 
 
 def _nid(tag: str) -> str:
@@ -272,6 +273,7 @@ def app(
     controller: str,
     *,
     tools: Optional[Any] = None,
+    tool_aliases: Optional[dict[str, str]] = None,
     subflows: Optional[Any] = None,
     budget: Optional[Any] = None,
     max_rounds: Optional[int] = None,
@@ -280,6 +282,8 @@ def app(
     round_note: Optional[str] = None,
     native_tools: bool = False,
     require_tool_call: bool = False,
+    output_schema: Optional[dict[str, Any]] = None,
+    output_retries: Optional[int] = None,
     subflow_queues: Optional[dict[str, str]] = None,
 ) -> Node:
     """Open-ended controller loop (Agent — the top of the lattice; use sparingly).
@@ -300,6 +304,7 @@ def app(
         id=_nid("app"),
         controller=controller,
         tools=tools,
+        tool_aliases=tool_aliases,
         subflows=subflows,
         budget=budget,
         max_rounds=max_rounds,
@@ -308,6 +313,8 @@ def app(
         round_note=round_note,
         native_tools=native_tools or None,
         require_tool_call=require_tool_call or None,
+        output_schema=output_schema,
+        output_retries=output_retries,
         subflow_queues=subflow_queues,
     )
 

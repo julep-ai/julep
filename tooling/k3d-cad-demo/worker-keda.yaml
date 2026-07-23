@@ -29,7 +29,7 @@ spec:
       metadata:
         endpoint: host.k3d.internal:7233
         namespace: default
-        taskQueue: ca-cad-demo
+        taskQueue: julep-cad-demo
         queueTypes: "workflow,activity"
         targetQueueSize: "1"
         activationTargetQueueSize: "0"

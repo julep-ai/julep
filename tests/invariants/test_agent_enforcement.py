@@ -64,9 +64,16 @@ def test_contract_retry_attempts_gate_on_idempotency() -> None:
     ) == 1
     assert retry_max_attempts_for_contract(
         read_native,
+        asserted=True,
         idempotent_max_attempts=9,
         write_max_attempts=2,
     ) == 9
+    assert retry_max_attempts_for_contract(
+        read_native,
+        asserted=False,
+        idempotent_max_attempts=9,
+        write_max_attempts=2,
+    ) == 1
 
 
 def test_controller_budget_precheck_stops_without_spend() -> None:

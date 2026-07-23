@@ -12,6 +12,7 @@ import sys
 import types
 import warnings
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -21,17 +22,23 @@ from julep.errors import JulepError
 from julep.app import Application, ApplicationDefinitionError, PipelineSpec
 from julep.dotctx import Reasoner
 from julep.dsl import think
+from julep.execution.blobstore import InMemoryBlobStore, LocalDirBlobStore
 from julep.execution.effects import WorkerContext
+from julep.secrets import REDACTED as VALUE_REDACTED, register_secret_value
 from julep.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
     WorkerServeSettings,
+    _install_blob_store,
+    _install_default_redactor,
     _versioning_worker_kwargs,
     load_application_runtime,
     load_context_factory,
+    read_redaction_pyproject,
     serve,
     smoke_test_worker,
 )
+from julep.trajectory import REDACTED_PLACEHOLDER, RedactionConfig
 from conftest import run
 
 
@@ -58,6 +65,105 @@ def test_from_env_defaults():
     assert s.health_port is None
     assert s.build_id is None
     assert s.use_worker_versioning is False
+    assert s.blob_store_url is None
+    assert s.redaction is None
+
+
+def test_from_env_parses_blob_store_url() -> None:
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "JULEP_BLOB_STORE_URL": "file:///var/lib/julep/blobs",
+        }
+    )
+    assert settings.blob_store_url == "file:///var/lib/julep/blobs"
+
+
+def test_install_blob_store_preserves_factory_store_or_rejects_ambiguity(
+    tmp_path: Path,
+) -> None:
+    original = InMemoryBlobStore()
+    context = WorkerContext(blob_store=original)
+    _install_blob_store(context, WorkerServeSettings(context_factory="m:f"))
+    assert context.blob_store is original
+
+    settings = WorkerServeSettings(
+        context_factory="m:f",
+        blob_store_url=(tmp_path / "blobs").as_uri(),
+    )
+    with pytest.raises(ValueError, match="both"):
+        _install_blob_store(context, settings)
+
+    configured = WorkerContext()
+    _install_blob_store(configured, settings)
+    assert isinstance(configured.blob_store, LocalDirBlobStore)
+    assert configured.blob_store.root == tmp_path / "blobs"
+
+
+def test_from_env_parses_redaction_config() -> None:
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "JULEP_REDACTION": (
+                '{"key_patterns":["^private$"],'
+                '"path_patterns":["items.*.note"]}'
+            ),
+        }
+    )
+    assert settings.redaction == RedactionConfig(
+        key_patterns=("^private$",),
+        path_patterns=("items.*.note",),
+    )
+
+    with pytest.raises(ValueError, match="invalid redaction JSON"):
+        WorkerServeSettings.from_env(
+            {"WORKER_CONTEXT_FACTORY": "m:f", "JULEP_REDACTION": "{"}
+        )
+
+
+def test_install_default_redactor_respects_factory_override() -> None:
+    settings = WorkerServeSettings(
+        context_factory="m:f",
+        redaction=RedactionConfig(key_patterns=(r"^private$",)),
+    )
+    context = WorkerContext()
+
+    _install_default_redactor(context, settings)
+
+    assert context.redactor is not None
+    assert context.redactor({"api_key": "secret", "private": "hidden"}) == {
+        "api_key": REDACTED_PLACEHOLDER,
+        "private": REDACTED_PLACEHOLDER,
+    }
+
+    def factory_redactor(value: Any) -> Any:
+        return {"factory": value}
+
+    factory_context = WorkerContext(redactor=factory_redactor)
+    _install_default_redactor(factory_context, settings)
+    assert factory_context.redactor is not None
+    assert factory_context.redactor("visible") == {"factory": "visible"}
+    register_secret_value("operator-secret-for-redactor-test")
+    assert factory_context.redactor("operator-secret-for-redactor-test") == {
+        "factory": VALUE_REDACTED
+    }
+
+
+def test_read_redaction_pyproject(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[tool.julep.redaction]
+key_patterns = ["^private$"]
+path_patterns = ["items.*.note"]
+disable_default = true
+""".strip()
+    )
+
+    assert read_redaction_pyproject(tmp_path) == {
+        "key_patterns": ["^private$"],
+        "path_patterns": ["items.*.note"],
+        "disable_default": True,
+    }
 
 
 def test_worker_settings_preserve_original_positional_field_order():
@@ -133,8 +239,8 @@ def test_from_env_full_parse():
 def test_from_env_parses_versioning():
     s = WorkerServeSettings.from_env({
         "WORKER_CONTEXT_FACTORY": "m:f",
-        "CA_WORKER_BUILD_ID": "build-42",
-        "CA_WORKER_VERSIONING": "1",
+        "JULEP_WORKER_BUILD_ID": "build-42",
+        "JULEP_WORKER_VERSIONING": "1",
     })
     assert s.build_id == "build-42"
     assert s.use_worker_versioning is True
@@ -147,6 +253,26 @@ def test_api_key_implies_tls_unless_overridden():
     assert s.tls is False and s.api_key == "k"
     s = WorkerServeSettings.from_env({"WORKER_CONTEXT_FACTORY": "m:f", "TEMPORAL_TLS": "ON"})
     assert s.tls is True
+
+
+def test_worker_settings_resolve_startup_secret_references() -> None:
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "TEMPORAL_API_KEY": "secret://temporal-key",
+            "JULEP_SECRET_TEMPORAL_KEY": "temporal-secret",
+            "TEMPORAL_PAYLOAD_KEYS": "secret://payload-ring",
+            "JULEP_SECRET_PAYLOAD_RING": "primary=" + "11" * 32,
+            "TEMPORAL_PAYLOAD_KEY_ID": "primary",
+            "MEMORY_TOOLS_TOKEN": "secret://tools-token",
+            "JULEP_SECRET_TOOLS_TOKEN": "runtime-token",
+        }
+    )
+    assert settings.api_key == "temporal-secret"
+    assert settings.payload_keys == "primary=" + "11" * 32
+    assert settings.materialized_secret_environment["MEMORY_TOOLS_TOKEN"] == (
+        "runtime-token"
+    )
 
 
 def test_bad_env_values_fail_loudly():
@@ -193,11 +319,53 @@ def test_run_worker_required_payload_encryption_rejects_missing_keys(
         run(run_worker())
 
 
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporal extra not installed")
+def test_run_worker_installs_blob_store_from_env(monkeypatch, tmp_path: Path) -> None:
+    import julep.execution.worker as worker_mod
+    from temporalio.client import Client
+
+    captured: dict[str, Any] = {}
+
+    class FakeWorker:
+        async def run(self) -> None:
+            return None
+
+    async def fake_connect(target, **kwargs):
+        return object()
+
+    def fake_build_worker(client, context, *, task_queue, **kwargs):
+        captured["context"] = context
+        return FakeWorker()
+
+    monkeypatch.setenv("JULEP_BLOB_STORE_URL", (tmp_path / "blobs").as_uri())
+    monkeypatch.setattr(Client, "connect", staticmethod(fake_connect))
+    monkeypatch.setattr(worker_mod, "build_worker", fake_build_worker)
+
+    run(worker_mod.run_worker())
+
+    store = captured["context"].blob_store
+    assert isinstance(store, LocalDirBlobStore)
+    assert store.root == tmp_path / "blobs"
+    assert store.root.is_dir()
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporal extra not installed")
+def test_run_worker_rejects_explicit_and_env_blob_stores(
+    monkeypatch, tmp_path: Path
+) -> None:
+    from julep.execution.worker import run_worker
+
+    monkeypatch.setenv("JULEP_BLOB_STORE_URL", (tmp_path / "blobs").as_uri())
+
+    with pytest.raises(ValueError, match="both"):
+        run(run_worker(blob_store=InMemoryBlobStore()))
+
+
 def test_from_env_versioning_bad_bool():
-    with pytest.raises(ValueError, match="CA_WORKER_VERSIONING"):
+    with pytest.raises(ValueError, match="JULEP_WORKER_VERSIONING"):
         WorkerServeSettings.from_env({
             "WORKER_CONTEXT_FACTORY": "m:f",
-            "CA_WORKER_VERSIONING": "banana",
+            "JULEP_WORKER_VERSIONING": "banana",
         })
 
 
@@ -224,7 +392,7 @@ def test_versioning_kwargs_missing_metadata_raises(monkeypatch):
 
     monkeypatch.setattr(serve_mod, "version", _boom)
     settings = WorkerServeSettings(context_factory="m:f", use_worker_versioning=True)
-    with pytest.raises(JulepError, match="CA_WORKER_BUILD_ID"):
+    with pytest.raises(JulepError, match="JULEP_WORKER_BUILD_ID"):
         _versioning_worker_kwargs(settings)
 
 
@@ -484,10 +652,10 @@ def test_build_worker_forwards_versioning_kwargs(monkeypatch):
     async def _noop_mcp(server, tool, value, idempotency_key, principal=None):
         return value
 
-    monkeypatch.delenv("STORE_URL", raising=False)
+    monkeypatch.delenv("JULEP_ARTIFACT_STORE_URL", raising=False)
     monkeypatch.setattr(worker_mod, "Worker", FakeWorker)
     with warnings.catch_warnings():
-        # The CA_WORKER_* seam intentionally maps to Temporal's deprecated
+        # The JULEP_WORKER_* seam intentionally maps to Temporal's deprecated
         # Worker kwargs for now; suppress future runtime warnings around this call.
         warnings.simplefilter("ignore", DeprecationWarning)
         build_worker(
@@ -502,7 +670,7 @@ def test_build_worker_forwards_versioning_kwargs(monkeypatch):
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
+def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch, tmp_path: Path):
     import julep.execution.worker as worker_mod
     from temporalio.client import Client
 
@@ -520,6 +688,7 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
 
     def fake_build_worker(client, context, *, task_queue, **kwargs):
         captured["task_queue"] = task_queue
+        captured["context"] = context
         captured["kwargs"] = kwargs
         return FakeWorker()
 
@@ -533,6 +702,7 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
         context_factory=f"{__name__}:make_context",
         build_id="serve-bid",
         use_worker_versioning=True,
+        blob_store_url=(tmp_path / "blobs").as_uri(),
     )
 
     async def _drive() -> None:
@@ -552,6 +722,8 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
 
     assert captured["kwargs"]["build_id"] == "serve-bid"
     assert captured["kwargs"]["use_worker_versioning"] is True
+    assert isinstance(captured["context"].blob_store, LocalDirBlobStore)
+    assert captured["context"].blob_store.root == tmp_path / "blobs"
 
 
 # --------------------------------------------------------------------------- #
@@ -575,7 +747,7 @@ async def _serve_lifecycle():
         settings = WorkerServeSettings(
             context_factory=f"{__name__}:make_context",
             address=env.client.service_client.config.target_host,
-            task_queue="ca-serve",
+            task_queue="julep-serve",
             graceful_shutdown_s=5.0,
         )
         stop = asyncio.Event()
@@ -583,7 +755,7 @@ async def _serve_lifecycle():
         try:
             out = await run_flow(
                 env.client, fr.flow.to_json(), manifest_to_json(fr.manifest),
-                session_id="serve-1", input=2, task_queue="ca-serve",
+                session_id="serve-1", input=2, task_queue="julep-serve",
             )
             assert out == 3, out  # the served worker polled and executed
         finally:

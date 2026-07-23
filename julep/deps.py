@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 import sys
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
+from . import _env
 from .ir import canonical_json
 
 if sys.version_info >= (3, 11):
@@ -20,6 +20,7 @@ _HEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _PYTHON_MAJOR_MINOR = re.compile(
     r"^\s*(?:~=|==|!=|<=|>=|<|>|===)?\s*(\d+)\.(\d+)(?:\.\d+)?"
 )
+_PEP723_ALLOWED_KEYS = frozenset({"dependencies", "requires-python", "tool"})
 
 
 def _normalized_deps(deps: Sequence[str]) -> tuple[str, ...]:
@@ -30,7 +31,7 @@ def native_dep_grants(explicit: Iterable[str] | str | None = None) -> frozenset[
     """Return pure names granted permission to use the native dependency tier."""
     raw = explicit
     if raw is None:
-        raw = os.environ.get("CA_PURE_NATIVE_DEPS", "")
+        raw = _env.get(_env.JULEP_PURE_NATIVE_DEPS, "")
     items: Iterable[str]
     if isinstance(raw, str):
         items = raw.split(",")
@@ -41,9 +42,6 @@ def native_dep_grants(explicit: Iterable[str] | str | None = None) -> frozenset[
 
 def parse_pep723(source: str) -> tuple[tuple[str, ...], str | None]:
     """Return canonical PEP 723 dependencies and raw requires-python metadata."""
-    # FIXME(P4-3): an invalid requires-python is coerced to null (env_hash collision with
-    # an omitted one) and deps are not PEP 508-validated (e.g. "numpy @@@" passes, then
-    # fails late at `uv pip install` on the worker). Reject both here. See TODOS.md.
     lines = source.splitlines()
     blocks: list[str] = []
     index = 0
@@ -83,6 +81,11 @@ def parse_pep723(source: str) -> tuple[tuple[str, ...], str | None]:
     except ValueError as e:
         raise ValueError(f"malformed PEP 723 script block TOML: {e}") from e
 
+    unknown_keys = set(metadata) - _PEP723_ALLOWED_KEYS
+    if unknown_keys:
+        formatted = ", ".join(repr(key) for key in sorted(unknown_keys))
+        raise ValueError(f"malformed PEP 723 script block: unknown key(s): {formatted}")
+
     raw_deps = metadata.get("dependencies", [])
     if not isinstance(raw_deps, list) or not all(isinstance(dep, str) for dep in raw_deps):
         raise ValueError("malformed PEP 723 script block: dependencies must be a list of strings")
@@ -90,6 +93,34 @@ def parse_pep723(source: str) -> tuple[tuple[str, ...], str | None]:
     requires_python = metadata.get("requires-python")
     if requires_python is not None and not isinstance(requires_python, str):
         raise ValueError("malformed PEP 723 script block: requires-python must be a string")
+
+    tool = metadata.get("tool")
+    if tool is not None and not isinstance(tool, dict):
+        raise ValueError("malformed PEP 723 script block: tool must be a table")
+
+    if raw_deps or requires_python is not None:
+        try:
+            from packaging.requirements import InvalidRequirement, Requirement
+            from packaging.specifiers import InvalidSpecifier, SpecifierSet
+        except ImportError as e:
+            raise RuntimeError(
+                "strict PEP 723 validation requires the 'packaging' package"
+            ) from e
+
+        for dep in raw_deps:
+            try:
+                Requirement(dep)
+            except InvalidRequirement as e:
+                raise ValueError(f"PEP 723 dependency is not valid PEP 508: {dep!r}") from e
+
+        if requires_python is not None:
+            try:
+                SpecifierSet(requires_python)
+            except InvalidSpecifier as e:
+                raise ValueError(
+                    "PEP 723 requires-python is not a valid version specifier: "
+                    f"{requires_python!r}"
+                ) from e
 
     return _normalized_deps(raw_deps), requires_python
 

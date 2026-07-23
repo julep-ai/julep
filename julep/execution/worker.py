@@ -51,9 +51,15 @@ from .activities import (
     resolveQoS,
     resolveRuntimeCapabilities,
     resolveSubflow,
+    validateAgentOutput,
+    validateJsonSchema,
     verifyPures,
 )
-from .blobstore import BlobStore
+from .blobstore import (
+    BlobStore,
+    _initialize_blob_store,
+    _resolve_blob_store_configuration,
+)
 from .reasoner_batch import (
     BatchCollector,
     BatchDispatchContext,
@@ -73,12 +79,14 @@ from .harness import (
     SessionWorkflow,
     finishTrajectory,
     flushStructural,
+    preflightMcp,
     runSubCapture,
     startTrajectory,
 )
+from .projection_store import finalize_projection_run, persist_projection_batch
 from .serve import DEFAULT_TASK_QUEUE, payload_encryption_from_env
 from .session_store import SessionStore
-from ..cas import cas_from_url
+from ..artifact_store import artifact_store_from_url
 
 # Every activity the two workflows can dispatch.
 ACTIVITIES = [
@@ -95,10 +103,15 @@ ACTIVITIES = [
     resolveQoS,
     resolveAgentSpec,
     resolveRuntimeCapabilities,
+    validateAgentOutput,
+    validateJsonSchema,
     startTrajectory,
     finishTrajectory,
     flushStructural,
     runSubCapture,
+    persist_projection_batch,
+    finalize_projection_run,
+    preflightMcp,
     submitReasonerBatch,
     submitBatch,
     pollBatch,
@@ -146,9 +159,9 @@ def encrypted_payload_converter(
 ) -> DataConverter:
     """Build the shared client/worker converter for encrypted Temporal payloads.
 
-    When a blob store is supplied, claim checking runs first and its small
-    pointer is encrypted before reaching Temporal. The referenced S3 object is
-    expected to use bucket-level KMS encryption.
+    When a blob store is supplied, oversized payloads are encrypted before
+    offload and the resulting small pointer is encrypted before reaching
+    Temporal. Bucket-level KMS encryption remains useful defense in depth.
     """
 
     import dataclasses
@@ -165,6 +178,7 @@ def encrypted_payload_converter(
                     blob_store,
                     tenant=tenant,
                     threshold_bytes=threshold_bytes,
+                    blob_encryption_codec=encryption,
                 ),
                 encryption,
             ]
@@ -192,8 +206,9 @@ def build_worker(
     ``worker_kwargs`` pass straight through to :class:`temporalio.worker.Worker`
     (e.g. ``max_concurrent_activities``, ``interceptors`` for the projection tail).
     If ``context.mcp_call`` is set, it must be async
-    ``(server, tool, value, idempotency_key, principal) -> result``; legacy
-    4-argument callers are wrapped by ``configure`` and keep working.
+    ``(server, tool, value, idempotency_key, principal, run_secrets,
+    input_schema_validated) -> result``; legacy 4/5/6-argument callers are
+    wrapped by ``configure`` and keep working.
 
     The default workflow sandbox passes ``julep`` through so
     workflow-side registry lookups (pures, reasoners) see the worker process's real
@@ -216,8 +231,8 @@ def build_worker(
         )
     )
     if "workflow_runner" not in worker_kwargs:
-        store_url = os.environ.get("STORE_URL", "").strip()
-        store = cas_from_url(store_url) if store_url else None
+        store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL", "").strip()
+        store = artifact_store_from_url(store_url) if store_url else None
         worker_kwargs["workflow_runner"] = BundleResolvingWorkflowRunner(
             inner=SandboxedWorkflowRunner(
                 restrictions=SandboxRestrictions.default.with_passthrough_modules(
@@ -261,10 +276,28 @@ async def run_worker(
     finer control (custom client, shared client across workers, lifecycle
     management) use :func:`build_worker` with your own :class:`Client`.
     ``mcp_call`` must be async
-    ``(server, tool, value, idempotency_key, principal) -> result`` (legacy
-    4-argument callers are wrapped by ``configure``); the idempotency key is the
-    stable activation ``cid`` reused on activity retry.
+    ``(server, tool, value, idempotency_key, principal, run_secrets,
+    input_schema_validated) -> result`` (legacy 4/5/6-argument callers are
+    wrapped by ``configure``); the idempotency key is the stable activation
+    ``cid`` reused on activity retry.
     """
+    from ..secrets import (
+        SecretResolver,
+        materialize_secret_environment,
+        operator_secret_redactor,
+    )
+    from ..trajectory import redact_secret_shaped
+
+    secret_resolver = SecretResolver.from_env(os.environ)
+    os.environ.update(
+        materialize_secret_environment(os.environ, resolver=secret_resolver)
+    )
+    blob_store = _resolve_blob_store_configuration(
+        blob_store,
+        os.environ.get("JULEP_BLOB_STORE_URL"),
+        explicit_source="run_worker(blob_store=...)",
+    )
+    await _initialize_blob_store(blob_store)
     connect_kwargs: dict[str, Any] = {"namespace": namespace}
     payload_keys, payload_key_id, _required = payload_encryption_from_env(os.environ)
     if payload_keys is not None:
@@ -293,6 +326,7 @@ async def run_worker(
         trajectory_sink=trajectory_sink,
         trajectory_blob_store=trajectory_blob_store,
         on_attempt=on_attempt,
+        redactor=operator_secret_redactor(redact_secret_shaped),
     )
     worker = build_worker(client, context, task_queue=task_queue, **worker_kwargs)
     await worker.run()

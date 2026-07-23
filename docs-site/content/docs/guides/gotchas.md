@@ -223,7 +223,7 @@ def extract_emails(record: dict) -> dict:
 
 Supported WASI wheels are exactly `pydantic-core` and `regex`. Off-list deps
 (e.g. `numpy`) only run on the **native tier**, which is opt-in per pure via the
-`CA_PURE_NATIVE_DEPS` allowlist at both publish and worker. Details:
+`JULEP_PURE_NATIVE_DEPS` allowlist at both publish and worker. Details:
 [Authoring Guide — Dependencies](/docs/guides/authoring-flows#third-party-dependencies-on-pures-pep-723).
 
 ## Step options and output-name collisions
@@ -298,7 +298,7 @@ Healthy: Temporal Web is reachable at `http://localhost:8233`.
 - For source span pointers in raw combinator DSL nodes:
 
 ```bash
-export COMPOSABLE_AGENTS_SOURCE_CAPTURE=1
+export JULEP_SOURCE_CAPTURE=1
 ```
 
 ### Step 1 — Reproduce the earliest failure boundary
@@ -340,9 +340,9 @@ Healthy: `No diagnostics.`, `no prod gap`, expected shape, and an artifact hash.
 If you already have frozen artifacts, inspect them without importing source:
 
 ```bash
-python -m julep.cli validate flow.json --manifest manifest.json
-python -m julep.cli inspect flow.json --manifest manifest.json --caps capabilities.yaml
-python -m julep.cli graph flow.json
+julep artifact validate flow.json --manifest manifest.json
+julep artifact inspect flow.json --manifest manifest.json --caps capabilities.yaml
+julep artifact graph flow.json
 ```
 
 Healthy: `validate` prints `No diagnostics.` and exits `0`.
@@ -380,7 +380,7 @@ julep run triage --input '"TICKET-42"'
 Healthy: lint exits `0`; run streams a trace tree and prints `output:`.
 
 ```bash
-python -m julep.cli freeze flow.json snapshot.json --caps capabilities.yaml
+julep artifact freeze flow.json snapshot.json --caps capabilities.yaml
 ```
 
 Healthy: output includes `frozen_flow`, `manifest`, `diagnostics:`, and
@@ -393,7 +393,7 @@ Healthy: output includes `frozen_flow`, `manifest`, `diagnostics:`, and
 - Local execution: `deployment.dry_run(input, reasoners={...})` returns the
   expected `.value` with deterministic fake reasoners.
 - CLI: `julep lint <selector> --fail-severity error` exits `0`.
-- Artifact: `python -m julep.cli validate flow.json --manifest manifest.json`
+- Artifact: `julep artifact validate flow.json --manifest manifest.json`
   prints `No diagnostics.`.
 - Temporal: the worker is ready, the workflow terminates, and `projection` has
   expected `events`, `costByShape`, and `pending`.
@@ -417,8 +417,8 @@ Healthy deployed state: `clean` and exit `0`. Drift exits `3`.
 julep run triage --env staging --input '"TICKET-42"'
 ```
 
-4. For CAS/ledger deployments, rollback is selecting the previous immutable
-   `artifact_hash` from the deploy ledger or CAS record. After the pointer swap,
+4. For artifact store/ledger deployments, rollback is selecting the previous immutable
+   `artifact_hash` from the deploy ledger or artifact store record. After the pointer swap,
    rerun `julep status triage --env staging` and a representative `julep run`.
 
 ### Escalation
@@ -440,4 +440,4 @@ Capture before escalating:
 Escalate with the smallest reproducer that imports the affected `@flow`, the
 capability manifest, and either the source module or the frozen IR/manifest pair.
 
-<!-- ported-by ca-docs-site: guides/gotchas -->
+<!-- ported-by julep-docs-site: guides/gotchas -->

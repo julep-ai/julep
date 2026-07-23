@@ -10,7 +10,7 @@ import pytest
 
 from julep import arr, deploy, pure, seq
 from julep.bundle import publish_bundle
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep import deps
 from julep.deps import base_component_hash, env_hash, parse_pep723
 from julep.execution import env_builder
@@ -32,7 +32,7 @@ def _deps_test_wrap(value: dict[str, Any]) -> dict[str, Any]:
     return {"wrapped": value}
 
 
-def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
+def _json_from_store(store: LocalDirArtifactStore, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
 
 
@@ -92,6 +92,53 @@ def test_parse_pep723_deps_and_requires_python() -> None:
     )
 
     assert parse_pep723(source) == (("anyio>=4", "zipp==3.20.0"), ">=3.11")
+
+
+def test_parse_pep723_rejects_unknown_keys() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = []\n"
+        "# dependency-groups = {}\n"
+        "# ///\n"
+    )
+
+    with pytest.raises(ValueError, match=r"unknown key\(s\).*dependency-groups"):
+        parse_pep723(source)
+
+
+def test_parse_pep723_allows_standard_tool_table() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = []\n"
+        "# [tool.julep]\n"
+        "# mode = \"strict\"\n"
+        "# ///\n"
+    )
+
+    assert parse_pep723(source) == ((), None)
+
+
+def test_parse_pep723_rejects_invalid_dependency() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = [\"numpy =>1\"]\n"
+        "# ///\n"
+    )
+
+    with pytest.raises(ValueError, match=r"not valid PEP 508.*numpy =>1"):
+        parse_pep723(source)
+
+
+def test_parse_pep723_rejects_invalid_requires_python() -> None:
+    source = (
+        "# /// script\n"
+        "# dependencies = []\n"
+        "# requires-python = \">=three\"\n"
+        "# ///\n"
+    )
+
+    with pytest.raises(ValueError, match=r"not a valid version specifier.*>=three"):
+        parse_pep723(source)
 
 
 def test_parse_pep723_sorts_deps_regardless_of_source_order() -> None:
@@ -160,7 +207,7 @@ def test_env_hash_omitted_requires_python_is_host_independent() -> None:
 
 
 def test_no_dep_publish_keeps_existing_bytes_without_env_hash(tmp_path: Path) -> None:
-    custom_store = LocalDirCAS(tmp_path / "custom")
+    custom_store = LocalDirArtifactStore(tmp_path / "custom")
     deployment = deploy(
         seq(arr("deps.test.normalize.v1"), arr("deps.test.wrap.v1")),
         read_snapshot(),
@@ -185,7 +232,7 @@ def test_no_dep_publish_keeps_existing_bytes_without_env_hash(tmp_path: Path) ->
     assert rec["bundleHash"] == custom_store.put(manifest_bytes)
 
     std_deployment = deploy(arr("std.pluck", {"key": "name"}), read_snapshot())
-    std_rec = std_deployment.publish(LocalDirCAS(tmp_path / "std"), signing_key=SEED)
+    std_rec = std_deployment.publish(LocalDirArtifactStore(tmp_path / "std"), signing_key=SEED)
     assert std_rec["pureRuntimeRefs"] == {}
     assert std_rec["publishedArtifactHash"] == std_deployment.artifact_hash
 
@@ -211,12 +258,12 @@ def test_dep_pin_changes_env_hash_and_published_artifact_hash(
     try:
         DEFAULT_REGISTRY.register_pure_from_source(name, source_a)
         deployment_a = deploy(arr(name), read_snapshot())
-        rec_a = deployment_a.publish(LocalDirCAS(tmp_path / "a"), signing_key=SEED)
+        rec_a = deployment_a.publish(LocalDirArtifactStore(tmp_path / "a"), signing_key=SEED)
 
         DEFAULT_REGISTRY.pures.pop(name, None)
         DEFAULT_REGISTRY.register_pure_from_source(name, source_b)
         deployment_b = deploy(arr(name), read_snapshot())
-        rec_b = deployment_b.publish(LocalDirCAS(tmp_path / "b"), signing_key=SEED)
+        rec_b = deployment_b.publish(LocalDirArtifactStore(tmp_path / "b"), signing_key=SEED)
     finally:
         DEFAULT_REGISTRY.pures.pop(name, None)
         if previous is not None:
@@ -236,7 +283,7 @@ def test_empty_dependencies_list_does_not_emit_env_hash(tmp_path: Path) -> None:
         deployment = deploy(arr(name), read_snapshot())
         rec = publish_bundle(
             deployment,
-            LocalDirCAS(tmp_path),
+            LocalDirArtifactStore(tmp_path),
             signing_key=SEED,
             registry=DEFAULT_REGISTRY,
         )

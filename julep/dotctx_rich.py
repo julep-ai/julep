@@ -59,7 +59,13 @@ from .dotctx import (
     _sub_from,
 )
 from .kinds import ContextScope
-from .registry import DEFAULT_REGISTRY, Registry, ToolSchemaExpectation
+from .registry import (
+    DEFAULT_REGISTRY,
+    Registry,
+    RendererDeclaration,
+    RendererDependency,
+    ToolSchemaExpectation,
+)
 
 # Settings keys the rich layout accepts. The prompt lives in template files and
 # the reply schema in schema.pyi, so the minimal layout's system/schema keys are
@@ -401,12 +407,40 @@ def _register_template(
     }
     digest = hashlib.sha256(source_for_hash.encode("utf-8")).hexdigest()
     name = f"dotctx/{package}/{role}@v{digest[:_HASH_PREFIX_LEN]}"
-    if name not in registry.renderers:  # same name => same content; reload is a no-op
+    expected_source_hash = f"renderer:{digest[:16]}"
+    existing = registry.renderers.get(name)
+    if existing is not None and existing.source_hash != expected_source_hash:
+        raise ValueError(
+            f"renderer {name!r} is already registered with different template content"
+        )
+    if existing is None:
         registry.register_renderer(
             name,
             _template_renderer(package, role, source, base_dir, templates, files),
             source=source_for_hash,
         )
+    registry.renderer_declarations.setdefault(
+        name,
+        RendererDeclaration(
+            package=package,
+            role=role,
+            source=source,
+            base_dir=base_dir,
+            templates=dict(templates),
+            files=dict(files),
+            hash_source=source_for_hash,
+            dependencies=tuple(
+                RendererDependency(
+                    kind=dependency.kind,
+                    ref=dependency.ref,
+                    rel=dependency.rel,
+                    content=dependency.content,
+                    exists=dependency.exists,
+                )
+                for dependency in deps
+            ),
+        ),
+    )
     return name
 
 
@@ -1176,7 +1210,13 @@ def load_rich_dotctx(
             expectations[key] = stub.input_schema
             descriptions[key] = stub.description
             registry.register_tool_expectation(
-                ToolSchemaExpectation(key=key, input_schema=stub.input_schema, ctx_path=path)
+                ToolSchemaExpectation(
+                    key=key,
+                    input_schema=stub.input_schema,
+                    ctx_path=path,
+                    description=stub.description,
+                ),
+                scope=package,
             )
 
     settings_tools: Sequence[Any] = settings.get("tools") or ()

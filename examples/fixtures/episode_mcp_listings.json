@@ -1,0 +1,54 @@
+{
+  "episodes": {
+    "read_episode": {
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "episode_id": {"type": "string"}
+        },
+        "required": ["episode_id"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "episodeId": {"type": "string"},
+          "found": {"type": "boolean"},
+          "text": {"type": "string"},
+          "contentHash": {"type": "string"}
+        },
+        "required": ["episodeId", "found"]
+      }
+    },
+    "write_summary_surfaces": {
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "episode_id": {"type": "string"},
+          "content_hash": {"type": "string"},
+          "summary": {"type": "string"},
+          "one_liner": {"type": "string"}
+        },
+        "required": ["episode_id", "content_hash", "summary", "one_liner"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "idempotentHint": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "episodeId": {"type": "string"},
+          "status": {"type": "string"},
+          "summary": {"type": "string"},
+          "oneLiner": {"type": "string"}
+        },
+        "required": ["episodeId", "status"]
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -19,6 +20,7 @@ from julep import app, deploy
 from julep.agent_loop import (
     AgentConfig,
     AgentState,
+    FEEDBACK_KEY,
     TraceEntry,
     drive_agent_loop,
     state_fingerprint,
@@ -27,7 +29,7 @@ from julep.dotctx import Reasoner, reasoner_to_flow
 from julep.registry import DEFAULT_REGISTRY
 from julep.errors import ValidationError
 from julep.execution import HAVE_DBOS, HAVE_TEMPORAL
-from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.blobstore import InMemoryBlobStore, LocalDirBlobStore
 from julep.execution.effects import (
     InvokeReasonerInput,
     WorkerContext,
@@ -89,6 +91,22 @@ def test_whole_session_plan_emits_input_then_action_result_pairs() -> None:
     assert plan[5] == {"role": "assistant", "ref": {"kind": "native", "name": "index"}}
     assert plan[6] == {"role": "tool", "ref": {"kind": "native", "name": "index"}}
     assert len(plan) == 7
+
+
+def test_whole_session_plan_uses_ephemeral_output_until_blob_ref_exists() -> None:
+    entry = TraceEntry(
+        decision="call",
+        ref="lookup",
+        output={"answer": 42},
+        output_available=True,
+    )
+    state = AgentState(trace=[entry])
+
+    assert transcript_for(state, WHOLE, input="question")[-1]["content"] == {
+        "answer": 42
+    }
+    assert "output" not in entry.to_json()
+    assert not AgentState.from_json(state.to_json()).trace[0].output_available
 
 
 def test_transcript_for_is_deterministic() -> None:
@@ -262,8 +280,12 @@ def test_well_declared_transcript_scopes_deploy_clean() -> None:
 # --------------------------------------------------------------------------- #
 # Arity shim: 4-arg canonical; wrapped 2-/3-arg callers fail fast on transcripts.
 # --------------------------------------------------------------------------- #
-def _invoke(reasoner: str = "tr.reasoner", **kwargs: Any) -> Any:
-    return asyncio.run(invokeReasoner(InvokeReasonerInput(reasoner=reasoner, value=1, cid="c", **kwargs)))
+def _invoke(reasoner: str = "tr.reasoner", value: Any = 1, **kwargs: Any) -> Any:
+    return asyncio.run(
+        invokeReasoner(
+            InvokeReasonerInput(reasoner=reasoner, value=value, cid="c", **kwargs)
+        )
+    )
 
 
 def test_legacy_two_arg_caller_still_works_without_transcript() -> None:
@@ -362,6 +384,114 @@ def test_whole_session_transcript_is_hydrated_from_the_blob_store() -> None:
         {"role": "user", "content": "go"},
         {"role": "tool", "ref": {"kind": "native", "name": "t"}, "content": {"hits": 3}},
     ]
+
+
+def test_whole_session_transcript_hydrates_after_file_store_restart(
+    tmp_path: Path,
+) -> None:
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name="tr.file.ctrl", model="m", system="s")
+    )
+    root = tmp_path / "blobs"
+    writer = LocalDirBlobStore(root)
+    ref = asyncio.run(
+        writer.put("sess", json.dumps({"hits": 3}, sort_keys=True).encode())
+    )
+
+    reader = LocalDirBlobStore(root)
+    ctx, seen = _capture_ctx(blob_store=reader)
+    configure(ctx)
+    _invoke(
+        reasoner="tr.file.ctrl",
+        transcript=[{"role": "tool", "content_ref": ref}],
+        ctx={"scope": "whole_session", "maxTokens": 10_000},
+    )
+
+    (call,) = seen["calls"]
+    assert call["transcript"] == [{"role": "tool", "content": {"hits": 3}}]
+
+
+def test_transcript_renders_string_opening_ask_from_original_input_before_budget() -> None:
+    renderer_name = "tests.transcript.string-opening"
+    reasoner_name = "tr.string-opening"
+    rendered_contexts: list[dict[str, Any]] = []
+    counted: list[str] = []
+
+    def render_user(context: Any) -> str:
+        rendered_contexts.append(dict(context))
+        assert "trace" not in context
+        return f"Question: {context['value']}"
+
+    previous = DEFAULT_REGISTRY.renderers.pop(renderer_name, None)
+    DEFAULT_REGISTRY.register_renderer(renderer_name, render_user)
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(
+            name=reasoner_name,
+            model="m",
+            system="s",
+            user_render=renderer_name,
+        )
+    )
+    ctx, seen = _capture_ctx(
+        count_tokens=lambda text: counted.append(text) or 1,
+    )
+    configure(ctx)
+    trace = [{"decision": "call", "ref": "search"}]
+    try:
+        _invoke(
+            reasoner=reasoner_name,
+            value={"input": "why?", "trace": trace},
+            transcript=[{"role": "user", "content": "why?"}],
+            ctx={"scope": "whole_session", "maxTokens": 10},
+        )
+    finally:
+        DEFAULT_REGISTRY.renderers.pop(renderer_name, None)
+        if previous is not None:
+            DEFAULT_REGISTRY.renderers[renderer_name] = previous
+
+    assert rendered_contexts == [{"value": "why?"}]
+    (call,) = seen["calls"]
+    assert call["transcript"] == [{"role": "user", "content": "Question: why?"}]
+    assert any("Question: why?" in text for text in counted)
+
+
+def test_feedback_looking_business_field_is_not_stripped_from_renderer_context() -> None:
+    from julep.agent_loop import ROUND_NOTE_KEY
+    from julep.execution.effects import _strip_reserved_controller_keys
+
+    business = {FEEDBACK_KEY: "ordinary business value", "category": "billing"}
+    assert _strip_reserved_controller_keys(business) == business
+    assert _strip_reserved_controller_keys(
+        {
+            "input": {"category": "billing"},
+            "trace": [],
+            FEEDBACK_KEY: "retry",
+            ROUND_NOTE_KEY: "round note",
+        }
+    ) == {"input": {"category": "billing"}, "trace": []}
+
+
+def test_loop_feedback_is_inserted_before_transcript_budgeting() -> None:
+    counted: list[str] = []
+    ctx, seen = _capture_ctx(
+        count_tokens=lambda text: counted.append(text) or 1,
+    )
+    configure(ctx)
+    feedback = {"error": "final output failed validation"}
+
+    _invoke(
+        value={
+            "input": {"task": "answer"},
+            "trace": [{"decision": "output_reask"}],
+            FEEDBACK_KEY: feedback,
+        },
+        transcript=[{"role": "user", "content": {"task": "answer"}}],
+        ctx={"scope": "whole_session", "maxTokens": 2},
+    )
+
+    (call,) = seen["calls"]
+    assert call["transcript"][-1] == {"role": "user", "content": feedback}
+    assert any("final output failed validation" in text for text in counted)
 
 
 def test_whole_session_budget_uses_worker_tokenizer_and_marks_elision() -> None:
@@ -545,6 +675,46 @@ def test_drive_agent_loop_threads_transcript_for_summary_scope() -> None:
     assert payloads[0]["transcript"] == [{"role": "user", "content": {"task": "go"}}]
 
 
+def test_transcript_tool_input_reask_keeps_original_render_context_and_full_trace() -> None:
+    payloads: list[dict[str, Any]] = []
+    replies = iter(
+        [
+            {"tool": "search", "input": {"query": 7}},
+            {"done": True, "output": {"answer": "fixed"}},
+        ]
+    )
+
+    async def invoke_controller(payload: dict[str, Any]) -> Any:
+        payloads.append(payload)
+        return next(replies)
+
+    async def call_tool(_tool: str, _value: Any) -> Any:
+        raise AssertionError("invalid tool input must not dispatch")
+
+    original = {"category": "billing"}
+    out = asyncio.run(
+        drive_agent_loop(
+            input=original,
+            cfg=AgentConfig(ctx=WHOLE, native_tools=True, max_rounds=3),
+            invoke_controller=invoke_controller,
+            call_tool=call_tool,
+            tool_schemas={
+                "search": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                    "required": ["query"],
+                }
+            },
+        )
+    )
+
+    assert out["status"] == "done"
+    assert payloads[1]["input"] == original
+    assert payloads[1]["trace"][0]["decision"] == "tool_input_reask"
+    assert payloads[1][FEEDBACK_KEY]["error"] == "tool_input_validation_failed"
+    assert payloads[1]["transcript"] == [{"role": "user", "content": original}]
+
+
 # --------------------------------------------------------------------------- #
 # Temporal harness: plan in workflow code, summary across continue-as-new.
 # --------------------------------------------------------------------------- #
@@ -665,9 +835,13 @@ def test_dbos_agent_segment_carries_summary_in_envelope(monkeypatch) -> None:
     async def fake_tool(inp: dict) -> Any:
         return {"tool": "out"}
 
+    async def fake_blob(inp: dict) -> str:
+        return f"{inp['tenant']}/sha256:" + "a" * 64
+
     monkeypatch.setattr(dbos_backend, "invokeReasonerStep", fake_reasoner)
     monkeypatch.setattr(dbos_backend, "callToolIdempotent", fake_tool)
     monkeypatch.setattr(dbos_backend, "callToolNoRetry", fake_tool)
+    monkeypatch.setattr(dbos_backend, "putBlobStep", fake_blob)
 
     agent_body = inspect.unwrap(dbos_backend.agent_workflow)
     out = asyncio.run(agent_body({
@@ -691,3 +865,56 @@ def test_dbos_agent_segment_carries_summary_in_envelope(monkeypatch) -> None:
     assert step_payload["transcript"] == [{"role": "user", "content": {"task": "go"}}]
     assert step_payload["ctx"] == {"scope": "summary", "maxTokens": 100}
     assert step_payload["summarizer"] == "sum.reasoner"
+
+
+@pytest.mark.skipif(not HAVE_DBOS, reason="dbos not installed")
+def test_dbos_transcript_round_keeps_original_input_and_full_trace(monkeypatch) -> None:
+    payloads: list[dict[str, Any]] = []
+    replies = iter(
+        [
+            {"tool": "search", "input": {"query": 7}},
+            {"done": True, "output": "fixed"},
+        ]
+    )
+
+    async def fake_reasoner(inp: dict[str, Any]) -> Any:
+        payloads.append(inp)
+        return next(replies)
+
+    monkeypatch.setattr(dbos_backend, "invokeReasonerStep", fake_reasoner)
+    agent_body = inspect.unwrap(dbos_backend.agent_workflow)
+    original = {"category": "billing"}
+    out = asyncio.run(
+        agent_body(
+            {
+                "controller": "ctrl",
+                "sessionId": "sess-dbos-feedback",
+                "input": original,
+                "config": {
+                    "maxRounds": 3,
+                    "nativeTools": True,
+                    "ctx": {"scope": "whole_session", "maxTokens": 500},
+                },
+                "grantedTools": ["search"],
+                "toolDefs": [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "search",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {"query": {"type": "string"}},
+                                "required": ["query"],
+                            },
+                        },
+                    }
+                ],
+                "resolveSpec": False,
+            }
+        )
+    )
+
+    assert out["status"] == "done"
+    assert payloads[1]["value"]["input"] == original
+    assert payloads[1]["value"]["trace"][0]["decision"] == "tool_input_reask"
+    assert payloads[1]["value"][FEEDBACK_KEY]["error"] == "tool_input_validation_failed"

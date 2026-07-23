@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Mapping, Optional, Seq
 from .capabilities import CapabilityManifest
 from .deploy import Deployment, _referenced_reasoners, deploy
 from .dotctx import Reasoner
+from .execution.policy import ExecutionPolicy
 from .freeze import McpSnapshot
 from .ir import Node, canonical_json
 from .registry import DEFAULT_REGISTRY, Registry
@@ -59,6 +60,9 @@ class PipelineSpec(Generic[Input, Output]):
     snapshot: Optional[McpSnapshot] = None
     snapshot_source: Optional[Callable[[Mapping[str, str]], McpSnapshot]] = None
     tools: Sequence[Tool[Any, Any]] = ()
+    # Release-pinned execution policy carried into the published release so
+    # control-plane runs execute under it. None means engine defaults.
+    execution_policy: Optional[ExecutionPolicy] = None
 
     def __post_init__(self) -> None:
         if not self.name or self.name.strip() != self.name:
@@ -131,6 +135,11 @@ class CompiledPipeline(Generic[Input, Output]):
     deployment: Deployment
     declared_schema_hash: str
     compiled_schema_hash: str
+    runtime_declarations_blob: Optional[bytes] = field(
+        default=None,
+        compare=False,
+        repr=False,
+    )
 
     @property
     def mcp_schema_drift(self) -> bool:
@@ -153,12 +162,16 @@ class CompiledApplication:
     name: str
     pipelines: tuple[CompiledPipeline[Any, Any], ...]
     runtime_declarations_hash: str
+    # New releases pin the worker-observed MCP surface by default.  Older
+    # release manifests omit this field and are decoded as preflight-off.
+    mcp_preflight_policy: str = "pin"
 
     @cached_property
     def artifact_components(self) -> dict[str, Any]:
         return {
             "application": self.name,
             "runtimeDeclarationsHash": self.runtime_declarations_hash,
+            "mcpPreflight": self.mcp_preflight_policy,
             "pipelines": [pipeline.to_json() for pipeline in self.pipelines],
         }
 
@@ -274,6 +287,18 @@ class Application:
             name: _resolve_renderer(name, registry)
             for name in renderer_names
         }
+        renderer_declarations = {
+            name: declaration
+            for name in renderer_names
+            if (
+                declaration := (
+                    registry.renderer_declarations.get(name)
+                    if registry is not None and name in registry.renderers
+                    else DEFAULT_REGISTRY.renderer_declarations.get(name)
+                )
+            )
+            is not None
+        }
         target_registries = [DEFAULT_REGISTRY]
         if registry is not None and registry is not DEFAULT_REGISTRY:
             target_registries.append(registry)
@@ -301,6 +326,9 @@ class Application:
                 target_registry.register_reasoner(reasoner)
             for name, source in renderer_sources.items():
                 target_registry.renderers[name] = source
+                declaration = renderer_declarations.get(name)
+                if declaration is not None:
+                    target_registry.renderer_declarations[name] = declaration
 
     def _resolved_reasoners(
         self,
@@ -360,6 +388,8 @@ class Application:
         self.register_runtime_declarations(
             expected_hash=runtime_declarations_hash,
         )
+        resolved_reasoners = self._resolved_reasoners()
+        from .declarations import declarations_blob
 
         compiled: list[CompiledPipeline[Any, Any]] = []
         for spec in sorted(self.pipelines, key=lambda pipeline: pipeline.name):
@@ -392,6 +422,15 @@ class Application:
                     deployment=deployment,
                     declared_schema_hash=_snapshot_hash(declared_snapshot),
                     compiled_schema_hash=_snapshot_hash(compile_snapshot),
+                    runtime_declarations_blob=(
+                        declarations_blob(
+                            (resolved_reasoners[name] for name in spec.reasoner_names),
+                            registry=DEFAULT_REGISTRY,
+                            flow=deployment.flow,
+                        )
+                        if spec.reasoner_names
+                        else None
+                    ),
                 )
             )
         return CompiledApplication(
@@ -436,7 +475,7 @@ class Application:
     ) -> dict[str, tuple[Any, ...]]:
         """Run declared eval packages through the supplied production caller."""
 
-        from .ca.evalrun import run_eval_sync
+        from .cli.evalrun import run_eval_sync
 
         base = Path(root)
         return {

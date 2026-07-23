@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any
 
 import pytest
 
-from julep import CapabilityManifest, WorkflowStartOptions, deploy, ident, think
+from julep import (
+    HAVE_TEMPORAL,
+    CapabilityManifest,
+    WorkflowStartOptions,
+    deploy,
+    ident,
+    think,
+)
 from julep.app import Application, ApplicationDefinitionError, PipelineSpec
 from julep.app_deploy import (
     ApplicationReleaseError,
@@ -20,7 +28,7 @@ from julep.app_deploy import (
     reconcile_application,
     release_from_bytes,
 )
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from julep.dotctx import Reasoner
 from julep.dsl import app as agent_app
@@ -352,7 +360,7 @@ def test_application_evals_receive_the_supplied_llm_caller(monkeypatch, tmp_path
         calls.append((path, kwargs["llm_caller"]))
         return path
 
-    monkeypatch.setattr("julep.ca.evalrun.run_eval_sync", fake_run)
+    monkeypatch.setattr("julep.cli.evalrun.run_eval_sync", fake_run)
     app = Application("memory", [_spec("summary")])
 
     reports = app.run_evals(caller, root=tmp_path)
@@ -361,42 +369,107 @@ def test_application_evals_receive_the_supplied_llm_caller(monkeypatch, tmp_path
     assert calls == [(str(tmp_path / "evals.summary"), caller)]
 
 
-def test_publish_release_is_content_addressed_and_round_trips(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path / "cas")
-    compiled = Application("memory", [_spec("summary")]).compile()
+@pytest.fixture
+def roundtrip_release(tmp_path, monkeypatch):
+    store = LocalDirArtifactStore(tmp_path / "artifacts")
+    reasoner_name = "release-roundtrip-reasoner"
+    reasoner = Reasoner(reasoner_name, "model-a", system="summarize")
+    monkeypatch.setitem(DEFAULT_REGISTRY.reasoners, reasoner_name, reasoner)
+    compiled = Application(
+        "memory",
+        [
+            PipelineSpec(
+                "summary",
+                think(reasoner_name),
+                reasoners=(reasoner,),
+                lane="summary",
+            )
+        ],
+    ).compile()
     image = "registry.example/memory@sha256:" + "a" * 64
-
     release = publish_application(
         compiled,
         store,
         worker_image=image,
         signing_key="0" * 64,
     )
-
     digest = release.release_hash.removeprefix("sha256:")
-    assert store.has(digest)
+    declarations_ref = release.pipelines[0].runtime_declarations_ref
     restored = release_from_bytes(store.get(digest))
+    return store, release, restored, digest, declarations_ref, image
+
+
+def test_publish_release_is_content_addressed_and_round_trips(
+    roundtrip_release,
+) -> None:
+    store, release, restored, digest, declarations_ref, image = roundtrip_release
+
+    assert store.has(digest)
+    assert release.schema_version == 2
+    assert declarations_ref is not None
+    assert store.has(str(declarations_ref["hash"]).removeprefix("sha256:"))
+    assert len(store.get(str(declarations_ref["hash"]).removeprefix("sha256:"))) == (
+        declarations_ref["size"]
+    )
+    pipeline_json = release.manifest["pipelines"][0]
+    assert pipeline_json["runtimeDeclarationsRef"] == declarations_ref
+    assert "runtimeDeclarationsRef" not in pipeline_json["manifestJson"]
+
     assert restored.release_hash == release.release_hash
     assert restored.worker_image == image
+    assert restored.schema_version == 2
+    assert restored.pipelines[0].runtime_declarations_ref == declarations_ref
 
 
-def test_release_parser_rejects_unknown_schema_version(tmp_path) -> None:
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_pipeline_release_start_uses_restored_release_contract(roundtrip_release) -> None:
+    _store, _release, restored, _digest, declarations_ref, _image = roundtrip_release
+    captured: dict[str, Any] = {}
+
+    class Client:
+        async def start_workflow(self, workflow, flow_input, **kwargs):
+            captured["flow_input"] = flow_input
+            captured["kwargs"] = kwargs
+            return "handle"
+
+    result = asyncio.run(
+        restored.pipelines[0].start(
+            Client(),
+            session_id="release-roundtrip",
+            input={"document": "hello"},
+            options=WorkflowStartOptions(require_payload_encryption=False),
+        )
+    )
+    assert result == "handle"
+    assert captured["flow_input"].runtime_declarations_ref == declarations_ref
+    assert captured["kwargs"]["task_queue"] == restored.pipelines[0].task_queue
+
+
+@pytest.mark.parametrize("schema_version", [1, 3, None])
+def test_release_parser_requires_schema_version_two(tmp_path, schema_version) -> None:
     release = publish_application(
         Application("memory", [_spec("summary")]).compile(),
-        LocalDirCAS(tmp_path / "cas"),
+        LocalDirArtifactStore(tmp_path / "artifacts"),
         worker_image="registry.example/memory@sha256:" + "a" * 64,
         signing_key="0" * 64,
     )
-    payload = release.manifest_bytes.replace(b'"schemaVersion":1', b'"schemaVersion":2')
+    payload = json.loads(release.manifest_bytes)
+    if schema_version is None:
+        payload.pop("schemaVersion")
+    else:
+        payload["schemaVersion"] = schema_version
 
-    with pytest.raises(ApplicationReleaseError, match="unsupported.*version 2"):
-        release_from_bytes(payload)
+    with pytest.raises(
+        ApplicationReleaseError,
+        match=r"version 2 is required; re-publish with this julep version",
+    ):
+        release_from_bytes(json.dumps(payload).encode("utf-8"))
 
 
 def test_published_release_is_deeply_immutable(tmp_path) -> None:
     release = publish_application(
         Application("memory", [_spec("summary")]).compile(),
-        LocalDirCAS(tmp_path / "cas"),
+        LocalDirArtifactStore(tmp_path / "artifacts"),
         worker_image="registry.example/memory@sha256:" + "d" * 64,
         signing_key="0" * 64,
     )
@@ -417,7 +490,7 @@ def test_publish_rejects_post_compile_flow_mutation(tmp_path) -> None:
     with pytest.raises(ValueError, match="changed after compilation"):
         publish_application(
             compiled,
-            LocalDirCAS(tmp_path / "cas"),
+            LocalDirArtifactStore(tmp_path / "artifacts"),
             worker_image="registry.example/memory@sha256:" + "e" * 64,
             signing_key="0" * 64,
         )
@@ -443,7 +516,7 @@ def test_release_rejects_mutable_image_tag(tmp_path) -> None:
     with pytest.raises(ApplicationReleaseError, match="immutable"):
         publish_application(
             Application("memory", [_spec("summary")]).compile(),
-            LocalDirCAS(tmp_path),
+            LocalDirArtifactStore(tmp_path),
             worker_image="registry.example/memory:latest",
             signing_key="0" * 64,
         )
@@ -472,7 +545,7 @@ def test_deployment_config_changes_release_and_physical_queue(tmp_path) -> None:
         )
         return publish_application(
             compiled,
-            LocalDirCAS(tmp_path / "cas"),
+            LocalDirArtifactStore(tmp_path / "artifacts"),
             worker_image="registry.example/memory@sha256:" + "f" * 64,
             deployment_config=config,
             signing_key="0" * 64,
@@ -621,7 +694,7 @@ def test_deployment_config_rejects_mutable_remote_chart_reference() -> None:
 
 
 def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
-    store = LocalDirCAS(tmp_path / "cas")
+    store = LocalDirArtifactStore(tmp_path / "artifacts")
     compiled = Application(
         "memory",
         [_spec("summary", lane="summary"), _spec("brief", lane="brief-refresh")],
@@ -755,14 +828,35 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
     assert all("--atomic" in command and "--wait" in command for command in upgrade_commands)
 
 
+def test_reconcile_rejects_publish_only_release_without_worker_image(tmp_path) -> None:
+    compiled = Application("memory", [_spec("summary")]).compile()
+    release = publish_application(
+        compiled,
+        LocalDirArtifactStore(tmp_path / "artifacts"),
+        worker_image=None,
+        signing_key="0" * 64,
+    )
+    reconciler = HelmLaneReconciler(
+        chart="infra/helm/julep-worker",
+        namespace="memory",
+        temporal_address="temporal:7233",
+        worker_context_factory="memory.worker:context",
+        payload_encryption_secret="temporal-payload-codec",
+        runner=lambda _args: None,
+    )
+
+    with pytest.raises(ApplicationReleaseError, match="requires a worker image"):
+        reconcile_application(release, reconciler)
+
+
 def test_helm_environment_preserves_comma_values(tmp_path) -> None:
     compiled = Application("memory", [_spec("summary")]).compile()
     chart = tmp_path / "chart"
     chart.mkdir()
-    worker_environment = {"CA_BUNDLE_ALLOWED_SIGNERS": "aa,bb"}
+    worker_environment = {"JULEP_BUNDLE_ALLOWED_SIGNERS": "aa,bb"}
     release = publish_application(
         compiled,
-        LocalDirCAS(tmp_path / "cas"),
+        LocalDirArtifactStore(tmp_path / "artifacts"),
         worker_image="registry.example/memory@sha256:" + "c" * 64,
         deployment_config=build_lane_deployment_config(
             chart=str(chart),
@@ -793,6 +887,6 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
 
     reconcile_application(release, reconciler)
 
-    assert 'worker.environment={"CA_BUNDLE_ALLOWED_SIGNERS":"aa,bb"}' in commands[0]
+    assert 'worker.environment={"JULEP_BUNDLE_ALLOWED_SIGNERS":"aa,bb"}' in commands[0]
     assert "payloadEncryption.secretName=temporal-payload-codec" in commands[0]
     assert "worker.priorityClassName=" in commands[0]

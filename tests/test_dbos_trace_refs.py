@@ -53,6 +53,33 @@ def test_single_call_round_blobs_state_last() -> None:
     assert blobbed == [{"r": 9}]
 
 
+def test_single_call_many_entry_blobs_actual_trace_output() -> None:
+    """One-call provider CALL_MANY keeps a list wrapper only in state.last."""
+
+    state = AgentState(
+        trace=[
+            TraceEntry(
+                decision="call",
+                ref="x",
+                call_id="call-1",
+                output={"r": 9},
+                output_available=True,
+            )
+        ],
+        last=[{"id": "call-1", "tool": "x", "output": {"r": 9}}],
+    )
+    blobbed: list[Any] = []
+
+    async def blob(value: Any) -> str:
+        blobbed.append(value)
+        return "blob-0"
+
+    asyncio.run(blob_round_output_refs(state, 0, blob))
+
+    assert state.trace[0].output_ref == "blob-0"
+    assert blobbed == [{"r": 9}]
+
+
 def test_reask_only_round_does_not_blob() -> None:
     state = AgentState(trace=[TraceEntry(decision="reask")], last={"r": 9})
     blobbed: list[Any] = []

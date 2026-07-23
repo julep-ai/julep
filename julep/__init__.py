@@ -132,6 +132,14 @@ from .freeze import (
     NativeToolSpec as NativeToolSpec,
     freeze as freeze,
 )
+from .mcp_surface import (
+    McpSurfaceMismatch as McpSurfaceMismatch,
+    McpSurfaceMismatchError as McpSurfaceMismatchError,
+    McpSurfacePolicy as McpSurfacePolicy,
+    assert_mcp_surface as assert_mcp_surface,
+    canonical_surface_digest as canonical_surface_digest,
+    compare_mcp_surface as compare_mcp_surface,
+)
 from .validate import Diagnostic as Diagnostic, blocking as blocking, validate as validate
 from .diagnostics import explain as explain
 from .capabilities import (
@@ -153,6 +161,7 @@ from .deploy import (
     deploy as deploy,
     snapshot_from_listings as snapshot_from_listings,
 )
+from .mcp_step import McpToolStep as McpToolStep, mcp_tool as mcp_tool
 from .app import (
     Application as Application,
     ApplicationDefinitionError as ApplicationDefinitionError,
@@ -270,6 +279,7 @@ from .resilience import (
 # --- errors ---------------------------------------------------------------- #
 from .errors import (
     AdmissionError as AdmissionError,
+    AgentTerminalError as AgentTerminalError,
     BudgetExceeded as BudgetExceeded,
     CapabilityDenied as CapabilityDenied,
     JulepError as JulepError,
@@ -280,6 +290,8 @@ from .errors import (
     RaceAllFailed as RaceAllFailed,
     ResilienceExhausted as ResilienceExhausted,
     UnsupportedShapeError as UnsupportedShapeError,
+    ToolSurfaceDrift as ToolSurfaceDrift,
+    ToolInputValidation as ToolInputValidation,
     ValidationError as ValidationError,
 )
 
@@ -290,10 +302,21 @@ from .execution import (
     HAVE_DBOS as HAVE_DBOS,
     HAVE_TEMPORAL as HAVE_TEMPORAL,
     InMemoryEnv as InMemoryEnv,
+    LlmCaller as LlmCaller,
     Result as Result,
     RunPrincipal as RunPrincipal,
     WorkerContext as WorkerContext,
     interpret as interpret,
+)
+from .local import (
+    LocalExecutionConfigurationError as LocalExecutionConfigurationError,
+    LocalExecutionUnsupported as LocalExecutionUnsupported,
+    LocalPipeline as LocalPipeline,
+    LocalPipelineError as LocalPipelineError,
+    LocalPipelineNotFound as LocalPipelineNotFound,
+    arun_local_pipeline as arun_local_pipeline,
+    prepare_local_pipeline as prepare_local_pipeline,
+    run_local_pipeline as run_local_pipeline,
 )
 
 
@@ -316,10 +339,10 @@ _BASE_EXPORTS = [
     "Shape", "Effect", "EnforcementMode", "Idempotency", "ContextScope", "SummaryPolicy",
     # ir
     "Node", "Ann", "ContextPolicy", "CacheHint", "SubContract",
-    "NativeTool", "McpTool", "ChannelRef",
+    "NativeTool", "McpTool", "McpToolStep", "ChannelRef",
     "HUMAN_GATE_TOOL", "SLEEP_TOOL", "RECV_TOOL", "EMIT_TOOL",
     # dsl
-    "call", "native", "mcp", "think", "reasoner_from_ctx", "ident", "arr", "sub",
+    "call", "native", "mcp", "mcp_tool", "think", "reasoner_from_ctx", "ident", "arr", "sub",
     "seq", "par", "fanout", "each", "alt", "cond", "switch", "switch_on", "reschedule",
     "iter_up_to", "stage", "app",
     "Contract",
@@ -337,6 +360,8 @@ _BASE_EXPORTS = [
     # compile
     "freeze", "FreezeResult", "McpSnapshot", "McpServerSnapshot", "McpToolSpec",
     "NativeToolSpec", "CapabilityOverrides",
+    "McpSurfacePolicy", "McpSurfaceMismatch", "McpSurfaceMismatchError",
+    "compare_mcp_surface", "assert_mcp_surface", "canonical_surface_digest",
     "validate", "Diagnostic", "blocking", "explain",
     "CapabilityManifest", "Budget", "ToolGrant", "check_approval_gates",
     "estimate_cost", "validate_plan", "admit_plan", "referenced_tool_keys",
@@ -367,12 +392,17 @@ _BASE_EXPORTS = [
     "AttemptRecord", "CircuitBreaker", "ErrorClass", "ResiliencePolicy",
     "classify_error", "summarize_attempts",
     # errors
-    "JulepError", "ValidationError", "FreezeError", "AdmissionError",
+    "JulepError", "ValidationError", "FreezeError", "AdmissionError", "AgentTerminalError",
     "PureDriftError", "RaceAllFailed", "BudgetExceeded", "PlanRejected", "CapabilityDenied",
-    "PrincipalRequired", "ResilienceExhausted", "UnsupportedShapeError",
+    "PrincipalRequired", "ResilienceExhausted", "UnsupportedShapeError", "ToolSurfaceDrift",
+    "ToolInputValidation",
     # execution (pure)
-    "Env", "ExecutionPolicy", "InMemoryEnv", "Result", "RunPrincipal", "WorkerContext", "interpret",
+    "Env", "ExecutionPolicy", "InMemoryEnv", "LlmCaller", "Result", "RunPrincipal", "WorkerContext", "interpret",
     "HAVE_DBOS", "HAVE_TEMPORAL",
+    # foreground configured execution
+    "LocalPipeline", "LocalPipelineError", "LocalPipelineNotFound",
+    "LocalExecutionConfigurationError", "LocalExecutionUnsupported",
+    "prepare_local_pipeline", "run_local_pipeline", "arun_local_pipeline",
     "__version__",
 ]
 

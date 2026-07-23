@@ -163,3 +163,72 @@ def test_coalesce_bypasses_batch_dispatch() -> None:
         assert coalescer.flushes == 0
 
     run(scenario())
+
+
+def test_coalesce_forwards_tools_per_buffered_call() -> None:
+    seen: dict[int, list[dict[str, Any]] | None] = {}
+
+    async def caller(
+        reasoner: Reasoner,
+        value: int,
+        principal: dict[str, Any] | None,
+        transcript: Any,
+        dispatch: ReasonerDispatch,
+        *,
+        tools: list[dict[str, Any]] | None = None,
+    ) -> int:
+        del reasoner, principal, transcript, dispatch
+        seen[value] = tools
+        return value
+
+    async def scenario() -> None:
+        coalescer = SyncCoalescer(caller, sleep=_yield_once)
+        first = [{"type": "function", "function": {"name": "first"}}]
+        second = [{"type": "function", "function": {"name": "second"}}]
+
+        results = await asyncio.gather(
+            coalescer(_reasoner(), 1, tools=first),
+            coalescer.call(_reasoner(), 2, tools=second),
+        )
+
+        assert results == [1, 2]
+        assert seen == {1: first, 2: second}
+        assert coalescer.flushes == 1
+
+    run(scenario())
+
+
+def test_coalesce_forwards_tools_on_batch_bypass() -> None:
+    seen: list[dict[str, Any]] | None = None
+
+    async def caller(
+        reasoner: Reasoner,
+        value: int,
+        principal: dict[str, Any] | None,
+        transcript: Any,
+        dispatch: ReasonerDispatch,
+        *,
+        tools: list[dict[str, Any]] | None = None,
+    ) -> int:
+        nonlocal seen
+        del reasoner, principal, transcript
+        assert dispatch.qos is QoSTier.BATCH
+        seen = tools
+        return value
+
+    async def scenario() -> None:
+        coalescer = SyncCoalescer(caller, sleep=_yield_once)
+        tool_defs = [{"type": "function", "function": {"name": "lookup"}}]
+
+        result = await coalescer.call(
+            _reasoner(),
+            1,
+            dispatch=ReasonerDispatch(qos=QoSTier.BATCH),
+            tools=tool_defs,
+        )
+
+        assert result == 1
+        assert seen == tool_defs
+        assert coalescer.flushes == 0
+
+    run(scenario())

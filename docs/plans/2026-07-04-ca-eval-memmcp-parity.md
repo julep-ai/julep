@@ -24,15 +24,15 @@ Parity source of truth (mem-mcp repo at `/home/diwank/github.com/julep-ai/mem-mc
 - Gates (run all three before every commit): `python -m pytest` (NOT bare `pytest`), `uv run mypy --strict composable_agents` (package only, not tests), `ruff check .`
 - Mirror mem-mcp shapes exactly: `_tool_calls` items `{"id", "name", "args"}`; score contract number-or-2-tuple; tag filter = any-match intersection; unknown `--sample-name` = error.
 - Intentional divergences (keep, and keep documented in docstrings): invalid score returns are **exit-4 setup errors** here (mem-mcp soft-fails that sample to 0.0 with an error string); an empty post-filter sample set is an exit-4 setup error (silent empty runs are worse); dict-returning `score()` stays unsupported (it does not work in mem-mcp's runner either — `briefs/propose_template` errors to 0.0 there).
-- Backward compatibility: `SampleScore.to_json()` must omit `metrics` when absent so existing baseline JSON files and the report-shape test (`tests/ca/test_eval_cli.py:224`) stay valid; `from_json` must accept old reports without a `metrics` key.
+- Backward compatibility: `SampleScore.to_json()` must omit `metrics` when absent so existing baseline JSON files and the report-shape test (`tests/cli/test_eval_cli.py:224`) stay valid; `from_json` must accept old reports without a `metrics` key.
 - No version bump or PyPI publish in this plan.
-- New tests go in `tests/ca/test_eval_cli.py`, using its existing conventions: `run` from conftest, `SingleShotFake`/`ToolLoopFake`, `_write_eval_ctx`, module-top `pytest.importorskip("jinja2")`/`importorskip("yglu")` guards (already present).
+- New tests go in `tests/cli/test_eval_cli.py`, using its existing conventions: `run` from conftest, `SingleShotFake`/`ToolLoopFake`, `_write_eval_ctx`, module-top `pytest.importorskip("jinja2")`/`importorskip("yglu")` guards (already present).
 
 ## File Structure
 
 - Modify: `composable_agents/ca/evalrun.py` — `EvalOutput` class, call collection in `_run_tool_loop`, `_coerce_score`, `SampleScore.metrics`, filter params on `run_eval`/`run_eval_sync`.
 - Modify: `composable_agents/ca/cli.py` — `--tag`/`--sample-name` options on `eval_cmd`.
-- Test: `tests/ca/test_eval_cli.py` — all new tests.
+- Test: `tests/cli/test_eval_cli.py` — all new tests.
 
 ---
 
@@ -40,7 +40,7 @@ Parity source of truth (mem-mcp repo at `/home/diwank/github.com/julep-ai/mem-mc
 
 **Files:**
 - Modify: `composable_agents/ca/evalrun.py` (class after `EvalReport` ~line 76; `_run_tool_loop` ~lines 218–335)
-- Test: `tests/ca/test_eval_cli.py`
+- Test: `tests/cli/test_eval_cli.py`
 
 **Interfaces:**
 - Consumes: `drive_agent_loop(...) -> dict[str, Any]` (unchanged), julep tool-call dicts `{"id", "tool", "input"}` from `reply["tool_calls"]`.
@@ -48,7 +48,7 @@ Parity source of truth (mem-mcp repo at `/home/diwank/github.com/julep-ai/mem-mc
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `tests/ca/test_eval_cli.py` (extend the existing `evalrun` import at the top of the file with `EvalOutput`; add `import shutil` to the stdlib imports):
+Add to `tests/cli/test_eval_cli.py` (extend the existing `evalrun` import at the top of the file with `EvalOutput`; add `import shutil` to the stdlib imports):
 
 ```python
 def _write_tool_eval_ctx(tmp_path: Path, eval_py: str) -> Path:
@@ -119,7 +119,7 @@ def test_tool_loop_output_carries_memmcp_metadata(tmp_path: Path) -> None:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `python -m pytest tests/ca/test_eval_cli.py::test_eval_output_is_dict_with_memmcp_metadata tests/ca/test_eval_cli.py::test_tool_loop_output_carries_memmcp_metadata -v`
+Run: `python -m pytest tests/cli/test_eval_cli.py::test_eval_output_is_dict_with_memmcp_metadata tests/cli/test_eval_cli.py::test_tool_loop_output_carries_memmcp_metadata -v`
 Expected: FAIL — `ImportError: cannot import name 'EvalOutput'`.
 
 - [ ] **Step 3: Implement `EvalOutput` and wire collection into `_run_tool_loop`**
@@ -192,7 +192,7 @@ Add `"EvalOutput",` to the `__all__` list at the bottom of the module (~line 438
 
 - [ ] **Step 4: Run the full eval test file + gates**
 
-Run: `python -m pytest tests/ca/test_eval_cli.py -v`
+Run: `python -m pytest tests/cli/test_eval_cli.py -v`
 Expected: all PASS — including the pre-existing `test_tool_loop_scores_trace_derived_output`, which proves the dict-subclass approach keeps `isinstance(output, dict)` scorers working (that fixture's scorer does exactly that check).
 Run: `uv run mypy --strict composable_agents && ruff check .`
 Expected: clean.
@@ -200,7 +200,7 @@ Expected: clean.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add composable_agents/ca/evalrun.py tests/ca/test_eval_cli.py
+git add composable_agents/ca/evalrun.py tests/cli/test_eval_cli.py
 git commit -m "feat(ca): tool-loop eval output carries mem-mcp _tool_calls/_rounds metadata"
 ```
 
@@ -210,7 +210,7 @@ git commit -m "feat(ca): tool-loop eval output carries mem-mcp _tool_calls/_roun
 
 **Files:**
 - Modify: `composable_agents/ca/evalrun.py` (`SampleScore` ~lines 30–41; new `_coerce_score` after `_unique_sample_ids`; `score_one` ~lines 372–385)
-- Test: `tests/ca/test_eval_cli.py`
+- Test: `tests/cli/test_eval_cli.py`
 
 **Interfaces:**
 - Consumes: `SampleScore`, `EvalReport` JSON shapes (existing baselines must keep loading).
@@ -218,7 +218,7 @@ git commit -m "feat(ca): tool-loop eval output carries mem-mcp _tool_calls/_roun
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `tests/ca/test_eval_cli.py` (extend the `evalrun` import with `SampleScore`):
+Add to `tests/cli/test_eval_cli.py` (extend the `evalrun` import with `SampleScore`):
 
 ```python
 TUPLE_SCORER_EVAL = '''\
@@ -286,7 +286,7 @@ def test_sample_score_json_backcompat_without_metrics() -> None:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `python -m pytest tests/ca/test_eval_cli.py::test_score_tuple_carries_metrics tests/ca/test_eval_cli.py::test_bad_score_returns_are_setup_errors tests/ca/test_eval_cli.py::test_sample_score_json_backcompat_without_metrics -v`
+Run: `python -m pytest tests/cli/test_eval_cli.py::test_score_tuple_carries_metrics tests/cli/test_eval_cli.py::test_bad_score_returns_are_setup_errors tests/cli/test_eval_cli.py::test_sample_score_json_backcompat_without_metrics -v`
 Expected: `test_score_tuple_carries_metrics` FAILs (`float(tuple)` TypeError wrapped as `eval score() failed`); `test_sample_score_json_backcompat_without_metrics` FAILs (`SampleScore` has no `metrics`); the out-of-range `1.5` param FAILs (no error raised today). The other bad-return params may already pass — that's fine.
 
 - [ ] **Step 3: Implement `_coerce_score` and `SampleScore.metrics`**
@@ -370,7 +370,7 @@ In `score_one`, replace the `s = float(value)` line and the return:
 
 - [ ] **Step 4: Run the full eval test file + gates**
 
-Run: `python -m pytest tests/ca/test_eval_cli.py -v`
+Run: `python -m pytest tests/cli/test_eval_cli.py -v`
 Expected: all PASS — including the pre-existing `test_single_shot_report_shape_and_pass`, which asserts score JSON keys are exactly `{"id", "score", "passed"}` (metrics omitted when absent).
 Run: `uv run mypy --strict composable_agents && ruff check .`
 Expected: clean.
@@ -378,7 +378,7 @@ Expected: clean.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add composable_agents/ca/evalrun.py tests/ca/test_eval_cli.py
+git add composable_agents/ca/evalrun.py tests/cli/test_eval_cli.py
 git commit -m "feat(ca): mem-mcp score contract - (score, metrics) tuples, range check, metrics in reports"
 ```
 
@@ -389,7 +389,7 @@ git commit -m "feat(ca): mem-mcp score contract - (score, metrics) tuples, range
 **Files:**
 - Modify: `composable_agents/ca/evalrun.py` (`run_eval` ~lines 337–370; `run_eval_sync` ~line 400)
 - Modify: `composable_agents/ca/cli.py` (`eval_cmd` ~lines 369–390)
-- Test: `tests/ca/test_eval_cli.py`
+- Test: `tests/cli/test_eval_cli.py`
 
 **Interfaces:**
 - Consumes: `Sample.tags` (list of strings, may be empty) and `Sample.name` from `composable_agents.dotctx_evals`.
@@ -397,7 +397,7 @@ git commit -m "feat(ca): mem-mcp score contract - (score, metrics) tuples, range
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `tests/ca/test_eval_cli.py`:
+Add to `tests/cli/test_eval_cli.py`:
 
 ```python
 TAGGED_EVAL = '''\
@@ -478,7 +478,7 @@ def test_eval_cmd_passes_filters(monkeypatch: pytest.MonkeyPatch) -> None:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `python -m pytest tests/ca/test_eval_cli.py -k "tag_filter or sample_name or no_matching or passes_filters" -v`
+Run: `python -m pytest tests/cli/test_eval_cli.py -k "tag_filter or sample_name or no_matching or passes_filters" -v`
 Expected: FAIL — `run_eval() got an unexpected keyword argument 'tags'` and CLI `Error: No such option: --tag`.
 
 - [ ] **Step 3: Implement filtering in `run_eval` / `run_eval_sync`**
@@ -589,7 +589,7 @@ and thread them through the `run_eval_sync` call:
 
 - [ ] **Step 5: Run the full eval test file + gates**
 
-Run: `python -m pytest tests/ca/test_eval_cli.py -v`
+Run: `python -m pytest tests/cli/test_eval_cli.py -v`
 Expected: all PASS.
 Run: `python -m pytest && uv run mypy --strict composable_agents && ruff check .`
 Expected: full suite green, mypy and ruff clean.
@@ -597,7 +597,7 @@ Expected: full suite green, mypy and ruff clean.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add composable_agents/ca/evalrun.py composable_agents/ca/cli.py tests/ca/test_eval_cli.py
+git add composable_agents/ca/evalrun.py composable_agents/ca/cli.py tests/cli/test_eval_cli.py
 git commit -m "feat(ca): --tag/--sample-name filtering on ca eval (mem-mcp prod/smoke workflow)"
 ```
 

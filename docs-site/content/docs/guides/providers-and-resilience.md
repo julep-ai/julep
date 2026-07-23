@@ -134,4 +134,4 @@ which provider was up is a fact about the world, recorded per attempt via
 Feed `on_attempt` into your projection sink so a run that quietly fell back
 from `pro` to `medium` is visible in the trace.
 
-<!-- ported-by ca-docs-site: guides/providers-and-resilience -->
+<!-- ported-by julep-docs-site: guides/providers-and-resilience -->

@@ -60,11 +60,18 @@ report optional runtime availability.
 | `dbos` | DBOS backend on `dbos>=2.18` | `pip install --pre 'julep[dbos]'` |
 | `http` | native HTTP tool calls from `callTool` | `pip install --pre 'julep[http]'` |
 | `cma` | Claude Managed Agents HTTP adapter | `pip install --pre 'julep[cma]'` |
+| `mcp` | MCP SDK, live snapshots, HTTP caller, PyJWT, Ed25519 auth | `pip install --pre 'julep[mcp]'` |
+| `server` | FastAPI control plane, Postgres store, SSE, Temporal gateway | `pip install --pre 'julep[server]'` |
 | `dotctx` | rich dotctx prompt packages with Jinja2 | `pip install --pre 'julep[dotctx]'` |
 | `providers` | `any-llm` provider caller | `pip install --pre 'julep[providers]'` |
+| `litellm` | public LiteLLM `LlmCaller` adapter | `pip install --pre 'julep[litellm]'` |
 | `otel`, `langfuse` | projection span export | `pip install --pre 'julep[otel]'` |
-| `store` | CAS bundle storage/signing helpers | `pip install --pre 'julep[store]'` |
+| `store` | artifact store bundle storage/signing helpers | `pip install --pre 'julep[store]'` |
 | `wasm` | wasm-tier bundle-sourced pures | `pip install --pre 'julep[wasm]'` |
+
+The `temporal`, `server`, and development extras accept `temporalio>=1.20`.
+This keeps Julep co-installable with current pydantic-ai stacks that still cap
+the Temporal SDK below 1.21; the minimum-SDK CI lane exercises 1.20 directly.
 
 ## Core enums and constants
 
@@ -104,7 +111,7 @@ available where shown; `from_json(...)` exists on the matching JSON codecs.
 `@flow` runs the Python function once at definition time with `Handle` values.
 Registered tools, registered pures, `think(...)`, `cond(...)`, `switch(...)`,
 `each(...)`, and `reschedule(...)` append graph steps; `h1 | h2` emits
-`std.merge`; `h["field"]` emits `std.pluck`. Runtime values must enter through
+`std.merge`; `h["field"]` and `h.field` emit `std.pluck`. Runtime values must enter through
 flow parameters or JSON captures.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
@@ -113,9 +120,10 @@ flow parameters or JSON captures.
 | `FlowDef` | `FlowDef(fn: Callable[..., Any])` | function to lower | lowerable flow | `DefineError` | `flow(lambda x: x)` is invalid because source/return rules are stricter |
 | `FlowDef.to_ir` | `to_ir(self) -> Node` | no args | compiled IR | `DefineError` if more than one runtime parameter remains | `triage.to_ir().to_json()` |
 | `BoundFlow` | `BoundFlow(flow: FlowDef, bound_args: dict[str, Any])` | partially applied JSON args | lowerable flow | `DefineError` if not exactly one runtime parameter remains | `some_flow(region="us").to_ir()` |
-| `Handle` | `Handle(label: str, graph, source)` | internal data handle | authoring handle | `TypeError`/`DefineError` on bool, iter, equality, attribute access | `h["summary"]`, `h1 | h2` inside `@flow` |
+| `Handle` | `Handle(label: str, graph, source)` | internal data handle | authoring handle | `TypeError`/`DefineError` on bool, iter, equality, or invalid/private attribute access | `h.summary`, `h["summary"]`, `h1 | h2` inside `@flow` |
 | `tool` | `tool(fn=None, /, *, effect="write", idempotent=False, name=None)` | function plus effect/idempotency/name | `Tool` or decorator | `ValueError` for invalid effect | `@tool(effect="read", idempotent=True)` |
 | `Tool` | `Tool(name, fn, contract, input_schema, output_schema, param_names=())` | native callable contract | `FlowLike` tool | callable may raise its own errors | `lookup.to_ir()` |
+| `mcp_tool` | `mcp_tool(server, tool, *, name=None) -> McpToolStep` | frozen MCP server/tool reference | `FlowLike` MCP step | `ValueError` for empty names; callable only on handles inside `@flow` | `read = mcp_tool("episodes", "read_episode")` |
 | `Tool.bound_tool` | property `Callable[[Any], Any]` | single threaded input adapter | callable | function errors | `snapshot_from_tools([lookup])` |
 | `snapshot_from_tools` | `snapshot_from_tools(tools: Sequence[Tool]) -> McpSnapshot` | native tools | freeze snapshot | none | `deploy(triage, tools=[lookup])` |
 | `pure` | `pure(fn, /) -> Pure`; `pure(name: str, /) -> Callable[[fn], Pure]` | deterministic map/predicate | `Pure` | registry `ValueError` on conflicting name | `@pure("is_large")` |
@@ -124,12 +132,21 @@ flow parameters or JSON captures.
 | `get_pure` | `get_pure(name: str) -> PureFn` | registered pure name | callable | `KeyError` if unknown | `get_pure("prompt")({"summary": "x"})` |
 | `is_registered` | `is_registered(name: str) -> bool` | pure name | bool | none | `is_registered("prompt")` |
 | `diff_pure_hashes` | `diff_pure_hashes(pinned: dict[str,str], registered: dict[str,str]) -> list[dict[str,str|None]]` | pinned and actual hash maps | drift list | none | `diff_pure_hashes({}, {})` |
-| `Reasoner` | `Reasoner(name, model, system="", tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET)` | model-call config; `reply` accepts TypedDict, Pydantic v2 model, or raw schema dict | reasoner config | `TypeError` for unsupported `reply` | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
+| `Reasoner` | `Reasoner(name, model, system="", tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET, reasoning_effort=None, output_retries=0, require_tool_call=False, response_format=None, prompt_cache=None)` | model-call config; `reply` accepts TypedDict, Pydantic v2 model, or raw schema dict | reasoner config | `TypeError` for unsupported `reply`; `ValueError` for bad cache TTL | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
+| `Reasoner.replace` | `replace(*, name=_KEEP, model=_KEEP, system=_KEEP, reply=_KEEP, tools=_KEEP, temperature=_KEEP, max_rounds=_KEEP, is_agent=_KEEP, sub_contract=_KEEP, context_scope=_KEEP, system_render=_KEEP, user_render=_KEEP, max_tokens=_KEEP, reasoning_effort=_KEEP, output_retries=_KEEP, require_tool_call=_KEEP, response_format=_KEEP, prompt_cache=_KEEP) -> Reasoner` | immutable copy-with updates; omitted `reply` preserves its materialized schema and explicit `reply=None` clears it | new reasoner | constructor validation for replaced values | `fast = base.replace(model="openai:gpt-5-mini")` |
 | `get_reasoner` | `get_reasoner(name: str) -> Reasoner` | reasoner name | config | `KeyError` if unknown | `get_reasoner("support_reply").model` |
-| `load_dotctx` | `load_dotctx(path: str) -> Reasoner` | dotctx directory | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
+| `load_dotctx` | `load_dotctx(path: str, *, env=None) -> Reasoner` | dotctx directory or file and explicit render environment | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
 | `reasoner_from_settings` | `reasoner_from_settings(settings: dict[str, Any], *, name=None, base_dir=None) -> Reasoner` | settings mapping and optional path | registered reasoner | `ValueError` if no name | `reasoner_from_settings({"name":"r","model":"m"})` |
 | `reasoner_to_flow` | `reasoner_to_flow(reasoner: Reasoner, *, ctx=None) -> Node` | reasoner and optional context | `think`, `iter_up_to`, `app`, or `sub` node | none | `reasoner_to_flow(get_reasoner("r"))` |
 | `dotctx_flow` | `dotctx_flow(path: str, *, ctx=None) -> Node` | dotctx path | lowered node | same as `load_dotctx` | `dotctx_flow("reasoners/r")` |
+| `CtxPipelineConfig` | `CtxPipelineConfig(name, ctx, lane="default", env={})` | zero-code pipeline declaration | config value | config validation occurs in `load_config` | `CtxPipelineConfig("summary", "prompts/summary.ctx")` |
+| `pipeline_spec_from_ctx` | `pipeline_spec_from_ctx(config, *, root, env_vars=None, agent_round_cap=32, mcp_servers=None) -> PipelineSpec` | load dotctx, merge env, bind configured MCP servers, and lower with `reasoner_to_flow` | pipeline spec | dotctx/config errors | `pipeline_spec_from_ctx(cfg, root=Path("."))` |
+
+Rich dotctx packages whose `schema.pyi` omits `class Output` emit
+`MissingOutputSchemaWarning`: loading remains compatible, but the returned
+reasoner has no reply schema and model output is not schema-validated. The CLI
+exposes the same condition as `CTX_OUTPUT_SCHEMA_MISSING` during configured
+pipeline lint.
 
 ## `@flow` control helpers
 
@@ -192,6 +209,23 @@ All functions return `Node` unless noted. They do no IO; `freeze(...)`,
 | `continuation_value` | `continuation_value(value: dict[str, Any]) -> Any` | sentinel dict | wrapped value | `KeyError` if missing key | `continuation_value(continue_with(1))` |
 | `run_chained` | `async run_chained(run_segment, input, *, max_segments=1000) -> Any` | async segment runner and initial input | final non-continuation value | `JulepError` when max segments exhausted | `await run_chained(lambda x: one_segment(x), 0)` |
 
+## Durable dispatch primitives
+
+Import these dispatch-boundary helpers from `julep.dispatch`. They decide how
+work starts; they are not frozen flow IR. Stable ids and batch-window evaluation
+are pure and import without Temporal. Materializing or executing the built-in
+debounce request requires `julep[temporal]`.
+
+| Symbol | Signature | Use | Returns | Raises |
+|---|---|---|---|---|
+| `dedup_workflow_id` | `dedup_workflow_id(namespace: str, *identity: Any, max_length=255) -> str` | opaque deterministic Temporal id for one logical dispatch; canonical finite JSON identity is hashed rather than exposed in listings | bounded workflow id | `TypeError` for non-finite/non-JSON identity; `ValueError` for invalid namespace/limit |
+| `BatchWindow` | `BatchWindow(quiet_s: float, max_items: int | None = None, max_wait_s: float | None = None)` | shared debounce/batch trigger policy | immutable window | `ValueError` for negative, non-finite, or invalid limits |
+| `BatchWindow.evaluate` | `evaluate(*, item_count, opened_at, last_arrival_at, now) -> BatchWindowDecision` | deterministic trigger selection using caller-supplied time | `fire`, `trigger`, `deadline`, `wait_s` | `ValueError` for inconsistent state |
+| `SignalWithStartRequest` | `SignalWithStartRequest(workflow, input, workflow_id, task_queue, signal, signal_args=(), start_options={})` | backend-neutral atomic signal-with-start description with `USE_EXISTING` conflict and `ALLOW_DUPLICATE` reuse policies | request; `await request.start(client)` returns a workflow handle | `ValueError`, missing Temporal extra at execution |
+| `build_debounce_request` | `build_debounce_request(flow_json, manifest_json, *, key, item, window, task_queue="julep", ..., scope=None, workflow_id=None, start_options=None) -> SignalWithStartRequest` | build an atomic keyed collector request; item values join the compatible open collector but are excluded from identity | request | config errors; missing Temporal extra |
+| `dispatch_debounced` | `async dispatch_debounced(client, flow_json, manifest_json, *, key, item, window, ...) -> Any` | build and execute a debounce signal-with-start | Temporal workflow handle | config/Temporal errors |
+| `signal_with_start` | `async signal_with_start(client, request) -> Any` | execute a pre-built request | Temporal workflow handle | Temporal errors |
+
 ## Sessions
 
 `scan`, `loop`, and `@session` all build a root `Op.LOOP`. `events()` is
@@ -218,18 +252,24 @@ single-consumer and ends only on `Closed`.
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
 | `ToolContract` | `ToolContract(effect: Effect, idempotency: Idempotency)` | asserted/defaulted behavior | contract | enum `ValueError` in `from_json` | `ToolContract(Effect.READ, Idempotency.NATIVE)` |
-| `McpAnnotations` | `McpAnnotations(read_only_hint=None, destructive_hint=None, open_world_hint=None, idempotent_hint=None)` | MCP behavior hints | annotation snapshot | none | `McpAnnotations.from_mcp({"annotations": {}})` |
-| `definition_hash` | `definition_hash(ref, input_schema, output_schema=None, server_version=None, annotations=None) -> str` | provider definition data | `sha256:<hex>` | JSON serialization errors | `definition_hash(native("t"), {})` |
+| `McpAnnotations` | `McpAnnotations(read_only_hint=None, destructive_hint=None, open_world_hint=None, idempotent_hint=None)`; `normalized(protocol_version=None)` | MCP behavior hints; normalization fills MCP defaults (`false`, `true`, `true`, `false`) for stable hashing | annotation snapshot | `ValueError` for non-boolean hints | `McpAnnotations.from_mcp({"annotations": {}}).normalized("2025-06-18")` |
+| `definition_hash` | `definition_hash(ref, input_schema, output_schema=None, server_version=None, annotations=None, protocol_version=None) -> str` | provider definition data, including negotiated MCP protocol version and normalized annotations | `sha256:<hex>` | JSON serialization errors | `definition_hash(native("t"), {})` |
 | `execution_hash` | `execution_hash(tool_definition_hash: str, contract: ToolContract, asserted: bool) -> str` | definition hash plus contract | `sha256:<hex>` | none | `execution_hash(h, c, True)` |
-| `FrozenTool` | `FrozenTool(definition_hash, execution_hash, ref, input_schema, contract, output_schema=None, server_version=None, asserted=False)` | frozen manifest entry | frozen tool | none | `FrozenTool.create(native("t"), {}, c)` |
-| `FrozenTool.create` | `create(ref, input_schema, contract, output_schema=None, server_version=None, asserted=False, annotations=None) -> FrozenTool` | hashes tool definition and execution contract | frozen tool | JSON serialization errors | `FrozenTool.create(native("t"), {}, c)` |
+| `FrozenTool` | `FrozenTool(definition_hash, execution_hash, ref, input_schema, contract, output_schema=None, server_version=None, protocol_version=None, annotations=None, asserted=False, assertion_provenance=None)` | frozen manifest entry with provider definition and trusted-assertion origin | frozen tool | none | `FrozenTool.create(native("t"), {}, c)` |
+| `FrozenTool.create` | `create(ref, input_schema, contract, output_schema=None, server_version=None, asserted=False, annotations=None, protocol_version=None, assertion_provenance=None) -> FrozenTool` | normalizes MCP annotations and hashes provider definition separately from the execution contract | frozen tool | annotation/JSON serialization errors | `FrozenTool.create(native("t"), {}, c)` |
 | `manifest_to_json` | `manifest_to_json(m: ToolManifest) -> dict[str, Any]` | manifest | JSON form | none | `manifest_to_json(deployment.manifest)` |
 | `manifest_from_json` | `manifest_from_json(d: dict[str, Any]) -> ToolManifest` | manifest JSON | manifest | `KeyError`, enum `ValueError` for malformed entries | `manifest_from_json(deployment.manifest_json)` |
 | `McpToolSpec` | `McpToolSpec(input_schema, annotations=McpAnnotations(), output_schema=None)` | MCP tool schema/hints | snapshot entry | none | `McpToolSpec({})` |
-| `McpServerSnapshot` | `McpServerSnapshot(server: str, tools: dict[str, McpToolSpec], version=None)` | server tools/version | snapshot server | none | `McpServerSnapshot("s", {"t": McpToolSpec({})})` |
+| `McpServerSnapshot` | `McpServerSnapshot(server: str, tools: dict[str, McpToolSpec], version=None, protocol_version=None, server_version=None)` | server tools plus legacy identity and separately negotiated MCP/server versions | snapshot server | none | `McpServerSnapshot("s", {"t": McpToolSpec({})})` |
 | `NativeToolSpec` | `NativeToolSpec(input_schema, contract, output_schema=None)` | native tool schema/contract | snapshot entry | none | `NativeToolSpec({}, c)` |
 | `McpSnapshot` | `McpSnapshot(servers={}, native={})` | whole tool surface | snapshot | none | `snapshot_from_tools([lookup])` |
-| `CapabilityOverrides` | `CapabilityOverrides(contracts={})`; `get(key) -> ToolContract | None` | asserted contracts | overrides | none | `CapabilityOverrides({"t": c}).get("t")` |
+| `CapabilityOverrides` | `CapabilityOverrides(contracts={}, provenance={}, default_provenance="operator_override")`; `get(key)`; `provenance_for(key)` | asserted contracts and their trusted origin | overrides | none | `CapabilityOverrides({"t": c}, {"t": "capability_manifest"})` |
+| `McpSurfacePolicy` | enum `PIN="pin"`, `NAMES="names"`, `OFF="off"`; `coerce(value)` | select exact definition, presence-only, or disabled comparison | policy | `ValueError` for unknown policy | `McpSurfacePolicy.coerce("pin")` |
+| `McpSurfaceMismatch` | `McpSurfaceMismatch(server, tool, reason, frozen_definition_hash, fresh_definition_hash=None, diff=None)` | one machine-readable surface difference | mismatch; `to_json()` | none | `mismatch.reason` |
+| `McpSurfaceMismatchError` | `McpSurfaceMismatchError(mismatches)` | aggregate failed assertion; `.details` returns JSON records | exception | n/a | `except McpSurfaceMismatchError as exc: print(exc.details)` |
+| `compare_mcp_surface` | `compare_mcp_surface(frozen, fresh, *, policy=PIN) -> tuple[McpSurfaceMismatch, ...]` | compare only referenced MCP tools; extra live tools are ignored | mismatches | policy `ValueError` | `compare_mcp_surface(d.manifest, live)` |
+| `assert_mcp_surface` | `assert_mcp_surface(frozen, fresh, *, policy=PIN) -> None` | enforce selected surface policy | None | `McpSurfaceMismatchError` | `assert_mcp_surface(d.manifest, live)` |
+| `canonical_surface_digest` | `canonical_surface_digest(tools) -> str` | stable digest of the referenced MCP definition hashes | `sha256:<hex>` | none | `canonical_surface_digest(d.manifest)` |
 | `FreezeResult` | `FreezeResult(flow: Node, manifest: ToolManifest, source_map={})` | freeze output | result | none | `freeze(flow, snapshot).manifest` |
 | `freeze` | `freeze(flow: Node, snapshot: McpSnapshot, overrides=None, *, expected_tool_schemas=None) -> FreezeResult` | authored flow and snapshot | frozen flow/manifest | `FreezeError` for cycles, missing tools, schema drift | `freeze(call("lookup"), snapshot_from_tools([lookup]))` |
 | `Diagnostic` | `Diagnostic(code, node_id, message, severity="error", hint=None, help_url=None, source=None)` | validation finding | diagnostic | none | `Diagnostic("X", "$", "message")` |
@@ -250,16 +290,114 @@ single-consumer and ends only on `Closed`.
 | `CapabilityManifest.assert_within_budget` | `assert_within_budget(*, cost=0.0, tokens=0) -> None` | current estimates | None | `CapabilityDenied` | `caps.assert_within_budget(cost=0.5)` |
 | `check_approval_gates` | `check_approval_gates(flow, manifest, capabilities=None) -> list[Diagnostic]` | frozen flow/manifest/caps | diagnostics | none | `check_approval_gates(flow, manifest, caps)` |
 | `snapshot_from_listings` | `snapshot_from_listings(listings, *, versions=None) -> McpSnapshot` | MCP tools/list-shaped dict | snapshot | none | `snapshot_from_listings({"s": {"t": {"inputSchema": {}}}})` |
-| `deploy` | `deploy(flow, snapshot=None, *, tools=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow") -> Deployment` | flow plus snapshot or native tools; capability gates; mode | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(triage, tools=[lookup], reasoners=[SUPPORT_REPLY])` |
+| `fetch_listings` | `fetch_listings(servers, *, auth=None, timeout_s=10, total_timeout_s=60, allowlist=None) -> dict` | Streamable HTTP server configs and exact URL allow-list | plain `tools/list` data | `McpSnapshotError`, `ImportError`, `RuntimeError` in an active event loop | `fetch_listings(servers, allowlist={servers["memory"]["url"]})` |
+| `snapshot_servers` | `snapshot_servers(servers, *, auth=None, timeout_s=10, total_timeout_s=60, allowlist=None) -> McpSnapshot` | same live server configuration | version-pinned freeze snapshot | same as `fetch_listings` | `snapshot_servers(servers, allowlist=urls)` |
+| `deploy` | `deploy(flow, snapshot=None, *, tools=None, mcp_servers=None, mcp_listings=None, reasoners=None, capabilities=None, extra_overrides=None, strict=True, mode=STRICT, freeze_timing="deploy_time", snapshot_source=None, target="flow", queue=None) -> Deployment` | explicit snapshot, or exactly one generated source; explicit `snapshot` wins | deployment | `ValueError`, `FreezeError`, `ValidationError` | `deploy(batch, mcp_listings=listings)` |
 | `Deployment` | `Deployment(flow, manifest, diagnostics=[], capabilities=None, mode=STRICT, freeze_timing="deploy_time", ...)` | compiled artifact | deployment | none | `deployment.artifact_hash` |
 | `Deployment.refresh` | `refresh(snapshot=None) -> Deployment` | fresh snapshot or stored source | new deployment | `ValueError`, deploy errors | `deployment.refresh(new_snapshot)` |
 | `Deployment.run` | `async run(client, *, session_id, input=None, task_queue="julep", policy=None, principal=None) -> Any` | Temporal client and run input | workflow result | `ValueError` in dev mode; Temporal errors | `await deployment.run(client, session_id="run-1")` |
-| `Deployment.adry_run` / `dry_run` | `adry_run(value, *, reasoners=None) -> Result`; `dry_run(value, *, reasoners=None) -> Result` | local value and fake reasoners | interpreter result | `ValueError` if not built with `tools=` | `deployment.dry_run("TICKET-42", reasoners={...})` |
-| `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | CAS store/url and optional signing key | bundle record | bundle/CAS/signing errors | `deployment.publish(".ca/cas")` |
+| `Deployment.adry_run` / `dry_run` | `adry_run(value, *, mcp_call=None, reasoners=None) -> Result`; sync equivalent | local value, MCP seam, and fake reasoners | interpreter result | effect handler and interpreter errors | `deployment.adry_run(batch, mcp_call=fake, reasoners={...})` |
+| `Deployment.publish` | `publish(store_or_url, *, signing_key=None) -> dict[str, Any]` | artifact store/url and optional signing key | bundle record | bundle/artifact store/signing errors | `deployment.publish(".julep/artifacts")` |
 
 `mode="dev"` returns deployments with would-block diagnostics in
 `Deployment.prod_gap`; Temporal `Deployment.run(...)` refuses dev mode.
 `freeze_timing` is `"deploy_time"` or `"per_run"`.
+
+Import live snapshot helpers from `julep.mcp_snapshot`. They use the official
+MCP SDK from `julep[mcp]` and never follow redirects outside the configured
+endpoint allow-list.
+
+For MCP tools, `freeze(...)` persists the negotiated protocol version and
+server version, applies that protocol's defaults to all four annotations, and
+hashes the normalized definition. `assertion_provenance` records why a contract
+is trusted (for example `native_declaration`, `framework_builtin`, or an
+operator/capability override); an unasserted MCP contract has no assertion
+provenance and its annotations remain untrusted hints.
+
+`mcp_tool` schemas and effect/idempotency behavior always come from the frozen
+snapshot; its constructor has no contract override arguments. Handle-valued
+keyword calls synthesize a compiler-owned `std.record` node. Capability defaults
+are derived from the resolved frozen tool set when `capabilities` is omitted.
+`InMemoryEnv` also accepts `mcp_call=`, so an MCP-only deployment needs no
+native `tools=` map for local execution.
+
+## Configured foreground execution
+
+These package-root exports load one configured application pipeline and execute
+its frozen deployment in the caller's process. They return the unwrapped
+interpreter value and perform no HTTP, PostgreSQL, Temporal, release, or durable
+retry work.
+
+| Symbol | Signature | Behavior | Raises |
+|---|---|---|---|
+| `prepare_local_pipeline` | `prepare_local_pipeline(pipeline: str, *, project_root: str | Path = ".", config: JulepConfig | None = None, env: str = "local") -> LocalPipeline` | resolve config/application, compile only the selected pipeline, and return a reusable object with `.artifact_hash`, `.name`, and `.environment` | `LocalPipelineNotFound`, compilation/freeze/snapshot errors |
+| `LocalPipeline.arun` | `async arun(input=None, *, llm: LlmCaller | None = None, context: WorkerContext | None = None, principal: RunPrincipal | None = None) -> Any` | execute in the current event loop and return the unwrapped value | local configuration/effect/interpreter errors |
+| `LocalPipeline.run` | `run(input=None, *, llm=None, context=None, principal=None) -> Any` | synchronous wrapper over `arun`; prepare once and reuse across calls | `LocalExecutionConfigurationError` in an active event loop |
+| `arun_local_pipeline` | `async arun_local_pipeline(pipeline, input=None, *, project_root=".", config=None, env="local", llm=None, context=None, principal=None) -> Any` | one-shot prepare and async run | same as prepare + `arun` |
+| `run_local_pipeline` | `run_local_pipeline(pipeline, input=None, *, project_root=".", config=None, env="local", llm=None, context=None, principal=None) -> Any` | one-shot prepare and sync run | same as prepare + `run` |
+| `LocalPipelineError` | subclass of `JulepError` | base class for configured foreground failures | n/a |
+| `LocalPipelineNotFound` | `LocalPipelineNotFound(kind, name, available)` | typed unknown environment/pipeline error with `.kind`, `.name`, and `.available` | n/a |
+| `LocalExecutionConfigurationError` | subclass of `LocalPipelineError` | missing/mismatched LLM, MCP, registry, or sync-loop configuration | n/a |
+| `LocalExecutionUnsupported` | subclass of `LocalPipelineError` | direct-foreground artifact requires a runtime-owned orchestration boundary | n/a |
+
+An explicit `llm=` takes precedence over `context.llm`; it uses the canonical
+`LlmCaller(reasoner, value, principal, transcript, dispatch, *, tools=None)`
+protocol. `WorkerContext` supplies MCP calls plus QoS and registry
+hooks, while `principal` is forwarded to both LLM and MCP calls. A differing
+reasoner declaration in `context.registry` is rejected rather than overriding
+the compiled artifact.
+
+Direct foreground execution rejects session `LOOP`, transcript-scoped `APP`
+agents, staged plans, subflows, and human-gate/sleep/recv/emit reserved effects.
+It also has no run-secret input; use the local API or durable worker when the
+runtime must own those boundaries.
+
+## Control-plane clients
+
+Import the HTTP clients and their typed run errors from `julep.client`. Install
+`julep[http]` (or `julep[server]`) for httpx. `AsyncJulepClient` mirrors the
+sync client's complete release, run, result, control, and projection-event
+surface and owns an `httpx.AsyncClient` when one is not injected.
+
+| Symbol | Signature | Behavior |
+|---|---|---|
+| `JulepClient` | `JulepClient(base_url=None, api_key=None, *, client: httpx.Client | None = None, timeout=30.0)` | synchronous client; supports context-manager cleanup |
+| `AsyncJulepClient` | `AsyncJulepClient(base_url=None, api_key=None, *, client: httpx.AsyncClient | None = None, timeout=30.0)` | async method parity; supports `async with` and `aclose()` |
+| `run_and_wait` | `run_and_wait(*, pipeline, input=None, release=None, session_id=None, principal=None, secrets=None, queue_lanes=None, idempotency_key=None, run_id=None, deadline_s=300.0, poll_wait_s=20.0) -> Any` | idempotent submit, bounded `GET .../result` long polls, and the unwrapped `result` payload on `completed`; async on `AsyncJulepClient` |
+| `wait_for_run` | `wait_for_run(run_id, *, deadline_s=300.0, poll_wait_s=20.0) -> Any` | wait for an already-submitted run and unwrap success; async on `AsyncJulepClient` |
+| `JulepClientError` | `JulepClientError(status_code, detail)` | non-success HTTP response with parsed `.detail` |
+| `JulepRunFailed` | `JulepRunFailed(run_id, status, error=None)` | typed terminal error for `failed`, `canceled`, `terminated`, or `start_failed`; exposes `.run_id`, `.status`, `.error`, and `.detail` |
+| `JulepRunTimeout` | `JulepRunTimeout(run_id, deadline_s)` | caller deadline expired; exposes `.run_id` and `.deadline_s` |
+| `JulepRunProtocolError` | `JulepRunProtocolError(message, *, run_id)` | malformed or mismatched start/result envelope |
+
+`start_run` and the wait helpers require either `idempotency_key` or `run_id`.
+Reuse of an idempotency key is safe only for the same pipeline and release; a
+different pipeline or release produces an HTTP `409 idempotency_conflict`
+instead of returning an unrelated existing run.
+
+`run_and_wait` intentionally exposes the ordinary client submission contract.
+The admin-only `mcp_preflight` override remains on `start_run` and
+`start_and_wait`; use the latter when an operator explicitly needs that
+override plus a bounded wait.
+
+## MCP authentication
+
+Julep ships the verifier half for application-owned MCP servers and a
+batteries-included HTTP caller. Authoring and serving the MCP server itself
+remain application responsibilities.
+
+| Symbol | Signature | Behavior |
+|---|---|---|
+| `McpAuthConfig` | `McpAuthConfig(signing_key, issuer, kid, ttl_s=300)` | Ed25519 signing config; `ttl_s` must be `1..300`. The key is the same 64-hex seed or seed-file form as `JULEP_BUNDLE_SIGNING_KEY`; `from_env()` reads `JULEP_MCP_SIGNING_KEY`, `JULEP_MCP_ISSUER`, `JULEP_MCP_KID`, and `JULEP_MCP_TTL_S`. |
+| `mint_token` | `mint_token(cfg, *, server_id, tool, scopes, idempotency_key, principal) -> str` | Creates an EdDSA JWT. `aud` is the stable logical server id, not its URL. Claims include `iss`, `aud`, typed `sub`/`tenant`/`scope`, `tool`, `idk`, `iat`, `exp`, and `jti`; the JOSE header includes `kid`. Only selected subject/tenant fields are copied from the principal. |
+| `verify_token` | `verify_token(token, *, verify_keys, audience, required_scopes=(), idempotency_key, issuer=None, leeway_s=30) -> VerifiedToken` | Pins `algorithms=["EdDSA"]`, verifies key id, audience, issuer/time claims and scopes, and requires JWT `idk` to equal the request's actual `Idempotency-Key`. |
+| `verify_keys_from_env` | `verify_keys_from_env() -> dict[str, Ed25519PublicKey]` | Parses `JULEP_MCP_VERIFY_KEYS` as comma-separated `kid:base64pub` entries. |
+| `FastMCPTokenVerifier` | `FastMCPTokenVerifier(verify_keys, audience, required_scopes=(), issuer=None, leeway_s=30)` | Adapter for the official MCP server auth provider. Pair with the middleware below because the provider interface does not expose request headers. |
+| `asgi_auth_middleware` | `asgi_auth_middleware(app, *, verify_keys, audience, required_scopes=(), issuer=None, leeway_s=30) -> ASGIApp` | Requires bearer auth and `Idempotency-Key`, verifies their binding, and stores `VerifiedToken` on the ASGI scope. |
+| `http_mcp_caller` | `http_mcp_caller(servers, auth=None) -> McpCaller` | Calls Streamable HTTP servers, always sends `Idempotency-Key` equal to the deterministic activity cid, and adds a minted bearer token when auth is configured. |
+
+This surface uses PyJWT with the allowed algorithm pinned to EdDSA and is
+installed by `julep[mcp]`. The principal mapping is never serialized wholesale.
 
 ## Staged plans and agent-loop extraction
 
@@ -332,11 +470,16 @@ The package root exports `as_flow`; the full typed wrapper lives in
 | `ExecutionPolicy` | `ExecutionPolicy(tool_timeout_s=30, reasoner_timeout_s=120, plan_timeout_s=120, sub_task_timeout_s=3600, agent_task_timeout_s=3600, idempotent_max_attempts=5, write_max_attempts=3, reasoner_max_attempts=4, initial_retry_s=1.0, retry_backoff=2.0, max_retry_interval_s=60, trace_content_refs=False, max_parallel=None)` | backend timeouts/retries/projection | policy | none | `ExecutionPolicy(reasoner_max_attempts=1).to_json()` |
 | `ExecutionPolicy.from_json` | `from_json(d: dict[str, Any] | None) -> ExecutionPolicy` | policy JSON | policy | none | `ExecutionPolicy.from_json({"maxParallel": 4})` |
 | `Env` | protocol with `run_call`, `invoke_reasoner`, `run_sub`, `run_agent`, `compile_plan`, `human_gate`, `sleep`, `recv`, `emit`, `gather`, `race_first` | interpreter effect boundary | protocol | implementation-defined | implement for a backend |
-| `InMemoryEnv` | `InMemoryEnv(manifest, emitter, *, tools=None, reasoners=None, subs=None, agents=None, planners=None, gate=None, sleeper=None, max_parallel=None, max_calls=None, mode=STRICT, registry=None, principal=None, root_run_id=None, segment_seq=0, inbound=None)` | local effect maps and limits | env | `CapabilityDenied`, `KeyError`, handler errors | `InMemoryEnv({}, ProjectionEmitter(InMemoryProjection()), tools={})` |
+| `InMemoryEnv` | `InMemoryEnv(manifest, emitter, *, tools=None, mcp_call=None, reasoners=None, subs=None, agents=None, planners=None, gate=None, sleeper=None, max_parallel=None, max_calls=None, mode=STRICT, registry=None, principal=None, root_run_id=None, segment_seq=0, inbound=None)` | local effect maps and limits | env | `CapabilityDenied`, `KeyError`, handler errors | `InMemoryEnv({}, emitter, mcp_call=fake)` |
 | `interpret` | `async interpret(node, value, env, causes=(), *, principal=None, root_run_id=None, segment_seq=None) -> Result` | IR, input, env, optional run identity | `Result(value, event_id, attrs, reported_cost)` | framework, pure, handler errors | `await interpret(flow, value, env)` |
 | `Result` | `Result(value: Any, event_id: str | None = None, attrs=None, reported_cost=None)` | interpreter result | value envelope | none | `result.value` |
 | `RunPrincipal` | `dict[str, Any]` | opaque tenant/credential reference, never secret | alias | none | `principal={"tenant": "acme"}` |
-| `WorkerContext` | `WorkerContext(tool_urls={}, mcp_call=None, llm=None, on_attempt=None, resolve_qos=default_resolve_qos, blob_store=None, session_store=None, capabilities=None, registry=None, http_timeout_s=30.0, principal_headers=None, count_tokens=None, subflows={}, agents={}, trajectory_sink=None, trajectory_blob_store=None)` | process-global worker dependencies | context | none | `WorkerContext(llm=make_llm_caller())` |
+| `LlmCaller` | protocol `async (reasoner, value, principal, transcript, dispatch, *, tools=None) -> Any` | five positional runtime inputs plus the keyword-only frozen native-tool surface | provider result | provider errors; adapted legacy callers reject unsupported transcript/tool rounds clearly | `WorkerContext(llm=litellm_caller())` |
+| `BlobStore` | protocol with async `put(tenant, data) -> ref` and `get(tenant, ref) -> bytes` | tenant and immutable bytes/ref | tenant-scoped `sha256` ref or bytes | blob contract errors | implement a production backend |
+| `InMemoryBlobStore` | `InMemoryBlobStore()` | none | process-local blob store | blob contract errors | tests and one-process local use only |
+| `LocalDirBlobStore` | `LocalDirBlobStore(root)` | private local/shared directory | restart-persistent blob store | filesystem and blob contract errors | `LocalDirBlobStore("/var/lib/julep/blobs")` |
+| `blob_store_from_url` | `blob_store_from_url(url: str) -> BlobStore` | absolute local `file://` URL | `LocalDirBlobStore` | `ValueError` for unsupported/non-local URLs | `blob_store_from_url("file:///var/lib/julep/blobs")` |
+| `WorkerContext` | `WorkerContext(tool_urls={}, mcp_call=None, mcp_transport=None, llm=None, on_attempt=None, resolve_qos=default_resolve_qos, blob_store=None, session_store=None, capabilities=None, registry=None, http_timeout_s=30.0, principal_headers=None, count_tokens=None, subflows={}, agents={}, trajectory_sink=None, trajectory_blob_store=None, redactor=None)` | process-global worker dependencies; canonical `mcp_call` receives `(server, tool, value, idempotency_key, principal, run_secrets, input_schema_validated)` | context | none | `WorkerContext(llm=make_llm_caller(), mcp_transport=transport)` |
 
 ## Temporal, worker, DBOS, and CMA runtime
 
@@ -348,26 +491,48 @@ Top-level Temporal exports exist only when `HAVE_TEMPORAL` is true:
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
-| `FlowInput` | `FlowInput(session_id, input=None, flow_json=None, manifest_json=None, pinned_pures=None, max_call_limits=None, call_counts=None, ref=None, policy=None, principal=None, bundle=None, root_run_id=None, segment_seq=0)` | Temporal flow workflow input | dataclass | none | `FlowInput("run-1", flow_json=deployment.flow_json)` |
+| `FlowInput` | `FlowInput(session_id, input=None, flow_json=None, manifest_json=None, pinned_pures=None, max_call_limits=None, call_counts=None, ref=None, policy=None, principal=None, bundle=None, runtime_declarations_ref=None, root_run_id=None, segment_seq=0, queue_lanes=None, run_id=None, emit_projection=False, projection_batch_size=20, projection_batch_interval_s=2.0, secrets=None, mcp_preflight=None)` | Temporal flow workflow input; use start helpers rather than raw secret-bearing starts | dataclass | none | `FlowInput("run-1", flow_json=deployment.flow_json)` |
 | `SessionInput` | `SessionInput(session_id, flow_json, manifest_json, init, max_call_limits=None, call_counts=None, pinned_pures=None, budget=None, spent=0.0, bundle=None, in_channel="in", out_channel="out", policy=None, principal=None, root_run_id=None, segment_seq=0, history_threshold=None, channel_capacity=None, ...)` | Temporal session workflow input | dataclass | none | created by `Agent.open(..., backend="temporal")` |
-| `AgentInput` | `AgentInput(controller, session_id, input=None, config=None, granted_tools=None, granted_tools_unconstrained=False, granted_subflows=None, granted_contracts=None, state=None, state_cursor=None, use_session_store=False, policy=None, resolve_spec=True, principal=None, root_run_id=None, segment_seq=0)` | Temporal agent workflow input | dataclass | none | created by runtime |
-| `run_flow` | `async run_flow(client, flow_json, manifest_json, *, session_id, input=None, task_queue="julep", policy=None, pinned_pures=None, max_call_limits=None, principal=None, root_run_id=None, bundle=None) -> Any` | connected Temporal client and frozen artifact | workflow result | Temporal/runtime errors | `await run_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
-| `start_flow` | same params as `run_flow` | connected client and artifact | workflow handle | Temporal errors | `handle = await start_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
+| `AgentInput` | `AgentInput(controller, session_id, input=None, config=None, granted_tools=None, granted_tools_unconstrained=False, granted_subflows=None, granted_contracts=None, tool_defs=None, tool_aliases=None, state=None, state_cursor=None, use_session_store=False, policy=None, resolve_spec=True, principal=None, runtime_declarations_ref=None, root_run_id=None, segment_seq=0, queue_lanes=None, subflow_queues=None, secrets=None, mcp_preflight=None)` | Temporal agent workflow input; completed preflight state and run secrets are carried through child starts and continue-as-new | dataclass | none | created by runtime |
+| `run_flow` | `async run_flow(client, flow_json, manifest_json, *, session_id, input=None, task_queue="julep", policy=None, pinned_pures=None, max_call_limits=None, principal=None, root_run_id=None, bundle=None, runtime_declarations_ref=None, queue_lanes=None, run_id=None, emit_projection=False, projection_batch_size=20, projection_batch_interval_s=2.0, secrets=None, mcp_preflight=None) -> Any` | connected Temporal client and frozen artifact | workflow result | rejects secrets without verified AES-GCM conversion or binding preflight; Temporal/runtime errors | `await run_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
+| `start_flow` | same as `run_flow`, plus `workflow_start_options=None` | connected client and artifact; start options cannot override `id` or `task_queue` | workflow handle | same encryption/binding checks; Temporal errors | `handle = await start_flow(client, d.flow_json, d.manifest_json, session_id="run-1")` |
 | `TemporalSessionHandle` | `TemporalSessionHandle(wfhandle, *, in_channel="in", out_channel="out", poll_s=0.02)` | workflow handle and channels | session handle | backend errors | returned by `Agent.open(..., backend="temporal")` |
 | `build_worker` | `build_worker(client, context, *, task_queue=DEFAULT_TASK_QUEUE, min_batch_window_s=0.0, **worker_kwargs) -> Worker` | Temporal client, `WorkerContext`, queue, SDK kwargs | worker | Temporal/import/config errors | `build_worker(client, WorkerContext(llm=llm))` |
 | `run_worker` | `async run_worker(*, target_host="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, tool_urls=None, mcp_call=None, llm=None, capabilities=None, subflows=None, agents=None, blob_store=None, session_store=None, trajectory_sink=None, trajectory_blob_store=None, on_attempt=None, http_timeout_s=30.0, **worker_kwargs) -> None` | standalone worker config | never until cancelled | Temporal/runtime errors | `await run_worker(llm=llm)` |
-| `WorkerServeSettings` | `WorkerServeSettings(context_factory, address="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, api_key=None, tls=False, graceful_shutdown_s=30.0, max_concurrent_activities=None, max_concurrent_workflow_tasks=None, health_port=None)` | container worker settings | settings | none | `WorkerServeSettings.from_env(env)` |
+| `WorkerServeSettings` | `WorkerServeSettings(context_factory, address="localhost:7233", namespace="default", task_queue=DEFAULT_TASK_QUEUE, ..., application=None, runtime_declarations_hash=None, redaction=None, blob_store_url=None)` | container worker settings; application/hash are optional paired cross-checks; blob URL and factory-provided store are mutually exclusive | settings | `ValueError` for ambiguous or invalid configuration | `WorkerServeSettings.from_env(env)` |
 | `serve` | `async serve(settings: WorkerServeSettings, *, shutdown_event=None) -> None` | settings and optional test shutdown event | None | `JulepError` without `temporalio`, factory errors | `await serve(WorkerServeSettings.from_env())` |
 | `HealthServer` | `HealthServer(port: int, *, host="0.0.0.0")` | probe listener | server with `/healthz`, `/readyz` | `RuntimeError` if `port` before start | `await HealthServer(8080).start()` |
 | `load_context_factory` | `load_context_factory(spec: str) -> Callable[[], Any]` | `module:attr` spec | callable | `ValueError` | `load_context_factory("app.worker:make_context")` |
-| Activity inputs | `CallToolInput`, `InvokeReasonerInput`, `ResolveQoSInput`, `CompilePlanInput`, `LoadStateInput`, `CommitStateInput`, `LoadValueInput`, `CommitValueInput`, `PutBlobInput` | dataclass payloads for activity wrappers | payload | none | `CallToolInput({"kind":"native","name":"t"}, {}, "cid")` |
-| Activities | `callTool`, `invokeReasoner`, `compilePlan`, `verifyPures`, `resolveSubflow`, `resolveRuntimeCapabilities`, `resolveAgentSpec` | activity payloads | effect results | worker context and policy errors | normally called by workflows |
+| `CallToolInput` | `CallToolInput(tool_ref, value, cid, cache=None, principal=None, run_id=None, root_run_id=None, segment_seq=None, node_id=None, op=None, kind=None, causes=(), secrets=None, frozen_input_schema=None, input_schema_validated=False)` | tool activity payload; agent calls carry the frozen schema and validation state | payload | none | `CallToolInput({"kind":"native","name":"t"}, {}, "cid")` |
+| `InvokeReasonerInput` | `InvokeReasonerInput(reasoner, value, cid, principal=None, transcript=None, ctx=None, summarizer=None, summary=None, tools=None, run_id=None, root_run_id=None, segment_seq=None, node_id=None, op=None, kind=None, causes=(), qos=None, runtime_declarations_ref=None, secrets=None)` | reasoner activity payload, including run-scoped failure scrubbing values | payload | none | normally constructed by workflows |
+| `ResolveQoSInput` | `ResolveQoSInput(reasoner, node_batchable=False, principal=None, cid=None, run_id=None, root_run_id=None, segment_seq=None, node_id=None, timeout_s=None, runtime_declarations_ref=None)` | deterministic QoS resolution payload | payload | none | normally constructed by workflows |
+| `CompilePlanInput` | `CompilePlanInput(planner, value, cid, manifest=None, principal=None, runtime_declarations_ref=None)` | staged-plan activity payload | payload | none | normally constructed by workflows |
+| State/value activity inputs | `LoadStateInput(session_id, cursor)`; `CommitStateInput(session_id, base, state, state_hash)`; `LoadValueInput(session_id, cursor)`; `CommitValueInput(session_id, base, value, value_hash)` | durable cursor payloads | payload | none | normally constructed by workflows |
+| `PutBlobInput` | `PutBlobInput(tenant, value, secrets=None)` | claim-check/blob payload with run-scoped scrubber values | payload | none | normally constructed by workflows |
+| Activities | `callTool`, `invokeReasoner`, `resolveQoS`, `compilePlan`, `verifyPures`, `resolveSubflow`, `resolveRuntimeCapabilities`, `resolveAgentSpec`, plus state/value/blob activities | activity payloads | effect results | worker context and policy errors | normally called by workflows |
 | `CMAEvent` | `CMAEvent(kind, tool=None, input=None, call_id=None, output=None, reason=None, usage=None)` | normalized managed-agent event | event | none | `CMAEvent("terminal", output="ok")` |
 | `CMAClient` | protocol `create_session(*, agent, environment, session_cid, input=None) -> CMASession` | CMA adapter seam | session | adapter errors | implement for provider |
 | `CMASession` | protocol `events`, `tool_result`, `tool_error`, `cancel` | one provider session | async event stream | adapter errors | `async for ev in session.events(): ...` |
 | `manifest_to_custom_tools` | `manifest_to_custom_tools(tool_names, *, input_schemas=None, descriptions=None) -> list[dict[str, Any]]` | granted tool names | CMA custom tools | none | `manifest_to_custom_tools(["lookup"])` |
 | `drive_cma_agent_loop` | `async drive_cma_agent_loop(*, input, cfg, session, call_tool, granted=None, contracts=None, state=None, session_cid="cma") -> dict[str, Any]` | CMA session and same gates as local loop | terminal result | CMA/tool errors | `await drive_cma_agent_loop(input=x, cfg=cfg, session=s, call_tool=fn)` |
 | `CMAAgentEnv` | `CMAAgentEnv(inner, *, client, environment=None, tools, cfg, granted=None, contracts=None, custom_tools=None)` | wraps an `Env`, replacing only `run_agent` | env | backend errors | `CMAAgentEnv(inner, client=c, tools={}, cfg=cfg)` |
+
+### Published-run secrets
+
+`PipelineRelease.start(..., secrets: dict[str, str] | None = None)` starts an
+already-published artifact with its captured MCP preflight policy.
+`julep.client.JulepClient.start_run(...)` accepts the same `secrets` mapping for
+control-plane starts; its optional `mcp_preflight="pin" | "names" | "off"`
+override is accepted by the server only for admin keys.
+
+Secret names match `[a-z0-9][a-z0-9_-]{0,63}`. A run accepts at most 32
+non-empty UTF-8 values, 16 KiB per value and 64 KiB total including names.
+Values can bind only whole-string `secret://name` request headers on MCP servers
+referenced by the release's transitive surface. Extra bindings fail before user
+effects, including under `off`. Published and helper starts require a verifiable
+AES-256-GCM Temporal data converter; raw Temporal SDK starts must not attach run
+secrets. Values are carried through child workflows and continue-as-new but are
+never copied into frozen artifacts, stored run input, projections, or events.
 
 DBOS exports are available from `julep.execution` only when
 `HAVE_DBOS` is true; they are not re-exported by the package root.
@@ -393,7 +558,15 @@ durability.
 | `SpanData` | `SpanData(name, cid, node, start_ts, end_ts, status, parents, error=None, attrs={}, cost=None, value_ref=None, planned_event_id=None, terminal_event_id=None)` | OTel-ready span data | span record | none | `to_otel_spans(store.events())` |
 | `to_otel_spans` | `to_otel_spans(events: list[ProjectionEvent]) -> list[SpanData]` | projection events | span data | none | `to_otel_spans(store.events())` |
 
+Cost is reported only when an effect supplies an actual cost. Model spans that
+carry model or usage metadata without a price have `cost=None` and render as
+`cost=unknown`; Julep does not substitute a synthetic dollar estimate.
+
 ## Provider resilience and QoS
+
+The LiteLLM helpers below live in `julep.llm`; installing `julep[litellm]` is
+needed only when `litellm_caller()` imports its default backend. Injecting
+`acompletion=` keeps unit tests provider-free.
 
 | Symbol | Signature | Parameters | Returns | Raises | Example |
 |---|---|---|---|---|---|
@@ -409,6 +582,9 @@ durability.
 | `make_llm_caller` | `make_llm_caller(*, default_provider="anthropic", acompletion=None) -> Callable[..., Awaitable[Any]]` | provider and optional test completion fn | worker `LlmCaller` | lazy `ImportError`, provider errors | `WorkerContext(llm=make_llm_caller())` |
 | `make_local_reasoner` | `make_local_reasoner(*, default_provider="anthropic", acompletion=None) -> Callable[[str, Any], Awaitable[Any]]` | provider/test seam | facade `llm` callable | lazy `ImportError`, provider errors | `Agent("anthropic:m", llm=make_local_reasoner())` |
 | `make_resilient_llm_caller` | `make_resilient_llm_caller(*, policy, breaker=None, on_attempt=None, classifier=classify_error, default_provider="anthropic", acompletion=None, sleep=asyncio.sleep) -> Callable[..., Awaitable[Any]]` | fallback policy and hooks | resilient `LlmCaller` | `ResilienceExhausted`, config/provider errors | `make_resilient_llm_caller(policy=ResiliencePolicy())` |
+| `prepare_litellm_payload` | `prepare_litellm_payload(payload: Mapping[str, Any]) -> dict[str, Any]` | pure translation of Julep model slugs and reasoning controls, including Fireworks, OpenRouter, Anthropic, and GPT-5 provider requirements | LiteLLM request mapping | malformed consumer data may raise normal mapping/value errors | `prepare_litellm_payload({"model":"openai:gpt-5@low"})` |
+| `litellm_caller` | `litellm_caller(*, request_timeout_s=None, acompletion=None) -> LlmCaller` | canonical worker caller backed by LiteLLM, including keyword-only native `tools=` | async caller | lazy `ImportError`, provider errors | `WorkerContext(llm=litellm_caller())` |
+| `with_model_ladder` | `with_model_ladder(caller, *, models: Sequence[str], classify=classify_error, on_attempt=None) -> LlmCaller` | primary reasoner model followed by stable de-duplicated fallbacks; advances only on transient/timeout failures and records attempt provenance on `LlmResult` | wrapped caller | non-transient original error or `ResilienceExhausted` | `llm = with_model_ladder(litellm_caller(), models=["openai:gpt-5-mini"])` |
 
 ## Errors and exceptions
 
@@ -416,6 +592,7 @@ durability.
 |---|---|---|---|
 | `JulepError` | `JulepError(*args)` | base framework error | `except JulepError:` |
 | `ValidationError` | `ValidationError(diagnostics: list[Diagnostic])` | strict `deploy`, facade checks | `exc.diagnostics` |
+| `AgentTerminalError` | `AgentTerminalError(result: Mapping[str, Any])` | a generic `app` boundary receives `controller_error`, `max_rounds`, `over_budget`, `denied`, or `output_validation_failed` | `.status`, `.result`; marks local, Temporal, and DBOS runs failed (direct Temporal output validation retains `OutputValidationError`) |
 | `FreezeError` | `FreezeError(*args)` | `freeze`, manifest binding | unresolved tool |
 | `AdmissionError` | `AdmissionError(*args)` | race admission callers | illegal race branch |
 | `PureDriftError` | `PureDriftError(*args)` | `verifyPures` | mismatched pure source |
@@ -424,6 +601,8 @@ durability.
 | `PlanRejected` | `PlanRejected(reasons: Iterable[str])` | staged plan admission | `exc.reasons` |
 | `CapabilityDenied` | `CapabilityDenied(*args)` | capability compile/runtime gates | denied egress/tool |
 | `PrincipalRequired` | `PrincipalRequired(*args)` | worker-supplied callers | missing principal |
+| `ToolInputValidation` | `ToolInputValidation(server, tool)` | frozen input-schema validation before MCP network I/O | `.server`, `.tool` |
+| `ToolSurfaceDrift` | `ToolSurfaceDrift(server, tool, reason)` | missing live MCP tool or server-side schema rejection after frozen validation; non-retryable and terminal | `.server`, `.tool`, `.reason`, `to_json()` |
 | `ResilienceExhausted` | `ResilienceExhausted(attempts: list[AttemptRecord])` | resilient LLM caller | `exc.attempts` |
 | `UnsupportedShapeError` | `UnsupportedShapeError(*args)` | backend preflight | unsupported op |
 | `SessionCompileError` | `SessionCompileError(*args)` | `@session` AST lifting | non-liftable coroutine |
@@ -431,23 +610,23 @@ durability.
 
 ## CLI and configuration
 
-Console scripts in `pyproject.toml`:
+CLI entry points:
 
 | Script | Entry point | Scope |
 |---|---|---|
-| `julep` | `julep.ca.cli:main` | module-level developer CLI over Python source |
-| `python -m julep.cli` | `julep.cli:main` | JSON artifact plumbing plus worker host (no console script) |
+| `julep` | `julep.cli.main:main` | module-level developer CLI over Python source |
+| `python -m julep.cli.artifact` | `julep.cli.artifact:main` | Direct module fallback for JSON artifact plumbing |
 
-`julep` commands and flags:
+`julep artifact` and `julep worker` commands and flags:
 
 | Command | Verified signature |
 |---|---|
-| `validate` | `python -m julep.cli validate <flow_json> [--manifest <path>]` |
-| `freeze` | `python -m julep.cli freeze <flow_json> <snapshot_json> [--caps <path>]` |
-| `inspect` | `python -m julep.cli inspect <flow_json> [--manifest <path>] [--caps <path>]` |
-| `run-local` | `python -m julep.cli run-local <flow_json> <input_json> [--mode strict|dev]` |
-| `graph` | `python -m julep.cli graph <flow_json>` |
-| `worker` | `python -m julep.cli worker [--context-factory module:attr] [--address host:port] [--namespace ns] [--task-queue queue] [--health-port port]` |
+| `validate` | `julep artifact validate <flow_json> [--manifest <path>]` |
+| `freeze` | `julep artifact freeze <flow_json> <snapshot_json> [--caps <path>]` |
+| `inspect` | `julep artifact inspect <flow_json> [--manifest <path>] [--caps <path>]` |
+| `run-local` | `julep artifact run-local <flow_json> <input_json> [--mode strict|dev]` |
+| `graph` | `julep artifact graph <flow_json>` |
+| `worker` | `julep worker [--smoke-test-seconds seconds]` |
 
 `julep` commands and flags:
 
@@ -457,15 +636,25 @@ Console scripts in `pyproject.toml`:
 | `ls` | `julep ls [selector] [--exclude expr]` |
 | `show` | `julep show <name>` |
 | `graph` | `julep graph [selector] [--exclude expr]` |
-| `run` | `julep run <name> [--input JSON] [--run-id id] [--env name]` |
+| `run` | `julep run <name-or-path.ctx> [--input JSON] [--run-id id] [--env name]` |
 | `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
-| `plan` | `julep plan [--env name] [--json]` (explicit application) |
-| `apply` | `julep apply --env name [--publish-only]` (explicit application) |
-| `status` | `julep status [selector] [--exclude expr] [--env name]` (unselected explicit application, otherwise legacy agent ledger) |
+| `plan` | `julep plan [--env name] [--json] [--mcp-snapshot]` |
+| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY]` |
+| `status` | `julep status [selector] [--exclude expr] [--env name] [--remote] [--api-url URL] [--api-key KEY] [--limit N]` |
+| `keygen` | `julep keygen [--format env|json] [--output PATH] [--force]` |
+| `dev up` | `julep dev up [--env name] [--api-url URL] [--api-key KEY] [--start-temporal/--no-start-temporal] [--publish/--no-publish] [--worker/--no-worker] [--startup-timeout SECONDS] [--dry-run]` |
+| `serve api` | `julep serve api [--host HOST] [--port PORT] [--migrate] [--local] [--context-factory module:attr]` |
+| `db migrate` | `julep db migrate [--dsn DSN]` |
+| `db sweep` | `julep db sweep --older-than SECONDS [--dsn DSN]` |
+| `db reencrypt-secrets` | `julep db reencrypt-secrets [--dsn DSN]` |
+| `schedule apply` | `julep schedule apply [--env name]` |
+| `schedule ls` | `julep schedule ls [--env name]` |
+| `schedule rm` | `julep schedule rm <name> [--env name]` |
 | `worker` | `julep worker [--smoke-test-seconds seconds]` (`0` continuous; positive smoke/poll/drain) |
 | `lint` | `julep lint [selector] [--exclude expr] [--fail-severity error|warning|info]` |
 | `test` | `julep test [selector] [--exclude expr] [--dry-run]` |
-| `trace` | `julep trace <run_id>` |
+| `eval` | `julep eval <ctx_path> [--env name] [--limit N] [--tag tag] [--sample-name name] [--json path] [--baseline path] [--llm-caller module:attr]` |
+| `trace` | `julep trace <run_id> [--remote] [--api-url URL] [--api-key KEY]` |
 | `doctor` | `julep doctor` |
 | `chat` | `julep chat <name> [--env local]` |
 | `trigger` | `julep trigger <name> <event> [--channel name]` |
@@ -477,7 +666,7 @@ Environment knobs verified in source:
 
 | Variable | Used by | Meaning |
 |---|---|---|
-| `COMPOSABLE_AGENTS_SOURCE_CAPTURE` | `dsl.py` | `1` enables `SourceSpan` capture for diagnostics |
+| `JULEP_SOURCE_CAPTURE` | `dsl.py` | `1` enables `SourceSpan` capture for diagnostics |
 | `WORKER_CONTEXT_FACTORY` | `WorkerServeSettings.from_env` | required `module:attr` factory returning `WorkerContext` |
 | `TEMPORAL_ADDRESS` | worker host | Temporal frontend, default `localhost:7233` |
 | `TEMPORAL_NAMESPACE` | worker host | namespace, default `default` |
@@ -488,19 +677,22 @@ Environment knobs verified in source:
 | `WORKER_MAX_CONCURRENT_ACTIVITIES` | worker host | SDK activity slots |
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | worker host | SDK workflow-task slots |
 | `WORKER_HEALTH_PORT` | worker host | probe port serving `/healthz` and `/readyz` |
-| `STORE_URL` | bundle worker/verification | CAS URL for bundle resolution |
-| `CA_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
-| `CA_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
-| `CA_BUNDLES` | bundle worker | bundle refs to load from `STORE_URL` |
-| `CA_PURE_NATIVE_DEPS` | pure dependency admission | comma-separated pure names allowed to use native dependency tier |
-| `COMPOSABLE_WASM_FUEL` | wasm executor | instruction fuel, default from executor |
-| `COMPOSABLE_WASM_CACHE_DIR` | wasm executor | compiled component cache directory |
-| `COMPOSABLE_WASM_EPOCH_MS` | wasm executor | optional epoch interruption interval |
-| `COMPOSABLE_NATIVE_VENV_CACHE_DIR` | native venv executor | cache directory for native-venv pure tier |
+| `JULEP_ARTIFACT_STORE_URL` | bundle worker/verification | artifact store URL for bundle resolution |
+| `JULEP_BLOB_STORE_URL` | worker host | absolute local `file://` URL installed as `WorkerContext.blob_store`; do not also return a blob store from the context factory |
+| `JULEP_API_KEY` | CLI/client or worker | client/admin token in the invoking shell; `dev up` gives workers only their separate worker-role token under this name |
+| `JULEP_WORKER_API_KEY` | `julep dev up` supervisor | worker-role handoff token; validated against `JULEP_API_KEYS` and never forwarded under this name |
+| `JULEP_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
+| `JULEP_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
+| `JULEP_BUNDLES` | bundle worker | bundle refs to load from `JULEP_ARTIFACT_STORE_URL` |
+| `JULEP_PURE_NATIVE_DEPS` | pure dependency admission | comma-separated pure names allowed to use native dependency tier |
+| `JULEP_WASM_FUEL` | wasm executor | instruction fuel, default from executor |
+| `JULEP_WASM_CACHE_DIR` | wasm executor | compiled component cache directory |
+| `JULEP_WASM_EPOCH_MS` | wasm executor | optional epoch interruption interval |
+| `JULEP_NATIVE_VENV_CACHE_DIR` | native venv executor | cache directory for native-venv pure tier |
 | `ANTHROPIC_API_KEY` | Anthropic CMA client | fallback API key |
 | `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | Langfuse exporter | OTLP endpoint credentials |
 | `LANGFUSE_CAPTURE_IO` | Langfuse exporter | `1`/`true` captures IO |
 | `LANGFUSE_PROJECT_ID` | `julep trace` deep links | optional project deep-link component |
-<!-- generated by ca-docs-matrix: julep/reference -->
+<!-- generated by julep-docs-matrix: julep/reference -->
 
-<!-- ported-by ca-docs-site: reference/python-api -->
+<!-- ported-by julep-docs-site: reference/python-api -->

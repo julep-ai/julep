@@ -5,7 +5,7 @@
     "python-api",
     "flow-api",
     "sessions-api",
-    "ca-cli",
+    "julep-cli",
     "cheatsheet"
   ]
 }

@@ -26,7 +26,7 @@ The goal is to close that gap with a single cohesive CLI whose mental model is *
 | Discovery | **Convention + optional config** | Auto-discover all `@flow`s by default (zero-config, drift-free). An optional committed config layers env / deploy targets / gate thresholds and can pin/exclude agents. Progressive disclosure. |
 | Execution locus | **Local-first dev server** | `ca dev` boots a local in-memory loop with hot-reload + live terminal trace; deploy is a *separate* push to Temporal/EKS. Magical inner loop; prod stays faithful via the outer loop. |
 | Debug/trace surface | **Terminal-native first** | Trace tree, step inspection, and live tail render in the terminal (stern/Stripe-style); Langfuse deep links for the rich web view. No bundled web UI to design or maintain. Fully scriptable. |
-| Binary | **New `ca` porcelain wrapping existing `composable-agents` plumbing** | Short; matches the `ca.cid`/`ca.node` span prefix. The JSON-artifact commands stay as the lower layer; `ca worker` remains the deploy-time entrypoint. |
+| Binary | **New `ca` porcelain wrapping existing `composable-agents` plumbing** | Short; matches the `julep.cid`/`julep.node` span prefix. The JSON-artifact commands stay as the lower layer; `ca worker` remains the deploy-time entrypoint. |
 | `eval` vs `test` | **Split: `ca eval` for the rich grid/regression UX; `ca test` runs evals too** | Evals are a kind of test (so CI's `ca test` covers them), but the prompt×provider×case grid + regression diff deserves its own verb. |
 | v1 selector scope | **`name` + `tag:` + `state:modified`**; graph operators (`+agent`, `@agent`, `agent+2`) deferred | The directional graph algebra is high-value but heavy; ship the 80% first. The grammar is designed so operators slot in later without breaking callers. |
 
@@ -153,23 +153,23 @@ Convergent pattern stolen from Terraform / Spectral / dbt / promptfoo:
 
 ## 8. Configuration (convention + optional)
 
-Zero-config works: `ca` in any dir with `@flow`s. The optional committed config — `[tool.ca]` in `pyproject.toml`, overridden by a sibling `ca.toml` when present (§11.1) — adds only what convention can't infer:
+Zero-config works: `ca` in any dir with `@flow`s. The optional committed config — `[tool.julep]` in `pyproject.toml`, overridden by a sibling `julep.toml` when present (§11.1) — adds only what convention can't infer:
 
 ```toml
-[tool.ca]
+[tool.julep]
 src = ["agents/", "examples/"]        # discovery roots (default: cwd package)
 exclude = ["examples/scratch_*.py"]
 
-[tool.ca.tags]                         # optional explicit tags if not on @flow
+[tool.julep.tags]                         # optional explicit tags if not on @flow
 triage = ["support"]
 
-[tool.ca.env.staging]
+[tool.julep.env.staging]
 temporal_address = "..."
 temporal_namespace = "..."
-task_queue = "ca-staging"
+task_queue = "julep-staging"
 langfuse_host = "..."
 
-[tool.ca.gates]
+[tool.julep.gates]
 fail_severity = "error"
 ```
 
@@ -194,7 +194,7 @@ The config is reviewable, drift-detectable (`ca status`), and never required to 
 
 | # | Question | Decision | Notes |
 |---|---|---|---|
-| 1 | Config location | **Both, auto-detected** | Read `[tool.ca]` from `pyproject.toml`; a sibling `ca.toml` overrides it when present. Precedence: `ca.toml` > `[tool.ca]` > convention defaults. Documented precedence is the only added cost. |
+| 1 | Config location | **Both, auto-detected** | Read `[tool.julep]` from `pyproject.toml`; a sibling `julep.toml` overrides it when present. Precedence: `julep.toml` > `[tool.julep]` > convention defaults. Documented precedence is the only added cost. |
 | 2 | CLI framework | **Typer**, in a new `cli`/`dev` extra | Type-hint-driven commands, rich `--help`, shell completion. Pulls `typer`+`click` into the extra only — **core stays PyYAML-only**. The existing argparse `composable-agents` plumbing CLI is left as-is underneath. |
 | 3 | Discovery mechanism | **Hybrid: AST static scan + lazy subprocess import** | Cheap AST scan finds `@flow` agents and `app`/`sub` edges for `ls`/`graph`/`select` with zero side effects; import in an **isolated subprocess** only when a verb needs runtime fidelity (`run`, deep `lint`). Default is safe + fast; full fidelity on demand. |
 | 4 | `state:modified` baseline | **Git tree** (HEAD default, `--state <ref>` override) | Working-tree-dirty layered on top, so uncommitted edits also count as modified. Rejected last-frozen-artifact-hash as the default — too coupled to deploy state for an inner-loop selector. |

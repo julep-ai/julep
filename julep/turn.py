@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Optional, Union, cast
@@ -23,6 +24,8 @@ from .agent_loop import (
     CallDenial,
     DEFAULT_TOOL_COST,
     Decision,
+    FEEDBACK_DECISIONS,
+    FEEDBACK_KEY,
     REQUIRE_TOOL_CALL_NEVER_CALLED_REASON,
     REQUIRE_TOOL_CALL_REASK_MESSAGE,
     ROUND_NOTE_KEY,
@@ -131,6 +134,8 @@ def controller_turn(
     granted: Optional[set[str]],
     granted_subflows: Optional[set[str]],
     contracts: Optional[AgentContractMap],
+    tool_count_keys: Optional[Mapping[str, str]] = None,
+    tool_schemas: Optional[Mapping[str, dict[str, Any]]] = None,
     mode: EnforcementMode,
     prod_gap: list[str],
     run_input: Any = None,
@@ -161,11 +166,51 @@ def controller_turn(
             return None
         return Halt("denied", reason=denial.reason)
 
+    def validate_tool_input(tool: str, value: Any) -> Optional[str]:
+        if tool_schemas is None:
+            return None
+        schema = tool_schemas.get(tool)
+        if schema is None:
+            return f"tool {tool!r} has no frozen input schema"
+        from .execution.llm import json_schema_error
+
+        error = json_schema_error(value, schema)
+        if error is None:
+            return None
+        return f"tool {tool!r} input failed frozen JSON-Schema validation: {error}"
+
+    def tool_count_key(tool: str) -> str:
+        if tool_count_keys is None:
+            return tool
+        return tool_count_keys.get(tool, tool)
+
     async def step(state: AgentState) -> StepResult:
-        payload: dict[str, Any] = {
-            "input": state.last,
-            "trace": [t.to_json() for t in state.trace],
-        }
+        # Transcript plan: deterministic, ref-bearing, computed in workflow code.
+        # Hydration/budget/summarization happen in the invoke_reasoner effect;
+        # the engine binding moves these keys onto InvokeReasonerInput.
+        transcript_plan = (
+            transcript_for(state, cfg.ctx, input=run_input)
+            if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES
+            else None
+        )
+        payload: dict[str, Any]
+        if transcript_plan is not None:
+            # Transcript rounds mirror the Temporal harness contract: the
+            # conversation (rendered opening ask + tool turns) lives in the
+            # transcript, so system/user templates always render from the
+            # ORIGINAL input. Loop feedback — which transcript_for deliberately
+            # excludes — rides FEEDBACK_KEY and renders as a trailing user turn.
+            payload = {
+                "input": run_input,
+                "trace": [entry.to_json() for entry in state.trace],
+            }
+            if state.trace and state.trace[-1].decision in FEEDBACK_DECISIONS:
+                payload[FEEDBACK_KEY] = state.last
+        else:
+            payload = {
+                "input": state.last,
+                "trace": [t.to_json() for t in state.trace],
+            }
         if note_fn is not None:
             # Fresh each round from loop state only; deterministic under Temporal
             # replay because the function is a registered pure.
@@ -180,19 +225,17 @@ def controller_turn(
                 # reserved key as a trailing system line; namespaced so ordinary
                 # reasoner "note" business fields are never injected.
                 payload[ROUND_NOTE_KEY] = note
-        if cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES:
-            # Transcript plan: deterministic, ref-bearing, computed in workflow
-            # code. Hydration/budget/summarization happen in the invoke_reasoner
-            # effect; the engine binding moves these keys onto InvokeReasonerInput.
-            payload["transcript"] = transcript_for(state, cfg.ctx, input=run_input)
+        if transcript_plan is not None:
+            assert cfg.ctx is not None
+            payload["transcript"] = transcript_plan
             payload["ctx"] = cfg.ctx.to_json()
             if cfg.summarizer is not None:
                 payload["summarizer"] = cfg.summarizer
             if state.summary is not None:
                 payload["summary"] = state.summary
         reply = await invoke_controller(payload)
-        if isinstance(reply, dict) and "__ca_meta__" in reply and "reply" in reply:
-            meta = reply["__ca_meta__"]
+        if isinstance(reply, dict) and "__julep_meta__" in reply and "reply" in reply:
+            meta = reply["__julep_meta__"]
             state.controller_meta = (
                 dict(meta) if isinstance(meta, dict) else {"meta": meta}
             )
@@ -225,6 +268,28 @@ def controller_turn(
                 state.record(TraceEntry(decision="reask", error=message))
                 state.round += 1
                 return state
+            if cfg.output_schema is not None:
+                from .execution.llm import json_schema_error
+
+                validation_error = json_schema_error(action.payload, cfg.output_schema)
+                if validation_error is not None:
+                    retries = sum(
+                        1 for entry in state.trace if entry.decision == "output_reask"
+                    )
+                    if retries >= cfg.output_retries:
+                        return Halt(
+                            "output_validation_failed",
+                            output=action.payload,
+                            reason=validation_error,
+                        )
+                    message = (
+                        "final output failed JSON-Schema validation: "
+                        + validation_error
+                    )
+                    state.last = {"error": message, "reply": action.payload}
+                    state.record(TraceEntry(decision="output_reask", error=message))
+                    state.round += 1
+                    return state
             return Halt("done", output=action.payload)
         if action.decision.value == "escalate":
             return Halt("escalated", reason=str(action.payload))
@@ -244,20 +309,58 @@ def controller_turn(
                     contracts=contracts))
                 if halt is not None:
                     return halt
+            resolved_inputs = [
+                entry.get("input") if entry.get("input") is not None else state.last
+                for entry in calls
+            ]
+            invalid: list[dict[str, Any]] = []
+            for index, (entry, call_input) in enumerate(zip(calls, resolved_inputs, strict=True)):
+                tool = cast(str, entry["tool"])
+                schema_error = validate_tool_input(tool, call_input)
+                if schema_error is None:
+                    continue
+                invalid.append(
+                    {
+                        "id": entry.get("id"),
+                        "tool": tool,
+                        "input": call_input,
+                        "error": schema_error,
+                    }
+                )
+                state.record(
+                    TraceEntry(
+                        decision="tool_input_reask",
+                        ref=tool,
+                        call_id=cast(Optional[str], entry.get("id"))
+                        or f"call-{state.round}-{index}",
+                        arguments=call_input,
+                        error=schema_error,
+                    )
+                )
+            if invalid:
+                state.last = {"error": "tool_input_validation_failed", "toolCalls": invalid}
+                state.round += 1
+                return state
             for entry in calls:
                 tool = cast(str, entry["tool"])
-                denial = charge_tool_call(state, tool, contracts)
+                count_key = tool_count_key(tool)
+                denial = charge_tool_call(
+                    state,
+                    tool,
+                    contracts,
+                    count_key=count_key,
+                )
                 halt = denial_to_halt(denial)
                 if halt is not None:
                     return halt
                 if denial is not None:
-                    state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
+                    state.call_counts[count_key] = (
+                        state.call_counts.get(count_key, 0) + 1
+                    )
 
             async def execute_entry(index: int, entry: dict[str, Any]) -> CallManyResult:
                 tool = cast(str, entry["tool"])
-                call_input = entry.get("input")
-                if call_input is None:
-                    call_input = state.last
+                call_input = resolved_inputs[index]
                 error: Optional[str] = None
                 try:
                     out = await call_tool(tool, call_input, call_index=index)
@@ -276,8 +379,11 @@ def controller_turn(
                         decision="call",
                         ref=tool,
                         cost=DEFAULT_TOOL_COST,
-                        call_id=cast(Optional[str], entry.get("id")),
+                        call_id=cast(Optional[str], entry.get("id")) or f"call-{state.round}-{index}",
+                        arguments=call_input,
                         error=error,
+                        output=out,
+                        output_available=True,
                     ),
                 )
 
@@ -312,15 +418,42 @@ def controller_turn(
                 contracts=contracts))
             if halt is not None:
                 return halt
-            denial = charge_tool_call(state, tool, contracts)
+            call_input = action.payload.get("input")
+            if call_input is None:
+                call_input = state.last
+            validation_error = validate_tool_input(tool, call_input)
+            if validation_error is not None:
+                state.last = {
+                    "error": "tool_input_validation_failed",
+                    "tool": tool,
+                    "input": call_input,
+                    "detail": validation_error,
+                }
+                state.record(
+                    TraceEntry(
+                        decision="tool_input_reask",
+                        ref=tool,
+                        call_id=action.payload.get("id") or f"call-{state.round}",
+                        arguments=call_input,
+                        error=validation_error,
+                    )
+                )
+                state.round += 1
+                return state
+            count_key = tool_count_key(tool)
+            denial = charge_tool_call(
+                state,
+                tool,
+                contracts,
+                count_key=count_key,
+            )
             halt = denial_to_halt(denial)
             if halt is not None:
                 return halt
             if denial is not None:  # DEV warn-but-allow: still count the call
-                state.call_counts[tool] = state.call_counts.get(tool, 0) + 1
-            call_input = action.payload.get("input")
-            if call_input is None:
-                call_input = state.last
+                state.call_counts[count_key] = (
+                    state.call_counts.get(count_key, 0) + 1
+                )
             error: Optional[str] = None
             try:
                 out = await call_tool(tool, call_input)
@@ -330,7 +463,22 @@ def controller_turn(
                 out = {"error": error, "tool": tool}
             state.charge(cost)
             state.last = out
-            state.record(TraceEntry(decision="call", ref=tool, cost=cost, error=error))
+            state.record(
+                TraceEntry(
+                    decision="call",
+                    ref=tool,
+                    cost=cost,
+                    call_id=(
+                        action.payload.get("id") or f"call-{state.round}"
+                        if cfg.native_tools
+                        else action.payload.get("id")
+                    ),
+                    arguments=call_input if cfg.native_tools else None,
+                    error=error,
+                    output=out,
+                    output_available=True,
+                )
+            )
         else:  # sub
             ref = action.payload["ref"]
             halt = denial_to_halt(authorize_subflow(ref, granted_subflows=granted_subflows))
@@ -357,6 +505,8 @@ def controller_turn(
                     shape=action.payload.get("shape"),
                     cost=cost,
                     error=error,
+                    output=out,
+                    output_available=True,
                 )
             )
 

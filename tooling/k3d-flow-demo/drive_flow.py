@@ -31,7 +31,7 @@ async def main() -> None:
         client,
         session_id=session_id,
         input=EPISODE_BATCH,
-        task_queue="ca-flow-demo",
+        task_queue="julep-flow-demo",
     )
     print("\n=== durable flow result (worker: pod, reasoners: real Anthropic) ===")
     print(json.dumps(result, indent=2))

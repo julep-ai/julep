@@ -241,13 +241,13 @@ successful batched `think` explainable, `batch_id` + `tier` must ride back in a
 framework envelope, then be unwrapped immediately by the interpreter:
 
 ```
-{"__ca_meta__": {"tier": "BATCH", "batch_id": "..."}, "reply": actual_reply}
+{"__julep_meta__": {"tier": "BATCH", "batch_id": "..."}, "reply": actual_reply}
 ```
 
 Only `actual_reply` flows downstream and is stored as the `Did.value`; the
 metadata becomes `Result.attrs` on that `Did` event. This keeps structured reasoner
 replies untouched. The unwrapping helper must handle both framework envelopes:
-preserve today's summary unwrap, then strip `__ca_meta__` into attrs before the
+preserve today's summary unwrap, then strip `__julep_meta__` into attrs before the
 reply enters user flow data. Extending `AttemptRecord` alone only feeds the
 worker/OTel sink and leaves the projection blind. Carry batch attribution through
 both — `Result.attrs` (for the projection) and `AttemptRecord` (for OTel) — to

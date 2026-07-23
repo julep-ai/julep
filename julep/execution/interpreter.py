@@ -27,7 +27,7 @@ import asyncio
 import inspect
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Optional, Protocol, Sequence
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional, Protocol, Sequence
 
 from ..contracts import CONSERVATIVE_DEFAULT, ToolManifest, contract_allows_retry
 from ..derived import flatten_race_group
@@ -37,12 +37,15 @@ from ..errors import (
     JulepError,
     PureExecutionError,
     RaceAllFailed,
+    ToolInputValidation,
+    raise_for_agent_terminal,
 )
 from ..freeze import bind
 from ..ir import (
     CallStep,
     EMIT_TOOL,
     HUMAN_GATE_TOOL,
+    McpTool,
     Node,
     RECV_TOOL,
     SLEEP_TOOL,
@@ -57,6 +60,9 @@ from .llm_result import LlmResult
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..shapes import surface_shape
 from ..validate import reads_whole_session
+
+if TYPE_CHECKING:
+    from .effects import McpCaller
 
 
 # Runtime projection cost defaults for effect leaves without Ann.cost. These
@@ -116,8 +122,18 @@ def call_contract(node: Node, manifest: ToolManifest):
     return CONSERVATIVE_DEFAULT
 
 
+def call_contract_asserted(node: Node, manifest: ToolManifest) -> bool:
+    """Whether a call's retry-relevant contract came from trusted authority."""
+
+    step = node.step
+    assert isinstance(step, CallStep)
+    return step.frozen_hash is not None and bind(node, manifest).asserted
+
+
 def _retry_attempts_for_call(node: Node, manifest: ToolManifest) -> int:
     if node.ann is None or node.ann.max_attempts is None:
+        return 1
+    if not call_contract_asserted(node, manifest):
         return 1
     if not contract_allows_retry(call_contract(node, manifest)):
         return 1
@@ -221,6 +237,16 @@ async def interpret(
     shape = surface_shape(node).value
     planned = env.emitter.plan(node.id, cid, causes=causes, shape=shape)
 
+    def projection_failure(value: str) -> str:
+        redact = getattr(env, "redact_failure", None)
+        if not callable(redact):
+            return value
+        try:
+            redacted = redact(value)
+        except Exception:
+            return "[REDACTED]"
+        return redacted if isinstance(redacted, str) else "[REDACTED]"
+
     try:
         out = await _eval(node, value, env, cid, planned)
     except PureExecutionError as err:
@@ -231,7 +257,10 @@ async def interpret(
         # span-bearing-diagnostics contract: a sandbox trap must be at least as
         # informative in the span as an ordinary native-pure error.
         env.emitter.fail(
-            node.id, cid, f"{err.error_type}: {err.message}", causes=(planned,)
+            node.id,
+            cid,
+            projection_failure(f"{err.error_type}: {err.message}"),
+            causes=(planned,),
         )
         raise
     except SessionClosed:
@@ -243,7 +272,12 @@ async def interpret(
         env.emitter.fail(node.id, cid, "framework-error", causes=(planned,))
         raise
     except Exception as e:  # noqa: BLE001 — record then re-raise for the engine
-        env.emitter.fail(node.id, cid, repr(e), causes=(planned,))
+        env.emitter.fail(
+            node.id,
+            cid,
+            projection_failure(repr(e)),
+            causes=(planned,),
+        )
         raise
 
     did = env.emitter.did(
@@ -345,7 +379,9 @@ async def _eval(node: Node, value: Any, env: Env, cid: str, planned: str) -> Res
 
     if op == Op.APP:
         assert node.controller is not None
-        out = await env.run_agent(node.controller, value, cid, _app_config(node))
+        out = raise_for_agent_terminal(
+            await env.run_agent(node.controller, value, cid, _app_config(node))
+        )
         return Result(out)
 
     raise JulepError(f"interpreter: unhandled op {op!r}")
@@ -404,8 +440,14 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         timeout_s = node.ann.timeout if node.ann else None
         batchable = bool(node.ann.batchable) if node.ann else False
         out = await env.invoke_reasoner(step.reasoner, value, cid, timeout_s, batchable)
-        reply, attrs = _unwrap_ca_meta(out)
-        return Result(reply, attrs=attrs, reported_cost=_reported_reasoner_cost(reply))
+        reply, attrs = _unwrap_julep_meta(out)
+        reported_cost = _reported_reasoner_cost(reply, attrs)
+        reasoner_attrs = dict(attrs or {})
+        reasoner_attrs.setdefault(
+            "llm.cost.status",
+            "reported" if reported_cost is not None else "unknown",
+        )
+        return Result(reply, attrs=reasoner_attrs, reported_cost=reported_cost)
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
     raise JulepError(f"interpreter: prim with no usable step at {node.id!r}")
@@ -516,7 +558,10 @@ def _projection_cost(node: Node, reported_cost: Optional[float]) -> Optional[flo
 
     step = node.step
     if isinstance(step, ThinkStep):
-        return reported_cost if reported_cost is not None else DEFAULT_THINK_COST
+        # The staged DEFAULT_THINK_COST is a budget/admission weight, not a USD
+        # price. Projection costs must only contain a declared annotation or a
+        # provider-reported charge; otherwise trace consumers render unknown.
+        return reported_cost
     if isinstance(step, SubStep):
         return DEFAULT_SUB_COST
     if isinstance(step, CallStep):
@@ -524,27 +569,35 @@ def _projection_cost(node: Node, reported_cost: Optional[float]) -> Optional[flo
     return None
 
 
-_CA_META_KEY = "__ca_meta__"
+_JULEP_META_KEY = "__julep_meta__"
 
 
-def _unwrap_ca_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
+def _unwrap_julep_meta(value: Any) -> tuple[Any, Optional[dict[str, Any]]]:
     """Strip the framework reasoner-attribution envelope.
 
     Two shapes reach this single gateway: an ``LlmResult`` (the facade/in-memory
     path, where ``make_local_reasoner`` calls ``complete_reasoner`` directly) and
-    the ``__ca_meta__`` dict envelope (the engine path, where the ``invokeReasoner``
+    the ``__julep_meta__`` dict envelope (the engine path, where the ``invokeReasoner``
     activity wraps the reply). Both surface their LLM ``meta`` as DID ``attrs`` so
     a usage-bearing generation reaches the projection (and thus Langfuse).
     """
     if isinstance(value, LlmResult):
         return value.reply, value.meta.to_attrs()
-    if isinstance(value, dict) and _CA_META_KEY in value and "reply" in value:
-        meta = value[_CA_META_KEY]
+    if isinstance(value, dict) and _JULEP_META_KEY in value and "reply" in value:
+        meta = value[_JULEP_META_KEY]
         return value.get("reply"), (dict(meta) if isinstance(meta, dict) else {"meta": meta})
     return value, None
 
 
-def _reported_reasoner_cost(value: Any) -> Optional[float]:
+def _reported_reasoner_cost(
+    value: Any,
+    attrs: Optional[dict[str, Any]] = None,
+) -> Optional[float]:
+    if attrs is not None:
+        meta_cost = attrs.get("llm.cost")
+        if isinstance(meta_cost, (int, float)) and not isinstance(meta_cost, bool):
+            return float(meta_cost)
+
     if not isinstance(value, dict):
         return None
 
@@ -591,6 +644,9 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
         key: encoded[key]
         for key in (
             "tools",
+            "toolAliases",
+            "toolDefs",
+            "toolContracts",
             "subflows",
             "subflowQueues",
             "budget",
@@ -600,6 +656,8 @@ def _app_config(node: Node) -> Optional[dict[str, Any]]:
             "roundNote",
             "nativeTools",
             "requireToolCall",
+            "replySchema",
+            "outputRetries",
         )
         if key in encoded
     }
@@ -754,10 +812,11 @@ class InMemoryEnv:
     """A deterministic, dependency-free :class:`Env`.
 
     Effect handlers are plain callables you supply (``tools``: name -> fn,
-    ``reasoners``: name -> fn, etc.). Concurrency uses ``asyncio`` but stays
-    deterministic for the control-flow under test: ``race_first`` resolves
-    already-ready coroutines in branch order, so a race over synchronous fakes
-    picks the first branch — exactly what a golden test wants to assert.
+    ``mcp_call``: async MCP dispatcher, ``reasoners``: name -> fn, etc.).
+    Concurrency uses ``asyncio`` but stays deterministic for the control-flow
+    under test: ``race_first`` resolves already-ready coroutines in branch
+    order, so a race over synchronous fakes picks the first branch — exactly
+    what a golden test wants to assert.
     """
 
     def __init__(
@@ -766,6 +825,7 @@ class InMemoryEnv:
         emitter: ProjectionEmitter,
         *,
         tools: Optional[dict[str, Callable[[Any], Any]]] = None,
+        mcp_call: Optional[McpCaller] = None,
         reasoners: Optional[dict[str, Callable[[Any], Any]]] = None,
         subs: Optional[dict[str, Callable[[Any], Any]]] = None,
         agents: Optional[dict[str, Callable[[Any], Any]]] = None,
@@ -788,6 +848,14 @@ class InMemoryEnv:
         self.root_run_id = root_run_id
         self.segment_seq = segment_seq
         self._tools = tools or {}
+        if mcp_call is None:
+            self._mcp_call = None
+        else:
+            # Keep local/dry-run behavior on the same canonical MCP seam while
+            # retaining compatibility with legacy 4/5/6-argument fakes.
+            from .effects import _adapt_mcp_caller
+
+            self._mcp_call = _adapt_mcp_caller(mcp_call)
         self._reasoners = reasoners or {}
         self._subs = subs or {}
         self._agents = agents or {}
@@ -840,9 +908,32 @@ class InMemoryEnv:
     async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         key = call_ref_key(node, self.manifest)
         fn = self._tools.get(key)
-        if fn is None:
-            raise KeyError(f"no in-memory tool for {key!r}")
-        return fn(value)
+        if fn is not None:
+            out = fn(value)
+            return await out if inspect.isawaitable(out) else out
+
+        step = node.step
+        assert isinstance(step, CallStep)
+        frozen = bind(node, self.manifest) if step.frozen_hash is not None else None
+        ref = frozen.ref if frozen is not None else step.tool
+        if isinstance(ref, McpTool) and self._mcp_call is not None:
+            input_schema_validated = False
+            if frozen is not None:
+                from .llm import json_schema_error
+
+                if json_schema_error(value, frozen.input_schema) is not None:
+                    raise ToolInputValidation(ref.server, ref.tool)
+                input_schema_validated = True
+            return await self._mcp_call(
+                ref.server,
+                ref.tool,
+                value,
+                cid,
+                self.principal,
+                None,
+                input_schema_validated,
+            )
+        raise KeyError(f"no in-memory tool for {key!r}")
 
     async def invoke_reasoner(
         self,
@@ -876,10 +967,96 @@ class InMemoryEnv:
         cid: str,
         app_config: Optional[dict[str, Any]] = None,
     ) -> Any:
-        if controller not in self._agents:
-            raise KeyError(f"no in-memory agent for {controller!r}")
-        out = self._agents[controller](value)
-        return await out if inspect.isawaitable(out) else out
+        if controller in self._agents:
+            out = self._agents[controller](value)
+            return await out if inspect.isawaitable(out) else out
+        if controller not in self._reasoners:
+            raise KeyError(f"no in-memory reasoner or agent for {controller!r}")
+
+        from ..agent_loop import (
+            AgentConfig,
+            AgentState,
+            drive_agent_loop,
+            tool_input_schemas,
+        )
+
+        authored = dict(app_config or {})
+        cfg = AgentConfig.from_json(authored)
+        grants = set(str(name) for name in authored.get("tools", ()))
+        aliases = {
+            str(alias): str(wire)
+            for alias, wire in authored.get("toolAliases", {}).items()
+        }
+        contracts = {
+            str(alias): dict(contract)
+            for alias, contract in authored.get("toolContracts", {}).items()
+        }
+        for alias in set(contracts) | grants:
+            wire = aliases.get(alias, alias)
+            limit = self._max_calls.get(wire)
+            if limit is None:
+                continue
+            contract = contracts.setdefault(alias, {})
+            authored_limit = contract.get("maxCalls", contract.get("max_calls"))
+            contract["maxCalls"] = (
+                int(limit)
+                if authored_limit is None
+                else min(int(limit), int(authored_limit))
+            )
+        schemas = (
+            tool_input_schemas(authored.get("toolDefs"))
+            if authored.get("toolDefs") is not None
+            else None
+        )
+
+        async def invoke_controller(payload: dict[str, Any]) -> Any:
+            out = self._reasoners[controller](payload)
+            return await out if inspect.isawaitable(out) else out
+
+        async def call_tool(
+            alias: str,
+            args: Any,
+            *,
+            call_index: Optional[int] = None,
+        ) -> Any:
+            del call_index
+            wire = aliases.get(alias, alias)
+            fn = self._tools.get(alias) or self._tools.get(wire)
+            if fn is not None:
+                out = fn(args)
+                return await out if inspect.isawaitable(out) else out
+            if "/" in wire and self._mcp_call is not None:
+                server, tool = wire.split("/", 1)
+                return await self._mcp_call(
+                    server,
+                    tool,
+                    args,
+                    self.next_cid(f"agent:{controller}:{alias}"),
+                    self.principal,
+                    None,
+                    schemas is not None and alias in schemas,
+                )
+            raise KeyError(f"no in-memory fake or MCP caller for tool alias {alias!r}")
+
+        result = await drive_agent_loop(
+            input=value,
+            cfg=cfg,
+            invoke_controller=invoke_controller,
+            call_tool=call_tool,
+            granted=grants,
+            contracts=contracts,
+            tool_count_keys=aliases,
+            tool_schemas=schemas,
+            state=AgentState(last=value, call_counts=dict(self.call_counts)),
+            get_pure=self.get_pure,
+        )
+        carried_counts = result.get("callCounts")
+        if isinstance(carried_counts, dict):
+            for tool, raw_count in carried_counts.items():
+                count = int(raw_count)
+                key = str(tool)
+                self.call_counts[key] = max(self.call_counts.get(key, 0), count)
+        return result
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         if planner not in self._planners:

@@ -8,6 +8,14 @@ from julep.errors import PureExecutionError
 from julep.execution.wasm_executor import WasmExecutor, get_wasm_executor
 
 
+def test_cache_file_uses_julep_prefix() -> None:
+    executor = WasmExecutor()
+    try:
+        assert executor._cache_path().name.startswith("julep_executor_")
+    finally:
+        executor.close()
+
+
 def test_trivial_pure_runs() -> None:
     source = """@pure("double")\ndef double(value, **kwargs):\n    return value * 2\n"""
 

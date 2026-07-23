@@ -11,7 +11,7 @@ Backend-specific contracts (the deltas vs Temporal -- see docs/deploy-dbos.md):
 * **No race/hedge/quorum**. DBOS cannot cancel an in-flight step, so racing
   semantics would lie. :func:`assert_dbos_executable` rejects these at
   dispatch; the compiled output of an ``eval_plan`` is re-scanned too.
-* **App (agent-loop) nodes are supported** via a dedicated ``ca_agent``
+* **App (agent-loop) nodes are supported** via a dedicated ``julep_agent``
   workflow: one DBOS workflow per history segment (ids ``{base}``,
   ``{base}-seg1``, ...), state crossing segments in the continuation envelope.
   Standalone dispatch goes through :func:`run_agent_dbos`; ``Op.APP`` nodes in
@@ -48,14 +48,17 @@ from ..continuation import CONTINUATION_KEY, continuation_value, is_continuation
 from ..contracts import contract_allows_retry, manifest_from_json
 from ..errors import (
     CapabilityDenied,
+    FAILED_AGENT_TERMINAL_STATUSES,
     JulepError,
     POLICY_ERRORS,
     UnsupportedShapeError,
+    raise_for_agent_terminal,
 )
 from ..ir import Node
 from ..kinds import Op
 from ..projection import InMemoryProjection, ProjectionEmitter, ProjectionSink, TeeStore
 from ..trajectory import ProjectionTrajectorySink
+from ..transcript import TRANSCRIPT_SCOPES
 from ..turn import Halt, controller_turn, make_finalize, pre_round
 from . import effects
 from .effects import (
@@ -71,6 +74,7 @@ from .interpreter import (
     BranchThunk,
     Result,
     call_contract,
+    call_contract_asserted,
     call_ref_key,
     gather_bounded,
     interpret,
@@ -81,7 +85,7 @@ from .policy import ExecutionPolicy
 # still letting an abandoned workflow drain. Override per node via ann.timeout.
 _GATE_DEFAULT_TIMEOUT_S = 7 * 24 * 3600
 
-_POLICY_ERROR_KEY = "__ca_policy_error__"
+_POLICY_ERROR_KEY = "__julep_policy_error__"
 _POLICY_ERROR_TYPES = {e.__name__: e for e in POLICY_ERRORS}
 
 
@@ -336,6 +340,9 @@ def _call_tool_input(inp: dict) -> CallToolInput:
         op=inp.get("op"),
         kind=inp.get("kind"),
         causes=tuple(inp.get("causes") or ()),
+        secrets=inp.get("secrets"),
+        frozen_input_schema=inp.get("frozen_input_schema"),
+        input_schema_validated=bool(inp.get("input_schema_validated", False)),
     )
 
 
@@ -457,10 +464,12 @@ class DbosEnv:
     async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         ref_key = call_ref_key(node, self.manifest)
         contract = call_contract(node, self.manifest)
-        if contract_allows_retry(contract):
+        asserted = call_contract_asserted(node, self.manifest)
+        if asserted and contract_allows_retry(contract):
             attempts = node.ann.max_attempts if node.ann and node.ann.max_attempts is not None else (
                 al.retry_max_attempts_for_contract(
                     contract,
+                    asserted=True,
                     idempotent_max_attempts=self._policy.idempotent_max_attempts,
                     write_max_attempts=self._policy.write_max_attempts,
                 )
@@ -565,6 +574,8 @@ class DbosEnv:
         granted_tools: Optional[list[str]] = None
         granted_subflows: Optional[list[str]] = None
         granted_contracts: Optional[dict[str, dict[str, Any]]] = None
+        tool_aliases: Optional[dict[str, str]] = None
+        tool_defs: Optional[list[dict[str, Any]]] = None
         granted_tools_unconstrained = False
 
         if app_config is not None:
@@ -583,21 +594,54 @@ class DbosEnv:
                 config["nativeTools"] = app_config["nativeTools"]
             if "requireToolCall" in app_config:
                 config["requireToolCall"] = app_config["requireToolCall"]
+            if "replySchema" in app_config:
+                config["replySchema"] = app_config["replySchema"]
+            if "outputRetries" in app_config:
+                config["outputRetries"] = app_config["outputRetries"]
 
             tools = app_config.get("tools") if "tools" in app_config else None
             granted_tools = None if tools is None else list(tools)
+            if "toolAliases" in app_config:
+                tool_aliases = {
+                    str(alias): str(wire)
+                    for alias, wire in app_config["toolAliases"].items()
+                }
+            if "toolDefs" in app_config:
+                tool_defs = list(app_config["toolDefs"])
             subflows = app_config.get("subflows") if "subflows" in app_config else None
             granted_subflows = None if subflows is None else list(subflows)
             if tools is not None:
-                granted_contracts = al.manifest_contracts_for_agent(
-                    self.manifest,
-                    granted_tools,
-                    self._max_call_limits,
-                )
+                if "toolContracts" in app_config:
+                    granted_contracts = {
+                        str(alias): dict(contract)
+                        for alias, contract in app_config["toolContracts"].items()
+                    }
+                    for raw_alias in granted_tools or ():
+                        alias = str(raw_alias)
+                        wire = (tool_aliases or {}).get(alias, alias)
+                        limit = self._max_call_limits.get(wire)
+                        if limit is None:
+                            continue
+                        contract = granted_contracts.setdefault(alias, {})
+                        authored_limit = contract.get(
+                            "maxCalls",
+                            contract.get("max_calls"),
+                        )
+                        contract["maxCalls"] = (
+                            int(limit)
+                            if authored_limit is None
+                            else min(int(limit), int(authored_limit))
+                        )
+                else:
+                    granted_contracts = al.manifest_contracts_for_agent(
+                        self.manifest,
+                        granted_tools,
+                        self._max_call_limits,
+                    )
 
         # Parity with run_sub: parent call counts seed the child agent so an
-        # app node cannot reset an already-consumed maxCalls budget. Counts
-        # flow one-way; the child's counts are not merged back.
+        # app node cannot reset an already-consumed maxCalls budget. Terminal
+        # counts merge back below as canonical wire-keyed high-water marks.
         state_json = (
             al.AgentState(last=value, call_counts=dict(self._call_counts)).to_json()
             if self._call_counts
@@ -614,6 +658,8 @@ class DbosEnv:
             "grantedToolsUnconstrained": granted_tools_unconstrained,
             "grantedSubflows": granted_subflows,
             "grantedContracts": granted_contracts,
+            "toolAliases": tool_aliases,
+            "toolDefs": tool_defs,
             "state": state_json,
             "policy": self._policy.to_json(),
             "resolveSpec": True,
@@ -621,7 +667,15 @@ class DbosEnv:
             "rootRunId": self.root_run_id,
             "segmentSeq": 0,
         }
-        return await _run_agent_chain(payload, base_id=base_id)
+        out = await _run_agent_chain(payload, base_id=base_id)
+        if isinstance(out, dict) and isinstance(out.get("callCounts"), dict):
+            for tool, raw_count in out["callCounts"].items():
+                key = str(tool)
+                self._call_counts[key] = max(
+                    self._call_counts.get(key, 0),
+                    int(raw_count),
+                )
+        return out
 
     async def human_gate(self, value: Any, cid: str, timeout_s: Optional[int]) -> Any:
         payload = await DBOS.recv_async(
@@ -650,7 +704,7 @@ class DbosEnv:
 # --------------------------------------------------------------------------- #
 # The workflow: one chain segment of one frozen flow.
 # --------------------------------------------------------------------------- #
-@DBOS.workflow(name="ca_flow")
+@DBOS.workflow(name="julep_flow")
 async def flow_workflow(inp: dict) -> Any:
     """Interpret one segment. ``inp`` is a plain JSON dict (camelCase keys
     mirroring :class:`~julep.execution.harness.FlowInput`)."""
@@ -727,7 +781,7 @@ async def flow_workflow(inp: dict) -> Any:
 # --------------------------------------------------------------------------- #
 # The agent workflow: one chain segment of one agent loop (Op.APP).
 # --------------------------------------------------------------------------- #
-@DBOS.workflow(name="ca_agent")
+@DBOS.workflow(name="julep_agent")
 async def agent_workflow(inp: dict) -> Any:
     """Run one history segment of the bounded agent loop.
 
@@ -753,6 +807,10 @@ async def agent_workflow(inp: dict) -> Any:
     granted_subflows = inp.get("grantedSubflows")
     contracts = dict(inp.get("grantedContracts") or {})
     tool_defs = inp.get("toolDefs")
+    tool_aliases = {
+        str(alias): str(wire)
+        for alias, wire in (inp.get("toolAliases") or {}).items()
+    }
     grants_supplied = (
         inp.get("grantedTools") is not None or bool(inp.get("grantedToolsUnconstrained"))
     )
@@ -762,6 +820,14 @@ async def agent_workflow(inp: dict) -> Any:
         spec = await resolveAgentSpecStep(inp["controller"])
         spec_tool_defs = spec.get("toolDefs")
         tool_defs = spec_tool_defs if spec_tool_defs is not None else tool_defs
+        spec_tool_aliases = spec.get("toolAliases")
+        if spec_tool_aliases is not None:
+            merged_aliases = {
+                str(alias): str(wire)
+                for alias, wire in spec_tool_aliases.items()
+            }
+            merged_aliases.update(tool_aliases)
+            tool_aliases = merged_aliases
         merged_config = dict(spec.get("config") or {})
         merged_config.update(config)
         config = merged_config
@@ -773,7 +839,12 @@ async def agent_workflow(inp: dict) -> Any:
                 and granted is not None
                 and capability_tools is not None
             ):
-                granted = sorted(set(granted) & set(capability_tools))
+                capability_set = set(capability_tools)
+                granted = sorted(
+                    alias
+                    for alias in granted
+                    if tool_aliases.get(alias, alias) in capability_set
+                )
         else:
             granted = spec_granted
         merged_contracts = dict(spec.get("grantedContracts") or {})
@@ -796,6 +867,9 @@ async def agent_workflow(inp: dict) -> Any:
         )
     unconstrained = bool(inp.get("grantedToolsUnconstrained")) or granted is None
     granted_set = set(granted or [])
+    for alias in granted_set:
+        tool_aliases.setdefault(alias, alias)
+    tool_schemas = al.tool_input_schemas(tool_defs) if tool_defs is not None else None
     state = (
         al.AgentState.from_json(inp["state"]) if inp.get("state")
         else al.AgentState(last=inp.get("input"))
@@ -854,13 +928,16 @@ async def agent_workflow(inp: dict) -> Any:
         call_index: Optional[int] = None,
     ) -> Any:
         contract = al.contract_for_tool(tool, contracts)
+        wire_tool = tool_aliases.get(tool, tool)
         attempts = (
             al.retry_max_attempts_for_contract(
                 contract,
+                asserted=al.contract_asserted_for_tool(tool, contracts),
                 idempotent_max_attempts=policy.idempotent_max_attempts,
                 write_max_attempts=policy.write_max_attempts,
             )
-            if contract_allows_retry(contract)
+            if al.contract_asserted_for_tool(tool, contracts)
+            and contract_allows_retry(contract)
             else 1
         )
         step = callToolIdempotent if max(1, attempts) > 1 else callToolNoRetry
@@ -868,7 +945,7 @@ async def agent_workflow(inp: dict) -> Any:
         if call_index is not None:
             cid = f"{cid}-{call_index}"
         out = await step({
-            "tool_ref": toolref_json_from_key(tool), "value": value,
+            "tool_ref": toolref_json_from_key(wire_tool), "value": value,
             "cid": cid, "cache": None,
             "principal": principal,
             "run_id": session,
@@ -876,6 +953,7 @@ async def agent_workflow(inp: dict) -> Any:
             "segment_seq": segment_seq,
             "op": "call",
             "kind": "tool",
+            "input_schema_validated": tool_schemas is not None and tool in tool_schemas,
         })
         return decode_policy_error(out)
 
@@ -886,7 +964,9 @@ async def agent_workflow(inp: dict) -> Any:
             session_id=f"{session}-sub-{state.round}",
             emitter=emitter,
             policy=policy,
-            max_call_limits=al.max_call_limits_from_contracts(contracts) or {},
+            max_call_limits=(
+                al.max_call_limits_from_contracts(contracts, tool_aliases) or {}
+            ),
             call_counts=dict(state.call_counts),
             principal=principal,
             root_run_id=root_run_id,
@@ -903,6 +983,8 @@ async def agent_workflow(inp: dict) -> Any:
         granted=None if unconstrained else granted_set,
         granted_subflows=None if granted_subflows is None else set(granted_subflows),
         contracts=contracts,
+        tool_count_keys=tool_aliases,
+        tool_schemas=tool_schemas,
         mode=cfg.mode,
         prod_gap=prod_gap,
         run_input=inp.get("input"),
@@ -923,7 +1005,9 @@ async def agent_workflow(inp: dict) -> Any:
                 al.terminal_result(result.status, state, output=result.output, reason=result.reason)
             )
         state = result
-        if policy.trace_content_refs:
+        if policy.trace_content_refs or (
+            cfg.ctx is not None and cfg.ctx.scope in TRANSCRIPT_SCOPES
+        ):
             await al.blob_round_output_refs(
                 state,
                 prev_trace_len,
@@ -942,6 +1026,7 @@ async def agent_workflow(inp: dict) -> Any:
                 "grantedSubflows": granted_subflows,
                 "grantedContracts": contracts,
                 "toolDefs": tool_defs,
+                "toolAliases": tool_aliases,
                 "state": state.to_json(),
                 "policy": policy.to_json(),
                 "resolveSpec": False,
@@ -954,6 +1039,33 @@ async def agent_workflow(inp: dict) -> Any:
 # --------------------------------------------------------------------------- #
 # Client helpers.
 # --------------------------------------------------------------------------- #
+async def _finish_trajectory_best_effort(
+    *,
+    run_id: str,
+    root_run_id: str,
+    status: str,
+    segment_seq: int,
+    final_value: Any = None,
+) -> None:
+    try:
+        await finishTrajectoryStep(
+            {
+                "runId": run_id,
+                "rootRunId": root_run_id,
+                "status": status,
+                "finalValue": final_value,
+                "segmentSeq": segment_seq,
+            }
+        )
+    except Exception as exc:
+        from .. import trajectory as _traj
+
+        def _reraise(e: BaseException = exc) -> None:
+            raise e
+
+        _traj._best_effort(_reraise)
+
+
 async def run_flow_dbos(
     flow_json: dict[str, Any],
     manifest_json: dict[str, Any],
@@ -1021,31 +1133,36 @@ async def run_flow_dbos(
                 handle = await queue.enqueue_async(flow_workflow, seg_payload)
             else:
                 handle = await DBOS.start_workflow_async(flow_workflow, seg_payload)
-        out = await handle.get_result()
+        try:
+            out = await handle.get_result()
+        except Exception:
+            await _finish_trajectory_best_effort(
+                run_id=effective_root_run_id,
+                root_run_id=effective_root_run_id,
+                status="failed",
+                segment_seq=seg,
+            )
+            raise
         if not is_continuation(out):
-            try:
-                await finishTrajectoryStep({
-                    "runId": effective_root_run_id,
-                    "rootRunId": effective_root_run_id,
-                    "status": "completed",
-                    "finalValue": out,
-                    "segmentSeq": seg,
-                })
-            except Exception as exc:
-                from .. import trajectory as _traj
-
-                def _reraise(e: BaseException = exc) -> None:
-                    raise e
-
-                _traj._best_effort(_reraise)
+            await _finish_trajectory_best_effort(
+                run_id=effective_root_run_id,
+                root_run_id=effective_root_run_id,
+                status="completed",
+                segment_seq=seg,
+                final_value=out,
+            )
             return out
         call_counts = out.get("callCounts") if isinstance(out, dict) else None
         if isinstance(out, dict) and "bundle" in out:
             bundle = out.get("bundle")
         seg_input = continuation_value(out)
-    raise JulepError(
-        f"flow {session_id!r} did not settle within {max_segments} segments"
+    await _finish_trajectory_best_effort(
+        run_id=effective_root_run_id,
+        root_run_id=effective_root_run_id,
+        status="failed",
+        segment_seq=max_segments - 1,
     )
+    raise JulepError(f"flow {session_id!r} did not settle within {max_segments} segments")
 
 
 async def _run_agent_chain(
@@ -1055,7 +1172,7 @@ async def _run_agent_chain(
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
 ) -> Any:
-    """Drive ``ca_agent`` segments to settlement (shared by
+    """Drive ``julep_agent`` segments to settlement (shared by
     :func:`run_agent_dbos` and :meth:`DbosEnv.run_agent`).
 
     Segment ``i`` runs as workflow id ``base_id`` (i=0) / ``f"{base_id}-seg{i}"``;
@@ -1085,32 +1202,43 @@ async def _run_agent_chain(
                 handle = await queue.enqueue_async(agent_workflow, payload)
             else:
                 handle = await DBOS.start_workflow_async(agent_workflow, payload)
-        out = await handle.get_result()
+        try:
+            out = await handle.get_result()
+        except Exception:
+            await _finish_trajectory_best_effort(
+                run_id=base_id,
+                root_run_id=payload.get("rootRunId") or base_id,
+                status="failed",
+                segment_seq=int(payload.get("segmentSeq") or seg),
+            )
+            raise
         if not is_continuation(out):
-            try:
-                # F1: an agent chain finishes ITS OWN run (base_id), stitched to
-                # the root via rootRunId -- never the root run. A child Op.APP
-                # agent inherits rootRunId from its parent, so targeting the root
-                # here would overwrite the root's final with the child's result.
-                await finishTrajectoryStep({
-                    "runId": base_id,
-                    "rootRunId": payload.get("rootRunId") or base_id,
-                    "status": "completed",
-                    "finalValue": out,
-                    "segmentSeq": int(payload.get("segmentSeq") or seg),
-                })
-            except Exception as exc:
-                from .. import trajectory as _traj
-
-                def _reraise(e: BaseException = exc) -> None:
-                    raise e
-
-                _traj._best_effort(_reraise)
-            return out
+            status = (
+                "failed"
+                if isinstance(out, dict)
+                and out.get("status") in FAILED_AGENT_TERMINAL_STATUSES
+                else "completed"
+            )
+            # F1: an agent chain finishes ITS OWN run (base_id), stitched to
+            # the root via rootRunId -- never the root run. A child Op.APP
+            # agent inherits rootRunId from its parent, so targeting the root
+            # here would overwrite the root's final with the child's result.
+            await _finish_trajectory_best_effort(
+                run_id=base_id,
+                root_run_id=payload.get("rootRunId") or base_id,
+                status=status,
+                segment_seq=int(payload.get("segmentSeq") or seg),
+                final_value=out,
+            )
+            return raise_for_agent_terminal(out)
         payload = continuation_value(out)
-    raise JulepError(
-        f"agent {base_id!r} did not settle within {max_segments} segments"
+    await _finish_trajectory_best_effort(
+        run_id=base_id,
+        root_run_id=root_run_id,
+        status="failed",
+        segment_seq=max_segments - 1,
     )
+    raise JulepError(f"agent {base_id!r} did not settle within {max_segments} segments")
 
 
 async def run_agent_dbos(
@@ -1124,6 +1252,7 @@ async def run_agent_dbos(
     granted_subflows: Optional[list[str]] = None,
     granted_contracts: Optional[dict[str, dict[str, Any]]] = None,
     tool_defs: Optional[list[dict[str, Any]]] = None,
+    tool_aliases: Optional[dict[str, str]] = None,
     policy: Optional[ExecutionPolicy] = None,
     queue: Optional[Queue] = None,
     max_segments: int = 1000,
@@ -1150,6 +1279,7 @@ async def run_agent_dbos(
         "grantedSubflows": granted_subflows,
         "grantedContracts": granted_contracts,
         "toolDefs": tool_defs,
+        "toolAliases": tool_aliases,
         "state": None,
         "policy": (policy or ExecutionPolicy()).to_json(),
         "resolveSpec": resolve_spec,
@@ -1163,7 +1293,7 @@ async def run_agent_dbos(
 
 
 async def submit_human_dbos(workflow_id: str, cid: str, value: Any) -> None:
-    """Release a parked human gate in a running ``ca_flow`` or ``ca_agent`` workflow.
+    """Release a parked human gate in a running ``julep_flow`` or ``julep_agent`` workflow.
 
     ``cid`` is the gate's activation id; with the DBOS env's session-prefixed
     cids, the first gate of a root flow is ``f"{workflow_id}/{gate_node_id}@1"``.

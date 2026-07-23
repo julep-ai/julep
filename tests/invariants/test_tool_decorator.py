@@ -16,6 +16,11 @@ from julep import (
     validate,
 )
 from julep.derived import check_race_admission
+from julep.registry import (
+    DEFAULT_REGISTRY,
+    ToolSchemaExpectation,
+    scoped_tool_expectation_key,
+)
 
 
 def test_tool_contract_mapping() -> None:
@@ -92,6 +97,30 @@ def test_tool_snapshot_freezes_native_and_race_validates_clean() -> None:
     race_frozen = freeze(race(call(native("web_search")), call(native("lookup"))), snap)
     assert not blocking(validate(race_frozen.flow, race_frozen.manifest))
     assert not blocking(check_race_admission(race_frozen.flow, race_frozen.manifest))
+
+
+def test_scoped_dotctx_expectation_does_not_bind_unrelated_native_tool() -> None:
+    name = "scoped_expectation_native_collision"
+    scope = "scoped-expectation-controller"
+    scoped_key = scoped_tool_expectation_key(scope, name)
+    expectation = ToolSchemaExpectation(
+        key=name,
+        input_schema={"type": "object", "required": ["query"]},
+        ctx_path="scoped.ctx",
+    )
+    DEFAULT_REGISTRY.register_tool_expectation(expectation, scope=scope)
+
+    @tool(effect="read", idempotent=True, name=name)
+    def native_collision(value: str) -> str:
+        return value
+
+    try:
+        frozen = freeze(call(native(name)), snapshot_from_tools([native_collision]))
+        assert len(frozen.manifest) == 1
+    finally:
+        DEFAULT_REGISTRY.tool_expectations.pop(scoped_key, None)
+        DEFAULT_REGISTRY.tool_expectations.pop(name, None)
+        DEFAULT_REGISTRY.scoped_tool_fallbacks.discard(name)
 
 
 def test_tool_name_override() -> None:

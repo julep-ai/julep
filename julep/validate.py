@@ -61,6 +61,72 @@ SECRET_KEY_RE = re.compile(
     r"token|secret|password|api_?key|credential|private_?key",
     re.IGNORECASE,
 )
+_NATIVE_TOOLS_REPLY_RESERVED_KEYS = frozenset(
+    {"done", "output", "escalate", "tool", "sub", "tool_calls"}
+)
+
+
+def _native_tools_reserved_output_properties(schema: dict[str, Any]) -> set[str]:
+    """Find reserved properties applied to the output's top-level instance.
+
+    Composition keywords and referenced definitions validate the same instance
+    as their parent, so their ``properties`` declarations are top-level too.
+    Property *value* schemas validate child instances and must not be traversed.
+    Only local JSON-pointer refs are admission-time inspectable; cycles are
+    harmless because every resolved schema object is visited at most once.
+    """
+
+    seen: set[int] = set()
+    reserved: set[str] = set()
+
+    def resolve_local_ref(ref: str) -> Any:
+        if ref == "#":
+            return schema
+        if not ref.startswith("#/"):
+            return None
+        current: Any = schema
+        for raw_token in ref[2:].split("/"):
+            token = raw_token.replace("~1", "/").replace("~0", "~")
+            if isinstance(current, dict) and token in current:
+                current = current[token]
+            elif isinstance(current, list) and token.isdigit():
+                index = int(token)
+                if index >= len(current):
+                    return None
+                current = current[index]
+            else:
+                return None
+        return current
+
+    def visit(candidate: Any) -> None:
+        if not isinstance(candidate, dict) or id(candidate) in seen:
+            return
+        seen.add(id(candidate))
+
+        properties = candidate.get("properties")
+        if isinstance(properties, dict):
+            reserved.update(_NATIVE_TOOLS_REPLY_RESERVED_KEYS.intersection(properties))
+
+        ref = candidate.get("$ref")
+        if isinstance(ref, str):
+            visit(resolve_local_ref(ref))
+
+        for keyword in ("oneOf", "anyOf", "allOf"):
+            alternatives = candidate.get(keyword)
+            if isinstance(alternatives, list):
+                for alternative in alternatives:
+                    visit(alternative)
+
+        for keyword in ("if", "then", "else"):
+            visit(candidate.get(keyword))
+
+        dependent_schemas = candidate.get("dependentSchemas")
+        if isinstance(dependent_schemas, dict):
+            for dependent_schema in dependent_schemas.values():
+                visit(dependent_schema)
+
+    visit(schema)
+    return reserved
 
 
 @dataclass
@@ -263,6 +329,14 @@ def _check_structure(n: Node, out: list[Diagnostic]) -> None:
             err("APP_NO_CONTROLLER", "app requires a controller ref")
         if n.round_note is not None and not is_registered(n.round_note):
             err("UNKNOWN_PURE", f"round note not registered: {n.round_note!r}")
+        if n.native_tools and isinstance(n.output_schema, dict):
+            reserved = sorted(_native_tools_reserved_output_properties(n.output_schema))
+            if reserved:
+                err(
+                    "APP_RESERVED_REPLY_KEY",
+                    "native-tools app output schema declares reserved controller "
+                    f"action key(s): {', '.join(reserved)}",
+                )
         # Transcript scopes (agent-transcripts design): no implicit budget, no
         # implicit summarizer model — declaring either without its requirement
         # is a blocking diagnostic, never a silent fallback.
@@ -365,8 +439,7 @@ def _check_ann_retry_fields(n: Node, out: list[Diagnostic]) -> None:
             Diagnostic(
                 "RETRY_FIELD_RANGE",
                 n.id,
-                f"Ann retry field {field}={value!r} is out of range; "
-                f"legal range is {legal_range}",
+                f"Ann retry field {field}={value!r} is out of range; legal range is {legal_range}",
             )
         )
 
@@ -631,9 +704,7 @@ def _check_session_loop_fields(flow: Node, out: list[Diagnostic]) -> None:
         if n.op != Op.LOOP:
             continue
         present = [
-            field
-            for field in illegal_fields
-            if hasattr(n, field) and getattr(n, field) is not None
+            field for field in illegal_fields if hasattr(n, field) and getattr(n, field) is not None
         ]
         if present:
             out.append(
@@ -690,8 +761,7 @@ def _check_session_target(flow: Node, out: list[Diagnostic], is_session: bool) -
                     Diagnostic(
                         "SESSION_LOOP_IN_FLOW",
                         n.id,
-                        "LOOP requires a session (root Op.LOOP); this flow targets "
-                        "FlowWorkflow",
+                        "LOOP requires a session (root Op.LOOP); this flow targets FlowWorkflow",
                     )
                 )
             if _is_recv(n):
@@ -699,8 +769,7 @@ def _check_session_target(flow: Node, out: list[Diagnostic], is_session: bool) -
                     Diagnostic(
                         "SESSION_RECV_IN_FLOW",
                         n.id,
-                        "recv requires a session (root Op.LOOP); this flow targets "
-                        "FlowWorkflow",
+                        "recv requires a session (root Op.LOOP); this flow targets FlowWorkflow",
                     )
                 )
                 if has_loop and not inside_loop:
@@ -717,8 +786,7 @@ def _check_session_target(flow: Node, out: list[Diagnostic], is_session: bool) -
                     Diagnostic(
                         "SESSION_EMIT_IN_FLOW",
                         n.id,
-                        "emit requires a session (root Op.LOOP); this flow targets "
-                        "FlowWorkflow",
+                        "emit requires a session (root Op.LOOP); this flow targets FlowWorkflow",
                     )
                 )
                 if has_loop and not inside_loop:
@@ -829,9 +897,7 @@ def validate(
     # finite tree / no knots
     cycle = detect_cycles(flow)
     if cycle is not None:
-        out.append(
-            Diagnostic("CYCLE", cycle[-1], "flow has a cycle: " + " -> ".join(cycle))
-        )
+        out.append(Diagnostic("CYCLE", cycle[-1], "flow has a cycle: " + " -> ".join(cycle)))
         return out  # don't traverse a cyclic graph further
 
     # unique ids
@@ -862,9 +928,7 @@ def validate(
                 _exit_schema(n.left, manifest), _entry_schema(n.right, manifest)
             )
             if reason:
-                out.append(
-                    Diagnostic("SEQ_TYPE", n.id, f"seq edge type mismatch: {reason}")
-                )
+                out.append(Diagnostic("SEQ_TYPE", n.id, f"seq edge type mismatch: {reason}"))
 
         # ContextPolicy legality under par -> sequential degrade (warning)
         if n.op == Op.PAR and n.left is not None and n.right is not None:
