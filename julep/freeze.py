@@ -244,8 +244,31 @@ def _toolref_from_key(key: str) -> ToolRef:
 # --------------------------------------------------------------------------- #
 # Expected-schema verification (dotctx tools.pyi contract assertions).
 # --------------------------------------------------------------------------- #
+def _strip_closed_object_markers(value: Any) -> Any:
+    """Drop ``additionalProperties: false`` (recursively) before comparison.
+
+    tools.pyi stubs cannot express ``additionalProperties``, while
+    signature-derived servers (FastMCP and the official SDK's function tools)
+    always emit ``additionalProperties: false`` — comparing verbatim would make
+    every such server drift against every dotctx expectation. Open-vs-closed is
+    the one axis this gate tolerates; property names, types, requiredness, and
+    descriptions still drift. The runtime preflight pin hashes the served
+    definition verbatim and is unaffected by this normalization.
+    """
+    if isinstance(value, dict):
+        return {
+            key: _strip_closed_object_markers(item)
+            for key, item in value.items()
+            if not (key == "additionalProperties" and item is False)
+        }
+    if isinstance(value, list):
+        return [_strip_closed_object_markers(item) for item in value]
+    return value
+
+
 def _schema_hash(schema: JSONSchema) -> str:
-    return "sha256:" + hashlib.sha256(canonical_json(schema).encode("utf-8")).hexdigest()
+    normalized = _strip_closed_object_markers(schema)
+    return "sha256:" + hashlib.sha256(canonical_json(normalized).encode("utf-8")).hexdigest()
 
 
 def _served_input_schema(key: str, snapshot: McpSnapshot) -> Optional[JSONSchema]:

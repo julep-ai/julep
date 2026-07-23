@@ -658,6 +658,35 @@ def test_freeze_raises_tool_schema_drift_on_mismatch() -> None:
     assert "researcher.ctx" in msg
 
 
+def test_freeze_tolerates_closed_object_markers_from_served_schemas() -> None:
+    # Signature-derived servers (FastMCP, official-SDK function tools) always
+    # emit additionalProperties: false; tools.pyi cannot express it. The drift
+    # gate must treat open-vs-closed as equal — everything else still drifts.
+    rich = _rich()
+    served = {}
+    for key, schema in rich.expected_tool_schemas.items():
+        closed = json.loads(json.dumps(schema))
+        closed["additionalProperties"] = False
+        for prop in closed.get("properties", {}).values():
+            if isinstance(prop, dict) and prop.get("type") == "object":
+                prop["additionalProperties"] = False
+        served[key] = closed
+    fr = freeze(think("researcher"), _memory_snapshot(served))
+    assert fr.flow is not None
+
+
+def test_freeze_still_drifts_when_closed_served_schema_differs() -> None:
+    rich = _rich()
+    served = {k: dict(v) for k, v in rich.expected_tool_schemas.items()}
+    served["memory/search_notes"] = {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": False,
+    }
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT"):
+        freeze(think("researcher"), _memory_snapshot(served))
+
+
 # --------------------------------------------------------------------------- #
 # LLM caller: rendered user turn + max_tokens forwarding.
 # --------------------------------------------------------------------------- #

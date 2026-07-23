@@ -102,6 +102,9 @@ def test_freeze_resolves_alias_and_records_exact_agent_contract() -> None:
 
 
 def test_freeze_rejects_non_exact_tools_pyi_schema() -> None:
+    # additionalProperties: false alone is tolerated (signature-derived
+    # servers always emit it; tools.pyi cannot express it) — the drift marker
+    # here is a real semantic change: the property type differs.
     reasoner, _frozen_result = _frozen()
     flow = reasoner_to_flow(
         reasoner,
@@ -115,6 +118,7 @@ def test_freeze_rejects_non_exact_tools_pyi_schema() -> None:
                     "search-posts": McpToolSpec(
                         input_schema={
                             **EXPECTED,
+                            "properties": {"query": {"type": "integer"}},
                             "additionalProperties": False,
                         }
                     )
@@ -148,9 +152,11 @@ def test_think_reasoner_honors_explicit_unscoped_tool_expectation(
                 "tracker",
                 {
                     "search-posts": McpToolSpec(
+                        # Real semantic drift (type change); a bare
+                        # additionalProperties: false would be tolerated.
                         input_schema={
                             **EXPECTED,
-                            "additionalProperties": False,
+                            "properties": {"query": {"type": "integer"}},
                         }
                     )
                 },
