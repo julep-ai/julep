@@ -806,7 +806,7 @@ def test_local_effects_agent_preserves_native_count_and_uses_wire_alias_limit(
 
     from julep import agent_loop
     from julep.execution import effects
-    from julep.execution.harness import ExecutionPolicy
+    from julep.execution.policy import ExecutionPolicy
     from julep.projection import InMemoryProjection, ProjectionEmitter
     from julep.server.local import _LocalEffectsEnv
 
