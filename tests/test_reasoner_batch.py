@@ -456,7 +456,12 @@ async def _same_key_fresh_collectors_start_distinct_poll_workflows(
         )
 
         BlockingFakeBatch.release = True
-        out_a, out_b = await asyncio.gather(receiver_a.result(), receiver_b.result())
+        # Temporal 1.20's time-skipping test server cannot service two
+        # concurrent ``result()`` waiters because both try to unlock time
+        # skipping. Waiting sequentially still lets the server advance every
+        # workflow and preserves the two independent receiver assertions.
+        out_a = await receiver_a.result()
+        out_b = await receiver_b.result()
 
     assert out_a == "alpha"
     assert out_b == "beta"
