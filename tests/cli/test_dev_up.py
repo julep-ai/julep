@@ -8,15 +8,20 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
-from julep.cli.config import EnvConfig, JulepConfig
-from julep.cli.dev import (
+from julep import HAVE_TEMPORAL
+
+if not HAVE_TEMPORAL:
+    pytest.skip("temporalio not installed", allow_module_level=True)
+
+from julep.cli.config import EnvConfig, JulepConfig  # noqa: E402
+from julep.cli.dev import (  # noqa: E402
     DevStackError,
     build_dev_stack_plan,
     render_dev_stack_plan,
     run_dev_stack,
 )
-from julep.cli.keygen import generate_dev_environment
-from julep.cli.main import app
+from julep.cli.keygen import generate_dev_environment  # noqa: E402
+from julep.cli.main import app  # noqa: E402
 
 
 def _source_env() -> dict[str, str]:
