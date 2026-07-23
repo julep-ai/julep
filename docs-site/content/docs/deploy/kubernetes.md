@@ -29,6 +29,7 @@ reads its configuration from the environment:
 | `WORKER_MAX_CONCURRENT_ACTIVITIES` | SDK default | per-replica activity slots |
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | SDK default | per-replica workflow-task slots |
 | `WORKER_HEALTH_PORT` | off | HTTP port serving `GET /healthz` and `GET /readyz` |
+| `JULEP_BLOB_STORE_URL` | unset | Absolute local `file://` URL for durable transcript/claim-check blobs. Mutually exclusive with a factory-provided `blob_store`. |
 
 `WORKER_CONTEXT_FACTORY` is required and has no default: a `WorkerContext`
 holds live callables (the MCP caller, the LLM, registries), which cannot come
@@ -200,9 +201,16 @@ replica count exceeds one:
   failing provider independently before its breaker opens. Acceptable at small
   counts; at larger ones the deterministic fallback chain is what bounds the
   damage.
-- **`SessionStore` and `BlobStore`** must be shared services (Postgres, object
-  store), not in-memory instances, or sessions and claim-checked payloads are
-  visible only to the replica that wrote them.
+- **`SessionStore` and `BlobStore`** must be shared services, not in-memory
+  instances, or sessions and claim-checked payloads are visible only to the
+  replica that wrote them. `JULEP_BLOB_STORE_URL=file:///...` is valid for
+  multiple pods only when an operator separately mounts the same coherent RWX
+  filesystem in every pod; the bundled deployment example does not provision
+  or mount one. It must support hard links and directory `fsync`, and replicas
+  need compatible filesystem identities because directories are `0700` and
+  objects are `0600`. Pod-local files are not shared. Use volume encryption for
+  sensitive content. There is no built-in garbage collector: retain the URL and
+  every referenced blob for the full workflow-history lifetime.
 - **Registry drift is caught, not prevented**: `verifyPures` compares
   deploy-pinned pure hashes against the replica's registry before effects run,
   so a stale image fails loudly. Roll images atomically per lane to avoid the

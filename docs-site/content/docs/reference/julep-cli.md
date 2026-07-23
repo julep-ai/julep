@@ -523,7 +523,9 @@ store, a worker context factory, payload encryption keys, an admin API key, and
 the server/store/Temporal dependencies. When workers need operator-vault
 values, `JULEP_WORKER_API_KEY` must match a separate worker-role keyring entry;
 the supervisor exposes it to workers as `JULEP_API_KEY` alongside
-`JULEP_API_URL`. It uses real PostgreSQL and Temporal;
+`JULEP_API_URL`. An explicit `JULEP_BLOB_STORE_URL` is forwarded only to workers;
+for example, `file:///absolute/project/.julep/blobs` lets durable transcript
+observations survive worker restarts on the supervised machine. It uses real PostgreSQL and Temporal;
 for a service-free HTTP test surface, use `julep serve api --local` instead.
 See [Local development](/docs/deploy/local) for setup.
 

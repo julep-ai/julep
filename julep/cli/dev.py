@@ -117,6 +117,7 @@ _API_ENV_NAMES = frozenset(
 _WORKER_ENV_NAMES = frozenset(
     {
         "JULEP_ARTIFACT_STORE_URL",
+        "JULEP_BLOB_STORE_URL",
         "JULEP_BUNDLE_ALLOWED_SIGNERS",
         "JULEP_EXECUTION_STORE_DSN",
         "JULEP_REDACTION",

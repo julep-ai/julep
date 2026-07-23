@@ -21,7 +21,13 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from .cma_session import CMASessionHandle as CMASessionHandle
 
-from .blobstore import BlobStore, InMemoryBlobStore, content_ref
+from .blobstore import (
+    BlobStore,
+    InMemoryBlobStore,
+    LocalDirBlobStore,
+    blob_store_from_url,
+    content_ref,
+)
 from .effects import LlmCaller, RunPrincipal, WorkerContext, configure
 from .interpreter import Env, InMemoryEnv, Result, interpret
 from .policy import ExecutionPolicy
@@ -175,6 +181,8 @@ __all__ = [
     "HAVE_DBOS",
     "BlobStore",
     "InMemoryBlobStore",
+    "LocalDirBlobStore",
+    "blob_store_from_url",
     "content_ref",
     "CMASessionHandle",
     "SessionStore",

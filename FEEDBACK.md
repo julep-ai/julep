@@ -159,14 +159,22 @@ hit five gaps the test suite's fakes never exercised. All five are fixed on
     `escalated` remain successful values; agent facades/evals retain their
     low-level value-envelope behavior.
 
-26. **Transcript-scoped agents now require a worker blob store, but julep ships only
-    `InMemoryBlobStore`.** After the transcript hardening, `invokeReasoner` refuses to
-    run without `WorkerContext.blob_store` ("worker has no blob store configured"), yet
-    there is no durable implementation (file://, S3) and no `WorkerServeSettings` env
-    for it — every consumer must hand-wire the in-memory reference impl and accept its
-    single-process/no-retention caveats. Ask: a file-backed store + a
-    `JULEP_BLOB_STORE_URL` env mirroring the artifact-store pattern, and a loud doc
-    note that in-memory is single-worker-per-queue only.
+26. **[fixed] Durable tool/sub-bearing transcript agents had no shipped blob store.**
+    The original report overstated the scope: first-round terminal agents and inline
+    local execution need no store. Temporal and DBOS agents do need one as soon as a
+    tool or subflow observation is persisted as a transcript ref; without it they fail
+    after the effect succeeds, and `InMemoryBlobStore` cannot survive worker restart or
+    cross replicas. Julep now ships an async, tenant-partitioned, integrity-checked
+    `LocalDirBlobStore` plus `blob_store_from_url(file://...)` and
+    `JULEP_BLOB_STORE_URL` wiring for `WorkerServeSettings`, `julep worker`, and the
+    standalone `run_worker` helper. `julep dev up` forwards an explicitly configured
+    URL only to workers. Ambiguous factory-plus-env stores fail at startup. Docs call
+    out that file storage is a single-host building block unless operators provide a
+    coherent shared mount with hard-link/`fsync` support and compatible identities.
+    It has no application-level encryption or garbage collector, and its root must
+    remain stable for the lifetime of retained Temporal or DBOS records. DBOS wiring
+    is explicit because Julep does not own its process entrypoint; the in-memory
+    implementation remains tests/one-process only.
 
 ## Consumer plumbing that should move into julep (from the full-migration estimate, 2026-07-23)
 

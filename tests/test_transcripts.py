@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -28,7 +29,7 @@ from julep.dotctx import Reasoner, reasoner_to_flow
 from julep.registry import DEFAULT_REGISTRY
 from julep.errors import ValidationError
 from julep.execution import HAVE_DBOS, HAVE_TEMPORAL
-from julep.execution.blobstore import InMemoryBlobStore
+from julep.execution.blobstore import InMemoryBlobStore, LocalDirBlobStore
 from julep.execution.effects import (
     InvokeReasonerInput,
     WorkerContext,
@@ -383,6 +384,31 @@ def test_whole_session_transcript_is_hydrated_from_the_blob_store() -> None:
         {"role": "user", "content": "go"},
         {"role": "tool", "ref": {"kind": "native", "name": "t"}, "content": {"hits": 3}},
     ]
+
+
+def test_whole_session_transcript_hydrates_after_file_store_restart(
+    tmp_path: Path,
+) -> None:
+    DEFAULT_REGISTRY.register_reasoner(
+        Reasoner(name="tr.file.ctrl", model="m", system="s")
+    )
+    root = tmp_path / "blobs"
+    writer = LocalDirBlobStore(root)
+    ref = asyncio.run(
+        writer.put("sess", json.dumps({"hits": 3}, sort_keys=True).encode())
+    )
+
+    reader = LocalDirBlobStore(root)
+    ctx, seen = _capture_ctx(blob_store=reader)
+    configure(ctx)
+    _invoke(
+        reasoner="tr.file.ctrl",
+        transcript=[{"role": "tool", "content_ref": ref}],
+        ctx={"scope": "whole_session", "maxTokens": 10_000},
+    )
+
+    (call,) = seen["calls"]
+    assert call["transcript"] == [{"role": "tool", "content": {"hits": 3}}]
 
 
 def test_transcript_renders_string_opening_ask_from_original_input_before_budget() -> None:

@@ -58,6 +58,7 @@ def _plan(tmp_path: Path, **kwargs: Any):
 
 def test_build_dev_stack_plan_wires_shared_contract_and_redacts_key(tmp_path: Path) -> None:
     source = _source_env()
+    source["JULEP_BLOB_STORE_URL"] = (tmp_path / ".julep" / "blobs").as_uri()
     cfg = JulepConfig(root=tmp_path, envs={})
     env = EnvConfig(
         name="local",
@@ -76,6 +77,10 @@ def test_build_dev_stack_plan_wires_shared_contract_and_redacts_key(tmp_path: Pa
     assert plan.temporal.argv[-2:] == ("--port", "7233")
     assert plan.api.environment["JULEP_ARTIFACT_STORE_URL"] == env.release_store
     assert plan.worker.environment["WORKER_CONTEXT_FACTORY"] == "project.worker:context"
+    assert plan.worker.environment["JULEP_BLOB_STORE_URL"] == source["JULEP_BLOB_STORE_URL"]
+    assert "JULEP_BLOB_STORE_URL" not in plan.api.environment
+    assert "JULEP_BLOB_STORE_URL" not in plan.publication_environment
+    assert "JULEP_BLOB_STORE_URL" not in plan.temporal.environment
     assert plan.worker.environment["JULEP_API_URL"] == "http://127.0.0.1:8600"
     assert plan.worker.environment["JULEP_API_KEY"] == source["JULEP_WORKER_API_KEY"]
     assert "JULEP_API_KEY" not in plan.api.environment
@@ -98,7 +103,11 @@ def test_build_dev_stack_plan_partitions_child_environments_by_role(
     tmp_path: Path,
 ) -> None:
     source = _source_env()
-    source.update({"PATH": "/bin", "AMBIENT_PROVIDER_SECRET": "do-not-propagate"})
+    source.update({
+        "PATH": "/bin",
+        "AMBIENT_PROVIDER_SECRET": "do-not-propagate",
+        "JULEP_BLOB_STORE_URL": (tmp_path / "source-blobs").as_uri(),
+    })
     cfg = JulepConfig(root=tmp_path, envs={})
     env = EnvConfig(
         name="local",
@@ -107,6 +116,7 @@ def test_build_dev_stack_plan_partitions_child_environments_by_role(
         worker_environment={
             "WORKER_PROVIDER_SECRET": "worker-only",
             "JULEP_API_KEYS": "must-not-override",
+            "JULEP_BLOB_STORE_URL": (tmp_path / "configured-blobs").as_uri(),
         },
     )
 
@@ -130,6 +140,14 @@ def test_build_dev_stack_plan_partitions_child_environments_by_role(
     assert all(
         "AMBIENT_PROVIDER_SECRET" not in environment
         for environment in environments.values()
+    )
+    assert plan.worker.environment["JULEP_BLOB_STORE_URL"] == (
+        tmp_path / "configured-blobs"
+    ).as_uri()
+    assert all(
+        "JULEP_BLOB_STORE_URL" not in environment
+        for name, environment in environments.items()
+        if name != "worker"
     )
     assert environments["worker"]["WORKER_PROVIDER_SECRET"] == "worker-only"
     assert all(

@@ -330,7 +330,12 @@ export ANTHROPIC_API_KEY=...
   callable returning `julep.execution.effects.WorkerContext`.
 - Production storage: if you run multi-replica workers or enable
   `history_threshold`, use shared implementations for `WorkerContext.session_store`
-  and `WorkerContext.blob_store`. `InMemorySessionStore` is only process-local.
+  and `WorkerContext.blob_store`. `InMemorySessionStore` and
+  `InMemoryBlobStore` are only process-local. Durable transcript-scoped tool
+  agents can use `JULEP_BLOB_STORE_URL=file:///absolute/path`; all eligible
+  workers must see the same operator-provisioned persistent filesystem. The
+  file backend has no garbage collector; do not change its root or remove blobs
+  while retained workflow histories can reference them.
 - Operator access: worker logs, Temporal Web/Cloud for the workflow id, and the
   ability to run `julep doctor` in the application checkout.
 
@@ -359,6 +364,7 @@ export WORKER_CONTEXT_FACTORY=yourapp.worker:make_context
 export TEMPORAL_ADDRESS=localhost:7233
 export TEMPORAL_NAMESPACE=default
 export TEMPORAL_TASK_QUEUE=julep
+export JULEP_BLOB_STORE_URL=file:///var/lib/julep/blobs
 export WORKER_HEALTH_PORT=8080
 julep worker
 ```

@@ -15,6 +15,8 @@ import julep.execution as ex
 PURE_SYMBOLS = [
     "BlobStore",
     "InMemoryBlobStore",
+    "LocalDirBlobStore",
+    "blob_store_from_url",
     "content_ref",
     "SessionStore",
     "InMemorySessionStore",
@@ -47,6 +49,8 @@ def test_pure_symbols_resolve_to_real_objects() -> None:
     from julep.execution.blobstore import (
         BlobStore,
         InMemoryBlobStore,
+        LocalDirBlobStore,
+        blob_store_from_url,
         content_ref,
     )
     from julep.execution.session_store import (
@@ -57,6 +61,8 @@ def test_pure_symbols_resolve_to_real_objects() -> None:
 
     assert ex.BlobStore is BlobStore
     assert ex.InMemoryBlobStore is InMemoryBlobStore
+    assert ex.LocalDirBlobStore is LocalDirBlobStore
+    assert ex.blob_store_from_url is blob_store_from_url
     assert ex.content_ref is content_ref
     assert ex.SessionStore is SessionStore
     assert ex.InMemorySessionStore is InMemorySessionStore

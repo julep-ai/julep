@@ -53,6 +53,25 @@ Temporal and DBOS runners claim-check transcript outputs before a continuation
 boundary. Hydration of refs happens in the effect under the blob-durability
 contract.
 
+Tool and subflow observations in durable transcript-scoped agents therefore
+require a `BlobStore` shared by every worker that can poll the release queue and
+retained for the full lifetime of any Temporal history or DBOS workflow record
+that can still reference it. `InMemoryBlobStore` is safe only for tests or a run
+guaranteed to stay in one live process. The container worker can install
+`LocalDirBlobStore` with `JULEP_BLOB_STORE_URL=file:///absolute/path`.
+
+The file backend is a single-host building block. Multiple processes may use it
+only when an operator separately mounts that exact directory as one coherent
+shared filesystem with hard-link and directory-`fsync` support, and runs all
+replicas under compatible filesystem identities (`0700` directories, `0600`
+objects). The configured root is operator-trusted; generated namespace paths
+reject symlinks observed during access, but the backend is not a sandbox against
+another same-identity process concurrently mutating that trusted root. It
+provides no application-level encryption and no garbage collector, so storage
+grows monotonically. Blob refs do not encode their backend: changing the
+URL/root or deleting files while retained workflows exist makes those refs
+unreadable.
+
 ### `ContextPolicy` semantics for `app`
 
 - **`LOCAL`** (default): today's behavior, unchanged — `{input, trace, last}`

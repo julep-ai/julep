@@ -130,6 +130,23 @@ Generic workers leave `WORKER_APPLICATION` and
 reference to reasoner-facing activities, which hydrate it from the artifact store named by
 `JULEP_ARTIFACT_STORE_URL`.
 
+Durable transcript-scoped agents with tool or subflow rounds also need a blob
+store for observation refs. Set an absolute local URL before `julep worker`:
+
+```bash
+export JULEP_BLOB_STORE_URL=file:///var/lib/julep/blobs
+```
+
+This installs `LocalDirBlobStore` after resolving the context factory. Do not
+also return `WorkerContext(blob_store=...)`; the worker rejects the ambiguous
+configuration. The built-in deployment examples do not provision storage; the
+file backend is single-host unless an operator mounts the same coherent
+filesystem into every eligible replica. That filesystem must support hard
+links and directory `fsync`, with compatible identities for `0700` directories
+and `0600` objects. It is not application-level encrypted and has no garbage
+collector. Keep the URL/root and blobs unchanged for the full workflow-history
+lifetime. `InMemoryBlobStore` cannot survive a restart or cross a replica.
+
 ## Activities
 
 - `verifyPures`: compare deploy-pinned pure source hashes to the worker

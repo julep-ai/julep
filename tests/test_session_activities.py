@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -41,7 +42,7 @@ if HAVE_TEMPORAL:
         loadState,
         putBlob,
     )
-    from julep.execution.blobstore import InMemoryBlobStore
+    from julep.execution.blobstore import InMemoryBlobStore, LocalDirBlobStore
     from julep.execution.session_store import InMemorySessionStore
 
 
@@ -106,6 +107,25 @@ def test_put_blob_is_content_addressed_and_resolvable() -> None:
         assert store_ref == ref
     finally:
         activities.configure(WorkerContext())
+
+
+def test_put_blob_file_store_survives_activity_context_restart(tmp_path: Path) -> None:
+    root = tmp_path / "blobs"
+    writer = LocalDirBlobStore(root)
+    activities.configure(WorkerContext(blob_store=writer))
+    try:
+        ref = _run(
+            _drive(
+                putBlob,
+                PutBlobInput(tenant="acme", value={"observation": "durable"}),
+            )
+        )
+    finally:
+        activities.configure(WorkerContext())
+
+    reader = LocalDirBlobStore(root)
+    resolved = _run(reader.get("acme", ref))
+    assert json.loads(resolved) == {"observation": "durable"}
 
 
 def test_load_state_requires_session_store() -> None:

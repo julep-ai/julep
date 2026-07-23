@@ -55,7 +55,11 @@ from .activities import (
     validateJsonSchema,
     verifyPures,
 )
-from .blobstore import BlobStore
+from .blobstore import (
+    BlobStore,
+    _initialize_blob_store,
+    _resolve_blob_store_configuration,
+)
 from .reasoner_batch import (
     BatchCollector,
     BatchDispatchContext,
@@ -288,6 +292,12 @@ async def run_worker(
     os.environ.update(
         materialize_secret_environment(os.environ, resolver=secret_resolver)
     )
+    blob_store = _resolve_blob_store_configuration(
+        blob_store,
+        os.environ.get("JULEP_BLOB_STORE_URL"),
+        explicit_source="run_worker(blob_store=...)",
+    )
+    await _initialize_blob_store(blob_store)
     connect_kwargs: dict[str, Any] = {"namespace": namespace}
     payload_keys, payload_key_id, _required = payload_encryption_from_env(os.environ)
     if payload_keys is not None:

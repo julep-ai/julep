@@ -18,16 +18,32 @@ Effects are configured exactly like the Temporal worker -- one process-global
 `DBOS.launch()` (step registration happens at import):
 
 ```python
+import os
+
 from dbos import DBOS, DBOSConfig
+from julep.execution import blob_store_from_url
 from julep.execution.effects import WorkerContext, configure
 import julep.execution.dbos_backend as julep_dbos
 
-configure(WorkerContext(mcp_call=my_mcp_caller, llm=my_llm_caller))
+blob_store = blob_store_from_url(os.environ["JULEP_BLOB_STORE_URL"])
+configure(WorkerContext(
+    mcp_call=my_mcp_caller,
+    llm=my_llm_caller,
+    blob_store=blob_store,
+))
 julep_dbos.set_projection_sink(my_logfire_sink)   # optional ProjectionSink
 
 DBOS(config=DBOSConfig(name="my-app", system_database_url=DB_URL))
 DBOS.launch()
 ```
+
+`JULEP_BLOB_STORE_URL=file:///absolute/path` is read explicitly here: unlike
+the Temporal `julep worker` host, DBOS has no Julep-owned process entrypoint.
+Transcript-scoped agents with tool or subflow observations require this durable
+store. Keep its root and blobs for the full lifetime of every DBOS workflow
+record that can reference them. `LocalDirBlobStore` has no garbage collector or
+application-level encryption; see [Agent Transcripts](/docs/internals/agent-transcripts)
+for filesystem and multi-process constraints.
 
 ## Running a flow
 

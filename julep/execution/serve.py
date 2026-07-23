@@ -178,6 +178,7 @@ class WorkerServeSettings:
     materialized_secret_environment: dict[str, str] = field(
         default_factory=dict, repr=False
     )
+    blob_store_url: Optional[str] = None
 
     @classmethod
     def from_env(cls, env: Optional[Mapping[str, str]] = None) -> "WorkerServeSettings":
@@ -189,7 +190,8 @@ class WorkerServeSettings:
         ``TEMPORAL_TLS``, ``WORKER_GRACEFUL_SHUTDOWN_S``,
         ``WORKER_MAX_CONCURRENT_ACTIVITIES``,
         ``WORKER_MAX_CONCURRENT_WORKFLOW_TASKS``, ``WORKER_HEALTH_PORT``,
-        ``JULEP_WORKER_BUILD_ID``, ``JULEP_WORKER_VERSIONING``, ``JULEP_REDACTION``.
+        ``JULEP_WORKER_BUILD_ID``, ``JULEP_WORKER_VERSIONING``, ``JULEP_REDACTION``,
+        and ``JULEP_BLOB_STORE_URL``.
         """
         e: Mapping[str, str] = os.environ if env is None else env
         factory = e.get("WORKER_CONTEXT_FACTORY")
@@ -264,6 +266,7 @@ class WorkerServeSettings:
             payload_encryption_required=payload_encryption_required,
             redaction=redaction,
             materialized_secret_environment=materialized_secret_environment,
+            blob_store_url=(e.get(_env.JULEP_BLOB_STORE_URL) or None),
         )
 
 
@@ -406,6 +409,25 @@ def _install_default_redactor(
     context.redactor = operator_secret_redactor(base)
 
 
+def _install_blob_store(
+    context: WorkerContext, settings: WorkerServeSettings
+) -> None:
+    """Install the operator-configured store before worker construction.
+
+    A factory store and URL together are ambiguous: changing the backend makes
+    retained transcript refs unreadable, so startup fails instead of choosing
+    one silently.
+    """
+
+    from .blobstore import _resolve_blob_store_configuration
+
+    context.blob_store = _resolve_blob_store_configuration(
+        context.blob_store,
+        settings.blob_store_url,
+        explicit_source="WORKER_CONTEXT_FACTORY",
+    )
+
+
 def load_application_runtime(
     spec: str,
     *,
@@ -469,6 +491,10 @@ async def serve(
         # Values remain pinned until this process restarts.
         os.environ.update(settings.materialized_secret_environment)
         context = await _resolve_context(settings.context_factory)
+        _install_blob_store(context, settings)
+        from .blobstore import _initialize_blob_store
+
+        await _initialize_blob_store(context.blob_store)
         _install_default_redactor(context, settings)
         if settings.application is not None:
             if settings.runtime_declarations_hash is None:

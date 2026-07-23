@@ -22,12 +22,14 @@ from julep.errors import JulepError
 from julep.app import Application, ApplicationDefinitionError, PipelineSpec
 from julep.dotctx import Reasoner
 from julep.dsl import think
+from julep.execution.blobstore import InMemoryBlobStore, LocalDirBlobStore
 from julep.execution.effects import WorkerContext
 from julep.secrets import REDACTED as VALUE_REDACTED, register_secret_value
 from julep.execution.serve import (
     DEFAULT_TASK_QUEUE,
     HealthServer,
     WorkerServeSettings,
+    _install_blob_store,
     _install_default_redactor,
     _versioning_worker_kwargs,
     load_application_runtime,
@@ -63,7 +65,39 @@ def test_from_env_defaults():
     assert s.health_port is None
     assert s.build_id is None
     assert s.use_worker_versioning is False
+    assert s.blob_store_url is None
     assert s.redaction is None
+
+
+def test_from_env_parses_blob_store_url() -> None:
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "JULEP_BLOB_STORE_URL": "file:///var/lib/julep/blobs",
+        }
+    )
+    assert settings.blob_store_url == "file:///var/lib/julep/blobs"
+
+
+def test_install_blob_store_preserves_factory_store_or_rejects_ambiguity(
+    tmp_path: Path,
+) -> None:
+    original = InMemoryBlobStore()
+    context = WorkerContext(blob_store=original)
+    _install_blob_store(context, WorkerServeSettings(context_factory="m:f"))
+    assert context.blob_store is original
+
+    settings = WorkerServeSettings(
+        context_factory="m:f",
+        blob_store_url=(tmp_path / "blobs").as_uri(),
+    )
+    with pytest.raises(ValueError, match="both"):
+        _install_blob_store(context, settings)
+
+    configured = WorkerContext()
+    _install_blob_store(configured, settings)
+    assert isinstance(configured.blob_store, LocalDirBlobStore)
+    assert configured.blob_store.root == tmp_path / "blobs"
 
 
 def test_from_env_parses_redaction_config() -> None:
@@ -283,6 +317,48 @@ def test_run_worker_required_payload_encryption_rejects_missing_keys(
 
     with pytest.raises(ValueError, match="payload encryption is required"):
         run(run_worker())
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporal extra not installed")
+def test_run_worker_installs_blob_store_from_env(monkeypatch, tmp_path: Path) -> None:
+    import julep.execution.worker as worker_mod
+    from temporalio.client import Client
+
+    captured: dict[str, Any] = {}
+
+    class FakeWorker:
+        async def run(self) -> None:
+            return None
+
+    async def fake_connect(target, **kwargs):
+        return object()
+
+    def fake_build_worker(client, context, *, task_queue, **kwargs):
+        captured["context"] = context
+        return FakeWorker()
+
+    monkeypatch.setenv("JULEP_BLOB_STORE_URL", (tmp_path / "blobs").as_uri())
+    monkeypatch.setattr(Client, "connect", staticmethod(fake_connect))
+    monkeypatch.setattr(worker_mod, "build_worker", fake_build_worker)
+
+    run(worker_mod.run_worker())
+
+    store = captured["context"].blob_store
+    assert isinstance(store, LocalDirBlobStore)
+    assert store.root == tmp_path / "blobs"
+    assert store.root.is_dir()
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporal extra not installed")
+def test_run_worker_rejects_explicit_and_env_blob_stores(
+    monkeypatch, tmp_path: Path
+) -> None:
+    from julep.execution.worker import run_worker
+
+    monkeypatch.setenv("JULEP_BLOB_STORE_URL", (tmp_path / "blobs").as_uri())
+
+    with pytest.raises(ValueError, match="both"):
+        run(run_worker(blob_store=InMemoryBlobStore()))
 
 
 def test_from_env_versioning_bad_bool():
@@ -594,7 +670,7 @@ def test_build_worker_forwards_versioning_kwargs(monkeypatch):
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
+def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch, tmp_path: Path):
     import julep.execution.worker as worker_mod
     from temporalio.client import Client
 
@@ -612,6 +688,7 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
 
     def fake_build_worker(client, context, *, task_queue, **kwargs):
         captured["task_queue"] = task_queue
+        captured["context"] = context
         captured["kwargs"] = kwargs
         return FakeWorker()
 
@@ -625,6 +702,7 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
         context_factory=f"{__name__}:make_context",
         build_id="serve-bid",
         use_worker_versioning=True,
+        blob_store_url=(tmp_path / "blobs").as_uri(),
     )
 
     async def _drive() -> None:
@@ -644,6 +722,8 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch):
 
     assert captured["kwargs"]["build_id"] == "serve-bid"
     assert captured["kwargs"]["use_worker_versioning"] is True
+    assert isinstance(captured["context"].blob_store, LocalDirBlobStore)
+    assert captured["context"].blob_store.root == tmp_path / "blobs"
 
 
 # --------------------------------------------------------------------------- #
