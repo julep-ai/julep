@@ -343,7 +343,7 @@ class ServerSettings:
                 "JULEP_VAULT_KEYS and JULEP_VAULT_KEY_ID must be set together"
             )
         if vault_keys is not None and payload_keys is not None:
-            from ..execution.codec import parse_aes_gcm_keyring
+            from .._payload_encryption import parse_aes_gcm_keyring
             from ..secrets import parse_vault_keyring
 
             payload_material = {

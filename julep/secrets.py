@@ -194,7 +194,7 @@ class VaultCipher:
         keys = parse_vault_keyring(raw_keys)
         payload_keys = source.get("TEMPORAL_PAYLOAD_KEYS")
         if payload_keys:
-            from .execution.codec import parse_aes_gcm_keyring
+            from ._payload_encryption import parse_aes_gcm_keyring
 
             payload_material = {
                 bytes.fromhex(value)
