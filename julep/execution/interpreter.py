@@ -970,7 +970,12 @@ class InMemoryEnv:
         if controller not in self._reasoners:
             raise KeyError(f"no in-memory reasoner or agent for {controller!r}")
 
-        from ..agent_loop import AgentConfig, drive_agent_loop, tool_input_schemas
+        from ..agent_loop import (
+            AgentConfig,
+            AgentState,
+            drive_agent_loop,
+            tool_input_schemas,
+        )
 
         authored = dict(app_config or {})
         cfg = AgentConfig.from_json(authored)
@@ -983,6 +988,18 @@ class InMemoryEnv:
             str(alias): dict(contract)
             for alias, contract in authored.get("toolContracts", {}).items()
         }
+        for alias in set(contracts) | grants:
+            wire = aliases.get(alias, alias)
+            limit = self._max_calls.get(alias, self._max_calls.get(wire))
+            if limit is None:
+                continue
+            contract = contracts.setdefault(alias, {})
+            authored_limit = contract.get("maxCalls", contract.get("max_calls"))
+            contract["maxCalls"] = (
+                int(limit)
+                if authored_limit is None
+                else min(int(limit), int(authored_limit))
+            )
         schemas = (
             tool_input_schemas(authored.get("toolDefs"))
             if authored.get("toolDefs") is not None
@@ -1018,7 +1035,17 @@ class InMemoryEnv:
                 )
             raise KeyError(f"no in-memory fake or MCP caller for tool alias {alias!r}")
 
-        return await drive_agent_loop(
+        initial_counts = dict(self.call_counts)
+        for alias in set(contracts) | grants:
+            wire = aliases.get(alias, alias)
+            count = max(
+                initial_counts.get(alias, 0),
+                initial_counts.get(wire, 0),
+            )
+            if count:
+                initial_counts[alias] = count
+
+        result = await drive_agent_loop(
             input=value,
             cfg=cfg,
             invoke_controller=invoke_controller,
@@ -1026,8 +1053,16 @@ class InMemoryEnv:
             granted=grants,
             contracts=contracts,
             tool_schemas=schemas,
+            state=AgentState(last=value, call_counts=initial_counts),
             get_pure=self.get_pure,
         )
+        carried_counts = result.get("callCounts")
+        if isinstance(carried_counts, dict):
+            for alias, raw_count in carried_counts.items():
+                count = int(raw_count)
+                wire = aliases.get(str(alias), str(alias))
+                self.call_counts[wire] = max(self.call_counts.get(wire, 0), count)
+        return result
 
     async def compile_plan(self, planner: str, value: Any, cid: str) -> Node:
         if planner not in self._planners:

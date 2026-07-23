@@ -350,11 +350,9 @@ def _reasoner_handlers(
     for node in flow.walk():
         if node.op is not Op.APP or node.controller is None:
             continue
-        if not node.tool_defs:
-            continue
-        definitions = tuple(dict(definition) for definition in node.tool_defs)
+        definitions = tuple(dict(definition) for definition in (node.tool_defs or ()))
         previous = controller_tools.get(node.controller)
-        if previous is not None and previous != definitions:
+        if node.controller in controller_tools and previous != definitions:
             raise LocalExecutionConfigurationError(
                 f"reasoner {node.controller!r} is used by foreground agents with "
                 "different frozen tool surfaces"

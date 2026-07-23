@@ -484,6 +484,86 @@ def test_app_runs_agent_handler():
     assert run(interpret(fr.flow, "go", env)).value == {"status": "done", "output": "go"}
 
 
+def test_in_memory_agent_enforces_release_max_calls_across_rounds():
+    model_calls = 0
+    effect_calls = 0
+
+    def controller(_value):
+        nonlocal model_calls
+        model_calls += 1
+        return {
+            "tool_calls": [
+                {"id": f"call-{model_calls}", "tool": "inc", "input": model_calls}
+            ]
+        }
+
+    def inc(value):
+        nonlocal effect_calls
+        effect_calls += 1
+        return value + 1
+
+    flow = app(
+        "controller",
+        tools=["inc"],
+        tool_aliases={"inc": "srv/inc"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    fr = freeze(flow, read_snapshot("inc"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/inc": inc},
+        reasoners={"controller": controller},
+        max_calls={"srv/inc": 1},
+    )
+
+    out = run(interpret(fr.flow, 0, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert effect_calls == 1
+    assert env.call_counts == {"srv/inc": 1}
+
+
+def test_in_memory_agent_inherits_calls_made_before_agent():
+    effect_calls = 0
+
+    def controller(_value):
+        return {"tool_calls": [{"id": "agent-call", "tool": "inc", "input": 2}]}
+
+    def inc(value):
+        nonlocal effect_calls
+        effect_calls += 1
+        return value + 1
+
+    flow = seq(
+        call(mcp("srv", "inc")),
+        app(
+            "controller",
+            tools=["inc"],
+            tool_aliases={"inc": "srv/inc"},
+            max_rounds=2,
+            native_tools=True,
+        ),
+    )
+    fr = freeze(flow, read_snapshot("inc"))
+    env = InMemoryEnv(
+        fr.manifest,
+        ProjectionEmitter(InMemoryProjection()),
+        tools={"srv/inc": inc},
+        reasoners={"controller": controller},
+        max_calls={"srv/inc": 1},
+    )
+
+    out = run(interpret(fr.flow, 0, env))
+
+    assert out.value["status"] == "denied"
+    assert out.value["reason"] == "tool 'inc' exceeded maxCalls=1"
+    assert effect_calls == 1
+    assert env.call_counts == {"srv/inc": 1}
+
+
 def test_stage_compiles_then_runs_plan_with_late_binding():
     # The planner returns an UNFROZEN plan; the interpreter late-binds its calls
     # by tool ref (admission would have vetted them in the real pipeline).

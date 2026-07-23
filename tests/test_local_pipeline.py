@@ -7,6 +7,15 @@ from typing import Any
 import pytest
 
 from conftest import run
+from julep import (
+    CapabilityManifest,
+    CompiledPipeline,
+    LocalPipeline,
+    PipelineSpec,
+    app,
+    deploy,
+    seq,
+)
 from julep.contracts import McpAnnotations
 from julep.dotctx import Reasoner
 from julep.execution.effects import WorkerContext
@@ -354,6 +363,81 @@ def test_tool_agent_uses_frozen_defs_mcp_context_and_principal(
     ]
 
 
+def test_local_pipeline_agent_enforces_deployment_max_calls_across_rounds() -> None:
+    reasoner = Reasoner("limited-controller", "test:limited")
+    snapshot = _lookup_snapshot()
+    flow = app(
+        reasoner.name,
+        tools=["lookup"],
+        tool_aliases={"lookup": "srv/lookup"},
+        max_rounds=3,
+        native_tools=True,
+    )
+    capabilities = CapabilityManifest.from_dict(
+        {"tools": [{"name": "srv/lookup", "maxCalls": 1}]}
+    )
+    spec = PipelineSpec(
+        name="limited-agent",
+        flow=flow,
+        reasoners=(reasoner,),
+        capabilities=capabilities,
+        snapshot=snapshot,
+    )
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(
+                flow,
+                snapshot=snapshot,
+                capabilities=capabilities,
+            ),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+    model_calls = 0
+    effect_calls = 0
+
+    async def llm(
+        _reasoner: Any,
+        _value: Any,
+        _principal: Any,
+        _transcript: Any,
+        _dispatch: Any,
+        **_kwargs: Any,
+    ) -> Any:
+        nonlocal model_calls
+        model_calls += 1
+        return {
+            "tool_calls": [
+                {
+                    "id": f"lookup-{model_calls}",
+                    "tool": "lookup",
+                    "input": {"query": "julep"},
+                }
+            ]
+        }
+
+    async def mcp_call(*_args: Any, **_kwargs: Any) -> Any:
+        nonlocal effect_calls
+        effect_calls += 1
+        return {"found": "JULEP"}
+
+    result = prepared.run(
+        {"query": "julep"},
+        llm=llm,
+        context=WorkerContext(mcp_call=mcp_call),
+    )
+
+    assert result["status"] == "denied"
+    assert result["reason"] == "tool 'lookup' exceeded maxCalls=1"
+    assert model_calls == 2
+    assert effect_calls == 1
+
+
 def test_tool_agent_rejects_caller_without_tools_extension(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -433,6 +517,64 @@ def test_configured_local_pipeline_validates_frozen_mcp_before_dispatch(
     with pytest.raises(ToolInputValidation, match="srv/typed"):
         prepared.run({"query": 7}, context=context)
     assert len(calls) == 1
+
+
+def test_configured_local_pipeline_rejects_mixed_controller_tool_surfaces(
+) -> None:
+    model_called = False
+    reasoner = Reasoner("shared-controller", "test:shared")
+    snapshot = _lookup_snapshot()
+    flow = seq(
+        app(
+            reasoner.name,
+            tools=["lookup"],
+            tool_aliases={"lookup": "srv/lookup"},
+            max_rounds=1,
+            native_tools=True,
+        ),
+        app(reasoner.name, max_rounds=1),
+    )
+    spec = PipelineSpec(
+        name="mixed-controller-surface",
+        flow=flow,
+        reasoners=(reasoner,),
+        snapshot=snapshot,
+    )
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(flow, snapshot=snapshot),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+
+    async def llm(
+        _reasoner: Any,
+        _value: Any,
+        _principal: Any,
+        _transcript: Any,
+        _dispatch: Any,
+        *,
+        tools: Any = None,
+    ) -> Any:
+        del tools
+        nonlocal model_called
+        model_called = True
+        return {"done": True, "output": "unused"}
+
+    async def mcp_call(*_args: Any, **_kwargs: Any) -> Any:
+        return {"unused": True}
+
+    with pytest.raises(
+        LocalExecutionConfigurationError,
+        match="different frozen tool surfaces",
+    ):
+        prepared.run({}, llm=llm, context=WorkerContext(mcp_call=mcp_call))
+    assert model_called is False
 
 
 def test_local_pipeline_errors_are_typed_and_actionable(tmp_path: Path) -> None:
