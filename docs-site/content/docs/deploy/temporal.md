@@ -58,6 +58,31 @@ sub-capabilities expose child artifacts through `agent.sub_deployments()`; the
 worker must register those on `WorkerContext.subflows`, then run the parent via
 `agent.deployment().run(...)`.
 
+## Self-contained schema-v2 releases
+
+`ApplicationRelease` uses `schemaVersion: 2`. Each pipeline entry carries a
+`runtimeDeclarationsRef` with a content hash and byte size. The referenced,
+hash-verified artifact store blob contains the reasoners and renderers needed by that
+pipeline: inline reasoners retain their prompt strings; rich dotctx reasoners
+retain the `.ctx` package content and portable renderer declarations. The
+release manifest's tool-map shape is unchanged.
+
+Reasoner activities fetch declarations by blob hash and cache each verified
+hash in the worker process. A generic worker therefore runs released pipelines
+without importing an application object. `WORKER_APPLICATION` and
+`WORKER_RUNTIME_DECLARATIONS_HASH` are optional. When supplied, they must be
+supplied together and are only loud cross-checks against the released
+declarations; a mismatch fails the worker.
+
+Release parsing rejects every schema version other than 2:
+
+```text
+unsupported application release schema version <v>; version 2 is required; re-publish with this julep version
+```
+
+A schema-v1 release cannot be upgraded in place. Re-publish it with this Julep
+version so the declarations blob is written to artifact store.
+
 ## Standing up a worker
 
 The worker host is the process that connects environment-specific capability to
@@ -94,11 +119,33 @@ functions. The six boundary/resolution activities are below; the seventh,
 `resolveRuntimeCapabilities`, supplies deterministic run-time policy such as
 `maxCalls`.
 
-For containers there is a third entry point: `python -m julep.cli worker` reads
+For containers there is a third entry point: `julep worker` reads
 the connection and tuning knobs from the environment, resolves the
 `WorkerContext` from a `WORKER_CONTEXT_FACTORY=module:attr` factory, drains
 gracefully on SIGTERM, and serves `/healthz` + `/readyz` probes. That is the
 Kubernetes/KEDA path — see [Kubernetes](/docs/deploy/kubernetes).
+
+Generic workers leave `WORKER_APPLICATION` and
+`WORKER_RUNTIME_DECLARATIONS_HASH` unset. The release supplies the declaration
+reference to reasoner-facing activities, which hydrate it from the artifact store named by
+`JULEP_ARTIFACT_STORE_URL`.
+
+Durable transcript-scoped agents with tool or subflow rounds also need a blob
+store for observation refs. Set an absolute local URL before `julep worker`:
+
+```bash
+export JULEP_BLOB_STORE_URL=file:///var/lib/julep/blobs
+```
+
+This installs `LocalDirBlobStore` after resolving the context factory. Do not
+also return `WorkerContext(blob_store=...)`; the worker rejects the ambiguous
+configuration. The built-in deployment examples do not provision storage; the
+file backend is single-host unless an operator mounts the same coherent
+filesystem into every eligible replica. That filesystem must support hard
+links and directory `fsync`, with compatible identities for `0700` directories
+and `0600` objects. It is not application-level encrypted and has no garbage
+collector. Keep the URL/root and blobs unchanged for the full workflow-history
+lifetime. `InMemoryBlobStore` cannot survive a restart or cross a replica.
 
 ## Activities
 
@@ -157,8 +204,9 @@ Two queries support a review UI:
 - `projection`: an in-workflow read-only pomset snapshot with `events`,
   `costByShape`, and `pending`.
 
-The projection query is not the durable observability sink. [SPEC §11](/docs/internals/specification#11-projection)
-requires durable projection sinks to be derived out-of-band from history.
+The projection query is not the durable observability sink. Control-plane runs
+also egress a derived Postgres projection through regular Temporal activities;
+see [Control plane](/docs/deploy/control-plane).
 
 ## Worked example
 
@@ -230,8 +278,9 @@ defines the replay-integrity constraints around them.
   counts, backoff, and maximum retry interval.
 - Continue-as-new cadence: `AgentConfig.continue_as_new_after` bounds agent
   workflow history; `0` disables the cadence.
-- Projection sinks: the workflow query is replay-safe and in-memory. Durable
-  sinks such as Postgres or OTel are fed from history outside the workflow.
+- Projection sinks: the workflow query is replay-safe and in-memory. The
+  control-plane Postgres view is activity-fed, batched, redacted, and
+  best-effort; OTel remains a derived export.
 
 Related: [docs index](/docs), [First Agent](/docs/start/first-agent),
 [Kubernetes](/docs/deploy/kubernetes),
@@ -239,4 +288,4 @@ Related: [docs index](/docs), [First Agent](/docs/start/first-agent),
 [the Typed Flow Calculus](/docs/internals/typed-flow-calculus), [the Specification](/docs/internals/specification), and
 [Contributing](/docs/development/contributing).
 
-<!-- ported-by ca-docs-site: deploy/temporal -->
+<!-- ported-by julep-docs-site: deploy/temporal -->

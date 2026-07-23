@@ -46,7 +46,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, Iterable, Optional, Protocol, TypeVar, cast
+from typing import Any, Callable, Iterable, Mapping, Optional, Protocol, TypeVar, cast
 
 from .validate import SECRET_KEY_RE
 
@@ -71,6 +71,115 @@ SECRET_REDACT_KEY_RE = re.compile(
 
 # Sentinel: the redactor raised, so the value must be dropped (never written raw).
 _REDACTION_DROP: Any = object()
+
+
+@dataclass(frozen=True)
+class RedactionConfig:
+    key_patterns: tuple[str, ...] = ()
+    path_patterns: tuple[str, ...] = ()
+    disable_default: bool = False
+
+    @classmethod
+    def from_mapping(cls, data: Mapping[str, Any]) -> "RedactionConfig":
+        allowed = {"key_patterns", "path_patterns", "disable_default"}
+        unknown = set(data) - allowed
+        if unknown:
+            names = ", ".join(sorted(repr(key) for key in unknown))
+            raise ValueError(f"unknown redaction config keys: {names}")
+
+        def _patterns(name: str) -> tuple[str, ...]:
+            value = data.get(name, ())
+            if not isinstance(value, (list, tuple)) or not all(
+                isinstance(pattern, str) for pattern in value
+            ):
+                raise ValueError(f"redaction {name} must be a list or tuple of strings")
+            return tuple(value)
+
+        key_patterns = _patterns("key_patterns")
+        for pattern in key_patterns:
+            try:
+                re.compile(pattern)
+            except re.error as exc:
+                raise ValueError(
+                    f"invalid redaction key_patterns regex {pattern!r}: {exc}"
+                ) from exc
+
+        path_patterns = _patterns("path_patterns")
+        for pattern in path_patterns:
+            if not pattern or any(not segment for segment in pattern.split(".")):
+                raise ValueError(
+                    "redaction path_patterns entries must be non-empty "
+                    "dot-separated segments"
+                )
+
+        disable_default = data.get("disable_default", False)
+        if not isinstance(disable_default, bool):
+            raise ValueError("redaction disable_default must be a boolean")
+
+        return cls(
+            key_patterns=key_patterns,
+            path_patterns=path_patterns,
+            disable_default=disable_default,
+        )
+
+    @classmethod
+    def from_json(cls, text: str) -> "RedactionConfig":
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid redaction JSON: {exc.msg}") from exc
+        if not isinstance(data, dict):
+            raise ValueError("redaction JSON must be an object")
+        return cls.from_mapping(data)
+
+
+def build_redactor(config: RedactionConfig) -> Redactor:
+    """Build a recursive config-based redactor.
+
+    The default secret-key floor is part of the same walk unless explicitly
+    disabled. The capture seam remains responsible for fail-closed handling.
+    """
+    custom_key_patterns = tuple(re.compile(pattern) for pattern in config.key_patterns)
+    key_patterns = (
+        custom_key_patterns
+        if config.disable_default
+        else (SECRET_REDACT_KEY_RE, *custom_key_patterns)
+    )
+    path_patterns = tuple(
+        tuple(pattern.split(".")) for pattern in config.path_patterns
+    )
+
+    def _path_matches(path: tuple[Any, ...]) -> bool:
+        return any(
+            len(path) == len(pattern)
+            and all(
+                expected == "*" or actual == expected
+                for actual, expected in zip(path, pattern, strict=True)
+            )
+            for pattern in path_patterns
+        )
+
+    def _walk(value: Any, path: tuple[Any, ...]) -> Any:
+        if _path_matches(path):
+            return REDACTED_PLACEHOLDER
+        if isinstance(value, dict):
+            out: dict[Any, Any] = {}
+            for key, child in value.items():
+                if isinstance(key, str) and any(
+                    pattern.search(key) for pattern in key_patterns
+                ):
+                    out[key] = REDACTED_PLACEHOLDER
+                else:
+                    out[key] = _walk(child, (*path, key))
+            return out
+        if isinstance(value, (list, tuple)):
+            return [_walk(child, (*path, "*")) for child in value]
+        return value
+
+    def redact(value: Any) -> Any:
+        return _walk(value, ())
+
+    return redact
 
 
 def trajectory_best_effort_failures() -> int:

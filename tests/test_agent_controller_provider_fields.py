@@ -230,7 +230,7 @@ def test_local_agent_loop_applies_prompt_cache_and_surfaces_meta() -> None:
     }
     assert result["status"] == "done"
     assert result["output"] == "done"
-    assert result["__ca_meta__"]["llm.cache"] == {
+    assert result["__julep_meta__"]["llm.cache"] == {
         "requested": "1h",
         "applied": True,
         "read": 7,
@@ -259,7 +259,7 @@ def test_temporal_agent_workflow_resolves_controller_reasoner_from_registry(
             assert registered.prompt_cache == "1h"
             return {
                 "reply": {"output": "done"},
-                "__ca_meta__": {"llm.cache": {"requested": "1h", "applied": True}},
+                "__julep_meta__": {"llm.cache": {"requested": "1h", "applied": True}},
             }
         return None
 
@@ -277,7 +277,7 @@ def test_temporal_agent_workflow_resolves_controller_reasoner_from_registry(
     )
 
     assert out["status"] == "done"
-    assert out["__ca_meta__"]["llm.cache"]["requested"] == "1h"
+    assert out["__julep_meta__"]["llm.cache"]["requested"] == "1h"
     reasoner_payloads = [
         payload
         for payload in payloads

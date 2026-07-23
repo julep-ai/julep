@@ -658,6 +658,35 @@ def test_freeze_raises_tool_schema_drift_on_mismatch() -> None:
     assert "researcher.ctx" in msg
 
 
+def test_freeze_tolerates_closed_object_markers_from_served_schemas() -> None:
+    # Signature-derived servers (FastMCP, official-SDK function tools) always
+    # emit additionalProperties: false; tools.pyi cannot express it. The drift
+    # gate must treat open-vs-closed as equal — everything else still drifts.
+    rich = _rich()
+    served = {}
+    for key, schema in rich.expected_tool_schemas.items():
+        closed = json.loads(json.dumps(schema))
+        closed["additionalProperties"] = False
+        for prop in closed.get("properties", {}).values():
+            if isinstance(prop, dict) and prop.get("type") == "object":
+                prop["additionalProperties"] = False
+        served[key] = closed
+    fr = freeze(think("researcher"), _memory_snapshot(served))
+    assert fr.flow is not None
+
+
+def test_freeze_still_drifts_when_closed_served_schema_differs() -> None:
+    rich = _rich()
+    served = {k: dict(v) for k, v in rich.expected_tool_schemas.items()}
+    served["memory/search_notes"] = {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": False,
+    }
+    with pytest.raises(FreezeError, match="TOOL_SCHEMA_DRIFT"):
+        freeze(think("researcher"), _memory_snapshot(served))
+
+
 # --------------------------------------------------------------------------- #
 # LLM caller: rendered user turn + max_tokens forwarding.
 # --------------------------------------------------------------------------- #
@@ -719,3 +748,74 @@ def test_complete_reasoner_keeps_value_as_user_turn_without_user_render() -> Non
     msgs = rec.calls[0]["messages"]
     assert msgs[0]["content"] == "Summarize for execs.\n"
     assert msgs[1]["content"] == json.dumps({"audience": "execs", "text": "T"})
+
+
+# --------------------------------------------------------------------------- #
+# Transcript rounds: opening ask renders through the template; no trailing
+# template turn; loop feedback rides the reserved key as a user turn.
+# --------------------------------------------------------------------------- #
+def _transcript_fixture() -> list[dict[str, Any]]:
+    return [
+        {"role": "user", "content": {"persona": "skeptic", "question": "why?"}},
+        {
+            "role": "assistant",
+            "content": {"call": "memory/search_notes"},
+            "tool_call_id": "call-1",
+            "tool_calls": [
+                {
+                    "id": "call-1",
+                    "type": "function",
+                    "function": {"name": "search_notes", "arguments": "{}"},
+                }
+            ],
+        },
+        {"role": "tool", "content": [{"note": "n1"}], "tool_call_id": "call-1"},
+    ]
+
+
+def test_transcript_round_renders_opening_ask_and_skips_trailing_turn() -> None:
+    from julep.agent_loop import FEEDBACK_KEY  # noqa: F401 (contract under test)
+
+    rich = _rich()
+    reply = {"findings": [], "summary": "s"}
+    rec = Recorder(replies=[FakeCompletion([FakeChoice(FakeMessage(content=json.dumps(reply)))])])
+    run(complete_reasoner(
+        rich.reasoner,
+        {"input": {"persona": "skeptic", "question": "why?"}, "trace": []},
+        acompletion=rec,
+        transcript=_transcript_fixture(),
+    ))
+    messages = rec.calls[0]["messages"]
+    user_turns = [m for m in messages if m["role"] == "user"]
+    # Exactly one user turn: the opening ask, template-rendered (not raw JSON).
+    assert len(user_turns) == 1
+    assert "why?" in user_turns[0]["content"]
+    assert not user_turns[0]["content"].lstrip().startswith("{")
+    # Tool turns survive as native tool messages.
+    assert any(m["role"] == "tool" for m in messages)
+    assert messages[-1]["role"] == "tool"
+
+
+def test_transcript_round_delivers_loop_feedback_as_user_turn() -> None:
+    from julep.agent_loop import FEEDBACK_KEY
+
+    rich = _rich()
+    reply = {"findings": [], "summary": "s"}
+    rec = Recorder(replies=[FakeCompletion([FakeChoice(FakeMessage(content=json.dumps(reply)))])])
+    feedback = {"error": "final output failed JSON-Schema validation: boom"}
+    run(complete_reasoner(
+        rich.reasoner,
+        {
+            "input": {"persona": "skeptic", "question": "why?"},
+            "trace": [],
+            FEEDBACK_KEY: feedback,
+        },
+        acompletion=rec,
+        transcript=_transcript_fixture(),
+    ))
+    messages = rec.calls[0]["messages"]
+    assert messages[-1]["role"] == "user"
+    assert "failed JSON-Schema validation" in messages[-1]["content"]
+    # The feedback key never leaks into the rendered opening ask.
+    opening = [m for m in messages if m["role"] == "user"][0]
+    assert FEEDBACK_KEY not in opening["content"]

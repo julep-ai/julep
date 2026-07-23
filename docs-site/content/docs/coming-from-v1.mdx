@@ -15,8 +15,10 @@ different surface, and a different deployment story.
 - **Julep 3** (this project) is an *open-source, durable-agents framework* you
   install and run yourself. You author agents as define-by-construction `@flow`
   dataflows in Python, compile them to a frozen, capability-bounded IR, and
-  execute that same artifact locally, on Temporal, or on DBOS. Nothing is hosted
-  for you; you own the runtime.
+  execute that same artifact locally, on Temporal, or on DBOS. It includes a
+  self-hosted control plane: `julep serve api` exposes a bearer-authenticated
+  `/v1` API for releases, deployments, run submission, queries, and SSE. You
+  operate that API and the runtime; Julep does not host them for you.
 
 ## There is no migration path
 
@@ -35,10 +37,11 @@ working against v1 unchanged — v3 does not replace it in place.
 ## Why the reset
 
 Julep v1 grew as a hosted platform, and the assumptions baked into that
-model — a managed control plane, an opaque runtime, an API-shaped surface — got
+model — a managed control plane, an opaque runtime, an API-first surface — got
 in the way of the thing people actually wanted: agents they could inspect,
 replay, bound, and run on their own infrastructure. Rather than bolt durability
 and portability onto the hosted design, Julep 3 rebuilds from the primitive up:
 agents are durable dataflows, effects are authorized statically, and every run
-is a frozen artifact you can review and re-run. That is a clean break, and it is
-an honest one — hence the separate branch, the separate docs, and this page.
+is a frozen artifact you can review and re-run. The v3 control plane is
+open-source and operator-owned rather than managed and opaque. That is a clean
+break — hence the separate branch, the separate docs, and this page.

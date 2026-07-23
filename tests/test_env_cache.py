@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import arr, deploy
 from julep.bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.deps import base_component_hash, env_hash
 from julep.errors import PureExecutionError
 from julep.execution import env_builder
@@ -42,11 +42,11 @@ def _public_key(seed: str) -> str:
     ).hex()
 
 
-def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
+def _json_from_store(store: LocalDirArtifactStore, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
 
 
-def _put_signature(store: LocalDirCAS, bundle_hash: str, seed: str = SEED) -> str:
+def _put_signature(store: LocalDirArtifactStore, bundle_hash: str, seed: str = SEED) -> str:
     manifest_bytes = store.get(bundle_hash)
     signature = {
         "algo": "ed25519",
@@ -111,10 +111,10 @@ def _publish_source(
     source: str,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-) -> tuple[LocalDirCAS, Any, dict[str, Any], dict[str, Any]]:
+) -> tuple[LocalDirArtifactStore, Any, dict[str, Any], dict[str, Any]]:
     _patch_synth_env_builder(monkeypatch, tmp_path)
     with _with_default_source(name, source):
-        store = LocalDirCAS(tmp_path / name.replace(".", "_"))
+        store = LocalDirArtifactStore(tmp_path / name.replace(".", "_"))
         deployment = deploy(arr(name), read_snapshot())
         rec = deployment.publish(store, signing_key=SEED)
         manifest = _json_from_store(store, rec["bundleHash"])
@@ -284,11 +284,11 @@ def test_off_list_dep_publish_fails_closed(tmp_path: Path, monkeypatch: pytest.M
     name = "env.cache.numpy.v1"
     _patch_synth_env_builder(monkeypatch, tmp_path)
     with _with_default_source(name, _source(name, "numpy==2")):
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
-        monkeypatch.delenv("CA_PURE_NATIVE_DEPS", raising=False)
+        monkeypatch.delenv("JULEP_PURE_NATIVE_DEPS", raising=False)
         with pytest.raises(BundleError, match="off the curated WASI wheel list"):
-            deployment.publish(LocalDirCAS(tmp_path), signing_key=SEED)
+            deployment.publish(LocalDirArtifactStore(tmp_path), signing_key=SEED)
 
 
 @pytest.mark.skipif(

@@ -1029,7 +1029,7 @@ and append `"dbos>=2.18; python_version >= '3.11'",` to the `dev` list.
 - [ ] **Step 2: Provision the test database (one-time, local)**
 
 ```bash
-docker run -d --name ca-dbos-pg -e POSTGRES_PASSWORD=ca -p 5433:5432 postgres:16
+docker run -d --name julep-dbos-pg -e POSTGRES_PASSWORD=julep -p 5433:5432 postgres:16
 export DBOS_TEST_DATABASE_URL='postgresql://postgres:ca@localhost:5433/postgres'
 uv sync --extra dev
 ```
@@ -1066,7 +1066,7 @@ pytestmark = pytest.mark.skipif(
 if HAVE_DBOS and DB_URL:
     from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
 
-    spike_queue = Queue("ca_spike", concurrency=2)
+    spike_queue = Queue("julep_spike", concurrency=2)
 
     @DBOS.step(retries_allowed=True, max_attempts=3)
     async def double(x: int) -> int:
@@ -1087,7 +1087,7 @@ if HAVE_DBOS and DB_URL:
 @pytest.fixture(scope="module")
 def dbos_runtime():
     DBOS(config=DBOSConfig(
-        name=f"ca-spike-{uuid.uuid4().hex[:8]}",
+        name=f"julep-spike-{uuid.uuid4().hex[:8]}",
         system_database_url=DB_URL,
     ))
     DBOS.launch()
@@ -1317,7 +1317,7 @@ from .policy import ExecutionPolicy
 _GATE_DEFAULT_TIMEOUT_S = 7 * 24 * 3600
 
 _POLICY_ERRORS = (CapabilityDenied, PlanRejected, ValidationError, FreezeError, PureDriftError)
-_POLICY_ERROR_KEY = "__ca_policy_error__"
+_POLICY_ERROR_KEY = "__julep_policy_error__"
 _POLICY_ERROR_TYPES = {e.__name__: e for e in _POLICY_ERRORS}
 
 
@@ -1573,7 +1573,7 @@ class DbosEnv:
 # --------------------------------------------------------------------------- #
 # The workflow: one chain segment of one frozen flow.
 # --------------------------------------------------------------------------- #
-@DBOS.workflow(name="ca_flow")
+@DBOS.workflow(name="julep_flow")
 async def flow_workflow(inp: dict) -> Any:
     """Interpret one segment. ``inp`` is a plain JSON dict (camelCase keys
     mirroring :class:`~composable_agents.execution.harness.FlowInput`)."""
@@ -1683,7 +1683,7 @@ Expected: PASS (dbos_backend is under the `composable_agents.execution.*` mypy e
 ```bash
 git add composable_agents/errors.py composable_agents/execution/dbos_backend.py \
         composable_agents/execution/__init__.py tests/test_dbos_pure.py
-git commit -m "feat(dbos): DBOS backend core — effect steps, DbosEnv, ca_flow workflow"
+git commit -m "feat(dbos): DBOS backend core — effect steps, DbosEnv, julep_flow workflow"
 ```
 
 ---
@@ -1753,7 +1753,7 @@ async def run_flow_dbos(
 
 
 async def submit_human_dbos(workflow_id: str, cid: str, value: Any) -> None:
-    """Release a parked human gate in a running ``ca_flow`` workflow.
+    """Release a parked human gate in a running ``julep_flow`` workflow.
 
     ``cid`` is the gate's activation id; with the DBOS env's session-prefixed
     cids, the first gate of a root flow is ``f"{workflow_id}/{gate_node_id}@1"``.
@@ -1862,7 +1862,7 @@ if HAVE_DBOS and DB_URL:
 def dbos_runtime():
     configure(WorkerContext(mcp_call=fake_mcp))
     DBOS(config=DBOSConfig(
-        name=f"ca-e2e-{uuid.uuid4().hex[:8]}",
+        name=f"julep-e2e-{uuid.uuid4().hex[:8]}",
         system_database_url=DB_URL,
     ))
     DBOS.launch()
@@ -2031,10 +2031,10 @@ Effects are configured exactly like the Temporal worker — one process-global
 ```python
 from dbos import DBOS, DBOSConfig
 from composable_agents.execution.effects import WorkerContext, configure
-import composable_agents.execution.dbos_backend as ca_dbos
+import julep.execution.dbos_backend as julep_dbos
 
 configure(WorkerContext(mcp_call=my_mcp_caller, llm=my_llm_caller))
-ca_dbos.set_projection_sink(my_logfire_sink)   # optional, see ProjectionSink
+julep_dbos.set_projection_sink(my_logfire_sink)   # optional, see ProjectionSink
 
 DBOS(config=DBOSConfig(name="my-app", system_database_url=DB_URL))
 DBOS.launch()

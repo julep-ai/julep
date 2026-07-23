@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "julep"
-version = "3.0.0rc3"
+version = "3.0.0rc4"
 description = "Julep — durable, composable AI agents on Temporal."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -23,18 +23,20 @@ classifiers = [
 # inside workflows, and span export are optional extras.
 dependencies = [
     "PyYAML>=6.0",
-    # The `ca` developer CLI console script is always installed (see
+    # The Julep developer CLI console script is always installed (see
     # [project.scripts]) and imports typer at module load, so typer is a hard
-    # dependency rather than an optional extra. ca/cli.py also imports `click`
+    # dependency rather than an optional extra. cli/main.py also imports `click`
     # directly; recent typer resolves to the `typer-slim` distribution which does
     # NOT pull in click, so it is declared explicitly here.
     "typer>=0.12",
     "click>=8.1",
+    # Reply contracts are enforced at run time, not merely used as provider hints.
+    "jsonschema>=4.21",
 ]
 
 [project.optional-dependencies]
 # Durable execution on Temporal (workflows, activities, worker, client helpers).
-temporal = ["temporalio>=1.21", "cryptography>=42"]
+temporal = ["temporalio>=1.20", "cryptography>=42"]
 # Durable execution on DBOS (steps, flow workflow, chaining runner).
 # dbos requires Python >=3.11; the marker keeps the extra resolvable on 3.10,
 # where importing the backend raises a clear ImportError instead.
@@ -43,6 +45,19 @@ dbos = ["dbos>=2.18; python_version >= '3.11'"]
 http = ["httpx>=0.24"]
 # Experimental Claude Managed Agents (CMA) backend (HTTP, beta-pinned).
 cma = ["httpx>=0.24"]
+# Authenticated MCP streamable-HTTP clients, server verifier adapters, and
+# live MCP tools/list snapshots at freeze time.
+mcp = ["mcp>=1.9", "httpx>=0.24", "PyJWT>=2.8", "cryptography>=42"]
+# FastAPI control plane for release publication, deployment routing, and runs.
+server = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sse-starlette>=2",
+    "psycopg[binary,pool]>=3.2",
+    "temporalio>=1.20",
+    "cryptography>=42",
+    "httpx>=0.24",
+]
 # Rich dotctx layout (Jinja2 templates compiled into registered renderers).
 dotctx = ["jinja2>=3.1"]
 # Yglu-evaluated settings.yaml (mem-mcp .ctx compatibility). $env reads come
@@ -53,6 +68,9 @@ yglu = ["yglu>=1.0"]
 # any-llm-sdk requires Python >=3.11; on 3.10 the LlmCaller raises a clear
 # ImportError at call time instead (the marker keeps the extra resolvable).
 providers = ["any-llm-sdk>=1.17; python_version >= '3.11'"]
+# Multi-provider LlmCaller for projects already standardized on LiteLLM.
+# The adapter imports LiteLLM lazily; core authoring remains dependency-light.
+litellm = ["litellm>=1.61,<2"]
 # OpenTelemetry span export of the projection.
 otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20"]
 # Langfuse OTLP/HTTP export of the projection.
@@ -82,7 +100,13 @@ test-no-temporal = [
     "pydantic>=2",
     "types-PyYAML>=6.0",
     "wasmtime>=45,<46",
+    "mcp>=1.9",
     "cryptography>=42",
+    "PyJWT>=2.8",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sse-starlette>=2",
+    "psycopg[binary,pool]>=3.2",
     "typer>=0.12",
     "any-llm-sdk[anthropic,openai,gemini,groq,mistral]>=1.17; python_version >= '3.11'",
 ]
@@ -92,7 +116,7 @@ test-no-temporal = [
 # here (dev) rather than in core; end users pull the slim ``providers`` extra.
 dev = [
     "julep[test-no-temporal]",
-    "temporalio>=1.21",
+    "temporalio>=1.20",
 ]
 # Opt-in live provider matrix. Keep OpenRouter/xAI's additional adapters out of
 # the ordinary unit-test environment; these tests make billable network calls.
@@ -106,7 +130,7 @@ Repository = "https://github.com/julep-ai/julep"
 Issues = "https://github.com/julep-ai/julep/issues"
 
 [project.scripts]
-julep = "julep.ca.cli:main"
+julep = "julep.cli.main:main"
 
 [tool.setuptools.packages.find]
 include = ["julep*"]
@@ -169,6 +193,13 @@ exclude = '(^|/)julep/execution/_wasm/'
 [[tool.mypy.overrides]]
 module = ["julep.execution.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "julep.execution.projection_store",
+    "julep.execution.projection_sql",
+]
+ignore_errors = false
 
 [[tool.mypy.overrides]]
 module = ["julep"]

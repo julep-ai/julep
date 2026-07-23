@@ -106,7 +106,7 @@ class ReceiverWorkflow:
     async def run(self) -> Any:
         await workflow.wait_condition(lambda: bool(self._inbox))
         reply = self._inbox[0]["reply"]
-        if isinstance(reply, dict) and "__ca_meta__" in reply:
+        if isinstance(reply, dict) and "__julep_meta__" in reply:
             return reply["reply"]
         return reply
 

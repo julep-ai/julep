@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 import types
+import warnings
 from dataclasses import dataclass
 from typing import (
     Any,
@@ -30,6 +31,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    TypeVar,
     Union,
     cast,
     get_args,
@@ -43,10 +45,41 @@ from .dsl import app, iter_up_to, sub, think
 from .ir import ContextPolicy, Node, SubContract
 from .kinds import ContextScope, Shape, SummaryPolicy
 from .model_slugs import EFFORT_LEVELS, normalize_model_slug
-from .registry import DEFAULT_REGISTRY
+from .registry import DEFAULT_REGISTRY, Registry
 
 _REPLY_UNSET = object()
 _SUPPORTED_REPLY_FORMS = "pydantic v2 model with model_json_schema() or TypedDict"
+
+
+_KEEP: Any = object()
+_T = TypeVar("_T")
+_REPLACE_HANDLED_FIELDS = frozenset(
+    {
+        "name", "model", "system", "reply_schema", "tools", "temperature",
+        "max_rounds", "is_agent", "sub_contract", "context_scope",
+        "system_render", "user_render", "max_tokens", "reasoning_effort",
+        "output_retries", "require_tool_call", "response_format", "prompt_cache",
+    }
+)
+
+
+def _replacement(value: Any, current: _T) -> _T:
+    return current if value is _KEEP else cast(_T, value)
+
+
+class MissingOutputSchemaWarning(UserWarning):
+    """A loaded dotctx package has no reply schema to validate model output."""
+
+
+def _warn_missing_output_schema(path: str, reasoner: "Reasoner") -> "Reasoner":
+    if reasoner.reply_schema is None:
+        warnings.warn(
+            f"dotctx package {path!r} does not define class Output in schema.pyi; "
+            "model replies will not be schema-validated",
+            MissingOutputSchemaWarning,
+            stacklevel=3,
+        )
+    return reasoner
 
 
 def _unsupported_reply_type(value: object) -> TypeError:
@@ -219,6 +252,63 @@ class Reasoner:
             )
         object.__setattr__(self, "prompt_cache", prompt_cache)
 
+    def replace(
+        self,
+        *,
+        name: str = _KEEP,
+        model: str = _KEEP,
+        system: str = _KEEP,
+        reply: Any = _KEEP,
+        tools: Sequence[str] = _KEEP,
+        temperature: Optional[float] = _KEEP,
+        max_rounds: Optional[int] = _KEEP,
+        is_agent: bool = _KEEP,
+        sub_contract: Optional[SubContract] = _KEEP,
+        context_scope: ContextScope = _KEEP,
+        system_render: Optional[str] = _KEEP,
+        user_render: Optional[str] = _KEEP,
+        max_tokens: Optional[int] = _KEEP,
+        reasoning_effort: Optional[str] = _KEEP,
+        output_retries: int = _KEEP,
+        require_tool_call: bool = _KEEP,
+        response_format: Optional[str] = _KEEP,
+        prompt_cache: Optional[str] = _KEEP,
+    ) -> Reasoner:
+        """Return a copy with selected fields replaced.
+
+        Omitting ``reply`` preserves the already-materialized reply schema;
+        passing ``reply=None`` explicitly clears it, while a Pydantic model or
+        ``TypedDict`` is materialized exactly as it is during construction.
+        """
+
+        replacement_reply = self.reply_schema if reply is _KEEP else reply
+        replaced = Reasoner(
+            name=_replacement(name, self.name),
+            model=_replacement(model, self.model),
+            system=_replacement(system, self.system),
+            reply=replacement_reply,
+            tools=_replacement(tools, self.tools),
+            temperature=_replacement(temperature, self.temperature),
+            max_rounds=_replacement(max_rounds, self.max_rounds),
+            is_agent=_replacement(is_agent, self.is_agent),
+            sub_contract=_replacement(sub_contract, self.sub_contract),
+            context_scope=_replacement(context_scope, self.context_scope),
+            system_render=_replacement(system_render, self.system_render),
+            user_render=_replacement(user_render, self.user_render),
+            max_tokens=_replacement(max_tokens, self.max_tokens),
+            reasoning_effort=_replacement(reasoning_effort, self.reasoning_effort),
+            output_retries=_replacement(output_retries, self.output_retries),
+            require_tool_call=_replacement(require_tool_call, self.require_tool_call),
+            response_format=_replacement(response_format, self.response_format),
+            prompt_cache=_replacement(prompt_cache, self.prompt_cache),
+        )
+        # Preserve extension/future fields this version cannot yet override.
+        # Declared fields still go through the constructor above for validation.
+        for field_name, value in vars(self).items():
+            if field_name not in _REPLACE_HANDLED_FIELDS:
+                object.__setattr__(replaced, field_name, value)
+        return replaced
+
 
 _REASONERS: dict[str, Reasoner] = DEFAULT_REGISTRY.reasoners
 
@@ -354,8 +444,13 @@ def _model_and_effort(settings: dict[str, Any]) -> tuple[str, Optional[str], int
     return slug.model, (effort or slug.reasoning_effort), retries
 
 
-def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = None,
-                        base_dir: Optional[str] = None) -> Reasoner:
+def reasoner_from_settings(
+    settings: dict[str, Any],
+    *,
+    name: Optional[str] = None,
+    base_dir: Optional[str] = None,
+    _registry: Registry = DEFAULT_REGISTRY,
+) -> Reasoner:
     """Build (and register) a :class:`Reasoner` from a settings mapping.
 
     ``base_dir`` lets ``system_file`` / ``schema_file`` resolve relative paths;
@@ -405,7 +500,7 @@ def reasoner_from_settings(settings: dict[str, Any], *, name: Optional[str] = No
         response_format=_response_format_setting(settings),
         prompt_cache=_prompt_cache_setting(settings),
     )
-    return DEFAULT_REGISTRY.register_reasoner(reasoner)
+    return _registry.register_reasoner(reasoner)
 
 
 # Rich-layout markers: any of these turns the package over to dotctx_rich
@@ -418,7 +513,12 @@ def is_rich_dotctx(path: str) -> bool:
     return any(os.path.exists(os.path.join(path, m)) for m in _RICH_MARKERS)
 
 
-def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reasoner:
+def load_dotctx(
+    path: str,
+    *,
+    env: Optional[Mapping[str, str]] = None,
+    _registry: Registry = DEFAULT_REGISTRY,
+) -> Reasoner:
     """Read a dotctx directory — or a single ``.ctx`` file — into a Reasoner.
 
     A directory reads ``<path>/settings.yaml`` (or ``settings.yml``); the
@@ -441,14 +541,20 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
             raise ValueError(f"single-file dotctx must end in .ctx: {path!r}")
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 
-        return dotctx_rich.load_single_file_dotctx(path, env=env).reasoner
+        return _warn_missing_output_schema(
+            path,
+            dotctx_rich.load_single_file_dotctx(path, registry=_registry, env=env).reasoner,
+        )
     if not os.path.isdir(path):
         raise FileNotFoundError(f"dotctx path does not exist: {path!r}")
 
     if is_rich_dotctx(path):
         from . import dotctx_rich  # hard ImportError without the [dotctx] extra
 
-        return dotctx_rich.load_rich_dotctx(path, env=env).reasoner
+        return _warn_missing_output_schema(
+            path,
+            dotctx_rich.load_rich_dotctx(path, registry=_registry, env=env).reasoner,
+        )
 
     settings_path = None
     for fn in ("settings.yaml", "settings.yml"):
@@ -475,14 +581,28 @@ def load_dotctx(path: str, *, env: Optional[Mapping[str, str]] = None) -> Reason
 
         settings = yaml.safe_load(text) or {}
     default_name = os.path.basename(os.path.normpath(path))
-    return reasoner_from_settings(settings, name=settings.get("name", default_name),
-                               base_dir=path)
+    return _warn_missing_output_schema(
+        path,
+        reasoner_from_settings(
+            settings,
+            name=settings.get("name", default_name),
+            base_dir=path,
+            _registry=_registry,
+        ),
+    )
 
 
 # --------------------------------------------------------------------------- #
 # Lowering a Reasoner to IR (the shape-bearing step).
 # --------------------------------------------------------------------------- #
-def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None) -> Node:
+def reasoner_to_flow(
+    reasoner: Reasoner,
+    *,
+    ctx: Optional[ContextPolicy] = None,
+    summarizer: Optional[str] = None,
+    tool_aliases: Optional[Mapping[str, str]] = None,
+    agent_round_cap: int = 32,
+) -> Node:
     """Lower a registered reasoner to the IR node its round policy implies.
 
     Sub before agent before bounded loop before single call, so an explicitly
@@ -490,9 +610,51 @@ def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None)
     """
     policy = ctx or ContextPolicy(scope=reasoner.context_scope)
 
+    if agent_round_cap < 1:
+        raise ValueError("agent_round_cap must be >= 1")
+
     if reasoner.sub_contract is not None:
         return sub(reasoner.name, reasoner.sub_contract,
                    summary_policy=reasoner.sub_contract.summary_policy)
+
+    # Tool-bearing reasoners run on the one durable native-tool loop. The
+    # provider sees tools.pyi's bare names; dispatch resolves those aliases to
+    # frozen wire ToolRefs. A finite reasoner bound wins, otherwise the project
+    # safety cap applies.
+    if reasoner.tools:
+        aliases = dict(tool_aliases or {key: key for key in reasoner.tools})
+        missing = sorted(set(reasoner.tools) - set(aliases))
+        extra = sorted(set(aliases) - set(reasoner.tools))
+        if missing or extra:
+            details: list[str] = []
+            if missing:
+                details.append("missing " + ", ".join(missing))
+            if extra:
+                details.append("unknown " + ", ".join(extra))
+            raise ValueError("tool alias map does not match reasoner grants: " + "; ".join(details))
+        bound = (
+            reasoner.max_rounds
+            if reasoner.max_rounds is not None and reasoner.max_rounds >= 1
+            else agent_round_cap
+        )
+        app_ctx = ctx
+        if app_ctx is None and reasoner.context_scope in (
+            ContextScope.SUMMARY,
+            ContextScope.WHOLE_SESSION,
+        ):
+            app_ctx = ContextPolicy(scope=reasoner.context_scope)
+        return app(
+            reasoner.name,
+            tools=list(reasoner.tools),
+            tool_aliases=aliases,
+            max_rounds=bound,
+            ctx=app_ctx,
+            summarizer=summarizer,
+            native_tools=True,
+            require_tool_call=reasoner.require_tool_call,
+            output_schema=reasoner.reply_schema,
+            output_retries=reasoner.output_retries,
+        )
 
     if reasoner.is_agent or (reasoner.max_rounds is not None and reasoner.max_rounds <= 0):
         # Open-ended controller loop. The reasoner name is the controller ref.
@@ -504,7 +666,7 @@ def reasoner_to_flow(reasoner: Reasoner, *, ctx: Optional[ContextPolicy] = None)
             ContextScope.WHOLE_SESSION,
         ):
             app_ctx = ContextPolicy(scope=reasoner.context_scope)
-        return app(reasoner.name, ctx=app_ctx)
+        return app(reasoner.name, ctx=app_ctx, summarizer=summarizer)
 
     if reasoner.max_rounds is not None and reasoner.max_rounds >= 1:
         # Bounded refinement loop -> Feedback.

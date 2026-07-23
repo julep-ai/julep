@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional, Protocol
@@ -55,10 +55,28 @@ from .validate import Diagnostic
 # as a system instruction (the prompt path opts in on THIS key only).
 ROUND_NOTE_KEY = "__round_note__"
 NATIVE_TOOLS_KEY = "__native_tools__"
-REQUIRE_TOOL_CALL_REASK_MESSAGE = "require_tool_call: reply with a tool call, not text"
-REQUIRE_TOOL_CALL_NEVER_CALLED_REASON = (
-    "require_tool_call: controller never called a tool"
+# Reserved controller-payload key carrying loop feedback (require_tool_call
+# re-asks, output-validation re-asks) on transcript-scoped rounds, where the
+# conversation itself lives in the transcript and transcript_for deliberately
+# excludes reask trace entries. The prompt path renders it as a trailing user
+# turn instead of re-rendering the business template against the feedback.
+FEEDBACK_KEY = "__loop_feedback__"
+# Trace decisions transcript_for excludes (it keeps only "call"/"sub") whose
+# state.last carries a diagnostic the model must see on the next round. When the
+# tail decision is one of these, the transcript-scoped controller value ships
+# state.last under FEEDBACK_KEY instead of dropping it. Keep in sync with the
+# non-terminal reask decisions recorded in turn.py / harness.py.
+FEEDBACK_DECISIONS = frozenset({"reask", "output_reask", "tool_input_reask"})
+# Top-level reply keys interpret_reasoner_reply routes on as controller actions.
+# A native-tools agent's business Output (reply) schema must not declare any of
+# these as a top-level property, or a schema-conforming final reply would be
+# misrouted to a CALL/SUB/FINISH/ESCALATE branch before the native FINISH
+# fallback. validate.py's APP_RESERVED_REPLY_KEY enforces this at admission.
+NATIVE_TOOLS_REPLY_RESERVED_KEYS = frozenset(
+    {"done", "output", "escalate", "tool", "sub", "tool_calls"}
 )
+REQUIRE_TOOL_CALL_REASK_MESSAGE = "require_tool_call: reply with a tool call, not text"
+REQUIRE_TOOL_CALL_NEVER_CALLED_REASON = "require_tool_call: controller never called a tool"
 
 
 def coerce_round_note(note: Any) -> Optional[str]:
@@ -70,9 +88,7 @@ def coerce_round_note(note: Any) -> Optional[str]:
     """
     if note is None or isinstance(note, str):
         return note
-    raise ValueError(
-        f"round_note pure must return str | None, got {type(note).__name__}: {note!r}"
-    )
+    raise ValueError(f"round_note pure must return str | None, got {type(note).__name__}: {note!r}")
 
 
 # --------------------------------------------------------------------------- #
@@ -81,11 +97,11 @@ def coerce_round_note(note: Any) -> Optional[str]:
 class Decision(str, Enum):
     """What a controller asked the loop to do this round."""
 
-    FINISH = "finish"      # done: payload is the final output
+    FINISH = "finish"  # done: payload is the final output
     ESCALATE = "escalate"  # give up to a human/parent: payload is a reason
-    CALL = "call"          # invoke a granted tool: payload is {"tool", "input"}
+    CALL = "call"  # invoke a granted tool: payload is {"tool", "input"}
     CALL_MANY = "call_many"  # invoke granted tools: payload is [{"id", "tool", "input"}, ...]
-    SUB = "sub"            # invoke a registered sub-flow: payload is {"ref", "input", "shape"?}
+    SUB = "sub"  # invoke a registered sub-flow: payload is {"ref", "input", "shape"?}
     CONTROLLER_ERROR = "controller_error"  # malformed controller output
 
 
@@ -116,8 +132,7 @@ class ToolCaller(Protocol):
         value: Any,
         *,
         call_index: Optional[int] = None,
-    ) -> Awaitable[Any]:
-        ...
+    ) -> Awaitable[Any]: ...
 
 
 def interpret_reasoner_reply(
@@ -129,6 +144,7 @@ def interpret_reasoner_reply(
     mode, malformed output is a controller error. Set ``strict=False`` to retain
     the legacy behavior where prose or unknown shapes finish with the raw reply.
     """
+
     def malformed() -> RoundAction:
         if strict:
             return RoundAction(
@@ -137,8 +153,40 @@ def interpret_reasoner_reply(
             )
         return RoundAction(Decision.FINISH, reply)
 
+    if native_tools and reply is not None and not isinstance(reply, dict):
+        # Provider-native tool calls arrive through the dedicated ``tool_calls``
+        # envelope. Any other non-null provider value is a final answer; the
+        # configured output schema and retry budget own its shape validation.
+        return RoundAction(Decision.FINISH, reply)
+
     if not isinstance(reply, dict):
         return malformed()
+
+    if native_tools:
+        # Every reserved key belongs to exactly one controller action family.
+        # Do this before routing on any individual key so contradictory
+        # envelopes cannot win merely because one branch happens to be checked
+        # first.  ``done`` and ``output`` are the one intentional pair: both
+        # describe the same FINISH action.
+        action_families = {
+            family
+            for family, present in (
+                ("finish", "done" in reply or "output" in reply),
+                ("escalate", "escalate" in reply),
+                ("tool", "tool" in reply),
+                ("sub", "sub" in reply),
+                ("tool_calls", "tool_calls" in reply),
+            )
+            if present
+        }
+        if len(action_families) > 1:
+            # Ambiguous native action envelopes are never safe to reinterpret
+            # as business output, even under the legacy permissive-controller
+            # compatibility switch.
+            return RoundAction(
+                Decision.CONTROLLER_ERROR,
+                f"malformed controller reply: {reply!r}",
+            )
 
     if native_tools and "tool_calls" in reply:
         entries = reply["tool_calls"]
@@ -146,7 +194,11 @@ def interpret_reasoner_reply(
             return malformed()
         calls: list[dict[str, Any]] = []
         for entry in entries:
-            if not isinstance(entry, dict) or not isinstance(entry.get("tool"), str):
+            if (
+                not isinstance(entry, dict)
+                or not isinstance(entry.get("tool"), str)
+                or not entry["tool"]
+            ):
                 return malformed()
             calls.append(
                 {
@@ -157,20 +209,35 @@ def interpret_reasoner_reply(
             )
         return RoundAction(Decision.CALL_MANY, calls)
 
+    if "done" in reply and reply.get("done") is not True:
+        return malformed()
+
     # Finish: explicit done flag, or a bare {"output": ...}.
-    if reply.get("done") is True or ("output" in reply and "tool" not in reply and "sub" not in reply):
+    if reply.get("done") is True or (
+        "output" in reply and "tool" not in reply and "sub" not in reply
+    ):
         return RoundAction(Decision.FINISH, reply.get("output", reply))
 
     if "escalate" in reply:
         return RoundAction(Decision.ESCALATE, reply.get("escalate") or "escalated by controller")
 
     if "tool" in reply:
+        if not isinstance(reply["tool"], str) or not reply["tool"]:
+            return malformed()
+        payload = {
+            "tool": reply["tool"],
+            "input": reply.get("input", reply.get("args")),
+        }
+        if reply.get("id") is not None:
+            payload["id"] = reply["id"]
         return RoundAction(
             Decision.CALL,
-            {"tool": reply["tool"], "input": reply.get("input", reply.get("args"))},
+            payload,
         )
 
     if "sub" in reply:
+        if not isinstance(reply["sub"], str) or not reply["sub"]:
+            return malformed()
         return RoundAction(
             Decision.SUB,
             {
@@ -179,6 +246,17 @@ def interpret_reasoner_reply(
                 "shape": reply.get("shape", Shape.PIPELINE.value),
             },
         )
+
+    if native_tools:
+        # Native tool-calling protocol: the model either calls tools or
+        # answers. A dict reply with none of the reserved action keys IS the
+        # final answer — reply_schema/prompt guidance told the model to return
+        # exactly that shape, and the loop's output-schema validation (with
+        # its re-ask budget) owns shape enforcement. Treating it as a
+        # controller error contradicted the package's own Output contract.
+        if NATIVE_TOOLS_REPLY_RESERVED_KEYS.intersection(reply):
+            return malformed()
+        return RoundAction(Decision.FINISH, reply)
 
     return malformed()
 
@@ -228,6 +306,8 @@ class AgentConfig:
     native_tools: bool = False
     require_tool_call: bool = False
     round_note: Optional[str] = None
+    output_schema: Optional[dict[str, Any]] = None
+    output_retries: int = 0
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "AgentConfig":
@@ -245,10 +325,10 @@ class AgentConfig:
             ctx=ContextPolicy.from_json(d["ctx"]) if d.get("ctx") else None,
             summarizer=d.get("summarizer"),
             native_tools=bool(d.get("nativeTools", d.get("native_tools", False))),
-            require_tool_call=bool(
-                d.get("requireToolCall", d.get("require_tool_call", False))
-            ),
+            require_tool_call=bool(d.get("requireToolCall", d.get("require_tool_call", False))),
             round_note=d.get("roundNote", d.get("round_note")),
+            output_schema=d.get("replySchema", d.get("reply_schema")),
+            output_retries=int(d.get("outputRetries", d.get("output_retries", 0))),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -278,6 +358,10 @@ class AgentConfig:
             out["requireToolCall"] = True
         if self.round_note is not None:
             out["roundNote"] = self.round_note
+        if self.output_schema is not None:
+            out["replySchema"] = self.output_schema
+        if self.output_retries:
+            out["outputRetries"] = self.output_retries
         return out
 
     @staticmethod
@@ -288,19 +372,55 @@ class AgentConfig:
         return cfg
 
 
+def tool_input_schemas(
+    tool_defs: Optional[Sequence[Mapping[str, Any]]],
+) -> dict[str, dict[str, Any]]:
+    """Extract the frozen provider-name -> input-schema map.
+
+    Tool definitions cross release/workflow boundaries as JSON, so validate the
+    small provider shape once before model rounds begin instead of silently
+    dispatching an unvalidated call when metadata is malformed.
+    """
+    schemas: dict[str, dict[str, Any]] = {}
+    for index, definition in enumerate(tool_defs or ()):
+        function = definition.get("function")
+        if not isinstance(function, Mapping):
+            raise ValueError(f"toolDefs[{index}].function must be an object")
+        name = function.get("name")
+        parameters = function.get("parameters")
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"toolDefs[{index}].function.name must be a non-empty string")
+        if not isinstance(parameters, dict):
+            raise ValueError(f"toolDefs[{index}].function.parameters must be an object")
+        if name in schemas:
+            raise ValueError(f"toolDefs defines {name!r} more than once")
+        schemas[name] = parameters
+    return schemas
+
+
 @dataclass
 class TraceEntry:
     """One recorded action and its result (the raw material for plan extraction)."""
 
     decision: str
-    ref: Optional[str] = None      # tool name or sub-flow ref
-    shape: Optional[str] = None    # sub-flow surface shape, if a sub
+    ref: Optional[str] = None  # tool name or sub-flow ref
+    shape: Optional[str] = None  # sub-flow surface shape, if a sub
     cost: float = 0.0
     input_ref: Optional[str] = None
     output_ref: Optional[str] = None
     schema_ref: Optional[str] = None
     call_id: Optional[str] = None
+    # Canonical call arguments live in durable loop state independently of
+    # provider prompt truncation. ``input_ref`` remains the optional blob ref.
+    arguments: Any = None
     error: Optional[str] = None
+    # Ephemeral observation used to materialize transcript turns before a
+    # durable backend has offloaded the value to ``output_ref``. It is
+    # deliberately omitted from ``to_json`` so continue-as-new payloads do not
+    # grow with duplicated tool output; transcript-scoped durable runners
+    # persist a blob ref before crossing that boundary.
+    output: Any = field(default=None, repr=False, compare=False)
+    output_available: bool = field(default=False, repr=False, compare=False)
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"decision": self.decision, "cost": self.cost}
@@ -316,6 +436,8 @@ class TraceEntry:
             out["schemaRef"] = self.schema_ref
         if self.call_id is not None:
             out["callId"] = self.call_id
+        if self.arguments is not None:
+            out["arguments"] = self.arguments
         if self.error is not None:
             out["error"] = self.error
         return out
@@ -323,12 +445,15 @@ class TraceEntry:
     @staticmethod
     def from_json(d: dict[str, Any]) -> "TraceEntry":
         return TraceEntry(
-            decision=d["decision"], ref=d.get("ref"),
-            shape=d.get("shape"), cost=float(d.get("cost", 0.0)),
+            decision=d["decision"],
+            ref=d.get("ref"),
+            shape=d.get("shape"),
+            cost=float(d.get("cost", 0.0)),
             input_ref=d.get("inputRef", d.get("input_ref")),
             output_ref=d.get("outputRef", d.get("output_ref")),
             schema_ref=d.get("schemaRef", d.get("schema_ref")),
             call_id=d.get("callId", d.get("call_id")),
+            arguments=d.get("arguments"),
             error=d.get("error"),
         )
 
@@ -399,8 +524,8 @@ async def blob_round_output_refs(
     """Assign per-entry output_ref blobs to call/sub trace entries recorded this round.
 
     A CALL_MANY round records several call entries and leaves ``state.last`` as the
-    aligned observation list. Each entry gets its own output blob. Single call/sub
-    rounds record one entry and keep the existing ``state.last`` semantics.
+    aligned observation list. Each entry gets its own output blob. Fresh trace
+    entries carry their exact output; legacy entries fall back to ``state.last``.
     """
     new_entries = [
         entry
@@ -410,14 +535,24 @@ async def blob_round_output_refs(
     if not new_entries:
         return
     if len(new_entries) == 1:
-        new_entries[0].output_ref = await blob(state.last)
+        entry = new_entries[0]
+        # A provider-native CALL_MANY with one call leaves ``state.last`` as a
+        # one-element observation wrapper.  The trace entry carries the actual
+        # tool result, including a legitimate ``None``, so prefer it whenever
+        # it is available.  Old/replayed state lacks the ephemeral field and
+        # retains the historical ``state.last`` fallback.
+        value = entry.output if entry.output_available else state.last
+        entry.output_ref = await blob(value)
         return
 
-    observations = (
-        state.last if isinstance(state.last, list) else [state.last] * len(new_entries)
-    )
+    observations = state.last if isinstance(state.last, list) else [state.last] * len(new_entries)
     for entry, obs in zip(new_entries, observations, strict=False):
-        value = obs["output"] if isinstance(obs, dict) and "output" in obs else obs
+        if entry.output_available:
+            value = entry.output
+        elif isinstance(obs, dict) and "output" in obs:
+            value = obs["output"]
+        else:
+            value = obs
         entry.output_ref = await blob(value)
 
 
@@ -468,8 +603,9 @@ def should_continue_as_new(state: AgentState, cfg: AgentConfig, *, baseline_roun
     )
 
 
-def terminal_result(status: str, state: AgentState, output: Any = None,
-                    reason: Optional[str] = None) -> dict[str, Any]:
+def terminal_result(
+    status: str, state: AgentState, output: Any = None, reason: Optional[str] = None
+) -> dict[str, Any]:
     """Uniform shape for everything the agent loop can return."""
     out: dict[str, Any] = {
         "status": status,
@@ -483,7 +619,7 @@ def terminal_result(status: str, state: AgentState, output: Any = None,
     if state.call_counts:
         out["callCounts"] = dict(sorted(state.call_counts.items()))
     if state.controller_meta:
-        out["__ca_meta__"] = dict(state.controller_meta)
+        out["__julep_meta__"] = dict(state.controller_meta)
     return out
 
 
@@ -512,6 +648,18 @@ def contract_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> ToolC
         effect=Effect(raw.get("effect", CONSERVATIVE_DEFAULT.effect.value)),
         idempotency=Idempotency(raw.get("idempotency", CONSERVATIVE_DEFAULT.idempotency.value)),
     )
+
+
+def contract_asserted_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> bool:
+    """Whether the carried contract has trusted retry authority.
+
+    Missing fields are legacy/unasserted and therefore fail closed.  An MCP
+    hint can describe a read or idempotent operation, but it cannot grant the
+    framework permission to repeat a call.
+    """
+
+    raw = (contracts or {}).get(tool) or {}
+    return raw.get("asserted") is True
 
 
 def approval_required_for_tool(tool: str, contracts: Optional[AgentContractMap]) -> bool:
@@ -547,15 +695,23 @@ def charge_tool_call(
     state: AgentState,
     tool: str,
     contracts: Optional[AgentContractMap],
+    *,
+    count_key: Optional[str] = None,
 ) -> Optional[CallDenial]:
-    """Increment the deterministic per-tool call counter, or return a denial."""
+    """Increment one deterministic tool budget counter, or return a denial.
+
+    ``tool`` is the provider-visible name used for contracts and diagnostics.
+    ``count_key`` is its canonical capability identity when multiple provider
+    aliases dispatch to the same wire tool.
+    """
     limit = max_calls_for_tool(tool, contracts)
     if limit is None:
         return None
-    count = state.call_counts.get(tool, 0)
+    key = tool if count_key is None else count_key
+    count = state.call_counts.get(key, 0)
     if count >= limit:
         return CallDenial(reason=f"tool {tool!r} exceeded maxCalls={limit}")
-    state.call_counts[tool] = count + 1
+    state.call_counts[key] = count + 1
     return None
 
 
@@ -573,6 +729,7 @@ def authorize_subflow(
 def retry_max_attempts_for_contract(
     contract: ToolContract,
     *,
+    asserted: bool = False,
     idempotent_max_attempts: int,
     write_max_attempts: int,
 ) -> int:
@@ -582,7 +739,7 @@ def retry_max_attempts_for_contract(
     retained for policy JSON compatibility, but non-idempotent writes collapse
     to one attempt.
     """
-    if contract_allows_retry(contract):
+    if asserted and contract_allows_retry(contract):
         return idempotent_max_attempts
     return 1
 
@@ -599,6 +756,9 @@ def manifest_contracts_for_agent(
         key = toolref_key(frozen.ref)
         if wanted is None or key in wanted:
             payload = frozen.contract.to_json()
+            payload["asserted"] = frozen.asserted
+            if frozen.assertion_provenance is not None:
+                payload["assertionProvenance"] = frozen.assertion_provenance
             if max_call_limits is not None and key in max_call_limits:
                 payload["maxCalls"] = int(max_call_limits[key])
             contracts[key] = payload
@@ -607,12 +767,16 @@ def manifest_contracts_for_agent(
 
 def max_call_limits_from_contracts(
     contracts: Optional[dict[str, dict[str, Any]]],
+    tool_aliases: Optional[Mapping[str, str]] = None,
 ) -> Optional[dict[str, int]]:
+    """Extract limits, optionally canonicalized to wire-tool identities."""
     limits: dict[str, int] = {}
     for tool, raw in (contracts or {}).items():
         limit = raw.get("maxCalls", raw.get("max_calls"))
         if limit is not None:
-            limits[tool] = int(limit)
+            key = (tool_aliases or {}).get(tool, tool)
+            value = int(limit)
+            limits[key] = min(limits.get(key, value), value)
     return limits or None
 
 
@@ -626,6 +790,8 @@ async def drive_agent_loop(
     granted: Optional[set[str]] = None,
     granted_subflows: Optional[set[str]] = None,
     contracts: Optional[AgentContractMap] = None,
+    tool_count_keys: Optional[Mapping[str, str]] = None,
+    tool_schemas: Optional[Mapping[str, dict[str, Any]]] = None,
     state: Optional[AgentState] = None,
     get_pure: Optional[Callable[[str], Callable[..., Any]]] = None,
 ) -> dict[str, Any]:
@@ -636,10 +802,19 @@ async def drive_agent_loop(
     prod_gap: list[str] = []
     state = state or AgentState(last=input)
     step = controller_turn(
-        cfg=cfg, invoke_controller=invoke_controller, call_tool=call_tool,
-        run_subflow=run_subflow, granted=granted, granted_subflows=granted_subflows,
-        contracts=contracts, mode=mode, prod_gap=prod_gap, run_input=input,
+        cfg=cfg,
+        invoke_controller=invoke_controller,
+        call_tool=call_tool,
+        run_subflow=run_subflow,
+        granted=granted,
+        granted_subflows=granted_subflows,
+        contracts=contracts,
+        tool_count_keys=tool_count_keys,
+        mode=mode,
+        prod_gap=prod_gap,
+        run_input=input,
         get_pure=get_pure,
+        tool_schemas=tool_schemas,
     )
     return await drive(step, state, halt=pre_round(cfg), finalize=make_finalize(prod_gap))
 
@@ -714,6 +889,7 @@ __all__ = [
     "interpret_reasoner_reply",
     "action_cost",
     "AgentConfig",
+    "tool_input_schemas",
     "AgentState",
     "STATE_SCHEMA_VERSION",
     "TraceEntry",
@@ -726,6 +902,7 @@ __all__ = [
     "coerce_round_note",
     "precheck_controller",
     "contract_for_tool",
+    "contract_asserted_for_tool",
     "approval_required_for_tool",
     "authorize_call",
     "max_calls_for_tool",

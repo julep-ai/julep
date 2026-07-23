@@ -10,13 +10,15 @@ configured with the in-memory reference stores, and assert that:
 * ``putBlob`` returns a content-addressed ref that the blob store resolves, and
   the ref matches ``SessionStore.put_blob`` for the same value (shared
   compact canonical JSON serialization);
-* each activity raises ``RuntimeError`` when its backing store is ``None``.
+* each activity fails when its backing store is ``None``; secret-bearing
+  ``putBlob`` crosses the activity boundary as a sanitized ``ApplicationError``.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -26,6 +28,7 @@ from julep import HAVE_TEMPORAL
 pytestmark = pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 
 if HAVE_TEMPORAL:
+    from temporalio.exceptions import ApplicationError
     from temporalio.testing import ActivityEnvironment
 
     from julep import agent_loop as al
@@ -39,7 +42,7 @@ if HAVE_TEMPORAL:
         loadState,
         putBlob,
     )
-    from julep.execution.blobstore import InMemoryBlobStore
+    from julep.execution.blobstore import InMemoryBlobStore, LocalDirBlobStore
     from julep.execution.session_store import InMemorySessionStore
 
 
@@ -106,6 +109,25 @@ def test_put_blob_is_content_addressed_and_resolvable() -> None:
         activities.configure(WorkerContext())
 
 
+def test_put_blob_file_store_survives_activity_context_restart(tmp_path: Path) -> None:
+    root = tmp_path / "blobs"
+    writer = LocalDirBlobStore(root)
+    activities.configure(WorkerContext(blob_store=writer))
+    try:
+        ref = _run(
+            _drive(
+                putBlob,
+                PutBlobInput(tenant="acme", value={"observation": "durable"}),
+            )
+        )
+    finally:
+        activities.configure(WorkerContext())
+
+    reader = LocalDirBlobStore(root)
+    resolved = _run(reader.get("acme", ref))
+    assert json.loads(resolved) == {"observation": "durable"}
+
+
 def test_load_state_requires_session_store() -> None:
     activities.configure(WorkerContext(blob_store=InMemoryBlobStore()))
     try:
@@ -138,7 +160,9 @@ def test_commit_state_requires_session_store() -> None:
 def test_put_blob_requires_blob_store() -> None:
     activities.configure(WorkerContext(session_store=InMemorySessionStore()))
     try:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ApplicationError) as captured:
             _run(_drive(putBlob, PutBlobInput(tenant="acme", value={"x": 1})))
+        assert captured.value.type == "RuntimeError"
+        assert "worker has no blob store configured" in str(captured.value)
     finally:
         activities.configure(WorkerContext())

@@ -1,4 +1,4 @@
-"""Startup-preload resolution for CAS bundles.
+"""Startup-preload resolution for artifact-store bundles.
 
 Bundle resolution deliberately happens at worker init, before any workflow task
 is accepted, and never inside workflow code. Temporal workflow code cannot do
@@ -15,9 +15,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
-from . import deps
+from . import _env, deps
 from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
-from .cas import CASError, CASStore, cas_from_url
+from .artifact_store import ArtifactStoreError, ArtifactStore, artifact_store_from_url
 from .registry import DEFAULT_REGISTRY, PureEntry, Registry, _text_hash
 
 _SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -66,13 +66,13 @@ def _json_object(data: bytes, label: str) -> dict[str, Any]:
 def _allowed_signers(allowed_signers: Sequence[str] | None) -> set[str]:
     raw = allowed_signers
     if raw is None:
-        env_value = os.environ.get("CA_BUNDLE_ALLOWED_SIGNERS", "")
+        env_value = _env.get(_env.JULEP_BUNDLE_ALLOWED_SIGNERS, "")
         raw = [part.strip() for part in env_value.split(",")]
 
     normalized = {signer.strip().lower() for signer in raw if signer.strip()}
     if not normalized:
         raise BundleResolutionError(
-            "bundle resolution requires allowed_signers or CA_BUNDLE_ALLOWED_SIGNERS"
+            "bundle resolution requires allowed_signers or JULEP_BUNDLE_ALLOWED_SIGNERS"
         )
     for signer in normalized:
         if not _HEX.fullmatch(signer):
@@ -119,31 +119,38 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
         assert isinstance(abi, str)
         assert isinstance(source, str)
         assert isinstance(source_hash, str)
-        env_hash = raw.get("envHash")
-        env_component = raw.get("envComponent")
+        has_executor_tier = "executorTier" in raw
         executor_tier_raw = raw.get("executorTier")
-        if executor_tier_raw is None:
+        if not has_executor_tier:
             executor_tier = "wasm"
-        elif executor_tier_raw in {"wasm", "native"}:
+        elif executor_tier_raw == "native":
             assert isinstance(executor_tier_raw, str)
             executor_tier = executor_tier_raw
+        elif executor_tier_raw is None or executor_tier_raw == "wasm":
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} must omit executorTier for the default "
+                "wasm tier"
+            )
         else:
             raise BundleResolutionError(
                 f"bundle manifest pure {name!r} has unsupported executorTier "
                 f"{executor_tier_raw!r}"
             )
-        dep_list_raw = raw.get("deps")
-        requires_python_raw = raw.get("requiresPython")
-        if requires_python_raw is not None and not isinstance(requires_python_raw, str):
-            raise BundleResolutionError(
-                f"bundle manifest pure {name!r} has malformed requiresPython"
-            )
-        requires_python = requires_python_raw
-        if (env_hash is None) != (env_component is None):
+
+        has_env_hash = "envHash" in raw
+        has_env_component = "envComponent" in raw
+        env_hash = raw.get("envHash")
+        env_component = raw.get("envComponent")
+        if has_env_hash != has_env_component:
             raise BundleResolutionError(
                 f"bundle manifest pure {name!r} must carry envHash and envComponent together"
             )
-        if env_hash is not None:
+        if has_env_hash and (env_hash is None or env_component is None):
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} must omit envHash and envComponent rather "
+                "than encode null"
+            )
+        if has_env_hash:
             if not isinstance(env_hash, str) or _SHA256_HEX.fullmatch(env_hash) is None:
                 raise BundleResolutionError(
                     f"bundle manifest pure {name!r} has malformed envHash"
@@ -154,12 +161,27 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
                 )
             env_hash = env_hash.lower()
             env_component = env_component.lower()
+
+        has_deps = "deps" in raw
+        has_requires_python = "requiresPython" in raw
+        dep_list_raw = raw.get("deps")
+        requires_python_raw = raw.get("requiresPython")
+        if requires_python_raw is not None and not isinstance(requires_python_raw, str):
+            raise BundleResolutionError(
+                f"bundle manifest pure {name!r} has malformed requiresPython"
+            )
+        requires_python = requires_python_raw
         dep_list: tuple[str, ...] = ()
         if executor_tier == "native":
-            if env_hash is not None or env_component is not None:
+            if has_env_hash or has_env_component:
                 raise BundleResolutionError(
                     f"bundle manifest pure {name!r} native tier must not carry "
                     "envHash/envComponent"
+                )
+            if not has_deps or not has_requires_python:
+                raise BundleResolutionError(
+                    f"bundle manifest pure {name!r} native tier must carry executorTier, "
+                    "deps, and requiresPython together"
                 )
             if (
                 not isinstance(dep_list_raw, list)
@@ -171,7 +193,7 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
                     "deps list"
                 )
             dep_list = tuple(sorted(set(cast(list[str], dep_list_raw))))
-        elif dep_list_raw is not None or "requiresPython" in raw:
+        elif has_deps or has_requires_python:
             raise BundleResolutionError(
                 f"bundle manifest pure {name!r} must not carry deps/requiresPython "
                 "outside the native tier"
@@ -199,7 +221,7 @@ def _manifest_pures(manifest: dict[str, Any]) -> list[_ManifestPure]:
 
 
 def resolve_and_register(
-    store: CASStore,
+    store: ArtifactStore,
     bundle_hash: str,
     *,
     signature_digest: str | None = None,
@@ -207,10 +229,10 @@ def resolve_and_register(
     native_grant: Sequence[str] | str | None = None,
     registry: Registry = DEFAULT_REGISTRY,
 ) -> dict[str, Any]:
-    """Resolve a signed CAS bundle and register its pures by manifest tier.
+    """Resolve a signed artifact-store bundle and register its pures by manifest tier.
 
     Wasm pures execute in the wasmtime sandbox. Native dependency pures require
-    an explicit CA_PURE_NATIVE_DEPS grant on this worker and are registered as
+    an explicit JULEP_PURE_NATIVE_DEPS grant on this worker and are registered as
     native_venv source-only pures.
     """
 
@@ -293,7 +315,7 @@ def resolve_and_register(
         if verified_pure.executor_tier == "native" and verified_pure.name not in native_grants:
             raise BundleResolutionError(
                 f"bundle pure {verified_pure.name!r} requests native dependency tier, "
-                "but this worker has not granted it via CA_PURE_NATIVE_DEPS"
+                "but this worker has not granted it via JULEP_PURE_NATIVE_DEPS"
             )
 
     if verified:
@@ -385,7 +407,7 @@ def _entry_env_hash(entry: PureEntry, base_component_hash: str) -> str:
     return deps.env_hash(entry.deps, entry.requires_python, base_component_hash)
 
 
-def _register_env_components(store: CASStore, verified: Sequence[_VerifiedPure]) -> None:
+def _register_env_components(store: ArtifactStore, verified: Sequence[_VerifiedPure]) -> None:
     from .execution.wasm_executor import get_wasm_executor
 
     executor = get_wasm_executor()
@@ -422,10 +444,10 @@ def _register_env_components(store: CASStore, verified: Sequence[_VerifiedPure])
             )
         try:
             component_bytes = store.get(pure_record.env_component)
-        except CASError as e:
+        except ArtifactStoreError as e:
             raise BundleResolutionError(
                 f"env component {pure_record.env_component} for pure {pure_record.name!r} "
-                "is missing or failed CAS verification"
+                "is missing or failed artifact-store verification"
             ) from e
         try:
             executor.register_env_component(pure_record.env_hash, component_bytes)
@@ -475,7 +497,7 @@ def _bundle_entries(raw: str) -> list[tuple[str, str]]:
         parts = item.split(":")
         if len(parts) != 2 or not all(_SHA256_HEX.fullmatch(part) for part in parts):
             raise BundleResolutionError(
-                "malformed CA_BUNDLES entry; expected "
+                "malformed JULEP_BUNDLES entry; expected "
                 "<bundleHash>:<signatureDigest> with 64 hex chars on each side"
             )
         entries.append((parts[0].lower(), parts[1].lower()))
@@ -517,7 +539,7 @@ def bundle_ref_entries(raw: Any) -> list[tuple[str, str]]:
 
 
 def resolve_entries(
-    store: CASStore,
+    store: ArtifactStore,
     entries: Sequence[tuple[str, str]],
     *,
     registry: Registry = DEFAULT_REGISTRY,
@@ -536,13 +558,13 @@ def resolve_entries(
 
 
 def load_bundles_from_env(*, registry: Registry = DEFAULT_REGISTRY) -> list[dict[str, Any]]:
-    raw = os.environ.get("CA_BUNDLES", "")
+    raw = _env.get(_env.JULEP_BUNDLES, "")
     if raw.strip() == "":
         return []
 
-    store_url = os.environ.get("STORE_URL")
+    store_url = os.environ.get("JULEP_ARTIFACT_STORE_URL")
     if store_url is None or store_url.strip() == "":
-        raise BundleResolutionError("STORE_URL is required when CA_BUNDLES is set")
+        raise BundleResolutionError("JULEP_ARTIFACT_STORE_URL is required when JULEP_BUNDLES is set")
 
-    store = cas_from_url(store_url)
+    store = artifact_store_from_url(store_url)
     return resolve_entries(store, _bundle_entries(raw), registry=registry)

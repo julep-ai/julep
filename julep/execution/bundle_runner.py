@@ -1,4 +1,4 @@
-"""WorkflowRunner wrapper that resolves CAS bundle refs before workflow code.
+"""WorkflowRunner wrapper that resolves artifact-store bundle refs before workflow code.
 
 Bundle-sourced pures are read synchronously from the process registry while the
 workflow interpreter runs. On replay, activity bodies are not re-executed, so the
@@ -16,7 +16,7 @@ from temporalio.bridge.proto.workflow_completion import WorkflowActivationComple
 from temporalio.worker import WorkflowInstance, WorkflowRunner
 from temporalio.worker._workflow_instance import WorkflowInstanceDetails
 
-from ..cas import CASStore
+from ..artifact_store import ArtifactStore
 from ..registry import DEFAULT_REGISTRY, Registry
 from ..worker_store import bundle_ref_entries, resolve_entries
 from .harness import FlowInput
@@ -37,7 +37,7 @@ class BundleResolvingWorkflowRunner(WorkflowRunner):
         self,
         *,
         inner: WorkflowRunner,
-        store: CASStore | None,
+        store: ArtifactStore | None,
         registry: Registry = DEFAULT_REGISTRY,
     ) -> None:
         self.inner = inner
@@ -68,7 +68,7 @@ class _BundleResolvingInstance(WorkflowInstance):
         inner: WorkflowInstance,
         *,
         det: WorkflowInstanceDetails,
-        store: CASStore | None,
+        store: ArtifactStore | None,
         registry: Registry,
     ) -> None:
         self.inner = inner

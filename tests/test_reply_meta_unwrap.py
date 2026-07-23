@@ -47,7 +47,7 @@ def test_controller_turn_unwraps_llm_reply_meta_for_finish() -> None:
     cfg = AgentConfig()
     step = _step(
         cfg,
-        [{"__ca_meta__": {"llm.model": "x"}, "reply": {"output": "done!"}}],
+        [{"__julep_meta__": {"llm.model": "x"}, "reply": {"output": "done!"}}],
     )
 
     out = asyncio.run(drive(step, AgentState(last={"q": "x"}), halt=pre_round(cfg)))
@@ -62,7 +62,7 @@ def test_controller_turn_unwraps_llm_reply_meta_for_native_tool_calls() -> None:
         AgentConfig(native_tools=True),
         [
             {
-                "__ca_meta__": {"llm.model": "x"},
+                "__julep_meta__": {"llm.model": "x"},
                 "reply": {
                     "tool_calls": [
                         {"id": "a", "tool": "t", "input": {"n": 1}},
@@ -86,7 +86,13 @@ def test_controller_turn_unwraps_llm_reply_meta_for_native_tool_calls() -> None:
         }
     ]
     assert [entry.to_json() for entry in state.trace] == [
-        {"decision": "call", "cost": 1.0, "ref": "t", "callId": "a"}
+        {
+            "decision": "call",
+            "cost": 1.0,
+            "ref": "t",
+            "callId": "a",
+            "arguments": {"n": 1},
+        }
     ]
 
 
@@ -100,7 +106,7 @@ def test_controller_turn_splits_summary_before_unwrapping_reply_meta() -> None:
         [
             {
                 SUMMARY_KEY: "s",
-                "__ca_meta__": {"llm.model": "x"},
+                "__julep_meta__": {"llm.model": "x"},
                 "reply": {"output": "done!"},
             }
         ],

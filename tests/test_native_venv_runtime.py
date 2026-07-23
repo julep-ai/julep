@@ -54,7 +54,7 @@ def test_native_venv_round_trips_deterministically(tmp_path: Path) -> None:
     executor = NativeVenvExecutor(cache_dir=tmp_path)
 
     first = executor.run(name, source, {"n": 225}, {}, deps=(), requires_python=">=3.11")
-    venvs = list(tmp_path.glob("composable_native_venv_*"))
+    venvs = list(tmp_path.glob("julep_native_venv_*"))
     assert len(venvs) == 1
     assert (venvs[0] / "bin" / "python").exists()
 
@@ -64,7 +64,7 @@ def test_native_venv_round_trips_deterministically(tmp_path: Path) -> None:
     assert second == first
     assert changed == {"digits": ["1", "9", "6"], "n": 196, "sqrt": 14}
     assert changed != first
-    assert list(tmp_path.glob("composable_native_venv_*")) == venvs
+    assert list(tmp_path.glob("julep_native_venv_*")) == venvs
 
 
 def test_native_venv_kwargs_round_trip(tmp_path: Path) -> None:
@@ -167,10 +167,10 @@ def test_native_venv_routes_through_registry_get_pure(
     )
     registry = Registry()
     registry.register_pure_from_source(name, source, tier="native_venv")
-    monkeypatch.setenv("COMPOSABLE_NATIVE_VENV_CACHE_DIR", str(tmp_path))
+    monkeypatch.setenv("JULEP_NATIVE_VENV_CACHE_DIR", str(tmp_path))
     monkeypatch.setattr(native_venv_executor, "_EXECUTOR", None)
 
     result = registry.get_pure(name)(11)
 
     assert result == {"doubled": 22, "value": 11}
-    assert list(tmp_path.glob("composable_native_venv_*"))
+    assert list(tmp_path.glob("julep_native_venv_*"))

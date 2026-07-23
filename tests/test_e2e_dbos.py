@@ -89,7 +89,7 @@ def dbos_runtime(run_async: Callable[[Awaitable[Any]], Any]) -> Iterator[None]:
     configure(WorkerContext(mcp_call=fake_mcp))
     DBOS(
         config=DBOSConfig(
-            name=f"ca-e2e-{uuid.uuid4().hex[:8]}",
+            name=f"julep-e2e-{uuid.uuid4().hex[:8]}",
             system_database_url=DB_URL,
         )
     )

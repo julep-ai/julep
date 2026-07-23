@@ -207,4 +207,4 @@ no controller server, no loop.
 - A new recursion primitive (law 6) or merging Feedback into Agent (the lattice).
 - Changing the IR, freeze/replay, or golden/cross-language hashes.
 
-<!-- ported-by ca-docs-site: internals/agent-loop-as-turn -->
+<!-- ported-by julep-docs-site: internals/agent-loop-as-turn -->

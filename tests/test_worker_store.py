@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
 from julep.bundle import ABI_PYTHON_SOURCE_JSON_V1
-from julep.cas import CASIntegrityError, LocalDirCAS
+from julep.artifact_store import ArtifactIntegrityError, LocalDirArtifactStore
 from julep.contracts import manifest_from_json
 from julep.errors import PureDriftError
 from julep.execution import effects
@@ -24,6 +24,7 @@ from julep.projection import InMemoryProjection, ProjectionEmitter
 from julep.registry import PureEntry, Registry, _text_hash
 from julep.worker_store import (
     BundleResolutionError,
+    _manifest_pures,
     bundle_ref_entries,
     load_bundles_from_env,
     resolve_and_register,
@@ -75,15 +76,15 @@ def _public_key(seed: str) -> str:
     ).hex()
 
 
-def _cas_path(root: Path, digest: str) -> Path:
+def _artifact_path(root: Path, digest: str) -> Path:
     return root / digest[:2] / digest[2:4] / digest
 
 
-def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
+def _json_from_store(store: LocalDirArtifactStore, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
 
 
-def _put_signature(store: LocalDirCAS, bundle_hash: str, seed: str) -> str:
+def _put_signature(store: LocalDirArtifactStore, bundle_hash: str, seed: str) -> str:
     manifest_bytes = store.get(bundle_hash)
     public_key = _public_key(seed)
     sig = _key(seed).sign(manifest_bytes).hex()
@@ -107,14 +108,74 @@ def _deployment():
 
 
 def _published(tmp_path: Path):
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     deployment = _deployment()
     rec = deployment.publish(store, signing_key=SEED_A)
     return store, deployment, rec
 
 
+def _manifest_with_pure(**updates: Any) -> dict[str, Any]:
+    record: dict[str, Any] = {
+        "abi": ABI_PYTHON_SOURCE_JSON_V1,
+        "name": "bundle.worker.canonical.v1",
+        "source": "a" * 64,
+        "sourceHash": "pure:" + "b" * 16,
+    }
+    record.update(updates)
+    return {"pures": [record]}
+
+
+def test_manifest_pures_uses_omitted_wasm_default() -> None:
+    [record] = _manifest_pures(_manifest_with_pure())
+
+    assert record.executor_tier == "wasm"
+
+
+@pytest.mark.parametrize("executor_tier", ["wasm", None])
+def test_manifest_pures_rejects_explicit_wasm_default(executor_tier: Any) -> None:
+    with pytest.raises(BundleResolutionError, match="omit executorTier"):
+        _manifest_pures(_manifest_with_pure(executorTier=executor_tier))
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"envHash": None},
+        {"envComponent": None},
+        {"envHash": None, "envComponent": None},
+    ],
+)
+def test_manifest_pures_rejects_null_env_fields(fields: dict[str, Any]) -> None:
+    with pytest.raises(BundleResolutionError, match="envHash and envComponent"):
+        _manifest_pures(_manifest_with_pure(**fields))
+
+
+@pytest.mark.parametrize("field", ["deps", "requiresPython"])
+def test_manifest_pures_rejects_null_native_only_fields_on_wasm(field: str) -> None:
+    with pytest.raises(BundleResolutionError, match="must not carry deps/requiresPython"):
+        _manifest_pures(_manifest_with_pure(**{field: None}))
+
+
+def test_manifest_pures_distinguishes_missing_from_null_native_requires_python() -> None:
+    with pytest.raises(BundleResolutionError, match="must carry executorTier, deps"):
+        _manifest_pures(
+            _manifest_with_pure(executorTier="native", deps=["numpy==2"])
+        )
+
+    [record] = _manifest_pures(
+        _manifest_with_pure(
+            executorTier="native",
+            deps=["numpy==2"],
+            requiresPython=None,
+        )
+    )
+    assert record.executor_tier == "native"
+    assert record.dep_list == ("numpy==2",)
+    assert record.requires_python is None
+
+
 def _resolve(
-    store: LocalDirCAS,
+    store: LocalDirArtifactStore,
     rec: dict[str, Any],
     registry: Registry,
     monkeypatch: pytest.MonkeyPatch,
@@ -194,16 +255,16 @@ def test_tampering_fails_closed_without_registering(
     signature_digest = rec["signatureDigest"]
 
     if target == "manifest":
-        _cas_path(tmp_path, rec["bundleHash"]).write_bytes(b"{}")
+        _artifact_path(tmp_path, rec["bundleHash"]).write_bytes(b"{}")
     elif target == "source":
         manifest = _json_from_store(store, rec["bundleHash"])
-        _cas_path(tmp_path, manifest["pures"][0]["source"]).write_bytes(b"tampered")
+        _artifact_path(tmp_path, manifest["pures"][0]["source"]).write_bytes(b"tampered")
     else:
         signature = _json_from_store(store, rec["signatureDigest"])
         signature["sig"] = ("0" if signature["sig"][0] != "0" else "1") + signature["sig"][1:]
         signature_digest = store.put(canonical_json(signature).encode("utf-8"))
 
-    with pytest.raises((BundleResolutionError, CASIntegrityError)):
+    with pytest.raises((BundleResolutionError, ArtifactIntegrityError)):
         _resolve(
             store,
             {**rec, "signatureDigest": signature_digest},
@@ -382,11 +443,11 @@ def test_resolution_is_ungated_and_registers_wasm_tier(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # P3: the former P2 dev-only CA_BUNDLE_NATIVE_EXEC native-exec gate is gone.
+    # P3: the former P2 dev-only JULEP_BUNDLE_NATIVE_EXEC native-exec gate is gone.
     # Bundle pures run in the wasm sandbox (not natively in-process), so
     # resolution succeeds by default and registers pures as the wasm tier.
     store, _deployment, rec = _published(tmp_path)
-    monkeypatch.delenv("CA_BUNDLE_NATIVE_EXEC", raising=False)
+    monkeypatch.delenv("JULEP_BUNDLE_NATIVE_EXEC", raising=False)
     fresh = Registry()
 
     resolved = resolve_and_register(
@@ -402,7 +463,7 @@ def test_resolution_is_ungated_and_registers_wasm_tier(
 
 
 def test_manual_built_manifest_rejects_std_pure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     source_digest = store.put(b"@pure(\"std.bad\")\ndef bad(value):\n    return value\n")
     components = {
         "flowJson": arr("std.bad").to_json(),
@@ -445,7 +506,7 @@ def test_source_hash_mismatch_in_manifest_fails_before_registration(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     name = "bundle.worker.bad_source_hash.v1"
     source = f"""@pure("{name}")\ndef bad_source_hash(value):\n    return value\n"""
     source_digest = store.put(source.encode("utf-8"))
@@ -503,9 +564,9 @@ def test_load_bundles_from_env_registers_idempotently(
 ) -> None:
     _store, _deployment, rec = _published(tmp_path)
     fresh = Registry()
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
-    monkeypatch.setenv("CA_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
-    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", f" {_public_key(SEED_A)} ")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", f" {_public_key(SEED_A)} ")
 
     first = load_bundles_from_env(registry=fresh)
     second = load_bundles_from_env(registry=fresh)
@@ -520,15 +581,15 @@ def test_load_bundles_from_env_noop_and_errors(
 ) -> None:
     fresh = Registry()
 
-    monkeypatch.delenv("CA_BUNDLES", raising=False)
+    monkeypatch.delenv("JULEP_BUNDLES", raising=False)
     assert load_bundles_from_env(registry=fresh) == []
 
-    monkeypatch.setenv("CA_BUNDLES", "abc")
-    monkeypatch.delenv("STORE_URL", raising=False)
-    with pytest.raises(BundleResolutionError, match="STORE_URL"):
+    monkeypatch.setenv("JULEP_BUNDLES", "abc")
+    monkeypatch.delenv("JULEP_ARTIFACT_STORE_URL", raising=False)
+    with pytest.raises(BundleResolutionError, match="JULEP_ARTIFACT_STORE_URL"):
         load_bundles_from_env(registry=fresh)
 
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
     with pytest.raises(BundleResolutionError, match="<bundleHash>:<signatureDigest>"):
         load_bundles_from_env(registry=fresh)
 
@@ -540,7 +601,7 @@ def test_verify_pures_resolves_bundle_on_fresh_activity_registry(
     _store, deployment, rec = _published(tmp_path)
     fresh = Registry()
     configure(WorkerContext(registry=fresh))
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
     bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
     resolved_entries = []
     manifest = _json_from_store(_store, rec["bundleHash"])
@@ -586,7 +647,7 @@ def test_verify_pures_rejects_bundle_bound_to_different_flow(
 ) -> None:
     _store, deployment, rec = _published(tmp_path)
     configure(WorkerContext(registry=Registry()))
-    monkeypatch.setenv("STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
     bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
 
     def fake_resolve_entries(store, entries, *, registry):
@@ -626,10 +687,10 @@ def test_verify_pures_bundle_resolution_failure_is_pure_drift(
 ) -> None:
     _store, deployment, rec = _published(tmp_path)
     configure(WorkerContext(registry=Registry()))
-    monkeypatch.delenv("STORE_URL", raising=False)
+    monkeypatch.delenv("JULEP_ARTIFACT_STORE_URL", raising=False)
     bundle = [{"bundleHash": rec["bundleHash"], "signatureDigest": rec["signatureDigest"]}]
 
-    with pytest.raises(PureDriftError, match="STORE_URL"):
+    with pytest.raises(PureDriftError, match="JULEP_ARTIFACT_STORE_URL"):
         run(
             verifyPures(
                 VerifyPuresInput(
@@ -710,7 +771,7 @@ def test_bundle_runner_resolves_flow_input_bundle_before_activation(
 ) -> None:
     store, deployment, rec = _published(tmp_path)
     fresh = Registry()
-    monkeypatch.setenv("CA_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
     dummy = _DummyInstance()
     runner = BundleResolvingWorkflowRunner(
         inner=_DummyRunner(dummy),
@@ -752,9 +813,9 @@ def test_bundle_runner_is_inert_without_store(tmp_path: Path) -> None:
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_bundle_runner_forwards_current_workflow_instance_abstract_methods() -> None:
-    assert WorkflowInstance.__abstractmethods__ == frozenset(
-        {"activate", "get_serialization_context", "get_external_store_context", "get_info"}
-    )
+    abstract_methods = WorkflowInstance.__abstractmethods__
+    assert abstract_methods
+    assert abstract_methods <= _BundleResolvingInstance.__dict__.keys()
     assert _BundleResolvingInstance.__abstractmethods__ == frozenset()
 
 

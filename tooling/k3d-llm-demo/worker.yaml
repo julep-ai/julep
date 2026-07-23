@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-llm-worker
+  name: julep-llm-worker
 spec:
   replicas: 1
   selector:
-    matchLabels: {app: ca-llm-worker}
+    matchLabels: {app: julep-llm-worker}
   template:
     metadata:
-      labels: {app: ca-llm-worker}
+      labels: {app: julep-llm-worker}
     spec:
       terminationGracePeriodSeconds: 30
       containers:

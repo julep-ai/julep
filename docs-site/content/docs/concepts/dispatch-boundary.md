@@ -49,4 +49,4 @@ tool-rolled orchestration must move *only its processing* into the IR. If you
 find yourself wanting a cron expression, a debounce window, or a dedup key
 inside a flow, you have found dispatch -- keep it outside.
 
-<!-- ported-by ca-docs-site: concepts/dispatch-boundary -->
+<!-- ported-by julep-docs-site: concepts/dispatch-boundary -->

@@ -63,3 +63,12 @@ def test_max_call_limits_from_contracts_roundtrip() -> None:
         _manifest(), None, max_call_limits={"srv/double": 1, "srv/inc": 5}
     )
     assert max_call_limits_from_contracts(contracts) == {"srv/double": 1, "srv/inc": 5}
+
+
+def test_alias_limits_canonicalize_fail_closed() -> None:
+    aliases = {"a": "srv/t", "b": "srv/t"}
+
+    assert max_call_limits_from_contracts(
+        {"a": {"maxCalls": 3}, "b": {"maxCalls": 2}},
+        aliases,
+    ) == {"srv/t": 2}

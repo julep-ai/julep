@@ -46,8 +46,20 @@ def renderer(name: str) -> Callable[[Callable[[Context], str]], Callable[[Contex
 
 
 def project_context(value: Any) -> dict[str, Any]:
-    """v1 Context projection at the invoke boundary."""
-    return dict(value) if isinstance(value, Mapping) else {"value": value}
+    """Context projection at the invoke boundary.
+
+    AgentWorkflow wraps the current observation under ``input`` and adds its
+    canonical trace. When the original/current input is itself a mapping,
+    expose its business fields at top level too so an ordinary dotctx template
+    renders identically inside and outside the agent loop.
+    """
+    if not isinstance(value, Mapping):
+        return {"value": value}
+    projected = dict(value)
+    nested = value.get("input")
+    if isinstance(nested, Mapping) and "trace" in value:
+        return {**nested, **projected}
+    return projected
 
 
 def render_system(reasoner: Reasoner, ctx: Context) -> str:
@@ -71,19 +83,7 @@ def rendered_user_for(reasoner: Reasoner, value: Any) -> Optional[str]:
 
 
 def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
-    return Reasoner(
-        name=reasoner.name, model=reasoner.model, system=system,
-        reply=reasoner.reply_schema, tools=reasoner.tools,
-        temperature=reasoner.temperature, max_rounds=reasoner.max_rounds,
-        is_agent=reasoner.is_agent, sub_contract=reasoner.sub_contract,
-        context_scope=reasoner.context_scope, system_render=None,
-        user_render=reasoner.user_render, max_tokens=reasoner.max_tokens,
-        reasoning_effort=reasoner.reasoning_effort,
-        output_retries=reasoner.output_retries,
-        require_tool_call=reasoner.require_tool_call,
-        response_format=reasoner.response_format,
-        prompt_cache=reasoner.prompt_cache,
-    )
+    return reasoner.replace(system=system, system_render=None)
 
 
 def rendered_reasoner_for(reasoner: Reasoner, value: Any) -> Reasoner:

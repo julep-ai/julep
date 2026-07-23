@@ -164,15 +164,15 @@ def test_fuel_exhaustion_is_a_structured_resource_diagnostic() -> None:
     actionable resource diagnostic — not a generic sandbox trap."""
     import os
 
-    prev = os.environ.get("COMPOSABLE_WASM_FUEL")
-    os.environ["COMPOSABLE_WASM_FUEL"] = "200000"
+    prev = os.environ.get("JULEP_WASM_FUEL")
+    os.environ["JULEP_WASM_FUEL"] = "200000"
     try:
         executor = WasmExecutor()
     finally:
         if prev is None:
-            os.environ.pop("COMPOSABLE_WASM_FUEL", None)
+            os.environ.pop("JULEP_WASM_FUEL", None)
         else:
-            os.environ["COMPOSABLE_WASM_FUEL"] = prev
+            os.environ["JULEP_WASM_FUEL"] = prev
 
     spin = (
         '@pure("probe.spin")\n'
@@ -201,8 +201,8 @@ _EPOCH_SUBPROCESS = '''
 import json
 import os
 
-os.environ["COMPOSABLE_WASM_EPOCH_MS"] = "10"
-os.environ["COMPOSABLE_WASM_FUEL"] = str(20_000_000_000)  # huge: epoch trips, not fuel
+os.environ["JULEP_WASM_EPOCH_MS"] = "10"
+os.environ["JULEP_WASM_FUEL"] = str(20_000_000_000)  # huge: epoch trips, not fuel
 
 from julep.errors import PureExecutionError
 from julep.execution.wasm_executor import WasmExecutor
@@ -228,7 +228,7 @@ finally:
 
 
 def test_epoch_deadline_is_a_structured_resource_diagnostic() -> None:
-    """When the OPT-IN epoch backstop is enabled (COMPOSABLE_WASM_EPOCH_MS), a
+    """When the OPT-IN epoch backstop is enabled (JULEP_WASM_EPOCH_MS), a
     long-running pure that outlives the deadline traps and surfaces a distinct,
     actionable WasmDeadlineExceeded diagnostic.
 

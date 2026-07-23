@@ -556,4 +556,4 @@ subagent ref c = Prim "sub" noAnn (Sub ref c)
 --    same runtime-control shape, but the data is a VALIDATED workflow artifact, not an arbitrary Flow.
 ```
 
-<!-- ported-by ca-docs-site: internals/typed-flow-calculus -->
+<!-- ported-by julep-docs-site: internals/typed-flow-calculus -->

@@ -12,7 +12,7 @@ no provider key and no running infrastructure.
 Start with a native `@tool` that returns canned data, then call it from a
 one-line `@flow`.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from julep import deploy, flow, tool
 
@@ -45,7 +45,7 @@ print(deployment.dry_run("ret-100").value)
 Add a deterministic `@pure` to reshape tool output. `hit["reason"]` plucks a
 field from the record handle, and `hit | decision` merges records.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from julep import deploy, flow, pure, tool
 
@@ -86,7 +86,7 @@ print(deployment.dry_run("ret-100").value)
 Declare a `Reasoner(...)` object, pass it to `think(reasoner, prompt)`, and use
 a fake reasoner in `dry_run(...)` for keyless local execution.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from typing import TypedDict
 
@@ -151,7 +151,7 @@ print(
 Use `switch_on(subject, key="action", cases={...})` to route on one record
 field. It is sugar over `switch`; case names match `str(subject["action"])`.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from julep import deploy, flow, pure, switch_on
 
@@ -196,7 +196,7 @@ print(deployment.dry_run({"order_id": "ret-101", "action": "auto"}).value)
 Use `each(body, items, max_parallel=...)` over a runtime list. The body item
 parameter is positional; enclosing values are explicit captures.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from julep import deploy, each, flow, pure
 
@@ -239,7 +239,7 @@ print(
 `deploy(...)` freezes the flow and exposes the shape, strict-production gap
 summary, and the same keyless `dry_run(...)` path used above.
 
-<!-- ca:doctest expect-output -->
+<!-- julep:doctest expect-output -->
 ```python
 from typing import TypedDict
 
@@ -317,4 +317,4 @@ no prod gap
 {'order_id': 'ret-100', 'reason': 'damaged', 'decision': 'inspect', 'note': 'Manual review for damaged.'}
 ```
 
-<!-- ported-by ca-docs-site: start/ladder -->
+<!-- ported-by julep-docs-site: start/ladder -->

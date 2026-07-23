@@ -101,31 +101,31 @@ in the source.
   in-repo, content-addressed wheels from `_wasm/wasi_wheels/`, so the env build INPUTS are
   reproducible. BUT componentize-py `--stub-wasi` bakes a fresh PRNG seed into the snapshot
   every build and CPython's pre-init heap snapshot is not byte-stable, so the OUTPUT bytes
-  (and thus the `envComponent` CAS digest that feeds bundleHash/publishedArtifactHash) still
+  (and thus the `envComponent` artifact store digest that feeds bundleHash/publishedArtifactHash) still
   vary build-to-build. `envHash` (the deterministic identity) is stable; only the shipped
   component bytes differ. Close via an upstream componentize determinism mode or a post-link
   canonicalization/seed-pinning pass, then add a real-build determinism assertion.
+  Accepted fallback (post-port plan review, 2026-07): if byte-stability proves unreachable,
+  pin the identity to the semantic env hash (`envHash`) and document that component bytes
+  are rebuild-variable — do not block the wasm tier on byte-equality.
 - **FIXME(P4-2) major — module-top PEP 723 dropped (fail-OPEN).** `register_pure` /
   bundle source use `inspect.getsource(fn)`, which omits a module-top `# /// script`
   block, so a dep'd baked pure publishes as no-dep and imports fail late in wasm. Reject
   pures importing an undeclared third-party module, or support module-top metadata; fix
   `examples/regex_extract_flow.py` to the documented placement.
-- **FIXME(P4-3) major — weak validation.** `deps.parse_pep723` coerces invalid
-  `requires-python` to null (envHash collision) and does not PEP 508-validate deps.
-  Reject both at parse/publish.
-- **FIXME(P4-4) minor — non-canonical manifest accepted.** `worker_store._manifest_pures`
-  accepts explicit `executorTier:"wasm"` and absent-vs-null; enforce SPEC §6.5 canonical
-  presence. (Bounded: manifest is content-addressed + signed.)
-- **FIXME(P4-5) minor — tar extraction.** `env_builder._safe_extract` lacks
-  `filter='data'`; add it / refuse symlink+hardlink members.
+- **RESOLVED(P4-3) — strict PEP 723 validation.** Unknown keys, invalid PEP 508
+  dependencies, and invalid `requires-python` specifiers now fail at parse/publish.
+- **RESOLVED(P4-4) — canonical manifest presence.** Worker resolution now rejects
+  explicit wasm-tier defaults and null encodings for fields that must be absent.
+- **RESOLVED(P4-5).** P4-1 wheel vendoring removed the extraction path; no tar is extracted in-package.
 - **FIXME(P4-6) nit — vestigial baked-deps parse.** `register_pure` parses PEP 723 but
   module-top is dropped, so baked native pures always get `deps=()`; wire consistently or
   drop the parse.
 - **Native tier real e2e (not yet exercised).** The `uv`-venv native tier
-  (`native_venv_executor`) resolves/registers behind `CA_PURE_NATIVE_DEPS` but its in-venv
+  (`native_venv_executor`) resolves/registers behind `JULEP_PURE_NATIVE_DEPS` but its in-venv
   subprocess execution is not run in CI (needs uv + network). A numpy pure through the
   native tier on a worker is the natural P5 dep'd-pure acceptance. Manifest wiring for
-  `CA_PURE_NATIVE_DEPS` in the k3d/EKS worker manifests is done.
+  `JULEP_PURE_NATIVE_DEPS` in the k3d/EKS worker manifests is done.
 
 ## P5 runtime/infra/docs: review follow-ups
 
@@ -150,8 +150,8 @@ section of `docs/plans/2026-06-11-code-as-data-distribution.md`.
   as generally supported without the Temporal-harness limitation; add the caveat.
 - **P5-6 nit — `GCResult.deleted` redundant** (recomputable from `collectable`).
 - **P5-7 nit — `_delete_local_object` shard-dir rmdir** best-effort can race shard recreation.
-- **S3CAS GC unimplemented** — `gc()` raises `GCError` for `S3CAS` (paginated list+delete
-  deferred); implement if S3-backed CAS retention is needed.
+- **S3ArtifactStore GC unimplemented** — `gc()` raises `GCError` for `S3ArtifactStore` (paginated list+delete
+  deferred); implement if S3-backed artifact store retention is needed.
 - **Live EKS dep'd-pure acceptance (P5 final gate) — DONE 2026-06-21.** A wasm-tier `regex`
   dep'd pure (`examples/regex_extract_flow.py`) ran end-to-end on the EKS Temporal+KEDA generic
   worker (image `…worker:cad-p6` from `d32aa43`): the env component (bundling the cp314 regex

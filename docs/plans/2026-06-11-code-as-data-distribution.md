@@ -151,7 +151,7 @@ unregenerated/byte-identical):
 - **Single-seam selection.** `Registry.get_pure` returns a wasm-bound callable for `executor ==
   "wasm"` (bundle-sourced) and the native fn for `native` (baked + all `std.*`). All three backends
   (Temporal harness, DBOS, CMA) inherit the tier through the registry; the Temporal worker passes
-  `wasmtime` through the workflow sandbox; bundle resolution is ungated (the P2 `CA_BUNDLE_NATIVE_EXEC`
+  `wasmtime` through the workflow sandbox; bundle resolution is ungated (the P2 `JULEP_BUNDLE_NATIVE_EXEC`
   dev gate is gone) and lands on the wasm tier end to end.
 - **Gates met locally.** wasm-vs-native parity on the grade-scores demo flow's dry_run
   (`tests/test_wasm_parity.py`); adversarial probes (clock/fs/net/entropy) fail closed as a
@@ -161,7 +161,7 @@ unregenerated/byte-identical):
   effect; executor-selection policy (bundle→wasm, baked `std.*`→native, and a bundle may not ship a
   `std.*` pure) (`tests/test_executor_selection_policy.py`); plus per-backend routing and a full e2e
   Temporal flow whose only pure is bundle-sourced (`tests/test_bundle_wasm_backends.py`).
-- **Infra/docs.** k3d demo worker Deployment carries `STORE_URL`/`CA_BUNDLES`/`CA_BUNDLE_ALLOWED_SIGNERS`;
+- **Infra/docs.** k3d demo worker Deployment carries `STORE_URL`/`JULEP_BUNDLES`/`JULEP_BUNDLE_ALLOWED_SIGNERS`;
   the EKS-target `tooling/sandbox-k8s/worker.yaml` carries them as a documented P3 wasm-tier block.
   `docs/ops/wasm-tier-runbook.md` covers signing tiers, executor tiers, the failure taxonomy, and CAS
   retention. `pyproject` ships the build-only `wasm` extra (`wasmtime>=45,<46`).
@@ -197,7 +197,7 @@ path against a Temporal time-skipping server, the DBOS env, the CMA env, and a r
 
 - Runtime image replaces the per-flow image; k3d + EKS manifests gain `STORE_URL`; KEDA untouched.
   Status: the canonical runtime image lives at `tooling/runtime-image/`, and the k3d/EKS
-  manifests carry the `CA_PURE_NATIVE_DEPS` native-tier grant commented off by default.
+  manifests carry the `JULEP_PURE_NATIVE_DEPS` native-tier grant commented off by default.
 - GC implementation (leases against live artifact hashes) as the optimization of P2's standing
   rule.
 - `docs/SPEC.md`: bundle manifest format + `pureRuntimeRefs` (wire commitments); AUTHORING: PEP
@@ -214,7 +214,7 @@ passed / 24 skipped, mypy/ruff clean, golden byte-identical.
 **EKS acceptance — partial (no-dep regression PROVEN; dep'd-pure deferred).** The generic
 runtime image rebuilt from `main` (`…worker:cad-p5`) ran the no-dep `grade_scores` flow on the
 EKS Temporal+KEDA worker end to end: the latest P4/P5 code re-published a **byte-identical**
-bundle (CA_BUNDLES unchanged → publish path is golden-safe), the generic pod resolved it from S3,
+bundle (JULEP_BUNDLES unchanged → publish path is golden-safe), the generic pod resolved it from S3,
 ran it, returned the exact expected result (`passRate 0.8`, tally A1/B2/C1/F1), KEDA scaled
 **0→1→0**, ~28s cold start incl. a fresh image pull. This re-confirms the whole code-as-data
 pipeline under all the P4/P5 changes.

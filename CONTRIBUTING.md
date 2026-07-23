@@ -70,7 +70,7 @@ Regenerate the corpus with:
 uv run python tests/replay/record_histories.py
 ```
 
-Build-ID / worker versioning is opt-in and off by default because versioned task queues need Temporal server support. Workers read `CA_WORKER_BUILD_ID` and `CA_WORKER_VERSIONING=1` through `WorkerServeSettings.from_env`; when versioning is on without an explicit build id, the worker defaults to the package version.
+Build-ID / worker versioning is opt-in and off by default because versioned task queues need Temporal server support. Workers read `JULEP_WORKER_BUILD_ID` and `JULEP_WORKER_VERSIONING=1` through `WorkerServeSettings.from_env`; when versioning is on without an explicit build id, the worker defaults to the package version.
 
 ## Testing norm
 

@@ -43,7 +43,7 @@ import time
 from collections.abc import Awaitable, Callable, Mapping
 from typing import Any, Optional
 
-from ..agent_loop import NATIVE_TOOLS_KEY, ROUND_NOTE_KEY
+from ..agent_loop import FEEDBACK_KEY, NATIVE_TOOLS_KEY, ROUND_NOTE_KEY
 from ..dotctx import Reasoner, get_reasoner
 from ..errors import ResilienceExhausted
 from ..prompt import rendered_reasoner_for, rendered_user_for
@@ -72,6 +72,33 @@ from .openai_responses import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def json_schema_error(value: Any, schema: Optional[dict[str, Any]]) -> Optional[str]:
+    """Return a concise validation error for ``value``, or ``None``.
+
+    Provider structured-output modes are hints with uneven enforcement. This
+    validator is the framework-owned final authority and supports the full
+    JSON-Schema dialect selected by the schema itself.
+    """
+    if schema is None:
+        return None
+    from jsonschema.validators import validator_for
+
+    validator_cls = validator_for(schema)
+    validator_cls.check_schema(schema)
+    errors = sorted(
+        validator_cls(schema).iter_errors(value),
+        key=lambda error: tuple(str(part) for part in error.absolute_path),
+    )
+    if not errors:
+        return None
+    error = errors[0]
+    # jsonschema's human message and instance path can both contain rejected
+    # caller values (including mapping keys). This string is persisted in
+    # agent observations and failures, so keep it useful but value-free.
+    validator = error.validator if isinstance(error.validator, str) else "schema"
+    return f"JSON value failed the {validator!r} schema constraint"
 
 # any-llm's ``acompletion``-shaped callable: keyword-driven, returns an
 # OpenAI-typed completion (``.choices[0].message.{content,parsed}``).
@@ -267,6 +294,9 @@ def _messages(
     if system_text:
         messages.append({"role": "system", "content": system_text})
     if transcript:
+        # The opening ask is already rendered into the transcript by
+        # _materialize_transcript (before the token budget); render it here too
+        # and the budget would be bypassed. Just map the turns.
         messages.extend(_transcript_messages(transcript))
     round_note: Optional[str] = None
     if isinstance(value, Mapping):
@@ -274,18 +304,76 @@ def _messages(
         if isinstance(candidate, str) and candidate:
             round_note = candidate
 
-    if user_text is not None:
-        user = user_text
-    elif isinstance(value, Mapping) and ROUND_NOTE_KEY in value:
-        # Strip the reserved round-note key from the model-facing user JSON;
-        # it is delivered as the trailing system line below, never as content.
-        user = json.dumps({k: v for k, v in value.items() if k != ROUND_NOTE_KEY})
+    if transcript and _is_controller_value(value):
+        # Agent transcript rounds: the conversation (rendered opening ask +
+        # tool turns) IS the transcript — no trailing template turn. Loop
+        # feedback (re-asks) arrives under the reserved key as a user turn.
+        # Non-controller values (a chat continuation's new ask) keep the
+        # ordinary trailing user turn below.
+        if isinstance(value, Mapping) and FEEDBACK_KEY in value:
+            feedback = value[FEEDBACK_KEY]
+            messages.append({
+                "role": "user",
+                "content": (
+                    feedback
+                    if isinstance(feedback, str)
+                    else json.dumps(feedback, sort_keys=True)
+                ),
+            })
     else:
-        user = value if isinstance(value, str) else json.dumps(value)
-    messages.append({"role": "user", "content": user})
+        if user_text is not None:
+            user = user_text
+        elif isinstance(value, Mapping) and ROUND_NOTE_KEY in value:
+            # Strip the reserved round-note key from the model-facing user
+            # JSON; it is delivered as the trailing system line below.
+            user = json.dumps(
+                {k: v for k, v in value.items() if k != ROUND_NOTE_KEY}
+            )
+        else:
+            user = value if isinstance(value, str) else json.dumps(value)
+        messages.append({"role": "user", "content": user})
     if round_note is not None:
         messages.append({"role": "system", "content": round_note})
     return messages
+
+
+def _is_controller_value(value: Any) -> bool:
+    """The agent loop's controller payload: ``{"input": ..., "trace": ...}``.
+
+    Same discriminator :func:`julep.prompt.project_context` uses — only these
+    values suppress the trailing user turn on transcript rounds; a chat
+    continuation's plain string/mapping ask still lands as a user turn.
+    """
+    return isinstance(value, Mapping) and "input" in value and "trace" in value
+
+
+def _render_raw_opening_ask(
+    transcript: list[dict[str, Any]],
+    *,
+    original_input: Any,
+    user_text: Optional[str],
+) -> list[dict[str, Any]]:
+    """Render a raw transcript projection's opening ask.
+
+    Activities render this turn before enforcing the transcript budget. The
+    lower-level completion seam can also receive ``transcript_for`` output
+    directly, so render only when the first user turn still exactly matches
+    the original run input. This avoids replacing a later feedback turn in an
+    already-budgeted transcript whose opening ask was elided.
+    """
+    if user_text is None:
+        return transcript
+    for index, turn in enumerate(transcript):
+        if turn.get("role") != "user":
+            continue
+        if turn.get("content") != original_input:
+            return transcript
+        return [
+            *transcript[:index],
+            {**turn, "content": user_text},
+            *transcript[index + 1 :],
+        ]
+    return transcript
 
 
 def _prompt_cache_control(prompt_cache: str) -> dict[str, Any]:
@@ -508,13 +596,23 @@ async def complete_reasoner(
 
     # Render named system/user templates here so both seams (activity + facade)
     # see the same strings; already-rendered reasoners pass through unchanged.
-    render_value = (
-        {k: v for k, v in value.items() if k != ROUND_NOTE_KEY}
-        if isinstance(value, Mapping)
-        else value
-    )
+    if transcript is not None and _is_controller_value(value):
+        render_value = value["input"]
+    elif isinstance(value, Mapping):
+        reserved = {ROUND_NOTE_KEY}
+        if _is_controller_value(value):
+            reserved.add(FEEDBACK_KEY)
+        render_value = {key: item for key, item in value.items() if key not in reserved}
+    else:
+        render_value = value
     reasoner = rendered_reasoner_for(reasoner, render_value)
     user_text = rendered_user_for(reasoner, render_value)
+    if transcript is not None and _is_controller_value(value):
+        transcript = _render_raw_opening_ask(
+            transcript,
+            original_input=value["input"],
+            user_text=user_text,
+        )
     provider, model = _split_model(reasoner.model, default_provider)
     use_responses = uses_openai_responses(provider, model)
     schema = reasoner.reply_schema
@@ -535,6 +633,18 @@ async def complete_reasoner(
                         tool = tool_call.get("tool")
                         tool_call["tool"] = tool_name_reverse.get(tool, tool)
         return parsed
+
+    def _final_output_schema_error(parsed: Any, native_calls: Any) -> Optional[str]:
+        # A native tool-call turn is an intermediate controller action, not the
+        # reasoner's final reply. Its arguments are validated separately against
+        # the selected frozen tool input schema by AgentWorkflow.
+        if native_calls or (
+            isinstance(parsed, dict)
+            and isinstance(parsed.get("tool_calls"), list)
+            and bool(parsed["tool_calls"])
+        ):
+            return None
+        return json_schema_error(parsed, schema)
 
     pc_marker_placed = False
 
@@ -641,20 +751,18 @@ async def complete_reasoner(
         else _parse_completion_reply(completion, expect_json=schema is not None)
     )
     reply = _restore_tool_calls(reply)
-    while (
-        schema is not None
-        and not isinstance(reply, dict)
-        and retries_used < reasoner.output_retries
-    ):
+    validation_error = _final_output_schema_error(reply, native_tool_calls)
+    while schema is not None and validation_error is not None and retries_used < reasoner.output_retries:
         retries_used += 1
         logger.warning(
-            "reply for %s did not parse as JSON object; re-ask %d/%d",
-            reasoner.name, retries_used, reasoner.output_retries,
+            "reply for %s failed JSON-Schema validation (%s); re-ask %d/%d",
+            reasoner.name, validation_error, retries_used, reasoner.output_retries,
         )
         completion = await dispatch_once(
             retry_note=(
                 "Your previous reply was not a single valid JSON object matching "
-                "the required schema. Reply again with ONLY the JSON object."
+                f"the required schema ({validation_error}). Reply again with ONLY "
+                "the corrected JSON object."
             )
         )
         apt, act, att = _usage_of(completion)
@@ -668,6 +776,7 @@ async def complete_reasoner(
             else _parse_completion_reply(completion, expect_json=True)
         )
         reply = _restore_tool_calls(reply)
+        validation_error = _final_output_schema_error(reply, native_tool_calls)
     ended = time.time()
     pc = reasoner.prompt_cache
     pc_requested: Optional[str]
@@ -808,26 +917,7 @@ def _with_model(reasoner: Reasoner, model: str) -> Reasoner:
     """A copy of ``reasoner`` addressed at a different model (not re-registered)."""
     if model == reasoner.model:
         return reasoner
-    return Reasoner(
-        name=reasoner.name,
-        model=model,
-        system=reasoner.system,
-        tools=reasoner.tools,
-        temperature=reasoner.temperature,
-        max_rounds=reasoner.max_rounds,
-        is_agent=reasoner.is_agent,
-        sub_contract=reasoner.sub_contract,
-        context_scope=reasoner.context_scope,
-        system_render=reasoner.system_render,
-        user_render=reasoner.user_render,
-        max_tokens=reasoner.max_tokens,
-        reply=reasoner.reply_schema,
-        reasoning_effort=reasoner.reasoning_effort,
-        output_retries=reasoner.output_retries,
-        require_tool_call=reasoner.require_tool_call,
-        response_format=reasoner.response_format,
-        prompt_cache=reasoner.prompt_cache,
-    )
+    return reasoner.replace(model=model)
 
 
 def make_resilient_llm_caller(

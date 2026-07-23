@@ -16,7 +16,7 @@ from julep import (
     think,
     tool,
 )
-from julep.ir import SLEEP_TOOL, CallStep, NativeTool, Node, canonical_json
+from julep.ir import SLEEP_TOOL, CallStep, McpTool, NativeTool, Node, canonical_json
 from julep.transforms import normalize_ids
 from examples import episode_summary_flow as episode
 
@@ -82,23 +82,31 @@ def p53_cas_write(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def test_episode_summary_define_acceptance_matches_combinator_and_rollup() -> None:
+def test_episode_summary_define_acceptance_uses_record_bound_mcp_calls() -> None:
     @flow
-    def happy_path(source: dict[str, Any]) -> dict[str, Any]:
+    def summarize_found(source: dict[str, Any]) -> dict[str, Any]:
         summary = think(episode.SUMMARIZER, source)
-        merged = source | summary
-        liner = think(episode.ONE_LINER, merged)
-        return episode.write_summary_surfaces(merged | liner)
+        one_liner = think(episode.ONE_LINER, summary)
+        return episode.write_summary_surfaces(
+            episode_id=source["episodeId"],
+            content_hash=source["contentHash"],
+            summary=summary["summary"],
+            one_liner=one_liner["oneLiner"],
+        )
 
     @flow
-    def not_found(source: dict[str, Any]) -> dict[str, Any]:
-        status = episode.not_found_status(source)
-        return status
+    def summarize_missing(source: dict[str, Any]) -> dict[str, Any]:
+        return episode.not_found_status(source)
 
     @flow
     def summarize_one(episode_id: str) -> dict[str, Any]:
-        source = episode.read_episode(episode_id)
-        return cond(episode.episode_found, source, then=happy_path, orelse=not_found)
+        source = episode.read_episode(episode_id=episode_id)
+        return cond(
+            episode.episode_found,
+            source,
+            then=summarize_found,
+            orelse=summarize_missing,
+        )
 
     @flow
     def batch(episode_ids: list[str]) -> dict[str, Any]:
@@ -109,69 +117,28 @@ def test_episode_summary_define_acceptance_matches_combinator_and_rollup() -> No
             reducer=episode.tally_summary_statuses,
         )
 
-    expected_summarize_one = dsl.seq(
-        dsl.call(episode.read_episode.name),
-        dsl.arr("std.init", {"key": "source"}),
-        dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
-        dsl.par(
-            dsl.ident(),
-            dsl.seq(
-                dsl.arr("std.pluck", {"key": "source"}),
-                dsl.arr("episode_found"),
-            ),
-        ),
-        dsl.arr("std.assign", {"key": "__branch__"}),
-        dsl.alt(
-            "std.branch_predicate",
-            if_true=dsl.seq(
-                dsl.arr("std.pack", {"fields": {"source": {"field": "source"}}}),
-                dsl.par(
-                    dsl.ident(),
-                    dsl.seq(
-                        dsl.arr("std.pluck", {"key": "source"}),
-                        dsl.think(episode.SUMMARIZER),
-                    ),
-                ),
-                dsl.arr("std.assign", {"key": "summary"}),
-                dsl.par(
-                    dsl.ident(),
-                    dsl.arr("std.merge", {"fields": ["source", "summary"]}),
-                ),
-                dsl.arr("std.assign", {"key": "merged"}),
-                dsl.arr("std.pack", {"fields": {"merged": {"field": "merged"}}}),
-                dsl.par(
-                    dsl.ident(),
-                    dsl.seq(
-                        dsl.arr("std.pluck", {"key": "merged"}),
-                        dsl.think(episode.ONE_LINER),
-                    ),
-                ),
-                dsl.arr("std.assign", {"key": "liner"}),
-                dsl.par(
-                    dsl.ident(),
-                    dsl.arr("std.merge", {"fields": ["merged", "liner"]}),
-                ),
-                dsl.arr("std.assign", {"key": "merge_1"}),
-                dsl.arr("std.pluck", {"key": "merge_1"}),
-                dsl.call(episode.write_summary_surfaces.name),
-            ),
-            if_false=dsl.seq(
-                dsl.arr("std.pluck", {"key": "source"}),
-                dsl.arr("not_found_status"),
-            ),
-        ),
-    )
-    expected_batch = dsl.each(expected_summarize_one, max_parallel=2, reducer="tally_summary_statuses")
+    ir = batch.to_ir()
+    pures = [node.pure for node in ir.walk() if node.pure is not None]
+    calls = [
+        node.step.tool
+        for node in ir.walk()
+        if isinstance(node.step, CallStep)
+    ]
 
-    assert _canonical_ir(batch.to_ir()) == _canonical_ir(expected_batch)
+    assert pures.count("std.record") == 2
+    assert "std.merge" not in pures
+    assert calls == [
+        McpTool(episode.MCP_SERVER, "read_episode"),
+        McpTool(episode.MCP_SERVER, "write_summary_surfaces"),
+    ]
 
     episode.reset_store()
     result = deploy(
         batch,
-        tools=episode.TOOLS,
-        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
+        mcp_listings=episode.mcp_listings(),
     ).dry_run(
         episode.EPISODE_BATCH,
+        mcp_call=episode._fake_mcp_call,
         reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,

@@ -35,13 +35,15 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Optional
 
 from temporalio import workflow
 
+from ..dispatch import BatchWindow, dispatch_debounced
+
 with workflow.unsafe.imports_passed_through():
-    from .harness import FlowInput, FlowWorkflow
+    from .harness import FlowWorkflow, build_flow_input
 
 
 @dataclass
@@ -61,8 +63,9 @@ class DebounceInput:
     # whole batch runs as one principal — a multi-tenant stream is one
     # collector per tenant key, by construction of `key`.
     principal: Optional[dict[str, Any]] = None
-    # Signed CAS bundle pointers for custom pures referenced by flow_json.
+    # Signed artifact-store bundle pointers for custom pures referenced by flow_json.
     bundle: Optional[list[dict[str, str]]] = None
+    runtime_declarations_ref: Optional[dict[str, Any]] = None
     # Continue-as-new carriage: batch ordinal, items left over from the
     # previous segment (capped surplus + arrivals during execution), and the
     # carried batch clocks (ISO timestamps from workflow.now()).
@@ -113,25 +116,25 @@ class DebounceCollector:
             self._last_at = _parse_at(inp.pending_last_at) or opened
 
         # --- collect until the fire condition holds -------------------------- #
+        window = BatchWindow(
+            quiet_s=inp.quiet_s,
+            max_items=inp.max_items,
+            max_wait_s=inp.max_wait_s,
+        )
         while True:
-            if inp.max_items is not None and len(self._items) >= inp.max_items:
+            decision = window.evaluate(
+                item_count=len(self._items),
+                opened_at=opened if self._items else None,
+                last_arrival_at=self._last_at,
+                now=workflow.now(),
+            )
+            if decision.fire:
                 break
-            now = workflow.now()
-            if self._items:
-                assert self._last_at is not None
-                deadline = self._last_at + timedelta(seconds=inp.quiet_s)
-                if inp.max_wait_s is not None:
-                    deadline = min(deadline, opened + timedelta(seconds=inp.max_wait_s))
-                if now >= deadline:
-                    break
-                timeout: Optional[float] = max((deadline - now).total_seconds(), 0.0)
-            else:
-                # Signal-with-start means at least one signal is on its way.
-                timeout = None
             count = len(self._items)
             try:
                 await workflow.wait_condition(
-                    lambda count=count: len(self._items) > count, timeout=timeout
+                    lambda count=count: len(self._items) > count,
+                    timeout=decision.wait_s,
                 )
             except asyncio.TimeoutError:
                 pass  # re-evaluate the fire condition against workflow.now()
@@ -148,7 +151,7 @@ class DebounceCollector:
         child_id = f"{workflow.info().workflow_id}:b{inp.batch_seq}"
         result = await workflow.execute_child_workflow(
             FlowWorkflow.run,
-            FlowInput(
+            build_flow_input(
                 session_id=child_id,
                 input=batch,
                 flow_json=inp.flow_json,
@@ -158,6 +161,7 @@ class DebounceCollector:
                 policy=inp.policy,
                 principal=inp.principal,
                 bundle=inp.bundle,
+                runtime_declarations_ref=inp.runtime_declarations_ref,
             ),
             id=child_id,
         )
@@ -193,6 +197,7 @@ async def submit_debounced(
     max_call_limits: Optional[dict[str, int]] = None,
     principal: Optional[dict[str, Any]] = None,
     bundle: Optional[list[dict[str, str]]] = None,
+    runtime_declarations_ref: Optional[dict[str, Any]] = None,
 ):
     """Submit one item to the debounced batch for ``key`` (signal-with-start).
 
@@ -208,25 +213,28 @@ async def submit_debounced(
     fixed by whichever submission opens the collector; later submissions to an
     open batch contribute only their item.
     """
-    return await client.start_workflow(
-        DebounceCollector.run,
-        DebounceInput(
-            key=key,
-            flow_json=flow_json,
-            manifest_json=manifest_json,
+    return await dispatch_debounced(
+        client,
+        flow_json,
+        manifest_json,
+        key=key,
+        item=item,
+        window=BatchWindow(
             quiet_s=quiet_s,
             max_items=max_items,
             max_wait_s=max_wait_s,
-            policy=policy,
-            pinned_pures=pinned_pures,
-            max_call_limits=max_call_limits,
-            principal=principal,
-            bundle=bundle,
         ),
-        id=f"debounce:{key}",
         task_queue=task_queue,
-        start_signal="submit",
-        start_signal_args=[item],
+        policy=policy,
+        pinned_pures=pinned_pures,
+        max_call_limits=max_call_limits,
+        principal=principal,
+        bundle=bundle,
+        runtime_declarations_ref=runtime_declarations_ref,
+        # Keep the historical collector id for callers of this compatibility
+        # wrapper.  New code should use julep.dispatch.dispatch_debounced,
+        # whose id also scopes the frozen target/configuration.
+        workflow_id=f"debounce:{key}",
     )
 
 

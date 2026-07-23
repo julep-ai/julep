@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import arr, deploy
 from julep.bundle import PureDepsUnbuildableError, publish_bundle
-from julep.cas import LocalDirCAS
+from julep.artifact_store import LocalDirArtifactStore
 from julep.deps import base_component_hash, env_hash, parse_pep723
 from julep.errors import PureExecutionError
 from julep.execution import env_builder
@@ -46,11 +46,11 @@ def _public_key(seed: str = SEED) -> str:
     ).hex()
 
 
-def _json_from_store(store: LocalDirCAS, digest: str) -> dict[str, Any]:
+def _json_from_store(store: LocalDirArtifactStore, digest: str) -> dict[str, Any]:
     return json.loads(store.get(digest).decode("utf-8"))
 
 
-def _put_resigned_manifest(store: LocalDirCAS, manifest: dict[str, Any]) -> tuple[str, str]:
+def _put_resigned_manifest(store: LocalDirArtifactStore, manifest: dict[str, Any]) -> tuple[str, str]:
     manifest_bytes = canonical_json(manifest).encode("utf-8")
     bundle_hash = store.put(manifest_bytes)
     signature = {
@@ -112,11 +112,11 @@ def _publish_source(
     monkeypatch: pytest.MonkeyPatch,
     *,
     native_grant: list[str] | None = None,
-) -> tuple[LocalDirCAS, dict[str, Any], dict[str, Any]]:
+) -> tuple[LocalDirArtifactStore, dict[str, Any], dict[str, Any]]:
     _patch_synth_env_builder(monkeypatch, tmp_path)
     with _with_default_source(name, source):
         deployment = deploy(arr(name), read_snapshot())
-        store = LocalDirCAS(tmp_path)
+        store = LocalDirArtifactStore(tmp_path)
         rec = publish_bundle(
             deployment,
             store,
@@ -158,7 +158,7 @@ def test_example_publish_resolve_carries_env_hash_end_to_end(
     from examples import regex_extract_flow
 
     _patch_synth_env_builder(monkeypatch, tmp_path)
-    store = LocalDirCAS(tmp_path)
+    store = LocalDirArtifactStore(tmp_path)
     deployment = regex_extract_flow.build()
     rec = deployment.publish(store, signing_key=SEED)
     manifest = _json_from_store(store, rec["bundleHash"])
@@ -239,19 +239,19 @@ def test_off_list_dep_without_native_grant_blocks_deploy_and_publish(
     name = "dep.e2e.numpy.blocked.v1"
     source = _source(name, "numpy==2")
     with _with_default_source(name, source):
-        monkeypatch.delenv("CA_PURE_NATIVE_DEPS", raising=False)
+        monkeypatch.delenv("JULEP_PURE_NATIVE_DEPS", raising=False)
         with pytest.raises(PureDepsUnbuildableError) as deploy_exc:
             deploy(arr(name), read_snapshot())
         assert name in str(deploy_exc.value)
         assert "numpy==2" in str(deploy_exc.value)
-        assert "CA_PURE_NATIVE_DEPS" in str(deploy_exc.value)
+        assert "JULEP_PURE_NATIVE_DEPS" in str(deploy_exc.value)
 
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
         with pytest.raises(PureDepsUnbuildableError) as publish_exc:
             publish_bundle(
                 deployment,
-                LocalDirCAS(tmp_path),
+                LocalDirArtifactStore(tmp_path),
                 signing_key=SEED,
                 registry=DEFAULT_REGISTRY,
                 native_grant=[],
@@ -268,9 +268,9 @@ def test_off_list_dep_with_native_grant_resolves_as_native_venv(
     name = "dep.e2e.numpy.native.v1"
     source = _source(name, "numpy==2")
     with _with_default_source(name, source, tier="native_venv"):
-        monkeypatch.setenv("CA_PURE_NATIVE_DEPS", name)
+        monkeypatch.setenv("JULEP_PURE_NATIVE_DEPS", name)
         deployment = deploy(arr(name), read_snapshot())
-        store = LocalDirCAS(tmp_path)
+        store = LocalDirArtifactStore(tmp_path)
         rec = publish_bundle(
             deployment,
             store,
@@ -306,7 +306,7 @@ def test_off_list_dep_with_native_grant_resolves_as_native_venv(
     assert entry.requires_python == ">=3.11"
 
     denied = Registry()
-    with pytest.raises(BundleResolutionError, match="CA_PURE_NATIVE_DEPS"):
+    with pytest.raises(BundleResolutionError, match="JULEP_PURE_NATIVE_DEPS"):
         resolve_and_register(
             store,
             rec["bundleHash"],

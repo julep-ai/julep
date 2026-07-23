@@ -67,7 +67,7 @@ if ! helm status keda -n keda >/dev/null 2>&1; then
 fi
 
 # --- 6. Demo worker image from the local checkout --------------------------- #
-BUILD=/tmp/ca-sandbox-k8s-build
+BUILD=/tmp/julep-sandbox-k8s-build
 rm -rf "$BUILD" && mkdir -p "$BUILD"
 git -C "$REPO_ROOT" archive HEAD --prefix=julep-v2/ | tar -x -C "$BUILD"
 cp "$HERE/Dockerfile" "$HERE/demo_worker.py" "$BUILD/"

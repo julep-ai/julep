@@ -10,7 +10,7 @@ a Deployment of worker pods, autoscaled by [Temporal](/docs/deploy/temporal).
 ## The container entrypoint
 
 ```bash
-python -m julep.cli worker
+julep worker
 ```
 
 reads its configuration from the environment:
@@ -18,6 +18,8 @@ reads its configuration from the environment:
 | Variable | Default | Meaning |
 |---|---|---|
 | `WORKER_CONTEXT_FACTORY` | **required** | `module:attr` of a zero-arg callable (sync or async) returning the `WorkerContext` |
+| `WORKER_APPLICATION` | unset | Optional application `module:attr` cross-check; set with `WORKER_RUNTIME_DECLARATIONS_HASH`. |
+| `WORKER_RUNTIME_DECLARATIONS_HASH` | unset | Optional `sha256:<hex>` declarations cross-check; set with `WORKER_APPLICATION`. |
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Temporal frontend `host:port` |
 | `TEMPORAL_NAMESPACE` | `default` | Temporal namespace |
 | `TEMPORAL_TASK_QUEUE` | `julep` | task queue this replica polls (one queue per lane) |
@@ -27,6 +29,7 @@ reads its configuration from the environment:
 | `WORKER_MAX_CONCURRENT_ACTIVITIES` | SDK default | per-replica activity slots |
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | SDK default | per-replica workflow-task slots |
 | `WORKER_HEALTH_PORT` | off | HTTP port serving `GET /healthz` and `GET /readyz` |
+| `JULEP_BLOB_STORE_URL` | unset | Absolute local `file://` URL for durable transcript/claim-check blobs. Mutually exclusive with a factory-provided `blob_store`. |
 
 `WORKER_CONTEXT_FACTORY` is required and has no default: a `WorkerContext`
 holds live callables (the MCP caller, the LLM, registries), which cannot come
@@ -46,9 +49,13 @@ def make_context() -> WorkerContext:  # async def also works
     )
 ```
 
-and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`. Flags override
-the environment for local runs: `python -m julep.cli worker --task-queue
-lane-embeddings --address localhost:7233`.
+and set `WORKER_CONTEXT_FACTORY=yourapp.worker:make_context`.
+
+Released pipelines are self-contained. Generic workers normally leave
+`WORKER_APPLICATION` and `WORKER_RUNTIME_DECLARATIONS_HASH` unset and hydrate
+the release's `runtimeDeclarationsRef` from the artifact store configured by `JULEP_ARTIFACT_STORE_URL`.
+If the two optional variables are used, they must be set together; they verify
+an image-specific application declaration and fail on mismatch.
 
 Lifecycle per replica: the probe listener starts first (liveness is green while
 the pod connects), the worker polls, readiness flips to 200. On SIGTERM,
@@ -76,21 +83,21 @@ ENTRYPOINT ["julep", "worker"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ca-worker
+  name: julep-worker
 spec:
   replicas: 1                      # KEDA takes over below
   selector:
-    matchLabels: {app: ca-worker}
+    matchLabels: {app: julep-worker}
   template:
     metadata:
-      labels: {app: ca-worker}
+      labels: {app: julep-worker}
     spec:
       # Must exceed WORKER_GRACEFUL_SHUTDOWN_S so the drain finishes
       # before the kubelet sends SIGKILL.
       terminationGracePeriodSeconds: 45
       containers:
         - name: worker
-          image: yourrepo/ca-worker:latest
+          image: yourrepo/julep-worker:latest
           env:
             - name: TEMPORAL_ADDRESS
               value: temporal-frontend.temporal.svc:7233
@@ -122,10 +129,10 @@ Temporal frontend — no metrics pipeline required:
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: ca-worker
+  name: julep-worker
 spec:
   scaleTargetRef:
-    name: ca-worker
+    name: julep-worker
   minReplicaCount: 0          # scale-to-zero; use >= 1 for a warm floor
   maxReplicaCount: 20
   cooldownPeriod: 120         # seconds idle before scaling back to zero
@@ -194,9 +201,16 @@ replica count exceeds one:
   failing provider independently before its breaker opens. Acceptable at small
   counts; at larger ones the deterministic fallback chain is what bounds the
   damage.
-- **`SessionStore` and `BlobStore`** must be shared services (Postgres, object
-  store), not in-memory instances, or sessions and claim-checked payloads are
-  visible only to the replica that wrote them.
+- **`SessionStore` and `BlobStore`** must be shared services, not in-memory
+  instances, or sessions and claim-checked payloads are visible only to the
+  replica that wrote them. `JULEP_BLOB_STORE_URL=file:///...` is valid for
+  multiple pods only when an operator separately mounts the same coherent RWX
+  filesystem in every pod; the bundled deployment example does not provision
+  or mount one. It must support hard links and directory `fsync`, and replicas
+  need compatible filesystem identities because directories are `0700` and
+  objects are `0600`. Pod-local files are not shared. Use volume encryption for
+  sensitive content. There is no built-in garbage collector: retain the URL and
+  every referenced blob for the full workflow-history lifetime.
 - **Registry drift is caught, not prevented**: `verifyPures` compares
   deploy-pinned pure hashes against the replica's registry before effects run,
   so a stale image fails loudly. Roll images atomically per lane to avoid the
@@ -206,4 +220,4 @@ Related: [Temporal](/docs/deploy/temporal),
 [the Dispatch Boundary](/docs/concepts/dispatch-boundary),
 [Providers And Resilience](/docs/guides/providers-and-resilience), [docs index](/docs).
 
-<!-- ported-by ca-docs-site: deploy/kubernetes -->
+<!-- ported-by julep-docs-site: deploy/kubernetes -->

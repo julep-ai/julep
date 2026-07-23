@@ -170,6 +170,8 @@ def test_deployed_agent_contract_derivation_reads_manifest_contracts() -> None:
     assert contracts[a_read_tool.name] == {
         "effect": Effect.READ.value,
         "idempotency": Idempotency.NATIVE.value,
+        "asserted": True,
+        "assertionProvenance": "capability_manifest",
     }
 
 

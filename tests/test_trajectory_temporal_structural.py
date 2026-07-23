@@ -156,6 +156,39 @@ def _structural_steps(sink: InMemoryTrajectoryStore, run_id: str = ROOT) -> list
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_flush_structural_scrubs_run_secret_from_errors_and_attrs() -> None:
+    sink = InMemoryTrajectoryStore()
+    _configure_worker(sink, InMemoryBlobStore())
+    asyncio.run(
+        _flush_structural_impl()(
+            {
+                "runId": ROOT,
+                "rootRunId": ROOT,
+                "segmentSeq": 0,
+                "nodeOps": {"node": "seq"},
+                "secrets": {"token": "run-secret-value"},
+                "events": [
+                    {
+                        "eventId": "event",
+                        "type": "Failed",
+                        "node": "node",
+                        "cid": "cid",
+                        "ts": 1.0,
+                        "error": "failed with run-secret-value",
+                        "attrs": {"detail": "echo=run-secret-value"},
+                    }
+                ],
+            }
+        )
+    )
+
+    [step] = sink.list_trajectory_steps(ROOT)
+    assert "run-secret-value" not in str(step)
+    assert step.error == "failed with [REDACTED]"
+    assert step.attrs == {"detail": "echo=[REDACTED]"}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_temporal_par_all_and_each_structural_steps(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: list[dict[str, Any]] = []
     _install_temporal_activity_stub(monkeypatch, captured)

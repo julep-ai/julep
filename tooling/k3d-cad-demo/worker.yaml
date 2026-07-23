@@ -1,10 +1,10 @@
-# Generic worker Deployment. up.sh substitutes __CA_BUNDLES__ and __SIGNER__
+# Generic worker Deployment. up.sh substitutes __JULEP_BUNDLES__ and __SIGNER__
 # with the values printed by publish.py, then applies the rendered manifest.
 #
-# The pod reads the published bundle from /cas (a hostPath onto the k3d node dir
-# that `k3d cluster create --volume <host>:/cas` bind-mounts from the host). The
+# The pod reads the published bundle from /artifacts (a hostPath onto the k3d node dir
+# that `k3d cluster create --volume <host>:/artifacts` bind-mounts from the host). The
 # bundle is content-addressed and signed; the worker verifies it against
-# CA_BUNDLE_ALLOWED_SIGNERS before accepting any task.
+# JULEP_BUNDLE_ALLOWED_SIGNERS before accepting any task.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,26 +26,26 @@ spec:
             - name: TEMPORAL_ADDRESS
               value: host.k3d.internal:7233
             - name: TEMPORAL_TASK_QUEUE
-              value: ca-cad-demo
+              value: julep-cad-demo
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: "20"
-            - name: STORE_URL
-              value: file:///cas
-            - name: CA_BUNDLES
-              value: "__CA_BUNDLES__"
-            - name: CA_BUNDLE_ALLOWED_SIGNERS
+            - name: JULEP_ARTIFACT_STORE_URL
+              value: file:///artifacts
+            - name: JULEP_BUNDLES
+              value: "__JULEP_BUNDLES__"
+            - name: JULEP_BUNDLE_ALLOWED_SIGNERS
               value: "__SIGNER__"
             # Native dependency tier grant (P4): comma-separated pure names allowed
             # to use the uv-venv native tier for deps with no WASI wheel. Empty/unset
             # = no native grant = bundle pures run wasm-only. Off by default.
-            # - name: CA_PURE_NATIVE_DEPS
+            # - name: JULEP_PURE_NATIVE_DEPS
             #   value: "my.pkg.heavy_pure,other.pure"
             # P3: bundle-sourced pures run in the wasmtime sandbox (not natively
             # in-process), so resolution is ungated -- the old P2 dev-only
-            # CA_BUNDLE_NATIVE_EXEC=1 flag is gone.
+            # JULEP_BUNDLE_NATIVE_EXEC=1 flag is gone.
           volumeMounts:
-            - name: cas
-              mountPath: /cas
+            - name: artifacts
+              mountPath: /artifacts
               readOnly: true
           ports:
             - containerPort: 8080
@@ -57,7 +57,7 @@ spec:
             httpGet: {path: /readyz, port: health}
             periodSeconds: 2
       volumes:
-        - name: cas
+        - name: artifacts
           hostPath:
-            path: /cas
+            path: /artifacts
             type: Directory

@@ -6,7 +6,7 @@ Run from the repo root after up.sh reports the worker ready::
 
 The driver holds the flow code (it is the author/operator); it ships flowJson +
 pinned pure hashes as workflow input. The worker has never imported this flow —
-it materialised the three custom pures from the signed CAS bundle at startup.
+it materialised the three custom pures from the signed artifact-store bundle at startup.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ async def main() -> None:
         client,
         session_id=session_id,
         input=SCORES,
-        task_queue="ca-cad-demo",
+        task_queue="julep-cad-demo",
     )
 
     print("\n=== durable flow result (worker: generic k3d pod, pures: from bundle) ===")

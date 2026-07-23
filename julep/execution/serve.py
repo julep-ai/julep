@@ -33,14 +33,23 @@ import inspect
 import os
 import re
 import signal
+import sys
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
-from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional
 
+from .. import _env
+from .._specload import resolve_spec
 from ..errors import JulepError
+from ..trajectory import RedactionConfig, build_redactor
 from .effects import WorkerContext
+
+if sys.version_info >= (3, 11):
+    import tomllib as _tomllib
+else:
+    _tomllib = None
 
 if TYPE_CHECKING:
     from ..registry import Registry
@@ -51,6 +60,27 @@ DEFAULT_TASK_QUEUE = "julep"
 
 _TRUE = {"1", "true", "yes", "on"}
 _FALSE = {"0", "false", "no", "off"}
+
+
+def read_redaction_pyproject(root: Path) -> Optional[dict[str, Any]]:
+    """Read ``[tool.julep.redaction]`` without coupling to the authoring CLI."""
+    if _tomllib is None:
+        return None
+    try:
+        with (root / "pyproject.toml").open("rb") as handle:
+            data = _tomllib.load(handle)
+    except (OSError, ValueError):
+        return None
+    tool = data.get("tool")
+    if not isinstance(tool, dict):
+        return None
+    julep = tool.get("julep")
+    if not isinstance(julep, dict):
+        return None
+    redaction = julep.get("redaction")
+    if not isinstance(redaction, dict):
+        return None
+    return dict(redaction)
 
 
 def _env_bool(env: Mapping[str, str], name: str, default: bool) -> bool:
@@ -144,6 +174,11 @@ class WorkerServeSettings:
     payload_encryption_required: bool = False
     application: Optional[str] = None
     runtime_declarations_hash: Optional[str] = None
+    redaction: Optional[RedactionConfig] = None
+    materialized_secret_environment: dict[str, str] = field(
+        default_factory=dict, repr=False
+    )
+    blob_store_url: Optional[str] = None
 
     @classmethod
     def from_env(cls, env: Optional[Mapping[str, str]] = None) -> "WorkerServeSettings":
@@ -155,7 +190,8 @@ class WorkerServeSettings:
         ``TEMPORAL_TLS``, ``WORKER_GRACEFUL_SHUTDOWN_S``,
         ``WORKER_MAX_CONCURRENT_ACTIVITIES``,
         ``WORKER_MAX_CONCURRENT_WORKFLOW_TASKS``, ``WORKER_HEALTH_PORT``,
-        ``CA_WORKER_BUILD_ID``, ``CA_WORKER_VERSIONING``.
+        ``JULEP_WORKER_BUILD_ID``, ``JULEP_WORKER_VERSIONING``, ``JULEP_REDACTION``,
+        and ``JULEP_BLOB_STORE_URL``.
         """
         e: Mapping[str, str] = os.environ if env is None else env
         factory = e.get("WORKER_CONTEXT_FACTORY")
@@ -182,12 +218,30 @@ class WorkerServeSettings:
                 "WORKER_RUNTIME_DECLARATIONS_HASH must be "
                 "sha256:<64 lowercase hex>"
             )
-        api_key = e.get("TEMPORAL_API_KEY") or None
+        from ..secrets import SecretResolver, materialize_secret_environment
+
+        secret_resolver = SecretResolver.from_env(e)
+        materialized_secret_environment = materialize_secret_environment(
+            e, resolver=secret_resolver
+        )
+        raw_api_key = e.get("TEMPORAL_API_KEY") or None
+        api_key = (
+            None if raw_api_key is None else secret_resolver.resolve_ref(raw_api_key)
+        )
+        redaction_json = e.get("JULEP_REDACTION", "").strip()
+        redaction = (
+            RedactionConfig.from_json(redaction_json) if redaction_json else None
+        )
+        payload_environment = dict(e)
+        if payload_environment.get("TEMPORAL_PAYLOAD_KEYS"):
+            payload_environment["TEMPORAL_PAYLOAD_KEYS"] = secret_resolver.resolve_ref(
+                payload_environment["TEMPORAL_PAYLOAD_KEYS"]
+            )
         (
             payload_keys,
             payload_key_id,
             payload_encryption_required,
-        ) = payload_encryption_from_env(e)
+        ) = payload_encryption_from_env(payload_environment)
         return cls(
             context_factory=factory,
             application=application,
@@ -201,11 +255,18 @@ class WorkerServeSettings:
             max_concurrent_activities=_env_int(e, "WORKER_MAX_CONCURRENT_ACTIVITIES"),
             max_concurrent_workflow_tasks=_env_int(e, "WORKER_MAX_CONCURRENT_WORKFLOW_TASKS"),
             health_port=_env_int(e, "WORKER_HEALTH_PORT"),
-            build_id=e.get("CA_WORKER_BUILD_ID") or None,
-            use_worker_versioning=_env_bool(e, "CA_WORKER_VERSIONING", default=False),
+            build_id=_env.get(_env.JULEP_WORKER_BUILD_ID, environ=e) or None,
+            use_worker_versioning=_env_bool(
+                e,
+                _env.JULEP_WORKER_VERSIONING,
+                default=False,
+            ),
             payload_keys=payload_keys,
             payload_key_id=payload_key_id,
             payload_encryption_required=payload_encryption_required,
+            redaction=redaction,
+            materialized_secret_environment=materialized_secret_environment,
+            blob_store_url=(e.get(_env.JULEP_BLOB_STORE_URL) or None),
         )
 
 
@@ -214,7 +275,7 @@ def _versioning_worker_kwargs(settings: WorkerServeSettings) -> dict[str, Any]:
 
     DELIBERATE deprecated-kwarg use: temporalio 1.30 deprecates `build_id` /
     `use_worker_versioning` on Worker in favor of `deployment_config`. The stable
-    contract we ship is the CA_WORKER_* env seam (parsed into WorkerServeSettings);
+    contract we ship is the JULEP_WORKER_* env seam (parsed into WorkerServeSettings);
     the Worker kwarg can migrate to deployment_config later without touching that seam.
     Omit-when-unset: versioning off + no build_id -> {} so build_worker is called
     byte-identically to before this task. When versioning is on and no explicit
@@ -230,10 +291,10 @@ def _versioning_worker_kwargs(settings: WorkerServeSettings) -> dict[str, Any]:
             build_id = version("julep")
         except PackageNotFoundError as exc:
             raise JulepError(
-                "worker versioning is on (CA_WORKER_VERSIONING=1) but no "
-                "CA_WORKER_BUILD_ID is set and the julep version cannot "
+                "worker versioning is on (JULEP_WORKER_VERSIONING=1) but no "
+                "JULEP_WORKER_BUILD_ID is set and the julep version cannot "
                 "be read from installed package metadata (source checkout or an image "
-                "without distribution metadata). Set CA_WORKER_BUILD_ID to a stable, "
+                "without distribution metadata). Set JULEP_WORKER_BUILD_ID to a stable, "
                 "per-image Build ID: versioning must never advertise a constant fake "
                 "Build ID across mutually-incompatible worker images."
             ) from exc
@@ -251,23 +312,7 @@ def load_context_factory(spec: str) -> Callable[[], Any]:
     with the failing spec on any bad shape, missing module, missing attribute,
     or non-callable target — the CLI surfaces these as one-line errors.
     """
-    module_name, sep, attr_path = spec.partition(":")
-    if not sep or not module_name or not attr_path:
-        raise ValueError(f"context factory spec must be 'module:attr', got {spec!r}")
-    try:
-        target: Any = import_module(module_name)
-    except ImportError as exc:
-        raise ValueError(f"cannot import context factory module {module_name!r}: {exc}") from exc
-    for part in attr_path.split("."):
-        try:
-            target = getattr(target, part)
-        except AttributeError as exc:
-            raise ValueError(
-                f"context factory {spec!r}: module {module_name!r} has no attribute {attr_path!r}"
-            ) from exc
-    if not callable(target):
-        raise ValueError(f"context factory {spec!r} is not callable")
-    return target  # type: ignore[no-any-return]
+    return resolve_spec(spec, what="context factory")
 
 
 class HealthServer:
@@ -346,6 +391,43 @@ async def _resolve_context(spec: str) -> WorkerContext:
     return context
 
 
+def _install_default_redactor(
+    context: WorkerContext, settings: WorkerServeSettings
+) -> None:
+    # The dynamic operator scrubber remains live after worker startup: secrets
+    # first resolved by a later MCP call are covered without replacing context.
+    from ..secrets import operator_secret_redactor
+    from ..trajectory import redact_secret_shaped
+
+    base = context.redactor
+    if base is None:
+        base = (
+            build_redactor(settings.redaction)
+            if settings.redaction is not None
+            else redact_secret_shaped
+        )
+    context.redactor = operator_secret_redactor(base)
+
+
+def _install_blob_store(
+    context: WorkerContext, settings: WorkerServeSettings
+) -> None:
+    """Install the operator-configured store before worker construction.
+
+    A factory store and URL together are ambiguous: changing the backend makes
+    retained transcript refs unreadable, so startup fails instead of choosing
+    one silently.
+    """
+
+    from .blobstore import _resolve_blob_store_configuration
+
+    context.blob_store = _resolve_blob_store_configuration(
+        context.blob_store,
+        settings.blob_store_url,
+        explicit_source="WORKER_CONTEXT_FACTORY",
+    )
+
+
 def load_application_runtime(
     spec: str,
     *,
@@ -405,7 +487,15 @@ async def serve(
             pass  # non-main thread or platform without loop signal handlers
 
     try:
+        # Application-specific worker env is a startup-time injection surface.
+        # Values remain pinned until this process restarts.
+        os.environ.update(settings.materialized_secret_environment)
         context = await _resolve_context(settings.context_factory)
+        _install_blob_store(context, settings)
+        from .blobstore import _initialize_blob_store
+
+        await _initialize_blob_store(context.blob_store)
+        _install_default_redactor(context, settings)
         if settings.application is not None:
             if settings.runtime_declarations_hash is None:
                 raise JulepError(

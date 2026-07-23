@@ -22,6 +22,7 @@ if HAVE_TEMPORAL:
 
     from julep import call, each, freeze, manifest_to_json, mcp
     from julep.contracts import McpAnnotations
+    from julep.dispatch import BatchWindow, dispatch_debounced
     from julep.execution.activities import WorkerContext
     from julep.execution.debounce import submit_debounced
     from julep.execution.worker import build_worker
@@ -29,6 +30,7 @@ if HAVE_TEMPORAL:
 
 
 BUNDLE_REF = [{"bundleHash": "a" * 64, "signatureDigest": "b" * 64}]
+DECLARATIONS_REF = {"hash": "sha256:" + "c" * 64, "size": 123}
 
 
 def _snapshot():
@@ -75,24 +77,33 @@ def test_submit_debounced_forwards_bundle_to_start_input():
             key="k",
             item=1,
             quiet_s=1,
+            policy={"maxParallel": 7},
             bundle=BUNDLE_REF,
+            runtime_declarations_ref=DECLARATIONS_REF,
         )
     )
 
     assert out == "handle"
     assert captured["input"].bundle == BUNDLE_REF
+    assert captured["input"].runtime_declarations_ref == DECLARATIONS_REF
+    assert captured["input"].policy["maxParallel"] == 7
 
 
 async def _quiet_window_collates_a_burst(env):
     flow_json, manifest_json = _frozen_each()
     key = f"burst-{uuid.uuid4()}"
-    async with _worker(env, task_queue="ca-debounce"):
+    async with _worker(env, task_queue="julep-debounce"):
         with env.auto_time_skipping_disabled():
             handle = None
             for item in (1, 2, 3):
-                handle = await submit_debounced(
-                    env.client, flow_json, manifest_json,
-                    key=key, item=item, quiet_s=600, task_queue="ca-debounce",
+                handle = await dispatch_debounced(
+                    env.client,
+                    flow_json,
+                    manifest_json,
+                    key=key,
+                    item=item,
+                    window=BatchWindow(quiet_s=600),
+                    task_queue="julep-debounce",
                 )
             assert sorted(await handle.query("pending")) == [1, 2, 3]
         await env.sleep(601)
@@ -105,13 +116,13 @@ async def _quiet_window_collates_a_burst(env):
 async def _max_items_fires_without_quiet(env):
     flow_json, manifest_json = _frozen_each()
     key = f"full-{uuid.uuid4()}"
-    async with _worker(env, task_queue="ca-debounce-full"):
+    async with _worker(env, task_queue="julep-debounce-full"):
         with env.auto_time_skipping_disabled():
             for item in (10, 20):
                 handle = await submit_debounced(
                     env.client, flow_json, manifest_json,
                     key=key, item=item, quiet_s=600, max_items=2,
-                    task_queue="ca-debounce-full",
+                    task_queue="julep-debounce-full",
                 )
             out = await handle.result()
     assert out["items"] == 2, out
@@ -121,15 +132,15 @@ async def _max_items_fires_without_quiet(env):
 async def _new_batch_after_completion(env):
     flow_json, manifest_json = _frozen_each()
     key = f"reuse-{uuid.uuid4()}"
-    async with _worker(env, task_queue="ca-debounce-reuse"):
+    async with _worker(env, task_queue="julep-debounce-reuse"):
         first = await submit_debounced(
             env.client, flow_json, manifest_json,
-            key=key, item=1, quiet_s=1, max_items=1, task_queue="ca-debounce-reuse",
+            key=key, item=1, quiet_s=1, max_items=1, task_queue="julep-debounce-reuse",
         )
         assert (await first.result())["result"] == [2]
         second = await submit_debounced(
             env.client, flow_json, manifest_json,
-            key=key, item=5, quiet_s=1, max_items=1, task_queue="ca-debounce-reuse",
+            key=key, item=5, quiet_s=1, max_items=1, task_queue="julep-debounce-reuse",
         )
         out = await second.result()
     assert out["result"] == [6], out
@@ -141,13 +152,13 @@ async def _max_items_caps_the_batch_and_carries_surplus(env):
     # its clocks carried (it fires after one window, not two).
     flow_json, manifest_json = _frozen_each("slow_inc")
     key = f"cap-{uuid.uuid4()}"
-    async with _worker(env, task_queue="ca-debounce-cap"):
+    async with _worker(env, task_queue="julep-debounce-cap"):
         with env.auto_time_skipping_disabled():
             for item in (1, 2, 3):
                 handle = await submit_debounced(
                     env.client, flow_json, manifest_json,
                     key=key, item=item, quiet_s=600, max_items=2,
-                    task_queue="ca-debounce-cap",
+                    task_queue="julep-debounce-cap",
                 )
         await env.sleep(601)
         out = await handle.result()  # follows continue-as-new to the last segment

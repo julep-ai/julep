@@ -125,12 +125,12 @@ def synthesize_env_component(
 
     The bytes are the vendored base executor component plus a deterministic wasm
     custom section carrying the env identity. That keeps the component
-    instantiable while giving different dependency pins different CAS digests.
+    instantiable while giving different dependency pins different artifact-store digests.
     It does not bundle or validate third-party wheels.
     """
     env_hash = _env_hash(deps, requires_python)
     payload = env_hash.encode("ascii") + b"\0" + marker
-    return _BASE_COMPONENT.read_bytes() + _custom_section("composable-env", payload)
+    return _BASE_COMPONENT.read_bytes() + _custom_section("julep-env", payload)
 
 
 def build_env_component(
@@ -149,7 +149,7 @@ def build_env_component(
     runtime), and CPython's pre-init heap snapshot is not byte-stable across
     runs. So two builds of the same dep set yield the same ``envHash`` (the
     content-addressed identity, derived purely from deps + base component) but
-    different ``envComponent`` CAS digests. Resolution is keyed by ``envHash``
+    different ``envComponent`` artifact-store digests. Resolution is keyed by ``envHash``
     and ships whatever component bytes were published for it; byte-identical
     rebuilds would require an upstream componentize determinism mode or a
     post-link canonicalization pass (residual P4-1 follow-up; see TODOS.md).
@@ -171,12 +171,12 @@ def build_env_component(
 
     env_hash = _env_hash(deps, requires_python)
     output_root = Path(out_dir) if out_dir is not None else Path(
-        tempfile.mkdtemp(prefix="composable-env-")
+        tempfile.mkdtemp(prefix="julep-env-")
     )
     output_root.mkdir(parents=True, exist_ok=True)
     output = output_root / f"env_{env_hash}.wasm"
 
-    with tempfile.TemporaryDirectory(prefix="composable-env-site-") as temp:
+    with tempfile.TemporaryDirectory(prefix="julep-env-site-") as temp:
         temp_root = Path(temp)
         site_packages = temp_root / "site-packages"
         site_packages.mkdir(parents=True)
@@ -301,7 +301,7 @@ def publish_env_component(
     data = component_path.read_bytes()
     digest = store.put(data)
     if not isinstance(digest, str):
-        raise EnvBuildError("CAS store returned a non-string digest for env component")
+        raise EnvBuildError("artifact store returned a non-string digest for env component")
     return env_hash, digest
 
 

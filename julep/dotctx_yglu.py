@@ -3,7 +3,7 @@
 mem-mcp's ``.ctx`` settings use yglu expressions — universally
 ``!? $env.get("VAR", default)`` — for env-dependent model/round config. To keep
 freezes deterministic, ``$env`` never reads the ambient process environment
-here: callers pass the mapping (the ``ca`` env profile), and ``os.environ`` is
+here: callers pass the mapping (the Julep env profile), and ``os.environ`` is
 swapped for exactly that mapping while yglu evaluates. Load/CLI-time only —
 the swap is process-global and not thread-safe.
 
@@ -13,7 +13,7 @@ without yglu is a hard, actionable error (G-8: no silent fallback).
 Deployed workers: ``$env`` never reads the ambient process environment — with
 no binding, tagged settings evaluate to their *defaults*. A Temporal worker
 that imports ``.ctx`` packages must call :func:`set_default_env` with the same
-env profile the artifact was frozen against (``ca.toml`` ``[env.<name>.vars]``)
+env profile the artifact was frozen against (``julep.toml`` ``[env.<name>.vars]``)
 *before* those imports, or its registry can disagree with the frozen identity.
 Persisting the resolved reasoner config into the artifact (so workers need no
 manual binding) is deferred to the deployment phase.

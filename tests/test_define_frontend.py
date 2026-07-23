@@ -4,9 +4,27 @@ from typing import Any
 
 import pytest
 
-import julep as ca
-from julep import as_flow, cond, delay, deploy, dsl, each, flow, pure, reschedule, switch, think, tool
+import julep as julep_api
+from julep import (
+    McpTool,
+    as_flow,
+    cond,
+    delay,
+    deploy,
+    dsl,
+    each,
+    flow,
+    freeze,
+    mcp_tool,
+    pure,
+    reschedule,
+    switch,
+    think,
+    tool,
+)
 from julep.define import DefineError, Handle
+from julep.errors import FreezeError
+from julep.freeze import McpServerSnapshot, McpSnapshot
 from julep.ir import Node, SLEEP_TOOL, CallStep, NativeTool, ThinkStep, canonical_json
 from julep.kinds import Op
 from julep.validate import SECRET_KEY_RE
@@ -31,6 +49,11 @@ def p51_write_summary(payload: dict[str, Any]) -> dict[str, Any]:
 def p51_echo_with_limit(payload: dict[str, Any]) -> dict[str, Any]:
     copied = dict(payload)
     return copied
+
+
+@tool(effect="read", idempotent=True)
+def ws2_search(collection_id: str, query: str, limit: int = 10) -> dict[str, Any]:
+    return {"collection_id": collection_id, "query": query, "limit": limit}
 
 
 @pure("p51.identity")
@@ -385,6 +408,158 @@ def test_tool_kwargs_lower_to_std_bind_before_call() -> None:
     assert _canonical_ir(bind_limit.to_ir()) == _canonical_ir(expected)
 
 
+def test_handle_kwargs_lower_to_record_and_mcp_tool_ref() -> None:
+    search = mcp_tool("memory", "search")
+
+    @flow
+    def search_flow(source: dict[str, Any]) -> dict[str, Any]:
+        collection = source.collection_id
+        query = source.query
+        found = search(
+            collection_id=collection,
+            query=query,
+            same_collection=collection,
+            limit=10,
+            retries=2,
+        )
+        return found
+
+    record = next(step for step in search_flow.graph.steps if step.ref == "std.record")
+    call_step = search_flow.graph.steps[-1]
+
+    assert [edge.source for edge in record.inputs] == ["collection", "query"]
+    assert record.args == {
+        "fields": [
+            ["collection_id", 0],
+            ["query", 1],
+            ["same_collection", 0],
+            ["limit", None],
+        ],
+        "consts": {"limit": 10},
+    }
+    assert call_step.ref == "mcp:memory:search"
+    assert call_step.tool_ref == McpTool("memory", "search")
+    assert call_step.contract is None
+    assert call_step.ann is not None
+    assert call_step.ann.to_json() == {"maxAttempts": 2}
+
+    ir_call = next(
+        node.step
+        for node in search_flow.to_ir().walk()
+        if node.step is not None and isinstance(node.step.tool, McpTool)
+    )
+    assert ir_call.tool == McpTool("memory", "search")
+
+
+def test_record_binding_executes_a_multi_parameter_native_tool() -> None:
+    @flow
+    def search_flow(source: dict[str, Any]) -> dict[str, Any]:
+        return ws2_search(
+            collection_id=source.collection_id,
+            query=source.query,
+            limit=10,
+        )
+
+    assert deploy(search_flow, tools=[ws2_search]).dry_run(
+        {"collection_id": "episodes", "query": "needle"}
+    ).value == {
+        "collection_id": "episodes",
+        "query": "needle",
+        "limit": 10,
+    }
+
+
+def test_record_binding_internal_name_cannot_steal_explicit_output_name() -> None:
+    search = mcp_tool("memory", "search")
+
+    @flow
+    def named(source: dict[str, Any]) -> dict[str, Any]:
+        result = search(query=source.query, name="search_record_1")
+        return result
+
+    record, call_step = named.graph.steps[-2:]
+    assert record.output == "search_record_2"
+    assert call_step.output == "search_record_1"
+
+
+def test_aliased_mcp_tool_keeps_assignment_name_with_other_attributes_on_line() -> None:
+    class Options:
+        limit = 10
+
+    lookup_ref = mcp_tool("memory", "search", name="lookup")
+    options = Options()
+
+    @flow
+    def named(source: dict[str, Any]) -> dict[str, Any]:
+        result = lookup_ref(query=source.query, limit=options.limit)
+        return result
+
+    assert named.graph.steps[-1].output == "result"
+
+
+def test_record_binding_rejects_mixed_positional_and_named_handles() -> None:
+    search = mcp_tool("memory", "search")
+
+    with pytest.raises(DefineError, match=r"cannot mix.*positional Handle.*all-named"):
+
+        @flow
+        def invalid(source: dict[str, Any]) -> dict[str, Any]:
+            return search(source, query=source.query)
+
+
+def test_pure_record_binding_embeds_literals_only_in_the_record() -> None:
+    @pure("ws2.record_payload")
+    def record_payload(value: dict[str, Any]) -> dict[str, Any]:
+        return value
+
+    @flow
+    def built(source: dict[str, Any]) -> dict[str, Any]:
+        return record_payload(query=source.query, limit=10)
+
+    pure_step = built.graph.steps[-1]
+    assert pure_step.ref == "ws2.record_payload"
+    assert pure_step.args is None
+    assert deploy(built, tools=[]).dry_run({"query": "needle"}).value == {
+        "query": "needle",
+        "limit": 10,
+    }
+
+
+def test_compiled_record_binding_preserves_a_single_list_valued_handle() -> None:
+    @pure("ws2.list_record")
+    def list_record(value: dict[str, Any]) -> dict[str, Any]:
+        return value
+
+    @flow
+    def built(source: dict[str, Any]) -> dict[str, Any]:
+        return list_record(items=source.items)
+
+    assert deploy(built, tools=[]).dry_run({"items": ["one", "two"]}).value == {
+        "items": ["one", "two"]
+    }
+
+
+def test_authored_mcp_tool_freeze_reports_missing_server_and_tool() -> None:
+    search = mcp_tool("memory", "search")
+
+    @flow
+    def search_flow(source: dict[str, Any]) -> dict[str, Any]:
+        return search(query=source.query)
+
+    with pytest.raises(FreezeError, match="MCP server not in snapshot: 'memory'"):
+        freeze(search_flow.to_ir(), McpSnapshot())
+
+    with pytest.raises(FreezeError, match="MCP tool not found: memory/search"):
+        freeze(
+            search_flow.to_ir(),
+            McpSnapshot(
+                servers={
+                    "memory": McpServerSnapshot(server="memory", tools={}),
+                }
+            ),
+        )
+
+
 def test_pure_kwargs_lower_to_arr_static_args_without_std_bind() -> None:
     @flow
     def scale(source: dict[str, Any]) -> dict[str, Any]:
@@ -488,7 +663,7 @@ def test_linear_authored_flow_dry_run_matches_combinator_flow() -> None:
     assert authored.dry_run("ep-1").value == combinator.dry_run("ep-1").value
 
 
-def test_handle_bool_iter_and_attribute_errors_are_actionable() -> None:
+def test_handle_bool_iter_and_reserved_attribute_errors_are_actionable() -> None:
     handle = Handle.synthetic("source")
     with pytest.raises(TypeError, match=r"Handle truthiness.*<synthetic>:1.*cond\(") as truthiness:
         bool(handle)
@@ -496,10 +671,24 @@ def test_handle_bool_iter_and_attribute_errors_are_actionable() -> None:
     with pytest.raises(TypeError, match=r"Handle iteration.*<synthetic>:1.*each\(") as iteration:
         iter(handle)
     assert str(iteration.value).count("<synthetic>:1") == 1
-    with pytest.raises(AttributeError, match=r"Handle attribute access.*source.foo.*Use source\['foo'\]"):
-        attr = "foo"
-        getattr(handle, attr)
-    assert not hasattr(handle, "foo")
+    private = "_private"
+    with pytest.raises(AttributeError, match="'_private'"):
+        getattr(handle, private)
+    suffixed = "private_"
+    with pytest.raises(AttributeError, match="'private_'"):
+        getattr(handle, suffixed)
+
+
+def test_handle_attribute_access_lowers_to_named_std_pluck() -> None:
+    @flow
+    def dotted(source: dict[str, Any]) -> Any:
+        summary = source.summary
+        return summary
+
+    (pluck,) = dotted.graph.steps
+    assert pluck.ref == "std.pluck"
+    assert pluck.output == "summary"
+    assert pluck.args == {"key": "summary"}
 
 
 def test_flowdef_dot_each_gives_top_level_hint() -> None:
@@ -1007,7 +1196,7 @@ def test_qualified_and_aliased_control_helpers_are_allowed_by_identity() -> None
 
     @flow
     def qualified(source: dict[str, Any]) -> dict[str, Any]:
-        result = ca.cond(p52_episode_found, source, then=found, orelse=missing)
+        result = julep_api.cond(p52_episode_found, source, then=found, orelse=missing)
         return result
 
     @flow
@@ -1048,7 +1237,7 @@ def test_genuinely_unregistered_qualified_callable_still_gets_existing_diagnosti
             return value
 
 
-def test_frontend_switch_on_cas_status_golden_and_all_arms() -> None:
+def test_frontend_switch_on_artifact_status_golden_and_all_arms() -> None:
     @flow
     def success(write_result: dict[str, Any]) -> dict[str, Any]:
         handled = p52_case_success(write_result)

@@ -28,6 +28,34 @@ def _canonical_ir(node: Node) -> str:
     return canonical_json(normalize_ids(Node.from_json(node.to_json())).to_json())
 
 
+def _spike_mcp_listings() -> dict[str, dict[str, object]]:
+    """Describe the compatibility payloads accepted by ``spike_mcp_call``."""
+    listings = episode.mcp_listings()
+    tools = listings[episode.MCP_SERVER]
+    tools["read_episode"]["inputSchema"] = {"type": "string"}
+    tools["write_summary_surfaces"]["inputSchema"] = {
+        "type": "object",
+        "properties": {
+            "episodeId": {"type": "string"},
+            "found": {"type": "boolean"},
+            "text": {"type": "string"},
+            "contentHash": {"type": "string"},
+            "summary": {"type": "string"},
+            "oneLiner": {"type": "string"},
+        },
+        "required": [
+            "episodeId",
+            "found",
+            "text",
+            "contentHash",
+            "summary",
+            "oneLiner",
+        ],
+        "additionalProperties": False,
+    }
+    return listings
+
+
 def _manual_spike_episode_ir() -> Node:
     happy_path = dsl.seq(
         dsl.arr("spike.assign_source"),
@@ -76,16 +104,28 @@ def test_spike_compiled_episode_ir_matches_manual_combinators() -> None:
     )
 
 
-def test_spike_episode_slice_dry_run_rolls_up_cas_statuses() -> None:
+def test_spike_episode_slice_dry_run_rolls_up_artifact_statuses() -> None:
+    async def spike_mcp_call(server, tool, value, cid, principal):
+        if tool == "read_episode":
+            value = {"episode_id": value}
+        elif tool == "write_summary_surfaces":
+            value = {
+                "episode_id": value["episodeId"],
+                "content_hash": value["contentHash"],
+                "summary": value["summary"],
+                "one_liner": value["oneLiner"],
+            }
+        return await episode._fake_mcp_call(server, tool, value, cid, principal)
+
     episode.reset_store()
     deployment = deploy(
         episode_slice.BATCH.to_ir(),
-        tools=episode.TOOLS,
-        reasoners=[episode.SUMMARIZER, episode.ONE_LINER],
+        mcp_listings=_spike_mcp_listings(),
     )
 
     result = deployment.dry_run(
         episode.EPISODE_BATCH,
+        mcp_call=spike_mcp_call,
         reasoners={
             episode.SUMMARIZER: episode._fake_summarizer,
             episode.ONE_LINER: episode._fake_one_liner,

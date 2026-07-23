@@ -5,10 +5,10 @@ data::
 
     WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context
 
-At startup it resolves every bundle named in ``CA_BUNDLES`` (see
+At startup it resolves every bundle named in ``JULEP_BUNDLES`` (see
 :func:`julep.worker_store.load_bundles_from_env`), registering each
 bundle's custom pures into the process registry, fail-closed against the
-``CA_BUNDLE_ALLOWED_SIGNERS`` allowlist, *before* any workflow task is accepted.
+``JULEP_BUNDLE_ALLOWED_SIGNERS`` allowlist, *before* any workflow task is accepted.
 It then returns a minimal :class:`WorkerContext`.
 
 This is the worker for flows whose only runtime-arriving code is custom pures
