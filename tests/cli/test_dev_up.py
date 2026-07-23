@@ -72,6 +72,16 @@ def test_build_dev_stack_plan_wires_shared_contract_and_redacts_key(tmp_path: Pa
     assert plan.worker.environment["JULEP_API_URL"] == "http://127.0.0.1:8600"
     assert plan.worker.environment["JULEP_API_KEY"] == source["JULEP_WORKER_API_KEY"]
     assert "JULEP_API_KEY" not in plan.api.environment
+    assert "JULEP_API_KEYS" not in plan.worker.environment
+    assert "JULEP_VAULT_KEYS" not in plan.worker.environment
+    assert "JULEP_BUNDLE_SIGNING_KEY" not in plan.worker.environment
+    assert "JULEP_BUNDLE_SIGNING_KEY" not in plan.api.environment
+    assert (
+        plan.publication_environment["JULEP_BUNDLE_SIGNING_KEY"]
+        == source["JULEP_BUNDLE_SIGNING_KEY"]
+    )
+    assert plan.temporal is not None
+    assert "TEMPORAL_PAYLOAD_KEYS" not in plan.temporal.environment
     rendered = render_dev_stack_plan(plan)
     assert "--api-key" not in rendered
     assert source["JULEP_API_KEY"] not in rendered

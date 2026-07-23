@@ -41,6 +41,7 @@ class DevStackPlan:
     temporal: Optional[DevCommand]
     api: DevCommand
     worker: DevCommand
+    publication_environment: Mapping[str, str] = field(repr=False)
     publish_release: bool = True
     start_workers: bool = True
     startup_timeout_s: float = 30.0
@@ -151,6 +152,31 @@ def build_dev_stack_plan(
         raise DevStackError("durable dev requires Temporal payload encryption keys")
 
     temporal_host, temporal_port = _temporal_endpoint(temporal_address)
+    # Split generated credentials by process. Workers need the shared payload
+    # codec and a worker-role API token, but never the server's static keyring,
+    # vault decryption key, or bundle-signing private key.
+    publication_environment = dict(effective)
+    api_environment = dict(effective)
+    api_environment.pop("JULEP_BUNDLE_SIGNING_KEY", None)
+    worker_environment = dict(effective)
+    for server_only in (
+        "JULEP_API_KEYS",
+        "JULEP_VAULT_KEYS",
+        "JULEP_VAULT_KEY_ID",
+        "JULEP_BUNDLE_SIGNING_KEY",
+    ):
+        worker_environment.pop(server_only, None)
+    if worker_api_key:
+        worker_environment["JULEP_API_URL"] = api_url
+        worker_environment["JULEP_API_KEY"] = worker_api_key
+
+    temporal_environment = dict(worker_environment)
+    temporal_environment.pop("JULEP_API_URL", None)
+    temporal_environment.pop("JULEP_API_KEY", None)
+    temporal_environment.pop("JULEP_BUNDLE_ALLOWED_SIGNERS", None)
+    temporal_environment.pop("TEMPORAL_PAYLOAD_KEYS", None)
+    temporal_environment.pop("TEMPORAL_PAYLOAD_KEY_ID", None)
+
     temporal: Optional[DevCommand] = None
     if start_temporal:
         if temporal_host not in {"127.0.0.1", "localhost", "::1"}:
@@ -165,15 +191,10 @@ def build_dev_stack_plan(
                 "--port",
                 str(temporal_port),
             ),
-            effective,
+            temporal_environment,
         )
 
     base = (python, "-m", "julep.cli.main")
-    api_environment = dict(effective)
-    worker_environment = dict(effective)
-    if worker_api_key:
-        worker_environment["JULEP_API_URL"] = api_url
-        worker_environment["JULEP_API_KEY"] = worker_api_key
     api = DevCommand(
         "api",
         (*base, "serve", "api", "--migrate", "--host", host, "--port", str(port)),
@@ -189,6 +210,7 @@ def build_dev_stack_plan(
         temporal=temporal,
         api=api,
         worker=worker,
+        publication_environment=publication_environment,
         publish_release=publish_release,
         start_workers=start_workers,
         startup_timeout_s=startup_timeout_s,
@@ -217,7 +239,7 @@ def _publish_and_register(plan: DevStackPlan) -> tuple[tuple[str, str], ...]:
     from julep.cli.config import load_config
     from julep.client import JulepClient
 
-    with _temporary_environment(plan.api.environment):
+    with _temporary_environment(plan.publication_environment):
         cfg = load_config(plan.root)
         if plan.env_name not in cfg.envs:
             raise DevStackError(f"unknown env {plan.env_name!r}")
