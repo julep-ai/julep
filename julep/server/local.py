@@ -34,8 +34,12 @@ from ..execution.effects import (
     WorkerContext,
     toolref_json_from_key,
 )
-from ..execution.harness import preflightMcp
 from ..execution.interpreter import InMemoryEnv, Result, call_ref_key, interpret
+from ..execution.mcp_preflight import (
+    McpPreflightError,
+    preflight_mcp,
+    scrub_mcp_preflight_failure,
+)
 from ..execution.policy import ExecutionPolicy
 from ..execution.projection_store import (
     ExecutionStore,
@@ -625,16 +629,19 @@ class LocalExecutionGateway:
             _validate_finite_flow(flow)
 
             if self._context is not None:
-                await preflightMcp(
-                    {
-                        "workflowId": record.workflow_id,
-                        "flowJson": flow_json,
-                        "manifestJson": manifest_json,
-                        "policy": pipeline.mcp_preflight_policy or "off",
-                        "principal": principal,
-                        **({"secrets": secrets} if secrets else {}),
-                    }
-                )
+                try:
+                    await preflight_mcp(
+                        {
+                            "workflowId": record.workflow_id,
+                            "flowJson": flow_json,
+                            "manifestJson": manifest_json,
+                            "policy": pipeline.mcp_preflight_policy or "off",
+                            "principal": principal,
+                            **({"secrets": secrets} if secrets else {}),
+                        }
+                    )
+                except Exception as exc:
+                    raise scrub_mcp_preflight_failure(exc, secrets) from None
                 await effects.verifyPures(
                     VerifyPuresInput(
                         pinned=dict(pipeline.pinned_pures),
@@ -753,11 +760,14 @@ class LocalExecutionGateway:
             return
         except Exception as exc:  # noqa: BLE001 - persist a terminal local run
             record.status = "failed"
+            error_type = (
+                exc.type if isinstance(exc, McpPreflightError) else type(exc).__name__
+            )
             self._finalize(
                 record,
                 status="failed",
                 result=None,
-                error=f"{type(exc).__name__}: {exc}",
+                error=f"{error_type}: {exc}",
                 cause=last_event_id,
                 secrets=secrets,
             )

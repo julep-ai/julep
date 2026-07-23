@@ -450,6 +450,79 @@ def test_configured_context_factory_executes_real_mcp_effect(tmp_path: Path) -> 
     assert effect_calls[0]["input_schema_validated"] is True
 
 
+def test_configured_context_surfaces_typed_preflight_refusal(tmp_path: Path) -> None:
+    _configure_context_auth(tmp_path)
+    app = server.create_local_app(
+        project_root=tmp_path,
+        context_factory=WorkerContext,
+    )
+    release = _release(ident(), mcp_preflight_policy="off")
+
+    with TestClient(app) as client:
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="configured-unused-secret",
+            input={"message": "preflight first"},
+            secrets={"unused": "must-not-leak"},
+            headers=CONFIGURED_HEADERS,
+        )
+        assert started.status_code == 201, started.text
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
+
+    assert finished["run"]["status"] == "failed"
+    error = finished["run"]["error"]
+    assert error.startswith("invalid_run_secret_binding: ")
+    assert '"error": "invalid_run_secret_binding"' in error
+    assert '"names": ["unused"]' in error
+    assert "must-not-leak" not in error
+
+
+def test_configured_context_scrubs_operator_secret_from_preflight_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from julep.secrets import register_secret_value
+
+    operator_secret = "local-operator-value:/must-not-leak"
+    register_secret_value(operator_secret)
+
+    async def failing_preflight(_payload: Any) -> dict[str, Any]:
+        raise RuntimeError(f"preflight echoed {operator_secret}")
+
+    monkeypatch.setattr("julep.server.local.preflight_mcp", failing_preflight)
+    _configure_context_auth(tmp_path)
+    app = server.create_local_app(
+        project_root=tmp_path,
+        context_factory=WorkerContext,
+    )
+    release = _release(ident(), mcp_preflight_policy="off")
+
+    with TestClient(app) as client:
+        _publish_and_activate(client, release, headers=CONFIGURED_HEADERS)
+        started = _start(
+            client,
+            key="configured-preflight-operator-secret",
+            input={"message": "preflight first"},
+            headers=CONFIGURED_HEADERS,
+        )
+        assert started.status_code == 201, started.text
+        finished = _wait_for_result(
+            client,
+            started.json()["run_id"],
+            headers=CONFIGURED_HEADERS,
+        )
+
+    assert finished["run"]["status"] == "failed"
+    error = finished["run"]["error"]
+    assert error.startswith("RuntimeError: preflight echoed ")
+    assert operator_secret not in error
+
+
 def test_local_control_plane_state_is_ephemeral_but_artifacts_persist(
     tmp_path: Path,
 ) -> None:
