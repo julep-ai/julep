@@ -99,7 +99,7 @@ keys are rejected with a close-match suggestion.
 | `julep apply --env <name> [--mcp-snapshot] [--publish-only] [--api-url --api-key]` | Publish a signed schema-v2 release, optionally register it with a control plane, and optionally reconcile lane workers. |
 | `julep status [SEL] --env <name>` | Aggregate application state or inspect the legacy ledger; `--remote --api-url --api-key --limit` reads control-plane runs. |
 | `julep worker [--smoke-test-seconds N]` | Run the environment-configured Temporal worker continuously (`0`) or verify/poll/drain for a positive `N`. |
-| `julep keygen [--format env|json] [--output PATH]` | Generate independent local API, payload, vault, and signing credentials; output files are mode `0600`. |
+| `julep keygen [--format env|json] [--output PATH]` | Generate independent local admin/worker API, payload, vault, and signing credentials; output files are mode `0600`. |
 | `julep dev up [--env local] [--dry-run]` | Supervise the PostgreSQL/Temporal durable development stack and one worker per release lane. |
 | `julep serve api [--host --port --migrate --local --context-factory]` | Run the durable or service-free local FastAPI control plane. |
 | `julep db migrate [--dsn]` | Apply projection-store migrations. |

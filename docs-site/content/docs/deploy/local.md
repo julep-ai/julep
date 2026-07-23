@@ -9,6 +9,7 @@ matches what you need to test:
 | Mode | Best for | Services required |
 |---|---|---|
 | `julep run` | Fast source-level iteration from the CLI | None |
+| `prepare_local_pipeline(...).run/arun` | Configured production-like foreground calls | Effect dependencies only |
 | `Deployment.dry_run(...)` | Unit tests with injected tools and reasoners | None |
 | `TestClient(create_local_app(...))` | In-process control-plane and execution tests | None |
 | `julep serve api --local` | Interactive API and client development | None |
@@ -18,7 +19,7 @@ The local API modes use an in-memory execution store, a local artifact
 directory, and interpreter-backed execution. They do not require PostgreSQL or
 Temporal. SQLite is not involved.
 
-The first four modes are **foreground** execution: they return in the caller or
+The first five modes are **foreground** execution: they return in the caller or
 API process, favor low latency, and deliberately omit crash recovery. Use them
 for unit tests, prompt iteration, and foreground request paths. `julep dev up`
 is the **durable** path: it exercises release publication, API persistence,
@@ -37,6 +38,54 @@ The default `local` environment resolves live source and runs the in-memory
 interpreter with deterministic echo effects. It prints the trace tree and final
 output directly. Use this mode when you do not need to exercise the HTTP API,
 release records, or deployment activation.
+
+## Run a configured pipeline in-process
+
+`prepare_local_pipeline(...)` is the first-class foreground seam for an
+application declared in `pyproject.toml` or `julep.toml`. It resolves the
+selected environment, compiles only the named pipeline with its normal env,
+policy, reasoner, freeze, and snapshot gates, and returns a reusable
+`LocalPipeline` with a stable `artifact_hash`:
+
+```python
+from julep import WorkerContext, prepare_local_pipeline
+from julep.llm import litellm_caller
+
+summary = prepare_local_pipeline("episode_summary", env="local")
+context = WorkerContext(llm=litellm_caller())
+
+result = await summary.arun(
+    {"episode_id": "42"},
+    context=context,
+    principal={"tenant": "acme"},
+)
+```
+
+Prepare once when a foreground service will call the pipeline repeatedly.
+`LocalPipeline.arun(...)` executes in the current event loop;
+`LocalPipeline.run(...)` is the synchronous wrapper and rejects an already
+running event loop. `arun_local_pipeline(...)` and `run_local_pipeline(...)`
+are one-shot compile-and-run conveniences. All four execution methods return
+the interpreter value directly rather than a control-plane result envelope.
+
+The model seam is the canonical `LlmCaller(reasoner, value, principal,
+transcript, dispatch)`. An explicit `llm=` wins over `WorkerContext.llm`.
+`principal=` is forwarded to both model and MCP calls. MCP execution is never
+inferred from ambient configuration: inject `WorkerContext(mcp_call=...)`.
+QoS resolution and registry verification are also reused. A context registry
+may contain the same compiled reasoner declaration, but a differing override is
+rejected. Tool-calling agents additionally require a caller that accepts
+Julep's optional `tools=` keyword extension.
+
+This path deliberately has no HTTP/control-plane hop, PostgreSQL, Temporal,
+release lifecycle, or durable retry boundary. It rejects session `LOOP`
+artifacts, transcript-scoped `APP` agents, staged plans, subflows, and the
+reserved human-gate, sleep, recv, and emit effects with typed
+`LocalExecutionUnsupported`. Ordinary business input may still contain a field
+named `transcript`; only the agent runtime protocol is unsupported. Batch QoS
+is clamped to foreground `FLEX`, and run-scoped control-plane secrets are not
+an argument. Use `serve api --local` or a durable worker for those orchestration
+surfaces.
 
 ## Unit-test a deployment
 
@@ -141,8 +190,8 @@ idempotent submission, PostgreSQL run records, Temporal retry/replay, payload
 encryption, or worker queue routing.
 
 Install the server/store/Temporal dependencies, a local PostgreSQL server, and
-the Temporal CLI. Generate independent development-only API, payload-codec,
-vault, and signing keys once, then load the same values into every process:
+the Temporal CLI. Generate independent development-only admin API, worker API,
+payload-codec, vault, and signing keys, then load the file into the supervisor:
 
 ```bash
 pip install --pre 'julep[server,store]'
@@ -158,6 +207,14 @@ export JULEP_EXECUTION_STORE_DSN='postgresql://postgres:postgres@127.0.0.1:5432/
 omitted. Use `--format json` when feeding a secret manager instead of a shell.
 The generated values are local credentials; Julep does not persist them for
 you and they should not be committed.
+
+The supervisor partitions that input by process. Publication receives the
+private signing seed; the API receives the static API keyring and vault keys;
+workers receive the shared payload codec, public signer allow-list, and only
+the worker-role token as `JULEP_API_KEY`. Workers never receive
+`JULEP_API_KEYS`, vault decryption keys, the admin token, or the private signing
+seed. `JULEP_WORKER_API_KEY` exists only as the supervisor's handoff name; it is
+used for authenticated vault reads through `JULEP_API_URL`.
 
 Configure a local file release store, the worker context factory that supplies
 real effects, and the lane queues in `julep.toml`:
@@ -190,7 +247,8 @@ frontend, `--no-publish --no-worker` to bring up infrastructure only, and
 `--dry-run` to inspect the redacted process plan. `--api-url` defaults to
 `JULEP_API_URL`, then `http://127.0.0.1:8080`; `--api-key` defaults to
 `JULEP_API_KEY`. The selected key must match an admin entry in
-`JULEP_API_KEYS`.
+`JULEP_API_KEYS`; the generated `JULEP_WORKER_API_KEY` must match its separate
+worker-role entry.
 
 This mode still uses PostgreSQL and Temporal intentionally. If a test only
 needs the HTTP surface, use `create_local_app(...)` or `serve api --local`

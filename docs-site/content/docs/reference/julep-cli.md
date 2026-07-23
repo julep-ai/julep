@@ -485,9 +485,13 @@ the generated values on its own.
 | `--force` | false | Replace an existing output file; without it, overwrite is refused. |
 
 The env form includes `TEMPORAL_PAYLOAD_KEYS`, `JULEP_VAULT_KEYS`, the bundle
-signing seed and allowed public signer, `JULEP_API_KEYS`, and the matching
-`JULEP_API_KEY`. Load the same output into the API and worker processes. Treat
-it as secret local configuration and do not commit it.
+signing seed and allowed public signer, and a two-role `JULEP_API_KEYS` keyring.
+`JULEP_API_KEY` is its admin token; `JULEP_WORKER_API_KEY` is an independent
+worker token. Source the output into `julep dev up`, which partitions the
+credentials by child process: workers receive the payload codec, public signer,
+and worker token, but not the static API keyring, vault keyring, admin token, or
+private signing seed. Treat the complete generated output as secret local
+configuration and do not commit it.
 
 ## `julep dev up`
 
@@ -512,7 +516,10 @@ stopped on exit or startup failure.
 
 Durable dev requires `JULEP_EXECUTION_STORE_DSN`, a local `file://` release
 store, a worker context factory, payload encryption keys, an admin API key, and
-the server/store/Temporal dependencies. It uses real PostgreSQL and Temporal;
+the server/store/Temporal dependencies. When workers need operator-vault
+values, `JULEP_WORKER_API_KEY` must match a separate worker-role keyring entry;
+the supervisor exposes it to workers as `JULEP_API_KEY` alongside
+`JULEP_API_URL`. It uses real PostgreSQL and Temporal;
 for a service-free HTTP test surface, use `julep serve api --local` instead.
 See [Local development](/docs/deploy/local) for setup.
 

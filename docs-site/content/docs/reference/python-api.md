@@ -321,6 +321,37 @@ are derived from the resolved frozen tool set when `capabilities` is omitted.
 `InMemoryEnv` also accepts `mcp_call=`, so an MCP-only deployment needs no
 native `tools=` map for local execution.
 
+## Configured foreground execution
+
+These package-root exports load one configured application pipeline and execute
+its frozen deployment in the caller's process. They return the unwrapped
+interpreter value and perform no HTTP, PostgreSQL, Temporal, release, or durable
+retry work.
+
+| Symbol | Signature | Behavior | Raises |
+|---|---|---|---|
+| `prepare_local_pipeline` | `prepare_local_pipeline(pipeline: str, *, project_root: str | Path = ".", config: JulepConfig | None = None, env: str = "local") -> LocalPipeline` | resolve config/application, compile only the selected pipeline, and return a reusable object with `.artifact_hash`, `.name`, and `.environment` | `LocalPipelineNotFound`, compilation/freeze/snapshot errors |
+| `LocalPipeline.arun` | `async arun(input=None, *, llm: LlmCaller | None = None, context: WorkerContext | None = None, principal: RunPrincipal | None = None) -> Any` | execute in the current event loop and return the unwrapped value | local configuration/effect/interpreter errors |
+| `LocalPipeline.run` | `run(input=None, *, llm=None, context=None, principal=None) -> Any` | synchronous wrapper over `arun`; prepare once and reuse across calls | `LocalExecutionConfigurationError` in an active event loop |
+| `arun_local_pipeline` | `async arun_local_pipeline(pipeline, input=None, *, project_root=".", config=None, env="local", llm=None, context=None, principal=None) -> Any` | one-shot prepare and async run | same as prepare + `arun` |
+| `run_local_pipeline` | `run_local_pipeline(pipeline, input=None, *, project_root=".", config=None, env="local", llm=None, context=None, principal=None) -> Any` | one-shot prepare and sync run | same as prepare + `run` |
+| `LocalPipelineError` | subclass of `JulepError` | base class for configured foreground failures | n/a |
+| `LocalPipelineNotFound` | `LocalPipelineNotFound(kind, name, available)` | typed unknown environment/pipeline error with `.kind`, `.name`, and `.available` | n/a |
+| `LocalExecutionConfigurationError` | subclass of `LocalPipelineError` | missing/mismatched LLM, MCP, registry, or sync-loop configuration | n/a |
+| `LocalExecutionUnsupported` | subclass of `LocalPipelineError` | direct-foreground artifact requires a runtime-owned orchestration boundary | n/a |
+
+An explicit `llm=` takes precedence over `context.llm`; it uses the canonical
+five-argument `LlmCaller`. Tool-calling agents require the optional `tools=`
+keyword extension. `WorkerContext` supplies MCP calls plus QoS and registry
+hooks, while `principal` is forwarded to both LLM and MCP calls. A differing
+reasoner declaration in `context.registry` is rejected rather than overriding
+the compiled artifact.
+
+Direct foreground execution rejects session `LOOP`, transcript-scoped `APP`
+agents, staged plans, subflows, and human-gate/sleep/recv/emit reserved effects.
+It also has no run-secret input; use the local API or durable worker when the
+runtime must own those boundaries.
+
 ## Control-plane clients
 
 Import the HTTP clients and their typed run errors from `julep.client`. Install
@@ -636,6 +667,8 @@ Environment knobs verified in source:
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | worker host | SDK workflow-task slots |
 | `WORKER_HEALTH_PORT` | worker host | probe port serving `/healthz` and `/readyz` |
 | `JULEP_ARTIFACT_STORE_URL` | bundle worker/verification | artifact store URL for bundle resolution |
+| `JULEP_API_KEY` | CLI/client or worker | client/admin token in the invoking shell; `dev up` gives workers only their separate worker-role token under this name |
+| `JULEP_WORKER_API_KEY` | `julep dev up` supervisor | worker-role handoff token; validated against `JULEP_API_KEYS` and never forwarded under this name |
 | `JULEP_BUNDLE_SIGNING_KEY` | bundle publish | signing seed or path |
 | `JULEP_BUNDLE_ALLOWED_SIGNERS` | bundle resolution | comma-separated signer allow-list |
 | `JULEP_BUNDLES` | bundle worker | bundle refs to load from `JULEP_ARTIFACT_STORE_URL` |
