@@ -7,6 +7,7 @@ import httpx
 import pytest
 from starlette.testclient import TestClient
 
+import julep.server as server
 from julep.client import (
     AsyncJulepClient,
     JulepClient,
@@ -86,6 +87,21 @@ def test_start_run_requires_idempotency_or_run_id() -> None:
     client = JulepClient(client=TestClient(lambda scope, receive, send: None))
     with pytest.raises(ValueError, match="idempotency_key or run_id"):
         client.start_run(pipeline="summary")
+
+
+def test_async_client_keeps_the_sync_public_method_surface() -> None:
+    sync_methods = {
+        name
+        for name, value in vars(JulepClient).items()
+        if not name.startswith("_") and callable(value)
+    }
+    async_methods = {
+        name
+        for name, value in vars(AsyncJulepClient).items()
+        if not name.startswith("_") and callable(value)
+    }
+
+    assert async_methods - {"aclose"} == sync_methods
 
 
 def test_publish_release_registers_manifest_as_admin(server_factory) -> None:
@@ -193,6 +209,45 @@ def test_sync_start_and_wait_raises_typed_terminal_error() -> None:
     assert caught.value.error == "provider unavailable"
 
 
+@pytest.mark.parametrize(
+    ("status", "terminal_detail"),
+    [
+        ("canceled", None),
+        ("terminated", {"reason": "operator request"}),
+        ("start_failed", "Temporal unavailable"),
+    ],
+)
+def test_sync_wait_covers_every_non_failure_terminal_status(
+    status: str,
+    terminal_detail: object,
+) -> None:
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "run": {
+                    "run_id": "run-terminal",
+                    "status": status,
+                    "detail": terminal_detail,
+                },
+                "result": None,
+            },
+        )
+
+    transport = httpx.Client(
+        base_url="https://julep.invalid",
+        transport=httpx.MockTransport(handler),
+    )
+    client = JulepClient(client=transport)
+
+    with pytest.raises(JulepRunFailed) as caught:
+        client.wait_for_run("run-terminal", deadline_s=5)
+
+    assert caught.value.run_id == "run-terminal"
+    assert caught.value.status == status
+    assert caught.value.detail == terminal_detail
+
+
 def test_sync_wait_deadline_expires_before_an_unbounded_poll() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
@@ -285,3 +340,62 @@ def test_async_run_and_wait_honors_deadline() -> None:
         asyncio.run(exercise())
 
     assert caught.value.run_id == "run-async-slow"
+
+
+def test_run_and_wait_executes_against_local_api_end_to_end(tmp_path) -> None:
+    """The adoption client and zero-daemon API compose without consumer glue."""
+
+    from julep import deploy, ident
+    from julep.app_deploy import ApplicationRelease, PipelineRelease
+    from julep.freeze import McpSnapshot
+
+    app = server.create_local_app(project_root=tmp_path)
+    deployment = deploy(ident(), McpSnapshot())
+    release = ApplicationRelease(
+        application="client-local-acceptance",
+        application_artifact_hash="sha256:" + "a" * 64,
+        worker_image="registry.invalid/client-local@sha256:" + "b" * 64,
+        pipelines=(
+            PipelineRelease(
+                name="summary",
+                lane="local",
+                artifact_hash=deployment.artifact_hash,
+                flow_json=deployment.flow_json,
+                manifest_json=deployment.manifest_json,
+                pinned_pures={},
+                bundle_ref=None,
+                eval_packages=(),
+                max_call_limits={},
+                mcp_preflight_policy="pin",
+            ),
+        ),
+    )
+    payload = {"question": "can the client execute this locally?"}
+
+    with TestClient(app) as transport_client:
+        client = JulepClient(api_key="local-dev", client=transport_client)
+        published = client.publish_release(release.manifest_bytes)
+        assert published["release_hash"] == release.release_hash
+
+        first = client.run_and_wait(
+            pipeline="summary",
+            input=payload,
+            release=release.release_hash,
+            idempotency_key="client-local-acceptance",
+            deadline_s=2,
+            poll_wait_s=0.1,
+        )
+        retry = client.run_and_wait(
+            pipeline="summary",
+            input=payload,
+            release=release.release_hash,
+            idempotency_key="client-local-acceptance",
+            deadline_s=2,
+            poll_wait_s=0.1,
+        )
+
+        assert first == payload
+        assert retry == payload
+        runs = client.list_runs()["items"]
+        assert len(runs) == 1
+        assert runs[0]["pipeline"] == "summary"

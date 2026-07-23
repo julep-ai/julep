@@ -87,6 +87,40 @@ def test_litellm_caller_is_canonical_and_injectable() -> None:
     assert seen["parallel_tool_calls"] is False
 
 
+def test_model_ladder_and_litellm_adapter_fail_over_as_one_execution_seam() -> None:
+    payloads: list[dict[str, Any]] = []
+
+    async def fake_acompletion(**kwargs: Any) -> Any:
+        payloads.append(kwargs)
+        if len(payloads) == 1:
+            raise HttpError(503)
+        return _completion("fallback reply")
+
+    caller = with_model_ladder(
+        litellm_caller(acompletion=fake_acompletion),
+        models=["anthropic:claude-sonnet-4-6@medium"],
+    )
+    result = run(
+        caller(
+            Reasoner("summary", "openrouter:openai/gpt-5@high"),
+            {"text": "summarize me"},
+        )
+    )
+
+    assert result.reply == "fallback reply"
+    assert payloads[0]["model"] == "openrouter/openai/gpt-5"
+    assert payloads[0]["extra_body"] == {"reasoning": {"effort": "high"}}
+    assert payloads[1]["model"] == "anthropic/claude-sonnet-4-6"
+    assert payloads[1]["thinking"] == {
+        "type": "enabled",
+        "budget_tokens": 2048,
+    }
+    assert [attempt.outcome for attempt in result.meta.attempts] == [
+        "transient",
+        "ok",
+    ]
+
+
 class HttpError(Exception):
     def __init__(self, status_code: int) -> None:
         self.status_code = status_code

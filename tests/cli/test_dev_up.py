@@ -177,6 +177,36 @@ def test_run_dev_stack_starts_one_worker_per_queue_and_cleans_up(
     assert all(process.terminated for process in processes)
 
 
+def test_run_dev_stack_surfaces_worker_failure_and_stops_healthy_children(
+    tmp_path: Path,
+) -> None:
+    plan = _plan(tmp_path, start_temporal=False)
+    processes: list[_Process] = []
+
+    def popen(_argv: Any, *, cwd: Path, env: dict[str, str]) -> _Process:
+        assert cwd == tmp_path
+        process = _Process()
+        process.environment = env
+        if env.get("TEMPORAL_TASK_QUEUE") == "summary-rabc":
+            process.returncode = 17
+        processes.append(process)
+        return process
+
+    with pytest.raises(DevStackError, match="worker:summary exited with status 17"):
+        run_dev_stack(
+            plan,
+            popen=popen,
+            publish=lambda _plan: (("summary", "summary-rabc"),),
+            wait_temporal=lambda *_args, **_kwargs: None,
+            wait_api=lambda *_args, **_kwargs: None,
+            poll_interval_s=0,
+        )
+
+    assert len(processes) == 2
+    assert processes[0].terminated  # API is always cleaned up on worker failure.
+    assert not processes[1].terminated  # The failed worker already exited.
+
+
 def _write_project(tmp_path: Path) -> None:
     (tmp_path / "julep.toml").write_text(
         "\n".join(
