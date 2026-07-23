@@ -220,6 +220,20 @@ def test_model_ladder_primary_suffix_wins_over_explicit_effort_on_fallback() -> 
     ]
 
 
+def test_model_ladder_deduplicates_equivalent_slug_spellings() -> None:
+    calls: list[str] = []
+
+    async def base(reasoner: Reasoner, *_args: Any) -> str:
+        calls.append(reasoner.model)
+        raise HttpError(503)
+
+    caller = with_model_ladder(base, models=["openai/gpt-5"])
+
+    with pytest.raises(ResilienceExhausted):
+        run(caller(Reasoner("r", "openai:gpt-5"), "value"))
+    assert calls == ["openai:gpt-5"]
+
+
 def test_model_ladder_fails_fast_on_configuration_error() -> None:
     calls: list[str] = []
 

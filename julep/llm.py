@@ -241,14 +241,17 @@ def with_model_ladder(
         tools: Optional[list[dict[str, Any]]] = None,
         parallel_tool_calls: Optional[bool] = None,
     ) -> Any:
-        candidates: list[str] = []
+        candidates: list[Reasoner] = []
+        seen_candidates: set[tuple[str, Optional[str]]] = set()
         for candidate in (reasoner.model, *models):
-            if candidate not in candidates:
-                candidates.append(candidate)
+            normalized = _reasoner_for_model(reasoner, candidate)
+            identity = (normalized.model, normalized.reasoning_effort)
+            if identity not in seen_candidates:
+                seen_candidates.add(identity)
+                candidates.append(normalized)
         attempts: list[AttemptRecord] = []
         last_exc: Optional[Exception] = None
-        for model in candidates:
-            attempt_reasoner = _reasoner_for_model(reasoner, model)
+        for attempt_reasoner in candidates:
             provider = _provider(attempt_reasoner.model)
             try:
                 extra: dict[str, Any] = {}
