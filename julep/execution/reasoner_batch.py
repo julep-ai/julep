@@ -13,6 +13,7 @@ from temporalio import activity, workflow
 from temporalio.exceptions import ApplicationError
 from temporalio.workflow import ParentClosePolicy
 
+from ..dispatch import BatchWindow
 from ..ir import canonical_json
 from .batch_provider import BatchReply
 from .failure_scrub import activity_redacted_failure_text, secret_safe_activity
@@ -232,25 +233,25 @@ class BatchCollector:
             self._last_at = _parse_at(inp.pending_last_at) or opened
 
         # --- collect until the fire condition holds -------------------------- #
+        window = BatchWindow(
+            quiet_s=inp.quiet_s,
+            max_items=inp.max_items,
+            max_wait_s=inp.max_wait_s,
+        )
         while True:
-            if inp.max_items is not None and len(self._items) >= inp.max_items:
+            decision = window.evaluate(
+                item_count=len(self._items),
+                opened_at=opened if self._items else None,
+                last_arrival_at=self._last_at,
+                now=workflow.now(),
+            )
+            if decision.fire:
                 break
-            now = workflow.now()
-            if self._items:
-                assert self._last_at is not None
-                deadline = self._last_at + timedelta(seconds=inp.quiet_s)
-                if inp.max_wait_s is not None:
-                    deadline = min(deadline, opened + timedelta(seconds=inp.max_wait_s))
-                if now >= deadline:
-                    break
-                timeout: Optional[float] = max((deadline - now).total_seconds(), 0.0)
-            else:
-                # Signal-with-start means at least one signal is on its way.
-                timeout = None
             count = len(self._items)
             try:
                 await workflow.wait_condition(
-                    lambda count=count: len(self._items) > count, timeout=timeout
+                    lambda count=count: len(self._items) > count,
+                    timeout=decision.wait_s,
                 )
             except asyncio.TimeoutError:
                 pass  # re-evaluate the fire condition against workflow.now()

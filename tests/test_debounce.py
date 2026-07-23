@@ -22,6 +22,7 @@ if HAVE_TEMPORAL:
 
     from julep import call, each, freeze, manifest_to_json, mcp
     from julep.contracts import McpAnnotations
+    from julep.dispatch import BatchWindow, dispatch_debounced
     from julep.execution.activities import WorkerContext
     from julep.execution.debounce import submit_debounced
     from julep.execution.worker import build_worker
@@ -95,9 +96,14 @@ async def _quiet_window_collates_a_burst(env):
         with env.auto_time_skipping_disabled():
             handle = None
             for item in (1, 2, 3):
-                handle = await submit_debounced(
-                    env.client, flow_json, manifest_json,
-                    key=key, item=item, quiet_s=600, task_queue="julep-debounce",
+                handle = await dispatch_debounced(
+                    env.client,
+                    flow_json,
+                    manifest_json,
+                    key=key,
+                    item=item,
+                    window=BatchWindow(quiet_s=600),
+                    task_queue="julep-debounce",
                 )
             assert sorted(await handle.query("pending")) == [1, 2, 3]
         await env.sleep(601)
