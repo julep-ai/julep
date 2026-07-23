@@ -205,6 +205,21 @@ def _provider_tool_defs(
     ]
 
 
+_SAMPLE_ATTRS = ("input", "expected", "mock_tools", "stop_on", "tags", "name")
+
+
+def _is_sample(obj: Any) -> bool:
+    """True for julep's Sample or a structurally identical real dotctx.Sample.
+
+    With a real third-party ``dotctx`` installed, the compat shim is skipped and
+    eval.py builds ``dotctx.eval_types.Sample`` (a distinct class from julep's).
+    Duck-type it so the runner loads those samples instead of rejecting them.
+    """
+    if isinstance(obj, Sample):
+        return True
+    return type(obj).__name__ == "Sample" and all(hasattr(obj, attr) for attr in _SAMPLE_ATTRS)
+
+
 def _validate_samples(loaded: Any) -> list[Sample]:
     """Validate the eval.py sample() contract as a setup-time error.
 
@@ -222,7 +237,7 @@ def _validate_samples(loaded: Any) -> list[Sample]:
             f"eval sample() must return an iterable of Sample, got {type(loaded).__name__}"
         ) from exc
     for i, s in enumerate(items):
-        if not isinstance(s, Sample):
+        if not _is_sample(s):
             raise ValueError(
                 f"eval sample()[{i}] must be a Sample, got {type(s).__name__} "
                 "(construct Sample(input=..., expected=...), do not return raw dicts)"
@@ -280,13 +295,22 @@ def _coerce_score(value: Any) -> tuple[float, dict[str, Any]]:
     return score, metrics
 
 
+def _is_mock_tool_config(obj: Any) -> bool:
+    """julep's MockToolConfig or a structurally identical real dotctx one."""
+    if isinstance(obj, MockToolConfig):
+        return True
+    return type(obj).__name__ == "MockToolConfig" and all(
+        hasattr(obj, attr) for attr in ("match", "default", "responses")
+    )
+
+
 def _resolve_mock(
     mock: Any,
     args: Any,
     counters: dict[str, int],
     key: str,
 ) -> Any:
-    if isinstance(mock, MockToolConfig):
+    if _is_mock_tool_config(mock):
         margs = args if isinstance(args, dict) else {}
         for pattern, response in mock.match:
             if all(margs.get(k) == v for k, v in pattern.items()):
