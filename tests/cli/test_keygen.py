@@ -11,7 +11,6 @@ from typer.testing import CliRunner
 from julep.bundle import bundle_signer_public_key
 from julep.cli.main import app
 from julep.cli.keygen import generate_dev_environment, render_dev_environment
-from julep.execution.codec import parse_aes_gcm_keyring
 from julep.secrets import parse_vault_keyring
 
 
@@ -27,7 +26,8 @@ def _deterministic_bytes() -> Callable[[int], bytes]:
 
 def test_generate_dev_environment_is_ready_for_api_and_worker() -> None:
     values = generate_dev_environment(random_bytes=_deterministic_bytes())
-    payload = parse_aes_gcm_keyring(values["TEMPORAL_PAYLOAD_KEYS"])
+    payload_key_id, payload_key = values["TEMPORAL_PAYLOAD_KEYS"].split("=", 1)
+    payload = {payload_key_id: payload_key}
     vault = parse_vault_keyring(values["JULEP_VAULT_KEYS"])
     assert payload == {"dev": "70" * 32}
     assert vault == {"dev": b"v" * 32}

@@ -23,7 +23,7 @@ if HAVE_DBOS:
         decode_policy_error,
         encode_policy_error,
     )
-    from julep.execution.harness import ExecutionPolicy
+    from julep.execution.policy import ExecutionPolicy
     from julep.projection import InMemoryProjection, ProjectionEmitter
 
 
