@@ -69,8 +69,7 @@ def test_vault_cipher_authenticates_name_and_generation() -> None:
         cipher.decrypt("tracker-token", 2, ciphertext, key_id)
 
 
-@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
-def test_vault_cipher_env_rejects_temporal_payload_key_reuse() -> None:
+def test_vault_cipher_env_rejects_payload_key_reuse() -> None:
     shared = "11" * 32
     with pytest.raises(VaultConfigurationError, match="distinct key material"):
         VaultCipher.from_env(
