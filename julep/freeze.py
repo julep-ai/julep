@@ -273,27 +273,29 @@ def _app_tool_expectation(
     return expectations.get(alias) or expectations.get(wire_key)
 
 
-def _expected_tool_keys(flow: Node) -> set[str]:
-    """Every toolref key the flow can reach: call leaves, app inline grants,
-    and the granted tools of each registered reasoner the flow references."""
-    keys: set[str] = set()
+def _reasoners_with_tool_expectations(flow: Node) -> set[str]:
+    """Reasoners whose declared tools are part of this non-APP flow surface."""
     reasoners: set[str] = set()
     for node in flow.walk():
         step = node.step
-        if isinstance(step, CallStep):
-            keys.add(toolref_key(step.tool))
         if isinstance(step, ThinkStep):
             reasoners.add(step.reasoner)
-        if node.op in (Op.APP, Op.EVAL_PLAN) and node.controller is not None:
+        if node.op == Op.EVAL_PLAN and node.controller is not None:
             reasoners.add(node.controller)
-        if node.op == Op.APP and node.tools:
-            aliases = node.tool_aliases or {}
-            keys.update(aliases.get(str(k), str(k)) for k in node.tools)
-    for name in reasoners:
-        reasoner = DEFAULT_REGISTRY.reasoners.get(name)
-        if reasoner is not None:
-            keys.update(reasoner.tools)
-    return keys
+        # APP nodes with explicit grants are checked through their alias-to-wire
+        # surface below. Retain the registered-reasoner fallback for legacy APPs
+        # that carry no inline grant list.
+        if node.op == Op.APP and node.controller is not None and not node.tools:
+            reasoners.add(node.controller)
+    return reasoners
+
+
+def _direct_tool_keys(flow: Node) -> set[str]:
+    return {
+        toolref_key(step.tool)
+        for node in flow.walk()
+        if isinstance((step := node.step), CallStep)
+    }
 
 
 def _check_tool_schema_drift(
@@ -339,30 +341,47 @@ def _check_tool_schema_drift(
                     f"{expectation.ctx_path!r} was written against {expected_hash}"
                 )
 
-    for key in sorted(_expected_tool_keys(flow)):
+    def check_tool(key: str, expectation: ToolSchemaExpectation) -> None:
+        served = _served_input_schema(key, snapshot)
+        if served is None:
+            return  # not resolved by this snapshot; missing call tools raise in _resolve
+        expected_hash = _schema_hash(expectation.input_schema)
+        served_hash = _schema_hash(served)
+        if expected_hash == served_hash:
+            return
+        ref = _toolref_from_key(key)
+        server = ref.server if isinstance(ref, McpTool) else "<native>"
+        raise FreezeError(
+            f"TOOL_SCHEMA_DRIFT: tool {key!r} (server {server!r}) serves schema "
+            f"{served_hash}, but {expectation.ctx_path!r} was written against "
+            f"{expected_hash}"
+        )
+
+    # A scoped fallback is unsafe for an unrelated authored call, but remains
+    # authoritative for the reasoner whose dotctx package registered it.
+    for reasoner_name in sorted(_reasoners_with_tool_expectations(flow)):
+        reasoner = DEFAULT_REGISTRY.reasoners.get(reasoner_name)
+        if reasoner is None:
+            continue
+        for key in sorted(reasoner.tools):
+            expectation = expectations.get(
+                scoped_tool_expectation_key(reasoner_name, key)
+            )
+            if expectation is not None:
+                check_tool(key, expectation)
+
+    for key in sorted(_direct_tool_keys(flow)):
         if (key, key) in checked or any(wire == key for _, wire in checked):
             continue
         if key in scoped_fallbacks:
-            # This bare-name entry exists only as a compatibility lookup for a
-            # scoped dotctx APP. It must not bind an unrelated authored/native
+            # This unscoped entry exists only as a compatibility lookup for a
+            # scoped dotctx package. It must not bind an unrelated authored
             # call with the same common name (for example, ``lookup``).
             continue
         expectation = expectations.get(key)
         if expectation is None:
             continue
-        served = _served_input_schema(key, snapshot)
-        if served is None:
-            continue  # not resolved by this snapshot; missing call tools raise in _resolve
-        expected_hash = _schema_hash(expectation.input_schema)
-        served_hash = _schema_hash(served)
-        if expected_hash != served_hash:
-            ref = _toolref_from_key(key)
-            server = ref.server if isinstance(ref, McpTool) else "<native>"
-            raise FreezeError(
-                f"TOOL_SCHEMA_DRIFT: tool {key!r} (server {server!r}) serves schema "
-                f"{served_hash}, but {expectation.ctx_path!r} was written against "
-                f"{expected_hash}"
-            )
+        check_tool(key, expectation)
 
 
 def freeze(
