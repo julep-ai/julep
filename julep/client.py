@@ -377,7 +377,11 @@ class JulepClient:
         deadline_s: float = 300.0,
         poll_wait_s: float = 20.0,
     ) -> Any:
-        """Alias for :meth:`start_and_wait` with the same typed contract."""
+        """Submit and wait without the admin-only MCP preflight override.
+
+        Either ``idempotency_key`` or ``run_id`` is required.
+        Operators that need ``mcp_preflight=`` can call :meth:`start_and_wait`.
+        """
 
         return self.start_and_wait(
             pipeline=pipeline,
@@ -657,6 +661,12 @@ class AsyncJulepClient:
         deadline_s: float = 300.0,
         poll_wait_s: float = 20.0,
     ) -> Any:
+        """Submit and wait without the admin-only MCP preflight override.
+
+        Either ``idempotency_key`` or ``run_id`` is required.
+        Operators that need ``mcp_preflight=`` can call :meth:`start_and_wait`.
+        """
+
         return await self.start_and_wait(
             pipeline=pipeline,
             input=input,

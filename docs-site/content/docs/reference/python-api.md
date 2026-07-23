@@ -135,12 +135,12 @@ flow parameters or JSON captures.
 | `Reasoner` | `Reasoner(name, model, system="", tools=(), temperature=None, max_rounds=None, is_agent=False, sub_contract=None, context_scope=ContextScope.LOCAL, system_render=None, user_render=None, max_tokens=None, *, reply=_UNSET, reasoning_effort=None, output_retries=0, require_tool_call=False, response_format=None, prompt_cache=None)` | model-call config; `reply` accepts TypedDict, Pydantic v2 model, or raw schema dict | reasoner config | `TypeError` for unsupported `reply`; `ValueError` for bad cache TTL | `Reasoner("r", "anthropic:claude-haiku-4-5", reply=Reply)` |
 | `Reasoner.replace` | `replace(*, name=_KEEP, model=_KEEP, system=_KEEP, reply=_KEEP, tools=_KEEP, temperature=_KEEP, max_rounds=_KEEP, is_agent=_KEEP, sub_contract=_KEEP, context_scope=_KEEP, system_render=_KEEP, user_render=_KEEP, max_tokens=_KEEP, reasoning_effort=_KEEP, output_retries=_KEEP, require_tool_call=_KEEP, response_format=_KEEP, prompt_cache=_KEEP) -> Reasoner` | immutable copy-with updates; omitted `reply` preserves its materialized schema and explicit `reply=None` clears it | new reasoner | constructor validation for replaced values | `fast = base.replace(model="openai:gpt-5-mini")` |
 | `get_reasoner` | `get_reasoner(name: str) -> Reasoner` | reasoner name | config | `KeyError` if unknown | `get_reasoner("support_reply").model` |
-| `load_dotctx` | `load_dotctx(path: str) -> Reasoner` | dotctx directory | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
+| `load_dotctx` | `load_dotctx(path: str, *, env=None) -> Reasoner` | dotctx directory or file and explicit render environment | registered reasoner | `FileNotFoundError`, `RuntimeError`, rich-layout import errors | `load_dotctx("reasoners/planner")` |
 | `reasoner_from_settings` | `reasoner_from_settings(settings: dict[str, Any], *, name=None, base_dir=None) -> Reasoner` | settings mapping and optional path | registered reasoner | `ValueError` if no name | `reasoner_from_settings({"name":"r","model":"m"})` |
 | `reasoner_to_flow` | `reasoner_to_flow(reasoner: Reasoner, *, ctx=None) -> Node` | reasoner and optional context | `think`, `iter_up_to`, `app`, or `sub` node | none | `reasoner_to_flow(get_reasoner("r"))` |
 | `dotctx_flow` | `dotctx_flow(path: str, *, ctx=None) -> Node` | dotctx path | lowered node | same as `load_dotctx` | `dotctx_flow("reasoners/r")` |
 | `CtxPipelineConfig` | `CtxPipelineConfig(name, ctx, lane="default", env={})` | zero-code pipeline declaration | config value | config validation occurs in `load_config` | `CtxPipelineConfig("summary", "prompts/summary.ctx")` |
-| `pipeline_spec_from_ctx` | `pipeline_spec_from_ctx(config, *, root, env_vars=None) -> PipelineSpec` | load dotctx, merge env, and lower with `reasoner_to_flow` | pipeline spec | dotctx/config errors | `pipeline_spec_from_ctx(cfg, root=Path("."))` |
+| `pipeline_spec_from_ctx` | `pipeline_spec_from_ctx(config, *, root, env_vars=None, agent_round_cap=32, mcp_servers=None) -> PipelineSpec` | load dotctx, merge env, bind configured MCP servers, and lower with `reasoner_to_flow` | pipeline spec | dotctx/config errors | `pipeline_spec_from_ctx(cfg, root=Path("."))` |
 
 Rich dotctx packages whose `schema.pyi` omits `class Output` emit
 `MissingOutputSchemaWarning`: loading remains compatible, but the returned
@@ -374,6 +374,11 @@ surface and owns an `httpx.AsyncClient` when one is not injected.
 Reuse of an idempotency key is safe only for the same pipeline and release; a
 different pipeline or release produces an HTTP `409 idempotency_conflict`
 instead of returning an unrelated existing run.
+
+`run_and_wait` intentionally exposes the ordinary client submission contract.
+The admin-only `mcp_preflight` override remains on `start_run` and
+`start_and_wait`; use the latter when an operator explicitly needs that
+override plus a bounded wait.
 
 ## MCP authentication
 

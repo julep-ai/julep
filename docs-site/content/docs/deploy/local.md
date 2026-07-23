@@ -77,6 +77,12 @@ may contain the same compiled reasoner declaration, but a differing override is
 rejected. Tool-calling agents additionally require a caller that accepts
 Julep's optional `tools=` keyword extension.
 
+The MCP surface is snapshotted and frozen when the pipeline is prepared, and
+frozen input schemas are enforced before dispatch. This foreground seam does
+not perform the control plane's per-run MCP preflight or re-snapshot drift
+check; call `prepare_local_pipeline(...)` again to refresh a live surface, or
+use the local/durable API when per-run preflight behavior is under test.
+
 This path deliberately has no HTTP/control-plane hop, PostgreSQL, Temporal,
 release lifecycle, or durable retry boundary. It rejects session `LOOP`
 artifacts, transcript-scoped `APP` agents, staged plans, subflows, and the

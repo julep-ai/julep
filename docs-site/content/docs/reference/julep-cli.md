@@ -538,8 +538,10 @@ Build and run the FastAPI control plane from `ServerSettings.from_env()`.
 | `--context-factory MODULE:ATTR` | unset | In local mode, load a zero-argument sync or async factory returning `WorkerContext`. |
 
 Durable mode requires `julep[server]` and `JULEP_EXECUTION_STORE_DSN`. Local
-mode needs no PostgreSQL or Temporal. Configuration or optional-dependency
-failures exit `2`. See [Local development](/docs/deploy/local) and
+echo mode needs no PostgreSQL or Temporal and supplies the fixed `local-dev`
+admin token only on loopback. Because configured-context mode can invoke real
+effects, it requires explicit `JULEP_API_KEYS` even on loopback. Configuration
+or optional-dependency failures exit `2`. See [Local development](/docs/deploy/local) and
 [Control plane](/docs/deploy/control-plane).
 
 ## `julep db migrate`

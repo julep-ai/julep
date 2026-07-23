@@ -399,6 +399,8 @@ with JulepClient("https://julep.example", api_key) as client:
 `JulepRunFailed` covers `failed`, `canceled`, `terminated`, and
 `start_failed`. `JulepRunTimeout` is a caller deadline, not a request to cancel
 the durable run. Async callers use the same method and contract with `await`.
+The admin-only `mcp_preflight` override is deliberately available on
+`start_and_wait(...)`, not the ordinary `run_and_wait(...)` convenience.
 
 For terminal CLI reads:
 
