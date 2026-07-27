@@ -11,6 +11,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import inspect
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Callable, Optional
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from .dotctx import Reasoner
 
 PureFn = Callable[..., Any]
+MAX_BUNDLE_PURE_SOURCE_BYTES = 256 * 1024
 
 
 def _wasm_source_only(*_args: object, **_kwargs: object) -> object:
@@ -64,6 +66,46 @@ def _pure_decorator_name(source: str, name: str) -> bool:
             if isinstance(arg, ast.Constant) and arg.value == name:
                 return True
     return False
+
+
+def _validate_portable_source(
+    name: str,
+    source: str,
+    *,
+    allow_dependencies: bool = False,
+) -> None:
+    source_bytes = source.encode("utf-8")
+    if len(source_bytes) > MAX_BUNDLE_PURE_SOURCE_BYTES:
+        raise ValueError(
+            f"pure {name!r} source is too large for the wasm tier "
+            f"({len(source_bytes)} bytes; limit {MAX_BUNDLE_PURE_SOURCE_BYTES})"
+        )
+
+    declared_deps, _ = parse_pep723(source)
+    if declared_deps and not allow_dependencies:
+        raise ValueError(
+            f"pure {name!r} declares third-party dependencies; the wasm alpha "
+            "supports dependency-free pures only"
+        )
+
+    tree = ast.parse(source)
+    third_party: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root = alias.name.partition(".")[0]
+                if root not in sys.stdlib_module_names:
+                    third_party.add(root)
+        elif isinstance(node, ast.ImportFrom):
+            root = "" if node.level else (node.module or "").partition(".")[0]
+            if root and root not in sys.stdlib_module_names:
+                third_party.add(root)
+    if third_party and not allow_dependencies:
+        raise ValueError(
+            f"pure {name!r} imports unsupported module(s) "
+            f"{', '.join(sorted(third_party))}; the wasm alpha supports the Python "
+            "standard library only"
+        )
 
 
 @dataclass(frozen=True)
@@ -319,6 +361,7 @@ class Registry:
         if not _pure_decorator_name(source, name):
             raise ValueError(f"source did not register requested pure {name!r}")
 
+        _validate_portable_source(name, source, allow_dependencies=True)
         deps, requires_python = parse_pep723(source)
         entry = PureEntry(
             name=name,

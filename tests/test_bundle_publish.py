@@ -15,7 +15,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from julep import HAVE_TEMPORAL, arr, deploy, pure, seq
-from julep.bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, publish_bundle
+from julep.bundle import (
+    ABI_PYTHON_SOURCE_JSON_V1,
+    BundleError,
+    PureDepsUnbuildableError,
+    publish_bundle,
+)
 from julep.artifact_store import LocalDirArtifactStore
 from julep.ir import canonical_json
 from julep.registry import PureEntry, Registry
@@ -124,6 +129,28 @@ def test_empty_custom_set_publishes_with_empty_refs(tmp_path: Path) -> None:
 
     manifest = _json_from_store(LocalDirArtifactStore(tmp_path), rec["bundleHash"])
     assert manifest["pures"] == []
+
+
+def test_dependency_pures_are_disabled_by_default(tmp_path: Path) -> None:
+    deployment = _simple_deployment()
+    registry = Registry()
+    name = "bundle.test.normalize.v1"
+    registry.pures[name] = PureEntry(
+        name=name,
+        fn=_bundle_test_normalize.fn,
+        source_hash=deployment.artifact_components["pureSourceHashes"][name],
+        deps=("regex==2024.11.6",),
+    )
+
+    with pytest.raises(PureDepsUnbuildableError, match="dependency-free pures only"):
+        publish_bundle(
+            deployment,
+            LocalDirArtifactStore(tmp_path),
+            signing_key=SEED_A,
+            registry=registry,
+        )
+
+    assert not any(tmp_path.iterdir())
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

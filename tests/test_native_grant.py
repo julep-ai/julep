@@ -22,6 +22,11 @@ from julep.worker_store import BundleResolutionError, resolve_and_register
 from conftest import read_snapshot
 
 
+@pytest.fixture(autouse=True)
+def _enable_experimental_wasm_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JULEP_WASM_DEPENDENCIES_ENABLED", "1")
+
+
 SEED = "55" * 32
 
 

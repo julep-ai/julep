@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("wasmtime")
 
 from julep.errors import PureExecutionError
+from julep.execution import wasm_executor
 from julep.execution.wasm_executor import WasmExecutor, get_wasm_executor
 
 
@@ -65,3 +66,23 @@ def test_pure_exception_propagates_type() -> None:
 
     assert exc.value.error_type == "ValueError"
     assert "boom" in exc.value.message
+
+
+def test_oversized_request_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    source = """@pure("identity")\ndef identity(value, **kwargs):\n    return value\n"""
+    monkeypatch.setattr(wasm_executor, "MAX_REQUEST_BYTES", 256)
+
+    with pytest.raises(PureExecutionError) as excinfo:
+        WasmExecutor().run("identity", source, "x" * 512, {})
+
+    assert excinfo.value.error_type == "WasmInputTooLarge"
+
+
+def test_oversized_response_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    source = """@pure("expand")\ndef expand(value, **kwargs):\n    return "x" * value\n"""
+    monkeypatch.setattr(wasm_executor, "MAX_RESPONSE_BYTES", 256)
+
+    with pytest.raises(PureExecutionError) as excinfo:
+        WasmExecutor().run("expand", source, 512, {})
+
+    assert excinfo.value.error_type == "WasmOutputTooLarge"

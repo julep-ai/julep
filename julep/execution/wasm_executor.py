@@ -17,6 +17,8 @@ from ..errors import PureExecutionError
 
 VENDORED_WASM = Path(__file__).resolve().parent / "_wasm" / "executor.wasm"
 DEFAULT_FUEL = 2_000_000_000
+MAX_REQUEST_BYTES = 4 * 1024 * 1024
+MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 
 _EXECUTOR: WasmExecutor | None = None
 _EXECUTOR_LOCK = threading.Lock()
@@ -120,6 +122,13 @@ class WasmExecutor:
         try:
             component = self._select_component(name, env_hash)
             raw_request = json.dumps(request, sort_keys=True, separators=(",", ":"))
+            request_size = len(raw_request.encode("utf-8"))
+            if request_size > MAX_REQUEST_BYTES:
+                raise PureExecutionError(
+                    "WasmInputTooLarge",
+                    f"bundle pure {name!r} request is {request_size} bytes; "
+                    f"limit is {MAX_REQUEST_BYTES}",
+                )
             # Keep batch 1 conservative: fresh store/instance per call, with a
             # process-local lock around wasmtime component instantiation/calls.
             with self._lock:
@@ -134,6 +143,13 @@ class WasmExecutor:
                 raw_response = run(store, raw_request)
                 run.post_return(store)
 
+            response_size = len(raw_response.encode("utf-8"))
+            if response_size > MAX_RESPONSE_BYTES:
+                raise PureExecutionError(
+                    "WasmOutputTooLarge",
+                    f"bundle pure {name!r} response is {response_size} bytes; "
+                    f"limit is {MAX_RESPONSE_BYTES}",
+                )
             response = json.loads(raw_response)
             if not isinstance(response, dict):
                 raise RuntimeError("component returned a non-object response")

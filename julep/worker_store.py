@@ -16,9 +16,15 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from . import _env, deps
-from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
+from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, _wasm_dependencies_enabled
 from .artifact_store import ArtifactStoreError, ArtifactStore, artifact_store_from_url
-from .registry import DEFAULT_REGISTRY, PureEntry, Registry, _text_hash
+from .registry import (
+    DEFAULT_REGISTRY,
+    PureEntry,
+    Registry,
+    _text_hash,
+    _validate_portable_source,
+)
 
 _SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
 _HEX = re.compile(r"^[0-9a-fA-F]+$")
@@ -289,6 +295,15 @@ def resolve_and_register(
                 f"source text hashes to {actual_hash}, manifest has {bundled_hash}"
             )
 
+        try:
+            _validate_portable_source(
+                pure_record.name,
+                source,
+                allow_dependencies=_wasm_dependencies_enabled(),
+            )
+        except (SyntaxError, ValueError) as e:
+            raise BundleResolutionError(str(e)) from e
+
         existing = registry.pures.get(pure_record.name)
         if existing is not None and existing.source_hash != bundled_hash:
             raise BundleResolutionError(
@@ -312,7 +327,14 @@ def resolve_and_register(
         )
 
     for verified_pure in verified:
-        if verified_pure.executor_tier == "native" and verified_pure.name not in native_grants:
+        if verified_pure.executor_tier != "native":
+            continue
+        if not _wasm_dependencies_enabled():
+            raise BundleResolutionError(
+                f"bundle pure {verified_pure.name!r} requests the native dependency tier, "
+                "which is disabled for the wasm alpha"
+            )
+        if verified_pure.name not in native_grants:
             raise BundleResolutionError(
                 f"bundle pure {verified_pure.name!r} requests native dependency tier, "
                 "but this worker has not granted it via JULEP_PURE_NATIVE_DEPS"
@@ -330,6 +352,15 @@ def resolve_and_register(
     # at the first lookup inside workflow code (a WorkflowTaskFailed mid-run).
     # Fail fast at resolution with install guidance.
     if wasm_verified:
+        if _env.get(_env.JULEP_WASM_ENABLED, "1").strip().lower() in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }:
+            raise BundleResolutionError(
+                "bundle-sourced wasm pures are disabled by JULEP_WASM_ENABLED"
+            )
         _ensure_wasm_runtime()
         _register_env_components(store, wasm_verified)
 

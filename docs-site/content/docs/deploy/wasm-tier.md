@@ -3,13 +3,11 @@ title: "WASM Execution Tier"
 description: "Operate the wasm tier for sandboxed pure execution: building wheels, the cwasm cache, and troubleshooting."
 ---
 
-Bundle-sourced pures (registered via `register_pure_from_source` after arriving
-from a signed artifact store bundle) execute inside a **wasmtime CPython sandbox** — a fresh
-instance per call, with no clock, filesystem, network, or entropy. A bundle pure
-with off-list dependencies may instead execute in the explicit native tier,
-behind a per-pure operator grant. Baked pures (`register_pure`) and `std.*` keep
-running natively in-process, unchanged. This runbook covers the operational and
-trust surface of those bundle execution tiers.
+Bundle-sourced pures execute inside a **wasmtime CPython sandbox**: a fresh
+instance per call, with no clock, filesystem, network, or entropy. The current
+alpha admits dependency-free pures only. Dependency environments and the native
+fallback remain experimental and are rejected by the alpha publication path.
+Baked pures (`register_pure`) and `std.*` continue to run natively in-process.
 
 ## What runs where
 
@@ -17,8 +15,8 @@ trust surface of those bundle execution tiers.
 | --- | --- | --- | --- |
 | Baked into the worker image | `register_pure` / `@pure(...)` | native (in-process) | none (trusted code) |
 | `std.*` library | baked | native | none |
-| Signed artifact store bundle, no deps or supported WASI-wheel deps | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
-| Signed artifact store bundle, off-list deps with `JULEP_PURE_NATIVE_DEPS` grant | `register_pure_from_source` | **native** (`uv` venv subprocess) | none (operator-trusted bundle source) |
+| Signed artifact store bundle, no deps | `register_pure_from_source` | **wasm** | wasmtime, fresh per call |
+| Signed artifact store bundle with dependencies | rejected in alpha | none | none |
 
 The selection is a single seam: `Registry.get_pure(name)` returns a wasm-bound
 callable for `executor == "wasm"` entries and a native-venv callable for
@@ -74,6 +72,8 @@ and [§6.6](/docs/internals/specification#66-bundle-manifest--detached-signature
 
 | Variable | Default | Effect |
 | --- | --- | --- |
+| `JULEP_WASM_ENABLED` | `1` | Set to `0` to reject WASM bundle resolution after workers restart. |
+| `JULEP_WASM_DEPENDENCIES_ENABLED` | `0` | Experimental dependency backend; leave disabled for the alpha. |
 | `JULEP_WASM_FUEL` | `2_000_000_000` | Fuel ceiling per call; bounds runaway compute. **Deterministic, always-on primary bound.** |
 | `JULEP_WASM_EPOCH_MS` | unset (off) | If set (>0), enables a best-effort epoch ticker + one-tick wall-clock deadline per call. **Opt-in, non-deterministic, coarse operational backstop only.** |
 | `JULEP_WASM_CACHE_DIR` | OS temp dir | Where the compiled `.cwasm` cache is written. |

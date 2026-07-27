@@ -89,13 +89,10 @@ class _BundleResolvingInstance(WorkflowInstance):
             init = job.initialize_workflow
             if init.workflow_type != "FlowWorkflow" or not init.arguments:
                 continue
-            try:
-                values = self._payload_converter.from_payloads(
-                    [init.arguments[0]],
-                    [FlowInput],
-                )
-            except Exception:
-                continue
+            values = self._payload_converter.from_payloads(
+                [init.arguments[0]],
+                [FlowInput],
+            )
             if not values:
                 continue
             entries = _flow_bundle_entries(values[0])
