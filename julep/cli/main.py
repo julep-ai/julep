@@ -886,6 +886,51 @@ def apply_application(
     if api_url or api_key:
         _register_remote_release(release, api_url or None, api_key or None)
     typer.echo("traffic   unchanged")
+    for lane_name, _task_queue in release_queue_lines(release):
+        typer.echo(
+            f"activate  julep activate --env {env} --lane {lane_name} "
+            f"--release {release.release_hash}"
+        )
+
+
+@app.command("activate")
+def activate(
+    env: str = typer.Option(..., "--env", help="Application environment name."),
+    lane: str = typer.Option(..., "--lane", help="Deployment lane name."),
+    release: str = typer.Option(..., "--release", help="Published release hash."),
+    api_url: str = typer.Option(
+        "",
+        "--api-url",
+        help="Activate the release with this Julep control-plane API base URL.",
+    ),
+    api_key: str = typer.Option(
+        "",
+        "--api-key",
+        help="Admin bearer key used with --api-url to activate the release.",
+    ),
+) -> None:
+    """Activate a lane release; rollback by activating a previous release hash."""
+    cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    client = _remote_client(api_url or None, api_key or None)
+    from julep.client import JulepClientError
+
+    try:
+        client.activate_deployment(lane, release)
+    except JulepClientError as exc:
+        if exc.status_code == 403:
+            typer.echo(
+                "error: lane activation requires an admin API key (403)",
+                err=True,
+            )
+        else:
+            typer.echo(f"error: lane activation failed: {exc}", err=True)
+        raise typer.Exit(1) from None
+    finally:
+        client.close()
+    typer.echo(f"activated {lane} {release}")
 
 
 @app.command("status")

@@ -406,6 +406,90 @@ def test_apply_surfaces_non_admin_registration_403(
     assert "admin API key" in err
 
 
+def test_activate_calls_remote_client_and_prints_confirmation(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+    release_hash = "sha256:" + "a" * 64
+    captured: dict[str, object] = {}
+
+    class FakeClient:
+        def activate_deployment(self, lane, release):
+            captured["activation"] = (lane, release)
+            return {"lane": lane, "release_hash": release}
+
+        def close(self):
+            captured["closed"] = True
+
+    def fake_remote_client(api_url, api_key):
+        captured["url"] = api_url
+        captured["key"] = api_key
+        return FakeClient()
+
+    monkeypatch.setattr(main_module, "_remote_client", fake_remote_client)
+
+    code = main(
+        [
+            "activate",
+            "--env",
+            "local",
+            "--lane",
+            "summary",
+            "--release",
+            release_hash,
+            "--api-url",
+            "http://control-plane",
+            "--api-key",
+            "admin-token",
+        ]
+    )
+    out = capsys.readouterr().out
+    assert code == 0
+    assert captured["activation"] == ("summary", release_hash)
+    assert captured["url"] == "http://control-plane"
+    assert captured["key"] == "admin-token"
+    assert captured.get("closed") is True
+    assert f"activated summary {release_hash}" in out
+
+
+def test_activate_surfaces_non_admin_403(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+
+    class FakeClient:
+        def activate_deployment(self, lane, release):
+            raise JulepClientError(403, "admin API key required")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(main_module, "_remote_client", lambda url, key: FakeClient())
+
+    code = main(
+        [
+            "activate",
+            "--env",
+            "local",
+            "--lane",
+            "summary",
+            "--release",
+            "sha256:" + "a" * 64,
+            "--api-key",
+            "alice-token",
+        ]
+    )
+    err = capsys.readouterr().err
+    assert code == 1
+    assert err == "error: lane activation requires an admin API key (403)\n"
+
+
 def test_deployment_config_preserves_pinned_oci_chart(
     tmp_path: Path,
     monkeypatch,
@@ -443,6 +527,10 @@ def test_plan_apply_publish_only_and_status_application_path(
     apply_output = capsys.readouterr().out
     assert "release   sha256:" in apply_output
     assert "traffic   unchanged" in apply_output
+    assert (
+        "activate  julep activate --env local --lane summary --release sha256:"
+        in apply_output
+    )
     assert not (root / ".julep" / "releases" / "local.json").exists()
     assert any((root / "releases").rglob("*"))
 
