@@ -741,6 +741,9 @@ class HelmLaneReconciler:
                 ]
             )
         self._runner(args)
+        # AIDEV-NOTE: Helm 3.21 --logs looks up a Pod named exactly like the Job,
+        # but test-hook Pods have generated suffixes. Retain the smoke Job so its
+        # logs can be fetched manually instead of turning a passed test into a failure.
         self._runner(
             [
                 "helm",
@@ -750,7 +753,6 @@ class HelmLaneReconciler:
                 self.namespace,
                 "--timeout",
                 "2m",
-                "--logs",
             ]
         )
         return LaneApplyResult(

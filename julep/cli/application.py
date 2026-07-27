@@ -78,6 +78,20 @@ def load_application(cfg: JulepConfig) -> Application:
     return load_application_spec(cfg.application)
 
 
+def _worker_runtime_declarations_hash(cfg: JulepConfig) -> str | None:
+    """Return the code-only declarations hash expected by an application worker.
+
+    The worker imports only the configured ``module:attr`` application, while ctx
+    pipelines keep their declarations in release-scoped blobs.
+    """
+
+    # AIDEV-NOTE: A merged code-plus-ctx hash would fail closed because worker
+    # startup imports only the code application named by cfg.application.
+    if cfg.application is None:
+        return None
+    return load_application(cfg).runtime_declarations_hash
+
+
 def _synth_application_name(root: Path) -> str:
     raw = re.sub(r"[^a-z0-9-]", "-", root.name.lower()).strip("-")
     if not raw or re.fullmatch(r"[a-z0-9](?:[-a-z0-9_.]{0,61}[a-z0-9])?", raw) is None:
@@ -234,11 +248,7 @@ def _resolve_deployment_config(
         _env.JULEP_BUNDLE_ALLOWED_SIGNERS: ",".join(allowed_signers),
     }
     chart = _resolve_helm_chart(cfg.root, env.helm_chart)
-    worker_runtime_declarations_hash = (
-        compiled.runtime_declarations_hash
-        if cfg.application is not None
-        else None
-    )
+    worker_runtime_declarations_hash = _worker_runtime_declarations_hash(cfg)
     deployment_config = build_lane_deployment_config(
         chart=chart,
         namespace=env.kubernetes_namespace,
@@ -310,11 +320,7 @@ def apply_configured_application(
         compiled,
         require_private_signer=True,
     )
-    worker_runtime_declarations_hash = (
-        compiled.runtime_declarations_hash
-        if cfg.application is not None
-        else None
-    )
+    worker_runtime_declarations_hash = _worker_runtime_declarations_hash(cfg)
     release = publish_application(
         compiled,
         store,
