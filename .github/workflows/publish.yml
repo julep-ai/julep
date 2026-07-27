@@ -1,0 +1,150 @@
+name: Publish
+
+# Publishes the `julep` distribution to PyPI.
+#
+# Normal path: push an annotated tag matching the version in pyproject.toml
+# (e.g. `v3.0.0rc5`) and this workflow builds, verifies, and uploads it.
+# Manual path: run via workflow_dispatch, which builds and verifies but only
+# uploads when `publish` is explicitly set to true.
+#
+# A PyPI version can never be replaced or re-uploaded, so the build job proves
+# the artifacts are installable before the publish job is allowed to run.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload to PyPI (leave false to build and verify only)"
+        type: boolean
+        default: false
+
+# Never let two releases race to the same version.
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # uv is installed from PyPI rather than via a third-party setup action:
+      # this workflow handles a publish credential, so its action surface is
+      # kept to first-party actions/* only.
+      - name: Install uv
+        run: python -m pip install --upgrade uv
+
+      # On a tag push the tag is the release's source of truth, so a tag that
+      # disagrees with pyproject.toml is a mistake worth failing loudly on
+      # before anything reaches PyPI.
+      - name: Tag must match the packaged version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          pyproject_version="$(python -c '
+          import pathlib, tomllib
+          print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])
+          ')"
+          echo "tag=$tag_version pyproject=$pyproject_version"
+          if [ "$tag_version" != "$pyproject_version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME implies version $tag_version but pyproject.toml declares $pyproject_version"
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Validate distribution metadata
+        run: uvx twine check dist/*
+
+      # The wheel ships package data (py.typed, the vendored wasm executor). A
+      # packaging regression that drops them is invisible until someone
+      # installs the release, so assert on the wheel contents here.
+      - name: Wheel must contain its package data
+        run: |
+          python - <<'EOF'
+          import glob, sys, zipfile
+
+          (wheel,) = glob.glob("dist/*.whl")
+          names = zipfile.ZipFile(wheel).namelist()
+          missing = [
+              expected
+              for expected in ("julep/py.typed", "julep/execution/_wasm/executor.wasm")
+              if expected not in names
+          ]
+          if missing:
+              sys.exit(f"{wheel} is missing package data: {missing}")
+          print(f"{wheel}: {len(names)} files, package data present")
+          EOF
+
+      # Install the built wheel into a clean environment with no extras, so a
+      # core module that grew an unconditional optional import cannot ship.
+      - name: Built wheel must install and import
+        run: |
+          uv venv /tmp/verify --python 3.12
+          uv pip install --python /tmp/verify/bin/python dist/*.whl
+          /tmp/verify/bin/python -c "import julep; print('import ok')"
+          /tmp/verify/bin/julep --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    # Only the tag push, or a dispatch that explicitly opted in, uploads.
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade uv
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Upload to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
+        run: uv publish dist/*
+
+      # Confirms the release is actually resolvable from the index rather than
+      # trusting the upload's exit code.
+      - name: Installed release must be importable from PyPI
+        run: |
+          version="$(python -c '
+          import glob, pathlib
+          # julep-3.0.0rc4-py3-none-any.whl -> 3.0.0rc4
+          print(pathlib.Path(glob.glob("dist/*.whl")[0]).name.split("-")[1])
+          ')"
+          echo "verifying julep==$version on PyPI"
+          uv venv /tmp/from-pypi --python 3.12
+          for attempt in 1 2 3 4 5; do
+            if uv pip install --python /tmp/from-pypi/bin/python --no-cache "julep==$version"; then
+              break
+            fi
+            echo "index not ready yet (attempt $attempt); retrying in 15s"
+            sleep 15
+          done
+          /tmp/from-pypi/bin/python -c "import julep; print('import ok')"
+          /tmp/from-pypi/bin/julep --version
