@@ -63,6 +63,11 @@ and [§6.6](/docs/internals/specification#66-bundle-manifest--detached-signature
   `JULEP_WASM_CACHE_DIR` (default: the OS temp dir) and is **not** committed
   (it is wasmtime-version/platform specific). Mounting a writable, node-local
   cache dir avoids paying the one-time compile on every pod start.
+- Each call runs in a store capped at 64 MiB of guest linear memory. Requests
+  and responses are capped at 4 MiB; the store cap bounds guest allocation
+  before the host verifies the returned response size. Temporal records the
+  `wasm-resource-limits-v1` patch marker for new histories; histories created
+  before this limit replay with the legacy behavior.
 - On the Temporal path the worker passes `wasmtime` through the workflow sandbox
   (`SandboxedWorkflowRunner.with_passthrough_modules("julep",
   "wasmtime")`) so the workflow-side wasm call shares the process-global engine

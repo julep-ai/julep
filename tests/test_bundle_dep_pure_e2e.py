@@ -192,6 +192,9 @@ def test_example_publish_resolve_carries_env_hash_end_to_end(
         base_component_hash(),
     ) == regex_pure["envHash"]
 
+    # Disabling new dependency publication must not strand signed bundles that
+    # were published while the experimental tier was enabled.
+    monkeypatch.setenv("JULEP_WASM_DEPENDENCIES_ENABLED", "0")
     fresh = Registry()
     resolve_and_register(
         store,

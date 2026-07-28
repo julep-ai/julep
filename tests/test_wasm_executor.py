@@ -78,6 +78,28 @@ def test_oversized_request_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None
     assert excinfo.value.error_type == "WasmInputTooLarge"
 
 
+def test_oversized_request_is_rejected_before_json_materialization(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = """@pure("identity")\ndef identity(value, **kwargs):\n    return value\n"""
+    monkeypatch.setattr(wasm_executor, "MAX_REQUEST_BYTES", 256)
+    original_dumps = wasm_executor.json.dumps
+    materialized = False
+
+    def tracking_dumps(*args, **kwargs):
+        nonlocal materialized
+        materialized = True
+        return original_dumps(*args, **kwargs)
+
+    monkeypatch.setattr(wasm_executor.json, "dumps", tracking_dumps)
+
+    with pytest.raises(PureExecutionError) as excinfo:
+        WasmExecutor().run("identity", source, "\x00" * 512, {})
+
+    assert excinfo.value.error_type == "WasmInputTooLarge"
+    assert not materialized
+
+
 def test_oversized_response_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     source = """@pure("expand")\ndef expand(value, **kwargs):\n    return "x" * value\n"""
     monkeypatch.setattr(wasm_executor, "MAX_RESPONSE_BYTES", 256)
@@ -86,3 +108,24 @@ def test_oversized_response_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
         WasmExecutor().run("expand", source, 512, {})
 
     assert excinfo.value.error_type == "WasmOutputTooLarge"
+
+
+def test_guest_memory_is_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    source = """@pure("expand")\ndef expand(value, **kwargs):\n    return "x" * value\n"""
+    monkeypatch.setattr(wasm_executor, "MAX_MEMORY_BYTES", 16 * 1024 * 1024)
+
+    with pytest.raises(PureExecutionError) as excinfo:
+        WasmExecutor().run("expand", source, 32 * 1024 * 1024, {})
+
+    assert excinfo.value.error_type in {"MemoryError", "WasmSandboxTrap"}
+
+
+def test_legacy_replay_bypasses_new_resource_limits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = """@pure("expand")\ndef expand(value, **kwargs):\n    return "x" * value\n"""
+    monkeypatch.setattr(wasm_executor, "MAX_RESPONSE_BYTES", 256)
+    monkeypatch.setattr(wasm_executor, "MAX_MEMORY_BYTES", 16 * 1024 * 1024)
+    monkeypatch.setattr(wasm_executor, "_resource_limits_enabled", lambda: False)
+
+    assert WasmExecutor().run("expand", source, 512, {}) == "x" * 512

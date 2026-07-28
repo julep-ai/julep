@@ -19,14 +19,111 @@ VENDORED_WASM = Path(__file__).resolve().parent / "_wasm" / "executor.wasm"
 DEFAULT_FUEL = 2_000_000_000
 MAX_REQUEST_BYTES = 4 * 1024 * 1024
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
+MAX_MEMORY_BYTES = 64 * 1024 * 1024
 
 _EXECUTOR: WasmExecutor | None = None
 _EXECUTOR_LOCK = threading.Lock()
+_RESOURCE_LIMITS_PATCH = "wasm-resource-limits-v1"
 _HOST_TRAP_ERROR_TYPES: tuple[tuple[tuple[str, ...], str], ...] = (
     (("all fuel consumed",), "WasmFuelExhausted"),
     (("epoch deadline", "interrupt"), "WasmDeadlineExceeded"),
     (("wasm trap", "unreachable"), "WasmSandboxTrap"),
 )
+
+
+class _JsonSizeLimitExceeded(Exception):
+    pass
+
+
+def _json_encoded_size(value: Any, limit: int) -> int:
+    size = 0
+    active: set[int] = set()
+
+    def add(amount: int) -> None:
+        nonlocal size
+        size += amount
+        if size > limit:
+            raise _JsonSizeLimitExceeded
+
+    def add_string(text: str) -> None:
+        add(2)
+        for char in text:
+            codepoint = ord(char)
+            if char in {'"', "\\", "\b", "\f", "\n", "\r", "\t"}:
+                add(2)
+            elif codepoint < 0x20:
+                add(6)
+            elif codepoint < 0x80:
+                add(1)
+            elif codepoint <= 0xFFFF:
+                add(6)
+            else:
+                add(12)
+
+    def dict_key_text(key: Any) -> str:
+        if isinstance(key, str):
+            return key
+        if key is None:
+            return "null"
+        if key is True:
+            return "true"
+        if key is False:
+            return "false"
+        if isinstance(key, int):
+            return str(key)
+        if isinstance(key, float):
+            return json.dumps(key)
+        raise TypeError(
+            "keys must be str, int, float, bool or None, "
+            f"not {type(key).__name__}"
+        )
+
+    def walk(item: Any) -> None:
+        if item is None:
+            add(4)
+        elif item is True:
+            add(4)
+        elif item is False:
+            add(5)
+        elif isinstance(item, str):
+            add_string(item)
+        elif isinstance(item, int):
+            add(len(str(item)))
+        elif isinstance(item, float):
+            add(len(json.dumps(item)))
+        elif isinstance(item, (list, tuple)):
+            identity = id(item)
+            if identity in active:
+                raise ValueError("Circular reference detected")
+            active.add(identity)
+            try:
+                add(2)
+                for index, child in enumerate(item):
+                    if index:
+                        add(1)
+                    walk(child)
+            finally:
+                active.remove(identity)
+        elif isinstance(item, dict):
+            identity = id(item)
+            if identity in active:
+                raise ValueError("Circular reference detected")
+            active.add(identity)
+            try:
+                add(2)
+                for index, (key, child) in enumerate(item.items()):
+                    if index:
+                        add(1)
+                    add_string(dict_key_text(key))
+                    add(1)
+                    walk(child)
+            finally:
+                active.remove(identity)
+        else:
+            raise TypeError(f"Object of type {type(item).__name__} is not JSON serializable")
+
+    walk(value)
+    return size
 
 
 def _stop_epoch_ticker(stop: threading.Event, thread: threading.Thread) -> None:
@@ -44,6 +141,16 @@ def get_wasm_executor() -> WasmExecutor:
             if _EXECUTOR is None:
                 _EXECUTOR = WasmExecutor()
     return _EXECUTOR
+
+
+def _resource_limits_enabled() -> bool:
+    try:
+        from temporalio import workflow
+
+        return workflow.patched(_RESOURCE_LIMITS_PATCH)
+    except Exception:
+        # Non-Temporal backends and direct calls always use the hardened path.
+        return True
 
 
 class WasmExecutor:
@@ -112,6 +219,7 @@ class WasmExecutor:
         *,
         env_hash: str | None = None,
     ) -> Any:
+        resource_limits_enabled = _resource_limits_enabled()
         request = {
             "kwargs": kwargs or {},
             "name": name,
@@ -121,18 +229,21 @@ class WasmExecutor:
 
         try:
             component = self._select_component(name, env_hash)
+            if resource_limits_enabled:
+                try:
+                    _json_encoded_size(request, MAX_REQUEST_BYTES)
+                except _JsonSizeLimitExceeded as exc:
+                    raise PureExecutionError(
+                        "WasmInputTooLarge",
+                        f"bundle pure {name!r} request exceeds {MAX_REQUEST_BYTES} bytes",
+                    ) from exc
             raw_request = json.dumps(request, sort_keys=True, separators=(",", ":"))
-            request_size = len(raw_request.encode("utf-8"))
-            if request_size > MAX_REQUEST_BYTES:
-                raise PureExecutionError(
-                    "WasmInputTooLarge",
-                    f"bundle pure {name!r} request is {request_size} bytes; "
-                    f"limit is {MAX_REQUEST_BYTES}",
-                )
             # Keep batch 1 conservative: fresh store/instance per call, with a
             # process-local lock around wasmtime component instantiation/calls.
             with self._lock:
                 store = Store(self._engine)
+                if resource_limits_enabled:
+                    store.set_limits(memory_size=MAX_MEMORY_BYTES)
                 store.set_fuel(self._fuel)
                 if self._epoch_ms is not None:
                     store.set_epoch_deadline(1)
@@ -144,7 +255,7 @@ class WasmExecutor:
                 run.post_return(store)
 
             response_size = len(raw_response.encode("utf-8"))
-            if response_size > MAX_RESPONSE_BYTES:
+            if resource_limits_enabled and response_size > MAX_RESPONSE_BYTES:
                 raise PureExecutionError(
                     "WasmOutputTooLarge",
                     f"bundle pure {name!r} response is {response_size} bytes; "

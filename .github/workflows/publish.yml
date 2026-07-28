@@ -20,10 +20,15 @@ on:
         description: "Upload to PyPI (leave false to build and verify only)"
         type: boolean
         default: false
+      version:
+        description: "Release tag (for example v3.0.0rc5; required when publishing)"
+        type: string
+        default: ""
 
-# Never let two releases race to the same version.
+# Serialize only runs targeting the same release. Build-only dispatches get a
+# unique group so they cannot displace a pending tag publication.
 concurrency:
-  group: publish-${{ github.ref }}
+  group: publish-${{ github.event_name == 'push' && github.ref_name || inputs.version || github.run_id }}
   cancel-in-progress: false
 
 permissions:
@@ -60,6 +65,20 @@ jobs:
           echo "tag=$tag_version pyproject=$pyproject_version"
           if [ "$tag_version" != "$pyproject_version" ]; then
             echo "::error::tag $GITHUB_REF_NAME implies version $tag_version but pyproject.toml declares $pyproject_version"
+            exit 1
+          fi
+
+      - name: Manual publish version must match the package
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          pyproject_version="$(python -c '
+          import pathlib, tomllib
+          print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])
+          ')"
+          if [ "$RELEASE_VERSION" != "v$pyproject_version" ]; then
+            echo "::error::manual publish version must be v$pyproject_version"
             exit 1
           fi
 
@@ -138,7 +157,7 @@ jobs:
       - name: Upload to PyPI
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
-        run: uv publish dist/*
+        run: uv publish --check-url https://pypi.org/simple dist/*
 
       # Confirms the release is actually resolvable from the index rather than
       # trusting the upload's exit code.

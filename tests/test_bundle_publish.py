@@ -23,7 +23,7 @@ from julep.bundle import (
 )
 from julep.artifact_store import LocalDirArtifactStore
 from julep.ir import canonical_json
-from julep.registry import PureEntry, Registry
+from julep.registry import PureEntry, Registry, _validate_portable_source
 from conftest import read_snapshot
 
 
@@ -151,6 +151,76 @@ def test_dependency_pures_are_disabled_by_default(tmp_path: Path) -> None:
         )
 
     assert not any(tmp_path.iterdir())
+
+
+def test_wasm_source_admission_uses_guest_stdlib() -> None:
+    source = """@pure("guest")\ndef guest(value):\n    import annotationlib\n    return value\n"""
+
+    _validate_portable_source("guest", source)
+
+
+@pytest.mark.parametrize(
+    "statement",
+    ["from . import helper", "from .helper import transform"],
+)
+def test_wasm_source_admission_rejects_relative_imports(statement: str) -> None:
+    source = f'@pure("relative")\ndef relative(value):\n    {statement}\n    return value\n'
+
+    with pytest.raises(ValueError, match="relative import"):
+        _validate_portable_source("relative", source)
+
+
+def test_wasm_source_admission_matches_imports_to_declared_projects() -> None:
+    source = """# /// script
+# dependencies = ["regex==2024.11.6"]
+# ///
+@pure("mismatch")
+def mismatch(value):
+    import numpy
+    return value
+"""
+
+    with pytest.raises(ValueError, match="not supplied by its declared dependencies"):
+        _validate_portable_source("mismatch", source, allow_dependencies=True)
+
+
+def test_wasm_source_admission_uses_distribution_import_metadata() -> None:
+    source = """# /// script
+# dependencies = ["PyYAML==6.0.2"]
+# ///
+@pure("yaml")
+def yaml(value):
+    import yaml
+    return yaml.safe_load(value)
+"""
+
+    _validate_portable_source("yaml", source, allow_dependencies=True)
+
+
+def test_wasm_source_admission_allows_uninstalled_distribution_alias() -> None:
+    source = """# /// script
+# dependencies = ["some-uninstalled-project==1"]
+# ///
+@pure("unknown")
+def unknown(value):
+    import different_import_name
+    return value
+"""
+
+    _validate_portable_source("unknown", source, allow_dependencies=True)
+
+
+def test_worker_validation_can_preserve_pre_limit_source() -> None:
+    source = (
+        '@pure("legacy.large")\n'
+        'def legacy(value):\n'
+        f'    """{"x" * (256 * 1024)}"""\n'
+        '    return value\n'
+    )
+
+    with pytest.raises(ValueError, match="source is too large"):
+        _validate_portable_source("legacy.large", source)
+    _validate_portable_source("legacy.large", source, validate_source_size=False)
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")

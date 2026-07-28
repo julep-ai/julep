@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from . import _env, deps
-from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError, _wasm_dependencies_enabled
+from .bundle import ABI_PYTHON_SOURCE_JSON_V1, BundleError
 from .artifact_store import ArtifactStoreError, ArtifactStore, artifact_store_from_url
 from .registry import (
     DEFAULT_REGISTRY,
@@ -299,7 +299,11 @@ def resolve_and_register(
             _validate_portable_source(
                 pure_record.name,
                 source,
-                allow_dependencies=_wasm_dependencies_enabled(),
+                # New publication is gated for the alpha, but workers must keep
+                # resolving dependency bundles that were already published.
+                allow_dependencies=True,
+                validate_dependency_imports=False,
+                validate_source_size=False,
             )
         except (SyntaxError, ValueError) as e:
             raise BundleResolutionError(str(e)) from e
@@ -329,11 +333,6 @@ def resolve_and_register(
     for verified_pure in verified:
         if verified_pure.executor_tier != "native":
             continue
-        if not _wasm_dependencies_enabled():
-            raise BundleResolutionError(
-                f"bundle pure {verified_pure.name!r} requests the native dependency tier, "
-                "which is disabled for the wasm alpha"
-            )
         if verified_pure.name not in native_grants:
             raise BundleResolutionError(
                 f"bundle pure {verified_pure.name!r} requests native dependency tier, "
@@ -372,6 +371,8 @@ def resolve_and_register(
             verified_pure.name,
             verified_pure.source,
             tier=tier,
+            validate_dependency_imports=False,
+            validate_source_size=False,
         )
         if verified_pure.executor_tier == "native":
             assert entry.deps == verified_pure.dep_list
@@ -401,7 +402,12 @@ def _validate_sources_without_registering(verified: Sequence[_VerifiedPure]) -> 
     scratch = Registry()
     for pure_record in verified:
         try:
-            scratch.register_pure_from_source(pure_record.name, pure_record.source)
+            scratch.register_pure_from_source(
+                pure_record.name,
+                pure_record.source,
+                validate_dependency_imports=False,
+                validate_source_size=False,
+            )
         except ValueError as e:
             raise BundleResolutionError(str(e)) from e
 
