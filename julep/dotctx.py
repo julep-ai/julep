@@ -59,6 +59,7 @@ _REPLACE_HANDLED_FIELDS = frozenset(
         "max_rounds", "is_agent", "sub_contract", "context_scope",
         "system_render", "user_render", "max_tokens", "reasoning_effort",
         "output_retries", "require_tool_call", "response_format", "prompt_cache",
+        "skills",
     }
 )
 
@@ -198,6 +199,7 @@ class Reasoner:
     require_tool_call: bool = False       # declarative; loop enforcement is Phase 3/4
     response_format: Optional[str] = None  # "json_object"; reply_schema wins at call time
     prompt_cache: Optional[str] = None
+    skills: tuple[str, ...] = ()          # content-addressed skill/<name>@v<hash> keys
 
     def __init__(
         self,
@@ -220,6 +222,7 @@ class Reasoner:
         require_tool_call: bool = False,
         response_format: Optional[str] = None,
         prompt_cache: Optional[str] = None,
+        skills: Sequence[str] = (),
     ) -> None:
         if reply is _REPLY_UNSET or reply is None:
             materialized = None
@@ -252,6 +255,18 @@ class Reasoner:
             )
         object.__setattr__(self, "prompt_cache", prompt_cache)
 
+        from .skills import SKILL_KEY_RE
+
+        skill_keys_tuple = tuple(skills)
+        for key in skill_keys_tuple:
+            if SKILL_KEY_RE.match(key) is None:
+                raise ValueError(
+                    f"malformed skill key {key!r} on reasoner {name!r}; "
+                    "expected 'skill/<name>@v<12 hex chars>' — pass "
+                    "julep.skills.skill_keys([...]) rather than bare names"
+                )
+        object.__setattr__(self, "skills", skill_keys_tuple)
+
     def replace(
         self,
         *,
@@ -273,6 +288,7 @@ class Reasoner:
         require_tool_call: bool = _KEEP,
         response_format: Optional[str] = _KEEP,
         prompt_cache: Optional[str] = _KEEP,
+        skills: Sequence[str] = _KEEP,
     ) -> Reasoner:
         """Return a copy with selected fields replaced.
 
@@ -301,6 +317,7 @@ class Reasoner:
             require_tool_call=_replacement(require_tool_call, self.require_tool_call),
             response_format=_replacement(response_format, self.response_format),
             prompt_cache=_replacement(prompt_cache, self.prompt_cache),
+            skills=_replacement(skills, self.skills),
         )
         # Preserve extension/future fields this version cannot yet override.
         # Declared fields still go through the constructor above for validation.

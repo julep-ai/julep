@@ -229,6 +229,8 @@ def _reasoner_identity(name: str) -> dict[str, Any]:
         ident["responseFormat"] = reasoner.response_format
     if reasoner.prompt_cache is not None:
         ident["promptCache"] = reasoner.prompt_cache
+    if reasoner.skills:
+        ident["skills"] = list(reasoner.skills)
     return ident
 
 
