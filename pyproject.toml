@@ -141,6 +141,8 @@ julep = ["py.typed", "execution/_wasm/*.wasm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Tests import repo-root examples/scripts; the pytest console script omits cwd from sys.path.
+pythonpath = ["."]
 # The Temporal E2E test wraps its own asyncio loop, so no asyncio plugin mode is
 # required; pure tests are synchronous.
 addopts = "-q -m 'not live'"
