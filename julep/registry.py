@@ -576,9 +576,9 @@ class Registry:
         """Register a skill under its content key and return that key.
 
         ``Skill`` equality ignores ``source``, so byte-identical sidecars in
-        different packages register once. A genuine mismatch under one key is
-        impossible (the key hashes every compared field) and is treated as a
-        corrupt-input error rather than silently overwritten.
+        different packages register once. The ``"\0"``-joined hash material is
+        not injective across field boundaries, so distinct skills can rarely
+        share a key; the mismatch guard is a real safety net against overwrite.
         """
         key = skill_key(skill)
         existing = self.skills.get(key)

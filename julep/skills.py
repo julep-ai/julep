@@ -42,7 +42,9 @@ _HASH_PREFIX_LEN = 12
 SKILL_KEY_RE = re.compile(r"^skill/(?P<name>[^@]+)@v[0-9a-f]{%d}$" % _HASH_PREFIX_LEN)  # noqa: UP031
 
 # Same frontmatter shape mem-mcp's loader and the single-file .ctx format use.
-_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
+_FRONTMATTER_RE = re.compile(
+    r"^---[ \t]*\n(.*?)^---[ \t]*\n(.*)$", re.DOTALL | re.MULTILINE
+)
 
 
 class SkillError(JulepError):
@@ -88,6 +90,9 @@ def parse_skill_markdown(text: str, *, origin: str) -> Skill:
     """Parse a ``SKILL.md``: YAML frontmatter then a markdown body."""
     import yaml
 
+    text = text.removeprefix("\ufeff")
+    # Normalize checkout line endings so Windows and Unix content hashes agree.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
     match = _FRONTMATTER_RE.match(text)
     if match is None:
         raise SkillError(
@@ -185,7 +190,6 @@ def load_package_skills(
         )
 
     by_name: dict[str, Skill] = {}
-    origin_of: dict[str, str] = {}
     for entry in sorted(os.listdir(skills_dir)):
         entry_path = os.path.join(skills_dir, entry)
         if not os.path.isdir(entry_path):
@@ -214,13 +218,7 @@ def load_package_skills(
                 f"{skill.name!r}; the directory name and the frontmatter name "
                 "must match"
             )
-        if skill.name in by_name:
-            raise SkillError(
-                f"skill {skill.name!r} is declared twice in {pkg_dir!r}: "
-                f"directory {origin_of[skill.name]!r} and directory {entry!r}"
-            )
         by_name[skill.name] = skill
-        origin_of[skill.name] = entry
 
     missing = [name for name in allowlist if name not in by_name]
     if missing:

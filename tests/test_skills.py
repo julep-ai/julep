@@ -56,8 +56,38 @@ def test_key_changes_when_description_changes() -> None:
 
 
 def test_missing_frontmatter_is_a_loud_error() -> None:
-    with pytest.raises(SkillError, match="frontmatter"):
+    with pytest.raises(SkillError, match="has no YAML frontmatter"):
         parse_skill_markdown("# Just a heading\n", origin="skills/x/SKILL.md")
+
+
+def test_crlf_document_matches_lf_skill_key() -> None:
+    lf_skill = parse_skill_markdown(SKILL_MD, origin="skills/natural-writing/SKILL.md")
+    crlf_skill = parse_skill_markdown(
+        SKILL_MD.replace("\n", "\r\n"),
+        origin="skills/natural-writing/SKILL.md",
+    )
+    assert crlf_skill == lf_skill
+    assert skill_key(crlf_skill) == skill_key(lf_skill)
+
+
+def test_delimiter_trailing_whitespace_is_accepted() -> None:
+    text = SKILL_MD.replace("---\n", "--- \n", 1).replace("\n---\n", "\n---\t\n", 1)
+    skill = parse_skill_markdown(text, origin="skills/natural-writing/SKILL.md")
+    assert skill.name == "natural-writing"
+    assert skill.body.startswith("# Natural Writing")
+
+
+def test_utf8_bom_is_accepted() -> None:
+    skill = parse_skill_markdown(
+        "\ufeff" + SKILL_MD,
+        origin="skills/natural-writing/SKILL.md",
+    )
+    assert skill.name == "natural-writing"
+
+
+def test_empty_frontmatter_reports_missing_name() -> None:
+    with pytest.raises(SkillError, match="frontmatter needs a non-empty name"):
+        parse_skill_markdown("---\n---\n\nbody\n", origin="skills/x/SKILL.md")
 
 
 def test_missing_name_is_a_loud_error() -> None:
@@ -159,17 +189,31 @@ def test_loose_file_directly_under_skills_is_rejected(tmp_path) -> None:
 def test_directory_name_must_match_frontmatter_name(tmp_path) -> None:
     pkg = str(tmp_path)
     _write_skill(pkg, "alpha", name="not-alpha")
-    with pytest.raises(SkillError, match="directory 'alpha'.*'not-alpha'"):
+    with pytest.raises(
+        SkillError,
+        match=(
+            "directory 'alpha'.*declares name 'not-alpha'.*"
+            "directory name and the frontmatter name must match"
+        ),
+    ):
         load_package_skills(pkg, ["not-alpha"])
 
 
-def test_duplicate_names_are_unresolvable(tmp_path) -> None:
+def test_mismatched_directory_is_rejected_when_name_has_a_legitimate_owner(
+    tmp_path,
+) -> None:
     pkg = str(tmp_path)
     _write_skill(pkg, "alpha", name="alpha")
     os.makedirs(os.path.join(pkg, "skills", "alpha-copy"))
     with open(os.path.join(pkg, "skills", "alpha-copy", "SKILL.md"), "w") as fh:
         fh.write("---\nname: alpha\ndescription: dupe\n---\n\nbody\n")
-    with pytest.raises(SkillError, match="directory 'alpha-copy'"):
+    with pytest.raises(
+        SkillError,
+        match=(
+            "directory 'alpha-copy'.*declares name 'alpha'.*"
+            "directory name and the frontmatter name must match"
+        ),
+    ):
         load_package_skills(pkg, ["alpha"])
 
 
@@ -225,6 +269,17 @@ def test_edited_copies_coexist_under_distinct_keys() -> None:
     assert len(reg.skills) == 2
 
 
+def test_register_rejects_nul_boundary_key_collision() -> None:
+    reg = Registry()
+    first = Skill(name="a", description="x\0y", body="z")
+    second = Skill(name="a", description="x", body="y\0z")
+    assert skill_key(first) == skill_key(second)
+    assert first != second
+    reg.register_skill(first)
+    with pytest.raises(ValueError, match="already registered with different content"):
+        reg.register_skill(second)
+
+
 def test_unknown_key_teaches() -> None:
     reg = Registry()
     with pytest.raises(KeyError, match="unknown skill"):
@@ -242,3 +297,9 @@ def test_skill_keys_registers_objects_and_passes_strings_through() -> None:
 def test_module_level_helpers_use_the_default_registry() -> None:
     key = register_skill(_skill("gamma-unique-to-this-test"))
     assert get_skill(key).name == "gamma-unique-to-this-test"
+
+
+def test_default_registry_skills_are_restored_between_tests() -> None:
+    key = skill_key(_skill("gamma-unique-to-this-test"))
+    with pytest.raises(KeyError, match="unknown skill"):
+        get_skill(key)
