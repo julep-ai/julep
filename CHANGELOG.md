@@ -51,6 +51,15 @@
   breaking legacy bundle resolution or Temporal replay; release publication is
   retry-safe.
 
+### Development
+
+- The test suite is invocation- and order-independent. `pythonpath = ["."]` makes
+  a bare `pytest` collect identically to `python -m pytest` (previously 14
+  collection errors), and `isolate_default_registry` is now autouse, so tests
+  that register reasoners/renderers/tool expectations no longer leak
+  `DEFAULT_REGISTRY` state into later tests. `CONTRIBUTING.md` documents the
+  canonical command (FEEDBACK 35).
+
 ## 3.0.0rc4 (2026-07-27)
 
 First release published via PyPI after rc2; see git history for details.
