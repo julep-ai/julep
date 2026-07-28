@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "julep"
-version = "3.0.0rc4"
+version = "3.0.0rc5"
 description = "Julep — durable, composable AI agents on Temporal."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -60,9 +60,6 @@ server = [
 ]
 # Rich dotctx layout (Jinja2 templates compiled into registered renderers).
 dotctx = ["jinja2>=3.1"]
-# Yglu-evaluated settings.yaml (mem-mcp .ctx compatibility). $env reads come
-# from an explicit mapping, never ambient os.environ.
-yglu = ["yglu>=1.0"]
 # Multi-provider LlmCaller via any-llm (execution/llm.py). Also install your
 # provider extras alongside it, e.g. pip install 'any-llm-sdk[anthropic,openai]'.
 # any-llm-sdk requires Python >=3.11; on 3.10 the LlmCaller raises a clear
@@ -144,6 +141,10 @@ julep = ["py.typed", "execution/_wasm/*.wasm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Tests import repo-root packages (`examples`, `scripts`, `tests.golden`), which
+# only land on sys.path implicitly under `python -m pytest`. Setting pythonpath
+# makes a bare `pytest` invocation collect identically.
+pythonpath = ["."]
 # The Temporal E2E test wraps its own asyncio loop, so no asyncio plugin mode is
 # required; pure tests are synchronous.
 addopts = "-q -m 'not live'"
@@ -213,10 +214,4 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["boto3.*", "botocore.*"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-# yglu ships no py.typed marker; the [yglu] extra is optional and imported
-# lazily inside dotctx_yglu._import_yglu only.
-module = ["yglu.*"]
 ignore_missing_imports = true

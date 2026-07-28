@@ -19,6 +19,11 @@ from julep.registry import DEFAULT_REGISTRY, Registry
 from conftest import read_snapshot
 
 
+@pytest.fixture(autouse=True)
+def _enable_experimental_wasm_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JULEP_WASM_DEPENDENCIES_ENABLED", "1")
+
+
 SEED = "33" * 32
 
 

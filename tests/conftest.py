@@ -7,11 +7,42 @@ tests, so the suite does not depend on a particular pytest-asyncio mode.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Iterator
 from typing import Any
+
+import pytest
 
 from julep.contracts import McpAnnotations
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep.registry import DEFAULT_REGISTRY
+
+# AIDEV-NOTE: DEFAULT_REGISTRY is process-global, so this autouse fixture makes
+# the suite order-independent. Registrations performed during module import or
+# collection survive because they happen before each snapshot; only intra-test
+# registrations are rolled back. Each test must register the registry state it
+# needs rather than relying on state left by another test.
+_REGISTRY_STATE_ATTRS = (
+    "reasoners",
+    "pures",
+    "renderers",
+    "renderer_declarations",
+    "tool_expectations",
+    "scoped_tool_fallbacks",
+    "agent_specs",
+)
+
+
+@pytest.fixture(autouse=True)
+def isolate_default_registry() -> Iterator[None]:
+    """Restore ``DEFAULT_REGISTRY`` around every test (global-state hygiene)."""
+    saved = {attr: getattr(DEFAULT_REGISTRY, attr).copy() for attr in _REGISTRY_STATE_ATTRS}
+    try:
+        yield
+    finally:
+        for attr, value in saved.items():
+            container = getattr(DEFAULT_REGISTRY, attr)
+            container.clear()
+            container.update(value)
 
 
 def run(coro: Coroutine[Any, Any, Any]) -> Any:

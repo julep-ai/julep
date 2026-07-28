@@ -229,6 +229,21 @@ class JulepClient:
             ).json(),
         )
 
+    def activate_deployment(self, lane: str, release: str) -> dict[str, Any]:
+        """Activate a published release for a deployment lane (admin-only)."""
+        return cast(
+            dict[str, Any],
+            self._request(
+                "POST",
+                "/v1/deployments",
+                json={"lane": lane, "release": release},
+            ).json(),
+        )
+
+    def list_deployments(self) -> dict[str, Any]:
+        """List active deployment lanes."""
+        return cast(dict[str, Any], self._request("GET", "/v1/deployments").json())
+
     def list_runs(self, *, cursor: str | None = None, limit: int = 50) -> dict[str, Any]:
         params: dict[str, Any] = {"limit": limit}
         if cursor is not None:
@@ -499,6 +514,24 @@ class AsyncJulepClient:
                     headers={"Content-Type": "application/json"},
                 )
             ).json(),
+        )
+
+    async def activate_deployment(self, lane: str, release: str) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            (
+                await self._request(
+                    "POST",
+                    "/v1/deployments",
+                    json={"lane": lane, "release": release},
+                )
+            ).json(),
+        )
+
+    async def list_deployments(self) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            (await self._request("GET", "/v1/deployments")).json(),
         )
 
     async def list_runs(

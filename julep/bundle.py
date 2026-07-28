@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from . import _env, deps
 from .artifact_store import ArtifactStore
 from .ir import canonical_json
-from .registry import DEFAULT_REGISTRY, Registry, _text_hash
+from .registry import DEFAULT_REGISTRY, Registry, _text_hash, _validate_portable_source
 
 if TYPE_CHECKING:
     from .deploy import Deployment
@@ -36,6 +36,15 @@ class PureDepsUnbuildableError(BundleError):
     pass
 
 
+def _wasm_dependencies_enabled() -> bool:
+    return _env.get(_env.JULEP_WASM_DEPENDENCIES_ENABLED, "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def _canonical_bytes(value: Any) -> bytes:
     return canonical_json(value).encode("utf-8")
 
@@ -46,13 +55,11 @@ def validate_pure_deps(
     registry: Registry,
     native_grant: Iterable[str] | str | None = None,
 ) -> None:
-    """Fail closed when a referenced dep'd pure cannot run in wasm or native."""
+    """Fail closed when a referenced pure cannot use an enabled execution tier."""
     grants = deps.native_dep_grants(native_grant)
     pure_hashes = deployment.artifact_components["pureSourceHashes"]
     if not isinstance(pure_hashes, dict):
         raise BundlePureSourceError("deployment artifact has malformed pureSourceHashes")
-
-    from .execution import env_builder
 
     for name in sorted(pure_hashes):
         if not isinstance(name, str) or name.startswith("std."):
@@ -60,16 +67,23 @@ def validate_pure_deps(
         entry = registry.pures.get(name)
         if entry is None or not entry.deps:
             continue
-        if env_builder.supported_deps(entry.deps) or name in grants:
-            continue
-        offending = env_builder.unsupported_deps(entry.deps)
+        if _wasm_dependencies_enabled():
+            from .execution import env_builder
+
+            if env_builder.supported_deps(entry.deps) or name in grants:
+                continue
+            offending = env_builder.unsupported_deps(entry.deps)
+            raise PureDepsUnbuildableError(
+                f"pure {name!r} declares dependency metadata that cannot be built for the "
+                "wasm tier: dependency requirement(s) "
+                f"{', '.join(repr(dep) for dep in offending)} are off the curated WASI "
+                f"wheel list ({', '.join(sorted(env_builder.SUPPORTED_WASI_WHEELS))}). "
+                "Use a supported wasi-wheel dependency, or grant this pure the native "
+                f"tier by adding {name} to JULEP_PURE_NATIVE_DEPS."
+            )
         raise PureDepsUnbuildableError(
-            f"pure {name!r} declares dependency metadata that cannot be built for the "
-            "wasm tier: dependency requirement(s) "
-            f"{', '.join(repr(dep) for dep in offending)} are off the curated WASI "
-            f"wheel list ({', '.join(sorted(env_builder.SUPPORTED_WASI_WHEELS))}). "
-            "Use a supported wasi-wheel dependency, or grant this pure the native "
-            f"tier by adding {name} to JULEP_PURE_NATIVE_DEPS."
+            f"pure {name!r} declares third-party dependencies; the wasm alpha "
+            "supports dependency-free pures only"
         )
 
 
@@ -192,6 +206,15 @@ def _custom_pure_sources(
                 f"pure {name!r} source hash mismatch: inspected source hashes to "
                 f"{actual_hash}, registry has {entry.source_hash}"
             )
+
+        try:
+            _validate_portable_source(
+                name,
+                source,
+                allow_dependencies=_wasm_dependencies_enabled(),
+            )
+        except (SyntaxError, ValueError) as e:
+            raise BundlePureSourceError(str(e)) from e
 
         records.append({"name": name, "sourceHash": pinned, "source": source})
     return records

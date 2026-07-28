@@ -58,6 +58,12 @@ result = await run_flow_dbos(
 )
 ```
 
+`run_flow_dbos` creates a Julep-owned DBOS workflow with its own trajectory
+records and per-effect step checkpoints. For a single-shot prompt inside a step
+you already own, call `LocalPipeline.arun` from your existing `@DBOS.step`
+instead — see [Embedded execution](/docs/deploy/embedded#durability-who-owns-the-workflow)
+for both shapes side by side.
+
 `run_flow_dbos` follows continuation segments (`continue_with`) as
 `job-123`, `job-123-seg1`, `job-123-seg2`, ... carrying `maxCalls` budgets
 across the chain. Human gates park on `DBOS.recv_async`; release with

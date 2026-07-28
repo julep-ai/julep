@@ -37,6 +37,30 @@ jobs:
       - name: Public package import must not require any optional extra
         run: python -c "import julep as c; assert c.HAVE_TEMPORAL is False"
 
+  wheel-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and install wheel with Wasmtime
+        run: |
+          python -m pip install uv
+          uv build --wheel
+          uv venv /tmp/julep-wheel --python 3.12
+          uv pip install --python /tmp/julep-wheel/bin/python dist/*.whl 'wasmtime>=45,<46'
+      - name: Execute pure from installed wheel
+        run: |
+          cd /tmp
+          /tmp/julep-wheel/bin/python - <<'PY'
+          from julep.execution.wasm_executor import VENDORED_WASM, WasmExecutor
+
+          source = '@pure("double")\ndef double(value, **kwargs):\n    return value * 2\n'
+          assert VENDORED_WASM.exists()
+          assert WasmExecutor().run("double", source, 21, {}) == 42
+          PY
+
   test:
     runs-on: ubuntu-latest
     strategy:

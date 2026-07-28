@@ -22,6 +22,11 @@ from julep.worker_store import BundleResolutionError, resolve_and_register
 from conftest import read_snapshot
 
 
+@pytest.fixture(autouse=True)
+def _enable_experimental_wasm_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JULEP_WASM_DEPENDENCIES_ENABLED", "1")
+
+
 SEED = "55" * 32
 
 
@@ -198,6 +203,9 @@ def test_worker_resolution_requires_native_grant_and_registers_native_venv(
     name = "native.grant.worker.v1"
     store, rec, _manifest = _publish_native_bundle(name, tmp_path, monkeypatch)
 
+    # The alpha gate blocks new publication, not replay/resolution of an
+    # existing signed bundle on a freshly configured worker.
+    monkeypatch.setenv("JULEP_WASM_DEPENDENCIES_ENABLED", "0")
     fresh = Registry()
     resolve_and_register(
         store,

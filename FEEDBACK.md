@@ -209,3 +209,117 @@ Most of it is generic; candidates to absorb, ranked:
     Ed25519 signer pubkey, and sequencing temporal-dev → `serve api --migrate` →
     publish/register → worker had to be hand-rolled in mise. `keygen` printing a ready
     env block is trivial; `dev up` makes finding 11's missing operator recipe a command.
+
+## Findings from the first EKS control-plane deployment (2026-07-27)
+
+The rc4 control plane now runs on the existing `julep-v2-temporal-demo` EKS cluster:
+two API replicas, PostgreSQL execution store, S3 release store, encrypted Temporal
+payloads, digest-pinned workers, KEDA scale-to-zero, and a public ALB restricted to
+the five Memory Store hosts. Three durable `grade-scores` samples completed after
+release activation. These are the gaps encountered while getting there.
+
+27. **[resolved] rc4 was not on PyPI during deployment.** PyPI now publishes
+    `3.0.0rc4`; the original deployment happened while the index stopped at rc2.
+    mem-mcp is moving directly to an exact rc5 source pin until rc5 is published.
+
+28. **[fixed in deployment branch] `helm test --logs` reports a successful Job as a
+    failure on Helm 3.21.** The chart creates a test Job whose Pod has a generated
+    suffix. Helm's log path looks for a Pod with the unsuffixed Job name, so `julep
+    apply` fails after the smoke test has actually passed. The working change removes
+    `--logs` from `HelmLaneReconciler` and retains successful smoke Jobs for inspection
+    (`julep/app_deploy.py`, `infra/helm/julep-worker/templates/smoke-test.yaml`). A
+    better long-term shape would collect logs by the Job's label selector when the test
+    fails, without making log retrieval part of pass/fail.
+
+29. **[fixed in deployment branch] The generic worker image misses imports required by
+    schema-v2 runtime preflight.** The image installed
+    `julep[dotctx,temporal,store,wasm]`, but a hydrated worker traverses MCP and server
+    auth imports. The deployed image adds `mcp` and `server` extras
+    (`tooling/runtime-image/Dockerfile`). Add an image-level startup or smoke test that
+    imports `julep.execution.bundle_worker:make_context` under the exact production
+    extras, so this fails during image build rather than after a release is published.
+
+30. **`julep status --env eks` treats an operator-network limitation as application
+    failure.** Helm, Deployment, and KEDA were healthy, but the command exited 3 because
+    the operator laptop cannot resolve
+    `temporal-frontend.temporal.svc.cluster.local`. This is expected for a cluster-only
+    Temporal endpoint. `status` should support a Kubernetes probe mode, skip direct
+    Temporal probing when the address is cluster-local, or distinguish “not observable
+    from here” from unhealthy. The current output marks runtime and queue state unknown,
+    then returns the same nonzero class used for real drift.
+
+31. **Release publication and activation are easy to mistake for one operation.** `julep
+    apply` correctly prints `traffic unchanged`, but unpinned `POST /v1/runs` requests do
+    not route to the healthy release until a separate admin `POST /v1/deployments`
+    activates its lane. Explicitly release-pinned runs can use it before activation. Keep
+    the separation. Improve the command's final output with the exact next command or add
+    an explicit `julep activate --env <env> --lane <lane> --release <hash>` command with
+    rollback symmetry.
+
+32. **Dependency-aware readiness has no probe-safe authentication mode.** `/v1/health`
+    is suitable for Kubernetes probes but does not check PostgreSQL, the artifact store,
+    or Temporal. `/v1/ready` checks all three but requires a bearer token, so standard
+    Kubernetes HTTP probes cannot use it without putting credentials in the Pod spec.
+    Consider a loopback-only readiness endpoint, a dedicated probe token mounted from a
+    Secret, or an exec-probe helper that reads the token without exposing it in the
+    manifest.
+
+33. **[fixed in deployment branch] Mixed code and configured-ctx applications pin the
+    wrong worker declaration hash.** `resolve_application()` combines the imported code
+    application with configured `.ctx` pipelines, then deployment passes the combined
+    `compiled.runtime_declarations_hash` as `WORKER_RUNTIME_DECLARATIONS_HASH`. Worker
+    startup imports only the code application's `module:attribute`, so its hash cannot
+    include the config-added reasoners and it fails closed before polling. The fix hashes
+    `load_application(cfg)` for worker startup while each configured `.ctx` pipeline keeps
+    its release-scoped declarations blob. A mixed-application regression now covers the
+    distinction (`julep/cli/application.py`,
+    `tests/cli/test_application_ctx_pipeline.py`).
+
+34. **The `yglu` extra resolves but cannot import on current setuptools.** `julep[yglu]`
+    installs yglu/yaql, but yaql imports the removed `pkg_resources` module. With
+    setuptools 83, `julep plan` catches that transitive `ModuleNotFoundError` and reports
+    the misleading “install julep[yglu]” error even though the extra is installed. Pinning
+    `setuptools>=75,<81` in the extra restores imports, with yaql's own deprecation warning.
+    Longer term, upgrade or replace the yaql dependency; until then, distinguish “extra
+    absent” from “installed extra failed to import” in the error message.
+
+35. **The full test suite is invocation- and order-dependent.** `uv run pytest -q`
+    fails collection because the repository root is absent from `sys.path`; `uv run
+    python -m pytest -q` collects, then leaves eight failures. Several are shared
+    `DEFAULT_REGISTRY` reasoner collisions that do not fail in targeted files, so an
+    earlier test changes a later test's result. The remaining failures include a stale
+    eval monkeypatch signature, one cross-test tool-schema expectation, and sibling
+    mem-mcp prompts that now use the unsupported `skills` setting. Add the repository
+    root to pytest's configured import path, isolate or restore global registries in an
+    autouse fixture, and make the canonical CI command explicit in `CONTRIBUTING.md`.
+
+## Findings from the embedded prompt pivot (2026-07-28)
+
+36. **Embedded execution exists, but its production name is hard to find.**
+    `prepare_local_pipeline(...).arun(...)` is the right boundary for a single-shot
+    prompt inside a consumer-owned DBOS step. The current `local`, `dry_run`, and
+    `foreground` vocabulary reads as test scaffolding, so the initial mem-mcp review
+    missed it. Add a top-level "Embedded execution" page and alias namespace, and state
+    the admission rule directly: use embedded Julep for prompt calls; use remote durable
+    Julep when Julep replaces orchestration.
+
+37. **The three-line embedded example assumes a Julep project config.** mem-mcp owns a
+    `.ctx` package but no `julep.toml`. The supported no-file path requires importing
+    `JulepConfig` and `EnvConfig` from `julep.cli.config` plus `CtxPipelineConfig` from
+    `julep.ctx_pipeline`, then constructing the config object manually. These modules
+    are public, but this is still control-plane vocabulary for an embedded prompt.
+    `julep.embedded.load_pipeline(path, env=...)` remains a useful API: it should load a
+    rich `.ctx` directory, compile one tool-less pipeline, and return `LocalPipeline`.
+
+38. **Embedded observability is incomplete for production adoption.**
+    `LocalPipeline.arun` returns only `result.value`; the in-memory projection, attempts,
+    usage, cost, and artifact identity are not returned or sent to a sink. mem-mcp can
+    retain its existing model-call telemetry by injecting its own `LlmCaller`, but it
+    cannot get a complete Julep execution trace. Add an optional result envelope or
+    projection sink without changing the value-only default.
+
+39. **Embedded examples should show consumer-owned durability explicitly.** The DBOS
+    recipe is `LocalPipeline.arun` inside the consumer's existing `@DBOS.step`. It is
+    not `run_flow_dbos`, which adds a nested Julep-owned workflow around a one-model-call
+    prompt. Document both shapes side by side; the distinction is the architecture
+    boundary adopters need when deciding whether to use embedded or remote execution.

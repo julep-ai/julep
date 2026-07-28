@@ -274,6 +274,7 @@ class ServerSettings:
     payload_keys: Optional[str] = field(default=None, repr=False)
     payload_key_id: Optional[str] = None
     payload_encryption_required: bool = True
+    unauthenticated_ready: bool = False
     vault_keys: Optional[str] = field(default=None, repr=False)
     vault_key_id: Optional[str] = None
     worker_secret_allowlist: frozenset[str] = frozenset()
@@ -429,6 +430,16 @@ class ServerSettings:
             payload_keys=payload_keys,
             payload_key_id=payload_key_id,
             payload_encryption_required=payload_required,
+            unauthenticated_ready=_bool(
+                _value(
+                    source,
+                    "JULEP_UNAUTHENTICATED_READY",
+                    config,
+                    "unauthenticated_ready",
+                ),
+                name="JULEP_UNAUTHENTICATED_READY",
+                default=False,
+            ),
             vault_keys=vault_keys,
             vault_key_id=vault_key_id,
             worker_secret_allowlist=worker_secret_allowlist,

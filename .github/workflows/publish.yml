@@ -100,6 +100,18 @@ jobs:
           /tmp/verify/bin/python -c "import julep; print('import ok')"
           /tmp/verify/bin/julep --version
 
+      - name: Built wheel must execute a wasm pure
+        run: |
+          uv pip install --python /tmp/verify/bin/python 'wasmtime>=45,<46'
+          cd /tmp
+          /tmp/verify/bin/python - <<'PY'
+          from julep.execution.wasm_executor import VENDORED_WASM, WasmExecutor
+
+          source = '@pure("double")\ndef double(value, **kwargs):\n    return value * 2\n'
+          assert VENDORED_WASM.exists()
+          assert WasmExecutor().run("double", source, 21, {}) == 42
+          PY
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist

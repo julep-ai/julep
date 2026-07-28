@@ -886,6 +886,64 @@ def apply_application(
     if api_url or api_key:
         _register_remote_release(release, api_url or None, api_key or None)
     typer.echo("traffic   unchanged")
+    if api_url or api_key:
+        # AIDEV-NOTE: activate needs the same connection context apply used, but
+        # the key itself is a secret — emit a shell reference, never the value.
+        activate_remote_args = ""
+        if api_url:
+            activate_remote_args += f" --api-url {api_url}"
+        if api_key:
+            activate_remote_args += ' --api-key "$JULEP_API_KEY"'
+        for lane_name, _task_queue in release_queue_lines(release):
+            typer.echo(
+                f"activate  julep activate --env {env} --lane {lane_name} "
+                f"--release {release.release_hash}{activate_remote_args}"
+            )
+    else:
+        typer.echo(
+            "activate  unavailable: re-run apply with --api-url/--api-key to "
+            "register this release with the control plane before activating"
+        )
+
+
+@app.command("activate")
+def activate(
+    env: str = typer.Option(..., "--env", help="Application environment name."),
+    lane: str = typer.Option(..., "--lane", help="Deployment lane name."),
+    release: str = typer.Option(..., "--release", help="Published release hash."),
+    api_url: str = typer.Option(
+        "",
+        "--api-url",
+        help="Activate the release with this Julep control-plane API base URL.",
+    ),
+    api_key: str = typer.Option(
+        "",
+        "--api-key",
+        help="Admin bearer key used with --api-url to activate the release.",
+    ),
+) -> None:
+    """Activate a lane release; rollback by activating a previous release hash."""
+    cfg = load_config(Path("."))
+    if env not in cfg.envs:
+        typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    client = _remote_client(api_url or None, api_key or None)
+    from julep.client import JulepClientError
+
+    try:
+        client.activate_deployment(lane, release)
+    except JulepClientError as exc:
+        if exc.status_code == 403:
+            typer.echo(
+                "error: lane activation requires an admin API key (403)",
+                err=True,
+            )
+        else:
+            typer.echo(f"error: lane activation failed: {exc}", err=True)
+        raise typer.Exit(1) from None
+    finally:
+        client.close()
+    typer.echo(f"activated {lane} {release}")
 
 
 @app.command("status")
@@ -897,6 +955,11 @@ def status(
     api_url: str = typer.Option("", "--api-url", help="Remote Julep API base URL."),
     api_key: str = typer.Option("", "--api-key", help="Remote Julep API bearer key."),
     limit: int = typer.Option(50, "--limit", min=1, max=100, help="Maximum remote runs."),
+    skip_temporal: bool = typer.Option(
+        False,
+        "--skip-temporal",
+        help="Skip Temporal probes; report runtime state as unobservable.",
+    ),
 ) -> None:
     """Show deployment status and drift for an environment."""
     if remote:
@@ -922,7 +985,11 @@ def status(
         raise typer.Exit(2)
     if cfg.application is not None and not selector.strip() and not exclude.strip():
         try:
-            observed = observe_application(cfg, cfg.envs[env])
+            observed = observe_application(
+                cfg,
+                cfg.envs[env],
+                skip_temporal=skip_temporal,
+            )
             application_plan = plan_configured_application(
                 cfg,
                 cfg.envs[env],
@@ -942,6 +1009,30 @@ def status(
             )
             if state.detail:
                 typer.echo(f"  {state.detail}")
+        unobservable_lanes = sorted(
+            lane
+            for lane, runtime_state in application_plan.runtime_drift.items()
+            if runtime_state in {"unobservable", "unconfigured"}
+        )
+        if unobservable_lanes:
+            temporal_details: list[str] = []
+            for lane in unobservable_lanes:
+                observation = observed.lanes.get(lane)
+                detail_parts = (
+                    [part for part in observation.detail.split("; ") if "temporal=" in part]
+                    if observation is not None
+                    else []
+                )
+                lane_detail = "; ".join(detail_parts) or "temporal=unavailable"
+                temporal_details.append(
+                    lane_detail if len(unobservable_lanes) == 1 else f"{lane}: {lane_detail}"
+                )
+            typer.echo(
+                "warning: temporal not observable from here for lane(s) "
+                f"{', '.join(unobservable_lanes)}: {'; '.join(temporal_details)}; "
+                "this is not evidence of drift",
+                err=True,
+            )
         drift = (
             application_plan.artifact_drift
             or application_plan.worker_image_drift
@@ -949,7 +1040,10 @@ def status(
             or any(value != "clean" for value in application_plan.deployment_config_drift.values())
             or any(value != "clean" for value in application_plan.release_drift.values())
             or any(value != "ready" for value in application_plan.helm_keda_drift.values())
-            or any(value != "healthy" for value in application_plan.runtime_drift.values())
+            or any(
+                value not in {"healthy", "unobservable", "unconfigured"}
+                for value in application_plan.runtime_drift.values()
+            )
         )
         raise typer.Exit(3 if drift else 0)
     rows = status_for_env(cfg, env)

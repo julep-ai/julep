@@ -10,7 +10,10 @@ from julep.cli.main import main
 
 
 def _write_eval_ctx(root: Path) -> Path:
-    ctx = root / "case.ctx"
+    # Reasoner names are global in the process-wide Registry: keep this package's
+    # name distinct from test_eval_cli.py's `case.ctx` (different model) so the
+    # two files can run in the same session without a "different config" clash.
+    ctx = root / "llm_caller_case.ctx"
     ctx.mkdir()
     (ctx / "settings.yaml").write_text('model: "openai/gpt-test"\n', encoding="utf-8")
     (ctx / "prompt.j2").write_text(

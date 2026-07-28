@@ -128,6 +128,50 @@ def test_publish_release_requires_admin_key(server_factory) -> None:
         assert caught.value.status_code == 403
 
 
+def test_activate_deployment_activates_published_release_as_admin(
+    server_factory,
+) -> None:
+    from .conftest import make_release
+
+    harness = server_factory()
+    release = make_release()
+    with TestClient(harness.app) as transport_client:
+        client = JulepClient(api_key="admin-token", client=transport_client)
+        client.publish_release(release.manifest_bytes)
+        row = client.activate_deployment("summary", release.release_hash)
+        assert row["lane"] == "summary"
+        assert row["release_hash"] == release.release_hash
+
+
+def test_activate_deployment_requires_admin_key(server_factory) -> None:
+    from .conftest import make_release
+
+    harness = server_factory()
+    release = make_release()
+    with TestClient(harness.app) as transport_client:
+        admin = JulepClient(api_key="admin-token", client=transport_client)
+        admin.publish_release(release.manifest_bytes)
+        client = JulepClient(api_key="alice-token", client=transport_client)
+        with pytest.raises(JulepClientError) as caught:
+            client.activate_deployment("summary", release.release_hash)
+        assert caught.value.status_code == 403
+
+
+def test_list_deployments_returns_activated_lane(server_factory) -> None:
+    from .conftest import make_release
+
+    harness = server_factory()
+    release = make_release()
+    with TestClient(harness.app) as transport_client:
+        admin = JulepClient(api_key="admin-token", client=transport_client)
+        admin.publish_release(release.manifest_bytes)
+        admin.activate_deployment("summary", release.release_hash)
+        client = JulepClient(api_key="alice-token", client=transport_client)
+        deployments = client.list_deployments()
+        assert deployments["items"][0]["lane"] == "summary"
+        assert deployments["items"][0]["release_hash"] == release.release_hash
+
+
 def test_sync_run_and_wait_submits_polls_and_unwraps_result() -> None:
     requests: list[httpx.Request] = []
     results = [

@@ -20,6 +20,7 @@ from julep.app_deploy import (
     HelmLaneReconciler,
     LaneObservation,
     ObservedApplicationState,
+    RuntimeState,
     build_lane_deployment_config,
     deployment_config_hash,
     lane_release_name,
@@ -268,6 +269,34 @@ def test_live_snapshot_override_is_visible_as_schema_drift() -> None:
     assert plan.release_drift == {"summary": "unknown"}
     assert plan.helm_keda_drift == {"summary": "unknown"}
     assert plan.runtime_drift == {"summary": "unknown"}
+
+
+@pytest.mark.parametrize(
+    ("runtime_state", "expected"),
+    [
+        ("healthy", "healthy"),
+        ("degraded", "degraded"),
+        ("unobservable", "unobservable"),
+        ("unconfigured", "unconfigured"),
+    ],
+)
+def test_plan_preserves_observed_runtime_state(
+    runtime_state: RuntimeState,
+    expected: RuntimeState,
+) -> None:
+    compiled = Application("memory", [_spec("summary")]).compile()
+    observed = ObservedApplicationState(
+        lanes={
+            "summary": LaneObservation(
+                lane="summary",
+                runtime_state=runtime_state,
+            )
+        }
+    )
+
+    plan = plan_application(compiled, observed)
+
+    assert plan.runtime_drift == {"summary": expected}
 
 
 def test_plan_detects_worker_image_drift() -> None:
@@ -757,7 +786,7 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
     smoke_commands = commands[1::2]
     assert all(command[:3] == ["helm", "upgrade", "--install"] for command in upgrade_commands)
     assert all(command[:2] == ["helm", "test"] for command in smoke_commands)
-    assert all("--logs" in command for command in smoke_commands)
+    assert all("--logs" not in command for command in smoke_commands)
     assert any(
         item.startswith("temporal.taskQueue=memory-summary-r")
         for command in upgrade_commands

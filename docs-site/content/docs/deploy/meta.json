@@ -2,6 +2,7 @@
   "title": "Deploy & Scale",
   "pages": [
     "index",
+    "embedded",
     "local",
     "temporal",
     "control-plane",

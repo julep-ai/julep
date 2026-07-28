@@ -119,7 +119,10 @@ def test_every_authenticated_route_declares_an_explicit_role(server_factory) -> 
     harness = server_factory()
     role_dependencies = {require_client, require_worker, require_admin}
     for route in harness.app.routes:
-        if not isinstance(route, APIRoute) or route.path == "/v1/health":
+        if not isinstance(route, APIRoute) or route.path in {
+            "/v1/health",
+            "/v1/health/ready",
+        }:
             continue
         declared = {
             dependency.call for dependency in route.dependant.dependencies

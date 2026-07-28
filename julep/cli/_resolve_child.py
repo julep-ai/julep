@@ -189,7 +189,7 @@ def main() -> int:
     target: str = payload["name"]
     action = payload.get("action", "resolve")
 
-    # Bind the Julep env profile as the dotctx yglu default env BEFORE any user
+    # Bind the Julep env profile as the dotctx tagged-expression default BEFORE any user
     # module import: user code calling load_dotctx() at import time must see
     # exactly the declared vars (never this process's ambient environment).
     # The child owns the binding for its lifetime and exits.

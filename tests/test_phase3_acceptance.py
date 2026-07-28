@@ -24,7 +24,6 @@ from typing import Any, Optional
 import pytest
 
 pytest.importorskip("jinja2")
-pytest.importorskip("yglu")  # the fixture settings carry a `!?` env expression
 
 from julep.agent_loop import ROUND_NOTE_KEY, AgentConfig, drive_agent_loop
 from julep.cli.main import main

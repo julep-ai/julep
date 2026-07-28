@@ -64,10 +64,12 @@ The loader reads mem-mcp's production prompts unchanged:
   loop enforcement lands in Phase 3/4) and
   `response_format: {type: json_object}` (stored as `"json_object"`; a reply
   schema wins at call time). Both enter deploy identity omit-when-unset.
-- **Yglu.** Settings and frontmatter may carry `!? $env.get(...)` expressions
-  (`julep[yglu]`), evaluated against an explicit `env=` binding —
-  never the ambient process environment. Numeric strings arriving from env
-  coerce for `max_rounds` / `max_tokens` / `output_retries` / `temperature`.
+- **Tagged env expressions.** Settings and frontmatter may carry
+  `!? $env.get(...)` expressions, evaluated by a built-in evaluator against an
+  explicit `env=` binding — never the ambient process environment. Only
+  `$env.get(...)` is supported; no extra is needed (the yglu dependency was
+  removed in 3.0.0rc5). Numeric strings arriving from env coerce for
+  `max_rounds` / `max_tokens` / `output_retries` / `temperature`.
 - **Jinja filters.** mem-mcp's pure filters (`to_json`, `as_xml`,
   `as_codeblock`, `numbered_list`, `bulleted_list`, `dedent`, `from_json`)
   are ported 1:1 onto the render environment; the file/token filters

@@ -29,6 +29,9 @@ reads its configuration from the environment:
 | `WORKER_MAX_CONCURRENT_ACTIVITIES` | SDK default | per-replica activity slots |
 | `WORKER_MAX_CONCURRENT_WORKFLOW_TASKS` | SDK default | per-replica workflow-task slots |
 | `WORKER_HEALTH_PORT` | off | HTTP port serving `GET /healthz` and `GET /readyz` |
+| `TEMPORAL_PAYLOAD_KEYS` | unset | Payload-codec keyring; comma-separated `key-id=64hex` entries. Set with `TEMPORAL_PAYLOAD_KEY_ID`. See [the payload-encryption Secret](#the-payload-encryption-secret). |
+| `TEMPORAL_PAYLOAD_KEY_ID` | unset | Key id used for new writes. Set with `TEMPORAL_PAYLOAD_KEYS`. |
+| `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `false` | Refuse to start unless a keyring is configured. `julep apply` always sets it `true`; a hand-run `julep worker` defaults to `false`. |
 | `JULEP_BLOB_STORE_URL` | unset | Absolute local `file://` URL for durable transcript/claim-check blobs. Mutually exclusive with a factory-provided `blob_store`. |
 
 `WORKER_CONTEXT_FACTORY` is required and has no default: a `WorkerContext`
@@ -77,6 +80,68 @@ ENV PYTHONPATH=/app \
 ENTRYPOINT ["julep", "worker"]
 ```
 
+## The payload-encryption Secret
+
+Julep encrypts Temporal payloads with an AES-256-GCM keyring. The keyring is
+`key-id=64hex` entries separated by commas; a key id matches
+`[A-Za-z0-9._-]+` and each key is exactly 64 hexadecimal characters (32 bytes).
+`TEMPORAL_PAYLOAD_KEY_ID` selects the entry used to encrypt new payloads, and
+every id still present in the keyring stays readable, which is what makes
+rotation possible.
+
+The bundled `infra/helm/julep-worker` chart — and therefore every lane rolled
+out by `julep apply` or by control-plane Helm reconciliation — reads both values
+from one **pre-existing** Kubernetes Secret. Nothing creates it for you, and the
+chart fails rendering without it, so provision it before the first apply.
+
+Generate a key and create the Secret:
+
+```bash
+KEY_ID="$(date +%Y%m%d)"
+KEY_HEX="$(openssl rand -hex 32)"
+
+kubectl create secret generic julep-payload-keys \
+  --namespace julep \
+  --from-literal=keyring="${KEY_ID}=${KEY_HEX}" \
+  --from-literal=active-key-id="${KEY_ID}"
+```
+
+`keyring` and `active-key-id` are the Secret key names the chart reads
+(`payloadEncryption.keyringKey` and `payloadEncryption.activeKeyIdKey`). The
+reconciler always passes exactly those two names, so do not rename them for a
+managed lane. The chart projects `keyring` into the worker container as
+`TEMPORAL_PAYLOAD_KEYS` and `active-key-id` as `TEMPORAL_PAYLOAD_KEY_ID`.
+
+`julep keygen` emits the same pair for local development —
+`TEMPORAL_PAYLOAD_KEYS=dev=<64hex>` and `TEMPORAL_PAYLOAD_KEY_ID=dev` — so the
+`keyring` Secret key holds the value of the former and `active-key-id` the value
+of the latter. Development keys are local-only: generate a fresh cluster key
+instead of promoting one.
+
+Then name the Secret for the reconciler. For `julep apply`, in `julep.toml`:
+
+```toml
+[env.prod]
+kubernetes_namespace = "julep"
+payload_encryption_secret = "julep-payload-keys"
+```
+
+`julep apply` refuses to deploy an env without `payload_encryption_secret`, and
+the Secret must already exist in that env's `kubernetes_namespace`. A control
+plane doing its own Helm reconciliation takes the same name from
+`JULEP_SERVER_PAYLOAD_ENCRYPTION_SECRET` (or `payload_encryption_secret` in the
+`[server]` table); see [Control plane](/docs/deploy/control-plane#configuration).
+
+The control plane starts the workflows these workers execute, so it needs the
+same keyring in its own `TEMPORAL_PAYLOAD_KEYS`/`TEMPORAL_PAYLOAD_KEY_ID`
+environment. Give the server process the same Secret; a server and worker with
+disjoint keyrings cannot read each other's payloads.
+
+To rotate, add the new entry to `keyring` while keeping the old one, roll every
+worker and the control plane, then move `active-key-id` to the new id and roll
+again. Retire the old entry only once no in-flight workflow history still
+references it.
+
 ## Deployment
 
 ```yaml
@@ -105,6 +170,17 @@ spec:
               value: julep
             - name: WORKER_GRACEFUL_SHUTDOWN_S
               value: "30"
+            # Hand-rolled workers default to not requiring encryption; set it
+            # explicitly so a missing keyring fails startup instead of
+            # silently polling in plaintext.
+            - name: TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED
+              value: "true"
+            - name: TEMPORAL_PAYLOAD_KEYS
+              valueFrom:
+                secretKeyRef: {name: julep-payload-keys, key: keyring}
+            - name: TEMPORAL_PAYLOAD_KEY_ID
+              valueFrom:
+                secretKeyRef: {name: julep-payload-keys, key: active-key-id}
           ports:
             - containerPort: 8080
               name: health

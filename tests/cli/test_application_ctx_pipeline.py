@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ pytest.importorskip("jinja2")
 from julep.cli import application as application_module
 from julep.cli.application import (
     apply_configured_application,
+    load_application,
     release_queue_lines,
     resolve_application,
 )
@@ -96,6 +98,66 @@ def test_zero_code_ctx_deployment_uses_release_scoped_declarations(
     assert compiled.runtime_declarations_hash is not None
     assert deployment_config["workerApplication"] is None
     assert deployment_config["workerRuntimeDeclarationsHash"] is None
+
+
+def test_mixed_code_ctx_deployment_uses_code_only_worker_hash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _copy_summary_project(tmp_path, application="code_app:application")
+    (tmp_path / "code_app.py").write_text(
+        """\
+from julep.app import Application, PipelineSpec
+from julep.dotctx import Reasoner
+from julep.dsl import think
+
+reasoner = Reasoner("brief-reasoner", "openai/gpt-test", system="brief test")
+application = Application(
+    "code-app",
+    (PipelineSpec("brief", think(reasoner.name), reasoners=(reasoner,), lane="brief"),),
+)
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("JULEP_BUNDLE_SIGNING_KEY", "0" * 64)
+    previous_code_app = sys.modules.pop("code_app", None)
+    saved_reasoners = dict(DEFAULT_REGISTRY.reasoners)
+    saved_renderers = dict(DEFAULT_REGISTRY.renderers)
+    saved_declarations = dict(DEFAULT_REGISTRY.renderer_declarations)
+    cfg = load_config(tmp_path)
+    env = dataclasses.replace(
+        cfg.envs["local"],
+        release_store=(tmp_path / "releases").as_uri(),
+        temporal_address="temporal:7233",
+        worker_context_factory="ctx_worker:build_context",
+        payload_encryption_secret="temporal-payload-codec",
+        helm_chart="oci://registry.example/julep/worker@sha256:" + "f" * 64,
+    )
+
+    try:
+        compiled = application_module.compile_application(cfg, env)
+        _chart, _worker_environment, deployment_config = (
+            application_module._resolve_deployment_config(cfg, env, compiled)
+        )
+
+        code_only_hash = load_application(cfg).runtime_declarations_hash
+        assert deployment_config["workerRuntimeDeclarationsHash"] == code_only_hash
+        assert code_only_hash != compiled.runtime_declarations_hash
+        summary = next(
+            pipeline for pipeline in compiled.pipelines if pipeline.spec.name == "summary"
+        )
+        assert summary.runtime_declarations_blob is not None
+    finally:
+        sys.modules.pop("code_app", None)
+        if previous_code_app is not None:
+            sys.modules["code_app"] = previous_code_app
+        DEFAULT_REGISTRY.reasoners.clear()
+        DEFAULT_REGISTRY.reasoners.update(saved_reasoners)
+        DEFAULT_REGISTRY.renderers.clear()
+        DEFAULT_REGISTRY.renderers.update(saved_renderers)
+        DEFAULT_REGISTRY.renderer_declarations.clear()
+        DEFAULT_REGISTRY.renderer_declarations.update(saved_declarations)
 
 
 def test_zero_code_ctx_apply_reconciles_without_worker_spec(

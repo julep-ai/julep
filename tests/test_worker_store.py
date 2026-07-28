@@ -462,6 +462,34 @@ def test_resolution_is_ungated_and_registers_wasm_tier(
     assert all(entry.executor == "wasm" for entry in fresh.pures.values())
 
 
+def test_resolution_rejects_undeclared_third_party_import(
+    tmp_path: Path,
+) -> None:
+    store, _deployment, rec = _published(tmp_path)
+    manifest = _json_from_store(store, rec["bundleHash"])
+    pure_record = manifest["pures"][0]
+    name = pure_record["name"]
+    source = (
+        f'@pure("{name}")\n'
+        "def imported(value):\n"
+        "    import third_party_alpha_probe\n"
+        "    return value\n"
+    )
+    pure_record["source"] = store.put(source.encode("utf-8"))
+    pure_record["sourceHash"] = _text_hash(source)
+    bundle_hash = store.put(canonical_json(manifest).encode("utf-8"))
+    signature_digest = _put_signature(store, bundle_hash, SEED_A)
+
+    with pytest.raises(BundleResolutionError, match="third_party_alpha_probe"):
+        resolve_and_register(
+            store,
+            bundle_hash,
+            signature_digest=signature_digest,
+            allowed_signers=[_public_key(SEED_A)],
+            registry=Registry(),
+        )
+
+
 def test_manual_built_manifest_rejects_std_pure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     store = LocalDirArtifactStore(tmp_path)
     source_digest = store.put(b"@pure(\"std.bad\")\ndef bad(value):\n    return value\n")
@@ -808,6 +836,45 @@ def test_bundle_runner_is_inert_without_store(tmp_path: Path) -> None:
     runner.create_instance(_workflow_details()).activate(_flow_activation(bundle))
 
     assert dummy.activated == 1
+    assert fresh.pures == {}
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_bundle_runner_rejects_undecodable_flow_input(tmp_path: Path) -> None:
+    store, _deployment, _rec = _published(tmp_path)
+    dummy = _DummyInstance()
+    runner = BundleResolvingWorkflowRunner(
+        inner=_DummyRunner(dummy),
+        store=store,
+        registry=Registry(),
+    )
+    activation = _flow_activation([])
+    activation.jobs[0].initialize_workflow.arguments[0].data = b"{"
+
+    with pytest.raises(RuntimeError, match="could not be converted"):
+        runner.create_instance(_workflow_details()).activate(activation)
+
+    assert dummy.activated == 0
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_bundle_resolution_honors_wasm_kill_switch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store, _deployment, rec = _published(tmp_path)
+    fresh = Registry()
+    monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", _public_key(SEED_A))
+    monkeypatch.setenv("JULEP_WASM_ENABLED", "false")
+
+    with pytest.raises(BundleResolutionError, match="JULEP_WASM_ENABLED"):
+        resolve_and_register(
+            store,
+            rec["bundleHash"],
+            signature_digest=rec["signatureDigest"],
+            registry=fresh,
+        )
+
     assert fresh.pures == {}
 
 

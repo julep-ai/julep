@@ -11,8 +11,11 @@ from __future__ import annotations
 import ast
 import hashlib
 import inspect
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from functools import lru_cache
+from importlib import metadata
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from .deps import parse_pep723
@@ -21,6 +24,83 @@ if TYPE_CHECKING:
     from .dotctx import Reasoner
 
 PureFn = Callable[..., Any]
+MAX_BUNDLE_PURE_SOURCE_BYTES = 256 * 1024
+
+# Keep admission tied to the Python 3.14 stdlib embedded in executor.wasm, not
+# to whichever host Python happens to validate the bundle. This is the guest's
+# sys.stdlib_module_names captured when the vendored component was built.
+_WASM_GUEST_STDLIB_MODULES = frozenset(
+    """
+    __future__ _abc _aix_support _android_support _apple_support _ast _ast_unparse
+    _asyncio _bisect _blake2 _bz2 _codecs _codecs_cn _codecs_hk _codecs_iso2022
+    _codecs_jp _codecs_kr _codecs_tw _collections _collections_abc _colorize
+    _compat_pickle _contextvars _csv _ctypes _curses _curses_panel _datetime _dbm
+    _decimal _elementtree _frozen_importlib _frozen_importlib_external _functools
+    _gdbm _hashlib _heapq _hmac _imp _interpchannels _interpqueues _interpreters _io
+    _ios_support _json _locale _lsprof _lzma _markupbase _md5 _multibytecodec
+    _multiprocessing _opcode _opcode_metadata _operator _osx_support _overlapped
+    _pickle _posixshmem _posixsubprocess _py_abc _py_warnings _pydatetime _pydecimal
+    _pyio _pylong _pyrepl _queue _random _remote_debugging _scproxy _sha1 _sha2
+    _sha3 _signal _sitebuiltins _socket _sqlite3 _sre _ssl _stat _statistics _string
+    _strptime _struct _suggestions _symtable _sysconfig _thread _threading_local
+    _tkinter _tokenize _tracemalloc _types _typing _uuid _warnings _weakref
+    _weakrefset _winapi _wmi _zoneinfo _zstd abc annotationlib antigravity argparse
+    array ast asyncio atexit base64 bdb binascii bisect builtins bz2 cProfile calendar
+    cmath cmd code codecs codeop collections colorsys compileall compression concurrent
+    configparser contextlib contextvars copy copyreg csv ctypes curses dataclasses
+    datetime dbm decimal difflib dis doctest email encodings ensurepip enum errno
+    faulthandler fcntl filecmp fileinput fnmatch fractions ftplib functools gc genericpath
+    getopt getpass gettext glob graphlib grp gzip hashlib heapq hmac html http idlelib
+    imaplib importlib inspect io ipaddress itertools json keyword linecache locale logging
+    lzma mailbox marshal math mimetypes mmap modulefinder msvcrt multiprocessing netrc nt
+    ntpath nturl2path numbers opcode operator optparse os pathlib pdb pickle pickletools
+    pkgutil platform plistlib poplib posix posixpath pprint profile pstats pty pwd
+    py_compile pyclbr pydoc pydoc_data pyexpat queue quopri random re readline reprlib
+    resource rlcompleter runpy sched secrets select selectors shelve shlex shutil signal
+    site smtplib socket socketserver sqlite3 sre_compile sre_constants sre_parse ssl stat
+    statistics string stringprep struct subprocess symtable sys sysconfig syslog tabnanny
+    tarfile tempfile termios textwrap this threading time timeit tkinter token tokenize
+    tomllib trace traceback tracemalloc tty turtle turtledemo types typing unicodedata
+    unittest urllib uuid venv warnings wave weakref webbrowser winreg winsound wsgiref xml
+    xmlrpc zipapp zipfile zipimport zlib zoneinfo
+    """.split()
+)
+_DEPENDENCY_IMPORT_ALIASES: dict[str, frozenset[str]] = {
+    "beautifulsoup4": frozenset({"bs4"}),
+    "pillow": frozenset({"PIL"}),
+    "pydantic-core": frozenset({"pydantic_core"}),
+    "pyyaml": frozenset({"yaml"}),
+    "regex": frozenset({"regex"}),
+}
+
+
+@lru_cache(maxsize=1)
+def _installed_distribution_import_roots() -> dict[str, frozenset[str]]:
+    roots_by_project: dict[str, set[str]] = {}
+    for import_root, projects in metadata.packages_distributions().items():
+        for project in projects:
+            canonical = re.sub(r"[-_.]+", "-", project).lower()
+            roots_by_project.setdefault(canonical, set()).add(import_root)
+    return {
+        project: frozenset(import_roots)
+        for project, import_roots in roots_by_project.items()
+    }
+
+
+def _dependency_import_roots(declared_deps: tuple[str, ...]) -> frozenset[str] | None:
+    from packaging.requirements import Requirement
+    from packaging.utils import canonicalize_name
+
+    roots: set[str] = set()
+    for dependency in declared_deps:
+        project = Requirement(dependency).name
+        canonical = canonicalize_name(project)
+        project_roots = set(_DEPENDENCY_IMPORT_ALIASES.get(canonical, ()))
+        project_roots.update(_installed_distribution_import_roots().get(canonical, ()))
+        if not project_roots:
+            return None
+        roots.update(project_roots)
+    return frozenset(roots)
 
 
 def _wasm_source_only(*_args: object, **_kwargs: object) -> object:
@@ -64,6 +144,61 @@ def _pure_decorator_name(source: str, name: str) -> bool:
             if isinstance(arg, ast.Constant) and arg.value == name:
                 return True
     return False
+
+
+def _validate_portable_source(
+    name: str,
+    source: str,
+    *,
+    allow_dependencies: bool = False,
+    validate_dependency_imports: bool = True,
+    validate_source_size: bool = True,
+) -> None:
+    source_bytes = source.encode("utf-8")
+    if validate_source_size and len(source_bytes) > MAX_BUNDLE_PURE_SOURCE_BYTES:
+        raise ValueError(
+            f"pure {name!r} source is too large for the wasm tier "
+            f"({len(source_bytes)} bytes; limit {MAX_BUNDLE_PURE_SOURCE_BYTES})"
+        )
+
+    declared_deps, _ = parse_pep723(source)
+    if declared_deps and not allow_dependencies:
+        raise ValueError(
+            f"pure {name!r} declares third-party dependencies; the wasm alpha "
+            "supports dependency-free pures only"
+        )
+
+    tree = ast.parse(source)
+    third_party: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root = alias.name.partition(".")[0]
+                if root not in _WASM_GUEST_STDLIB_MODULES:
+                    third_party.add(root)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                raise ValueError(
+                    f"pure {name!r} uses a relative import; bundle pure source "
+                    "executes as a standalone module"
+                )
+            root = (node.module or "").partition(".")[0]
+            if root and root not in _WASM_GUEST_STDLIB_MODULES:
+                third_party.add(root)
+    if third_party and (not allow_dependencies or not declared_deps):
+        raise ValueError(
+            f"pure {name!r} imports unsupported module(s) "
+            f"{', '.join(sorted(third_party))}; third-party imports require declared "
+            "dependencies and an enabled dependency tier"
+        )
+    if third_party and validate_dependency_imports:
+        allowed_imports = _dependency_import_roots(declared_deps)
+        mismatched = third_party - allowed_imports if allowed_imports is not None else set()
+        if mismatched:
+            raise ValueError(
+                f"pure {name!r} imports module(s) {', '.join(sorted(mismatched))} "
+                "that are not supplied by its declared dependencies"
+            )
 
 
 @dataclass(frozen=True)
@@ -271,6 +406,8 @@ class Registry:
         source: str,
         *,
         tier: str = "wasm",
+        validate_dependency_imports: bool = True,
+        validate_source_size: bool = True,
     ) -> PureEntry:
         """Register a bundle-sourced pure as the wasm tier WITHOUT host execution.
 
@@ -319,6 +456,13 @@ class Registry:
         if not _pure_decorator_name(source, name):
             raise ValueError(f"source did not register requested pure {name!r}")
 
+        _validate_portable_source(
+            name,
+            source,
+            allow_dependencies=True,
+            validate_dependency_imports=validate_dependency_imports,
+            validate_source_size=validate_source_size,
+        )
         deps, requires_python = parse_pep723(source)
         entry = PureEntry(
             name=name,

@@ -996,8 +996,7 @@ def parse_tools_pyi(source: str) -> tuple[Optional[str], list[ToolStub]]:
 def _parse_settings_text(
     text: str, *, env: Optional[Mapping[str, str]], origin: str
 ) -> dict[str, Any]:
-    """Yglu-aware settings-text parsing shared by ``settings.yaml`` and
-    single-file frontmatter (same gating, same explicit ``env`` binding)."""
+    """Parse settings/frontmatter with native tagged-expression support."""
     from .dotctx_yglu import has_yglu_tags, load_settings as load_yglu_settings
 
     if has_yglu_tags(text):
@@ -1113,7 +1112,7 @@ def load_single_file_dotctx(
 ) -> RichDotctx:
     """Load a single-file ``.ctx``: YAML frontmatter + Jinja template body.
 
-    The frontmatter goes through the same Yglu-aware settings path (and the
+    The frontmatter goes through the same tagged-expression settings path (and the
     same unknown-key validation) as ``settings.yaml``; the body through the
     same ``<<< role:... >>>`` splitting as ``prompt.j2``. A file without
     frontmatter is all template — settings are empty and CA's defaults apply.
