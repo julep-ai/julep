@@ -46,6 +46,18 @@ python -c "import julep as c; assert c.HAVE_TEMPORAL is True"
 python -m pytest -q
 ```
 
+Locally, the canonical command for the whole suite is:
+
+```bash
+uv run pytest -q
+```
+
+`pyproject.toml` sets `pythonpath = ["."]`, so a bare `pytest` collects the same
+tests as `python -m pytest`; tests that import repo-root packages such as
+`examples` and `scripts` resolve either way. `addopts` already includes
+`-m 'not live'`, so live provider tests are excluded from the default run — pass
+`-m live` explicitly to opt into them.
+
 ## The golden corpus is a contract
 
 `tests/golden/` pins the golden corpus as the cross-language wire-format contract. The committed `tests/golden/golden_hashes.json` values are expected to change only when the IR, manifest JSON, diagnostics, shape projection, or snapshot hashing changes intentionally.

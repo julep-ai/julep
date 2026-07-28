@@ -218,12 +218,9 @@ payloads, digest-pinned workers, KEDA scale-to-zero, and a public ALB restricted
 the five Memory Store hosts. Three durable `grade-scores` samples completed after
 release activation. These are the gaps encountered while getting there.
 
-27. **rc4 is not on PyPI.** The source tree reports `3.0.0rc4`, and the deployment
-    target is rc4, but PyPI currently stops at `3.0.0rc2`. A consumer pin to
-    `julep==3.0.0rc4` fails dependency resolution with “no version.” mem-mcp therefore
-    cannot update its lockfile or refresh its generated Julep skill without using an
-    explicit source dependency. Publish rc4 before asking external consumers to pin it,
-    or document the supported VCS pin and commit SHA.
+27. **[resolved] rc4 was not on PyPI during deployment.** PyPI now publishes
+    `3.0.0rc4`; the original deployment happened while the index stopped at rc2.
+    mem-mcp is moving directly to an exact rc5 source pin until rc5 is published.
 
 28. **[fixed in deployment branch] `helm test --logs` reports a successful Job as a
     failure on Helm 3.21.** The chart creates a test Job whose Pod has a generated
@@ -295,3 +292,34 @@ release activation. These are the gaps encountered while getting there.
     mem-mcp prompts that now use the unsupported `skills` setting. Add the repository
     root to pytest's configured import path, isolate or restore global registries in an
     autouse fixture, and make the canonical CI command explicit in `CONTRIBUTING.md`.
+
+## Findings from the embedded prompt pivot (2026-07-28)
+
+36. **Embedded execution exists, but its production name is hard to find.**
+    `prepare_local_pipeline(...).arun(...)` is the right boundary for a single-shot
+    prompt inside a consumer-owned DBOS step. The current `local`, `dry_run`, and
+    `foreground` vocabulary reads as test scaffolding, so the initial mem-mcp review
+    missed it. Add a top-level "Embedded execution" page and alias namespace, and state
+    the admission rule directly: use embedded Julep for prompt calls; use remote durable
+    Julep when Julep replaces orchestration.
+
+37. **The three-line embedded example assumes a Julep project config.** mem-mcp owns a
+    `.ctx` package but no `julep.toml`. The supported no-file path requires importing
+    `JulepConfig` and `EnvConfig` from `julep.cli.config` plus `CtxPipelineConfig` from
+    `julep.ctx_pipeline`, then constructing the config object manually. These modules
+    are public, but this is still control-plane vocabulary for an embedded prompt.
+    `julep.embedded.load_pipeline(path, env=...)` remains a useful API: it should load a
+    rich `.ctx` directory, compile one tool-less pipeline, and return `LocalPipeline`.
+
+38. **Embedded observability is incomplete for production adoption.**
+    `LocalPipeline.arun` returns only `result.value`; the in-memory projection, attempts,
+    usage, cost, and artifact identity are not returned or sent to a sink. mem-mcp can
+    retain its existing model-call telemetry by injecting its own `LlmCaller`, but it
+    cannot get a complete Julep execution trace. Add an optional result envelope or
+    projection sink without changing the value-only default.
+
+39. **Embedded examples should show consumer-owned durability explicitly.** The DBOS
+    recipe is `LocalPipeline.arun` inside the consumer's existing `@DBOS.step`. It is
+    not `run_flow_dbos`, which adds a nested Julep-owned workflow around a one-model-call
+    prompt. Document both shapes side by side; the distinction is the architecture
+    boundary adopters need when deciding whether to use embedded or remote execution.
