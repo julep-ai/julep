@@ -16,7 +16,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Optional, Protocol
+from typing import Any, Literal, Optional, Protocol
 
 from . import _env
 from .app import CompiledApplication
@@ -56,6 +56,8 @@ _RESERVED_WORKER_ENVIRONMENT = frozenset(
         "WORKER_RUNTIME_DECLARATIONS_HASH",
     }
 )
+
+RuntimeState = Literal["healthy", "degraded", "unobservable", "unconfigured"]
 
 
 class ApplicationReleaseError(RuntimeError):
@@ -407,7 +409,7 @@ class LaneObservation:
     worker_ready: Optional[bool] = None
     temporal_backlog: Optional[int] = None
     temporal_running: Optional[int] = None
-    runtime_healthy: Optional[bool] = None
+    runtime_state: Optional[RuntimeState] = None
     worker_image: Optional[str] = None
     deployment_config_hash: Optional[str] = None
     live_config_matches_helm: Optional[bool] = None
@@ -517,10 +519,13 @@ def plan_application(
             helm_keda[lane] = "ready"
         else:
             helm_keda[lane] = "unknown"
-        if lane_observation.runtime_healthy is False:
-            runtime[lane] = "degraded"
-        elif lane_observation.runtime_healthy is True:
-            runtime[lane] = "healthy"
+        if lane_observation.runtime_state in {
+            "healthy",
+            "degraded",
+            "unobservable",
+            "unconfigured",
+        }:
+            runtime[lane] = lane_observation.runtime_state
         else:
             runtime[lane] = "unknown"
     return ApplicationPlan(

@@ -21,6 +21,7 @@ from julep.app_deploy import (
     LaneApplyResult,
     LaneObservation,
     ObservedApplicationState,
+    RuntimeState,
     build_lane_deployment_config,
     deployment_config_hash,
     lane_release_name,
@@ -420,7 +421,12 @@ def read_applied_state(root: str | Path, env: str) -> Optional[AppliedApplicatio
     )
 
 
-def observe_application(cfg: JulepConfig, env: EnvConfig) -> ObservedApplicationState:
+def observe_application(
+    cfg: JulepConfig,
+    env: EnvConfig,
+    *,
+    skip_temporal: bool = False,
+) -> ObservedApplicationState:
     """Aggregate recorded release, live Helm/KEDA, and Temporal lane state."""
 
     state = read_applied_state(cfg.root, env.name)
@@ -489,9 +495,10 @@ def observe_application(cfg: JulepConfig, env: EnvConfig) -> ObservedApplication
             scaled_object=scaled_object,
         )
         worker_ready, worker_detail = _deployment_ready(discovered_deployment)
-        backlog, running, runtime_healthy, runtime_detail = _temporal_status(
+        backlog, running, runtime_state, runtime_detail = _temporal_status(
             env,
             task_queue,
+            skip=skip_temporal,
         )
         lanes[lane] = LaneObservation(
             lane=lane,
@@ -501,7 +508,7 @@ def observe_application(cfg: JulepConfig, env: EnvConfig) -> ObservedApplication
             worker_ready=worker_ready,
             temporal_backlog=backlog,
             temporal_running=running,
-            runtime_healthy=runtime_healthy,
+            runtime_state=runtime_state,
             worker_image=worker_image,
             deployment_config_hash=live_deployment_config_hash,
             live_config_matches_helm=live_config_matches_helm,
@@ -901,9 +908,13 @@ def _contains_expected(expected: Any, live: Any) -> bool:
 def _temporal_status(
     env: EnvConfig,
     task_queue: str,
-) -> tuple[Optional[int], Optional[int], Optional[bool], str]:
+    *,
+    skip: bool = False,
+) -> tuple[Optional[int], Optional[int], RuntimeState, str]:
+    if skip:
+        return None, None, "unobservable", "temporal=skipped"
     if env.temporal_address is None:
-        return None, None, None, "temporal=unconfigured"
+        return None, None, "unconfigured", "temporal=unconfigured"
     base = [
         "--address",
         env.temporal_address,
@@ -957,15 +968,16 @@ def _temporal_status(
         if all(value is not None for value in queue_backlogs)
         else None
     )
-    healthy: Optional[bool] = None
     queue_reachable = all(data is not None for data in queue_data.values())
     count_reachable = count_data is not None or running is not None
     if queue_reachable and count_reachable:
-        healthy = True
-    elif queue_reachable or count_reachable:
-        healthy = False
+        runtime_state: RuntimeState = "healthy"
+    elif any(data is not None for data in queue_data.values()) or count_reachable:
+        runtime_state = "degraded"
+    else:
+        runtime_state = "unobservable"
     detail = "; ".join([*queue_details, *([count_detail] if count_detail else [])])
-    return backlog, running, healthy, detail
+    return backlog, running, runtime_state, detail
 
 
 def _unsupported_cli_option(detail: str, option: str) -> bool:

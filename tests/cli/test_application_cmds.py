@@ -14,9 +14,13 @@ from julep.cli.main import main
 from julep.cli import application as application_module
 from julep.cli.config import McpServerConfig, load_config
 from julep.app_deploy import (
+    ApplicationPlan,
     ApplicationRelease,
     LaneApplyResult,
+    LaneObservation,
+    ObservedApplicationState,
     PipelineRelease,
+    RuntimeState,
     deployment_config_hash,
 )
 from julep.client import JulepClientError
@@ -571,7 +575,86 @@ def test_application_deployment_requires_explicit_payload_secret(
         application_module._resolve_deployment_config(cfg, env, compiled)
 
 
-def test_temporal_status_degrades_when_only_one_probe_succeeds(monkeypatch, tmp_path: Path) -> None:
+def _runtime_observation(
+    runtime_state: RuntimeState,
+    detail: str,
+) -> ObservedApplicationState:
+    artifact_hash = "sha256:" + "a" * 64
+    release_hash = "sha256:" + "b" * 64
+    worker_image = "example.invalid/memory@sha256:" + "a" * 64
+    return ObservedApplicationState(
+        application_artifact_hash=artifact_hash,
+        release_hash=release_hash,
+        recorded_release_hash=release_hash,
+        worker_image=worker_image,
+        lanes={
+            "summary": LaneObservation(
+                lane="summary",
+                release_hash=release_hash,
+                helm_ready=True,
+                keda_ready=True,
+                worker_ready=True,
+                temporal_backlog=None,
+                temporal_running=None,
+                runtime_state=runtime_state,
+                worker_image=worker_image,
+                deployment_config_hash="sha256:" + "c" * 64,
+                live_config_matches_helm=True,
+                detail=detail,
+            )
+        },
+    )
+
+
+def _runtime_plan(runtime_state: RuntimeState) -> ApplicationPlan:
+    artifact_hash = "sha256:" + "a" * 64
+    worker_image = "example.invalid/memory@sha256:" + "a" * 64
+    return ApplicationPlan(
+        application="memory",
+        desired_artifact_hash=artifact_hash,
+        observed_artifact_hash=artifact_hash,
+        artifact_drift=False,
+        desired_worker_image=worker_image,
+        observed_worker_image=worker_image,
+        worker_image_drift=False,
+        mcp_schema_drift={"episode_summary": False},
+        deployment_config_drift={"summary": "clean"},
+        release_drift={"summary": "clean"},
+        helm_keda_drift={"summary": "ready"},
+        runtime_drift={"summary": runtime_state},
+    )
+
+
+def test_temporal_status_is_unobservable_when_all_probes_fail(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(
+        application_module,
+        "_json_command",
+        lambda _args: (None, "temporal=FileNotFoundError"),
+    )
+    monkeypatch.setattr(
+        application_module,
+        "_text_command",
+        lambda _args: (_ for _ in ()).throw(AssertionError("unexpected fallback")),
+    )
+    cfg = load_config(_application_project(tmp_path))
+    env = cfg.envs["local"]
+
+    backlog, running, runtime_state, detail = application_module._temporal_status(
+        env,
+        "summary",
+    )
+
+    assert (backlog, running, runtime_state) == (None, None, "unobservable")
+    assert "FileNotFoundError" in detail
+
+
+def test_temporal_status_degrades_when_only_one_probe_succeeds(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
     responses = iter(
         [
             ({"stats": {"approximateBacklogCount": 0}}, ""),
@@ -580,13 +663,33 @@ def test_temporal_status_degrades_when_only_one_probe_succeeds(monkeypatch, tmp_
         ]
     )
     monkeypatch.setattr(application_module, "_json_command", lambda _args: next(responses))
-    env = load_config(_application_project(tmp_path)).envs["local"]
+    cfg = load_config(_application_project(tmp_path))
+    env = cfg.envs["local"]
     env = dataclasses.replace(env, temporal_address="temporal:7233")
 
-    _backlog, _running, healthy, detail = application_module._temporal_status(env, "summary")
+    _backlog, _running, runtime_state, detail = application_module._temporal_status(
+        env,
+        "summary",
+    )
 
-    assert healthy is False
+    assert runtime_state == "degraded"
     assert "permission denied" in detail
+    compiled = application_module.compile_application(
+        cfg,
+        env,
+    )
+    plan = application_module.plan_application(
+        compiled,
+        ObservedApplicationState(
+            lanes={
+                "summary": LaneObservation(
+                    lane="summary",
+                    runtime_state=runtime_state,
+                )
+            }
+        ),
+    )
+    assert plan.runtime_drift == {"summary": "degraded"}
 
 
 def test_temporal_status_uses_modern_json_stats(monkeypatch, tmp_path: Path) -> None:
@@ -617,9 +720,12 @@ def test_temporal_status_uses_modern_json_stats(monkeypatch, tmp_path: Path) -> 
     env = load_config(_application_project(tmp_path)).envs["local"]
     env = dataclasses.replace(env, temporal_address="temporal:7233")
 
-    backlog, running, healthy, detail = application_module._temporal_status(env, "summary")
+    backlog, running, runtime_state, detail = application_module._temporal_status(
+        env,
+        "summary",
+    )
 
-    assert (backlog, running, healthy, detail) == (4, 2, True, "")
+    assert (backlog, running, runtime_state, detail) == (4, 2, "healthy", "")
     assert len(calls) == 3
     assert [call[call.index("--task-queue-type") + 1] for call in calls[:2]] == [
         "workflow",
@@ -667,9 +773,12 @@ def test_temporal_status_falls_back_for_cli_0_11(monkeypatch, tmp_path: Path) ->
     env = load_config(_application_project(tmp_path)).envs["local"]
     env = dataclasses.replace(env, temporal_address="temporal:7233")
 
-    backlog, running, healthy, detail = application_module._temporal_status(env, "summary")
+    backlog, running, runtime_state, detail = application_module._temporal_status(
+        env,
+        "summary",
+    )
 
-    assert (backlog, running, healthy, detail) == (10, 5, True, "")
+    assert (backlog, running, runtime_state, detail) == (10, 5, "healthy", "")
     assert len(json_calls) == 5
     assert "--report-stats" in json_calls[0]
     assert "--report-stats" not in json_calls[1]
@@ -688,6 +797,114 @@ def test_temporal_status_falls_back_for_cli_0_11(monkeypatch, tmp_path: Path) ->
             'TaskQueue="summary" AND ExecutionStatus="Running"',
         ]
     ]
+
+
+def test_status_warns_but_exits_zero_when_temporal_is_unobservable(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    root = _application_project(tmp_path)
+    monkeypatch.chdir(root)
+    main_module = import_module("julep.cli.main")
+    monkeypatch.setattr(
+        application_module,
+        "_json_command",
+        lambda _args: (None, "temporal=FileNotFoundError"),
+    )
+    monkeypatch.setattr(
+        application_module,
+        "_text_command",
+        lambda _args: (_ for _ in ()).throw(AssertionError("unexpected fallback")),
+    )
+
+    def fake_observe(_cfg, env, *, skip_temporal=False):
+        _backlog, _running, runtime_state, detail = application_module._temporal_status(
+            env,
+            "summary",
+            skip=skip_temporal,
+        )
+        return _runtime_observation(runtime_state, detail)
+
+    def fake_plan(_cfg, _env, *, observed=None, mcp_snapshot=False):
+        assert observed is not None
+        return _runtime_plan(observed.lanes["summary"].runtime_state)
+
+    monkeypatch.setattr(main_module, "observe_application", fake_observe)
+    monkeypatch.setattr(main_module, "plan_configured_application", fake_plan)
+
+    assert main(["status", "--env", "local"]) == 0
+    captured = capsys.readouterr()
+    assert "application memory" in captured.out
+    assert "warning: temporal not observable from here for lane(s) summary" in captured.err
+    assert "temporal=FileNotFoundError" in captured.err
+    assert "this is not evidence of drift" in captured.err
+
+
+def test_status_degraded_temporal_runtime_still_exits_three(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    root = _application_project(tmp_path)
+    monkeypatch.chdir(root)
+    main_module = import_module("julep.cli.main")
+    observed = _runtime_observation("degraded", "activity-queue:temporal=permission denied")
+    monkeypatch.setattr(
+        main_module,
+        "observe_application",
+        lambda _cfg, _env, *, skip_temporal=False: observed,
+    )
+    monkeypatch.setattr(
+        main_module,
+        "plan_configured_application",
+        lambda _cfg, _env, *, observed=None, mcp_snapshot=False: _runtime_plan("degraded"),
+    )
+
+    assert main(["status", "--env", "local"]) == 3
+    captured = capsys.readouterr()
+    assert captured.err == ""
+
+
+def test_status_skip_temporal_spawns_no_temporal_subprocess(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    root = _application_project(tmp_path)
+    monkeypatch.chdir(root)
+    main_module = import_module("julep.cli.main")
+    monkeypatch.setattr(
+        application_module,
+        "_json_command",
+        lambda _args: (_ for _ in ()).throw(AssertionError("unexpected subprocess")),
+    )
+    monkeypatch.setattr(
+        application_module,
+        "_text_command",
+        lambda _args: (_ for _ in ()).throw(AssertionError("unexpected subprocess")),
+    )
+
+    def fake_observe(_cfg, env, *, skip_temporal=False):
+        assert skip_temporal is True
+        _backlog, _running, runtime_state, detail = application_module._temporal_status(
+            env,
+            "summary",
+            skip=skip_temporal,
+        )
+        return _runtime_observation(runtime_state, detail)
+
+    monkeypatch.setattr(main_module, "observe_application", fake_observe)
+    monkeypatch.setattr(
+        main_module,
+        "plan_configured_application",
+        lambda _cfg, _env, *, observed=None, mcp_snapshot=False: _runtime_plan("unobservable"),
+    )
+
+    assert main(["status", "--env", "local", "--skip-temporal"]) == 0
+    captured = capsys.readouterr()
+    assert "temporal=skipped" in captured.err
+    assert "this is not evidence of drift" in captured.err
 
 
 def test_status_prefers_live_release_over_stale_local_state(
@@ -910,6 +1127,15 @@ def test_status_prefers_recorded_rollback_deployment_over_newer_candidate(
     assert observed.recorded_release_hash == rollback_hash
     assert observed.lanes["summary"].release_hash == rollback_hash
     assert any(call[:3] == ["temporal", "task-queue", "describe"] for call in calls)
+
+    # skip_temporal short-circuits every Temporal probe and reports the lane as
+    # unobservable rather than unhealthy.
+    calls.clear()
+    skipped = application_module.observe_application(cfg, env, skip_temporal=True)
+
+    assert not any(call[0] == "temporal" for call in calls)
+    assert skipped.lanes["summary"].runtime_state == "unobservable"
+    assert "temporal=skipped" in skipped.lanes["summary"].detail
 
 
 def test_deployment_readiness_detects_unavailable_workers() -> None:
