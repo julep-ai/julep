@@ -19,6 +19,7 @@ from importlib import metadata
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from .deps import parse_pep723
+from .skills import Skill, skill_key
 
 if TYPE_CHECKING:
     from .dotctx import Reasoner
@@ -312,6 +313,9 @@ class Registry:
         self.pures: dict[str, PureEntry] = {}
         self.renderers: dict[str, RendererEntry] = {}
         self.renderer_declarations: dict[str, RendererDeclaration] = {}
+        # Content-addressed agent skills (skill/<name>@v<hash12>). Keys carry
+        # their own content hash, so sharing them process-wide is safe.
+        self.skills: dict[str, Skill] = {}
         self.tool_expectations: dict[str, ToolSchemaExpectation] = {}
         # Compatibility aliases installed by a scoped dotctx package are kept
         # queryable, but must not constrain unrelated top-level native calls
@@ -567,6 +571,32 @@ class Registry:
             return self.renderers[name].fn
         except KeyError as e:
             raise KeyError(f"unknown renderer {name!r}; register it with @renderer({name!r})") from e
+
+    def register_skill(self, skill: Skill) -> str:
+        """Register a skill under its content key and return that key.
+
+        ``Skill`` equality ignores ``source``, so byte-identical sidecars in
+        different packages register once. A genuine mismatch under one key is
+        impossible (the key hashes every compared field) and is treated as a
+        corrupt-input error rather than silently overwritten.
+        """
+        key = skill_key(skill)
+        existing = self.skills.get(key)
+        if existing is not None and existing != skill:
+            raise ValueError(
+                f"skill key {key!r} already registered with different content"
+            )
+        self.skills[key] = skill
+        return key
+
+    def get_skill(self, key: str) -> Skill:
+        try:
+            return self.skills[key]
+        except KeyError as e:
+            raise KeyError(
+                f"unknown skill {key!r}; load its dotctx package or call "
+                "register_skill()"
+            ) from e
 
     def renderer_source_hash_of(self, name: str) -> str:
         return self.renderers[name].source_hash
