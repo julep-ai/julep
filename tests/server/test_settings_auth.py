@@ -69,6 +69,23 @@ def test_server_settings_require_store_only_when_built(tmp_path) -> None:
         settings.build_store()
 
 
+def test_server_settings_parse_unauthenticated_ready(tmp_path) -> None:
+    enabled = ServerSettings.from_env(
+        {
+            "JULEP_UNAUTHENTICATED_READY": "true",
+            "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED": "false",
+        },
+        root=tmp_path,
+    )
+    defaulted = ServerSettings.from_env(
+        {"TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED": "false"},
+        root=tmp_path,
+    )
+
+    assert enabled.unauthenticated_ready is True
+    assert defaulted.unauthenticated_ready is False
+
+
 def test_required_payload_encryption_rejects_missing_keys(tmp_path) -> None:
     with pytest.raises(ValueError, match="payload encryption is required"):
         ServerSettings.from_env({}, root=tmp_path)

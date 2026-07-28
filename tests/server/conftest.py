@@ -101,6 +101,7 @@ def server_factory(tmp_path: Path):
         queue_by_lane: dict[str, str] | None = None,
         enable_reconciler: bool = False,
         payload_encryption_required: bool = True,
+        unauthenticated_ready: bool = False,
     ) -> ServerHarness:
         nonlocal counter
         counter += 1
@@ -119,6 +120,7 @@ def server_factory(tmp_path: Path):
             worker_secret_allowlist=frozenset({"tracker-token", "other-token"}),
             queue_by_lane=queue_by_lane or {},
             payload_encryption_required=payload_encryption_required,
+            unauthenticated_ready=unauthenticated_ready,
             config_root=tmp_path,
         )
         app = create_app(
