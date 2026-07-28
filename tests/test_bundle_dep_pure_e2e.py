@@ -16,6 +16,7 @@ pytest.importorskip("wasmtime")
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from examples import regex_extract_flow
 
 from julep import arr, deploy
 from julep.bundle import PureDepsUnbuildableError, publish_bundle
@@ -141,8 +142,6 @@ def _manifest_pure(manifest: dict[str, Any], name: str) -> dict[str, Any]:
 
 
 def test_example_pep723_metadata_survives_inspect_source() -> None:
-    from examples import regex_extract_flow  # noqa: F401
-
     extract_entry = DEFAULT_REGISTRY.pures[EXTRACT_NAME]
     merge_entry = DEFAULT_REGISTRY.pures[MERGE_NAME]
 
@@ -160,8 +159,6 @@ def test_example_publish_resolve_carries_env_hash_end_to_end(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from examples import regex_extract_flow
-
     _patch_synth_env_builder(monkeypatch, tmp_path)
     store = LocalDirArtifactStore(tmp_path)
     deployment = regex_extract_flow.build()

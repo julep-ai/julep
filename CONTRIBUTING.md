@@ -9,8 +9,10 @@
 ```bash
 git clone https://github.com/julep-ai/julep
 cd julep
-python -m pip install -e '.[dev]'
+uv sync --extra dev
 ```
+
+The `dev` extra installs everything the full suite needs, including the Temporal E2E dependencies. Use `uv sync --extra test-no-temporal` to reproduce the no-Temporal CI matrix variant.
 
 The package requires Python 3.12 or newer (see `pyproject.toml`). CI tests Python 3.12.
 
@@ -21,6 +23,22 @@ julep
 ```
 
 ## Running the checks
+
+The canonical local commands are:
+
+```bash
+uv run pytest
+uv run ruff check julep tests
+uv run mypy julep
+```
+
+`uv run pytest` and `uv run python -m pytest` are equivalent: `pythonpath = ["."]` in `pyproject.toml` puts the repo root on `sys.path` for both, so tests that import `examples` or `scripts` collect either way. `addopts` already applies `-m 'not live'`; tests marked `live` or `provider_smoke` make billable network calls and are opt-in.
+
+## Test isolation
+
+`DEFAULT_REGISTRY` is a process-global singleton. An autouse fixture in `tests/conftest.py` snapshots and restores its mappings around every test, so the suite must pass in any order and in any subset. Registrations done at module import time survive; registrations done inside a test are rolled back. Each test must register the reasoners, pures, and renderers it needs rather than relying on state left behind by an earlier test.
+
+## What CI runs
 
 CI runs lint and type checks on Python 3.12:
 
@@ -46,17 +64,7 @@ python -c "import julep as c; assert c.HAVE_TEMPORAL is True"
 python -m pytest -q
 ```
 
-Locally, the canonical command for the whole suite is:
-
-```bash
-uv run pytest -q
-```
-
-`pyproject.toml` sets `pythonpath = ["."]`, so a bare `pytest` collects the same
-tests as `python -m pytest`; tests that import repo-root packages such as
-`examples` and `scripts` resolve either way. `addopts` already includes
-`-m 'not live'`, so live provider tests are excluded from the default run — pass
-`-m live` explicitly to opt into them.
+Pass `-m live` explicitly to opt into the live provider tests.
 
 ## The golden corpus is a contract
 
@@ -87,6 +95,8 @@ Build-ID / worker versioning is opt-in and off by default because versioned task
 ## Testing norm
 
 The [specification](docs-site/content/docs/internals/specification.md) defines conformance in terms of tested invariants: an item is conformant only when its invariant holds in code with a test. A change is done when the behavior is implemented and the relevant tests have been added or adjusted with it.
+
+Regression tests live under `tests/`, mirroring the module under test: `tests/test_<module>.py` for library modules, `tests/cli/` for CLI behavior, `tests/invariants/` for repo-wide invariant checks. Every bug fix gets a test that fails before the fix.
 
 ## Style
 

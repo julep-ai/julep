@@ -472,6 +472,7 @@ def test_feedback_looking_business_field_is_not_stripped_from_renderer_context()
 
 
 def test_loop_feedback_is_inserted_before_transcript_budgeting() -> None:
+    DEFAULT_REGISTRY.register_reasoner(Reasoner(name="tr.reasoner", model="m", system="s"))
     counted: list[str] = []
     ctx, seen = _capture_ctx(
         count_tokens=lambda text: counted.append(text) or 1,

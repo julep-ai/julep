@@ -16,12 +16,11 @@ from julep.contracts import McpAnnotations
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from julep.registry import DEFAULT_REGISTRY
 
-# AIDEV-NOTE: DEFAULT_REGISTRY is process-global; tests that call load_dotctx()
-# or drive the CLI without an explicit registry leak reasoner names and
-# tool-schema expectations into later tests (order-dependent "already registered
-# with a different config" / TOOL_SCHEMA_DRIFT failures). Opt in per module with
-# `pytestmark = pytest.mark.usefixtures("isolate_default_registry")`. It is not
-# autouse: a few modules deliberately build up registry state across tests.
+# AIDEV-NOTE: DEFAULT_REGISTRY is process-global, so this autouse fixture makes
+# the suite order-independent. Registrations performed during module import or
+# collection survive because they happen before each snapshot; only intra-test
+# registrations are rolled back. Each test must register the registry state it
+# needs rather than relying on state left by another test.
 _REGISTRY_STATE_ATTRS = (
     "reasoners",
     "pures",
@@ -33,7 +32,7 @@ _REGISTRY_STATE_ATTRS = (
 )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def isolate_default_registry() -> Iterator[None]:
     """Restore ``DEFAULT_REGISTRY`` around every test (global-state hygiene)."""
     saved = {attr: getattr(DEFAULT_REGISTRY, attr).copy() for attr in _REGISTRY_STATE_ATTRS}
