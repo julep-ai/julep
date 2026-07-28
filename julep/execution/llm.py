@@ -48,6 +48,7 @@ from ..dotctx import Reasoner, get_reasoner
 from ..errors import ResilienceExhausted
 from ..prompt import rendered_reasoner_for, rendered_user_for
 from ..qos import ReasonerDispatch, QoSTier
+from ..registry import DEFAULT_REGISTRY
 from ..resilience import (
     AttemptRecord,
     CircuitBreaker,
@@ -56,6 +57,12 @@ from ..resilience import (
     ResiliencePolicy,
     classify_error,
     is_auth_error,
+)
+from ..skills import (
+    SKILL_TOOL,
+    load_skill_tool_def,
+    resolve_skill_keys,
+    skills_prompt_block,
 )
 from .llm_result import AttemptMeta, LlmCallMeta, LlmResult
 from .openai_responses import (
@@ -619,10 +626,34 @@ async def complete_reasoner(
     # mem-mcp's declarative json_object mode claims the kwarg only when no
     # reply schema does (the schema path wins; the call never carries both).
     json_object = schema is None and reasoner.response_format == "json_object"
-    has_tools = bool(tools)
     safe_tools, tool_name_reverse = (
         provider_safe_tool_defs(tools) if tools else (tools, {})
     )
+    active_skills = (
+        resolve_skill_keys(reasoner.skills, registry=DEFAULT_REGISTRY)
+        if reasoner.skills
+        else ()
+    )
+    # SKILL_TOOL is already provider-safe, so sanitization cannot hide a collision.
+    if active_skills and any(
+        tool_def.get("function", {}).get("name") == SKILL_TOOL
+        for tool_def in safe_tools or []
+    ):
+        raise ValueError(
+            f"reasoner {reasoner.name!r} grants a tool named {SKILL_TOOL!r}, which is "
+            "reserved for skill disclosure; rename the tool"
+        )
+    system_text = reasoner.system
+    if active_skills:
+        block = skills_prompt_block(active_skills)
+        system_text = f"{block}\n\n{reasoner.system}" if reasoner.system else block
+    loaded_skills: list[str] = []
+    skill_turns: list[dict[str, Any]] = []
+    skill_tool_open = bool(active_skills)
+    skill_error_budget = 2
+
+    def _offering_tools() -> bool:
+        return bool(safe_tools) or skill_tool_open
 
     def _restore_tool_calls(parsed: Any) -> Any:
         if tool_name_reverse and isinstance(parsed, dict):
@@ -652,10 +683,15 @@ async def complete_reasoner(
         nonlocal pc_marker_placed
         # Native tool rounds cannot carry response_format; keep schema guidance
         # in the prompt so FINISH replies can still parse on non-tool rounds.
-        native_response_format = native and not has_tools
+        if skill_tool_open:
+            offered_tools = list(safe_tools or [])
+            offered_tools.append(load_skill_tool_def(active_skills, loaded=loaded_skills))
+        else:
+            offered_tools = safe_tools or []
+        native_response_format = native and not offered_tools
         if native_response_format and schema is not None:
             messages = _messages(
-                reasoner.system, value,
+                system_text, value,
                 schema_hint=None, user_text=user_text, transcript=transcript,
             )
             kwargs: dict[str, Any] = {"response_format": _response_format(schema)}
@@ -665,20 +701,21 @@ async def complete_reasoner(
             # raw text either way — json_object constrains the provider, not
             # CA parsing; callers own parsing (mem-mcp's use parse_llm_json).
             messages = _messages(
-                reasoner.system, value,
+                system_text, value,
                 schema_hint=None, user_text=user_text, transcript=transcript,
             )
             kwargs = {"response_format": {"type": "json_object"}}
         else:
             messages = _messages(
-                reasoner.system, value,
+                system_text, value,
                 schema_hint=schema, user_text=user_text, transcript=transcript,
             )
             kwargs = {}
-        if has_tools:
-            kwargs["tools"] = safe_tools
+        if offered_tools:
+            kwargs["tools"] = offered_tools
             if parallel_tool_calls is not None:
                 kwargs["parallel_tool_calls"] = parallel_tool_calls
+        messages.extend(skill_turns)
         if retry_note is not None:
             messages.append({"role": "user", "content": retry_note})
         effort = reasoner.reasoning_effort
@@ -718,7 +755,7 @@ async def complete_reasoner(
 
     async def dispatch_once(retry_note: Optional[str] = None) -> Any:
         nonlocal fallback_reason, native_ok
-        if not has_tools and (schema is not None or json_object) and native_ok \
+        if not _offering_tools() and (schema is not None or json_object) and native_ok \
                 and provider not in _PROMPT_FALLBACK_PROVIDERS:
             try:
                 return await call(native=True, retry_note=retry_note)
@@ -741,16 +778,103 @@ async def complete_reasoner(
                 )
         return await call(native=False, retry_note=retry_note)
 
+    pt = ct = tt = None
+    cache_read = cache_creation = None
+
+    def _accumulate(result: Any) -> None:
+        nonlocal pt, ct, tt, cache_read, cache_creation
+        apt, act, att = _usage_of(result)
+        pt, ct, tt = _add_tokens(pt, apt), _add_tokens(ct, act), _add_tokens(tt, att)
+        rcr, rcc = _cache_usage_of(result)
+        cache_read = _add_tokens(cache_read, rcr)
+        cache_creation = _add_tokens(cache_creation, rcc)
+
+    def _parse(result: Any, *, expect_json: bool) -> tuple[Any, int]:
+        parsed, calls = (
+            parse_responses_reply(result, expect_json=expect_json)
+            if is_responses_result(result)
+            else _parse_completion_reply(result, expect_json=expect_json)
+        )
+        return _restore_tool_calls(parsed), calls
+
+    def _skill_requests(parsed: Any) -> list[tuple[Any, Any]]:
+        if not isinstance(parsed, dict):
+            return []
+        calls = parsed.get("tool_calls")
+        if not isinstance(calls, list):
+            return []
+        return [
+            (call.get("id"), (call.get("input") or {}).get("name"))
+            for call in calls
+            if isinstance(call, dict) and call.get("tool") == SKILL_TOOL
+        ]
+
+    def _drop_skill_calls(parsed: Any) -> tuple[Any, int]:
+        """Skill calls are resolved here and must never reach the agent loop."""
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("tool_calls"), list):
+            return parsed, 0
+        kept = [call for call in parsed["tool_calls"] if call.get("tool") != SKILL_TOOL]
+        if len(kept) == len(parsed["tool_calls"]):
+            return parsed, len(kept)
+        remainder = {key: item for key, item in parsed.items() if key != "tool_calls"}
+        if kept:
+            remainder["tool_calls"] = kept
+        return (remainder or None), len(kept)
+
     completion = await dispatch_once()
-    # Usage accumulates over every attempt — re-asks cost tokens too.
-    pt, ct, tt = _usage_of(completion)
-    cache_read, cache_creation = _cache_usage_of(completion)
-    reply, native_tool_calls = (
-        parse_responses_reply(completion, expect_json=schema is not None)
-        if is_responses_result(completion)
-        else _parse_completion_reply(completion, expect_json=schema is not None)
-    )
-    reply = _restore_tool_calls(reply)
+    _accumulate(completion)
+    reply, native_tool_calls = _parse(completion, expect_json=schema is not None)
+
+    # Progressive skill disclosure: resolve __load_skill__ from the frozen skill
+    # set and re-ask, inside this one call. The IR never sees these rounds, so a
+    # think leaf stays a think leaf and max_rounds keeps counting task progress.
+    while skill_tool_open:
+        requests = _skill_requests(reply)
+        if not requests:
+            skill_tool_open = False
+            break
+        by_name = {skill.name: skill for skill in active_skills}
+        skill_turns.append(
+            {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": call_id,
+                        "type": "function",
+                        "function": {
+                            "name": SKILL_TOOL,
+                            "arguments": json.dumps({"name": name}),
+                        },
+                    }
+                    for call_id, name in requests
+                ],
+            }
+        )
+        for call_id, name in requests:
+            if name in loaded_skills:
+                skill_error_budget -= 1
+                content = f"skill {name!r} was already provided above"
+            elif name not in by_name:
+                skill_error_budget -= 1
+                content = (
+                    f"unknown skill {name!r}; available skills are: "
+                    + ", ".join(sorted(by_name))
+                )
+            else:
+                loaded_skills.append(str(name))
+                content = by_name[name].body
+            skill_turns.append(
+                {"role": "tool", "tool_call_id": call_id, "content": content}
+            )
+        if len(loaded_skills) >= len(active_skills) or skill_error_budget <= 0:
+            skill_tool_open = False
+        completion = await dispatch_once()
+        _accumulate(completion)
+        reply, native_tool_calls = _parse(completion, expect_json=schema is not None)
+
+    reply, native_tool_calls = _drop_skill_calls(reply)
+
     validation_error = _final_output_schema_error(reply, native_tool_calls)
     while schema is not None and validation_error is not None and retries_used < reasoner.output_retries:
         retries_used += 1
@@ -765,17 +889,9 @@ async def complete_reasoner(
                 "the corrected JSON object."
             )
         )
-        apt, act, att = _usage_of(completion)
-        pt, ct, tt = _add_tokens(pt, apt), _add_tokens(ct, act), _add_tokens(tt, att)
-        rcr, rcc = _cache_usage_of(completion)
-        cache_read = _add_tokens(cache_read, rcr)
-        cache_creation = _add_tokens(cache_creation, rcc)
-        reply, native_tool_calls = (
-            parse_responses_reply(completion, expect_json=True)
-            if is_responses_result(completion)
-            else _parse_completion_reply(completion, expect_json=True)
-        )
-        reply = _restore_tool_calls(reply)
+        _accumulate(completion)
+        reply, native_tool_calls = _parse(completion, expect_json=True)
+        reply, native_tool_calls = _drop_skill_calls(reply)
         validation_error = _final_output_schema_error(reply, native_tool_calls)
     ended = time.time()
     pc = reasoner.prompt_cache
@@ -802,6 +918,7 @@ async def complete_reasoner(
         response_format_fallback=fallback_reason,
         output_retries_used=retries_used,
         native_tool_calls=native_tool_calls,
+        skill_loads=tuple(loaded_skills),
         prompt_cache_requested=pc_requested,
         prompt_cache_applied=pc_applied,
         prompt_cache_reason=pc_reason,

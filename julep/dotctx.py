@@ -497,6 +497,20 @@ def reasoner_from_settings(
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
 
     model, effort, output_retries = _model_and_effort(settings)
+    from .skills import load_package_skills, parse_skills_setting
+
+    skill_key_tuple: tuple[str, ...] = ()
+    declared = parse_skills_setting(settings.get("skills"), origin=base_dir or nm)
+    if base_dir is not None:
+        skill_key_tuple = tuple(
+            _registry.register_skill(skill)
+            for skill in load_package_skills(base_dir, declared)
+        )
+    elif declared:
+        raise ValueError(
+            f"reasoner {nm!r} declares skills but was built without a base_dir; "
+            "skills load from <package>/skills/<name>/SKILL.md"
+        )
     reasoner = Reasoner(
         name=nm,
         model=model,
@@ -518,6 +532,7 @@ def reasoner_from_settings(
         require_tool_call=_require_tool_call_setting(settings),
         response_format=_response_format_setting(settings),
         prompt_cache=_prompt_cache_setting(settings),
+        skills=skill_key_tuple,
     )
     return _registry.register_reasoner(reasoner)
 

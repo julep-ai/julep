@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..prompt import rendered_user_for
+from ..registry import DEFAULT_REGISTRY
+from ..skills import batch_system_text
 from .batch_provider import (
     BatchProvider,
     BatchReply,
@@ -58,7 +60,9 @@ class OpenAIBatchProvider(BatchProvider):
         body: dict[str, Any] = {
             "model": model,
             "messages": _messages(
-                reasoner.system,
+                batch_system_text(
+                    reasoner.system, reasoner.skills, registry=DEFAULT_REGISTRY
+                ),
                 value,
                 schema_hint=None,
                 user_text=user_text,

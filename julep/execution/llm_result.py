@@ -34,6 +34,7 @@ class LlmCallMeta:
     response_format_fallback: str | None = None
     output_retries_used: int = 0
     native_tool_calls: int = 0
+    skill_loads: tuple[str, ...] = ()
     prompt_cache_requested: str | None = None
     prompt_cache_applied: bool | None = None
     prompt_cache_reason: str | None = None
@@ -60,6 +61,8 @@ class LlmCallMeta:
             out["llm.output_retries"] = self.output_retries_used
         if self.native_tool_calls:
             out["llm.tool_calls"] = self.native_tool_calls
+        if self.skill_loads:
+            out["llm.skill_loads"] = list(self.skill_loads)
         cache: dict[str, Any] = {}
         if self.prompt_cache_requested is not None:
             cache["requested"] = self.prompt_cache_requested

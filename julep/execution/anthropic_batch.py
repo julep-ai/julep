@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..prompt import rendered_user_for
+from ..registry import DEFAULT_REGISTRY
+from ..skills import batch_system_text
 from .batch_provider import (
     BatchProvider,
     BatchReply,
@@ -70,7 +72,9 @@ class AnthropicBatchProvider(BatchProvider):
         # rides the prompt's own JSON instructions — the same place the sync
         # path lands after its recorded fallback.
         messages = _messages(
-            reasoner.system,
+            batch_system_text(
+                reasoner.system, reasoner.skills, registry=DEFAULT_REGISTRY
+            ),
             value,
             schema_hint=schema,
             user_text=user_text,
