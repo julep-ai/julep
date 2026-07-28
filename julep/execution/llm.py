@@ -60,6 +60,7 @@ from ..resilience import (
 )
 from ..skills import (
     SKILL_TOOL,
+    disclosed_skills_block,
     load_skill_tool_def,
     resolve_skill_keys,
     skills_prompt_block,
@@ -715,7 +716,19 @@ async def complete_reasoner(
             kwargs["tools"] = offered_tools
             if parallel_tool_calls is not None:
                 kwargs["parallel_tool_calls"] = parallel_tool_calls
-        messages.extend(skill_turns)
+        if skill_tool_open:
+            disclosure_turns = skill_turns
+        elif loaded_skills:
+            loaded = [skill for skill in active_skills if skill.name in loaded_skills]
+            disclosure_turns = [
+                {"role": "user", "content": disclosed_skills_block(loaded)}
+            ]
+        else:
+            disclosure_turns = []
+        disclosure_index = len(messages)
+        while disclosure_index and messages[disclosure_index - 1].get("role") == "system":
+            disclosure_index -= 1
+        messages[disclosure_index:disclosure_index] = disclosure_turns
         if retry_note is not None:
             messages.append({"role": "user", "content": retry_note})
         effort = reasoner.reasoning_effort
@@ -797,25 +810,35 @@ async def complete_reasoner(
         )
         return _restore_tool_calls(parsed), calls
 
-    def _skill_requests(parsed: Any) -> list[tuple[Any, Any]]:
+    def _skill_requests(parsed: Any) -> list[tuple[Any, Optional[str]]]:
         if not isinstance(parsed, dict):
             return []
         calls = parsed.get("tool_calls")
         if not isinstance(calls, list):
             return []
-        return [
-            (call.get("id"), (call.get("input") or {}).get("name"))
-            for call in calls
-            if isinstance(call, dict) and call.get("tool") == SKILL_TOOL
-        ]
+        requests: list[tuple[Any, Optional[str]]] = []
+        for call in calls:
+            if not isinstance(call, dict) or call.get("tool") != SKILL_TOOL:
+                continue
+            call_input = call.get("input")
+            raw_name = call_input.get("name") if isinstance(call_input, dict) else None
+            name = raw_name if isinstance(raw_name, str) and raw_name else None
+            requests.append((call.get("id"), name))
+        return requests
 
-    def _drop_skill_calls(parsed: Any) -> tuple[Any, int]:
+    def _drop_skill_calls(parsed: Any, native_calls: int) -> tuple[Any, int]:
         """Skill calls are resolved here and must never reach the agent loop."""
+        if not active_skills:
+            return parsed, native_calls
         if not isinstance(parsed, dict) or not isinstance(parsed.get("tool_calls"), list):
-            return parsed, 0
-        kept = [call for call in parsed["tool_calls"] if call.get("tool") != SKILL_TOOL]
+            return parsed, native_calls
+        kept = [
+            call
+            for call in parsed["tool_calls"]
+            if not isinstance(call, dict) or call.get("tool") != SKILL_TOOL
+        ]
         if len(kept) == len(parsed["tool_calls"]):
-            return parsed, len(kept)
+            return parsed, native_calls
         remainder = {key: item for key, item in parsed.items() if key != "tool_calls"}
         if kept:
             remainder["tool_calls"] = kept
@@ -833,6 +856,25 @@ async def complete_reasoner(
         if not requests:
             skill_tool_open = False
             break
+        calls = reply.get("tool_calls") if isinstance(reply, dict) else None
+        discarded_tools: list[str] = []
+        for tool_call in calls if isinstance(calls, list) else []:
+            if not isinstance(tool_call, dict):
+                discarded_tools.append(f"<malformed tool call {tool_call!r}>")
+                continue
+            tool = tool_call.get("tool")
+            if tool != SKILL_TOOL:
+                discarded_tools.append(
+                    tool if isinstance(tool, str) and tool else "<unnamed tool>"
+                )
+        if discarded_tools:
+            logger.warning(
+                "reasoner %s issued non-skill tool calls alongside %s; discarding "
+                "%s so they will be re-decided after skill disclosure",
+                reasoner.name,
+                SKILL_TOOL,
+                ", ".join(discarded_tools),
+            )
         by_name = {skill.name: skill for skill in active_skills}
         skill_turns.append(
             {
@@ -855,6 +897,12 @@ async def complete_reasoner(
             if name in loaded_skills:
                 skill_error_budget -= 1
                 content = f"skill {name!r} was already provided above"
+            elif name is None:
+                skill_error_budget -= 1
+                content = (
+                    f"{SKILL_TOOL} needs a `name` string; available skills are: "
+                    + ", ".join(sorted(by_name))
+                )
             elif name not in by_name:
                 skill_error_budget -= 1
                 content = (
@@ -873,7 +921,7 @@ async def complete_reasoner(
         _accumulate(completion)
         reply, native_tool_calls = _parse(completion, expect_json=schema is not None)
 
-    reply, native_tool_calls = _drop_skill_calls(reply)
+    reply, native_tool_calls = _drop_skill_calls(reply, native_tool_calls)
 
     validation_error = _final_output_schema_error(reply, native_tool_calls)
     while schema is not None and validation_error is not None and retries_used < reasoner.output_retries:
@@ -891,7 +939,7 @@ async def complete_reasoner(
         )
         _accumulate(completion)
         reply, native_tool_calls = _parse(completion, expect_json=True)
-        reply, native_tool_calls = _drop_skill_calls(reply)
+        reply, native_tool_calls = _drop_skill_calls(reply, native_tool_calls)
         validation_error = _final_output_schema_error(reply, native_tool_calls)
     ended = time.time()
     pc = reasoner.prompt_cache

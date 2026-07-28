@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -114,6 +115,26 @@ def _skill_call(name: str, call_id: str = "c1") -> FakeCompletion:
     )
 
 
+def _skill_call_with_arguments(arguments: str, call_id: str = "c1") -> FakeCompletion:
+    return FakeCompletion(
+        choices=[
+            FakeChoice(
+                FakeMessage(
+                    tool_calls=[
+                        FakeToolCall(call_id, FakeFunction(SKILL_TOOL, arguments))
+                    ]
+                )
+            )
+        ]
+    )
+
+
+def _tool_calls(*calls: FakeToolCall) -> FakeCompletion:
+    return FakeCompletion(
+        choices=[FakeChoice(FakeMessage(tool_calls=list(calls)))]
+    )
+
+
 def _registry_with(*skills: Skill) -> tuple[Registry, tuple[str, ...]]:
     reg = Registry()
     return reg, tuple(reg.register_skill(skill) for skill in skills)
@@ -171,7 +192,7 @@ def test_no_tool_and_no_block_without_skills() -> None:
 
 
 def test_loading_a_skill_feeds_the_body_back_and_re_asks(monkeypatch) -> None:
-    reg, keys = _registry_with(ALPHA)
+    reg, keys = _registry_with(ALPHA, BETA)
     monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
     replies = iter([_skill_call("alpha"), _text("drafted")])
     seen: list[list[dict[str, Any]]] = []
@@ -231,6 +252,45 @@ def test_unknown_skill_name_is_answered_not_raised(monkeypatch) -> None:
     assert "ghost" in tool_turn["content"] and "alpha" in tool_turn["content"]
 
 
+def test_non_json_skill_arguments_are_answered_not_raised(monkeypatch) -> None:
+    reg, keys = _registry_with(ALPHA)
+    monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    replies = iter([_skill_call_with_arguments('{"name": "al'), _text("drafted")])
+    seen: list[list[dict[str, Any]]] = []
+
+    async def acompletion(**kwargs: Any) -> Any:
+        seen.append(kwargs["messages"])
+        return next(replies)
+
+    result = run(complete_reasoner(_reasoner(keys), "hi", acompletion=acompletion))
+    assert result.reply == "drafted"
+    assert result.meta.skill_loads == ()
+    tool_turn = [m for m in seen[1] if m.get("role") == "tool"][0]
+    assert SKILL_TOOL in tool_turn["content"]
+    assert "name" in tool_turn["content"] and "string" in tool_turn["content"]
+    assert "alpha" in tool_turn["content"]
+
+
+def test_non_string_skill_name_is_answered_not_raised(monkeypatch) -> None:
+    reg, keys = _registry_with(ALPHA)
+    monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    arguments = json.dumps({"name": {"a": 1}})
+    replies = iter([_skill_call_with_arguments(arguments), _text("drafted")])
+    seen: list[list[dict[str, Any]]] = []
+
+    async def acompletion(**kwargs: Any) -> Any:
+        seen.append(kwargs["messages"])
+        return next(replies)
+
+    result = run(complete_reasoner(_reasoner(keys), "hi", acompletion=acompletion))
+    assert result.reply == "drafted"
+    assert result.meta.skill_loads == ()
+    tool_turn = [m for m in seen[1] if m.get("role") == "tool"][0]
+    assert SKILL_TOOL in tool_turn["content"]
+    assert "name" in tool_turn["content"] and "string" in tool_turn["content"]
+    assert "alpha" in tool_turn["content"]
+
+
 def test_repeated_requests_cannot_spin_forever(monkeypatch) -> None:
     reg, keys = _registry_with(ALPHA)
     monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
@@ -249,14 +309,159 @@ def test_repeated_requests_cannot_spin_forever(monkeypatch) -> None:
 def test_skill_calls_never_leak_to_the_agent_loop(monkeypatch) -> None:
     reg, keys = _registry_with(ALPHA)
     monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    replies = iter(
+        [
+            _skill_call("alpha"),
+            _tool_calls(
+                FakeToolCall("c2", FakeFunction(SKILL_TOOL, '{"name": "alpha"}')),
+                FakeToolCall("r1", FakeFunction("lookup", '{"q": "x"}')),
+            ),
+        ]
+    )
 
     async def acompletion(**kwargs: Any) -> Any:
-        return _skill_call("alpha")
+        return next(replies)
 
     result = run(complete_reasoner(_reasoner(keys), "hi", acompletion=acompletion))
-    calls = result.reply.get("tool_calls", []) if isinstance(result.reply, dict) else []
-    assert all(call["tool"] != SKILL_TOOL for call in calls)
+    assert result.reply == {
+        "tool_calls": [{"id": "r1", "tool": "lookup", "input": {"q": "x"}}]
+    }
+    assert result.meta.native_tool_calls == 1
+
+
+def test_mixed_skill_and_real_tool_call_warns_and_reasks(monkeypatch, caplog) -> None:
+    reg, keys = _registry_with(ALPHA)
+    monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    replies = iter(
+        [
+            _tool_calls(
+                FakeToolCall("c1", FakeFunction(SKILL_TOOL, '{"name": "alpha"}')),
+                FakeToolCall("r1", FakeFunction("lookup", '{"q": "x"}')),
+            ),
+            _text("drafted"),
+        ]
+    )
+
+    async def acompletion(**kwargs: Any) -> Any:
+        return next(replies)
+
+    with caplog.at_level(logging.WARNING, logger="julep.execution.llm"):
+        result = run(complete_reasoner(_reasoner(keys), "hi", acompletion=acompletion))
+
+    assert result.reply == "drafted"
+    assert "lookup" not in str(result.reply)
+    warning = caplog.text
+    assert "skilled" in warning and "lookup" in warning
+    assert "re-decided after skill disclosure" in warning
+
+
+def test_skillless_json_tool_calls_payload_preserves_pre_feature_meta() -> None:
+    payload = {"tool_calls": [{"tool": "lookup", "input": {"q": "x"}}]}
+
+    async def acompletion(**kwargs: Any) -> Any:
+        return _text(json.dumps(payload))
+
+    result = run(
+        complete_reasoner(
+            _reasoner((), reply={"type": "object"}),
+            "hi",
+            acompletion=acompletion,
+        )
+    )
+    assert result.reply == payload
     assert result.meta.native_tool_calls == 0
+
+
+def test_skillless_json_tool_calls_payload_allows_non_dict_items() -> None:
+    payload = {"tool_calls": ["oops"]}
+
+    async def acompletion(**kwargs: Any) -> Any:
+        return _text(json.dumps(payload))
+
+    result = run(
+        complete_reasoner(
+            _reasoner((), reply={"type": "object"}),
+            "hi",
+            acompletion=acompletion,
+        )
+    )
+    assert result.reply == payload
+    assert result.meta.native_tool_calls == 0
+
+
+def test_withdrawal_round_uses_plain_skill_disclosure(monkeypatch) -> None:
+    reg, keys = _registry_with(ALPHA)
+    monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    replies = iter([_skill_call("alpha"), _text("drafted")])
+    seen: list[list[dict[str, Any]]] = []
+
+    async def acompletion(**kwargs: Any) -> Any:
+        seen.append(kwargs["messages"])
+        return next(replies)
+
+    result = run(complete_reasoner(_reasoner(keys), "hi", acompletion=acompletion))
+    assert result.reply == "drafted"
+    assert not any("tool_calls" in message for message in seen[1])
+    assert not any(message.get("role") == "tool" for message in seen[1])
+    assert any("ALPHA BODY" in str(message.get("content")) for message in seen[1])
+
+
+def test_prompt_cache_keeps_round_note_volatile_on_disclosure(monkeypatch) -> None:
+    from julep.agent_loop import ROUND_NOTE_KEY
+
+    reg, keys = _registry_with(ALPHA)
+    monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    replies = iter([_skill_call("alpha"), _text("drafted")])
+    seen: list[list[dict[str, Any]]] = []
+
+    async def acompletion(**kwargs: Any) -> Any:
+        seen.append(kwargs["messages"])
+        return next(replies)
+
+    reasoner = Reasoner(
+        name="cached-skilled",
+        model="anthropic:claude-x",
+        system="You draft.",
+        prompt_cache="1h",
+        skills=list(keys),
+    )
+    run(
+        complete_reasoner(
+            reasoner,
+            {"task": "hi", ROUND_NOTE_KEY: "round note"},
+            acompletion=acompletion,
+        )
+    )
+
+    system = [message for message in seen[1] if message.get("role") == "system"]
+    assert len(system) == 1
+    blocks = system[0]["content"]
+    assert blocks[-1] == {"type": "text", "text": "round note"}
+    assert "round note" not in blocks[0]["text"]
+
+
+def test_openai_restores_response_format_after_skill_tool_withdrawal(monkeypatch) -> None:
+    reg, keys = _registry_with(ALPHA)
+    monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)
+    replies = iter([_skill_call("alpha"), _text('{"answer": "drafted"}')])
+    seen: list[dict[str, Any]] = []
+
+    async def acompletion(**kwargs: Any) -> Any:
+        seen.append(kwargs)
+        return next(replies)
+
+    reasoner = Reasoner(
+        name="openai-skilled",
+        model="openai:gpt-5.5",
+        system="You draft.",
+        reply={"type": "object"},
+        skills=list(keys),
+    )
+    result = run(complete_reasoner(reasoner, "hi", acompletion=acompletion))
+
+    assert result.reply == {"answer": "drafted"}
+    assert "tools" in seen[0] and "response_format" not in seen[0]
+    assert "response_format" in seen[1] and "tools" not in seen[1]
 
 
 def test_real_tool_name_colliding_with_the_reserved_name_is_rejected(monkeypatch) -> None:

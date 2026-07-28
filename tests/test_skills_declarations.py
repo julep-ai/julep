@@ -30,6 +30,24 @@ def test_malformed_skill_key_is_rejected_at_construction() -> None:
         Reasoner(name="r", model="openai:gpt-5.5", skills=["natural-writing"])
 
 
+def test_duplicate_skill_names_are_rejected_at_construction() -> None:
+    first = Skill(name="alpha", description="first", body="Do alpha first.")
+    second = Skill(name="alpha", description="second", body="Do alpha second.")
+    first_key = skill_key(first)
+    second_key = skill_key(second)
+    assert first_key != second_key
+
+    with pytest.raises(
+        ValueError,
+        match="duplicate skill name 'alpha'.*reasoner 'duplicate-skills'",
+    ):
+        Reasoner(
+            name="duplicate-skills",
+            model="openai:gpt-5.5",
+            skills=[first_key, second_key],
+        )
+
+
 def test_replace_preserves_and_overrides_skills() -> None:
     r = Reasoner(name="r", model="openai:gpt-5.5", skills=[ALPHA_KEY])
     assert r.replace(temperature=0.5).skills == (ALPHA_KEY,)
@@ -48,6 +66,20 @@ def test_identity_omits_skills_when_absent_and_includes_them_when_set() -> None:
     skilled = Reasoner(name="ident-skilled", model="openai:gpt-5.5", skills=[ALPHA_KEY])
     DEFAULT_REGISTRY.register_reasoner(skilled)
     assert _reasoner_identity("ident-skilled")["skills"] == [ALPHA_KEY]
+
+
+def test_runtime_declaration_omits_skills_when_absent_and_includes_them_when_set() -> None:
+    from julep.app import _reasoner_runtime_declaration
+
+    plain = Reasoner(name="runtime-plain", model="openai:gpt-5.5")
+    assert "skills" not in _reasoner_runtime_declaration(plain)
+
+    skilled = Reasoner(
+        name="runtime-skilled",
+        model="openai:gpt-5.5",
+        skills=[ALPHA_KEY],
+    )
+    assert _reasoner_runtime_declaration(skilled)["skills"] == [ALPHA_KEY]
 
 
 def test_editing_a_skill_body_moves_the_reasoner_identity() -> None:

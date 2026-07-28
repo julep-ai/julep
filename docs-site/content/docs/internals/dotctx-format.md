@@ -203,7 +203,9 @@ The complete load-time and call-time error inventory is:
 | directory name != frontmatter `name` | `SkillError` |
 | a configured name with no sidecar | `SkillError`, listing what is available |
 | `SKILL.md` with no frontmatter, invalid YAML, a non-mapping frontmatter, a missing/blank `name`, or an empty body | `SkillError` |
-| a `Reasoner` given a string that is not `skill/<name>@v<12 hex>` | `SkillError` telling the caller to pass `skill_keys([...])` |
+| a `SKILL.md` frontmatter name outside `^[A-Za-z0-9][A-Za-z0-9._-]*$` | `SkillError`, naming the file and offending name |
+| a `Reasoner` given a string that is not `skill/<name>@v<12 hex>` | `ValueError` telling the caller to pass `skill_keys([...])` |
+| a `Reasoner` given multiple skill keys declaring the same name | `ValueError`, naming the duplicate skill and reasoner |
 | the reasoner grants a tool literally named `__load_skill__` while skills are active | `ValueError` at call time (the name is reserved) |
 
 `description` is optional; a missing one renders as `(no description)` in the
@@ -225,9 +227,11 @@ The prompt block is a `# Available skills` list of `- **name** — description`
 lines, prepended ahead of the authored system prompt because it is a stable
 prefix that prompt caching can cover. The `__load_skill__` tool's `name` enum
 lists only skills not yet disclosed, so the model cannot spend a round
-re-reading something already in its context. Bodies are answered as `tool`
-messages appended to the same call's message list, and the caller re-asks. The
-loop closes when every activated skill has been read, when the model stops
+re-reading something already in its context. While the tool remains offered,
+bodies are answered as `tool` messages and the caller re-asks. After the tool
+is withdrawn, already-loaded bodies are carried into the final request as a
+plain user message, without tool-call or tool-result blocks. The loop closes
+when every activated skill has been read, when the model stops
 asking, or when a budget of **two** malformed requests (an unknown name, or a
 name already provided) is spent. `__load_skill__` calls are stripped from the
 parsed reply before it is returned, so they never surface as controller tool

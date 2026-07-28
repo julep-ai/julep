@@ -40,6 +40,7 @@ SKILL_TOOL = "__load_skill__"
 
 _HASH_PREFIX_LEN = 12
 SKILL_KEY_RE = re.compile(r"^skill/(?P<name>[^@]+)@v[0-9a-f]{%d}$" % _HASH_PREFIX_LEN)  # noqa: UP031
+SKILL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 # Same frontmatter shape mem-mcp's loader and the single-file .ctx format use.
 _FRONTMATTER_RE = re.compile(
@@ -109,6 +110,12 @@ def parse_skill_markdown(text: str, *, origin: str) -> Skill:
     raw_name = frontmatter.get("name")
     if not isinstance(raw_name, str) or not raw_name.strip():
         raise SkillError(f"skill {origin!r} frontmatter needs a non-empty name")
+    name = raw_name.strip()
+    if SKILL_NAME_RE.fullmatch(name) is None:
+        raise SkillError(
+            f"skill {origin!r} has invalid name {name!r}; skill names must match "
+            "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        )
 
     raw_description = frontmatter.get("description", "")
     description = (
@@ -121,7 +128,7 @@ def parse_skill_markdown(text: str, *, origin: str) -> Skill:
             "cannot be disclosed"
         )
     return Skill(
-        name=raw_name.strip(),
+        name=name,
         description=" ".join(description.split()),
         body=body,
         source=origin,
@@ -304,6 +311,15 @@ def inline_skills_block(skills: Sequence[Skill]) -> str:
     ]
     return "# Available skills\n\nUse these skills when they are relevant.\n\n" + "\n\n".join(
         blocks
+    )
+
+
+def disclosed_skills_block(skills: Sequence[Skill]) -> str:
+    """Loaded skill bodies for a tool-free continuation round."""
+    blocks = [f"## {skill.name}\n\n{skill.body}" for skill in skills]
+    return (
+        "You asked for these skills; here are their full instructions:\n\n"
+        + "\n\n".join(blocks)
     )
 
 

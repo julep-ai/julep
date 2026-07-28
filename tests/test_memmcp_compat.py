@@ -21,7 +21,6 @@ from __future__ import annotations
 import json
 import os
 import sys
-import warnings
 from pathlib import Path
 
 import pytest
@@ -33,7 +32,6 @@ from julep.dotctx_evals import Sample, load_ctx_evals
 from julep.dotctx_rich import load_rich_dotctx
 from julep.prompt import get_renderer
 from julep.registry import Registry
-from julep.skills import InertSkillsDirectoryWarning
 
 FIXTURES = Path(__file__).parent / "fixtures" / "memmcp"
 
@@ -178,11 +176,11 @@ def test_load_ctx_evals_execute_eval_yaml() -> None:
 @pytest.mark.skipif(
     not os.path.isdir(_MEM_MCP_REPO), reason="sibling mem-mcp repo not checked out"
 )
+@pytest.mark.filterwarnings("ignore::julep.skills.InertSkillsDirectoryWarning")
 def test_sibling_repo_supported_prompts_all_load() -> None:
     # plan_sections.ctx ships skills/ with no skills: key. Under Julep's
     # explicit-activation rule that is inert and warns; the sweep only cares
     # that every package still loads.
-    warnings.filterwarnings("ignore", category=InertSkillsDirectoryWarning)
     ctx_paths = sorted(Path(_MEM_MCP_PROMPTS).rglob("*.ctx"))
     # Directories holding only a stale __pycache__ (leftovers of deleted
     # prompts) carry no settings.yaml and are not loadable packages.

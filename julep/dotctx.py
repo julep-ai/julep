@@ -255,7 +255,7 @@ class Reasoner:
             )
         object.__setattr__(self, "prompt_cache", prompt_cache)
 
-        from .skills import SKILL_KEY_RE
+        from .skills import SKILL_KEY_RE, skill_name_of
 
         skill_keys_tuple = tuple(skills)
         for key in skill_keys_tuple:
@@ -265,6 +265,15 @@ class Reasoner:
                     "expected 'skill/<name>@v<12 hex chars>' — pass "
                     "julep.skills.skill_keys([...]) rather than bare names"
                 )
+        skill_names: set[str] = set()
+        for key in skill_keys_tuple:
+            skill_name = skill_name_of(key)
+            if skill_name in skill_names:
+                raise ValueError(
+                    f"duplicate skill name {skill_name!r} on reasoner {name!r}; "
+                    "each declared skill name must be unique"
+                )
+            skill_names.add(skill_name)
         object.__setattr__(self, "skills", skill_keys_tuple)
 
     def replace(

@@ -96,6 +96,17 @@ def test_missing_name_is_a_loud_error() -> None:
         parse_skill_markdown(text, origin="skills/x/SKILL.md")
 
 
+def test_invalid_skill_name_charset_names_file_and_name() -> None:
+    origin = "skills/bad/SKILL.md"
+    text = "---\nname: bad@name\ndescription: invalid name\n---\n\nbody\n"
+    with pytest.raises(SkillError) as exc_info:
+        parse_skill_markdown(text, origin=origin)
+    message = str(exc_info.value)
+    assert origin in message
+    assert "bad@name" in message
+    assert "^[A-Za-z0-9][A-Za-z0-9._-]*$" in message
+
+
 def test_non_mapping_frontmatter_is_a_loud_error() -> None:
     with pytest.raises(SkillError, match="YAML mapping"):
         parse_skill_markdown("---\n- a\n- b\n---\n\nbody\n", origin="skills/x/SKILL.md")
