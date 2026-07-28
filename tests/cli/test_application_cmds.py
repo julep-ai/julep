@@ -378,6 +378,16 @@ def test_apply_prints_queue_lines_and_registers_release(
     assert captured["key"] == "admin-token"
     assert captured.get("closed") is True
     assert f"registered {release.release_hash}" in out
+    assert (
+        "activate  julep activate --env local --lane summary --release "
+        + release.release_hash
+        in out
+    )
+    assert (
+        "activate  unavailable: re-run apply with --api-url/--api-key to register "
+        "this release with the control plane before activating"
+        not in out
+    )
 
 
 def test_apply_surfaces_non_admin_registration_403(
@@ -531,8 +541,10 @@ def test_plan_apply_publish_only_and_status_application_path(
     apply_output = capsys.readouterr().out
     assert "release   sha256:" in apply_output
     assert "traffic   unchanged" in apply_output
+    assert "activate  julep activate" not in apply_output
     assert (
-        "activate  julep activate --env local --lane summary --release sha256:"
+        "activate  unavailable: re-run apply with --api-url/--api-key to register "
+        "this release with the control plane before activating"
         in apply_output
     )
     assert not (root / ".julep" / "releases" / "local.json").exists()

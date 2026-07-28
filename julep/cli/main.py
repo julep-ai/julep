@@ -886,10 +886,16 @@ def apply_application(
     if api_url or api_key:
         _register_remote_release(release, api_url or None, api_key or None)
     typer.echo("traffic   unchanged")
-    for lane_name, _task_queue in release_queue_lines(release):
+    if api_url or api_key:
+        for lane_name, _task_queue in release_queue_lines(release):
+            typer.echo(
+                f"activate  julep activate --env {env} --lane {lane_name} "
+                f"--release {release.release_hash}"
+            )
+    else:
         typer.echo(
-            f"activate  julep activate --env {env} --lane {lane_name} "
-            f"--release {release.release_hash}"
+            "activate  unavailable: re-run apply with --api-url/--api-key to "
+            "register this release with the control plane before activating"
         )
 
 
