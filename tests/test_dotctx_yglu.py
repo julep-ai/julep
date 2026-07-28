@@ -63,6 +63,31 @@ max_rounds: !? $env.get("MAX_ROUNDS", 12)
     assert isinstance(out["max_rounds"], int)
 
 
+@pytest.mark.parametrize(
+    ("literal", "expected"),
+    [
+        ("true", True),
+        ("True", True),
+        ("false", False),
+        ("False", False),
+        ("null", None),
+        ("None", None),
+    ],
+)
+def test_unset_vars_preserve_boolean_and_null_defaults(
+    literal: str, expected: bool | None
+) -> None:
+    text = f'value: !? $env.get("FLAG", {literal})\n'
+    assert load_settings(text, env={}, filepath="settings.yaml")["value"] is expected
+
+
+def test_set_env_value_wins_verbatim_over_boolean_default() -> None:
+    text = 'value: !? $env.get("FLAG", false)\n'
+    value = load_settings(text, env={"FLAG": "0"}, filepath="settings.yaml")["value"]
+    assert value == "0"
+    assert isinstance(value, str)
+
+
 def test_set_env_values_win_verbatim_as_strings() -> None:
     text = """\
 model: !? $env.get("MODEL", "fallback")
@@ -96,6 +121,14 @@ three: !? $env.get("OUTER", $env.get("MIDDLE", $env.get("INNER", "three-default"
         env={"OUTER": "outer", "MIDDLE": "middle", "INNER": "inner"},
         filepath="settings.yaml",
     ) == {"two": "outer", "three": "outer"}
+
+
+@pytest.mark.parametrize(("literal", "expected"), [("false", False), ("null", None)])
+def test_nested_env_fallback_supports_boolean_and_null_defaults(
+    literal: str, expected: bool | None
+) -> None:
+    text = f'value: !? $env.get("A", $env.get("B", {literal}))\n'
+    assert load_settings(text, env={}, filepath="settings.yaml")["value"] is expected
 
 
 def test_env_get_without_default_preserves_dict_get_semantics() -> None:
@@ -167,6 +200,12 @@ def test_unsupported_expressions_have_actionable_errors(expression: str) -> None
     assert "removed in 3.0.0rc5" in message
     assert "$env.get" in message
     assert "run input/metadata" in message
+
+
+@pytest.mark.parametrize("identifier", ["truthy", "nullable", "Falsey", "foo"])
+def test_literal_identifier_near_misses_are_unsupported(identifier: str) -> None:
+    with pytest.raises(ValueError, match="Unsupported yglu configuration"):
+        load_settings(f"value: !? {identifier}\n", env={}, filepath="invalid.yaml")
 
 
 @pytest.mark.parametrize("node", ["[1, 2]", "{key: value}"])

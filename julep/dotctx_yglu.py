@@ -26,6 +26,15 @@ _TAG_RE = re.compile(r"!\?|!\(\)|!if\b|!for\b|!concat\b|!merge\b")
 _YGLU_TAG_SUFFIXES = frozenset({"?", "()", "if", "for", "concat", "merge"})
 _DEFAULT_ENV: Optional[Mapping[str, str]] = None
 _NUMBER_RE = re.compile(r"-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
+_LITERAL_VALUES = {
+    "true": True,
+    "True": True,
+    "false": False,
+    "False": False,
+    "null": None,
+    "None": None,
+}
+_NO_LITERAL = object()
 
 
 def has_yglu_tags(text: str) -> bool:
@@ -71,7 +80,8 @@ class _ExpressionParser:
     """Parse the intentionally small expression language used by ``!?`` tags."""
 
     # AIDEV-NOTE: Supported grammar is expr := env_get | string_literal |
-    # number_literal, where env_get recursively accepts an optional expr default.
+    # number_literal | boolean_literal | null_literal, where env_get recursively
+    # accepts an optional expr default.
     def __init__(self, expression: str, env: Mapping[str, str]) -> None:
         self._expression = expression
         self._env = env
@@ -91,7 +101,23 @@ class _ExpressionParser:
             return self._parse_env_get()
         if self._peek() in {"'", '"'}:
             return self._parse_string()
+        literal = self._parse_literal()
+        if literal is not _NO_LITERAL:
+            return literal
         return self._parse_number()
+
+    def _parse_literal(self) -> Any:
+        for token, value in _LITERAL_VALUES.items():
+            if not self._expression.startswith(token, self._position):
+                continue
+            end = self._position + len(token)
+            if end < len(self._expression) and (
+                self._expression[end].isalnum() or self._expression[end] == "_"
+            ):
+                continue
+            self._position = end
+            return value
+        return _NO_LITERAL
 
     def _parse_env_get(self) -> Any:
         self._expect("$env")
