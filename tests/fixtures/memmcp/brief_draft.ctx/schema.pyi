@@ -1,0 +1,2 @@
+class Output:
+    draft: str

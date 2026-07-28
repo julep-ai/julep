@@ -6,8 +6,11 @@ comment header, role markers, Input-only schema.pyi, tagged model, eval.py),
 ``execute.ctx`` (require_tool_call + tagged max_rounds + tools.pyi + eval.yaml),
 ``cluster_label.ctx`` (``response_format: {type: json_object}`` and a bare
 ``#`` header line before the first role marker), and ``anchor_choose.ctx``
-(mem-mcp's single-file frontmatter format). ``{% include %}`` partials are
-trimmed out — CA renders templates without a filesystem loader.
+(mem-mcp's single-file frontmatter format), and ``brief_draft.ctx`` (the
+``skills:`` setting activates one sidecar skill from
+``skills/natural-writing/SKILL.md`` with progressive disclosure). ``{% include
+%}`` partials are trimmed out — CA renders templates without a filesystem
+loader.
 
 The sweep test loads every supported ``.ctx`` under the sibling mem-mcp
 checkout's ``apps/memory-api/prompts`` and is skipped when that repo is absent.
@@ -18,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -29,6 +33,7 @@ from julep.dotctx_evals import Sample, load_ctx_evals
 from julep.dotctx_rich import load_rich_dotctx
 from julep.prompt import get_renderer
 from julep.registry import Registry
+from julep.skills import InertSkillsDirectoryWarning
 
 FIXTURES = Path(__file__).parent / "fixtures" / "memmcp"
 
@@ -174,6 +179,10 @@ def test_load_ctx_evals_execute_eval_yaml() -> None:
     not os.path.isdir(_MEM_MCP_REPO), reason="sibling mem-mcp repo not checked out"
 )
 def test_sibling_repo_supported_prompts_all_load() -> None:
+    # plan_sections.ctx ships skills/ with no skills: key. Under Julep's
+    # explicit-activation rule that is inert and warns; the sweep only cares
+    # that every package still loads.
+    warnings.filterwarnings("ignore", category=InertSkillsDirectoryWarning)
     ctx_paths = sorted(Path(_MEM_MCP_PROMPTS).rglob("*.ctx"))
     # Directories holding only a stale __pycache__ (leftovers of deleted
     # prompts) carry no settings.yaml and are not loadable packages.
@@ -193,12 +202,6 @@ def test_sibling_repo_supported_prompts_all_load() -> None:
         try:
             rich = load_rich_dotctx(str(path), registry=Registry(), env={})
         except Exception as exc:
-            # AIDEV-NOTE: live mem-mcp may add settings keys after this compatibility
-            # snapshot. `skills` is unrelated to tagged env evaluation and is not
-            # represented by Julep's Reasoner yet; keep checking every supported
-            # package while the dedicated settings sweep still parses these files.
-            if "unknown settings keys" in str(exc) and ": skills (allowed:" in str(exc):
-                continue
             failures.append(f"{path.relative_to(_MEM_MCP_PROMPTS)}: {exc}")
             continue
         b = rich.reasoner
@@ -207,3 +210,23 @@ def test_sibling_repo_supported_prompts_all_load() -> None:
         assert "@" not in b.model               # effort suffix extracted, never leaks
 
     assert not failures, "mem-mcp prompts failed to load:\n" + "\n".join(failures)
+
+
+# --------------------------------------------------------------------------- #
+# brief_draft.ctx: the skills: setting with progressive disclosure.
+# --------------------------------------------------------------------------- #
+def test_brief_draft_activates_one_skill_without_inlining_it() -> None:
+    from julep.registry import Registry
+
+    # Fresh registry: renderers land on it, so resolve the system template through
+    # it rather than through the module-level DEFAULT_REGISTRY helper.
+    registry = Registry()
+    rich = load_rich_dotctx(
+        str(FIXTURES / "brief_draft.ctx"), registry=registry, env={}
+    )
+    assert [s.name for s in rich.skills] == ["natural-writing"]
+    assert rich.reasoner.skills[0].startswith("skill/natural-writing@v")
+    # Disclosure is progressive: the body is not in the rendered system prompt.
+    system = registry.get_renderer(rich.reasoner.system_render)({})
+    assert "Significance Inflation" not in system
+    assert system.startswith("You draft a living brief.")

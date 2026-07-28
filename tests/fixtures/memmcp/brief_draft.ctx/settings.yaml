@@ -1,0 +1,7 @@
+# AI-ANCHOR: prompt: living brief draft agent settings
+model: !? $env.get("LIVING_BRIEF_DRAFT_MODEL", "openai:chat-latest")
+temperature: 1.0
+reasoning_effort: medium
+max_rounds: 2
+output_retries: 1
+skills: [natural-writing]

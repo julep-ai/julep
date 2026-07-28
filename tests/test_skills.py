@@ -303,3 +303,37 @@ def test_default_registry_skills_are_restored_between_tests() -> None:
     key = skill_key(_skill("gamma-unique-to-this-test"))
     with pytest.raises(KeyError, match="unknown skill"):
         get_skill(key)
+
+
+def test_public_exports() -> None:
+    import julep
+
+    assert julep.Skill is Skill
+    assert julep.SKILL_TOOL == SKILL_TOOL
+    for name in (
+        "Skill",
+        "SkillError",
+        "SKILL_TOOL",
+        "register_skill",
+        "get_skill",
+        "skill_keys",
+        "load_package_skills",
+    ):
+        assert name in julep.__all__, name
+
+
+def test_code_first_authoring_round_trip() -> None:
+    from julep.dotctx import Reasoner
+    from julep.registry import Registry
+
+    reg = Registry()
+    written = Skill(
+        name="house-style", description="How we write.", body="Short sentences."
+    )
+    reasoner = Reasoner(
+        name="code-first",
+        model="openai:gpt-5.5",
+        system="You write.",
+        skills=skill_keys([written], registry=reg),
+    )
+    assert reg.get_skill(reasoner.skills[0]).body == "Short sentences."

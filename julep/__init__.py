@@ -207,6 +207,17 @@ from .dotctx import (
     load_dotctx as load_dotctx,
 )
 
+# --- agent skills ---------------------------------------------------------- #
+from .skills import (
+    SKILL_TOOL as SKILL_TOOL,
+    Skill as Skill,
+    SkillError as SkillError,
+    get_skill as get_skill,
+    load_package_skills as load_package_skills,
+    register_skill as register_skill,
+    skill_keys as skill_keys,
+)
+
 # --- purity registry ------------------------------------------------------- #
 from .purity import (
     Pure as Pure,
@@ -376,6 +387,9 @@ _BASE_EXPORTS = [
     # dotctx
     "Reasoner", "get_reasoner", "load_dotctx", "dotctx_flow",
     "reasoner_to_flow", "reasoner_from_settings",
+    # agent skills
+    "Skill", "SkillError", "SKILL_TOOL",
+    "register_skill", "get_skill", "skill_keys", "load_package_skills",
     # purity
     "pure", "register_pure", "is_registered", "get_pure", "diff_pure_hashes",
     "Registry", "DEFAULT_REGISTRY",
