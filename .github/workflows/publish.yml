@@ -20,15 +20,12 @@ on:
         description: "Upload to PyPI (leave false to build and verify only)"
         type: boolean
         default: false
-      version:
-        description: "Release tag (for example v3.0.0rc5; required when publishing)"
-        type: string
-        default: ""
 
-# Serialize only runs targeting the same release. Build-only dispatches get a
-# unique group so they cannot displace a pending tag publication.
+# Never let two releases race to the same version. A single, ref-independent
+# group means a manual dispatch and a tag push queue up serially instead of
+# racing to upload the same immutable PyPI version from different commits.
 concurrency:
-  group: publish-${{ github.event_name == 'push' && github.ref_name || inputs.version || github.run_id }}
+  group: publish-pypi
   cancel-in-progress: false
 
 permissions:
@@ -65,20 +62,6 @@ jobs:
           echo "tag=$tag_version pyproject=$pyproject_version"
           if [ "$tag_version" != "$pyproject_version" ]; then
             echo "::error::tag $GITHUB_REF_NAME implies version $tag_version but pyproject.toml declares $pyproject_version"
-            exit 1
-          fi
-
-      - name: Manual publish version must match the package
-        if: github.event_name == 'workflow_dispatch' && inputs.publish
-        env:
-          RELEASE_VERSION: ${{ inputs.version }}
-        run: |
-          pyproject_version="$(python -c '
-          import pathlib, tomllib
-          print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])
-          ')"
-          if [ "$RELEASE_VERSION" != "v$pyproject_version" ]; then
-            echo "::error::manual publish version must be v$pyproject_version"
             exit 1
           fi
 
@@ -137,8 +120,12 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    # Only the tag push, or a dispatch that explicitly opted in, uploads.
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    # Only an actual tag push, or a dispatch that explicitly opted in, uploads.
+    # `github.event_name == 'push'` is required alongside the ref check: a
+    # workflow_dispatch run can itself target a `v*` tag ref, and without the
+    # event check that would satisfy the ref clause and publish regardless of
+    # the `publish` input.
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || inputs.publish
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -154,10 +141,13 @@ jobs:
           name: dist
           path: dist/
 
+      # --check-url lets a rerun (e.g. after the post-upload verification step
+      # below flakes transiently) succeed: uv skips any file already present
+      # on the index instead of failing on PyPI's immutable-file rule.
       - name: Upload to PyPI
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
-        run: uv publish --check-url https://pypi.org/simple dist/*
+        run: uv publish dist/* --check-url https://pypi.org/simple/
 
       # Confirms the release is actually resolvable from the index rather than
       # trusting the upload's exit code.
