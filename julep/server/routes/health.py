@@ -1,21 +1,16 @@
-"""Liveness and authenticated dependency-readiness endpoints."""
+"""Liveness and dependency-readiness endpoints."""
 
 from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from ..auth import ApiKey, require_client
 from . import artifact_store, execution_store
 
 router = APIRouter(tags=["health"])
-
-
-@router.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
 
 
 async def _temporal_ready(request: Request) -> None:
@@ -42,11 +37,7 @@ async def _temporal_ready(request: Request) -> None:
         raise
 
 
-@router.get("/ready")
-async def ready(
-    request: Request,
-    key: Annotated[ApiKey, Depends(require_client)],
-) -> JSONResponse:
+async def _dependency_checks(request: Request) -> dict[str, str]:
     checks: dict[str, str] = {}
 
     try:
@@ -68,11 +59,35 @@ async def ready(
     except Exception as exc:
         checks["temporal"] = f"error: {type(exc).__name__}"
 
+    return checks
+
+
+def _readiness_response(checks: dict[str, str]) -> JSONResponse:
     healthy = all(value == "ok" for value in checks.values())
     return JSONResponse(
         status_code=200 if healthy else 503,
         content={"status": "ready" if healthy else "unavailable", "checks": checks},
     )
+
+
+@router.get("/health/ready")
+async def health_ready(request: Request) -> JSONResponse:
+    if not getattr(request.app.state.settings, "unauthenticated_ready", False):
+        raise HTTPException(status_code=404, detail="not found")
+    return _readiness_response(await _dependency_checks(request))
+
+
+@router.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@router.get("/ready")
+async def ready(
+    request: Request,
+    key: Annotated[ApiKey, Depends(require_client)],
+) -> JSONResponse:
+    return _readiness_response(await _dependency_checks(request))
 
 
 __all__ = ["router"]

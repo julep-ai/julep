@@ -42,6 +42,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 | `TEMPORAL_PAYLOAD_KEYS` | unset | Payload-codec keyring. Set with `TEMPORAL_PAYLOAD_KEY_ID`. |
 | `TEMPORAL_PAYLOAD_KEY_ID` | unset | Active payload-codec key id. |
 | `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `true` | Require encrypted control-plane workflow starts. Set `false` only for a trusted plaintext Temporal deployment. |
+| `JULEP_UNAUTHENTICATED_READY` | `false` | Enable unauthenticated dependency readiness at `GET /v1/health/ready`. |
 | `JULEP_VAULT_KEYS` | unset | Dedicated vault keyring: comma-separated `key-id=64hex` entries. |
 | `JULEP_VAULT_KEY_ID` | unset | Active vault key id. Set together with `JULEP_VAULT_KEYS`. |
 | `JULEP_WORKER_SECRET_ALLOWLIST` | empty | Comma/whitespace-separated logical names worker keys may fetch. Empty is fail-closed. |
@@ -61,7 +62,8 @@ The server table recognizes `api_keys`, `execution_store_dsn`, `artifact_store_u
 `temporal_address`, `temporal_namespace`, `temporal_task_queue`,
 `temporal_api_key`, `temporal_tls`, `temporal_payload_keys`/`payload_keys`,
 `temporal_payload_key_id`/`payload_key_id`,
-`temporal_payload_encryption_required`/`payload_encryption_required`, `host`,
+`temporal_payload_encryption_required`/`payload_encryption_required`,
+`unauthenticated_ready`, `host`,
 `vault_keys`, `vault_key_id`, `worker_secret_allowlist`,
 `port`, `projection_batch_size`, `projection_batch_interval_s`,
 `reconcile_interval_s`, `helm_chart`, `kubernetes_namespace`,
@@ -70,9 +72,10 @@ The server table recognizes `api_keys`, `execution_store_dsn`, `artifact_store_u
 
 ## Authentication and ownership
 
-Every route except `GET /v1/health` requires `Authorization: Bearer <token>`;
-`GET /v1/ready` also requires a bearer key. The keyring compares every candidate with
-`hmac.compare_digest` and yields an `ApiKey(name, principal_base, role)`.
+Every route except `GET /v1/health` requires `Authorization: Bearer <token>` by
+default; `GET /v1/ready` requires a bearer key. When explicitly enabled,
+`GET /v1/health/ready` is also unauthenticated. The keyring compares every candidate
+with `hmac.compare_digest` and yields an `ApiKey(name, principal_base, role)`.
 
 Client and admin keys may use ordinary authenticated routes. Worker keys are
 rejected from every route except `GET /v1/secrets/{name}/value`; admin keys
@@ -147,6 +150,23 @@ Unauthenticated liveness returns `200`:
 Authenticated `GET /v1/ready` checks Postgres, artifact store, and Temporal. It returns
 `200` with `status: "ready"`, or `503` with `status: "unavailable"`; `checks`
 maps each dependency to `ok` or an error class.
+
+For Kubernetes liveness/readiness probes and load-balancer health checks, enable the
+same dependency check without authentication with
+`JULEP_UNAUTHENTICATED_READY=true` or `unauthenticated_ready = true`:
+
+```http
+GET /v1/health/ready HTTP/1.1
+```
+
+The endpoint returns the same `200`/`503` payload as `GET /v1/ready`. It is disabled
+by default and returns `404` without running dependency checks, so deployments do not
+expose it accidentally.
+
+Operators who do not want an unauthenticated endpoint can provision a dedicated,
+low-privilege client key such as `probe:<token>:client` in `JULEP_API_KEYS`, keep
+`/v1/ready` authenticated, and inject its `Authorization: Bearer <token>` header into
+the probe's `httpGet.httpHeaders` from a Kubernetes Secret.
 
 ### artifact store
 
