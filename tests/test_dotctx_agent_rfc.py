@@ -374,7 +374,7 @@ def test_declarations_v2_carries_frozen_agent_and_loads_release_scoped() -> None
     reasoner, frozen = _frozen()
     blob = declarations_blob([reasoner], registry=Registry(), flow=frozen.flow)
     payload = json.loads(blob)
-    assert payload["schemaVersion"] == 2
+    assert payload["schemaVersion"] == 3
     spec = payload["agents"]["bound-agent"]
     assert spec["toolAliases"] == {"search": "tracker/search-posts"}
     assert spec["grantedTools"] == ["search"]
