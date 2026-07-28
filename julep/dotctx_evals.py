@@ -17,11 +17,10 @@ Real ``eval.py`` files import ``from dotctx.eval_types import Sample`` /
 ``dotctx.llm_utils`` pointing at this module's namespace — ONLY for names not
 already present in ``sys.modules`` (already-loaded real modules are never
 clobbered) — and restores ``sys.modules`` in a ``finally``. CLI/test-time only;
-the swap is process-global and not thread-safe (same caveat as the yglu env swap in
-:mod:`julep.dotctx_yglu`).
+the ``sys.modules`` swap is process-global and not thread-safe.
 
-Imports cleanly without the ``[dotctx]`` (jinja2) or ``[yglu]`` extras; yaml
-and yglu load lazily inside the config loader.
+Imports cleanly without the ``[dotctx]`` (jinja2) extra; yaml loads lazily
+inside the config loader, and tagged env expressions use the built-in evaluator.
 """
 
 from __future__ import annotations
@@ -484,7 +483,7 @@ def _parse_datasets(raw: Any, base_dir: str, origin: str) -> tuple[DatasetSpec, 
 
 
 def _coerce_number(value: Any, *, key: str, origin: str, want_int: bool) -> float:
-    # Yglu/env values arrive as strings; numeric strings coerce (same rule as
+    # Env values arrive as strings; numeric strings coerce (same rule as
     # the settings loaders), anything else is a loud teaching error.
     try:
         return int(str(value)) if want_int else float(str(value))
@@ -506,8 +505,8 @@ def _mapping_key(raw: Mapping[str, Any], key: str, origin: str) -> dict[str, Any
 def load_eval_config(path: str, *, env: Optional[Mapping[str, str]] = None) -> EvalConfig:
     """Load an ``eval.yaml``/``eval.yml`` into an :class:`EvalConfig`.
 
-    Yglu-aware with the same explicit ``env=`` binding as the settings
-    loaders: ``$env`` never reads the ambient process environment.
+    Tagged ``$env.get(...)`` expressions use the same explicit ``env=`` binding
+    as the settings loaders; ``$env`` never reads the ambient process environment.
     """
     if not os.path.exists(path):
         raise ValueError(f"eval config not found at {path}")

@@ -66,7 +66,7 @@ def score(input, output, expected) -> float:
     return 1.0 if content else 0.0
 '''
 
-# Modeled on mem-mcp's briefs/draft.ctx/eval.yaml (minus the yglu model tag,
+# Modeled on mem-mcp's briefs/draft.ctx/eval.yaml (minus the tagged model,
 # covered separately).
 EVAL_YAML = """\
 models:
@@ -309,7 +309,6 @@ def test_eval_config_missing_file_is_clear_error(tmp_path: Path) -> None:
 
 
 def test_eval_config_yglu_env_binding(tmp_path: Path) -> None:
-    pytest.importorskip("yglu")
     path = tmp_path / "eval.yaml"
     path.write_text(
         'models:\n  - id: !? $env.get("DRAFT_MODEL", "openai:chat-latest")\n'

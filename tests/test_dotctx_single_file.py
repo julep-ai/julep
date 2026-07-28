@@ -2,8 +2,8 @@
 
 A single-file ``.ctx`` is mem-mcp's compact prompt form: optional YAML
 frontmatter delimited by ``---`` lines, then a Jinja body that may use
-``<<< role:... >>>`` markers. The frontmatter goes through the same
-Yglu-aware settings path as ``settings.yaml``; the body goes through the
+``<<< role:... >>>`` markers. The frontmatter goes through the same native
+tagged-expression settings path as ``settings.yaml``; the body goes through the
 same role-marker splitting as ``prompt.j2``.
 """
 
@@ -66,7 +66,6 @@ def test_single_file_has_no_sidecar_surfaces(tmp_path: Path) -> None:
 
 
 def test_yglu_frontmatter_binds_explicit_env(tmp_path: Path) -> None:
-    pytest.importorskip("yglu")
     content = (
         "---\n"
         "name: single.tagged\n"

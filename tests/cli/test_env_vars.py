@@ -1,5 +1,5 @@
 # tests/cli/test_env_vars.py
-"""`[env.<name>.vars]` -> dotctx yglu default env, bound inside the resolver child.
+"""`[env.<name>.vars]` -> dotctx expression env, bound inside the resolver child.
 
 The binding must reach the process that imports user modules: `julep run`/`lint`/
 `deploy` resolve and freeze in a subprocess, so a user module calling
@@ -62,7 +62,7 @@ def test_env_vars_merge_julep_toml_over_pyproject(tmp_path: Path) -> None:
 _SETTINGS = 'model: !? $env.get("SUMMARY_MODEL", "openai:gpt-4o")\n'
 
 # The module asserts at import time, inside the resolver child: if the julep env
-# profile is not bound there, the yglu default wins and the import fails.
+# profile is not bound there, the expression default wins and the import fails.
 _MODULE = (
     "import os\n"
     "from julep import flow, think\n"
@@ -91,7 +91,6 @@ def _project(tmp_path: Path) -> Path:
 
 
 def test_run_binds_env_vars_in_resolver_child(tmp_path: Path) -> None:
-    pytest.importorskip("yglu")
     from julep.cli.runner import run_agent_local
 
     cfg = load_config(_project(tmp_path))
@@ -104,13 +103,12 @@ def test_run_binds_env_vars_in_resolver_child(tmp_path: Path) -> None:
 
 
 def test_resolver_child_without_env_vars_sees_defaults(tmp_path: Path) -> None:
-    pytest.importorskip("yglu")
     from julep.cli.resolve import resolve_agent
 
     cfg = load_config(_project(tmp_path))
     resolved = resolve_agent(cfg, "summary")
     assert resolved.error is not None
-    # No binding -> $env.get yields the yglu default -> the module's assert fires.
+    # No binding -> $env.get yields its default -> the module's assert fires.
     assert "model=openai:gpt-4o" in resolved.error
 
 

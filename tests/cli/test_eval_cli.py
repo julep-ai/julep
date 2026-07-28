@@ -11,7 +11,6 @@ from typing import Any, Optional
 import pytest
 
 pytest.importorskip("jinja2")
-pytest.importorskip("yglu")  # the vendored .ctx settings carry `!?` env expressions
 
 from julep.cli.main import app, main
 from julep.cli.evalrun import (
@@ -35,6 +34,10 @@ from julep.dotctx_evals import (
 )
 from julep.dotctx_rich import load_rich_dotctx
 from conftest import run
+
+# The CLI registers the loaded `.ctx` packages in the process-global
+# DEFAULT_REGISTRY; keep that state from leaking into unrelated test modules.
+pytestmark = pytest.mark.usefixtures("isolate_default_registry")
 
 
 @dataclass
@@ -458,7 +461,7 @@ def test_eval_cmd_passes_filters(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(evalrun, "run_eval_sync", fake_run_eval_sync)
     main_module = import_module("julep.cli.main")
-    monkeypatch.setattr(main_module, "_eval_env_vars", lambda env: {})
+    monkeypatch.setattr(main_module, "_eval_env_vars", lambda env, **_kwargs: {})
     result = CliRunner().invoke(
         app,
         ["eval", "some.ctx", "--tag", "prod", "--tag", "smoke", "--sample-name", "a"],

@@ -472,18 +472,16 @@ def test_response_format_bad_shape_is_teaching_error(tmp_path: Path) -> None:
 
 
 def test_yglu_numeric_string_setting_coerces(tmp_path: Path) -> None:
-    pytest.importorskip("yglu")
     pkg = _write_pkg(
         tmp_path, "rounds.ctx",
         'name: rich.rounds\nmodel: m\nmax_rounds: !? $env.get("MAX_ROUNDS", 12)\n',
         {"prompt.j2": "hello"},
     )
-    # env vars are strings; the yglu default stays an int — both land as int.
+    # Env vars are strings; the expression default stays an int — both land as int.
     assert load_dotctx(str(pkg), env={"MAX_ROUNDS": "9"}).max_rounds == 9
 
 
 def test_yglu_numeric_string_default_stays_int(tmp_path: Path) -> None:
-    pytest.importorskip("yglu")
     pkg = _write_pkg(
         tmp_path, "rounds_def.ctx",
         'name: rich.rounds_def\nmodel: m\nmax_rounds: !? $env.get("MAX_ROUNDS", 12)\n',

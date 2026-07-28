@@ -108,7 +108,7 @@ class EnvConfig:
     task_queue: str = 'julep'
     artifacts: str | None = None
     langfuse_host: str | None = None
-    # [env.<name>.vars]: the env profile bound as the dotctx yglu default env
+    # [env.<name>.vars]: the env profile bound as the dotctx expression default
     # inside the resolver/freeze child (never the ambient process environment).
     vars: dict[str, str] = field(default_factory=dict)
     queues: dict[str, str] = field(default_factory=dict)

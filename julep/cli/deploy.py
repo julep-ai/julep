@@ -114,7 +114,7 @@ def freeze_agent(cfg: JulepConfig, name: str, env: str, *, publish: bool = True)
             "name": name,
             "artifacts": artifacts,
             "flow_queue": cfg.flow_queues.get(name),
-            # The env profile binds the dotctx yglu default env in the child;
+            # The env profile binds the dotctx expression default in the child;
             # freeze and freeze_check (status drift) use the same binding so a
             # var-dependent agent does not show phantom drift.
             "env_vars": env_cfg.vars,
