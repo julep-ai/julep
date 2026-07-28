@@ -61,6 +61,11 @@ result = await summary.arun(
 )
 ```
 
+This is also the production path for calling one pipeline from inside your own
+application or workflow engine; see
+[Embedded execution](/docs/deploy/embedded) for the admission rule, the
+no-project-file recipe, and the durability shapes.
+
 Prepare once when a foreground service will call the pipeline repeatedly.
 `LocalPipeline.arun(...)` executes in the current event loop;
 `LocalPipeline.run(...)` is the synchronous wrapper and rejects an already

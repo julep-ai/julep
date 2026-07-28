@@ -51,6 +51,28 @@
   breaking legacy bundle resolution or Temporal replay; release publication is
   retry-safe.
 
+### Documentation
+
+- New [Embedded execution](docs-site/content/docs/deploy/embedded.md) page: the
+  admission rule (embedded Julep for prompt calls; remote durable Julep when
+  Julep replaces orchestration), the in-process `prepare_local_pipeline` path,
+  the supported recipe for a `.ctx` package with no `julep.toml`, the
+  accepted-IR contract (which shapes raise `LocalExecutionUnsupported`), and the
+  two DBOS shapes side by side — `LocalPipeline.arun` inside a consumer-owned
+  `@DBOS.step` versus the nested Julep-owned workflow of `run_flow_dbos`
+  (FEEDBACK 36, 39). The page states up front that `arun` returns the value only:
+  usage, cost, attempts and projection are not surfaced yet (FEEDBACK 38).
+- The Kubernetes payload-encryption Secret is documented for the first time:
+  keyring grammar, a `kubectl create secret generic` recipe with the chart's real
+  `keyring` / `active-key-id` key names, the `julep keygen` → Secret bridge, and
+  key rotation.
+- Corrected the security posture of the managed path: `julep apply` hardcodes
+  payload encryption on, so `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=false` is
+  honored only by a hand-run server or worker. A new "Mandatory and optional
+  controls" section states what is actually enforced for API keys (fail-closed),
+  bundle signing (verified only where a bundle reference exists), the vault,
+  worker secret allowlists, and MCP preflight.
+
 ### Development
 
 - The test suite is invocation- and order-independent. `pythonpath = ["."]` makes

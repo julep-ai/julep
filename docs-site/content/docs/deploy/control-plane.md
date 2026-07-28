@@ -31,7 +31,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `JULEP_API_KEYS` | empty | Comma- or whitespace-separated `name:token[:client\|worker\|admin]` keys. Omitted role means `client`. |
+| `JULEP_API_KEYS` | empty | Comma- or whitespace-separated `name:token[:client\|worker\|admin]` keys. Omitted role means `client`. Empty is fail-closed: an empty keyring authenticates nothing. |
 | `JULEP_EXECUTION_STORE_DSN` | none | PostgreSQL DSN. Required to serve the API. |
 | `JULEP_ARTIFACT_STORE_URL` | `file://<project>/.julep/artifacts` | Release and runtime-declaration artifact store. |
 | `TEMPORAL_ADDRESS` | `localhost:7233` | Temporal frontend. |
@@ -41,7 +41,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 | `TEMPORAL_TLS` | true iff API key set | Force Temporal TLS on or off. |
 | `TEMPORAL_PAYLOAD_KEYS` | unset | Payload-codec keyring. Set with `TEMPORAL_PAYLOAD_KEY_ID`. |
 | `TEMPORAL_PAYLOAD_KEY_ID` | unset | Active payload-codec key id. |
-| `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `true` | Require encrypted control-plane workflow starts. Set `false` only for a trusted plaintext Temporal deployment. |
+| `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `true` | Require encrypted control-plane workflow starts. A `false` value is honored only by a hand-run server; the managed Helm path has no opt-out. See [mandatory and optional controls](#mandatory-and-optional-controls). |
 | `JULEP_UNAUTHENTICATED_READY` | `false` | Enable unauthenticated dependency readiness at `GET /v1/health/ready`. |
 | `JULEP_VAULT_KEYS` | unset | Dedicated vault keyring: comma-separated `key-id=64hex` entries. |
 | `JULEP_VAULT_KEY_ID` | unset | Active vault key id. Set together with `JULEP_VAULT_KEYS`. |
@@ -54,7 +54,7 @@ Environment variables override `[server]` in `julep.toml`, which overrides
 | `JULEP_SERVER_HELM_CHART` | unset | Enable Helm lane reconciliation with this chart. |
 | `JULEP_SERVER_KUBERNETES_NAMESPACE` | `julep` | Helm reconciliation namespace. |
 | `JULEP_SERVER_WORKER_CONTEXT_FACTORY` | unset | Worker `module:attribute` context factory. Required with Helm reconciliation. |
-| `JULEP_SERVER_PAYLOAD_ENCRYPTION_SECRET` | unset | Kubernetes payload-codec Secret. Required with Helm reconciliation. |
+| `JULEP_SERVER_PAYLOAD_ENCRYPTION_SECRET` | unset | Name of a pre-existing Kubernetes payload-codec Secret with `keyring` and `active-key-id` keys. Required with Helm reconciliation; see [creating it](/docs/deploy/kubernetes#the-payload-encryption-secret). |
 | `JULEP_SERVER_WORKER_SERVICE_ACCOUNT` | unset | Existing worker ServiceAccount. |
 | `JULEP_SERVER_WORKER_PRIORITY_CLASS` | unset | Existing worker PriorityClass. |
 
@@ -69,6 +69,62 @@ The server table recognizes `api_keys`, `execution_store_dsn`, `artifact_store_u
 `reconcile_interval_s`, `helm_chart`, `kubernetes_namespace`,
 `worker_context_factory`, `payload_encryption_secret`,
 `worker_service_account`, `worker_priority_class`, and `queue_by_lane`.
+
+### Mandatory and optional controls
+
+Several of the variables above look like knobs but are not, and which ones are
+knobs depends on how workers are rolled out.
+
+**Payload encryption is mandatory on the managed path.** The Helm lane
+reconciler behind `julep apply` and `JULEP_SERVER_HELM_CHART` hardcodes
+`payloadEncryption.enabled=true` and `payloadEncryption.required=true` and
+refuses to reconcile without a payload-encryption Secret name. There is no
+setting that turns it off for a managed lane. `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED`
+is a genuine knob only for a server or worker you run by hand, and the two
+defaults are asymmetric: this server defaults it to `true`, while a bare
+`julep worker` defaults it to `false`. Set it explicitly on hand-run workers
+rather than relying on the default. Provisioning the Secret is an operator step
+with no automation behind it — see
+[the payload-encryption Secret](/docs/deploy/kubernetes#the-payload-encryption-secret).
+
+**API keys are mandatory in effect.** `JULEP_API_KEYS` defaults to empty, and an
+empty keyring authenticates nothing rather than allowing everything: every route
+except `GET /v1/health` returns `401`. `GET /v1/health/ready` is the one
+additional unauthenticated route, and only when `JULEP_UNAUTHENTICATED_READY` is
+enabled; otherwise it returns `404`.
+
+**Bundle signing is mandatory at publish, and verified only where it matters.**
+Publishing a release signs each pipeline bundle and fails without
+`JULEP_BUNDLE_SIGNING_KEY` (or an explicit signing key). Workers resolve bundles
+against `JULEP_BUNDLE_ALLOWED_SIGNERS`, which is fail-closed: an empty allowlist
+refuses resolution. `julep apply` therefore always propagates a non-empty
+allowlist into the worker environment, defaulting it to the signer's own public
+key. Note the limit of what this buys you: a pipeline with no custom runtime
+pures publishes no bundle reference in its release, so its signature is produced
+but never consulted by a worker. Signing protects custom pure code, not the
+release manifest itself, which is identified by its recomputed `release_hash`.
+
+**Vault encryption is optional and off by default.** The operator vault is
+enabled only when `JULEP_VAULT_KEYS` and `JULEP_VAULT_KEY_ID` are both set;
+unset means no vault cipher and no secret-value reads. Setting exactly one of
+the pair is an error.
+
+**The worker secret allowlist is optional but fail-closed.**
+`JULEP_WORKER_SECRET_ALLOWLIST` defaults to empty, and
+`GET /v1/secrets/{name}/value` returns `403` for any name not in it. Leaving it
+unset does not disable the check; it denies every read.
+
+**MCP preflight defaults to strict.** New releases capture `pin` unless
+`[mcp] preflight` says otherwise; `names` and `off` are explicit downgrades. See
+[MCP preflight and drift](#mcp-preflight-and-drift).
+
+**A dedicated ServiceAccount is optional.**
+`JULEP_SERVER_WORKER_SERVICE_ACCOUNT` is unset by default and the chart then
+creates a ServiceAccount named after the Helm release. Naming an existing one
+switches the chart to `serviceAccount.create=false` and uses it as-is, which is
+where cloud workload identity (EKS Pod Identity, IRSA, GKE Workload Identity)
+belongs: annotate that account yourself. `JULEP_SERVER_WORKER_PRIORITY_CLASS` is
+likewise optional and unset.
 
 ## Authentication and ownership
 
