@@ -16,12 +16,18 @@ FROM python:3.12-slim
 COPY julep-v2 /src/julep-v2
 # Install the julep framework with production runtime extras:
 # [temporal] for durable workers, [store] for S3 artifact store and ed25519 signature
-# verification, [dotctx] for portable renderer hydration, and [wasm] for wasmtime
-# plus the vendored executor.wasm package data. Drop the build context afterwards
-# so the final image contains only the installed framework.
+# verification, [dotctx] for portable renderer hydration, [wasm] for wasmtime plus
+# the vendored executor.wasm package data, [mcp] for authenticated streamable-HTTP
+# clients and verifier adapters used by MCP-tool pipelines, and [server] for the
+# FastAPI control-plane surface and psycopg used by worker-side server helpers.
+# Drop the build context afterwards so the final image contains only the framework.
 RUN pip install --no-cache-dir uv \
-    && pip install --no-cache-dir '/src/julep-v2[dotctx,temporal,store,wasm]' \
+    && pip install --no-cache-dir '/src/julep-v2[dotctx,mcp,server,store,temporal,wasm]' \
     && rm -rf /src/julep-v2
+
+# Fail the image build if the generic worker's import-time dependencies are incomplete.
+RUN python -c \
+    "import julep.execution.bundle_worker; from julep.execution.bundle_worker import make_context"
 
 ENV WORKER_CONTEXT_FACTORY=julep.execution.bundle_worker:make_context \
     WORKER_HEALTH_PORT=8080

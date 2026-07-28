@@ -757,7 +757,7 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
     smoke_commands = commands[1::2]
     assert all(command[:3] == ["helm", "upgrade", "--install"] for command in upgrade_commands)
     assert all(command[:2] == ["helm", "test"] for command in smoke_commands)
-    assert all("--logs" in command for command in smoke_commands)
+    assert all("--logs" not in command for command in smoke_commands)
     assert any(
         item.startswith("temporal.taskQueue=memory-summary-r")
         for command in upgrade_commands

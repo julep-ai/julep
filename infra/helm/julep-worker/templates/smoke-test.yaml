@@ -9,7 +9,7 @@ metadata:
     julep.ai/lane: {{ .Values.worker.lane | quote }}
   annotations:
     "helm.sh/hook": test
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   activeDeadlineSeconds: 90
   backoffLimit: 0
