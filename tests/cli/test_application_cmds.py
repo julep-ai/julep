@@ -381,8 +381,10 @@ def test_apply_prints_queue_lines_and_registers_release(
     assert (
         "activate  julep activate --env local --lane summary --release "
         + release.release_hash
+        + ' --api-url http://control-plane --api-key "$JULEP_API_KEY"'
         in out
     )
+    assert "admin-token" not in out
     assert (
         "activate  unavailable: re-run apply with --api-url/--api-key to register "
         "this release with the control plane before activating"

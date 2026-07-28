@@ -887,10 +887,17 @@ def apply_application(
         _register_remote_release(release, api_url or None, api_key or None)
     typer.echo("traffic   unchanged")
     if api_url or api_key:
+        # AIDEV-NOTE: activate needs the same connection context apply used, but
+        # the key itself is a secret — emit a shell reference, never the value.
+        activate_remote_args = ""
+        if api_url:
+            activate_remote_args += f" --api-url {api_url}"
+        if api_key:
+            activate_remote_args += ' --api-key "$JULEP_API_KEY"'
         for lane_name, _task_queue in release_queue_lines(release):
             typer.echo(
                 f"activate  julep activate --env {env} --lane {lane_name} "
-                f"--release {release.release_hash}"
+                f"--release {release.release_hash}{activate_remote_args}"
             )
     else:
         typer.echo(
