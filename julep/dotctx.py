@@ -339,9 +339,11 @@ def _sub_from(d: Optional[dict[str, Any]]) -> Optional[SubContract]:
 
 
 def _as_int(value: Any, *, key: str) -> Optional[int]:
-    """An optional int setting; numeric strings coerce — yglu ``$env.get``
-    values arrive as strings (record/execute.ctx's ``max_rounds`` is the real
-    case) — and anything else is a loud teaching error."""
+    """An optional int setting; numeric strings from ``$env.get`` coerce.
+
+    Environment values arrive as strings (record/execute.ctx's ``max_rounds``
+    is the real case), and anything else is a loud teaching error.
+    """
     if value is None:
         return None
     if isinstance(value, bool):
@@ -532,8 +534,8 @@ def load_dotctx(
     always needs the ``[dotctx]`` extra — the body is a template. The reasoner
     name defaults to the filename stem without ``.ctx``.
 
-    Settings carrying yglu expressions (``!? $env.get(...)``) are evaluated by
-    :mod:`julep.dotctx_yglu` against exactly ``env`` (or the
+    Settings carrying ``!? $env.get(...)`` expressions are evaluated by the
+    native :mod:`julep.dotctx_yglu` loader against exactly ``env`` (or the
     module-level default the CLI sets) — never the ambient process environment.
     """
     if os.path.isfile(path):
@@ -568,7 +570,7 @@ def load_dotctx(
     with open(settings_path, "r", encoding="utf-8") as fh:
         text = fh.read()
 
-    # dotctx_yglu imports nothing optional at module scope, so this is always safe.
+    # The tagged-expression loader is built in and safe to import unconditionally.
     from .dotctx_yglu import has_yglu_tags, load_settings as load_yglu_settings
 
     if has_yglu_tags(text):

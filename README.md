@@ -220,8 +220,7 @@ The base install is authoring + compile only (PyYAML). Optional extras add runti
 | `cma` | `julep[cma]` | httpx transport for the CMA HTTP adapter |
 | `mcp` | `julep[mcp]` | official MCP SDK, httpx, PyJWT, and cryptography for MCP references, snapshots, calls, and auth |
 | `server` | `julep[server]` | FastAPI/Uvicorn control plane, SSE, Postgres store, Temporal gateway, cryptography, and httpx |
-| `dotctx` | `julep[dotctx]` | rich `.ctx` layout (Jinja2 templates compiled into registered renderers) |
-| `yglu` | `julep[yglu]` | Yglu-evaluated `settings.yaml` (mem-mcp `.ctx` compatibility) |
+| `dotctx` | `julep[dotctx]` | rich `.ctx` layout (Jinja2 templates compiled into registered renderers); native `!? $env.get(...)` settings support needs no extra |
 | `providers` | `julep[providers]` | multi-provider `LlmCaller` via any-llm (pair with provider extras) |
 | `otel` | `julep[otel]` | OpenTelemetry span export of the projection |
 | `langfuse` | `julep[langfuse]` | Langfuse OTLP/HTTP export of the projection |
