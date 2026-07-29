@@ -203,8 +203,11 @@ runtime's transcript protocol is unsupported.
 
 `arun` and `run` remain value-only. `arun_detailed` and `run_detailed` return an
 `EmbeddedRun` containing the value, the exact `InMemoryProjection`, and the
-pipeline's `artifact_hash`. The projection exposes ordered PLANNED/DID/FAILED
-events, per-step attributes, values, status, and declared/reported cost.
+pipeline's `artifact_hash`, plus aggregate LLM `usage`, `usage_complete`,
+`total_cost`, `cost_status`, and `cost_complete`. The projection exposes ordered
+PLANNED/DID/FAILED events, per-step attributes, values, status, and
+declared/reported cost. Usage-derived prices remain metadata and do not become
+projection charges.
 
 The envelope and `sink=` solve different problems. The envelope is returned only
 on success. A sink receives events synchronously as execution proceeds, including

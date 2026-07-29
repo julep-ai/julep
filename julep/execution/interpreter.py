@@ -443,10 +443,11 @@ async def _eval_prim(node: Node, value: Any, env: Env, cid: str) -> Result:
         reply, attrs = _unwrap_julep_meta(out)
         reported_cost = _reported_reasoner_cost(reply, attrs)
         reasoner_attrs = dict(attrs or {})
-        reasoner_attrs.setdefault(
-            "llm.cost.status",
-            "reported" if reported_cost is not None else "unknown",
-        )
+        if reported_cost is not None:
+            reasoner_attrs["llm.cost.status"] = "reported"
+            reasoner_attrs.setdefault("llm.cost", reported_cost)
+        else:
+            reasoner_attrs.setdefault("llm.cost.status", "unknown")
         return Result(reply, attrs=reasoner_attrs, reported_cost=reported_cost)
     if isinstance(step, SubStep):
         return Result(await env.run_sub(step.ref, step.contract, value, cid, node.id))
@@ -595,7 +596,17 @@ def _reported_reasoner_cost(
 ) -> Optional[float]:
     if attrs is not None:
         meta_cost = attrs.get("llm.cost")
-        if isinstance(meta_cost, (int, float)) and not isinstance(meta_cost, bool):
+        cost_status = attrs.get("llm.cost.status")
+        # AIDEV-NOTE: usage-derived prices are observability metadata, not
+        # replay-stable projection charges. Event.cost remains restricted to a
+        # declared annotation or a price the provider/caller reported.
+        if cost_status == "derived":
+            return None
+        if (
+            cost_status != "unknown"
+            and isinstance(meta_cost, (int, float))
+            and not isinstance(meta_cost, bool)
+        ):
             return float(meta_cost)
 
     if not isinstance(value, dict):

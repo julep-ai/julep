@@ -11,6 +11,11 @@
   project file or Kubernetes-derived application naming (FEEDBACK 37).
 - Configured `llm_caller` values now participate in embedded caller precedence,
   and `LlmResult`, `LlmCallMeta`, `AttemptMeta`, and `EmbeddedRun` are root-public.
+- `LlmUsage` gives model-call metadata a typed prompt/completion/total and cache
+  token shape. The LiteLLM caller captures that usage, preserves reported
+  prices, and can fail-soft derive missing prices from LiteLLM's pricing map.
+- `EmbeddedRun` now includes aggregate LLM usage and total price, with explicit
+  reported/derived/mixed/unknown status and completeness fields (FEEDBACK 38).
 
 ### Fixed
 
