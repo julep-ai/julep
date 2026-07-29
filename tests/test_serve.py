@@ -42,6 +42,12 @@ from julep.trajectory import REDACTED_PLACEHOLDER, RedactionConfig
 from conftest import run
 
 
+# AIDEV-NOTE: a worker fails closed on Temporal payload encryption, matching
+# ServerSettings. Tests that are not about encryption take the documented
+# opt-out exactly as a hand-run plaintext worker must.
+_PLAINTEXT_WORKER = {"TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED": "false"}
+
+
 # --------------------------------------------------------------------------- #
 # Settings from the environment.
 # --------------------------------------------------------------------------- #
@@ -51,7 +57,9 @@ def test_from_env_requires_context_factory():
 
 
 def test_from_env_defaults():
-    s = WorkerServeSettings.from_env({"WORKER_CONTEXT_FACTORY": "m:f"})
+    s = WorkerServeSettings.from_env(
+        {"WORKER_CONTEXT_FACTORY": "m:f", **_PLAINTEXT_WORKER}
+    )
     assert s.context_factory == "m:f"
     assert s.application is None
     assert s.runtime_declarations_hash is None
@@ -74,6 +82,7 @@ def test_from_env_parses_blob_store_url() -> None:
         {
             "WORKER_CONTEXT_FACTORY": "m:f",
             "JULEP_BLOB_STORE_URL": "file:///var/lib/julep/blobs",
+            **_PLAINTEXT_WORKER,
         }
     )
     assert settings.blob_store_url == "file:///var/lib/julep/blobs"
@@ -108,6 +117,7 @@ def test_from_env_parses_redaction_config() -> None:
                 '{"key_patterns":["^private$"],'
                 '"path_patterns":["items.*.note"]}'
             ),
+            **_PLAINTEXT_WORKER,
         }
     )
     assert settings.redaction == RedactionConfig(
@@ -117,7 +127,11 @@ def test_from_env_parses_redaction_config() -> None:
 
     with pytest.raises(ValueError, match="invalid redaction JSON"):
         WorkerServeSettings.from_env(
-            {"WORKER_CONTEXT_FACTORY": "m:f", "JULEP_REDACTION": "{"}
+            {
+                "WORKER_CONTEXT_FACTORY": "m:f",
+                "JULEP_REDACTION": "{",
+                **_PLAINTEXT_WORKER,
+            }
         )
 
 
@@ -224,6 +238,7 @@ def test_from_env_full_parse():
         "WORKER_MAX_CONCURRENT_ACTIVITIES": "16",
         "WORKER_MAX_CONCURRENT_WORKFLOW_TASKS": "8",
         "WORKER_HEALTH_PORT": "8080",
+        **_PLAINTEXT_WORKER,
     })
     assert s.address == "temporal-frontend.temporal.svc:7233"
     assert s.application == "pkg.application:application"
@@ -241,17 +256,24 @@ def test_from_env_parses_versioning():
         "WORKER_CONTEXT_FACTORY": "m:f",
         "JULEP_WORKER_BUILD_ID": "build-42",
         "JULEP_WORKER_VERSIONING": "1",
+        **_PLAINTEXT_WORKER,
     })
     assert s.build_id == "build-42"
     assert s.use_worker_versioning is True
 
 
 def test_api_key_implies_tls_unless_overridden():
-    base = {"WORKER_CONTEXT_FACTORY": "m:f", "TEMPORAL_API_KEY": "k"}
+    base = {
+        "WORKER_CONTEXT_FACTORY": "m:f",
+        "TEMPORAL_API_KEY": "k",
+        **_PLAINTEXT_WORKER,
+    }
     assert WorkerServeSettings.from_env(base).tls is True
     s = WorkerServeSettings.from_env({**base, "TEMPORAL_TLS": "false"})
     assert s.tls is False and s.api_key == "k"
-    s = WorkerServeSettings.from_env({"WORKER_CONTEXT_FACTORY": "m:f", "TEMPORAL_TLS": "ON"})
+    s = WorkerServeSettings.from_env(
+        {"WORKER_CONTEXT_FACTORY": "m:f", "TEMPORAL_TLS": "ON", **_PLAINTEXT_WORKER}
+    )
     assert s.tls is True
 
 
@@ -276,7 +298,7 @@ def test_worker_settings_resolve_startup_secret_references() -> None:
 
 
 def test_bad_env_values_fail_loudly():
-    base = {"WORKER_CONTEXT_FACTORY": "m:f"}
+    base = {"WORKER_CONTEXT_FACTORY": "m:f", **_PLAINTEXT_WORKER}
     with pytest.raises(ValueError, match="TEMPORAL_TLS"):
         WorkerServeSettings.from_env({**base, "TEMPORAL_TLS": "banana"})
     with pytest.raises(ValueError, match="WORKER_HEALTH_PORT"):
@@ -303,6 +325,48 @@ def test_required_payload_encryption_rejects_missing_keys():
                 "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED": "true",
             }
         )
+
+
+def test_worker_payload_encryption_defaults_to_required_like_the_server():
+    """An unset TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED fails a keyless worker."""
+    from julep.server.settings import ServerSettings
+
+    assert WorkerServeSettings.payload_encryption_required is True
+    assert (
+        WorkerServeSettings.payload_encryption_required
+        == ServerSettings.payload_encryption_required
+    )
+    with pytest.raises(ValueError, match="payload encryption is required"):
+        WorkerServeSettings.from_env({"WORKER_CONTEXT_FACTORY": "m:f"})
+
+
+def test_worker_payload_encryption_default_honors_documented_opt_out():
+    settings = WorkerServeSettings.from_env(
+        {"WORKER_CONTEXT_FACTORY": "m:f", **_PLAINTEXT_WORKER}
+    )
+    assert settings.payload_encryption_required is False
+    assert settings.payload_keys is None
+
+
+def test_worker_payload_encryption_default_accepts_a_keyring():
+    settings = WorkerServeSettings.from_env(
+        {
+            "WORKER_CONTEXT_FACTORY": "m:f",
+            "TEMPORAL_PAYLOAD_KEYS": "primary=" + "11" * 32,
+            "TEMPORAL_PAYLOAD_KEY_ID": "primary",
+        }
+    )
+    assert settings.payload_encryption_required is True
+    assert settings.payload_key_id == "primary"
+
+
+def test_ad_hoc_client_connections_keep_the_permissive_default():
+    """`julep run` against Temporal is a client, not a durable-plane server."""
+    from julep.execution.serve import payload_encryption_from_env
+
+    assert payload_encryption_from_env({}) == (None, None, False)
+    with pytest.raises(ValueError, match="payload encryption is required"):
+        payload_encryption_from_env({}, default_required=True)
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporal extra not installed")
@@ -366,6 +430,7 @@ def test_from_env_versioning_bad_bool():
         WorkerServeSettings.from_env({
             "WORKER_CONTEXT_FACTORY": "m:f",
             "JULEP_WORKER_VERSIONING": "banana",
+            **_PLAINTEXT_WORKER,
         })
 
 
@@ -638,6 +703,24 @@ def test_health_server_probes():
 
 
 @pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
+def test_serve_refuses_to_poll_plaintext_when_encryption_is_required(monkeypatch):
+    """Settings built in code get the same fail-closed check as from_env."""
+    from temporalio.client import Client
+
+    async def fake_connect(target, **kwargs):  # pragma: no cover - must not run
+        raise AssertionError("connected without a payload codec")
+
+    monkeypatch.setattr(Client, "connect", staticmethod(fake_connect))
+    settings = WorkerServeSettings(
+        context_factory=f"{__name__}:make_context",
+        payload_encryption_required=True,
+    )
+
+    with pytest.raises(JulepError, match="payload encryption is required"):
+        run(serve(settings))
+
+
+@pytest.mark.skipif(not HAVE_TEMPORAL, reason="temporalio not installed")
 def test_build_worker_forwards_versioning_kwargs(monkeypatch):
     from julep.execution import worker as worker_mod
     from julep.execution.worker import build_worker
@@ -703,6 +786,7 @@ def test_serve_forwards_versioning_kwargs_to_build_worker(monkeypatch, tmp_path:
         build_id="serve-bid",
         use_worker_versioning=True,
         blob_store_url=(tmp_path / "blobs").as_uri(),
+        payload_encryption_required=False,
     )
 
     async def _drive() -> None:
@@ -749,6 +833,7 @@ async def _serve_lifecycle():
             address=env.client.service_client.config.target_host,
             task_queue="julep-serve",
             graceful_shutdown_s=5.0,
+            payload_encryption_required=False,
         )
         stop = asyncio.Event()
         serve_task = asyncio.create_task(serve(settings, shutdown_event=stop))
@@ -770,6 +855,9 @@ def test_serve_lifecycle_end_to_end():
 
 @pytest.mark.skipif(HAVE_TEMPORAL, reason="exercises the missing-extra error")
 def test_serve_without_temporalio_fails_explicitly():
-    settings = WorkerServeSettings(context_factory=f"{__name__}:make_context")
+    settings = WorkerServeSettings(
+        context_factory=f"{__name__}:make_context",
+        payload_encryption_required=False,
+    )
     with pytest.raises(JulepError, match="julep\\[temporal\\]"):
         run(serve(settings))

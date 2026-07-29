@@ -117,12 +117,20 @@ def _env_float(env: Mapping[str, str], name: str, default: float) -> float:
 
 def payload_encryption_from_env(
     env: Mapping[str, str],
+    *,
+    default_required: bool = False,
 ) -> tuple[Optional[str], Optional[str], bool]:
     """Parse the shared Temporal payload-encryption environment contract.
 
     Every client and worker entrypoint uses this helper so an explicit
     ``TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=true`` can never silently fall back
     to Temporal's plaintext data converter.
+
+    ``default_required`` is what an unset ``TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED``
+    means for the calling entrypoint. Processes that *serve* the durable plane —
+    the control plane (``ServerSettings``) and the worker
+    (:meth:`WorkerServeSettings.from_env`) — pass ``True`` so they fail closed;
+    ad-hoc client connections keep the permissive default.
     """
 
     payload_keys = env.get("TEMPORAL_PAYLOAD_KEYS") or None
@@ -134,7 +142,7 @@ def payload_encryption_from_env(
     required = _env_bool(
         env,
         "TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED",
-        default=False,
+        default=default_required,
     )
     if required and payload_keys is None:
         raise ValueError(
@@ -155,6 +163,11 @@ class WorkerServeSettings:
     are verified and registered into its context before polling. ``tls``
     defaults to True exactly when ``api_key`` is set (Temporal Cloud);
     self-hosted plaintext stays the default otherwise.
+
+    ``payload_encryption_required`` defaults to True, matching
+    :class:`~julep.server.settings.ServerSettings`: a worker joins the same
+    durable plane the control plane encrypts, so it fails closed unless the
+    operator sets ``TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=false``.
     """
 
     context_factory: str
@@ -171,7 +184,7 @@ class WorkerServeSettings:
     use_worker_versioning: bool = False
     payload_keys: Optional[str] = field(default=None, repr=False)
     payload_key_id: Optional[str] = None
-    payload_encryption_required: bool = False
+    payload_encryption_required: bool = True
     application: Optional[str] = None
     runtime_declarations_hash: Optional[str] = None
     redaction: Optional[RedactionConfig] = None
@@ -241,7 +254,7 @@ class WorkerServeSettings:
             payload_keys,
             payload_key_id,
             payload_encryption_required,
-        ) = payload_encryption_from_env(payload_environment)
+        ) = payload_encryption_from_env(payload_environment, default_required=True)
         return cls(
             context_factory=factory,
             application=application,
@@ -528,6 +541,15 @@ async def serve(
             )
             connect_kwargs["header_codec_behavior"] = HeaderCodecBehavior.CODEC
             connect_kwargs["interceptors"] = [WorkflowTraceHeadersInterceptor()]
+        elif settings.payload_encryption_required:
+            # AIDEV-NOTE: mirrors create_temporal_gateway in julep/server/temporal.py.
+            # from_env already rejects this combination, so this catches settings
+            # assembled in code — without it a required-but-keyless worker would
+            # silently poll a plaintext converter.
+            raise JulepError(
+                "Temporal payload encryption is required but payload keys are "
+                "not configured"
+            )
         client = await Client.connect(settings.address, **connect_kwargs)
         if verify_connection:
             healthy = await client.service_client.check_health(

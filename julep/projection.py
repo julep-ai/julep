@@ -158,9 +158,13 @@ class TeeStore:
     def events(self) -> list[ProjectionEvent]:
         return self._primary.events()
 
+    def drop_event(self, event_id: str) -> None:
+        """Delegate cancellation cleanup to the queryable primary store."""
+        self._primary.drop_event(event_id)
+
 
 class InMemoryProjection:
-    """A complete, queryable projection backed by a Python list (tests/dev)."""
+    """A complete, queryable projection backed by an in-memory Python list."""
 
     def __init__(self) -> None:
         self._events: list[ProjectionEvent] = []

@@ -66,6 +66,7 @@ from .registry import (
     RendererDependency,
     ToolSchemaExpectation,
 )
+from .skills import Skill, SkillError, load_package_skills, parse_skills_setting
 
 # Settings keys the rich layout accepts. The prompt lives in template files and
 # the reply schema in schema.pyi, so the minimal layout's system/schema keys are
@@ -93,6 +94,7 @@ _ALLOWED_SETTINGS = frozenset(
         "sub",
         "context",
         "tools",
+        "skills",
     }
 )
 
@@ -126,6 +128,7 @@ class RichDotctx:
     tool_grants: tuple[ToolGrant, ...]
     expected_tool_schemas: Mapping[str, dict[str, Any]]
     expected_tool_descriptions: Mapping[str, str] = field(default_factory=dict)
+    skills: tuple[Skill, ...] = ()
 
 
 # --------------------------------------------------------------------------- #
@@ -1072,6 +1075,7 @@ def _build_reasoner(
     tools: tuple[str, ...],
     system_render: Optional[str],
     user_render: Optional[str],
+    skill_keys_: tuple[str, ...] = (),
 ) -> Reasoner:
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
     model, effort, output_retries = _model_and_effort(dict(settings))
@@ -1096,6 +1100,7 @@ def _build_reasoner(
         require_tool_call=_require_tool_call_setting(settings),
         response_format=_response_format_setting(settings),
         prompt_cache=_prompt_cache_setting(settings),
+        skills=skill_keys_,
     )
 
 
@@ -1131,6 +1136,12 @@ def load_single_file_dotctx(
     else:
         settings, body = {}, content
     _validate_settings_keys(settings, path)
+    if "skills" in settings:
+        parse_skills_setting(settings["skills"], origin=path)
+        raise SkillError(
+            f"single-file dotctx {path!r} cannot activate skills; skills load from "
+            "<package>.ctx/skills/<name>/SKILL.md, which needs the directory layout"
+        )
 
     raw_name = settings.get("name")
     package = raw_name if isinstance(raw_name, str) and raw_name else _default_name(path)
@@ -1220,6 +1231,14 @@ def load_rich_dotctx(
 
     settings_tools: Sequence[Any] = settings.get("tools") or ()
     tools = tuple(dict.fromkeys([*(str(t) for t in settings_tools), *tool_keys]))
+    if "skills" in settings and settings["skills"] is None:
+        raise SkillError(
+            f"settings 'skills' in {path!r} must be a list of skill names"
+        )
+    skills = load_package_skills(
+        path, parse_skills_setting(settings.get("skills"), origin=path)
+    )
+    skill_key_tuple = tuple(registry.register_skill(skill) for skill in skills)
 
     reasoner = _build_reasoner(
         package,
@@ -1228,6 +1247,7 @@ def load_rich_dotctx(
         tools=tools,
         system_render=renderer_names.get("system"),
         user_render=renderer_names.get("user"),
+        skill_keys_=skill_key_tuple,
     )
     reasoner = registry.register_reasoner(reasoner)
 
@@ -1239,6 +1259,7 @@ def load_rich_dotctx(
         tool_grants=tuple(ToolGrant(name=key) for key in tool_keys),
         expected_tool_schemas=expectations,
         expected_tool_descriptions=descriptions,
+        skills=skills,
     )
 
 

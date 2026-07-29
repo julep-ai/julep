@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -786,7 +787,11 @@ def test_reconcile_one_helm_release_per_lane(tmp_path) -> None:
     smoke_commands = commands[1::2]
     assert all(command[:3] == ["helm", "upgrade", "--install"] for command in upgrade_commands)
     assert all(command[:2] == ["helm", "test"] for command in smoke_commands)
+    # No `helm test --logs`: Helm 3.21 reports a passing Job as failed when it
+    # cannot find a Pod named exactly like the Job. Logs come from a separate
+    # kubectl fetch, on failure only.
     assert all("--logs" not in command for command in smoke_commands)
+    assert all(command[0] != "kubectl" for command in commands)
     assert any(
         item.startswith("temporal.taskQueue=memory-summary-r")
         for command in upgrade_commands
@@ -919,3 +924,156 @@ def test_helm_environment_preserves_comma_values(tmp_path) -> None:
     assert 'worker.environment={"JULEP_BUNDLE_ALLOWED_SIGNERS":"aa,bb"}' in commands[0]
     assert "payloadEncryption.secretName=temporal-payload-codec" in commands[0]
     assert "worker.priorityClassName=" in commands[0]
+
+
+def _smoke_test_release(tmp_path):
+    """A single-lane release whose reconcile reaches `helm test`."""
+    compiled = Application("memory", [_spec("summary")]).compile()
+    return publish_application(
+        compiled,
+        LocalDirArtifactStore(tmp_path / "artifacts"),
+        worker_image="registry.example/memory@sha256:" + "d" * 64,
+        deployment_config=build_lane_deployment_config(
+            chart="infra/helm/julep-worker",
+            namespace="memory",
+            temporal_address="temporal:7233",
+            temporal_namespace="default",
+            worker_context_factory="memory.worker:context",
+            worker_service_account=None,
+            worker_priority_class=None,
+            payload_encryption_secret="temporal-payload-codec",
+            worker_environment={},
+            worker_secret_environment={},
+            lanes=tuple(compiled.lanes),
+        ),
+        signing_key="0" * 64,
+    )
+
+
+def _smoke_test_reconciler(*, runner, log_runner):
+    return HelmLaneReconciler(
+        chart="infra/helm/julep-worker",
+        namespace="memory",
+        temporal_address="temporal:7233",
+        worker_context_factory="memory.worker:context",
+        payload_encryption_secret="temporal-payload-codec",
+        runner=runner,
+        log_runner=log_runner,
+    )
+
+
+def _failing_smoke_runner(commands: list[list[str]]):
+    def runner(args) -> None:
+        commands.append(list(args))
+        if list(args)[:2] == ["helm", "test"]:
+            raise ApplicationReleaseError("Error: pod worker-smoke failed")
+
+    return runner
+
+
+def test_failed_smoke_test_reports_job_logs_by_label_selector(tmp_path) -> None:
+    release = _smoke_test_release(tmp_path)
+    commands: list[list[str]] = []
+    log_commands: list[list[str]] = []
+
+    def log_runner(args) -> str:
+        log_commands.append(list(args))
+        return "Traceback: WORKER_CONTEXT_FACTORY import failed\n"
+
+    reconciler = _smoke_test_reconciler(
+        runner=_failing_smoke_runner(commands),
+        log_runner=log_runner,
+    )
+
+    with pytest.raises(ApplicationReleaseError) as excinfo:
+        reconcile_application(release, reconciler)
+
+    message = str(excinfo.value)
+    # The original smoke-test failure is still what surfaces...
+    assert "smoke test failed for" in message
+    assert "Error: pod worker-smoke failed" in message
+    # ...with the Job's logs appended.
+    assert "Traceback: WORKER_CONTEXT_FACTORY import failed" in message
+    # Logs are fetched out-of-band, never through `helm test --logs`.
+    assert all("--logs" not in command for command in commands)
+    assert len(log_commands) == 1
+    fetch = log_commands[0]
+    release_name = next(
+        command[3] for command in commands if command[:3] == ["helm", "upgrade", "--install"]
+    )
+    assert fetch[:2] == ["kubectl", "logs"]
+    assert "--selector" in fetch
+    assert fetch[fetch.index("--selector") + 1] == f"job-name={release_name}-smoke"
+    assert fetch[fetch.index("--namespace") + 1] == "memory"
+
+
+def test_passing_smoke_test_never_fetches_logs(tmp_path) -> None:
+    release = _smoke_test_release(tmp_path)
+    commands: list[list[str]] = []
+    log_commands: list[list[str]] = []
+
+    def log_runner(args) -> str:
+        log_commands.append(list(args))
+        return ""
+
+    reconciler = _smoke_test_reconciler(
+        runner=lambda args: commands.append(list(args)),
+        log_runner=log_runner,
+    )
+
+    reconcile_application(release, reconciler)
+
+    assert [command[:2] for command in commands] == [
+        ["helm", "upgrade"],
+        ["helm", "test"],
+    ]
+    assert log_commands == []
+
+
+@pytest.mark.parametrize(
+    ("log_runner", "expected"),
+    [
+        (
+            lambda _args: (_ for _ in ()).throw(FileNotFoundError("kubectl")),
+            "kubectl",
+        ),
+        (lambda _args: "   \n", "no output"),
+    ],
+)
+def test_smoke_test_log_retrieval_failure_does_not_mask_the_failure(
+    tmp_path,
+    log_runner,
+    expected,
+) -> None:
+    release = _smoke_test_release(tmp_path)
+    commands: list[list[str]] = []
+    reconciler = _smoke_test_reconciler(
+        runner=_failing_smoke_runner(commands),
+        log_runner=log_runner,
+    )
+
+    with pytest.raises(ApplicationReleaseError) as excinfo:
+        reconcile_application(release, reconciler)
+
+    message = str(excinfo.value)
+    assert "Error: pod worker-smoke failed" in message
+    assert "smoke-test logs unavailable" in message
+    assert expected in message
+
+
+def test_smoke_test_job_is_retained_for_log_retrieval() -> None:
+    """The chart must not delete the failed Job before its logs are read."""
+    template = (
+        Path(__file__).resolve().parents[1]
+        / "infra"
+        / "helm"
+        / "julep-worker"
+        / "templates"
+        / "smoke-test.yaml"
+    ).read_text()
+
+    assert 'name: {{ .Release.Name }}-smoke' in template
+    assert '"helm.sh/hook-delete-policy": before-hook-creation' in template
+    assert "hook-succeeded" not in template
+    assert "hook-failed" not in template
+    assert "ttlSecondsAfterFinished" not in template

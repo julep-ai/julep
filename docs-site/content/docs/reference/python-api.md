@@ -639,7 +639,8 @@ CLI entry points:
 | `run` | `julep run <name-or-path.ctx> [--input JSON] [--run-id id] [--env name]` |
 | `deploy` | `julep deploy [selector] [--exclude expr] [--env name]` |
 | `plan` | `julep plan [--env name] [--json] [--mcp-snapshot]` |
-| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY]` |
+| `apply` | `julep apply --env name [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY] [--activate]` |
+| `activate` | `julep activate --env name --lane lane --release hash [--api-url URL] [--api-key KEY]` |
 | `status` | `julep status [selector] [--exclude expr] [--env name] [--remote] [--api-url URL] [--api-key KEY] [--limit N]` |
 | `keygen` | `julep keygen [--format env|json] [--output PATH] [--force]` |
 | `dev up` | `julep dev up [--env name] [--api-url URL] [--api-key KEY] [--start-temporal/--no-start-temporal] [--publish/--no-publish] [--worker/--no-worker] [--startup-timeout SECONDS] [--dry-run]` |

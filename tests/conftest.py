@@ -26,6 +26,7 @@ _REGISTRY_STATE_ATTRS = (
     "pures",
     "renderers",
     "renderer_declarations",
+    "skills",
     "tool_expectations",
     "scoped_tool_fallbacks",
     "agent_specs",

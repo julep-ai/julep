@@ -568,6 +568,7 @@ def _reasoner_runtime_declaration(
         "requireToolCall": reasoner.require_tool_call,
         "responseFormat": reasoner.response_format,
         "promptCache": reasoner.prompt_cache,
+        **({"skills": list(reasoner.skills)} if reasoner.skills else {}),
         "rendererSourceHashes": renderer_hashes,
     }
 

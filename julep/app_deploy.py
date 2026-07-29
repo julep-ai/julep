@@ -564,6 +564,7 @@ class LaneReconciler(Protocol):
 
 
 CommandRunner = Callable[[Sequence[str]], None]
+CommandOutputRunner = Callable[[Sequence[str]], str]
 
 
 class HelmLaneReconciler:
@@ -585,6 +586,7 @@ class HelmLaneReconciler:
         worker_environment: Optional[Mapping[str, str]] = None,
         worker_secret_environment: Optional[Mapping[str, Mapping[str, str]]] = None,
         runner: Optional[CommandRunner] = None,
+        log_runner: Optional[CommandOutputRunner] = None,
     ) -> None:
         if not worker_context_factory.strip():
             raise ApplicationReleaseError("worker_context_factory must be non-empty")
@@ -616,6 +618,7 @@ class HelmLaneReconciler:
             name: dict(source) for name, source in (worker_secret_environment or {}).items()
         }
         self._runner = runner or _run_command
+        self._log_runner = log_runner or _run_command_output
 
     def reconcile(
         self,
@@ -746,25 +749,66 @@ class HelmLaneReconciler:
                 ]
             )
         self._runner(args)
-        # AIDEV-NOTE: Helm 3.21 --logs looks up a Pod named exactly like the Job,
-        # but test-hook Pods have generated suffixes. Retain the smoke Job so its
-        # logs can be fetched manually instead of turning a passed test into a failure.
-        self._runner(
-            [
-                "helm",
-                "test",
-                release_name,
-                "--namespace",
-                self.namespace,
-                "--timeout",
-                "2m",
-            ]
-        )
+        # AIDEV-NOTE: no `helm test --logs`. Helm 3.21 looks up a Pod named exactly
+        # like the Job, but test-hook Pods have generated suffixes, so --logs turns
+        # a PASSED test into a reported failure. Logs are fetched out-of-band below,
+        # on failure only, so retrieval can never decide pass/fail.
+        try:
+            self._runner(
+                [
+                    "helm",
+                    "test",
+                    release_name,
+                    "--namespace",
+                    self.namespace,
+                    "--timeout",
+                    "2m",
+                ]
+            )
+        except ApplicationReleaseError as exc:
+            raise ApplicationReleaseError(
+                f"smoke test failed for {release_name}: {exc}\n"
+                + self._smoke_test_logs(release_name)
+            ) from exc
         return LaneApplyResult(
             lane=lane,
             release_name=release_name,
             task_queue=release_task_queue,
         )
+
+    def _smoke_test_logs(self, release_name: str) -> str:
+        """Best-effort smoke-test Job logs, for a FAILED ``helm test`` only.
+
+        The chart's smoke-test hook keeps ``helm.sh/hook-delete-policy:
+        before-hook-creation`` and nothing else, so a failed Job (and its Pod,
+        which has ``backoffLimit: 0`` and no TTL) survives until the next
+        ``helm test`` — the logs are still there to read. The Pod name carries a
+        generated suffix, so select on ``job-name``, the label the Job
+        controller stamps onto every Pod it creates.
+
+        AIDEV-NOTE: this must never influence pass/fail. ``helm test`` already
+        decided; a missing ``kubectl``, an evicted Pod, or a denied RBAC rule
+        returns a note, never an exception that would replace the real failure.
+        """
+        job = f"{release_name}-smoke"
+        args = [
+            "kubectl",
+            "logs",
+            "--selector",
+            f"job-name={job}",
+            "--namespace",
+            self.namespace,
+            "--all-containers=true",
+            "--tail=200",
+        ]
+        printable = " ".join(args)
+        try:
+            output = self._log_runner(args).strip()
+        except Exception as exc:  # noqa: BLE001 - retrieval failures are reported, not raised
+            return f"smoke-test logs unavailable ({printable}): {exc}"
+        if not output:
+            return f"smoke-test logs unavailable ({printable}): no output"
+        return f"smoke-test logs ({job}):\n{output}"
 
     def _validate_deployment_config(
         self,
@@ -1047,6 +1091,15 @@ def _run_command(args: Sequence[str]) -> None:
     if proc.returncode != 0:
         detail = proc.stderr.strip() or proc.stdout.strip() or "unknown Helm failure"
         raise ApplicationReleaseError(detail)
+
+
+def _run_command_output(args: Sequence[str]) -> str:
+    """Run a command and return its stdout; raise on a non-zero exit."""
+    proc = subprocess.run(list(args), capture_output=True, text=True)
+    if proc.returncode != 0:
+        detail = proc.stderr.strip() or proc.stdout.strip() or "unknown command failure"
+        raise ApplicationReleaseError(detail)
+    return proc.stdout
 
 
 def release_from_bytes(data: bytes) -> ApplicationRelease:

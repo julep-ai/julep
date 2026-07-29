@@ -35,9 +35,12 @@ golden corpus do not move.
 
 ```
 <name>.ctx/
-├── settings.yaml        # name, model, temperature, max_rounds, agent, sub, context, tools
+├── settings.yaml        # name, model, temperature, max_rounds, agent, sub, context, tools, skills
 ├── schema.pyi           # input/output models -> reply_schema (JSON Schema)
 ├── tools.pyi            # tool stubs -> granted tool keys + expected schemas
+├── skills/              # activated by settings.yaml `skills:` (see below)
+│   └── <skill-name>/
+│       └── SKILL.md     # YAML frontmatter (name, description) + markdown body
 ├── prompt.j2            # single-template form (optional <<< role:... >>> markers), OR
 └── messages/            # multi-message form
     ├── 00_system.yml    # role: system, Jinja2 body
@@ -155,6 +158,127 @@ loader does two things:
 The stubs do **not** create tools. The tools are served by real MCP servers
 (for mem-mcp: its internal task-family servers); `tools.pyi` is the
 prompt-side contract assertion.
+
+### `skills/` → progressive disclosure
+
+A package may ship agent skills as `skills/<name>/SKILL.md` — YAML frontmatter
+(`name`, `description`) followed by a markdown body. Activation is **explicit**:
+
+```yaml
+skills: [natural-writing]
+```
+
+- The key **absent** activates nothing (a present-but-unused `skills/`
+  directory warns). `skills: []` also activates nothing, silently.
+- A configured name with no matching sidecar is a load error, as is a
+  directory whose name disagrees with its frontmatter `name`.
+- Only `SKILL.md` is read. Any other file in a skill directory is a load
+  error — bundled skill resources (`references/`, `scripts/`) are reserved.
+
+Both the minimal settings-only layout (`julep/dotctx.py`) and the rich layout
+(`julep/dotctx_rich.py`) accept `skills:`. Skills need no `[dotctx]` extra —
+`julep/skills.py` imports neither jinja2 nor `Reasoner`. A single-file `.ctx`
+(mem-mcp's compact frontmatter form) cannot activate skills: the key being
+present in any form, including `skills: []`, is a load error because sidecars
+need the directory layout. In the minimal layout a non-empty `skills:` with no
+`base_dir` is an error.
+
+When `skills:` is non-empty **every** directory under `skills/` is parsed and
+validated, not just the activated ones, so a malformed sibling skill fails the
+load. When the key is absent or empty, nothing under `skills/` is read at all.
+
+The complete load-time and call-time error inventory is:
+
+| Condition | Result |
+|---|---|
+| `skills:` is not a list (e.g. a bare string) | `SkillError` |
+| a list item is not a non-empty string (e.g. a mapping) | `SkillError`; per-skill option mappings are deliberately reserved for later |
+| duplicate names in `skills:` | `SkillError` |
+| key absent, `skills/` present | `InertSkillsDirectoryWarning`, nothing active |
+| `skills: []` | nothing active, no warning |
+| non-empty `skills:` but no `skills/` directory | `SkillError` |
+| a non-directory entry inside `skills/` | `SkillError` |
+| a skill directory with no `SKILL.md` | `SkillError` |
+| a skill directory with any file besides `SKILL.md` | `SkillError` |
+| directory name != frontmatter `name` | `SkillError` |
+| a configured name with no sidecar | `SkillError`, listing what is available |
+| `SKILL.md` with no frontmatter, invalid YAML, a non-mapping frontmatter, a missing/blank `name`, or an empty body | `SkillError` |
+| a `SKILL.md` frontmatter name outside `^[A-Za-z0-9][A-Za-z0-9._-]*$` | `SkillError`, naming the file and offending name |
+| a `Reasoner` given a string that is not `skill/<name>@v<12 hex>` | `ValueError` telling the caller to pass `skill_keys([...])` |
+| a `Reasoner` given multiple skill keys declaring the same name | `ValueError`, naming the duplicate skill and reasoner |
+| the reasoner grants a tool literally named `__load_skill__` while skills are active | `ValueError` at call time (the name is reserved) |
+
+`description` is optional; a missing one renders as `(no description)` in the
+prompt block, and its whitespace is collapsed. A leading BOM is stripped and
+CRLF is normalized to LF before hashing, so a Windows checkout and a Unix
+checkout produce the same key. `Skill.source` is diagnostics only — excluded
+from equality and from the content hash, which is what makes identical skills
+in different packages one skill.
+
+Disclosure is progressive. Only the name and description of each activated
+skill reach the system prompt; the body arrives when the model calls the
+reserved `__load_skill__` tool, which the LLM caller resolves from the frozen
+release and answers in place. Those round trips happen *inside* one reasoner
+call: the flow shape is unchanged, `max_rounds` still counts rounds of task
+progress, and skill calls never reach the agent loop. `LlmCallMeta.skill_loads`
+records which skills were actually read.
+
+The prompt block is a `# Available skills` list of `- **name** — description`
+lines, prepended ahead of the authored system prompt because it is a stable
+prefix that prompt caching can cover. The `__load_skill__` tool's `name` enum
+lists only skills not yet disclosed, so the model cannot spend a round
+re-reading something already in its context. While the tool remains offered,
+bodies are answered as `tool` messages and the caller re-asks. After the tool
+is withdrawn, already-loaded bodies are carried into the final request as a
+plain user message, without tool-call or tool-result blocks. The loop closes
+when every activated skill has been read, when the model stops
+asking, or when a budget of **two** malformed requests (an unknown name, or a
+name already provided) is spent. `__load_skill__` calls are stripped from the
+parsed reply before it is returned, so they never surface as controller tool
+calls. Bodies are resolved from the registry populated by the frozen release,
+never from the filesystem, so replay is deterministic.
+
+Single-shot batch submission has no tool round trip, so a batched reasoner
+inlines every activated skill instead.
+
+Skills are content-addressed as `skill/<name>@v<hash12>` over
+(name, description, body), and `Reasoner.skills` holds those keys — so editing
+a skill body moves the reasoner identity exactly the way editing a template
+does, and byte-identical copies in different packages cost one artifact entry.
+
+`skills` enters the reasoner's deploy identity only when non-empty, so
+pre-existing artifacts hash identically. The declarations blob (schema v3)
+carries each skill's name, description, and body once per key; a worker
+rebuilding a skill re-verifies the content against the key it was stored under.
+Because the key covers the body, an edited skill body changes the reasoner's
+identity hash — the same drift detection that already covers template edits.
+
+**Differences from mem-mcp's `skills:`.** mem-mcp activates *all* skills when
+the key is absent and inlines every body into the system prompt. Julep requires
+explicit activation and discloses progressively, so a package migrating from
+mem-mcp must list the names it wants.
+
+Programmatically:
+
+```python
+from julep import Reasoner, Skill, skill_keys
+
+house_style = Skill(
+    name="house-style",
+    description="How we write.",
+    body="Short sentences. Concrete nouns.",
+)
+reasoner = Reasoner(
+    name="drafter",
+    model="openai:gpt-5.5",
+    system="You draft release notes.",
+    skills=skill_keys([house_style]),
+)
+```
+
+`Reasoner` is a pure value type and never touches the registry, so
+`skill_keys()` is the explicit bridge: it registers each `Skill` and returns
+the content keys the reasoner stores.
 
 ### Settings normalization
 

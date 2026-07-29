@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional, Protocol
 
 from .dotctx import Reasoner
-from .registry import DEFAULT_REGISTRY, RendererEntry
+from .registry import DEFAULT_REGISTRY, Registry, RendererEntry
 
 Context = Mapping[str, Any]
 
@@ -62,38 +62,63 @@ def project_context(value: Any) -> dict[str, Any]:
     return projected
 
 
-def render_system(reasoner: Reasoner, ctx: Context) -> str:
+def render_system(
+    reasoner: Reasoner,
+    ctx: Context,
+    *,
+    registry: Optional[Registry] = None,
+) -> str:
     if reasoner.system_render is not None:
-        return DEFAULT_REGISTRY.get_renderer(reasoner.system_render)(ctx)
+        target = DEFAULT_REGISTRY if registry is None else registry
+        return target.get_renderer(reasoner.system_render)(ctx)
     return reasoner.system
 
 
-def render_user(reasoner: Reasoner, ctx: Context) -> Optional[str]:
+def render_user(
+    reasoner: Reasoner,
+    ctx: Context,
+    *,
+    registry: Optional[Registry] = None,
+) -> Optional[str]:
     """The rendered user turn, or ``None`` when the reasoner names no user renderer
     (callers fall back to the value-as-JSON user turn)."""
     if reasoner.user_render is None:
         return None
-    return DEFAULT_REGISTRY.get_renderer(reasoner.user_render)(ctx)
+    target = DEFAULT_REGISTRY if registry is None else registry
+    return target.get_renderer(reasoner.user_render)(ctx)
 
 
-def rendered_user_for(reasoner: Reasoner, value: Any) -> Optional[str]:
+def rendered_user_for(
+    reasoner: Reasoner,
+    value: Any,
+    *,
+    registry: Optional[Registry] = None,
+) -> Optional[str]:
     if reasoner.user_render is None:
         return None
-    return render_user(reasoner, project_context(value))
+    return render_user(reasoner, project_context(value), registry=registry)
 
 
 def _with_rendered_system(reasoner: Reasoner, system: str) -> Reasoner:
     return reasoner.replace(system=system, system_render=None)
 
 
-def rendered_reasoner_for(reasoner: Reasoner, value: Any) -> Reasoner:
+def rendered_reasoner_for(
+    reasoner: Reasoner,
+    value: Any,
+    *,
+    registry: Optional[Registry] = None,
+) -> Reasoner:
     """The invoke seam: a no-renderer reasoner passes through identically; a
     renderer-bearing reasoner becomes a derived reasoner with the rendered system.
     ``user_render`` rides along — the LLM caller renders the user turn via
     :func:`rendered_user_for` against the same value."""
     if reasoner.system_render is None:
         return reasoner
-    return _with_rendered_system(reasoner, render_system(reasoner, project_context(value)))
+    return _with_rendered_system(
+        reasoner,
+        render_system(reasoner, project_context(value), registry=registry),
+    )
 
 
 @dataclass(frozen=True)

@@ -6,6 +6,7 @@ from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
 
+import httpx
 import pytest
 import yaml
 
@@ -47,6 +48,31 @@ def _publish_only_release() -> ApplicationRelease:
             ),
         ),
         deployment_config={"queues": {"summary": "summary"}},
+    )
+
+
+def _multi_lane_release(*lanes: str) -> ApplicationRelease:
+    """A publishable release with one pipeline (and therefore lane) per name."""
+    return ApplicationRelease(
+        application="memory",
+        application_artifact_hash="sha256:" + "a" * 64,
+        worker_image=None,
+        pipelines=tuple(
+            PipelineRelease(
+                name=lane,
+                lane=lane,
+                artifact_hash="sha256:" + "a" * 64,
+                flow_json={"id": "root", "op": "IDENT"},
+                manifest_json={},
+                pinned_pures={},
+                bundle_ref=None,
+                eval_packages=(),
+                max_call_limits={},
+                mcp_preflight_policy="pin",
+            )
+            for lane in lanes
+        ),
+        deployment_config={"queues": {lane: lane for lane in lanes}},
     )
 
 
@@ -504,6 +530,218 @@ def test_activate_surfaces_non_admin_403(
     err = capsys.readouterr().err
     assert code == 1
     assert err == "error: lane activation requires an admin API key (403)\n"
+
+
+def _apply_with_activate(
+    monkeypatch,
+    release: ApplicationRelease,
+    client,
+    *,
+    extra_args: tuple[str, ...] = (
+        "--api-url",
+        "http://control-plane",
+        "--api-key",
+        "admin-token",
+    ),
+) -> int:
+    main_module = import_module("julep.cli.main")
+
+    def fake_apply(_cfg, _env, *, publish_only=False, mcp_snapshot=False):
+        return release, ()
+
+    monkeypatch.setattr(main_module, "apply_configured_application", fake_apply)
+    monkeypatch.setattr(main_module, "_remote_client", lambda url, key: client)
+    return main(
+        ["apply", "--env", "local", "--publish-only", "--activate", *extra_args]
+    )
+
+
+class _RecordingActivationClient:
+    """Control-plane stub that records activations and can fail chosen lanes."""
+
+    def __init__(self, failures: dict[str, BaseException] | None = None) -> None:
+        self.failures = failures or {}
+        self.activations: list[tuple[str, str]] = []
+        self.published: list[bytes] = []
+        self.closed = 0
+
+    def publish_release(self, manifest_bytes):
+        self.published.append(manifest_bytes)
+        return {"release_hash": "ok"}
+
+    def activate_deployment(self, lane, release):
+        failure = self.failures.get(lane)
+        if failure is not None:
+            raise failure
+        self.activations.append((lane, release))
+        return {"lane": lane, "release_hash": release}
+
+    def close(self):
+        self.closed += 1
+
+
+def test_apply_activate_activates_every_lane_inline(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    release = _multi_lane_release("brief-refresh", "summary")
+    client = _RecordingActivationClient()
+
+    code = _apply_with_activate(monkeypatch, release, client)
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert client.activations == [
+        ("brief-refresh", release.release_hash),
+        ("summary", release.release_hash),
+    ]
+    # One connection context is reused for registration plus every lane.
+    assert client.published == [release.manifest_bytes]
+    assert f"activated {'brief-refresh':24} {release.release_hash}" in out
+    assert f"activated {'summary':24} {release.release_hash}" in out
+    assert "traffic   activated brief-refresh, summary" in out
+    # The unconditional echo and the per-lane hint are gone once --activate ran.
+    assert "traffic   unchanged" not in out
+    assert "activate  julep activate" not in out
+    assert "admin-token" not in out
+
+
+def test_apply_activate_reports_partial_failure_and_exits_nonzero(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    release = _multi_lane_release("brief-refresh", "digest", "summary")
+    client = _RecordingActivationClient(
+        failures={"digest": JulepClientError(500, "temporal unreachable")}
+    )
+
+    code = _apply_with_activate(monkeypatch, release, client)
+
+    captured = capsys.readouterr()
+    assert code == 1
+    # Every lane is attempted even after one fails.
+    assert [lane for lane, _ in client.activations] == ["brief-refresh", "summary"]
+    assert "error: lane 'digest' activation failed:" in captured.err
+    assert "temporal unreachable" in captured.err
+    assert (
+        "traffic   partial: activated brief-refresh, summary; unchanged digest"
+        in captured.out
+    )
+
+
+def test_apply_activate_continues_after_transport_failure(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    release = _multi_lane_release("brief-refresh", "digest", "summary")
+    client = _RecordingActivationClient(
+        failures={"digest": httpx.ReadTimeout("control plane timed out")}
+    )
+
+    code = _apply_with_activate(monkeypatch, release, client)
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert [lane for lane, _ in client.activations] == ["brief-refresh", "summary"]
+    assert "error: lane 'digest' activation failed: control plane timed out" in captured.err
+    assert (
+        "traffic   partial: activated brief-refresh, summary; unchanged digest"
+        in captured.out
+    )
+
+
+def test_apply_activate_explains_server_reconciler_conflict(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    release = _multi_lane_release("summary")
+    client = _RecordingActivationClient(
+        failures={
+            "summary": JulepClientError(
+                409, "worker reconciliation failed: lane reconciler configuration"
+            )
+        }
+    )
+
+    code = _apply_with_activate(monkeypatch, release, client)
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "ran its own Helm reconciler" in captured.err
+    assert "byte-identically" in captured.err
+    assert "worker reconciliation failed" in captured.err
+
+
+def test_apply_activate_requires_control_plane_context(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+    called: list[str] = []
+
+    def fake_apply(_cfg, _env, *, publish_only=False, mcp_snapshot=False):
+        called.append("apply")
+        return _multi_lane_release("summary"), ()
+
+    monkeypatch.setattr(main_module, "apply_configured_application", fake_apply)
+
+    code = main(["apply", "--env", "local", "--publish-only", "--activate"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    # Refused before anything was published.
+    assert called == []
+    assert (
+        "error: --activate unavailable: re-run apply with --api-url/--api-key "
+        "to register this release with the control plane before activating"
+        in captured.err
+    )
+
+
+def test_activate_command_explains_server_reconciler_conflict(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    main_module = import_module("julep.cli.main")
+
+    class FakeClient:
+        def activate_deployment(self, lane, release):
+            raise JulepClientError(409, "worker reconciliation failed: mismatch")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(main_module, "_remote_client", lambda url, key: FakeClient())
+
+    code = main(
+        [
+            "activate",
+            "--env",
+            "local",
+            "--lane",
+            "summary",
+            "--release",
+            "sha256:" + "a" * 64,
+            "--api-key",
+            "admin-token",
+        ]
+    )
+    err = capsys.readouterr().err
+    assert code == 1
+    assert "ran its own Helm reconciler" in err
+    assert "worker reconciliation failed: mismatch" in err
 
 
 def test_deployment_config_preserves_pinned_oci_chart(

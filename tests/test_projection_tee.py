@@ -41,3 +41,15 @@ def test_tee_exposes_primary_value_store() -> None:
     [did] = [e for e in primary.events() if e.type.value == "Did"]
     assert did.value_ref is not None
     assert primary.values.get(did.value_ref) == {"big": "payload"}
+
+
+def test_tee_delegates_cancel_cleanup_to_primary() -> None:
+    primary = InMemoryProjection()
+    sink = _ListSink()
+    emitter = ProjectionEmitter(TeeStore(primary, sink))
+
+    event_id = emitter.plan("n1", "n1@1")
+    emitter.cancel("n1", "n1@1", event_id)
+
+    assert primary.events() == []
+    assert [event.event_id for event in sink.events] == [event_id]

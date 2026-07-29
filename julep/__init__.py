@@ -207,6 +207,17 @@ from .dotctx import (
     load_dotctx as load_dotctx,
 )
 
+# --- agent skills ---------------------------------------------------------- #
+from .skills import (
+    SKILL_TOOL as SKILL_TOOL,
+    Skill as Skill,
+    SkillError as SkillError,
+    get_skill as get_skill,
+    load_package_skills as load_package_skills,
+    register_skill as register_skill,
+    skill_keys as skill_keys,
+)
+
 # --- purity registry ------------------------------------------------------- #
 from .purity import (
     Pure as Pure,
@@ -308,7 +319,14 @@ from .execution import (
     WorkerContext as WorkerContext,
     interpret as interpret,
 )
+from .execution.llm_result import (
+    AttemptMeta as AttemptMeta,
+    LlmCallMeta as LlmCallMeta,
+    LlmResult as LlmResult,
+    LlmUsage as LlmUsage,
+)
 from .local import (
+    EmbeddedRun as EmbeddedRun,
     LocalExecutionConfigurationError as LocalExecutionConfigurationError,
     LocalExecutionUnsupported as LocalExecutionUnsupported,
     LocalPipeline as LocalPipeline,
@@ -376,6 +394,9 @@ _BASE_EXPORTS = [
     # dotctx
     "Reasoner", "get_reasoner", "load_dotctx", "dotctx_flow",
     "reasoner_to_flow", "reasoner_from_settings",
+    # agent skills
+    "Skill", "SkillError", "SKILL_TOOL",
+    "register_skill", "get_skill", "skill_keys", "load_package_skills",
     # purity
     "pure", "register_pure", "is_registered", "get_pure", "diff_pure_hashes",
     "Registry", "DEFAULT_REGISTRY",
@@ -388,6 +409,7 @@ _BASE_EXPORTS = [
     "ProjectionEvent", "ProjectionEmitter", "ProjectionSink", "ProjectionStore",
     "InMemoryProjection", "PostgresProjection", "TeeStore", "ValueStore", "SpanData",
     "to_otel_spans",
+    "LlmResult", "LlmCallMeta", "LlmUsage", "AttemptMeta", "EmbeddedRun",
     # provider resilience
     "AttemptRecord", "CircuitBreaker", "ErrorClass", "ResiliencePolicy",
     "classify_error", "summarize_attempts",

@@ -19,8 +19,9 @@ from .registry import (
     RendererDependency,
     RendererEntry,
 )
+from .skills import Skill, skill_key
 
-_BLOB_SCHEMA_VERSION = 2
+_BLOB_SCHEMA_VERSION = 3
 _SHA256_REF = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
@@ -138,6 +139,23 @@ def declarations_blob(
             ],
         }
 
+    skills: dict[str, dict[str, Any]] = {}
+    for reasoner in reasoner_values.values():
+        for key in reasoner.skills:
+            if key in skills:
+                continue
+            skill = registry.skills.get(key)
+            if skill is None:
+                raise ApplicationDefinitionError(
+                    f"reasoner {reasoner.name!r} references skill {key!r} with no "
+                    "registered content; load its dotctx package before releasing"
+                )
+            skills[key] = {
+                "name": skill.name,
+                "description": skill.description,
+                "body": skill.body,
+            }
+
     agents: dict[str, dict[str, Any]] = {}
     if flow is not None:
         for node in flow.walk():
@@ -185,6 +203,7 @@ def declarations_blob(
         },
         "renderers": renderers,
         "agents": {name: agents[name] for name in sorted(agents)},
+        "skills": {name: skills[name] for name in sorted(skills)},
     }
     return canonical_json(payload).encode("utf-8")
 
@@ -318,6 +337,11 @@ def _reasoner_from_json(name: str, raw: Any) -> Reasoner:
     output_retries = value.get("outputRetries")
     if not isinstance(output_retries, int) or isinstance(output_retries, bool):
         _fail(f"reasoner {name!r} outputRetries must be an integer")
+    skills_raw = value.get("skills", [])
+    if not isinstance(skills_raw, list) or not all(
+        isinstance(item, str) for item in skills_raw
+    ):
+        _fail(f"reasoner {name!r} skills must be a list of strings")
 
     return Reasoner(
         name=declared_name,
@@ -350,6 +374,7 @@ def _reasoner_from_json(name: str, raw: Any) -> Reasoner:
         prompt_cache=_optional_string(
             value.get("promptCache"), label=f"reasoner {name!r} promptCache"
         ),
+        skills=skills_raw,
     )
 
 
@@ -451,6 +476,21 @@ def load_declarations(
         rebuilt_renderers[name] = entry
         renderer_declarations[name] = declaration
 
+    skill_values = _object(payload.get("skills", {}), label="declarations skills")
+    rebuilt_skills: dict[str, Skill] = {}
+    for key, raw in skill_values.items():
+        skill_entry = _object(raw, label=f"skill {key!r}")
+        skill = Skill(
+            name=_string(skill_entry.get("name"), label=f"skill {key!r} name"),
+            description=_string(
+                skill_entry.get("description"), label=f"skill {key!r} description"
+            ),
+            body=_string(skill_entry.get("body"), label=f"skill {key!r} body"),
+        )
+        if skill_key(skill) != key:
+            _fail(f"skill {key!r} does not match the content hash of its declaration")
+        rebuilt_skills[key] = skill
+
     reasoner_values = _object(payload.get("reasoners"), label="declarations reasoners")
     rebuilt_reasoners = {
         name: _reasoner_from_json(name, raw) for name, raw in reasoner_values.items()
@@ -475,6 +515,9 @@ def load_declarations(
                     f"reasoner {name!r} renderer {renderer_name!r} hash does not "
                     "match the rebuilt declaration"
                 )
+        for skill_ref in reasoner.skills:
+            if skill_ref not in rebuilt_skills:
+                _fail(f"reasoner {name!r} references undeclared skill {skill_ref!r}")
 
     agent_values = _object(payload.get("agents"), label="declarations agents")
     rebuilt_agents = {
@@ -505,6 +548,20 @@ def load_declarations(
                 raise ApplicationDefinitionError(
                     f"agent {name!r} conflicts with the verified application declaration"
                 )
+        for key, skill in rebuilt_skills.items():
+            existing_skill = target.skills.get(key)
+            if existing_skill is not None and existing_skill != skill:
+                raise ApplicationDefinitionError(
+                    f"skill {key!r} conflicts with the verified application declaration"
+                )
+
+    if release_scoped and registry is not DEFAULT_REGISTRY:
+        for key, skill in rebuilt_skills.items():
+            existing_skill = DEFAULT_REGISTRY.skills.get(key)
+            if existing_skill is not None and existing_skill != skill:
+                raise ApplicationDefinitionError(
+                    f"skill {key!r} conflicts with a loaded release declaration"
+                )
 
     for target in targets:
         for reasoner in rebuilt_reasoners.values():
@@ -513,6 +570,8 @@ def load_declarations(
             target.renderers[name] = entry
             target.renderer_declarations[name] = renderer_declarations[name]
         target.agent_specs.update(rebuilt_agents)
+        for skill in rebuilt_skills.values():
+            target.register_skill(skill)
 
     # Renderer names are content-addressed, so sharing them process-wide is
     # safe even when reasoner names are release-scoped. The prompt adapter's
@@ -530,6 +589,10 @@ def load_declarations(
                 )
             DEFAULT_REGISTRY.renderers[name] = entry
             DEFAULT_REGISTRY.renderer_declarations[name] = renderer_declarations[name]
+        # Release workers still support callers configured with the process-wide
+        # registry, so share content-addressed skills after collision preflight.
+        for skill in rebuilt_skills.values():
+            DEFAULT_REGISTRY.register_skill(skill)
 
 
 __all__ = ["DeclarationError", "declarations_blob", "load_declarations"]

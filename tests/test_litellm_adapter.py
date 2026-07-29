@@ -8,7 +8,7 @@ import pytest
 from conftest import run
 from julep.dotctx import Reasoner
 from julep.errors import ResilienceExhausted
-from julep.execution.llm_result import LlmCallMeta, LlmResult
+from julep.execution.llm_result import LlmCallMeta, LlmResult, LlmUsage
 from julep.llm import litellm_caller, prepare_litellm_payload, with_model_ladder
 from julep.qos import ReasonerDispatch
 from julep.resilience import AttemptRecord
@@ -94,6 +94,131 @@ def test_litellm_caller_is_canonical_and_injectable() -> None:
     assert seen["timeout"] == 17.0
     assert seen["tools"] == [{"type": "function", "function": {"name": "lookup"}}]
     assert seen["parallel_tool_calls"] is False
+
+
+def test_litellm_caller_captures_usage_and_derives_unreported_cost() -> None:
+    usage = SimpleNamespace(
+        prompt_tokens=13,
+        completion_tokens=5,
+        total_tokens=18,
+        prompt_tokens_details=SimpleNamespace(
+            cached_tokens=4,
+            cache_creation_tokens=2,
+        ),
+    )
+    response = _completion()
+    response.usage = usage
+    response._hidden_params = {}
+    priced: dict[str, Any] = {}
+
+    async def fake_acompletion(**_kwargs: Any) -> Any:
+        return response
+
+    def fake_cost(**kwargs: Any) -> float:
+        priced.update(kwargs)
+        return 0.0125
+
+    result = run(
+        litellm_caller(
+            acompletion=fake_acompletion,
+            cost_calculator=fake_cost,
+        )(Reasoner("summary", "openai:gpt-test"), "hello")
+    )
+
+    assert result.meta.usage == LlmUsage(13, 5, 18, 4, 2)
+    assert result.meta.cost == pytest.approx(0.0125)
+    assert result.meta.cost_status == "derived"
+    assert result.meta.to_attrs()["llm.cost.status"] == "derived"
+    assert priced == {
+        "completion_response": response,
+        "model": "openai/gpt-test",
+    }
+
+
+@pytest.mark.parametrize("location", ["usage", "hidden"])
+def test_litellm_caller_treats_ambiguous_attached_cost_as_derived(
+    location: str,
+) -> None:
+    response = _completion()
+    response._hidden_params = {}
+    if location == "usage":
+        response.usage = SimpleNamespace(cost=0.0042)
+    else:
+        response._hidden_params["response_cost"] = 0.0042
+
+    async def fake_acompletion(**_kwargs: Any) -> Any:
+        return response
+
+    result = run(
+        litellm_caller(
+            acompletion=fake_acompletion,
+        )(Reasoner("summary", "openai:gpt-test"), "hello")
+    )
+
+    assert result.meta.cost == pytest.approx(0.0042)
+    assert result.meta.cost_status == "derived"
+    assert result.meta.to_attrs()["llm.cost.status"] == "derived"
+
+
+def test_litellm_caller_preserves_provider_attested_cost_as_reported() -> None:
+    response = _completion()
+    response._hidden_params = {
+        "additional_headers": {
+            "llm_provider-x-litellm-response-cost": 0.0042,
+        },
+        "response_cost": 0.0099,
+    }
+
+    async def fake_acompletion(**_kwargs: Any) -> Any:
+        return response
+
+    def unexpected_cost(**_kwargs: Any) -> float:
+        raise AssertionError("provider-attested cost must skip derivation")
+
+    result = run(
+        litellm_caller(
+            acompletion=fake_acompletion,
+            cost_calculator=unexpected_cost,
+        )(Reasoner("summary", "openrouter:openai/gpt-test"), "hello")
+    )
+
+    assert result.meta.cost == pytest.approx(0.0042)
+    assert result.meta.cost_status == "reported"
+    assert result.meta.to_attrs()["llm.cost.status"] == "reported"
+
+
+def test_litellm_caller_unpriced_model_is_unknown_and_derivation_can_be_disabled() -> None:
+    response = _completion()
+    response._hidden_params = {}
+    calls = 0
+
+    async def fake_acompletion(**_kwargs: Any) -> Any:
+        return response
+
+    def unpriced(**_kwargs: Any) -> float:
+        nonlocal calls
+        calls += 1
+        raise KeyError("unknown model")
+
+    unknown = run(
+        litellm_caller(
+            acompletion=fake_acompletion,
+            cost_calculator=unpriced,
+        )(Reasoner("summary", "custom:unpriced"), "hello")
+    )
+    disabled = run(
+        litellm_caller(
+            acompletion=fake_acompletion,
+            derive_cost=False,
+            cost_calculator=unpriced,
+        )(Reasoner("summary", "custom:unpriced"), "hello")
+    )
+
+    assert calls == 1
+    assert unknown.meta.cost is None
+    assert unknown.meta.cost_status == "unknown"
+    assert disabled.meta.cost is None
+    assert disabled.meta.cost_status == "unknown"
 
 
 def test_litellm_caller_normalizes_slash_slug_before_provider_dispatch() -> None:

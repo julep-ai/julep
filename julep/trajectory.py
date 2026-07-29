@@ -431,12 +431,14 @@ class ProjectionTrajectorySink:
         root_run_id: str,
         segment_seq: int,
         node_ops: dict[str, str],
+        redactor: Optional[Redactor] = None,
     ) -> None:
         self._sink = sink
         self._run_id = run_id
         self._root_run_id = root_run_id
         self._segment_seq = segment_seq
         self._node_ops = node_ops
+        self._redactor = redactor
 
     def append(self, event: Any) -> None:
         def _append() -> None:
@@ -445,9 +447,22 @@ class ProjectionTrajectorySink:
             if event.type not in (EventType.DID, EventType.FAILED):
                 return
             op = self._node_ops.get(event.node)
-            if op is None or op == "prim":
+            if op is None or (op == "prim" and event.type == EventType.DID):
                 return
             status = "did" if event.type == EventType.DID else "failed"
+            error = event.error
+            attrs = dict(event.attrs or {})
+            if self._redactor is not None:
+                # AIDEV-NOTE: foreground structural events share the same
+                # fail-closed persistence boundary as TrajectoryRecorder blobs.
+                redacted_error = redact_for_capture(self._redactor, error)
+                redacted_attrs = redact_for_capture(self._redactor, attrs)
+                error = redacted_error if isinstance(redacted_error, str) else None
+                attrs = (
+                    dict(redacted_attrs)
+                    if isinstance(redacted_attrs, Mapping)
+                    else {}
+                )
             step = TrajectoryStep(
                 step_id=f"{self._run_id}:s{self._segment_seq}:{event.cid}",
                 run_id=self._run_id,
@@ -459,8 +474,8 @@ class ProjectionTrajectorySink:
                 causes=tuple(event.causes),
                 status=status,
                 cost=event.cost,
-                error=event.error,
-                attrs=dict(event.attrs or {}),
+                error=error,
+                attrs=attrs,
             )
             _best_effort(lambda: self._sink.append_steps([step]))
 

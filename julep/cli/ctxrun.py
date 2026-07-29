@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
 
 from julep.cli import evalrun
@@ -11,12 +11,14 @@ from julep.deploy import deploy
 from julep.dotctx import load_dotctx, reasoner_to_flow
 from julep.dotctx_rich import load_rich_dotctx
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
+from julep.projection import InMemoryProjection, ProjectionSink
 
 
 @dataclass(frozen=True)
 class CtxRunOutcome:
     artifact_hash: str
     reply: Any
+    projection: InMemoryProjection = field(default_factory=InMemoryProjection)
 
 
 def run_ctx_local(
@@ -29,6 +31,8 @@ def run_ctx_local(
     tools: Mapping[str, Callable[[Any], Any]] | None = None,
     tool_bindings: Mapping[str, str] | None = None,
     mcp_call: Any = None,
+    projection: InMemoryProjection | None = None,
+    sink: ProjectionSink | None = None,
 ) -> CtxRunOutcome:
     reasoner = load_dotctx(ctx_path, env=dict(env_vars or {}))
     if reasoner.tools:
@@ -71,39 +75,43 @@ def run_ctx_local(
             else evalrun._resolve_acompletion(None)
         )
     )
-    if rich is None:
-        reply = asyncio.run(
-            evalrun._invoke_eval_llm(
-                reasoner,
-                value,
-                acompletion=resolved,
-                llm_caller=llm_caller,
-            )
-        )
-    else:
+    tool_defs = None
+    if rich is not None:
         tool_defs = evalrun._provider_tool_defs(
             rich.expected_tool_schemas,
             rich.expected_tool_descriptions,
         )
 
-        async def controller(payload: dict[str, Any]) -> Any:
-            return await evalrun._invoke_eval_llm(
-                reasoner,
-                payload,
-                acompletion=resolved,
-                llm_caller=llm_caller,
-                tools=tool_defs,
-            )
+    async def controller(payload: Any) -> Any:
+        return await evalrun._invoke_eval_llm(
+            reasoner,
+            payload,
+            acompletion=resolved,
+            llm_caller=llm_caller,
+            tools=tool_defs,
+        )
 
-        reply = asyncio.run(
-            deployment.adry_run(
-                value,
-                reasoners={reasoner.name: controller},
-                tools=dict(tools or {}),
-                mcp_call=mcp_call,
-            )
-        ).value
-    return CtxRunOutcome(artifact_hash=deployment.artifact_hash, reply=reply)
+    # AIDEV-NOTE: even single-shot .ctx packages must traverse the interpreter;
+    # bypassing it produces no projection and makes the local trace cache blind.
+    local_deployment = (
+        deployment if rich is not None else replace(deployment, _tools=())
+    )
+    run_projection = projection if projection is not None else InMemoryProjection()
+    reply = asyncio.run(
+        local_deployment.adry_run(
+            value,
+            reasoners={reasoner.name: controller},
+            tools=dict(tools or {}),
+            mcp_call=mcp_call,
+            projection=run_projection,
+            sink=sink,
+        )
+    ).value
+    return CtxRunOutcome(
+        artifact_hash=deployment.artifact_hash,
+        reply=reply,
+        projection=run_projection,
+    )
 
 
 __all__ = ["CtxRunOutcome", "run_ctx_local"]

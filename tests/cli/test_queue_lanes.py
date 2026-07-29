@@ -300,6 +300,9 @@ def test_worker_queue_cli_resolves_lanes_and_raw_strings(
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)
+    # A hand-run worker fails closed on payload encryption; this test is about
+    # queue resolution, so take the documented plaintext opt-out.
+    monkeypatch.setenv("TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED", "false")
     captured: list[str] = []
 
     async def fake_serve(settings: Any) -> None:
@@ -337,6 +340,9 @@ def test_worker_queue_unknown_env_is_loud(
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)
+    # A hand-run worker fails closed on payload encryption; this test is about
+    # queue resolution, so take the documented plaintext opt-out.
+    monkeypatch.setenv("TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED", "false")
     captured: list[str] = []
 
     async def fake_serve(settings: Any) -> None:

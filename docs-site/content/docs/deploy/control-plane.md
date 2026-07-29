@@ -80,11 +80,13 @@ reconciler behind `julep apply` and `JULEP_SERVER_HELM_CHART` hardcodes
 `payloadEncryption.enabled=true` and `payloadEncryption.required=true` and
 refuses to reconcile without a payload-encryption Secret name. There is no
 setting that turns it off for a managed lane. `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED`
-is a genuine knob only for a server or worker you run by hand, and the two
-defaults are asymmetric: this server defaults it to `true`, while a bare
-`julep worker` defaults it to `false`. Set it explicitly on hand-run workers
-rather than relying on the default. Provisioning the Secret is an operator step
-with no automation behind it — see
+is a genuine knob only for a server or worker you run by hand, and the server
+and the worker now default it the same way: `true`. A hand-run `julep worker`
+without `TEMPORAL_PAYLOAD_KEYS`/`TEMPORAL_PAYLOAD_KEY_ID` refuses to start
+rather than joining the durable plane with a plaintext converter. Running a
+worker against a deliberately plaintext Temporal is still supported, but it is
+now an explicit `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=false`. Provisioning the
+Secret is an operator step with no automation behind it — see
 [the payload-encryption Secret](/docs/deploy/kubernetes#the-payload-encryption-secret).
 
 **API keys are mandatory in effect.** `JULEP_API_KEYS` defaults to empty, and an

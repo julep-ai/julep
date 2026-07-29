@@ -36,7 +36,7 @@ from julep.cli.tracetree import render_tree
 from julep.cli.trigger import trigger_command
 from julep.bundle import BundleError
 from julep.artifact_store import ArtifactStoreError
-from julep.projection import ProjectionEvent
+from julep.projection import InMemoryProjection, ProjectionEvent
 
 if TYPE_CHECKING:
     from julep.client import JulepClient
@@ -571,6 +571,66 @@ def _register_remote_release(release: Any, api_url: str | None, api_key: str | N
     typer.echo(f"registered {release.release_hash}")
 
 
+# AIDEV-NOTE: a control plane configured with its own HelmLaneReconciler re-runs
+# the lane reconcile on every activation (julep/server/routes/deployments.py).
+# That reconcile re-derives the lane deployment config and 409s unless it
+# reproduces the release's frozen `deployment_config` byte-identically, so a
+# perfectly good release can be refused at activation time. Name the cause
+# instead of letting a bare "409 CONFLICT" look like a crash.
+_ACTIVATION_CONFLICT_HINT = (
+    "the control plane ran its own Helm reconciler for this lane and refused "
+    "the rollout (409). Inline activation re-reconciles the lane, which only "
+    "succeeds when the server reproduces the release's frozen deployment "
+    "config byte-identically. Use --activate against a control plane that "
+    "leaves worker rollout external, or reconcile server-side first and "
+    "activate with 'julep activate'"
+)
+
+
+def _activation_failure_detail(exc: Any) -> str:
+    """Render one lane-activation failure, naming the reconciler-conflict case."""
+    if exc.status_code == 403:
+        return "lane activation requires an admin API key (403)"
+    if exc.status_code == 409:
+        return f"{_ACTIVATION_CONFLICT_HINT}; server said: {exc.detail}"
+    return str(exc)
+
+
+def _activate_release_lanes(
+    release: Any,
+    api_url: str | None,
+    api_key: str | None,
+) -> tuple[list[tuple[str, str | None]], BaseException | None]:
+    """Activate every lane of a release over one control-plane connection.
+
+    Returns outcomes plus any unexpected exception deferred until the caller
+    reports them. Expected API and transport failures do not stop later lanes.
+    """
+    client = _remote_client(api_url, api_key)
+    from httpx import HTTPError
+    from julep.client import JulepClientError
+
+    outcomes: list[tuple[str, str | None]] = []
+    unexpected: BaseException | None = None
+    try:
+        for lane_name in release.lanes:
+            try:
+                client.activate_deployment(lane_name, release.release_hash)
+            except JulepClientError as exc:
+                outcomes.append((lane_name, _activation_failure_detail(exc)))
+            except HTTPError as exc:
+                outcomes.append((lane_name, str(exc)))
+            except Exception as exc:  # noqa: BLE001 - report completed lanes first
+                outcomes.append((lane_name, str(exc)))
+                unexpected = exc
+                break
+            else:
+                outcomes.append((lane_name, None))
+    finally:
+        client.close()
+    return outcomes, unexpected
+
+
 @app.command("ls")
 def ls(
     selector: str = typer.Argument("", help="Selection expression (default: all)."),
@@ -675,15 +735,52 @@ def run(
                 err=True,
             )
             raise typer.Exit(2)
-        env_vars = _eval_env_vars(env)
+        cfg = _eval_project_config()
+        env_vars = _eval_env_vars(env, cfg=cfg)
+        rid = run_id or f"julep-{Path(name).stem}-local"
+        cache_root = str(cfg.root if cfg is not None else Path(".").resolve())
+        projection = InMemoryProjection()
         try:
             from julep.cli.ctxrun import run_ctx_local
 
-            ctx_outcome = run_ctx_local(name, parsed, env_vars=env_vars)
+            ctx_outcome = run_ctx_local(
+                name,
+                parsed,
+                env_vars=env_vars,
+                projection=projection,
+            )
         except (ValueError, FileNotFoundError) as exc:
+            if projection.events():
+                save_run(
+                    cache_root,
+                    run_id=rid,
+                    agent=name,
+                    status="error",
+                    events=projection.events(),
+                )
             typer.echo(f"error: {exc}", err=True)
             raise typer.Exit(2) from None
+        except Exception as exc:  # noqa: BLE001 - persist the failed local run
+            save_run(
+                cache_root,
+                run_id=rid,
+                agent=name,
+                status="error",
+                events=projection.events(),
+            )
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(1) from None
+        save_run(
+            cache_root,
+            run_id=rid,
+            agent=name,
+            status="done",
+            events=ctx_outcome.projection.events(),
+        )
         typer.echo(f"artifact-digest {ctx_outcome.artifact_hash}")
+        tree = render_tree(ctx_outcome.projection.events())
+        if tree:
+            typer.echo(tree)
         typer.echo(f"output: {_json.dumps(ctx_outcome.reply, default=str)}")
         return
     cfg = load_config(Path("."))
@@ -849,6 +946,16 @@ def apply_application(
         "--api-key",
         help="Admin bearer key used with --api-url to register the release.",
     ),
+    activate_lanes: bool = typer.Option(
+        False,
+        "--activate",
+        help=(
+            "Shift traffic to the published release for every lane instead of "
+            "printing the per-lane 'julep activate' commands. Requires "
+            "--api-url/--api-key, and a control plane that leaves worker "
+            "rollout external (a server-side Helm reconciler answers 409)."
+        ),
+    ),
 ) -> None:
     """Publish an immutable release and reconcile inactive lane workers."""
     from julep.cli.application import release_queue_lines
@@ -856,6 +963,15 @@ def apply_application(
     cfg = load_config(Path("."))
     if env not in cfg.envs:
         typer.echo(f"error: unknown env {env!r}", err=True)
+        raise typer.Exit(2)
+    # Refuse before publishing: --activate is meaningless without the same
+    # control-plane context that registers the release in the first place.
+    if activate_lanes and not (api_url or api_key):
+        typer.echo(
+            "error: --activate unavailable: re-run apply with --api-url/--api-key "
+            "to register this release with the control plane before activating",
+            err=True,
+        )
         raise typer.Exit(2)
     try:
         release, lanes = apply_configured_application(
@@ -885,6 +1001,30 @@ def apply_application(
         typer.echo(f"queue     {lane_name:24} {task_queue}")
     if api_url or api_key:
         _register_remote_release(release, api_url or None, api_key or None)
+    if activate_lanes:
+        outcomes, unexpected = _activate_release_lanes(
+            release, api_url or None, api_key or None
+        )
+        activated = [name for name, detail in outcomes if detail is None]
+        failed = [(name, detail) for name, detail in outcomes if detail is not None]
+        for lane_name in activated:
+            typer.echo(f"activated {lane_name:24} {release.release_hash}")
+        for lane_name, detail in failed:
+            typer.echo(f"error: lane {lane_name!r} activation failed: {detail}", err=True)
+        if failed:
+            typer.echo(
+                "traffic   partial: activated "
+                + (", ".join(activated) or "no lanes")
+                + "; unchanged "
+                + ", ".join(name for name, _ in failed)
+            )
+            if unexpected is not None:
+                raise unexpected
+            raise typer.Exit(1)
+        typer.echo(
+            "traffic   activated " + (", ".join(activated) or "no lanes in release")
+        )
+        return
     typer.echo("traffic   unchanged")
     if api_url or api_key:
         # AIDEV-NOTE: activate needs the same connection context apply used, but
@@ -933,13 +1073,11 @@ def activate(
     try:
         client.activate_deployment(lane, release)
     except JulepClientError as exc:
+        detail = _activation_failure_detail(exc)
         if exc.status_code == 403:
-            typer.echo(
-                "error: lane activation requires an admin API key (403)",
-                err=True,
-            )
+            typer.echo(f"error: {detail}", err=True)
         else:
-            typer.echo(f"error: lane activation failed: {exc}", err=True)
+            typer.echo(f"error: lane activation failed: {detail}", err=True)
         raise typer.Exit(1) from None
     finally:
         client.close()

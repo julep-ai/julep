@@ -5,8 +5,9 @@ description: "Call one Julep pipeline in your own process, inside your own workf
 
 Embedded execution runs one configured Julep pipeline as a normal function call
 in your process. There is no Temporal, no PostgreSQL, no Julep server, no
-release publication, and no Kubernetes. The public entry point is
-`prepare_local_pipeline(...)` plus `LocalPipeline.arun(...)`.
+release publication, and no Kubernetes. For a standalone `.ctx` package, the
+primary entry point is `julep.embedded.load_pipeline(...)`; configured projects
+use `prepare_local_pipeline(...)`.
 
 This is the path to use when your application already has a workflow engine —
 DBOS, Temporal, Celery, Airflow, or a plain request handler — and you want Julep
@@ -65,8 +66,10 @@ prepare_local_pipeline(
     env: str = "local",
 ) -> LocalPipeline
 
-await pipeline.arun(input=None, *, llm=None, context=None, principal=None) -> Any
-pipeline.run(input=None, *, llm=None, context=None, principal=None) -> Any
+await pipeline.arun(input=None, *, llm=None, context=None, principal=None, sink=None) -> Any
+await pipeline.arun_detailed(..., sink=None, projection=None) -> EmbeddedRun
+pipeline.run(input=None, *, llm=None, context=None, principal=None, sink=None) -> Any
+pipeline.run_detailed(..., sink=None, projection=None) -> EmbeddedRun
 ```
 
 Prepare once and reuse the object: compilation is the expensive part, and every
@@ -79,8 +82,9 @@ keywords; they recompile on every call, so they are for scripts and tests rather
 than a hot path.
 
 Effects are always explicit. A pipeline that invokes a reasoner needs a model
-seam — pass `llm=` or `WorkerContext(llm=...)`, where an explicit `llm=` wins
-over the context's — otherwise `arun` raises
+seam. Precedence is explicit `llm=`, `WorkerContext(llm=...)`, then the
+project's configured `[tool.julep] llm_caller`; the configured callable is
+resolved once when the pipeline is prepared. If all are absent, `arun` raises
 `LocalExecutionConfigurationError`. `julep.llm.litellm_caller()` is the built-in
 implementation of the canonical seam
 `LlmCaller(reasoner, value, principal, transcript, dispatch, *, tools=None)`;
@@ -95,9 +99,24 @@ published release, an activated deployment, or Kubernetes.
 
 ## Embed without a Julep project file
 
-`prepare_local_pipeline` reads `pyproject.toml` / `julep.toml` by default. If you
-own a `.ctx` package but no Julep project file, build the same configuration
-objects in memory and pass them as `config=`:
+Use `load_pipeline` when you own a `.ctx` package but no Julep project file:
+
+```python
+from julep.embedded import load_pipeline
+from julep.llm import litellm_caller
+
+summary = load_pipeline("episode_summary.ctx", env={"SUMMARY_MODEL": "openai/gpt-5.4-nano@medium"})
+value = await summary.arun({"episode_id": "42"}, llm=litellm_caller())
+```
+
+The path is resolved before compilation and the application name is always
+`embedded`, so local paths are not subject to Kubernetes label rules. `tools=`
+maps prompt-visible MCP aliases to configured `server:tool` targets; it does not
+accept native Python callables. `load_pipeline` has no configured `llm_caller`,
+so pass `llm=` or `WorkerContext(llm=...)`.
+
+For multiple pipelines, code-defined applications, or the full project config
+surface, build configuration objects in memory and pass them as `config=`:
 
 ```python
 from pathlib import Path
@@ -144,12 +163,6 @@ tool-less prompt needs none of them. When a `JulepConfig` declares only ctx
 pipelines and no `application`, Julep synthesizes the application from those
 pipelines, so a code-defined `Application` is not required.
 
-This is the supported no-project-file path today, and it is admittedly
-control-plane vocabulary for what is really a prompt call. A first-class
-`julep.embedded.load_pipeline(path, env=...)` — load a `.ctx` directory, compile
-one tool-less pipeline, return a `LocalPipeline` — is planned. `julep.embedded`
-does not exist yet; use the recipe above until it does.
-
 ## What embedded execution accepts
 
 The embedded path is a real subset of the IR, checked before any effect runs
@@ -179,36 +192,46 @@ Two further behaviors to know:
 - The MCP surface is snapshotted and frozen when the pipeline is prepared.
   Embedded execution does not run the control plane's per-run MCP preflight or
   re-snapshot drift check; call `prepare_local_pipeline(...)` again to refresh.
+- Retry annotations use real asynchronous sleeps and honor their exponential
+  backoff. Tests and specialized direct `Deployment.adry_run` callers can inject
+  a fake sleeper, or pass `sleeper=None` for record-only behavior.
 
 An ordinary business input field named `transcript` is fine — only the agent
 runtime's transcript protocol is unsupported.
 
 ## Observability: what you get today
 
-**`LocalPipeline.arun` returns the interpreter's unwrapped value and nothing
-else.** The interpreter's result carries a projection event id, attribute
-metadata, and reported cost, and the run builds an in-memory projection — none of
-that is returned to the caller or forwarded to a sink. Attempt counts, token
-usage, cost, and the artifact identity of the specific call are not observable
-from the return value. `WorkerContext.on_attempt` is a worker-activity seam and is
-not invoked on this path.
+`arun` and `run` remain value-only. `arun_detailed` and `run_detailed` return an
+`EmbeddedRun` containing the value, the exact `InMemoryProjection`, and the
+pipeline's `artifact_hash`, plus aggregate LLM `usage`, `usage_complete`,
+`total_cost`, `cost_status`, and `cost_complete`. The projection exposes ordered
+PLANNED/DID/FAILED events, per-step attributes, values, status, and
+declared/reported cost. Usage-derived prices remain metadata and do not become
+projection charges.
 
-Do not plan embedded adoption around Julep-side tracing. What you can do today:
+The envelope and `sink=` solve different problems. The envelope is returned only
+on success. A sink receives events synchronously as execution proceeds, including
+FAILED before the original exception propagates, so it supports live and failure
+capture. Pass a caller-owned `projection=` to `arun_detailed` when you need to
+inspect the same projection after an exception. Sink `append` methods are
+synchronous and sink exceptions deliberately fail the run; transport adapters
+should catch their own failures.
+
+Additional telemetry guidance:
 
 - **Own the model-call telemetry.** Inject your own `LlmCaller` instead of
   `litellm_caller()`. It receives the rendered `Reasoner`, the input value, the
   `principal`, and the `ReasonerDispatch` (including the resolved QoS tier), and it
-  returns the provider response — so latency, tokens, cost, retries, and prompt
-  identity are all recordable in your existing instrumentation, at the seam you
-  control.
+  returns the provider response. Return root-public `LlmResult` with
+  `LlmCallMeta` to place usage metadata on the step's DID event. A bare reply has
+  no framework usage metadata.
 - **Record the deployment identity yourself.** `LocalPipeline.artifact_hash`,
   `.name`, and `.environment` are stable for the prepared object; log them
   alongside your own step id.
 
-An optional result envelope and a projection sink for embedded runs are planned,
-and would not change the value-only default of `arun`. Until then, a complete
-Julep-side execution trace requires the durable backends: Temporal's projection
-interceptor, or DBOS's `set_projection_sink` (see [Deploy on DBOS](/docs/deploy/dbos)).
+Provider cost remains intentionally unknown when the caller reports none. Token
+usage and admission weights are not USD prices: `cost_by_shape()` does not invent
+money, and `llm.cost.status` remains `unknown` where applicable.
 
 ## Durability: who owns the workflow
 

@@ -9,6 +9,7 @@ caller.  Imports of LiteLLM remain lazy so the core package stays lightweight.
 from __future__ import annotations
 
 import dataclasses
+import math
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from importlib import import_module
 from typing import Any, Optional, cast
@@ -17,13 +18,15 @@ from .dotctx import Reasoner
 from .errors import ResilienceExhausted
 from .execution.effects import LlmCaller, RunPrincipal
 from .execution.llm import complete_reasoner
-from .execution.llm_result import AttemptMeta, LlmResult
+from .execution.llm_result import AttemptMeta, LlmCostStatus, LlmResult
 from .model_slugs import EFFORT_LEVELS, normalize_model_slug
 from .qos import ReasonerDispatch
+from .registry import DEFAULT_REGISTRY, Registry
 from .resilience import AttemptRecord, ErrorClass, OnAttempt, classify_error
 from .transcript import Transcript
 
 LiteLlmCompletion = Callable[..., Awaitable[Any]]
+LiteLlmCostCalculator = Callable[..., float]
 
 _DEFAULT_DISPATCH = ReasonerDispatch()
 _ANTHROPIC_THINKING_BUDGETS: Mapping[str, int] = {
@@ -129,10 +132,84 @@ def prepare_litellm_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     return prepared
 
 
+def _finite_cost(value: Any) -> Optional[float]:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    cost = float(value)
+    return cost if math.isfinite(cost) and cost >= 0 else None
+
+
+def _litellm_reported_cost(response: Any) -> Optional[float]:
+    """Read a price explicitly marked as coming from the provider."""
+
+    hidden = getattr(response, "_hidden_params", None)
+    if not isinstance(hidden, Mapping):
+        return None
+    headers = hidden.get("additional_headers")
+    if not isinstance(headers, Mapping):
+        return None
+    return _finite_cost(headers.get("llm_provider-x-litellm-response-cost"))
+
+
+def _litellm_attached_cost(response: Any) -> Optional[float]:
+    """Read an ambiguous price attached by LiteLLM or provider translation."""
+
+    usage = getattr(response, "usage", None)
+    usage_cost = usage.get("cost") if isinstance(usage, Mapping) else getattr(usage, "cost", None)
+    attached = _finite_cost(usage_cost)
+    if attached is not None:
+        return attached
+
+    hidden = getattr(response, "_hidden_params", None)
+    if isinstance(hidden, Mapping):
+        return _finite_cost(hidden.get("response_cost"))
+    return None
+
+
+def _litellm_cost_resolver(
+    response: Any,
+    *,
+    model: str,
+    derive_cost: bool,
+    cost_calculator: Optional[LiteLlmCostCalculator],
+) -> tuple[Optional[float], LlmCostStatus]:
+    reported = _litellm_reported_cost(response)
+    if reported is not None:
+        return reported, "reported"
+    if not derive_cost:
+        return None, "unknown"
+
+    attached = _litellm_attached_cost(response)
+    if attached is not None:
+        return attached, "derived"
+
+    calculator = cost_calculator
+    if calculator is None:
+        try:
+            litellm = import_module("litellm")
+            calculator = cast(
+                LiteLlmCostCalculator,
+                vars(litellm)["completion_cost"],
+            )
+        except (ImportError, KeyError):
+            return None, "unknown"
+    try:
+        derived = calculator(completion_response=response, model=model)
+    except Exception:
+        # A pricing map miss must not turn a successful generation into a
+        # failed run. It is observable as unknown instead.
+        return None, "unknown"
+    cost = _finite_cost(derived)
+    return (cost, "derived") if cost is not None else (None, "unknown")
+
+
 def litellm_caller(
     *,
     request_timeout_s: Optional[float] = None,
     acompletion: Optional[LiteLlmCompletion] = None,
+    derive_cost: bool = True,
+    cost_calculator: Optional[LiteLlmCostCalculator] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> LlmCaller:
     """Return Julep's canonical five-argument caller backed by LiteLLM.
 
@@ -187,6 +264,18 @@ def litellm_caller(
                 parsed_model.reasoning_effort or reasoner.reasoning_effort
             ),
         )
+        pricing_model = _normalize_litellm_model(normalized_reasoner.model)
+
+        def resolve_cost(response: Any) -> tuple[Optional[float], LlmCostStatus]:
+            return _litellm_cost_resolver(
+                response,
+                model=(
+                    pricing_model if isinstance(pricing_model, str) else normalized_reasoner.model
+                ),
+                derive_cost=derive_cost,
+                cost_calculator=cost_calculator,
+            )
+
         return await complete_reasoner(
             normalized_reasoner,
             value,
@@ -195,6 +284,8 @@ def litellm_caller(
             dispatch=dispatch,
             tools=tools,
             parallel_tool_calls=parallel_tool_calls,
+            registry=registry,
+            cost_resolver=resolve_cost,
         )
 
     return caller
@@ -307,11 +398,13 @@ def with_model_ladder(
             raise exhausted from last_exc
         raise exhausted
 
+    wrapped.__julep_on_attempt__ = on_attempt  # type: ignore[attr-defined]
     return wrapped
 
 
 __all__ = [
     "LiteLlmCompletion",
+    "LiteLlmCostCalculator",
     "litellm_caller",
     "prepare_litellm_payload",
     "with_model_ladder",

@@ -59,6 +59,7 @@ _REPLACE_HANDLED_FIELDS = frozenset(
         "max_rounds", "is_agent", "sub_contract", "context_scope",
         "system_render", "user_render", "max_tokens", "reasoning_effort",
         "output_retries", "require_tool_call", "response_format", "prompt_cache",
+        "skills",
     }
 )
 
@@ -198,6 +199,7 @@ class Reasoner:
     require_tool_call: bool = False       # declarative; loop enforcement is Phase 3/4
     response_format: Optional[str] = None  # "json_object"; reply_schema wins at call time
     prompt_cache: Optional[str] = None
+    skills: tuple[str, ...] = ()          # content-addressed skill/<name>@v<hash> keys
 
     def __init__(
         self,
@@ -220,6 +222,7 @@ class Reasoner:
         require_tool_call: bool = False,
         response_format: Optional[str] = None,
         prompt_cache: Optional[str] = None,
+        skills: Sequence[str] = (),
     ) -> None:
         if reply is _REPLY_UNSET or reply is None:
             materialized = None
@@ -252,6 +255,27 @@ class Reasoner:
             )
         object.__setattr__(self, "prompt_cache", prompt_cache)
 
+        from .skills import SKILL_KEY_RE, skill_name_of
+
+        skill_keys_tuple = tuple(skills)
+        for key in skill_keys_tuple:
+            if SKILL_KEY_RE.match(key) is None:
+                raise ValueError(
+                    f"malformed skill key {key!r} on reasoner {name!r}; "
+                    "expected 'skill/<name>@v<12 hex chars>' — pass "
+                    "julep.skills.skill_keys([...]) rather than bare names"
+                )
+        skill_names: set[str] = set()
+        for key in skill_keys_tuple:
+            skill_name = skill_name_of(key)
+            if skill_name in skill_names:
+                raise ValueError(
+                    f"duplicate skill name {skill_name!r} on reasoner {name!r}; "
+                    "each declared skill name must be unique"
+                )
+            skill_names.add(skill_name)
+        object.__setattr__(self, "skills", skill_keys_tuple)
+
     def replace(
         self,
         *,
@@ -273,6 +297,7 @@ class Reasoner:
         require_tool_call: bool = _KEEP,
         response_format: Optional[str] = _KEEP,
         prompt_cache: Optional[str] = _KEEP,
+        skills: Sequence[str] = _KEEP,
     ) -> Reasoner:
         """Return a copy with selected fields replaced.
 
@@ -301,6 +326,7 @@ class Reasoner:
             require_tool_call=_replacement(require_tool_call, self.require_tool_call),
             response_format=_replacement(response_format, self.response_format),
             prompt_cache=_replacement(prompt_cache, self.prompt_cache),
+            skills=_replacement(skills, self.skills),
         )
         # Preserve extension/future fields this version cannot yet override.
         # Declared fields still go through the constructor above for validation.
@@ -480,6 +506,26 @@ def reasoner_from_settings(
     scope = ContextScope(settings["context"]) if settings.get("context") else ContextScope.LOCAL
 
     model, effort, output_retries = _model_and_effort(settings)
+    from .skills import load_package_skills, parse_skills_setting
+
+    skill_key_tuple: tuple[str, ...] = ()
+    if "skills" in settings and settings["skills"] is None:
+        from .skills import SkillError
+
+        raise SkillError(
+            f"settings 'skills' in {base_dir or nm!r} must be a list of skill names"
+        )
+    declared = parse_skills_setting(settings.get("skills"), origin=base_dir or nm)
+    if base_dir is not None:
+        skill_key_tuple = tuple(
+            _registry.register_skill(skill)
+            for skill in load_package_skills(base_dir, declared)
+        )
+    elif declared:
+        raise ValueError(
+            f"reasoner {nm!r} declares skills but was built without a base_dir; "
+            "skills load from <package>/skills/<name>/SKILL.md"
+        )
     reasoner = Reasoner(
         name=nm,
         model=model,
@@ -501,6 +547,7 @@ def reasoner_from_settings(
         require_tool_call=_require_tool_call_setting(settings),
         response_format=_response_format_setting(settings),
         prompt_cache=_prompt_cache_setting(settings),
+        skills=skill_key_tuple,
     )
     return _registry.register_reasoner(reasoner)
 
