@@ -405,7 +405,11 @@ Synopsis: `julep apply --env ENV [--publish-only] [--mcp-snapshot] [--api-url UR
 Compile and publish a signed, immutable application release. By default it then
 reconciles one digest-pinned Helm release and release-specific Temporal task
 queue per logical lane, runs the chart's worker smoke test, and records local
-applied state. It never switches application traffic unless `--activate` is
+applied state. A failing smoke test aborts the apply and reports the smoke-test
+Job's logs alongside the Helm failure, fetched out of band with
+`kubectl logs --selector job-name=<release>-smoke`; if that fetch is not
+possible (no `kubectl`, no RBAC), the Helm failure is still what surfaces, with
+a `smoke-test logs unavailable` note. It never switches application traffic unless `--activate` is
 given.
 
 | Flag | Default | Meaning |

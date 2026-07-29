@@ -45,6 +45,13 @@
 
 - Embedded retries now honor declared exponential backoff by default; direct
   dry-run callers can pass `sleeper=None` for record-only behavior (FEEDBACK 38).
+- A failing Helm smoke test now reports the smoke-test Job's logs. The
+  reconciler fetches them out of band on failure only, by label selector
+  (`kubectl logs --selector job-name=<release>-smoke`), because the Job's Pod
+  carries a generated suffix and the chart retains failed Jobs. Log retrieval
+  can never decide pass/fail: a missing `kubectl`, a denied RBAC rule, or an
+  empty log leaves the original Helm failure intact with a
+  `smoke-test logs unavailable` note (FEEDBACK 28).
 
 ## 3.0.0rc5 (unreleased)
 
