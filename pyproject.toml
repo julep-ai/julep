@@ -47,7 +47,9 @@ http = ["httpx>=0.24"]
 cma = ["httpx>=0.24"]
 # Authenticated MCP streamable-HTTP clients, server verifier adapters, and
 # live MCP tools/list snapshots at freeze time.
-mcp = ["mcp>=1.9", "httpx>=0.24", "PyJWT>=2.8", "cryptography>=42"]
+# FIXME: Upgrade to MCP 2.x ASAP; its package layout and streamable HTTP client
+# API require coordinated import and compatibility updates.
+mcp = ["mcp>=1.9,<2", "httpx>=0.24", "PyJWT>=2.8", "cryptography>=42"]
 # FastAPI control plane for release publication, deployment routing, and runs.
 server = [
     "fastapi>=0.115",
@@ -97,7 +99,8 @@ test-no-temporal = [
     "pydantic>=2",
     "types-PyYAML>=6.0",
     "wasmtime>=45,<46",
-    "mcp>=1.9",
+    # TODO: Remove the MCP 1.x ceiling with the MCP 2.x compatibility upgrade.
+    "mcp>=1.9,<2",
     "cryptography>=42",
     "PyJWT>=2.8",
     "fastapi>=0.115",
