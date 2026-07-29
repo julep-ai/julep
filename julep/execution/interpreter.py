@@ -600,14 +600,13 @@ def _reported_reasoner_cost(
         # AIDEV-NOTE: usage-derived prices are observability metadata, not
         # replay-stable projection charges. Event.cost remains restricted to a
         # declared annotation or a price the provider/caller reported.
-        if cost_status == "derived":
-            return None
         if (
-            cost_status != "unknown"
+            cost_status == "reported"
             and isinstance(meta_cost, (int, float))
             and not isinstance(meta_cost, bool)
         ):
             return float(meta_cost)
+        return None
 
     if not isinstance(value, dict):
         return None

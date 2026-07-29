@@ -20,8 +20,8 @@ from .app import Application, CompiledPipeline, PipelineSpec
 from .dotctx import Reasoner
 from .errors import JulepError
 from .execution.effects import LlmCaller, RunPrincipal, WorkerContext
-from .execution.llm_result import LlmResult, LlmUsage
-from .projection import EventType, InMemoryProjection, ProjectionSink
+from .execution.llm_result import LlmCallMeta, LlmResult, LlmUsage
+from .projection import InMemoryProjection, ProjectionSink
 from .ir import (
     EMIT_TOOL,
     HUMAN_GATE_TOOL,
@@ -104,20 +104,11 @@ def _price(value: Any) -> Optional[float]:
 
 
 def _embedded_llm_totals(
-    projection: InMemoryProjection,
+    calls: list[LlmCallMeta],
 ) -> tuple[LlmUsage, bool, Optional[float], EmbeddedCostStatus, bool]:
-    """Aggregate only reasoner metadata; projection cost weights stay separate."""
+    """Aggregate model-call metadata observed by one embedded invocation."""
 
-    legs = [
-        event
-        for event in projection.events()
-        if event.type is EventType.DID
-        and any(
-            key in event.attrs
-            for key in ("llm.model", "llm.provider", "llm.usage", "llm.cost.status")
-        )
-    ]
-    if not legs:
+    if not calls:
         return LlmUsage(), False, None, "unknown", False
 
     prompt: list[Optional[int]] = []
@@ -127,27 +118,22 @@ def _embedded_llm_totals(
     cache_creation: list[Optional[int]] = []
     costs: list[Optional[float]] = []
     statuses: list[Literal["reported", "derived", "unknown"]] = []
-    for event in legs:
-        raw_usage = event.attrs.get("llm.usage")
-        usage = raw_usage if isinstance(raw_usage, Mapping) else {}
-        leg_prompt = _token(usage.get("input"))
-        leg_completion = _token(usage.get("output"))
-        leg_total = _token(usage.get("total"))
+    for meta in calls:
+        usage = meta.resolved_usage()
+        leg_prompt = _token(usage.prompt_tokens)
+        leg_completion = _token(usage.completion_tokens)
+        leg_total = _token(usage.total_tokens)
         if leg_total is None and leg_prompt is not None and leg_completion is not None:
             leg_total = leg_prompt + leg_completion
         prompt.append(leg_prompt)
         completion.append(leg_completion)
         total.append(leg_total)
 
-        raw_cache = event.attrs.get("llm.cache")
-        cache = raw_cache if isinstance(raw_cache, Mapping) else {}
-        cache_read.append(_token(cache.get("read")))
-        cache_creation.append(_token(cache.get("creation")))
+        cache_read.append(_token(usage.cache_read_tokens))
+        cache_creation.append(_token(usage.cache_creation_tokens))
 
-        raw_status = event.attrs.get("llm.cost.status")
-        status = raw_status if raw_status in {"reported", "derived", "unknown"} else "unknown"
-        statuses.append(cast(Literal["reported", "derived", "unknown"], status))
-        costs.append(_price(event.attrs.get("llm.cost")))
+        statuses.append(meta.resolved_cost_status())
+        costs.append(_price(meta.cost))
 
     def complete_sum(values: list[Optional[int]]) -> Optional[int]:
         return (
@@ -246,12 +232,14 @@ class LocalPipeline:
         deployment.assert_artifact_integrity()
         _assert_foreground_supported(deployment.flow)
 
+        llm_calls: list[LlmCallMeta] = []
         reasoner_handlers = _reasoner_handlers(
             deployment.flow,
             self.reasoners,
             caller=caller,
             context=worker,
             principal=principal,
+            observed_calls=llm_calls,
         )
         mcp_backed = any(
             isinstance(tool.ref, McpTool) for tool in deployment.manifest.values()
@@ -291,7 +279,7 @@ class LocalPipeline:
             redactor=worker.redactor,
         )
         usage, usage_complete, total_cost, cost_status, cost_complete = _embedded_llm_totals(
-            run_projection
+            llm_calls
         )
         return EmbeddedRun(
             result.value,
@@ -596,11 +584,17 @@ def _reasoner_handlers(
     caller: Optional[LlmCaller],
     context: WorkerContext,
     principal: Optional[RunPrincipal],
+    observed_calls: list[LlmCallMeta],
 ) -> dict[str, ReasonerHandler]:
     if caller is None:
         return {}
 
     reasoners = dict(prepared_reasoners)
+    caller_attempt_sink = getattr(caller, "__julep_on_attempt__", None)
+    caller_owns_attempts = caller_attempt_sink is not None and (
+        caller_attempt_sink is context.on_attempt
+        or caller_attempt_sink == context.on_attempt
+    )
     if context.registry is not None:
         for name, reasoner in reasoners.items():
             override = context.registry.reasoners.get(name)
@@ -670,7 +664,7 @@ def _reasoner_handlers(
             else:
                 raw = await caller(rendered, value, principal, None, dispatch)
         except Exception as exc:
-            if context.on_attempt is not None:
+            if context.on_attempt is not None and not caller_owns_attempts:
                 context.on_attempt(
                     _foreground_attempt(
                         rendered,
@@ -680,7 +674,10 @@ def _reasoner_handlers(
                     )
                 )
             raise
-        _notify_foreground_attempts(context, rendered, raw, dispatch)
+        if isinstance(raw, LlmResult):
+            observed_calls.append(raw.meta)
+        if not caller_owns_attempts:
+            _notify_foreground_attempts(context, rendered, raw, dispatch)
         return _pack_reasoner_result(raw)
 
     handlers: dict[str, ReasonerHandler] = {}

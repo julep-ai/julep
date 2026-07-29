@@ -140,13 +140,25 @@ def _finite_cost(value: Any) -> Optional[float]:
 
 
 def _litellm_reported_cost(response: Any) -> Optional[float]:
-    """Read prices LiteLLM/provider code attached to the response."""
+    """Read a price explicitly marked as coming from the provider."""
+
+    hidden = getattr(response, "_hidden_params", None)
+    if not isinstance(hidden, Mapping):
+        return None
+    headers = hidden.get("additional_headers")
+    if not isinstance(headers, Mapping):
+        return None
+    return _finite_cost(headers.get("llm_provider-x-litellm-response-cost"))
+
+
+def _litellm_attached_cost(response: Any) -> Optional[float]:
+    """Read an ambiguous price attached by LiteLLM or provider translation."""
 
     usage = getattr(response, "usage", None)
     usage_cost = usage.get("cost") if isinstance(usage, Mapping) else getattr(usage, "cost", None)
-    reported = _finite_cost(usage_cost)
-    if reported is not None:
-        return reported
+    attached = _finite_cost(usage_cost)
+    if attached is not None:
+        return attached
 
     hidden = getattr(response, "_hidden_params", None)
     if isinstance(hidden, Mapping):
@@ -166,6 +178,10 @@ def _litellm_cost_resolver(
         return reported, "reported"
     if not derive_cost:
         return None, "unknown"
+
+    attached = _litellm_attached_cost(response)
+    if attached is not None:
+        return attached, "derived"
 
     calculator = cost_calculator
     if calculator is None:
@@ -382,6 +398,7 @@ def with_model_ladder(
             raise exhausted from last_exc
         raise exhausted
 
+    wrapped.__julep_on_attempt__ = on_attempt  # type: ignore[attr-defined]
     return wrapped
 
 

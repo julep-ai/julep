@@ -447,7 +447,7 @@ class ProjectionTrajectorySink:
             if event.type not in (EventType.DID, EventType.FAILED):
                 return
             op = self._node_ops.get(event.node)
-            if op is None or op == "prim":
+            if op is None or (op == "prim" and event.type == EventType.DID):
                 return
             status = "did" if event.type == EventType.DID else "failed"
             error = event.error

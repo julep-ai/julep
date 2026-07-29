@@ -135,21 +135,51 @@ def test_litellm_caller_captures_usage_and_derives_unreported_cost() -> None:
     }
 
 
-def test_litellm_caller_prefers_reported_cost() -> None:
+@pytest.mark.parametrize("location", ["usage", "hidden"])
+def test_litellm_caller_treats_ambiguous_attached_cost_as_derived(
+    location: str,
+) -> None:
     response = _completion()
-    response._hidden_params = {"response_cost": 0.0042}
+    response._hidden_params = {}
+    if location == "usage":
+        response.usage = SimpleNamespace(cost=0.0042)
+    else:
+        response._hidden_params["response_cost"] = 0.0042
+
+    async def fake_acompletion(**_kwargs: Any) -> Any:
+        return response
+
+    result = run(
+        litellm_caller(
+            acompletion=fake_acompletion,
+        )(Reasoner("summary", "openai:gpt-test"), "hello")
+    )
+
+    assert result.meta.cost == pytest.approx(0.0042)
+    assert result.meta.cost_status == "derived"
+    assert result.meta.to_attrs()["llm.cost.status"] == "derived"
+
+
+def test_litellm_caller_preserves_provider_attested_cost_as_reported() -> None:
+    response = _completion()
+    response._hidden_params = {
+        "additional_headers": {
+            "llm_provider-x-litellm-response-cost": 0.0042,
+        },
+        "response_cost": 0.0099,
+    }
 
     async def fake_acompletion(**_kwargs: Any) -> Any:
         return response
 
     def unexpected_cost(**_kwargs: Any) -> float:
-        raise AssertionError("reported cost must skip derivation")
+        raise AssertionError("provider-attested cost must skip derivation")
 
     result = run(
         litellm_caller(
             acompletion=fake_acompletion,
             cost_calculator=unexpected_cost,
-        )(Reasoner("summary", "openai:gpt-test"), "hello")
+        )(Reasoner("summary", "openrouter:openai/gpt-test"), "hello")
     )
 
     assert result.meta.cost == pytest.approx(0.0042)

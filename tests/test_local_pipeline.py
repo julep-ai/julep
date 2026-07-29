@@ -44,6 +44,7 @@ from julep.local import (
     prepare_local_pipeline,
     run_local_pipeline,
 )
+from julep.llm import with_model_ladder
 from julep.qos import QoSTier
 from julep.projection import EventType
 from julep.registry import Registry
@@ -1015,6 +1016,26 @@ def test_embedded_worker_context_records_trajectory_and_attempts(
     assert stored_output["secret"] == "[local-redacted]"
 
 
+def test_embedded_model_ladder_attempt_callback_fires_once(tmp_path: Path) -> None:
+    _reasoner_project(tmp_path)
+    attempts = []
+    callback = attempts.append
+
+    async def base(reasoner: Reasoner, *_args: Any, **_kwargs: Any) -> LlmResult:
+        return LlmResult(
+            reply={"answer": "ok"},
+            meta=LlmCallMeta(served_model=reasoner.model, provider="test"),
+        )
+
+    caller = with_model_ladder(base, models=[], on_attempt=callback)
+    prepare_local_pipeline("summary", project_root=tmp_path).run_detailed(
+        {"text": "hello"},
+        context=WorkerContext(llm=caller, on_attempt=callback),
+    )
+
+    assert [attempt.outcome for attempt in attempts] == ["ok"]
+
+
 def test_embedded_llm_result_usage_and_unknown_cost_are_projected(
     tmp_path: Path,
 ) -> None:
@@ -1092,6 +1113,105 @@ def test_embedded_run_aggregates_usage_and_mixed_cost_without_charging_derived()
     # Only the reported leg remains a projection charge. The pricing-map
     # derivation is metadata, so durable Event.cost semantics do not change.
     assert sum(detailed.projection.cost_by_shape().values()) == pytest.approx(0.01)
+
+
+def test_embedded_run_totals_are_scoped_to_reused_projection_invocation() -> None:
+    reasoner = Reasoner("metered", "test:metered")
+    flow = think(reasoner.name)
+    prepared = LocalPipeline(
+        name="metered",
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=PipelineSpec(name="metered", flow=flow, reasoners=(reasoner,)),
+            deployment=deploy(flow, tools=(), reasoners=(reasoner,)),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+
+    async def llm(*_args: Any, **_kwargs: Any) -> LlmResult:
+        return LlmResult(
+            reply="ok",
+            meta=LlmCallMeta(
+                served_model=reasoner.model,
+                provider="test",
+                usage=LlmUsage(8, 2, 10),
+                cost=0.01,
+                cost_status="reported",
+            ),
+        )
+
+    projection = InMemoryProjection()
+    prepared.run_detailed("first", llm=llm, projection=projection)
+    second = prepared.run_detailed("second", llm=llm, projection=projection)
+
+    assert second.usage == LlmUsage(8, 2, 10)
+    assert second.total_cost == pytest.approx(0.01)
+
+
+def test_embedded_run_totals_include_unattributed_agent_controller_calls() -> None:
+    reasoner = Reasoner("controller", "test:controller")
+    flow = app(reasoner.name, max_rounds=1)
+    spec = PipelineSpec(name="agent", flow=flow, reasoners=(reasoner,))
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(flow, tools=(), reasoners=(reasoner,)),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={reasoner.name: reasoner},
+    )
+
+    async def llm(*_args: Any, **_kwargs: Any) -> LlmResult:
+        return LlmResult(
+            reply={"done": True, "output": "done"},
+            meta=LlmCallMeta(
+                served_model=reasoner.model,
+                provider="test",
+                usage=LlmUsage(12, 3, 15),
+                cost=0.02,
+                cost_status="reported",
+            ),
+        )
+
+    detailed = prepared.run_detailed({}, llm=llm)
+
+    assert not any("llm.usage" in event.attrs for event in detailed.projection.events())
+    assert detailed.usage == LlmUsage(12, 3, 15)
+    assert detailed.total_cost == pytest.approx(0.02)
+
+
+def test_failed_foreground_primitive_is_retained_in_trajectory() -> None:
+    flow = call(native(_raise_tool.name))
+    spec = PipelineSpec(name="failing", flow=flow, tools=(_raise_tool,))
+    prepared = LocalPipeline(
+        name=spec.name,
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=spec,
+            deployment=deploy(flow, tools=(_raise_tool,)),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={},
+    )
+    trajectory = InMemoryTrajectoryStore()
+
+    with pytest.raises(RuntimeError, match="batch-e-boom"):
+        prepared.run_detailed(
+            None,
+            context=WorkerContext(trajectory_sink=trajectory),
+            run_id="failed-primitive",
+        )
+
+    [step] = trajectory.list_trajectory_steps("failed-primitive")
+    assert step.op == "prim"
+    assert step.status == "failed"
+    assert step.error == "RuntimeError('batch-e-boom')"
 
 
 def test_deployment_retry_uses_injected_backoff_and_none_sleeper() -> None:

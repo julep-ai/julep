@@ -6,6 +6,7 @@ from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
 
+import httpx
 import pytest
 import yaml
 
@@ -558,7 +559,7 @@ def _apply_with_activate(
 class _RecordingActivationClient:
     """Control-plane stub that records activations and can fail chosen lanes."""
 
-    def __init__(self, failures: dict[str, JulepClientError] | None = None) -> None:
+    def __init__(self, failures: dict[str, BaseException] | None = None) -> None:
         self.failures = failures or {}
         self.activations: list[tuple[str, str]] = []
         self.published: list[bytes] = []
@@ -626,6 +627,29 @@ def test_apply_activate_reports_partial_failure_and_exits_nonzero(
     assert [lane for lane, _ in client.activations] == ["brief-refresh", "summary"]
     assert "error: lane 'digest' activation failed:" in captured.err
     assert "temporal unreachable" in captured.err
+    assert (
+        "traffic   partial: activated brief-refresh, summary; unchanged digest"
+        in captured.out
+    )
+
+
+def test_apply_activate_continues_after_transport_failure(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    release = _multi_lane_release("brief-refresh", "digest", "summary")
+    client = _RecordingActivationClient(
+        failures={"digest": httpx.ReadTimeout("control plane timed out")}
+    )
+
+    code = _apply_with_activate(monkeypatch, release, client)
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert [lane for lane, _ in client.activations] == ["brief-refresh", "summary"]
+    assert "error: lane 'digest' activation failed: control plane timed out" in captured.err
     assert (
         "traffic   partial: activated brief-refresh, summary; unchanged digest"
         in captured.out

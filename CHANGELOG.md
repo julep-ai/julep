@@ -12,8 +12,9 @@
 - Configured `llm_caller` values now participate in embedded caller precedence,
   and `LlmResult`, `LlmCallMeta`, `AttemptMeta`, and `EmbeddedRun` are root-public.
 - `LlmUsage` gives model-call metadata a typed prompt/completion/total and cache
-  token shape. The LiteLLM caller captures that usage, preserves reported
-  prices, and can fail-soft derive missing prices from LiteLLM's pricing map.
+  token shape. The LiteLLM caller captures that usage, preserves explicitly
+  provider-attested prices, and classifies ambiguous attached or pricing-map
+  prices as derived metadata.
 - `EmbeddedRun` now includes aggregate LLM usage and total price, with explicit
   reported/derived/mixed/unknown status and completeness fields (FEEDBACK 38).
 - `julep run <package>.ctx` now records its local projection in the run cache,
