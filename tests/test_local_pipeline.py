@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import shutil
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,7 @@ from julep.dsl import native
 from julep.contracts import McpAnnotations
 from julep.dotctx import Reasoner
 from julep.execution.effects import WorkerContext
+from julep.execution.blobstore import InMemoryBlobStore
 from julep.errors import AgentTerminalError, ToolInputValidation
 from julep.freeze import McpServerSnapshot, McpSnapshot, McpToolSpec
 from julep.local import (
@@ -44,6 +46,7 @@ from julep.local import (
 from julep.qos import QoSTier
 from julep.projection import EventType
 from julep.registry import Registry
+from julep.trajectory import InMemoryTrajectoryStore
 from julep.typed import seq as typed_seq
 
 
@@ -952,6 +955,63 @@ def test_embedded_sink_order_and_failure_projection() -> None:
         EventType.FAILED,
     ]
     assert projection.failures()[0].error == "RuntimeError('batch-e-boom')"
+
+
+def test_embedded_worker_context_records_trajectory_and_attempts(
+    tmp_path: Path,
+) -> None:
+    _reasoner_project(tmp_path)
+    trajectory = InMemoryTrajectoryStore()
+    blobs = InMemoryBlobStore()
+    attempts = []
+
+    def redact(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: "[local-redacted]" if key == "secret" else child
+                for key, child in value.items()
+            }
+        return value
+
+    async def llm(
+        _reasoner: Any,
+        value: Any,
+        _principal: Any,
+        _transcript: Any,
+        _dispatch: Any,
+    ) -> Any:
+        return {"answer": value["text"], "secret": "model-secret"}
+
+    context = WorkerContext(
+        llm=llm,
+        on_attempt=attempts.append,
+        trajectory_sink=trajectory,
+        trajectory_blob_store=blobs,
+        redactor=redact,
+    )
+    result = prepare_local_pipeline("summary", project_root=tmp_path).run_detailed(
+        {"text": "hello", "secret": "input-secret"},
+        context=context,
+        run_id="embedded-observed",
+    )
+
+    assert result.value["answer"] == "hello"
+    assert [attempt.outcome for attempt in attempts] == ["ok"]
+    run_record = trajectory.get_trajectory_run("embedded-observed")
+    assert run_record is not None
+    assert run_record.status == "completed"
+    [step] = trajectory.list_trajectory_steps("embedded-observed")
+    assert step.op == "think"
+    assert step.input_ref is not None
+    assert step.output_ref is not None
+    stored_input = json.loads(
+        run(blobs.get("embedded-observed", step.input_ref)).decode()
+    )
+    stored_output = json.loads(
+        run(blobs.get("embedded-observed", step.output_ref)).decode()
+    )
+    assert stored_input["secret"] == "[local-redacted]"
+    assert stored_output["secret"] == "[local-redacted]"
 
 
 def test_embedded_llm_result_usage_and_unknown_cost_are_projected(

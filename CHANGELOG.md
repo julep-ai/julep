@@ -11,6 +11,11 @@
   project file or Kubernetes-derived application naming (FEEDBACK 37).
 - Configured `llm_caller` values now participate in embedded caller precedence,
   and `LlmResult`, `LlmCallMeta`, `AttemptMeta`, and `EmbeddedRun` are root-public.
+- `julep run <package>.ctx` now records its local projection in the run cache,
+  including failed runs, so the same run id is available to `julep trace`.
+- Foreground runs now honor `WorkerContext.trajectory_sink`, trajectory blob
+  storage/redaction, and `on_attempt`; `TrajectoryRecorder` and
+  `InMemoryTrajectoryStore` can capture caller-named embedded runs (FEEDBACK 38).
 - `julep apply --activate` activates every lane of the release it just
   published, over the connection `--api-url`/`--api-key` already established,
   instead of printing one `julep activate` command per lane. Explicit

@@ -840,6 +840,8 @@ class InMemoryEnv:
         root_run_id: Optional[str] = None,
         segment_seq: int = 0,
         inbound: Optional[dict[str, list[Any]]] = None,
+        trajectory_recorder: Optional[Any] = None,
+        trajectory_run_id: Optional[str] = None,
     ) -> None:
         self.manifest = manifest
         self.emitter = emitter
@@ -875,6 +877,9 @@ class InMemoryEnv:
         }
         self._emitted: dict[str, list[Any]] = {}
         self._cid = 0
+        self._trajectory_cid = 0
+        self._trajectory_recorder = trajectory_recorder
+        self._trajectory_run_id = trajectory_run_id
 
     # --- identity / pures --- #
     def next_cid(self, node_id: str) -> str:
@@ -904,13 +909,55 @@ class InMemoryEnv:
             raise CapabilityDenied(f"tool {tool_key!r} exceeded maxCalls={limit}")
         self.call_counts[tool_key] = count + 1
 
+    async def _capture_trajectory(
+        self,
+        *,
+        node_id: str,
+        cid: str,
+        op: str,
+        kind: str,
+        input_value: Any,
+        output_value: Any,
+    ) -> None:
+        recorder = self._trajectory_recorder
+        run_id = self._trajectory_run_id
+        root_run_id = self.root_run_id
+        if recorder is None or run_id is None or root_run_id is None:
+            return
+        await recorder.capture(
+            step_id=f"{run_id}:s{self.segment_seq}:{cid}",
+            run_id=run_id,
+            root_run_id=root_run_id,
+            cid=cid,
+            node_id=node_id,
+            op=op,
+            kind=kind,
+            input_value=input_value,
+            output_value=output_value,
+        )
+
+    def _next_trajectory_cid(self, node_id: str) -> str:
+        # AIDEV-NOTE: trajectory-only identities must not consume the Env cid
+        # sequence; MCP idempotency keys and projection identities are behavior.
+        self._trajectory_cid += 1
+        return f"{node_id}@trajectory-{self._trajectory_cid}"
+
     # --- effect handlers --- #
     async def run_call(self, node: Node, value: Any, cid: str) -> Any:
         key = call_ref_key(node, self.manifest)
         fn = self._tools.get(key)
         if fn is not None:
             out = fn(value)
-            return await out if inspect.isawaitable(out) else out
+            result = await out if inspect.isawaitable(out) else out
+            await self._capture_trajectory(
+                node_id=node.id,
+                cid=cid,
+                op="call",
+                kind="tool",
+                input_value=value,
+                output_value=result,
+            )
+            return result
 
         step = node.step
         assert isinstance(step, CallStep)
@@ -924,7 +971,7 @@ class InMemoryEnv:
                 if json_schema_error(value, frozen.input_schema) is not None:
                     raise ToolInputValidation(ref.server, ref.tool)
                 input_schema_validated = True
-            return await self._mcp_call(
+            result = await self._mcp_call(
                 ref.server,
                 ref.tool,
                 value,
@@ -933,6 +980,15 @@ class InMemoryEnv:
                 None,
                 input_schema_validated,
             )
+            await self._capture_trajectory(
+                node_id=node.id,
+                cid=cid,
+                op="call",
+                kind="tool",
+                input_value=value,
+                output_value=result,
+            )
+            return result
         raise KeyError(f"no in-memory tool for {key!r}")
 
     async def invoke_reasoner(
@@ -946,7 +1002,17 @@ class InMemoryEnv:
         if reasoner not in self._reasoners:
             raise KeyError(f"no in-memory reasoner for {reasoner!r}")
         out = self._reasoners[reasoner](value)
-        return await out if inspect.isawaitable(out) else out
+        result = await out if inspect.isawaitable(out) else out
+        node_id, separator, _ = cid.rpartition("@")
+        await self._capture_trajectory(
+            node_id=node_id if separator else reasoner,
+            cid=cid,
+            op="think",
+            kind="reasoner",
+            input_value=value,
+            output_value=result,
+        )
+        return result
 
     async def run_sub(
         self,
@@ -1010,8 +1076,19 @@ class InMemoryEnv:
         )
 
         async def invoke_controller(payload: dict[str, Any]) -> Any:
+            controller_node = f"agent:{controller}:think"
+            controller_cid = self._next_trajectory_cid(controller_node)
             out = self._reasoners[controller](payload)
-            return await out if inspect.isawaitable(out) else out
+            result = await out if inspect.isawaitable(out) else out
+            await self._capture_trajectory(
+                node_id=controller_node,
+                cid=controller_cid,
+                op="think",
+                kind="reasoner",
+                input_value=payload,
+                output_value=result,
+            )
+            return result
 
         async def call_tool(
             alias: str,
@@ -1021,21 +1098,42 @@ class InMemoryEnv:
         ) -> Any:
             del call_index
             wire = aliases.get(alias, alias)
+            tool_node = f"agent:{controller}:{alias}"
             fn = self._tools.get(alias) or self._tools.get(wire)
             if fn is not None:
+                tool_cid = self._next_trajectory_cid(tool_node)
                 out = fn(args)
-                return await out if inspect.isawaitable(out) else out
+                result = await out if inspect.isawaitable(out) else out
+                await self._capture_trajectory(
+                    node_id=tool_node,
+                    cid=tool_cid,
+                    op="call",
+                    kind="tool",
+                    input_value=args,
+                    output_value=result,
+                )
+                return result
             if "/" in wire and self._mcp_call is not None:
                 server, tool = wire.split("/", 1)
-                return await self._mcp_call(
+                tool_cid = self.next_cid(tool_node)
+                result = await self._mcp_call(
                     server,
                     tool,
                     args,
-                    self.next_cid(f"agent:{controller}:{alias}"),
+                    tool_cid,
                     self.principal,
                     None,
                     schemas is not None and alias in schemas,
                 )
+                await self._capture_trajectory(
+                    node_id=tool_node,
+                    cid=tool_cid,
+                    op="call",
+                    kind="tool",
+                    input_value=args,
+                    output_value=result,
+                )
+                return result
             raise KeyError(f"no in-memory fake or MCP caller for tool alias {alias!r}")
 
         result = await drive_agent_loop(

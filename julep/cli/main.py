@@ -36,7 +36,7 @@ from julep.cli.tracetree import render_tree
 from julep.cli.trigger import trigger_command
 from julep.bundle import BundleError
 from julep.artifact_store import ArtifactStoreError
-from julep.projection import ProjectionEvent
+from julep.projection import InMemoryProjection, ProjectionEvent
 
 if TYPE_CHECKING:
     from julep.client import JulepClient
@@ -728,15 +728,52 @@ def run(
                 err=True,
             )
             raise typer.Exit(2)
-        env_vars = _eval_env_vars(env)
+        cfg = _eval_project_config()
+        env_vars = _eval_env_vars(env, cfg=cfg)
+        rid = run_id or f"julep-{Path(name).stem}-local"
+        cache_root = str(cfg.root if cfg is not None else Path(".").resolve())
+        projection = InMemoryProjection()
         try:
             from julep.cli.ctxrun import run_ctx_local
 
-            ctx_outcome = run_ctx_local(name, parsed, env_vars=env_vars)
+            ctx_outcome = run_ctx_local(
+                name,
+                parsed,
+                env_vars=env_vars,
+                projection=projection,
+            )
         except (ValueError, FileNotFoundError) as exc:
+            if projection.events():
+                save_run(
+                    cache_root,
+                    run_id=rid,
+                    agent=name,
+                    status="error",
+                    events=projection.events(),
+                )
             typer.echo(f"error: {exc}", err=True)
             raise typer.Exit(2) from None
+        except Exception as exc:  # noqa: BLE001 - persist the failed local run
+            save_run(
+                cache_root,
+                run_id=rid,
+                agent=name,
+                status="error",
+                events=projection.events(),
+            )
+            typer.echo(f"error: {exc}", err=True)
+            raise typer.Exit(1) from None
+        save_run(
+            cache_root,
+            run_id=rid,
+            agent=name,
+            status="done",
+            events=ctx_outcome.projection.events(),
+        )
         typer.echo(f"artifact-digest {ctx_outcome.artifact_hash}")
+        tree = render_tree(ctx_outcome.projection.events())
+        if tree:
+            typer.echo(tree)
         typer.echo(f"output: {_json.dumps(ctx_outcome.reply, default=str)}")
         return
     cfg = load_config(Path("."))

@@ -39,6 +39,8 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import time
+import uuid
 from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import cached_property
@@ -66,6 +68,8 @@ from .shapes import surface_shape as _compute_surface_shape
 
 if TYPE_CHECKING:
     from .projection import InMemoryProjection, ProjectionSink
+    from .trajectory import Redactor, TrajectorySink
+    from .execution.blobstore import BlobStore
 from .validate import Diagnostic, blocking, validate
 
 if TYPE_CHECKING:
@@ -747,6 +751,10 @@ class Deployment:
         max_parallel: Optional[int] = None,
         projection: Optional["InMemoryProjection"] = None,
         sink: Optional["ProjectionSink"] = None,
+        run_id: Optional[str] = None,
+        trajectory_sink: Optional["TrajectorySink"] = None,
+        trajectory_blob_store: Optional["BlobStore"] = None,
+        redactor: Optional["Redactor"] = None,
         sleeper: Optional[Callable[[float], Awaitable[None]]] = asyncio.sleep,
     ) -> "InterpreterResult":
         """Run locally, optionally retaining and/or forwarding projection events.
@@ -769,6 +777,13 @@ class Deployment:
 
         from .execution.interpreter import InMemoryEnv, interpret  # lazy: keeps deploy import-light
         from .projection import InMemoryProjection, ProjectionEmitter, TeeStore
+        from .trajectory import (
+            ProjectionTrajectorySink,
+            TrajectoryRecorder,
+            TrajectoryRun,
+            _best_effort,
+            redact_secret_shaped,
+        )
 
         local_tools = {
             native_tool.name: native_tool.bound_tool
@@ -776,7 +791,42 @@ class Deployment:
         }
         local_tools.update(tools or {})
         store = projection if projection is not None else InMemoryProjection()
-        emitter_store = TeeStore(store, sink) if sink is not None else store
+        trajectory_id: Optional[str] = None
+        recorder: Optional[TrajectoryRecorder] = None
+        projection_sinks = [] if sink is None else [sink]
+        if trajectory_sink is not None:
+            # AIDEV-NOTE: UUID generation is foreground-only. Durable run ids
+            # remain engine-owned and never consult this observational branch.
+            trajectory_id = run_id or f"embedded-{uuid.uuid4().hex}"
+            effective_redactor = redactor or redact_secret_shaped
+            _best_effort(
+                lambda: trajectory_sink.start_run(
+                    TrajectoryRun(
+                        run_id=trajectory_id,
+                        root_run_id=trajectory_id,
+                        backend="memory",
+                        session_id=trajectory_id,
+                        flow_ref=self.artifact_hash,
+                        started_ts=time.time(),
+                    )
+                )
+            )
+            projection_sinks.append(
+                ProjectionTrajectorySink(
+                    trajectory_sink,
+                    run_id=trajectory_id,
+                    root_run_id=trajectory_id,
+                    segment_seq=0,
+                    node_ops={node.id: node.op.value for node in self.flow.walk()},
+                    redactor=effective_redactor,
+                )
+            )
+            recorder = TrajectoryRecorder(
+                sink=trajectory_sink,
+                blob_store=trajectory_blob_store,
+                redactor=effective_redactor,
+            )
+        emitter_store = TeeStore(store, *projection_sinks) if projection_sinks else store
         env = InMemoryEnv(
             self.manifest,
             ProjectionEmitter(emitter_store),
@@ -790,8 +840,27 @@ class Deployment:
             registry=registry,
             principal=principal,
             sleeper=sleeper,
+            root_run_id=trajectory_id,
+            trajectory_recorder=recorder,
+            trajectory_run_id=trajectory_id,
         )
-        return await interpret(self.flow, value, env)
+        try:
+            result = await interpret(self.flow, value, env)
+        except BaseException:
+            if trajectory_sink is not None and trajectory_id is not None:
+                _best_effort(
+                    lambda: trajectory_sink.finish_run(
+                        trajectory_id, "failed", time.time()
+                    )
+                )
+            raise
+        if trajectory_sink is not None and trajectory_id is not None:
+            _best_effort(
+                lambda: trajectory_sink.finish_run(
+                    trajectory_id, "completed", time.time()
+                )
+            )
+        return result
 
     def dry_run(
         self,
@@ -805,6 +874,10 @@ class Deployment:
         max_parallel: Optional[int] = None,
         projection: Optional["InMemoryProjection"] = None,
         sink: Optional["ProjectionSink"] = None,
+        run_id: Optional[str] = None,
+        trajectory_sink: Optional["TrajectorySink"] = None,
+        trajectory_blob_store: Optional["BlobStore"] = None,
+        redactor: Optional["Redactor"] = None,
         sleeper: Optional[Callable[[float], Awaitable[None]]] = asyncio.sleep,
     ) -> "InterpreterResult":
         """Synchronously run this deployment locally via :meth:`adry_run`."""
@@ -819,6 +892,10 @@ class Deployment:
                 max_parallel=max_parallel,
                 projection=projection,
                 sink=sink,
+                run_id=run_id,
+                trajectory_sink=trajectory_sink,
+                trajectory_blob_store=trajectory_blob_store,
+                redactor=redactor,
                 sleeper=sleeper,
             )
         )
