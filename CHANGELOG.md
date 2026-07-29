@@ -64,7 +64,7 @@
   empty log leaves the original Helm failure intact with a
   `smoke-test logs unavailable` note (FEEDBACK 28).
 
-## 3.0.0rc5 (unreleased)
+## 3.0.0rc5 (2026-07-28)
 
 ### Breaking
 
