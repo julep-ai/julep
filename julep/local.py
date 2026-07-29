@@ -34,9 +34,11 @@ from .ir import (
     ThinkStep,
 )
 from .kinds import ContextScope, Op
+from .model_slugs import normalize_model_slug
 from .prompt import rendered_reasoner_for
 from .qos import QoSTier, ReasonerDispatch
 from .registry import DEFAULT_REGISTRY
+from .resilience import AttemptRecord, classify_error
 
 if TYPE_CHECKING:
     from .cli.config import JulepConfig
@@ -107,11 +109,17 @@ class LocalPipeline:
         context: Optional[WorkerContext] = None,
         principal: Optional[RunPrincipal] = None,
         sink: Optional[ProjectionSink] = None,
+        run_id: Optional[str] = None,
     ) -> Any:
         """Execute in-process and return the interpreter's unwrapped value."""
 
         return (await self.arun_detailed(
-            input, llm=llm, context=context, principal=principal, sink=sink
+            input,
+            llm=llm,
+            context=context,
+            principal=principal,
+            sink=sink,
+            run_id=run_id,
         )).value
 
     async def arun_detailed(
@@ -123,6 +131,7 @@ class LocalPipeline:
         principal: Optional[RunPrincipal] = None,
         sink: Optional[ProjectionSink] = None,
         projection: Optional[InMemoryProjection] = None,
+        run_id: Optional[str] = None,
     ) -> EmbeddedRun:
         """Execute in-process and return its value, projection, and artifact hash.
 
@@ -183,6 +192,10 @@ class LocalPipeline:
             max_parallel=None if policy is None else policy.max_parallel,
             projection=run_projection,
             sink=sink,
+            run_id=run_id,
+            trajectory_sink=worker.trajectory_sink,
+            trajectory_blob_store=worker.trajectory_blob_store or worker.blob_store,
+            redactor=worker.redactor,
         )
         return EmbeddedRun(result.value, run_projection, self.artifact_hash)
 
@@ -194,6 +207,7 @@ class LocalPipeline:
         context: Optional[WorkerContext] = None,
         principal: Optional[RunPrincipal] = None,
         sink: Optional[ProjectionSink] = None,
+        run_id: Optional[str] = None,
     ) -> Any:
         """Synchronous foreground execution; use :meth:`arun` in an event loop."""
 
@@ -207,7 +221,14 @@ class LocalPipeline:
                 "await LocalPipeline.arun() instead"
             )
         return asyncio.run(
-            self.arun(input, llm=llm, context=context, principal=principal, sink=sink)
+            self.arun(
+                input,
+                llm=llm,
+                context=context,
+                principal=principal,
+                sink=sink,
+                run_id=run_id,
+            )
         )
 
     def run_detailed(
@@ -219,6 +240,7 @@ class LocalPipeline:
         principal: Optional[RunPrincipal] = None,
         sink: Optional[ProjectionSink] = None,
         projection: Optional[InMemoryProjection] = None,
+        run_id: Optional[str] = None,
     ) -> EmbeddedRun:
         """Synchronous mirror of :meth:`arun_detailed`."""
         try:
@@ -232,7 +254,7 @@ class LocalPipeline:
             )
         return asyncio.run(self.arun_detailed(
             input, llm=llm, context=context, principal=principal,
-            sink=sink, projection=projection,
+            sink=sink, projection=projection, run_id=run_id,
         ))
 
 
@@ -308,6 +330,7 @@ async def arun_local_pipeline(
     llm: Optional[LlmCaller] = None,
     context: Optional[WorkerContext] = None,
     principal: Optional[RunPrincipal] = None,
+    run_id: Optional[str] = None,
 ) -> Any:
     """Compile and execute one configured pipeline in the current event loop."""
 
@@ -317,7 +340,9 @@ async def arun_local_pipeline(
         config=config,
         env=env,
     )
-    return await prepared.arun(input, llm=llm, context=context, principal=principal)
+    return await prepared.arun(
+        input, llm=llm, context=context, principal=principal, run_id=run_id
+    )
 
 
 def run_local_pipeline(
@@ -330,6 +355,7 @@ def run_local_pipeline(
     llm: Optional[LlmCaller] = None,
     context: Optional[WorkerContext] = None,
     principal: Optional[RunPrincipal] = None,
+    run_id: Optional[str] = None,
 ) -> Any:
     """Compile and synchronously execute one configured pipeline in-process."""
 
@@ -339,7 +365,9 @@ def run_local_pipeline(
         config=config,
         env=env,
     )
-    return prepared.run(input, llm=llm, context=context, principal=principal)
+    return prepared.run(
+        input, llm=llm, context=context, principal=principal, run_id=run_id
+    )
 
 
 def _resolve_pipeline_reasoners(
@@ -413,6 +441,49 @@ def _assert_foreground_supported(flow: Any) -> None:
             )
 
 
+def _foreground_attempt(
+    reasoner: Reasoner,
+    *,
+    outcome: str,
+    dispatch: ReasonerDispatch,
+    detail: str = "",
+) -> AttemptRecord:
+    normalized = normalize_model_slug(reasoner.model).model
+    provider, separator, _ = normalized.partition(":")
+    return AttemptRecord(
+        model=normalized,
+        provider=provider if separator else "",
+        outcome=outcome,
+        detail=detail,
+        tier=dispatch.qos.value,
+        batch_id=dispatch.batch_id,
+    )
+
+
+def _notify_foreground_attempts(
+    context: WorkerContext,
+    reasoner: Reasoner,
+    raw: Any,
+    dispatch: ReasonerDispatch,
+) -> None:
+    notify = context.on_attempt
+    if notify is None:
+        return
+    if isinstance(raw, LlmResult) and raw.meta.attempts:
+        for attempt in raw.meta.attempts:
+            notify(
+                AttemptRecord(
+                    model=attempt.model,
+                    provider=attempt.provider,
+                    outcome=attempt.outcome,
+                    tier=dispatch.qos.value,
+                    batch_id=dispatch.batch_id,
+                )
+            )
+        return
+    notify(_foreground_attempt(reasoner, outcome="ok", dispatch=dispatch))
+
+
 def _reasoner_handlers(
     flow: Any,
     prepared_reasoners: Mapping[str, Reasoner],
@@ -476,22 +547,35 @@ def _reasoner_handlers(
             )
         rendered = rendered_reasoner_for(reasoner, value)
         dispatch = _foreground_dispatch(rendered, context, principal)
-        if tool_defs:
-            if not _accepts_keyword(caller, "tools"):
-                raise LocalExecutionConfigurationError(
-                    f"pipeline reasoner {name!r} uses native tool calling, but its "
-                    "LlmCaller does not accept the optional tools= keyword extension"
-                )
-            raw = await cast(Any, caller)(
-                rendered,
-                value,
-                principal,
-                None,
-                dispatch,
-                tools=list(tool_defs),
+        if tool_defs and not _accepts_keyword(caller, "tools"):
+            raise LocalExecutionConfigurationError(
+                f"pipeline reasoner {name!r} uses native tool calling, but its "
+                "LlmCaller does not accept the optional tools= keyword extension"
             )
-        else:
-            raw = await caller(rendered, value, principal, None, dispatch)
+        try:
+            if tool_defs:
+                raw = await cast(Any, caller)(
+                    rendered,
+                    value,
+                    principal,
+                    None,
+                    dispatch,
+                    tools=list(tool_defs),
+                )
+            else:
+                raw = await caller(rendered, value, principal, None, dispatch)
+        except Exception as exc:
+            if context.on_attempt is not None:
+                context.on_attempt(
+                    _foreground_attempt(
+                        rendered,
+                        outcome=classify_error(exc).value,
+                        detail=str(exc),
+                        dispatch=dispatch,
+                    )
+                )
+            raise
+        _notify_foreground_attempts(context, rendered, raw, dispatch)
         return _pack_reasoner_result(raw)
 
     handlers: dict[str, ReasonerHandler] = {}
