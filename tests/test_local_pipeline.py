@@ -17,6 +17,7 @@ from julep import (
     InMemoryProjection,
     LlmCallMeta,
     LlmResult,
+    LlmUsage,
     LocalPipeline,
     PipelineSpec,
     ProjectionEvent,
@@ -1040,6 +1041,57 @@ def test_embedded_llm_result_usage_and_unknown_cost_are_projected(
     assert did.attrs["llm.usage"] == {"input": 11, "output": 7, "total": 18}
     assert did.attrs["llm.cost.status"] == "unknown"
     assert detailed.projection.cost_by_shape() == {}
+
+
+def test_embedded_run_aggregates_usage_and_mixed_cost_without_charging_derived() -> None:
+    flow = seq(think("first"), think("second"))
+    first = Reasoner("first", "test:first")
+    second = Reasoner("second", "test:second")
+    prepared = LocalPipeline(
+        name="metered",
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=PipelineSpec(name="metered", flow=flow, reasoners=(first, second)),
+            deployment=deploy(flow, tools=(), reasoners=(first, second)),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={
+            "first": first,
+            "second": second,
+        },
+    )
+
+    async def llm(reasoner: Reasoner, *_args: Any, **_kwargs: Any) -> LlmResult:
+        first = reasoner.name == "first"
+        usage = LlmUsage(
+            prompt_tokens=10 if first else 20,
+            completion_tokens=2 if first else 3,
+            total_tokens=12 if first else 23,
+            cache_read_tokens=1 if first else 4,
+            cache_creation_tokens=0,
+        )
+        return LlmResult(
+            reply=f"{reasoner.name}-reply",
+            meta=LlmCallMeta(
+                served_model=reasoner.model,
+                provider="test",
+                usage=usage,
+                cost=0.01 if first else 0.02,
+                cost_status="reported" if first else "derived",
+            ),
+        )
+
+    detailed = prepared.run_detailed("hello", llm=llm)
+
+    assert detailed.usage == LlmUsage(30, 5, 35, 5, 0)
+    assert detailed.usage_complete is True
+    assert detailed.total_cost == pytest.approx(0.03)
+    assert detailed.cost_status == "mixed"
+    assert detailed.cost_complete is True
+    # Only the reported leg remains a projection charge. The pricing-map
+    # derivation is metadata, so durable Event.cost semantics do not change.
+    assert sum(detailed.projection.cost_by_shape().values()) == pytest.approx(0.01)
 
 
 def test_deployment_retry_uses_injected_backoff_and_none_sleeper() -> None:

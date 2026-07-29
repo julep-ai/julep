@@ -65,7 +65,13 @@ from ..skills import (
     resolve_skill_keys,
     skills_prompt_block,
 )
-from .llm_result import AttemptMeta, LlmCallMeta, LlmResult
+from .llm_result import (
+    AttemptMeta,
+    LlmCallMeta,
+    LlmCostStatus,
+    LlmResult,
+    LlmUsage,
+)
 from .openai_responses import (
     AnyResponses,
     ResponsesModelBehaviorError,
@@ -111,6 +117,7 @@ def json_schema_error(value: Any, schema: Optional[dict[str, Any]]) -> Optional[
 # any-llm's ``acompletion``-shaped callable: keyword-driven, returns an
 # OpenAI-typed completion (``.choices[0].message.{content,parsed}``).
 AnyCompletion = Callable[..., Awaitable[Any]]
+CompletionCostResolver = Callable[[Any], tuple[float | None, LlmCostStatus]]
 
 DEFAULT_PROVIDER = "anthropic"
 
@@ -565,6 +572,10 @@ def _cache_usage_of(completion: Any) -> tuple[int | None, int | None]:
         if details is not None:
             read = getattr(details, "cached_tokens", None)
     creation = getattr(usage, "cache_creation_input_tokens", None)
+    if creation is None:
+        details = getattr(usage, "prompt_tokens_details", None)
+        if details is not None:
+            creation = getattr(details, "cache_creation_tokens", None)
     return read, creation
 
 
@@ -590,6 +601,7 @@ async def complete_reasoner(
     tools: Optional[list[dict[str, Any]]] = None,
     parallel_tool_calls: Optional[bool] = None,
     registry: Optional[Registry] = None,
+    cost_resolver: Optional[CompletionCostResolver] = None,
 ) -> LlmResult:
     """One model call for ``reasoner`` against ``value``, returning its parsed reply.
 
@@ -795,6 +807,8 @@ async def complete_reasoner(
 
     pt = ct = tt = None
     cache_read = cache_creation = None
+    resolved_costs: list[float | None] = []
+    resolved_cost_statuses: list[LlmCostStatus] = []
 
     def _accumulate(result: Any) -> None:
         nonlocal pt, ct, tt, cache_read, cache_creation
@@ -803,6 +817,10 @@ async def complete_reasoner(
         rcr, rcc = _cache_usage_of(result)
         cache_read = _add_tokens(cache_read, rcr)
         cache_creation = _add_tokens(cache_creation, rcc)
+        if cost_resolver is not None:
+            cost, status = cost_resolver(result)
+            resolved_costs.append(cost)
+            resolved_cost_statuses.append(status)
 
     def _parse(result: Any, *, expect_json: bool) -> tuple[Any, int]:
         parsed, calls = (
@@ -960,6 +978,24 @@ async def complete_reasoner(
         pc_reason = None if pc_marker_placed else "no_cacheable_content"
     else:
         pc_requested, pc_applied, pc_reason = pc, False, "provider_inert"
+    if resolved_cost_statuses and all(
+        status != "unknown" and cost is not None
+        for status, cost in zip(resolved_cost_statuses, resolved_costs, strict=True)
+    ):
+        cost = sum(item for item in resolved_costs if item is not None)
+        cost_status: LlmCostStatus = (
+            "derived" if "derived" in resolved_cost_statuses else "reported"
+        )
+    else:
+        cost = None
+        cost_status = "unknown"
+    usage = LlmUsage(
+        prompt_tokens=pt,
+        completion_tokens=ct,
+        total_tokens=tt,
+        cache_read_tokens=cache_read,
+        cache_creation_tokens=cache_creation,
+    )
     meta = LlmCallMeta(
         served_model=_served_model_of(completion, model),
         provider=provider,
@@ -974,6 +1010,9 @@ async def complete_reasoner(
         prompt_cache_reason=pc_reason,
         cache_read_tokens=cache_read,
         cache_creation_tokens=cache_creation,
+        usage=usage,
+        cost=cost,
+        cost_status=cost_status,
     )
     return LlmResult(reply=reply, meta=meta)
 

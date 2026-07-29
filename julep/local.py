@@ -10,17 +10,18 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import math
 from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Optional, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Literal, Mapping, Optional, cast
 
 from .app import Application, CompiledPipeline, PipelineSpec
 from .dotctx import Reasoner
 from .errors import JulepError
 from .execution.effects import LlmCaller, RunPrincipal, WorkerContext
-from .execution.llm_result import LlmResult
-from .projection import InMemoryProjection, ProjectionSink
+from .execution.llm_result import LlmResult, LlmUsage
+from .projection import EventType, InMemoryProjection, ProjectionSink
 from .ir import (
     EMIT_TOOL,
     HUMAN_GATE_TOOL,
@@ -74,15 +75,107 @@ class LocalExecutionUnsupported(LocalPipelineError):
 
 
 ReasonerHandler = Callable[[Any], Awaitable[Any]]
+EmbeddedCostStatus = Literal["reported", "derived", "mixed", "unknown"]
 
 
 @dataclass(frozen=True)
 class EmbeddedRun:
-    """One embedded execution: its value, exact projection, and artifact identity."""
+    """One embedded execution with aggregate LLM usage and price metadata."""
 
     value: Any
     projection: InMemoryProjection
     artifact_hash: str
+    usage: LlmUsage = LlmUsage()
+    usage_complete: bool = False
+    total_cost: Optional[float] = None
+    cost_status: EmbeddedCostStatus = "unknown"
+    cost_complete: bool = False
+
+
+def _token(value: Any) -> Optional[int]:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def _price(value: Any) -> Optional[float]:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    price = float(value)
+    return price if math.isfinite(price) and price >= 0 else None
+
+
+def _embedded_llm_totals(
+    projection: InMemoryProjection,
+) -> tuple[LlmUsage, bool, Optional[float], EmbeddedCostStatus, bool]:
+    """Aggregate only reasoner metadata; projection cost weights stay separate."""
+
+    legs = [
+        event
+        for event in projection.events()
+        if event.type is EventType.DID
+        and any(
+            key in event.attrs
+            for key in ("llm.model", "llm.provider", "llm.usage", "llm.cost.status")
+        )
+    ]
+    if not legs:
+        return LlmUsage(), False, None, "unknown", False
+
+    prompt: list[Optional[int]] = []
+    completion: list[Optional[int]] = []
+    total: list[Optional[int]] = []
+    cache_read: list[Optional[int]] = []
+    cache_creation: list[Optional[int]] = []
+    costs: list[Optional[float]] = []
+    statuses: list[Literal["reported", "derived", "unknown"]] = []
+    for event in legs:
+        raw_usage = event.attrs.get("llm.usage")
+        usage = raw_usage if isinstance(raw_usage, Mapping) else {}
+        leg_prompt = _token(usage.get("input"))
+        leg_completion = _token(usage.get("output"))
+        leg_total = _token(usage.get("total"))
+        if leg_total is None and leg_prompt is not None and leg_completion is not None:
+            leg_total = leg_prompt + leg_completion
+        prompt.append(leg_prompt)
+        completion.append(leg_completion)
+        total.append(leg_total)
+
+        raw_cache = event.attrs.get("llm.cache")
+        cache = raw_cache if isinstance(raw_cache, Mapping) else {}
+        cache_read.append(_token(cache.get("read")))
+        cache_creation.append(_token(cache.get("creation")))
+
+        raw_status = event.attrs.get("llm.cost.status")
+        status = raw_status if raw_status in {"reported", "derived", "unknown"} else "unknown"
+        statuses.append(cast(Literal["reported", "derived", "unknown"], status))
+        costs.append(_price(event.attrs.get("llm.cost")))
+
+    def complete_sum(values: list[Optional[int]]) -> Optional[int]:
+        return (
+            sum(cast(int, value) for value in values)
+            if all(value is not None for value in values)
+            else None
+        )
+
+    aggregate_usage = LlmUsage(
+        prompt_tokens=complete_sum(prompt),
+        completion_tokens=complete_sum(completion),
+        total_tokens=complete_sum(total),
+        cache_read_tokens=complete_sum(cache_read),
+        cache_creation_tokens=complete_sum(cache_creation),
+    )
+    usage_complete = all(
+        value is not None for values in (prompt, completion, total) for value in values
+    )
+    cost_complete = all(
+        status != "unknown" and cost is not None
+        for status, cost in zip(statuses, costs, strict=True)
+    )
+    if len(set(statuses)) == 1:
+        cost_status: EmbeddedCostStatus = statuses[0]
+    else:
+        cost_status = "mixed"
+    total_cost = sum(cast(float, cost) for cost in costs) if cost_complete else None
+    return aggregate_usage, usage_complete, total_cost, cost_status, cost_complete
 
 
 @dataclass(frozen=True)
@@ -197,7 +290,19 @@ class LocalPipeline:
             trajectory_blob_store=worker.trajectory_blob_store or worker.blob_store,
             redactor=worker.redactor,
         )
-        return EmbeddedRun(result.value, run_projection, self.artifact_hash)
+        usage, usage_complete, total_cost, cost_status, cost_complete = _embedded_llm_totals(
+            run_projection
+        )
+        return EmbeddedRun(
+            result.value,
+            run_projection,
+            self.artifact_hash,
+            usage=usage,
+            usage_complete=usage_complete,
+            total_cost=total_cost,
+            cost_status=cost_status,
+            cost_complete=cost_complete,
+        )
 
     def run(
         self,
