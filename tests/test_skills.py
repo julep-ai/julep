@@ -197,6 +197,33 @@ def test_loose_file_directly_under_skills_is_rejected(tmp_path) -> None:
         load_package_skills(pkg, ["alpha"])
 
 
+def test_symlinked_skill_directory_is_rejected(tmp_path) -> None:
+    pkg = tmp_path / "pkg"
+    external = tmp_path / "external"
+    pkg.mkdir()
+    _write_skill(str(external), "alpha", name="alpha")
+    (pkg / "skills").mkdir()
+    (pkg / "skills" / "alpha").symlink_to(external / "skills" / "alpha")
+
+    with pytest.raises(SkillError, match="skill directory 'alpha'.*symlink"):
+        load_package_skills(str(pkg), ["alpha"])
+
+
+def test_symlinked_skill_markdown_is_rejected(tmp_path) -> None:
+    pkg = tmp_path / "pkg"
+    skill_dir = pkg / "skills" / "alpha"
+    skill_dir.mkdir(parents=True)
+    external = tmp_path / "external-skill.md"
+    external.write_text(
+        "---\nname: alpha\ndescription: external\n---\n\nDo not load.\n",
+        encoding="utf-8",
+    )
+    (skill_dir / "SKILL.md").symlink_to(external)
+
+    with pytest.raises(SkillError, match="SKILL.md.*symlink"):
+        load_package_skills(str(pkg), ["alpha"])
+
+
 def test_directory_name_must_match_frontmatter_name(tmp_path) -> None:
     pkg = str(tmp_path)
     _write_skill(pkg, "alpha", name="not-alpha")

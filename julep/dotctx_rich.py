@@ -1136,7 +1136,8 @@ def load_single_file_dotctx(
     else:
         settings, body = {}, content
     _validate_settings_keys(settings, path)
-    if parse_skills_setting(settings.get("skills"), origin=path) is not None:
+    if "skills" in settings:
+        parse_skills_setting(settings["skills"], origin=path)
         raise SkillError(
             f"single-file dotctx {path!r} cannot activate skills; skills load from "
             "<package>.ctx/skills/<name>/SKILL.md, which needs the directory layout"
@@ -1230,6 +1231,10 @@ def load_rich_dotctx(
 
     settings_tools: Sequence[Any] = settings.get("tools") or ()
     tools = tuple(dict.fromkeys([*(str(t) for t in settings_tools), *tool_keys]))
+    if "skills" in settings and settings["skills"] is None:
+        raise SkillError(
+            f"settings 'skills' in {path!r} must be a list of skill names"
+        )
     skills = load_package_skills(
         path, parse_skills_setting(settings.get("skills"), origin=path)
     )

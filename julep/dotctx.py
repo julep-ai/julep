@@ -509,6 +509,12 @@ def reasoner_from_settings(
     from .skills import load_package_skills, parse_skills_setting
 
     skill_key_tuple: tuple[str, ...] = ()
+    if "skills" in settings and settings["skills"] is None:
+        from .skills import SkillError
+
+        raise SkillError(
+            f"settings 'skills' in {base_dir or nm!r} must be a list of skill names"
+        )
     declared = parse_skills_setting(settings.get("skills"), origin=base_dir or nm)
     if base_dir is not None:
         skill_key_tuple = tuple(

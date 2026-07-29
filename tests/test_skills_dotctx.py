@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 pytest.importorskip("jinja2")
@@ -91,3 +89,28 @@ def test_single_file_ctx_rejects_skills(tmp_path) -> None:
     )
     with pytest.raises(SkillError, match="single-file"):
         load_rich_dotctx(str(path), registry=Registry(), env={})
+
+
+def test_single_file_ctx_rejects_null_skills(tmp_path) -> None:
+    path = tmp_path / "solo.ctx"
+    path.write_text(
+        "---\nmodel: openai:gpt-5.5\nskills:\n---\nBody.\n", encoding="utf-8"
+    )
+    with pytest.raises(SkillError, match="single-file"):
+        load_rich_dotctx(str(path), registry=Registry(), env={})
+
+
+def test_rich_package_rejects_null_skills(tmp_path) -> None:
+    pkg = _rich_pkg(tmp_path, "model: openai:gpt-5.5\nskills:\n")
+    with pytest.raises(SkillError, match="must be a list of skill names"):
+        load_rich_dotctx(str(pkg), registry=Registry(), env={})
+
+
+def test_minimal_package_rejects_null_skills(tmp_path) -> None:
+    pkg = tmp_path / "planner"
+    pkg.mkdir()
+    (pkg / "settings.yaml").write_text(
+        "model: openai:gpt-5.5\nsystem: You plan.\nskills:\n", encoding="utf-8"
+    )
+    with pytest.raises(SkillError, match="must be a list of skill names"):
+        load_dotctx(str(pkg), env={}, _registry=Registry())

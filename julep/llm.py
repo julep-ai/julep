@@ -20,6 +20,7 @@ from .execution.llm import complete_reasoner
 from .execution.llm_result import AttemptMeta, LlmResult
 from .model_slugs import EFFORT_LEVELS, normalize_model_slug
 from .qos import ReasonerDispatch
+from .registry import DEFAULT_REGISTRY, Registry
 from .resilience import AttemptRecord, ErrorClass, OnAttempt, classify_error
 from .transcript import Transcript
 
@@ -133,6 +134,7 @@ def litellm_caller(
     *,
     request_timeout_s: Optional[float] = None,
     acompletion: Optional[LiteLlmCompletion] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> LlmCaller:
     """Return Julep's canonical five-argument caller backed by LiteLLM.
 
@@ -195,6 +197,7 @@ def litellm_caller(
             dispatch=dispatch,
             tools=tools,
             parallel_tool_calls=parallel_tool_calls,
+            registry=registry,
         )
 
     return caller

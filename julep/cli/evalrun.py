@@ -38,6 +38,7 @@ async def _invoke_eval_llm(
     llm_caller: Optional[EvalLlmCaller],
     transcript: Optional[list[dict[str, Any]]] = None,
     tools: Optional[list[dict[str, Any]]] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> Any:
     if llm_caller is None:
         result = await complete_reasoner(
@@ -47,6 +48,7 @@ async def _invoke_eval_llm(
             transcript=transcript,
             tools=tools,
             parallel_tool_calls=True if tools else None,
+            registry=registry,
         )
         return result.reply
 
@@ -340,10 +342,15 @@ def _turn_from_reply(reply: Any) -> Turn:
     return Turn(output=reply, tool_calls=[], tool_results=[], content=content, refusal=None)
 
 
-def _seed_user_turn(reasoner: Any, value: Any) -> dict[str, Any]:
+def _seed_user_turn(
+    reasoner: Any,
+    value: Any,
+    *,
+    registry: Registry = DEFAULT_REGISTRY,
+) -> dict[str, Any]:
     """The leading user turn the model saw on round 0, replayed so later rounds
     start from a valid user turn (providers reject a leading assistant turn)."""
-    text = rendered_user_for(reasoner, value)
+    text = rendered_user_for(reasoner, value, registry=registry)
     content = text if text is not None else (value if isinstance(value, str) else json.dumps(value))
     return {"role": "user", "content": content}
 
@@ -381,12 +388,14 @@ async def _run_single_shot(
     sample: Sample,
     acompletion: Optional[AnyCompletion],
     llm_caller: Optional[EvalLlmCaller] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> Any:
     reply = await _invoke_eval_llm(
         reasoner,
         sample.input,
         acompletion=acompletion,
         llm_caller=llm_caller,
+        registry=registry,
     )
     text = reply if isinstance(reply, str) else json.dumps(reply)
     return {"content": text}
@@ -397,6 +406,7 @@ async def _run_tool_loop(
     sample: Sample,
     acompletion: Optional[AnyCompletion],
     llm_caller: Optional[EvalLlmCaller] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> Any:
     reasoner = rich.reasoner
     tool_defs = _provider_tool_defs(
@@ -487,12 +497,15 @@ async def _run_tool_loop(
             llm_caller=llm_caller,
             tools=tool_defs,
             transcript=list(transcript) if transcript else None,
+            registry=registry,
         )
         last_turn = _turn_from_reply(reply)
         tool_calls = reply.get("tool_calls") if isinstance(reply, dict) else None
         if isinstance(tool_calls, list) and tool_calls:
             if not transcript:
-                transcript.append(_seed_user_turn(reasoner, base_value))
+                transcript.append(
+                    _seed_user_turn(reasoner, base_value, registry=registry)
+                )
             transcript.append(_assistant_call_turn(tool_calls))
             round_call_ids = [
                 (tc.get("id") if isinstance(tc, dict) else None) for tc in tool_calls
@@ -602,6 +615,7 @@ async def run_eval(
                     sample,
                     resolved,
                     llm_caller=llm_caller,
+                    registry=registry,
                 )
             else:
                 output = await _run_single_shot(
@@ -609,6 +623,7 @@ async def run_eval(
                     sample,
                     resolved,
                     llm_caller=llm_caller,
+                    registry=registry,
                 )
             try:
                 raw_score = module.score(sample.input, output, sample.expected)
@@ -641,6 +656,7 @@ def run_eval_sync(
     sample_names: Optional[Sequence[str]] = None,
     acompletion: Optional[AnyCompletion] = None,
     llm_caller: Optional[EvalLlmCaller] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> EvalReport:
     return asyncio.run(
         run_eval(
@@ -651,6 +667,7 @@ def run_eval_sync(
             sample_names=sample_names,
             acompletion=acompletion,
             llm_caller=llm_caller,
+            registry=registry,
         )
     )
 

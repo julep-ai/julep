@@ -166,6 +166,25 @@ def test_descriptions_are_in_the_system_prompt_and_bodies_are_not(monkeypatch) -
     assert system.rstrip().endswith("You draft.")
 
 
+def test_skills_resolve_from_the_callers_registry() -> None:
+    reg, keys = _registry_with(ALPHA)
+    seen: list[list[dict[str, Any]]] = []
+
+    async def acompletion(**kwargs: Any) -> Any:
+        seen.append(kwargs["messages"])
+        return _text("done")
+
+    run(
+        complete_reasoner(
+            _reasoner(keys),
+            "hi",
+            acompletion=acompletion,
+            registry=reg,
+        )
+    )
+    assert "Use for alpha work." in seen[0][0]["content"]
+
+
 def test_skill_tool_is_offered_when_skills_are_active(monkeypatch) -> None:
     reg, keys = _registry_with(ALPHA)
     monkeypatch.setattr("julep.execution.llm.DEFAULT_REGISTRY", reg)

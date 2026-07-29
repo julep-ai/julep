@@ -44,11 +44,11 @@ from collections.abc import Awaitable, Callable, Mapping
 from typing import Any, Optional
 
 from ..agent_loop import FEEDBACK_KEY, NATIVE_TOOLS_KEY, ROUND_NOTE_KEY
-from ..dotctx import Reasoner, get_reasoner
+from ..dotctx import Reasoner
 from ..errors import ResilienceExhausted
 from ..prompt import rendered_reasoner_for, rendered_user_for
 from ..qos import ReasonerDispatch, QoSTier
-from ..registry import DEFAULT_REGISTRY
+from ..registry import DEFAULT_REGISTRY, Registry
 from ..resilience import (
     AttemptRecord,
     CircuitBreaker,
@@ -589,6 +589,7 @@ async def complete_reasoner(
     dispatch: ReasonerDispatch = _DEFAULT_REASONER_DISPATCH,
     tools: Optional[list[dict[str, Any]]] = None,
     parallel_tool_calls: Optional[bool] = None,
+    registry: Optional[Registry] = None,
 ) -> LlmResult:
     """One model call for ``reasoner`` against ``value``, returning its parsed reply.
 
@@ -601,6 +602,7 @@ async def complete_reasoner(
     injected and ``response_format`` is omitted from that request."""
     if dispatch.qos == QoSTier.BATCH:
         raise ValueError("BATCH must not reach complete_reasoner")
+    registry = DEFAULT_REGISTRY if registry is None else registry
 
     # Render named system/user templates here so both seams (activity + facade)
     # see the same strings; already-rendered reasoners pass through unchanged.
@@ -613,8 +615,8 @@ async def complete_reasoner(
         render_value = {key: item for key, item in value.items() if key not in reserved}
     else:
         render_value = value
-    reasoner = rendered_reasoner_for(reasoner, render_value)
-    user_text = rendered_user_for(reasoner, render_value)
+    reasoner = rendered_reasoner_for(reasoner, render_value, registry=registry)
+    user_text = rendered_user_for(reasoner, render_value, registry=registry)
     if transcript is not None and _is_controller_value(value):
         transcript = _render_raw_opening_ask(
             transcript,
@@ -631,7 +633,7 @@ async def complete_reasoner(
         provider_safe_tool_defs(tools) if tools else (tools, {})
     )
     active_skills = (
-        resolve_skill_keys(reasoner.skills, registry=DEFAULT_REGISTRY)
+        resolve_skill_keys(reasoner.skills, registry=registry)
         if reasoner.skills
         else ()
     )
@@ -1012,6 +1014,7 @@ def make_llm_caller(
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
     aresponses: Optional[AnyResponses] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> Callable[..., Awaitable[Any]]:
     """Activity-seam ``LlmCaller``: ``(Reasoner, value, principal, transcript, dispatch)``.
 
@@ -1040,6 +1043,7 @@ def make_llm_caller(
             dispatch=dispatch,
             tools=tools,
             parallel_tool_calls=parallel_tool_calls,
+            registry=registry,
         )
 
     return caller
@@ -1050,6 +1054,7 @@ def make_local_reasoner(
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
     aresponses: Optional[AnyResponses] = None,
+    registry: Registry = DEFAULT_REGISTRY,
 ) -> Callable[[str, Any], Awaitable[Any]]:
     """Facade-seam llm: ``(reasoner_name, payload) -> reply``.
 
@@ -1064,12 +1069,13 @@ def make_local_reasoner(
             tools = payload[NATIVE_TOOLS_KEY]
             value = {key: val for key, val in payload.items() if key != NATIVE_TOOLS_KEY}
         return await complete_reasoner(
-            get_reasoner(reasoner_name),
+            registry.get_reasoner(reasoner_name),
             value,
             acompletion=acompletion,
             aresponses=aresponses,
             default_provider=default_provider,
             tools=tools,
+            registry=registry,
         )
 
     return caller
@@ -1094,6 +1100,7 @@ def make_resilient_llm_caller(
     default_provider: str = DEFAULT_PROVIDER,
     acompletion: Optional[AnyCompletion] = None,
     aresponses: Optional[AnyResponses] = None,
+    registry: Registry = DEFAULT_REGISTRY,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> Callable[..., Awaitable[Any]]:
     """An ``LlmCaller`` that survives provider outages deterministically.
@@ -1166,6 +1173,7 @@ def make_resilient_llm_caller(
                         dispatch=dispatch,
                         tools=tools,
                         parallel_tool_calls=parallel_tool_calls,
+                        registry=registry,
                     )
                     reply = result.reply
                 except ResponsesRefusalError as exc:

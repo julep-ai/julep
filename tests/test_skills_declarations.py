@@ -125,6 +125,33 @@ def test_blob_carries_skill_bodies_and_round_trips() -> None:
     assert target.get_skill(key).body == "Do alpha."
 
 
+def test_release_load_rejects_a_global_skill_key_collision() -> None:
+    from julep.app import ApplicationDefinitionError
+    from julep.declarations import declarations_blob, load_declarations
+    from julep.registry import DEFAULT_REGISTRY, Registry
+
+    first = Skill(name="a", description="x\0y", body="z")
+    second = Skill(name="a", description="x", body="y\0z")
+    assert skill_key(first) == skill_key(second)
+    DEFAULT_REGISTRY.register_skill(first)
+
+    source = Registry()
+    key = source.register_skill(second)
+    blob = declarations_blob(
+        [Reasoner(name="colliding-skill", model="openai:gpt-5.5", skills=[key])],
+        registry=source,
+    )
+    target = Registry()
+    with pytest.raises(ApplicationDefinitionError, match="loaded release declaration"):
+        load_declarations(
+            blob,
+            expected_hash="sha256:" + hashlib.sha256(blob).hexdigest(),
+            registry=target,
+            release_scoped=True,
+        )
+    assert target.skills == {}
+
+
 def test_blob_rejects_a_skill_key_that_does_not_match_its_content() -> None:
     from julep.declarations import DeclarationError, load_declarations
     from julep.registry import Registry

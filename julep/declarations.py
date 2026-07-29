@@ -555,6 +555,14 @@ def load_declarations(
                     f"skill {key!r} conflicts with the verified application declaration"
                 )
 
+    if release_scoped and registry is not DEFAULT_REGISTRY:
+        for key, skill in rebuilt_skills.items():
+            existing_skill = DEFAULT_REGISTRY.skills.get(key)
+            if existing_skill is not None and existing_skill != skill:
+                raise ApplicationDefinitionError(
+                    f"skill {key!r} conflicts with a loaded release declaration"
+                )
+
     for target in targets:
         for reasoner in rebuilt_reasoners.values():
             target.register_reasoner(reasoner)
@@ -562,7 +570,8 @@ def load_declarations(
             target.renderers[name] = entry
             target.renderer_declarations[name] = renderer_declarations[name]
         target.agent_specs.update(rebuilt_agents)
-        target.skills.update(rebuilt_skills)
+        for skill in rebuilt_skills.values():
+            target.register_skill(skill)
 
     # Renderer names are content-addressed, so sharing them process-wide is
     # safe even when reasoner names are release-scoped. The prompt adapter's
@@ -580,9 +589,10 @@ def load_declarations(
                 )
             DEFAULT_REGISTRY.renderers[name] = entry
             DEFAULT_REGISTRY.renderer_declarations[name] = renderer_declarations[name]
-        # Skill keys are content-addressed like renderer names, and the LLM
-        # caller resolves skill bodies from DEFAULT_REGISTRY, so share them.
-        DEFAULT_REGISTRY.skills.update(rebuilt_skills)
+        # Release workers still support callers configured with the process-wide
+        # registry, so share content-addressed skills after collision preflight.
+        for skill in rebuilt_skills.values():
+            DEFAULT_REGISTRY.register_skill(skill)
 
 
 __all__ = ["DeclarationError", "declarations_blob", "load_declarations"]

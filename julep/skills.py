@@ -178,6 +178,12 @@ def load_package_skills(
     skills_dir = os.path.join(pkg_dir, "skills")
     has_dir = os.path.isdir(skills_dir)
 
+    if os.path.islink(skills_dir):
+        raise SkillError(
+            f"dotctx package {pkg_dir!r} has a symlinked skills/ directory; "
+            "skill content must live inside the package"
+        )
+
     if allowlist is None:
         if has_dir:
             warnings.warn(
@@ -199,6 +205,11 @@ def load_package_skills(
     by_name: dict[str, Skill] = {}
     for entry in sorted(os.listdir(skills_dir)):
         entry_path = os.path.join(skills_dir, entry)
+        if os.path.islink(entry_path):
+            raise SkillError(
+                f"skill directory {entry!r} in {pkg_dir!r} is a symlink; "
+                "skill content must live inside the package"
+            )
         if not os.path.isdir(entry_path):
             raise SkillError(
                 f"{os.path.join('skills', entry)!r} in {pkg_dir!r} is not a skill "
@@ -217,6 +228,11 @@ def load_package_skills(
                 "resources are not supported yet)"
             )
         origin = os.path.join(skills_dir, entry, "SKILL.md")
+        if os.path.islink(origin):
+            raise SkillError(
+                f"SKILL.md for skill {entry!r} in {pkg_dir!r} is a symlink; "
+                "skill content must live inside the package"
+            )
         with open(origin, "r", encoding="utf-8") as fh:
             skill = parse_skill_markdown(fh.read(), origin=origin)
         if skill.name != entry:
