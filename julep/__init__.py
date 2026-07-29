@@ -319,7 +319,13 @@ from .execution import (
     WorkerContext as WorkerContext,
     interpret as interpret,
 )
+from .execution.llm_result import (
+    AttemptMeta as AttemptMeta,
+    LlmCallMeta as LlmCallMeta,
+    LlmResult as LlmResult,
+)
 from .local import (
+    EmbeddedRun as EmbeddedRun,
     LocalExecutionConfigurationError as LocalExecutionConfigurationError,
     LocalExecutionUnsupported as LocalExecutionUnsupported,
     LocalPipeline as LocalPipeline,
@@ -402,6 +408,7 @@ _BASE_EXPORTS = [
     "ProjectionEvent", "ProjectionEmitter", "ProjectionSink", "ProjectionStore",
     "InMemoryProjection", "PostgresProjection", "TeeStore", "ValueStore", "SpanData",
     "to_otel_spans",
+    "LlmResult", "LlmCallMeta", "AttemptMeta", "EmbeddedRun",
     # provider resilience
     "AttemptRecord", "CircuitBreaker", "ErrorClass", "ResiliencePolicy",
     "classify_error", "summarize_attempts",

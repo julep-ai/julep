@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -8,15 +9,25 @@ import pytest
 
 from conftest import run
 from julep import (
+    AttemptMeta,
     CapabilityManifest,
     CompiledPipeline,
+    EmbeddedRun,
+    InMemoryProjection,
+    LlmCallMeta,
+    LlmResult,
     LocalPipeline,
     PipelineSpec,
+    ProjectionEvent,
+    Ann,
     app,
+    call,
     deploy,
     seq,
     think,
+    tool,
 )
+from julep.dsl import native
 from julep.contracts import McpAnnotations
 from julep.dotctx import Reasoner
 from julep.execution.effects import WorkerContext
@@ -31,7 +42,37 @@ from julep.local import (
     run_local_pipeline,
 )
 from julep.qos import QoSTier
+from julep.projection import EventType
 from julep.registry import Registry
+from julep.typed import seq as typed_seq
+
+
+@tool(effect="read", idempotent=True, name="batch_e_increment")
+def _increment(value: int) -> int:
+    return value + 1
+
+
+@tool(effect="read", idempotent=True, name="batch_e_raise")
+def _raise_tool(_value: Any) -> Any:
+    raise RuntimeError("batch-e-boom")
+
+
+async def configured_test_llm(
+    _reasoner: Any,
+    value: Any,
+    _principal: Any,
+    _transcript: Any,
+    _dispatch: Any,
+) -> Any:
+    return {"answer": f"configured:{value['source']}"}
+
+
+class _EventSink:
+    def __init__(self) -> None:
+        self.events: list[ProjectionEvent] = []
+
+    def append(self, event: ProjectionEvent) -> None:
+        self.events.append(event)
 
 
 def _reasoner_project(root: Path) -> None:
@@ -840,3 +881,197 @@ application = "foreground_app:application"
     with pytest.raises(LocalExecutionUnsupported, match="transcript-scoped"):
         prepared.run({}, llm=llm)
     assert called is False
+
+
+def test_embedded_value_envelope_projection_and_sync_parity() -> None:
+    flow = typed_seq(_increment, _increment).to_ir()
+    prepared = LocalPipeline(
+        name="two-step",
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=PipelineSpec(name="two-step", flow=flow, tools=(_increment,)),
+            deployment=deploy(flow, tools=(_increment,)),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={},
+    )
+    projection = InMemoryProjection()
+
+    assert run(prepared.arun(1)) == 3
+    detailed = run(prepared.arun_detailed(1, projection=projection))
+    sync_detailed = prepared.run_detailed(1)
+
+    assert isinstance(detailed, EmbeddedRun)
+    assert detailed.value == sync_detailed.value == 3
+    assert detailed.projection is projection
+    assert detailed.artifact_hash == prepared.artifact_hash
+    assert sync_detailed.artifact_hash == prepared.artifact_hash
+
+    async def inside_loop() -> None:
+        with pytest.raises(LocalExecutionConfigurationError, match="active event loop"):
+            prepared.run_detailed(1)
+
+    asyncio.run(inside_loop())
+
+
+def test_embedded_sink_order_and_failure_projection() -> None:
+    successful = deploy(typed_seq(_increment, _increment).to_ir(), tools=(_increment,))
+    sink = _EventSink()
+
+    assert run(successful.adry_run(1, sink=sink)).value == 3
+    assert [event.type for event in sink.events] == [
+        EventType.PLANNED,
+        EventType.PLANNED,
+        EventType.DID,
+        EventType.PLANNED,
+        EventType.DID,
+        EventType.DID,
+    ]
+
+    failing_flow = call(native(_raise_tool.name))
+    failing_spec = PipelineSpec(name="failing", flow=failing_flow, tools=(_raise_tool,))
+    failing = LocalPipeline(
+        name="failing",
+        environment="local",
+        compiled=CompiledPipeline(
+            spec=failing_spec,
+            deployment=deploy(failing_flow, tools=(_raise_tool,)),
+            declared_schema_hash="test",
+            compiled_schema_hash="test",
+        ),
+        reasoners={},
+    )
+    failure_sink = _EventSink()
+    projection = InMemoryProjection()
+    with pytest.raises(RuntimeError, match="batch-e-boom"):
+        run(failing.arun_detailed(None, sink=failure_sink, projection=projection))
+
+    assert [event.type for event in failure_sink.events] == [
+        EventType.PLANNED,
+        EventType.FAILED,
+    ]
+    assert projection.failures()[0].error == "RuntimeError('batch-e-boom')"
+
+
+def test_embedded_llm_result_usage_and_unknown_cost_are_projected(
+    tmp_path: Path,
+) -> None:
+    _reasoner_project(tmp_path)
+
+    async def llm(*_args: Any, **_kwargs: Any) -> LlmResult:
+        return LlmResult(
+            reply={"answer": "ok"},
+            meta=LlmCallMeta(
+                served_model="test:served",
+                provider="unknown-provider",
+                input_tokens=11,
+                output_tokens=7,
+                total_tokens=18,
+                attempts=(AttemptMeta("test:served", "unknown-provider", "ok", 11, 7),),
+            ),
+        )
+
+    detailed = prepare_local_pipeline("summary", project_root=tmp_path).run_detailed(
+        {"text": "hello"}, llm=llm
+    )
+    [did] = [event for event in detailed.projection.events() if event.type is EventType.DID]
+
+    assert did.attrs["llm.usage"] == {"input": 11, "output": 7, "total": 18}
+    assert did.attrs["llm.cost.status"] == "unknown"
+    assert detailed.projection.cost_by_shape() == {}
+
+
+def test_deployment_retry_uses_injected_backoff_and_none_sleeper() -> None:
+    flow = call(
+        native(_raise_tool.name),
+        ann=Ann(max_attempts=3, retry_interval_s=0.25, backoff_rate=2.0),
+    )
+    deployment = deploy(flow, tools=(_raise_tool,))
+    sleeps: list[float] = []
+
+    async def sleeper(interval: float) -> None:
+        sleeps.append(interval)
+
+    with pytest.raises(RuntimeError, match="batch-e-boom"):
+        run(deployment.adry_run(None, sleeper=sleeper))
+    assert sleeps == [0.25, 0.5]
+
+    with pytest.raises(RuntimeError, match="batch-e-boom"):
+        run(deployment.adry_run(None, sleeper=None))
+
+
+def test_load_pipeline_fixture_names_env_exports_and_kubernetes_name_escape(
+    tmp_path: Path,
+) -> None:
+    import julep
+    import julep.embedded as embedded
+
+    fixture = Path(__file__).parent / "fixtures/memmcp/episode_summary.ctx"
+    seen: list[tuple[str, str]] = []
+
+    async def llm(reasoner: Any, value: Any, *_args: Any) -> Any:
+        seen.append((reasoner.model, value["episode_id"]))
+        return "summary"
+
+    default = embedded.load_pipeline(fixture, env={"SUMMARY_MODEL": "test:env"})
+    explicit = embedded.load_pipeline(
+        fixture, name="custom-summary", env={"SUMMARY_MODEL": "test:env"}
+    )
+    assert default.name == "episode_summary"
+    assert explicit.name == "custom-summary"
+    assert default.run({"episode_id": "42"}, llm=llm) == "summary"
+    assert seen == [("test:env", "42")]
+
+    invalid_root = tmp_path / "---"
+    copied_ctx = invalid_root / "episode_summary.ctx"
+    shutil.copytree(fixture, copied_ctx)
+    (invalid_root / "pyproject.toml").write_text(
+        '[tool.julep]\n\n[tool.julep.pipeline.summary]\nctx = "episode_summary.ctx"\n'
+        '\n[tool.julep.env.local.vars]\nSUMMARY_MODEL = "test:env"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="application name|Kubernetes|label"):
+        prepare_local_pipeline("summary", project_root=invalid_root)
+    assert embedded.load_pipeline(copied_ctx, env={"SUMMARY_MODEL": "test:env"}).run(
+        {"episode_id": "43"}, llm=llm
+    ) == "summary"
+
+    assert julep.EmbeddedRun is embedded.EmbeddedRun
+    assert julep.LlmResult is LlmResult
+    assert embedded.WorkerContext is WorkerContext
+
+
+def test_configured_llm_precedence_and_prepare_time_resolution(tmp_path: Path) -> None:
+    _reasoner_project(tmp_path)
+    config_path = tmp_path / "pyproject.toml"
+    config_path.write_text(
+        config_path.read_text(encoding="utf-8").replace(
+            "[tool.julep]\n", f'[tool.julep]\nllm_caller = "{__name__}:configured_test_llm"\n'
+        ),
+        encoding="utf-8",
+    )
+    prepared = prepare_local_pipeline("summary", project_root=tmp_path)
+
+    async def context_llm(*_args: Any, **_kwargs: Any) -> Any:
+        return {"answer": "context"}
+
+    async def explicit_llm(*_args: Any, **_kwargs: Any) -> Any:
+        return {"answer": "explicit"}
+
+    assert prepared.run({"source": "cfg"}) == {"answer": "configured:cfg"}
+    assert prepared.run({"source": "ctx"}, context=WorkerContext(llm=context_llm)) == {
+        "answer": "context"
+    }
+    assert prepared.run(
+        {"source": "explicit"},
+        llm=explicit_llm,
+        context=WorkerContext(llm=context_llm),
+    ) == {"answer": "explicit"}
+    assert prepared.configured_llm is configured_test_llm
+
+    unconfigured_root = tmp_path / "unconfigured"
+    unconfigured_root.mkdir()
+    _reasoner_project(unconfigured_root)
+    with pytest.raises(LocalExecutionConfigurationError, match=r"\[tool\.julep\] llm_caller"):
+        prepare_local_pipeline("summary", project_root=unconfigured_root).run({})

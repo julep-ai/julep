@@ -15,11 +15,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Optional, cast
 
-from .app import Application, CompiledPipeline
+from .app import Application, CompiledPipeline, PipelineSpec
 from .dotctx import Reasoner
 from .errors import JulepError
 from .execution.effects import LlmCaller, RunPrincipal, WorkerContext
 from .execution.llm_result import LlmResult
+from .projection import InMemoryProjection, ProjectionSink
 from .ir import (
     EMIT_TOOL,
     HUMAN_GATE_TOOL,
@@ -74,6 +75,15 @@ ReasonerHandler = Callable[[Any], Awaitable[Any]]
 
 
 @dataclass(frozen=True)
+class EmbeddedRun:
+    """One embedded execution: its value, exact projection, and artifact identity."""
+
+    value: Any
+    projection: InMemoryProjection
+    artifact_hash: str
+
+
+@dataclass(frozen=True)
 class LocalPipeline:
     """One compiled configured pipeline reusable across foreground calls."""
 
@@ -81,6 +91,7 @@ class LocalPipeline:
     environment: str
     compiled: CompiledPipeline[Any, Any]
     reasoners: Mapping[str, Reasoner]
+    configured_llm: Optional[LlmCaller] = None
 
     @property
     def artifact_hash(self) -> str:
@@ -95,15 +106,38 @@ class LocalPipeline:
         llm: Optional[LlmCaller] = None,
         context: Optional[WorkerContext] = None,
         principal: Optional[RunPrincipal] = None,
+        sink: Optional[ProjectionSink] = None,
     ) -> Any:
         """Execute in-process and return the interpreter's unwrapped value."""
 
-        worker = context or WorkerContext()
-        caller = llm or worker.llm
+        return (await self.arun_detailed(
+            input, llm=llm, context=context, principal=principal, sink=sink
+        )).value
+
+    async def arun_detailed(
+        self,
+        input: Any = None,
+        *,
+        llm: Optional[LlmCaller] = None,
+        context: Optional[WorkerContext] = None,
+        principal: Optional[RunPrincipal] = None,
+        sink: Optional[ProjectionSink] = None,
+        projection: Optional[InMemoryProjection] = None,
+    ) -> EmbeddedRun:
+        """Execute in-process and return its value, projection, and artifact hash.
+
+        Pass a caller-owned ``projection`` to retain failure events when execution
+        raises. A synchronous ``sink`` receives live events and fails loudly.
+        """
+
+        worker = context if context is not None else WorkerContext()
+        caller = llm if llm is not None else worker.llm
+        if caller is None:
+            caller = self.configured_llm
         if self.reasoners and caller is None:
             raise LocalExecutionConfigurationError(
                 f"pipeline {self.name!r} invokes a reasoner; pass llm= or "
-                "WorkerContext(llm=...)"
+                "WorkerContext(llm=...), or configure [tool.julep] llm_caller"
             )
 
         deployment = self.compiled.deployment
@@ -139,6 +173,7 @@ class LocalPipeline:
             else replace(deployment, _tools=())
         )
         policy = self.compiled.spec.execution_policy
+        run_projection = projection if projection is not None else InMemoryProjection()
         result = await local_deployment.adry_run(
             input,
             mcp_call=worker.mcp_call,
@@ -146,8 +181,10 @@ class LocalPipeline:
             principal=principal,
             registry=worker.registry,
             max_parallel=None if policy is None else policy.max_parallel,
+            projection=run_projection,
+            sink=sink,
         )
-        return result.value
+        return EmbeddedRun(result.value, run_projection, self.artifact_hash)
 
     def run(
         self,
@@ -156,6 +193,7 @@ class LocalPipeline:
         llm: Optional[LlmCaller] = None,
         context: Optional[WorkerContext] = None,
         principal: Optional[RunPrincipal] = None,
+        sink: Optional[ProjectionSink] = None,
     ) -> Any:
         """Synchronous foreground execution; use :meth:`arun` in an event loop."""
 
@@ -169,8 +207,33 @@ class LocalPipeline:
                 "await LocalPipeline.arun() instead"
             )
         return asyncio.run(
-            self.arun(input, llm=llm, context=context, principal=principal)
+            self.arun(input, llm=llm, context=context, principal=principal, sink=sink)
         )
+
+    def run_detailed(
+        self,
+        input: Any = None,
+        *,
+        llm: Optional[LlmCaller] = None,
+        context: Optional[WorkerContext] = None,
+        principal: Optional[RunPrincipal] = None,
+        sink: Optional[ProjectionSink] = None,
+        projection: Optional[InMemoryProjection] = None,
+    ) -> EmbeddedRun:
+        """Synchronous mirror of :meth:`arun_detailed`."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            raise LocalExecutionConfigurationError(
+                "LocalPipeline.run_detailed() cannot run inside an active event loop; "
+                "await LocalPipeline.arun_detailed() instead"
+            )
+        return asyncio.run(self.arun_detailed(
+            input, llm=llm, context=context, principal=principal,
+            sink=sink, projection=projection,
+        ))
 
 
 def prepare_local_pipeline(
@@ -201,17 +264,37 @@ def prepare_local_pipeline(
     # Compile only the selected pipeline.  This preserves its normal application
     # compilation gates while keeping unrelated MCP surfaces off the foreground
     # startup path.
-    selected = Application(application.name, (matches[0],))
-    compiled_application = selected.compile_live(
-        env_vars={**env_config.vars, **env_config.worker_environment}
+    configured_llm = None
+    if cfg.llm_caller is not None:
+        from ._specload import resolve_spec
+
+        configured_llm = cast(LlmCaller, resolve_spec(cfg.llm_caller, what="llm caller"))
+    return _local_pipeline_from_spec(
+        matches[0], application_name=application.name, environment=env,
+        env_vars={**env_config.vars, **env_config.worker_environment},
+        configured_llm=configured_llm,
     )
+
+
+def _local_pipeline_from_spec(
+    spec: PipelineSpec[Any, Any],
+    *,
+    application_name: str,
+    environment: str,
+    env_vars: Mapping[str, str],
+    configured_llm: Optional[LlmCaller] = None,
+) -> LocalPipeline:
+    """Compile one selected spec into the shared embedded execution surface."""
+    selected = Application(application_name, (spec,))
+    compiled_application = selected.compile_live(env_vars=env_vars)
     compiled = compiled_application.pipelines[0]
     reasoners = _resolve_pipeline_reasoners(compiled)
     return LocalPipeline(
-        name=pipeline,
-        environment=env,
+        name=spec.name,
+        environment=environment,
         compiled=compiled,
         reasoners=MappingProxyType(dict(reasoners)),
+        configured_llm=configured_llm,
     )
 
 
@@ -472,6 +555,7 @@ __all__ = [
     "LocalPipeline",
     "LocalPipelineError",
     "LocalPipelineNotFound",
+    "EmbeddedRun",
     "arun_local_pipeline",
     "prepare_local_pipeline",
     "run_local_pipeline",

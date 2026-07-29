@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.0.0rc6 (unreleased)
+
+### Added
+
+- Embedded runs can expose a frozen `EmbeddedRun` envelope through
+  `arun_detailed` / `run_detailed`, stream projection events to a synchronous
+  sink, and retain caller-owned projections across failures (FEEDBACK 38).
+- `julep.embedded.load_pipeline` compiles standalone `.ctx` packages without a
+  project file or Kubernetes-derived application naming (FEEDBACK 37).
+- Configured `llm_caller` values now participate in embedded caller precedence,
+  and `LlmResult`, `LlmCallMeta`, `AttemptMeta`, and `EmbeddedRun` are root-public.
+
+### Fixed
+
+- Embedded retries now honor declared exponential backoff by default; direct
+  dry-run callers can pass `sleeper=None` for record-only behavior (FEEDBACK 38).
+
 ## 3.0.0rc5 (unreleased)
 
 ### Breaking

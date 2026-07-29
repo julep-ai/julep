@@ -42,7 +42,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Optional, Sequence
 
 from . import __version__
 from .capabilities import CapabilityManifest, check_approval_gates
@@ -63,6 +63,9 @@ from .kinds import EnforcementMode, Op, Shape
 from .purity import is_registered, source_hash_of
 from .registry import DEFAULT_REGISTRY
 from .shapes import surface_shape as _compute_surface_shape
+
+if TYPE_CHECKING:
+    from .projection import InMemoryProjection, ProjectionSink
 from .validate import Diagnostic, blocking, validate
 
 if TYPE_CHECKING:
@@ -742,8 +745,16 @@ class Deployment:
         principal: Optional[dict[str, Any]] = None,
         registry: Optional[Registry] = None,
         max_parallel: Optional[int] = None,
+        projection: Optional["InMemoryProjection"] = None,
+        sink: Optional["ProjectionSink"] = None,
+        sleeper: Optional[Callable[[float], Awaitable[None]]] = asyncio.sleep,
     ) -> "InterpreterResult":
-        """Run locally with injected effects and optional run identity context."""
+        """Run locally, optionally retaining and/or forwarding projection events.
+
+        The interpreter result is returned unchanged. ``projection`` is the queryable
+        primary store, while the synchronous ``sink`` observes events as they happen.
+        Sink exceptions intentionally propagate.
+        """
         mcp_backed = any(isinstance(tool.ref, McpTool) for tool in self.manifest.values())
         if self._tools is None and not mcp_backed:
             raise ValueError(
@@ -757,16 +768,18 @@ class Deployment:
             )
 
         from .execution.interpreter import InMemoryEnv, interpret  # lazy: keeps deploy import-light
-        from .projection import InMemoryProjection, ProjectionEmitter
+        from .projection import InMemoryProjection, ProjectionEmitter, TeeStore
 
         local_tools = {
             native_tool.name: native_tool.bound_tool
             for native_tool in (self._tools or ())
         }
         local_tools.update(tools or {})
+        store = projection if projection is not None else InMemoryProjection()
+        emitter_store = TeeStore(store, sink) if sink is not None else store
         env = InMemoryEnv(
             self.manifest,
-            ProjectionEmitter(InMemoryProjection()),
+            ProjectionEmitter(emitter_store),
             tools=local_tools or None,
             mcp_call=mcp_call,
             reasoners=reasoners,
@@ -776,6 +789,7 @@ class Deployment:
             max_parallel=max_parallel,
             registry=registry,
             principal=principal,
+            sleeper=sleeper,
         )
         return await interpret(self.flow, value, env)
 
@@ -789,6 +803,9 @@ class Deployment:
         principal: Optional[dict[str, Any]] = None,
         registry: Optional[Registry] = None,
         max_parallel: Optional[int] = None,
+        projection: Optional["InMemoryProjection"] = None,
+        sink: Optional["ProjectionSink"] = None,
+        sleeper: Optional[Callable[[float], Awaitable[None]]] = asyncio.sleep,
     ) -> "InterpreterResult":
         """Synchronously run this deployment locally via :meth:`adry_run`."""
         return asyncio.run(
@@ -800,6 +817,9 @@ class Deployment:
                 principal=principal,
                 registry=registry,
                 max_parallel=max_parallel,
+                projection=projection,
+                sink=sink,
+                sleeper=sleeper,
             )
         )
 

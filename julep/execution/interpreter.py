@@ -831,7 +831,7 @@ class InMemoryEnv:
         agents: Optional[dict[str, Callable[[Any], Any]]] = None,
         planners: Optional[dict[str, Callable[[Any], Node]]] = None,
         gate: Optional[Callable[[Any], Any]] = None,
-        sleeper: Optional[Callable[[int], Awaitable[None]]] = None,
+        sleeper: Optional[Callable[[float], Awaitable[None]]] = None,
         max_parallel: Optional[int] = None,
         max_calls: Optional[dict[str, int]] = None,
         mode: EnforcementMode | str = EnforcementMode.STRICT,
