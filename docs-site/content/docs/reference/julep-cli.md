@@ -400,12 +400,13 @@ and does not change plan's success exit code.
 
 ## `julep apply`
 
-Synopsis: `julep apply --env ENV [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY]`
+Synopsis: `julep apply --env ENV [--publish-only] [--mcp-snapshot] [--api-url URL] [--api-key KEY] [--activate]`
 
 Compile and publish a signed, immutable application release. By default it then
 reconciles one digest-pinned Helm release and release-specific Temporal task
 queue per logical lane, runs the chart's worker smoke test, and records local
-applied state. It never switches application traffic.
+applied state. It never switches application traffic unless `--activate` is
+given.
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -414,6 +415,7 @@ applied state. It never switches application traffic.
 | `--mcp-snapshot` | false | Fetch configured MCP `tools/list` schemas before publishing. Requires `julep[mcp]`. |
 | `--api-url URL` | unset | Register the release manifest with this control-plane API after publishing. |
 | `--api-key KEY` | unset | Admin bearer key for release registration. |
+| `--activate` | false | Activate every lane of the published release inline. Requires `--api-url`/`--api-key`. See [inline activation](#inline-activation-with---activate). |
 
 An explicit `snapshot=` in application code remains authoritative. The CLI
 flag applies the configured server snapshot to pipelines without native tools.
@@ -430,6 +432,65 @@ Exit/errors: unknown env exits `2`; compile, signing, artifact store,
 configuration, reconciliation, or registration failures exit `1`; success
 exits `0` and prints the release, artifact, every release-scoped lane queue,
 optional `registered <release-hash>`, and `traffic unchanged`.
+
+### Inline activation with `--activate`
+
+Explicit activation remains the default: without `--activate`, `apply`
+publishes, prints `traffic   unchanged`, and prints the exact
+`julep activate ...` command for every lane.
+
+`--activate` instead activates every lane of the release inline, over the same
+control-plane connection `--api-url`/`--api-key` already established. Without
+that connection there is nothing to activate against, so `--activate` exits `2`
+before publishing anything.
+
+Activation is attempted for every lane even after one fails, so a partial
+rollout is reported rather than hidden:
+
+```text
+activated brief-refresh            sha256:...
+error: lane 'digest' activation failed: ...
+traffic   partial: activated brief-refresh, summary; unchanged digest
+```
+
+A partial rollout exits `1`; a fully activated release prints
+`traffic   activated <lanes>` and exits `0`.
+
+**Caveat: control planes that reconcile Helm themselves answer `409`.** When the
+server is configured with `JULEP_SERVER_HELM_CHART`, `POST /v1/deployments`
+re-runs the lane reconcile. That reconcile re-derives the lane deployment
+config and refuses unless it reproduces the release's frozen
+`deployment_config` byte-identically — a mismatch (a chart, namespace, queue
+map, or worker-environment difference between the publishing CLI and the
+server) surfaces as HTTP `409`. Julep names that cause instead of reporting a
+bare conflict, but the activation still fails.
+
+Use `--activate` against a control plane that leaves worker rollout external
+(no `JULEP_SERVER_HELM_CHART`), where `apply` has already reconciled the lanes
+and activation is a pure traffic switch. Against a reconciling control plane,
+align the server's reconciler configuration with the release first, then
+activate explicitly with `julep activate`.
+
+## `julep activate`
+
+Synopsis: `julep activate --env ENV --lane LANE --release HASH [--api-url URL] [--api-key KEY]`
+
+Point one lane at a published release. This is the traffic switch `julep apply`
+deliberately does not perform. Rolling back is the same operation with an
+earlier release hash.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--env ENV` | required | Configured application environment. |
+| `--lane LANE` | required | Deployment lane to switch. |
+| `--release HASH` | required | Published release hash to activate. |
+| `--api-url URL` | `JULEP_API_URL` | Control-plane base URL. |
+| `--api-key KEY` | `JULEP_API_KEY` | Admin bearer key. |
+
+Exit/errors: unknown env exits `2`; a missing API URL or a missing httpx exits
+`2`; a non-admin key (`403`), a server-side reconciler conflict (`409`, see
+[the caveat above](#inline-activation-with---activate)), and any other API
+error exit `1`. Success prints `activated <lane> <release>` and exits `0`.
 
 ## `julep status`
 

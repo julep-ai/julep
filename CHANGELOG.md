@@ -11,6 +11,17 @@
   project file or Kubernetes-derived application naming (FEEDBACK 37).
 - Configured `llm_caller` values now participate in embedded caller precedence,
   and `LlmResult`, `LlmCallMeta`, `AttemptMeta`, and `EmbeddedRun` are root-public.
+- `julep apply --activate` activates every lane of the release it just
+  published, over the connection `--api-url`/`--api-key` already established,
+  instead of printing one `julep activate` command per lane. Explicit
+  activation stays the default. Without a control-plane connection the flag
+  exits 2 before publishing anything. Every lane is attempted even after one
+  fails, so a partial rollout prints which lanes moved and which did not and
+  exits 1. Note the sharp edge: a control plane configured with
+  `JULEP_SERVER_HELM_CHART` re-reconciles the lane on activation and answers
+  `409` unless it reproduces the release's frozen `deployment_config`
+  byte-identically — both `--activate` and `julep activate` now name that cause
+  instead of reporting a bare conflict.
 
 ### Fixed
 
