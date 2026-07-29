@@ -366,6 +366,10 @@ export TEMPORAL_NAMESPACE=default
 export TEMPORAL_TASK_QUEUE=julep
 export JULEP_BLOB_STORE_URL=file:///var/lib/julep/blobs
 export WORKER_HEALTH_PORT=8080
+# The worker fails closed on payload encryption. Either export
+# TEMPORAL_PAYLOAD_KEYS/TEMPORAL_PAYLOAD_KEY_ID, or opt out explicitly for a
+# deliberately plaintext local Temporal:
+export TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=false
 julep worker
 ```
 

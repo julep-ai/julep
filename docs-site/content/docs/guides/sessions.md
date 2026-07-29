@@ -301,6 +301,9 @@ export TEMPORAL_ADDRESS=localhost:7233
 export TEMPORAL_NAMESPACE=default
 export TEMPORAL_TASK_QUEUE=support-sessions
 export WORKER_HEALTH_PORT=8080
+# Payload encryption is required by default; set the keyring, or opt out
+# explicitly for a deliberately plaintext local Temporal.
+export TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=false
 julep worker
 ```
 

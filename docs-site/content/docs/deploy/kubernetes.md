@@ -31,7 +31,7 @@ reads its configuration from the environment:
 | `WORKER_HEALTH_PORT` | off | HTTP port serving `GET /healthz` and `GET /readyz` |
 | `TEMPORAL_PAYLOAD_KEYS` | unset | Payload-codec keyring; comma-separated `key-id=64hex` entries. Set with `TEMPORAL_PAYLOAD_KEY_ID`. See [the payload-encryption Secret](#the-payload-encryption-secret). |
 | `TEMPORAL_PAYLOAD_KEY_ID` | unset | Key id used for new writes. Set with `TEMPORAL_PAYLOAD_KEYS`. |
-| `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `false` | Refuse to start unless a keyring is configured. `julep apply` always sets it `true`; a hand-run `julep worker` defaults to `false`. |
+| `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` | `true` | Refuse to start unless a keyring is configured. `julep apply` always sets it `true`, and a hand-run `julep worker` now defaults the same way. Set it to `false` to run a worker against a deliberately plaintext Temporal. |
 | `JULEP_BLOB_STORE_URL` | unset | Absolute local `file://` URL for durable transcript/claim-check blobs. Mutually exclusive with a factory-provided `blob_store`. |
 
 `WORKER_CONTEXT_FACTORY` is required and has no default: a `WorkerContext`

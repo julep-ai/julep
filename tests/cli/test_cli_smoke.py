@@ -57,6 +57,9 @@ def test_worker_smoke_command_uses_environment_contract(monkeypatch):
         captured.append((settings.context_factory, poll_seconds))
 
     monkeypatch.setenv("WORKER_CONTEXT_FACTORY", "memory.worker:context")
+    # A hand-run worker fails closed on payload encryption; this smoke test is
+    # about the environment contract, so take the documented plaintext opt-out.
+    monkeypatch.setenv("TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED", "false")
     monkeypatch.setattr(serve_module, "smoke_test_worker", fake_smoke)
 
     assert main(["worker", "--smoke-test-seconds", "0.25"]) == 0

@@ -23,6 +23,24 @@
   byte-identically — both `--activate` and `julep activate` now name that cause
   instead of reporting a bare conflict.
 
+### Changed
+
+- **Behavior change: a hand-run worker now fails closed on Temporal payload
+  encryption.** `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED` defaulted to `true` on
+  the control plane and `false` on the worker, so a worker joined the plane the
+  server encrypts with a plaintext converter unless the operator remembered to
+  set the variable. The worker default is now `true`, matching the server:
+  `julep worker` (and `julep artifact worker`) refuse to start without
+  `TEMPORAL_PAYLOAD_KEYS`/`TEMPORAL_PAYLOAD_KEY_ID`, and `serve()` refuses to
+  poll even for settings assembled in code rather than from the environment.
+  The documented opt-out is unchanged: set
+  `TEMPORAL_PAYLOAD_ENCRYPTION_REQUIRED=false` to run against a deliberately
+  plaintext Temporal. Deployed workers are unaffected — the Helm path already
+  hardcoded encryption on — as are `julep serve api --local`, `julep dev up`,
+  and `create_local_app`, which set the opt-out (or a keyring) explicitly. Ad
+  hoc Temporal *client* connections (`julep run` against a remote env) keep the
+  permissive default.
+
 ### Fixed
 
 - Embedded retries now honor declared exponential backoff by default; direct
