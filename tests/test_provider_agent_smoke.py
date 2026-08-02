@@ -80,6 +80,12 @@ CASES = (
         credential_envs=("OPENROUTER_API_KEY",),
     ),
     ProviderCase(
+        id="orcarouter",
+        model="orcarouter:anthropic/claude-sonnet-4.6",
+        model_env="JULEP_SMOKE_ORCAROUTER_MODEL",
+        credential_envs=("ORCAROUTER_API_KEY",),
+    ),
+    ProviderCase(
         id="xai",
         model="xai:grok-4.20-non-reasoning-latest",
         model_env="JULEP_SMOKE_XAI_MODEL",

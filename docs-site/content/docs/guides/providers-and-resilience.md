@@ -25,10 +25,35 @@ that routes the call through [any-llm](https://github.com/mozilla-ai/any-llm):
 "anthropic:claude-sonnet-4-6"
 "gemini:gemini-2.5-flash"
 "groq:llama-3.3-70b"
+"orcarouter:anthropic/claude-sonnet-4.6"
 ```
 
 A bare model string (no `provider:` prefix) falls back to the default provider
 (anthropic).
+
+## OrcaRouter
+
+[OrcaRouter](https://www.orcarouter.ai) is an OpenAI-wire-compatible gateway
+that also routes any mainstream model through a single endpoint. Use it with a
+`orcarouter:` model prefix and the `ORCAROUTER_API_KEY` credential:
+
+```python
+# pip install --pre 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
+# export ORCAROUTER_API_KEY=sk-orca-...
+from julep import Agent, tool
+from julep.execution.llm import make_local_reasoner
+
+agent = Agent(
+    reasoner="orcarouter:anthropic/claude-sonnet-4.6",
+    tools=[search_kb],
+    llm=make_local_reasoner(),
+)
+```
+
+Model names follow the gateway's own catalog (for example
+`anthropic/claude-sonnet-4.6`, `openai/gpt-4o`). The named `orcarouter` prefix
+is dispatched through any-llm's OpenAI transport against
+`https://api.orcarouter.ai/v1`.
 
 ## make_local_reasoner
 
