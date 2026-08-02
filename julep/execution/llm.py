@@ -38,6 +38,7 @@ import asyncio
 import dataclasses
 import json
 import logging
+import os
 import re
 import time
 from collections.abc import Awaitable, Callable, Mapping
@@ -125,6 +126,32 @@ DEFAULT_PROVIDER = "anthropic"
 # them prompt-injected JSON instead of a native structured request.
 # (mozilla-ai/any-llm issues #541 gemini, #542 xai.)
 _PROMPT_FALLBACK_PROVIDERS = frozenset({"gemini", "xai"})
+
+# OrcaRouter is OpenAI-wire-compatible but has no native provider key in
+# any-llm. An ``orcarouter:`` model slug therefore dispatches through any-llm's
+# OpenAI transport against the gateway base URL, keyed by ``ORCAROUTER_API_KEY``.
+# Everything else in Julep (effort clamping, QoS request fields, prompt cache)
+# keeps reading the named ``orcarouter`` prefix, so it stays a first-class named
+# provider rather than a bare OpenAI-compatible endpoint.
+_ORCAROUTER_BASE_URL = "https://api.orcarouter.ai/v1"
+_ORCAROUTER_API_KEY_ENV = "ORCAROUTER_API_KEY"
+
+
+def _provider_transport(provider: str) -> tuple[str, dict[str, Any]]:
+    """Map a Julep provider name to the any-llm transport kwargs.
+
+    Returns ``(any_llm_provider, extra_kwargs)``. Most providers pass through
+    unchanged; the named OrcaRouter gateway is translated onto any-llm's OpenAI
+    adapter with the gateway base URL and credential.
+    """
+    if provider != "orcarouter":
+        return provider, {}
+    return "openai", {
+        "api_base": _ORCAROUTER_BASE_URL,
+        "api_key": os.environ.get(_ORCAROUTER_API_KEY_ENV),
+    }
+
+
 _DEFAULT_REASONER_DISPATCH = ReasonerDispatch()
 _PROVIDER_SAFE_RE = re.compile(r"[^A-Za-z0-9_-]")
 
@@ -145,8 +172,9 @@ def _effort_for_provider(effort: Optional[str], provider: str) -> Optional[str]:
 
     OpenAI's reasoning_effort scale tops out at ``xhigh``; ``max`` is
     CA/anthropic vocabulary and any-llm forwards it verbatim, so an
-    ``openai:...@max`` reasoner would be a 400 without this."""
-    if effort == "max" and provider == "openai":
+    ``openai:...@max`` reasoner would be a 400 without this. OrcaRouter shares
+    the OpenAI reasoning_effort scale, so it gets the same clamp."""
+    if effort == "max" and provider in ("openai", "orcarouter"):
         return "xhigh"
     return effort
 
@@ -771,8 +799,13 @@ async def complete_reasoner(
                     original: alias for alias, original in tool_name_reverse.items()
                 },
             )
+        any_llm_provider, transport_kwargs = _provider_transport(provider)
         return await _resolve_acompletion(acompletion)(
-            provider=provider, model=model, messages=messages, **kwargs
+            provider=any_llm_provider,
+            model=model,
+            messages=messages,
+            **kwargs,
+            **transport_kwargs,
         )
 
     started = time.time()

@@ -52,6 +52,15 @@ def test_effort_max_untouched_for_other_providers() -> None:
     assert seen["reasoning_effort"] == "max"
 
 
+def test_effort_max_clamped_to_xhigh_for_orcarouter() -> None:
+    # OrcaRouter is OpenAI-wire-compatible, so ``max`` gets the same OpenAI
+    # clamp as the ``openai`` provider (any-llm forwards the value verbatim).
+    seen = _run(Reasoner(name="t", model="orcarouter:anthropic/claude-sonnet-4.6",
+                         temperature=0.2, reasoning_effort="max"))
+    assert seen["reasoning_effort"] == "xhigh"
+    assert "temperature" not in seen
+
+
 def test_unset_effort_not_sent() -> None:
     seen = _run(Reasoner(name="t", model="openai:gpt-4o", temperature=0.2))
     assert "reasoning_effort" not in seen

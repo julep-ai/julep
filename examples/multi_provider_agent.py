@@ -16,6 +16,7 @@ Prereqs:
     pip install 'julep[providers]' 'any-llm-sdk[anthropic,openai]'
     export ANTHROPIC_API_KEY=sk-ant-...   # for the anthropic:... model
     export OPENAI_API_KEY=sk-...          # for the openai:... model
+    export ORCAROUTER_API_KEY=sk-orca-... # for the orcarouter:... model (gateway)
 
 Then:
 
@@ -47,6 +48,7 @@ MODELS: list[tuple[str, str]] = [
     ("openai:gpt-4o-mini", "OPENAI_API_KEY"),
     ("groq:llama-3.3-70b-versatile", "GROQ_API_KEY"),
     ("gemini:gemini-2.5-flash", "GEMINI_API_KEY"),
+    ("orcarouter:anthropic/claude-sonnet-4.6", "ORCAROUTER_API_KEY"),
 ]
 
 

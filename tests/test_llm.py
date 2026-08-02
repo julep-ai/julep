@@ -104,6 +104,24 @@ def test_caller_routes_provider_model_and_builds_messages() -> None:
     assert "response_format" not in call  # no reply_schema => no structured request
 
 
+def test_orcarouter_slug_routes_to_openai_transport_with_gateway_base(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rec = Recorder(_json_replies({"output": "ok"}))
+    monkeypatch.setenv("ORCAROUTER_API_KEY", "sk-orca-test")
+    reasoner = Reasoner(name="orca1", model="orcarouter:anthropic/claude-sonnet-4.6")
+    run(make_llm_caller(acompletion=rec)(reasoner, "hi"))
+
+    call = rec.calls[0]
+    # any-llm has no ``orcarouter`` provider key, so the named slug dispatches
+    # through its OpenAI transport against the gateway base URL.
+    assert call["provider"] == "openai"
+    assert call["model"] == "anthropic/claude-sonnet-4.6"
+    assert call["api_base"] == "https://api.orcarouter.ai/v1"
+    assert call["api_key"] == "sk-orca-test"
+    assert call["messages"][-1] == {"role": "user", "content": "hi"}
+
+
 def test_bare_model_falls_back_to_default_provider() -> None:
     rec = Recorder(_json_replies({"output": "ok"}))
     reasoner = Reasoner(name="b2", model="claude-opus-4-8")
