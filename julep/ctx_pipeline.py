@@ -38,10 +38,17 @@ class CtxPipelineConfig:
 
 def normalize_tool_bindings(bindings: Mapping[str, str]) -> dict[str, str]:
     """Translate config's ``server:tool`` spelling to ToolRef keys."""
-    return {
-        alias: f"{target.split(':', 1)[0]}/{target.split(':', 1)[1]}"
-        for alias, target in bindings.items()
-    }
+    normalized: dict[str, str] = {}
+    for alias, target in bindings.items():
+        server, sep, tool = target.partition(":")
+        if not sep:
+            # Without a ``:`` the old code did target.split(":", 1)[1] and blew
+            # up with an opaque IndexError. Fail with a clear, actionable message.
+            raise ValueError(
+                f"tool binding {alias!r} must be in 'server:tool' form, got {target!r}"
+            )
+        normalized[alias] = f"{server}/{tool}"
+    return normalized
 
 
 def pipeline_spec_from_ctx(
