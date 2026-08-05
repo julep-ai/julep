@@ -6,7 +6,11 @@ import pytest
 
 pytest.importorskip("jinja2")
 
-from julep.ctx_pipeline import CtxPipelineConfig, pipeline_spec_from_ctx
+from julep.ctx_pipeline import (
+    CtxPipelineConfig,
+    normalize_tool_bindings,
+    pipeline_spec_from_ctx,
+)
 from julep.registry import Registry
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -135,3 +139,14 @@ def test_summarizer_ctx_rejected_outside_summary_scope(tmp_path: Path) -> None:
             root=tmp_path,
             _registry=Registry(),
         )
+
+
+def test_normalize_tool_bindings_translates_server_tool() -> None:
+    assert normalize_tool_bindings({"search": "web:search"}) == {"search": "web/search"}
+
+
+def test_normalize_tool_bindings_rejects_missing_server() -> None:
+    # A target without a ':' used to raise an opaque IndexError; it now raises a
+    # clear ValueError naming the offending binding.
+    with pytest.raises(ValueError):
+        normalize_tool_bindings({"search": "search"})
