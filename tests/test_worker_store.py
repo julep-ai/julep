@@ -586,13 +586,16 @@ def test_source_hash_mismatch_in_manifest_fails_before_registration(
     assert fresh.pures == {}
 
 
+@pytest.mark.parametrize("directory", ["artifacts", "agent workspace"])
 def test_load_bundles_from_env_registers_idempotently(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    directory: str,
 ) -> None:
-    _store, _deployment, rec = _published(tmp_path)
+    root = tmp_path / directory
+    _store, _deployment, rec = _published(root)
     fresh = Registry()
-    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", f"file://{tmp_path}")
+    monkeypatch.setenv("JULEP_ARTIFACT_STORE_URL", root.as_uri())
     monkeypatch.setenv("JULEP_BUNDLES", f"{rec['bundleHash']}:{rec['signatureDigest']}")
     monkeypatch.setenv("JULEP_BUNDLE_ALLOWED_SIGNERS", f" {_public_key(SEED_A)} ")
 

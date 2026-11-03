@@ -156,6 +156,20 @@ def test_artifact_store_from_url_unknown_scheme_lists_supported_schemes() -> Non
         artifact_store_from_url("gs://bucket/prefix")
 
 
+@pytest.mark.parametrize("directory", ["agent artifacts", "工作流", "literal%20name", "artifacts#1?"])
+def test_file_url_reopens_existing_artifacts(tmp_path, directory: str) -> None:
+    root = tmp_path / directory
+    original = LocalDirArtifactStore(root)
+    data = b"published agent bundle"
+    digest = original.put(data)
+
+    reopened = artifact_store_from_url(root.as_uri())
+
+    assert reopened.get(digest) == data
+    assert isinstance(reopened, LocalDirArtifactStore)
+    assert reopened.root == root
+
+
 def test_s3_artifact_store_missing_boto3_error_is_actionable(monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "boto3", None)
     with pytest.raises(RuntimeError, match=r"julep\[store\]"):

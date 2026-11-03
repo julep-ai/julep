@@ -15,7 +15,7 @@ import re
 import tempfile
 from pathlib import Path
 from typing import Any, Protocol
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
 
@@ -188,7 +188,7 @@ class S3ArtifactStore:
 def artifact_store_from_url(url: str) -> ArtifactStore:
     parsed = urlparse(url)
     if parsed.scheme == "file":
-        return LocalDirArtifactStore(Path(parsed.path))
+        return LocalDirArtifactStore(Path(unquote(parsed.path)))
     if parsed.scheme == "s3":
         prefix = parsed.path.lstrip("/")
         return S3ArtifactStore(parsed.netloc, prefix)
