@@ -522,7 +522,7 @@ def _domain_of(url: str) -> str:
 class CallToolInput:
     tool_ref: dict[str, Any]  # ToolRef JSON (native or mcp)
     value: Any
-    cid: str  # deterministic activation id -> Idempotency-Key
+    cid: str  # deterministic activation id and fallback transport key
     # Advisory CacheHint JSON. The tool/transport may honor it; the framework
     # does not provide a cache backend or change replay behavior from this hint.
     cache: Optional[dict[str, Any]] = None
@@ -541,6 +541,7 @@ class CallToolInput:
     frozen_input_schema: Optional[dict[str, Any]] = None
     # Workflow code may set this only after validating against a frozen schema.
     input_schema_validated: bool = False
+    idempotency_key: Optional[str] = None
 
 
 @dataclass
@@ -909,6 +910,7 @@ async def record_marker_step(
 async def callTool(inp: CallToolInput) -> Any:
     ref = toolref_from_json(inp.tool_ref)
     key = toolref_key(ref)
+    idempotency_key = inp.idempotency_key or inp.cid
 
     if inp.tool_ref.get("kind") == "mcp":
         if _CTX.mcp_call is None:
@@ -926,13 +928,13 @@ async def callTool(inp: CallToolInput) -> Any:
             server,
             tool,
             inp.value,
-            inp.cid,
+            idempotency_key,
             inp.principal,
             inp.secrets,
             input_schema_validated,
         )
     else:
-        # Native tool: HTTP POST with an idempotency key derived from the cid.
+        # Native tool: HTTP POST with the same key used for MCP transport.
         url = _CTX.tool_urls.get(key)
         if url is None:
             raise RuntimeError(f"no URL registered for native tool {key!r}")
@@ -942,7 +944,7 @@ async def callTool(inp: CallToolInput) -> Any:
         import httpx  # imported in-activity so the module loads without httpx
 
         logger.debug("callTool %s -> %s", key, url)
-        headers = {"Idempotency-Key": inp.cid}
+        headers = {"Idempotency-Key": idempotency_key}
         if inp.principal is not None and _CTX.principal_headers is not None:
             headers.update(_CTX.principal_headers(inp.principal))
         async with httpx.AsyncClient(timeout=_CTX.http_timeout_s) as client:

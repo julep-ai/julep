@@ -151,9 +151,12 @@ lifetime. `InMemoryBlobStore` cannot survive a restart or cross a replica.
 
 - `verifyPures`: compare deploy-pinned pure source hashes to the worker
   registry before the workflow executes effects.
-- `callTool`: invoke a native HTTP tool or MCP tool. Native tools receive
-  `Idempotency-Key: <cid>`; MCP callers receive the same deterministic `cid` as
-  the transport idempotency key.
+- `callTool`: invoke a native HTTP tool or MCP tool. Native tools receive the
+  `Idempotency-Key` header and MCP callers receive the same key as an argument.
+  For new flow and session activations, the key combines the first workflow
+  execution run ID, the continuation segment number, and the activation ID.
+  Activity retries reuse the stored key. Activities scheduled without a scoped
+  key continue to use their original activation ID.
 - `invokeReasoner`: call the configured LLM function with a resolved `Reasoner`
   definition and input value.
 - `compilePlan`: ask a planner reasoner for a plan, parse it to IR, and run staged
