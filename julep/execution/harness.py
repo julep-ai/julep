@@ -739,6 +739,10 @@ class _TemporalEnv:
         )
         timeout_s = node.ann.timeout if node.ann else None
         cache = node.ann.cache.to_json() if node.ann and node.ann.cache is not None else None
+        idempotency_key = None
+        if workflow.in_workflow() and workflow.patched("scoped-tool-idempotency-v1"):
+            first_run_id = workflow.info().first_execution_run_id
+            idempotency_key = f"{first_run_id}/{self.segment_seq}/{cid}"
         return await workflow.execute_activity(
             callTool,
             CallToolInput(
@@ -754,6 +758,7 @@ class _TemporalEnv:
                 op="call",
                 kind="tool",
                 secrets=(self.secrets or None),
+                idempotency_key=idempotency_key,
             ),
             start_to_close_timeout=activity_timeout(timeout_s, self._policy.tool_timeout_s),
             retry_policy=_retry_policy_for(
